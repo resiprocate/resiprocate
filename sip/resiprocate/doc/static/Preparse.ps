@@ -1,9 +1,9 @@
 %!PS-Adobe-2.0
-%%Creator: dot version 1.7.14 (Mon Oct 21 18:19:04 MDT 2002)
+%%Creator: dot version 1.9 (Wed Apr 16 21:58:33 MDT 2003)
 %%For: (alan) 
 %%Title: pp_fsm
 %%Pages: (atend)
-%%BoundingBox: 35 35 609 757
+%%BoundingBox: 35 35 613 748
 %%EndComments
 save
 %%BeginProlog
@@ -103,7 +103,7 @@ cleartomark
 } bind def
 
 % styles
-/solid { } bind def
+/solid { [] 0 setdash } bind def
 /dashed { [9 InvScaleFactor mul dup ] 0 setdash } bind def
 /dotted { [1 InvScaleFactor mul 6 InvScaleFactor mul] 0 setdash } bind def
 /invis {/fill {newpath} def /stroke {newpath} def /show {pop newpath} def} bind def
@@ -187,8 +187,10 @@ cleartomark
 	]
 def
 
+/layerlen layercolorseq length def
+
 /setlayer {/maxlayer exch def /curlayer exch def
-	layercolorseq curlayer get
+	layercolorseq curlayer 1 sub layerlen mod get
 	aload pop sethsbcolor
 	/nodecolor {nopcolor} def
 	/edgecolor {nopcolor} def
@@ -227,937 +229,1141 @@ def
 
 %%EndSetup
 %%Page: 1 1
-%%PageBoundingBox: 36 36 609 757
+%%PageBoundingBox: 36 36 613 748
 %%PageOrientation: Landscape
 gsave
-35 35 574 722 boxprim clip newpath
+35 35 578 713 boxprim clip newpath
 36 36 translate
-gsave 572 0 translate 90 rotate
+gsave 576 0 translate 90 rotate
 0 0 1 beginpage
 grestore
-0.5430 set_scale
-1055 0 translate 90 rotate
-[ /CropBox [36 36 609 757] /PAGES pdfmark
+0.4804 set_scale
+1199 0 translate 90 rotate
 0.000 0.000 0.000 graphcolor
 14.00 /Helvetica set_font
 
 %	NewMsg
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-1180 1029 43 18 ellipse_path
+117 1173 43 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-1180 1024 moveto 64 -0.5 (NewMsg) alignedtext
+117 1168 moveto 64 -0.5 (NewMsg) alignedtext
 end grestore
 end grestore
 
 %	StartLine
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-1098 929 42 18 ellipse_path
+209 1061 42 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-1098 924 moveto 63 -0.5 (StartLine) alignedtext
+209 1056 moveto 63 -0.5 (StartLine) alignedtext
 end grestore
 end grestore
 
 %	NewMsg -> StartLine
-newpath 1157 1014 moveto
-1147 1006 1136 996 1128 986 curveto
-1120 977 1114 965 1109 955 curveto
+newpath 135 1157 moveto
+145 1147 158 1135 167 1124 curveto
+177 1112 187 1098 194 1086 curveto
 stroke
-newpath 1107 957 moveto
-1105 947 lineto
-1112 955 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 196 1088 moveto
+199 1078 lineto
+192 1085 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1143 976 moveto 22 -0.5 (*, Add ) alignedtext
+198 1114 moveto 31 -0.5 (X, Add ) alignedtext
 end grestore
 
 %	NewMsgCrLf
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-1266 929 60 18 ellipse_path
+60 1061 60 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-1266 924 moveto 99 -0.5 (NewMsgCrLf) alignedtext
+60 1056 moveto 99 -0.5 (NewMsgCrLf) alignedtext
 end grestore
 end grestore
 
 %	NewMsg -> NewMsgCrLf
-newpath 1201 1013 moveto
-1214 1003 1229 992 1234 986 curveto
-1241 977 1248 965 1254 955 curveto
+newpath 86 1160 moveto
+71 1152 54 1140 45 1124 curveto
+39 1113 41 1099 46 1088 curveto
 stroke
-newpath 1251 955 moveto
-1258 947 lineto
-1256 957 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 48 1089 moveto
+49 1079 lineto
+43 1088 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1263 976 moveto 36 -0.5 (CR, None ) alignedtext
+73 1114 moveto 42 -0.5 (CR, None ) alignedtext
 end grestore
 
 %	StartLine -> StartLine
-newpath 1127 916 moveto
-1143 914 1158 918 1158 929 curveto
-1158 937 1149 942 1138 942 curveto
+newpath 238 1048 moveto
+254 1046 269 1050 269 1061 curveto
+269 1070 260 1074 248 1074 curveto
 stroke
-newpath 1137 945 moveto
-1127 942 lineto
-1137 940 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 248 1072 moveto
+238 1074 lineto
+248 1077 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1173 926 moveto 22 -0.5 (*, Add) alignedtext
+287 1058 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	StartLineCrLf
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-1098 829 60 18 ellipse_path
+209 950 60 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-1098 824 moveto 98 -0.5 (StartLineCrLf) alignedtext
+209 945 moveto 98 -0.5 (StartLineCrLf) alignedtext
 end grestore
 end grestore
 
 %	StartLine -> StartLineCrLf
-newpath 1098 911 moveto
-1098 896 1098 874 1098 856 curveto
+newpath 209 1043 moveto
+209 1025 209 998 209 977 curveto
 stroke
-newpath 1096 857 moveto
-1098 847 lineto
-1101 857 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 212 978 moveto
+209 968 lineto
+207 978 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1120 876 moveto 36 -0.5 (CR, None) alignedtext
+233 1003 moveto 39 -0.5 (CR, None) alignedtext
 end grestore
 
 %	NewMsgCrLf -> NewMsg
-newpath 1179 1003 moveto
-1178 989 1178 974 1180 972 curveto
-1188 957 1204 947 1220 941 curveto
+newpath 112 1146 moveto
+109 1135 105 1121 99 1110 curveto
+93 1098 85 1087 77 1078 curveto
 stroke
-newpath 1182 1001 moveto
-1179 1011 lineto
-1177 1001 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 109 1146 moveto
+114 1155 lineto
+114 1145 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1205 976 moveto 42 -0.5 (LF, Discard ) alignedtext
+135 1114 moveto 48 -0.5 (LF, Discard ) alignedtext
 end grestore
 
 %	EndMsg
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-857 28 40 18 ellipse_path
+794 56 40 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-857 23 moveto 58 -0.5 (EndMsg) alignedtext
+794 51 moveto 58 -0.5 (EndMsg) alignedtext
 end grestore
 end grestore
 
 %	NewMsgCrLf -> EndMsg
-newpath 1266 911 moveto
-1266 883 1265 833 1266 829 curveto
-1266 829 1266 829 1266 128 curveto
-1265 51 1199 47 1125 30 curveto
-1122 29 984 28 907 28 curveto
+newpath 60 1043 moveto
+60 1021 60 983 60 950 curveto
+60 950 60 950 60 168 curveto
+60 74 449 84 623 68 curveto
+675 63 688 61 741 58 curveto
+742 58 744 58 745 58 curveto
 stroke
-newpath 907 31 moveto
-897 28 lineto
-907 26 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 744 61 moveto
+754 57 lineto
+744 56 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1296 476 moveto 51 -0.5 (*, Bad|Discard ) alignedtext
+94 556 moveto 60 -0.5 (X, Bad|Discard ) alignedtext
 end grestore
 
 %	StartLineCrLf -> EndMsg
-newpath 1114 811 moveto
-1138 785 1178 739 1179 729 curveto
-1179 729 1179 729 1179 128 curveto
-1178 0 1034 52 907 31 curveto
+newpath 195 932 moveto
+179 911 156 874 156 838 curveto
+156 838 156 838 156 168 curveto
+156 108 595 71 745 60 curveto
 stroke
-newpath 907 33 moveto
-897 30 lineto
-907 29 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 744 63 moveto
+754 59 lineto
+744 58 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1209 426 moveto 51 -0.5 (*, Bad|Discard) alignedtext
+189 500 moveto 57 -0.5 (X, Bad|Discard) alignedtext
 end grestore
 
 %	BuildHdr
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-939 729 43 18 ellipse_path
+1080 838 43 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-939 724 moveto 65 -0.5 (BuildHdr) alignedtext
+1080 833 moveto 65 -0.5 (BuildHdr) alignedtext
 end grestore
 end grestore
 
 %	StartLineCrLf -> BuildHdr
-newpath 1072 813 moveto
-1044 795 999 766 969 748 curveto
+newpath 264 943 moveto
+423 922 880 864 1031 844 curveto
 stroke
-newpath 970 752 moveto
-963 744 lineto
-973 747 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1029 847 moveto
+1039 843 lineto
+1029 842 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1072 776 moveto 84 -0.5 (LF, Reset|Fline|Discard) alignedtext
+716 891 moveto 87 -0.5 (LF, Reset|Fline|Discard) alignedtext
 end grestore
 
 %	BuildHdr -> BuildHdr
-newpath 969 716 moveto
-985 714 1000 718 1000 729 curveto
-1000 737 991 742 980 742 curveto
+newpath 1110 825 moveto
+1126 823 1141 827 1141 838 curveto
+1141 846 1132 851 1121 851 curveto
 stroke
-newpath 979 745 moveto
-969 742 lineto
-979 740 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1120 849 moveto
+1110 851 lineto
+1120 854 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1015 726 moveto 22 -0.5 (*, Add) alignedtext
+1159 835 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	EWSPostHdr
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-1024 629 57 18 ellipse_path
+1165 726 57 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-1024 624 moveto 92 -0.5 (EWSPostHdr) alignedtext
+1165 721 moveto 92 -0.5 (EWSPostHdr) alignedtext
 end grestore
 end grestore
 
 %	BuildHdr -> EWSPostHdr
-newpath 953 712 moveto
-967 696 988 672 1003 654 curveto
+newpath 1093 821 moveto
+1107 802 1130 772 1146 751 curveto
 stroke
-newpath 1001 653 moveto
-1009 647 lineto
-1004 656 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1147 754 moveto
+1151 744 lineto
+1143 751 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1011 676 moveto 44 -0.5 (LWS, None) alignedtext
+1151 779 moveto 46 -0.5 (LWS, None) alignedtext
 end grestore
 
 %	EWSPostColon
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-580 529 63 18 ellipse_path
+826 615 63 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-580 524 moveto 105 -0.5 (EWSPostColon) alignedtext
+826 610 moveto 105 -0.5 (EWSPostColon) alignedtext
 end grestore
 end grestore
 
 %	BuildHdr -> EWSPostColon
-newpath 912 715 moveto
-880 699 827 671 783 647 curveto
-723 614 656 574 615 550 curveto
+newpath 1050 825 moveto
+1016 809 960 780 921 744 curveto
+888 713 858 670 841 642 curveto
 stroke
-newpath 614 552 moveto
-607 545 lineto
-617 548 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 843 641 moveto
+836 633 lineto
+839 643 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-857 626 moveto 134 -0.5 (COLON, Hdr|Reset|DiscardKnown) alignedtext
+996 723 moveto 137 -0.5 (COLON, Hdr|Reset|DiscardKnown) alignedtext
 end grestore
 
 %	EWSPostHdr -> EndMsg
-newpath 1044 612 moveto
-1064 594 1090 563 1091 529 curveto
-1091 529 1091 529 1091 128 curveto
-1090 107 966 63 899 41 curveto
+newpath 1204 713 moveto
+1243 696 1299 665 1299 615 curveto
+1299 615 1299 615 1299 168 curveto
+1299 89 1235 84 1162 58 curveto
+1158 56 945 56 844 56 curveto
 stroke
-newpath 899 44 moveto
-890 38 lineto
-900 39 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 844 54 moveto
+834 56 lineto
+844 59 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1121 326 moveto 51 -0.5 (*, Bad|Discard) alignedtext
+1332 388 moveto 57 -0.5 (X, Bad|Discard) alignedtext
 end grestore
 
 %	EWSPostHdr -> EWSPostHdr
-newpath 1063 616 moveto
-1082 614 1099 619 1099 629 curveto
-1099 638 1086 642 1071 642 curveto
+newpath 1204 713 moveto
+1223 711 1240 716 1240 726 curveto
+1240 734 1229 739 1215 739 curveto
 stroke
-newpath 1073 645 moveto
-1063 642 lineto
-1073 640 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1214 737 moveto
+1204 739 lineto
+1214 742 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-1125 626 moveto 44 -0.5 (LWS, None) alignedtext
+1267 723 moveto 46 -0.5 (LWS, None) alignedtext
 end grestore
 
 %	EWSPostHdr -> EWSPostColon
-newpath 977 618 moveto
-895 601 726 562 638 542 curveto
+newpath 1125 713 moveto
+1064 693 945 654 877 632 curveto
 stroke
-newpath 639 545 moveto
-630 540 lineto
-640 540 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 877 629 moveto
+867 629 lineto
+876 634 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-898 576 moveto 134 -0.5 (COLON, Hdr|Reset|DiscardKnown) alignedtext
+1087 667 moveto 137 -0.5 (COLON, Hdr|Reset|DiscardKnown) alignedtext
 end grestore
 
 %	EWSPostColon -> EWSPostColon
-newpath 623 516 moveto
-643 514 661 519 661 529 curveto
-661 538 648 543 631 542 curveto
+newpath 869 602 moveto
+889 600 907 605 907 615 curveto
+907 623 895 628 880 628 curveto
 stroke
-newpath 633 545 moveto
-623 542 lineto
-633 540 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 879 626 moveto
+869 628 lineto
+879 631 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-717 526 moveto 104 -0.5 (LWS, Reset|DiscardKnown) alignedtext
+965 612 moveto 107 -0.5 (LWS, Reset|DiscardKnown) alignedtext
 end grestore
 
 %	BuildData
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-592 429 46 18 ellipse_path
+532 503 46 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-592 424 moveto 70 -0.5 (BuildData) alignedtext
+532 498 moveto 70 -0.5 (BuildData) alignedtext
 end grestore
 end grestore
 
 %	EWSPostColon -> BuildData
-newpath 570 511 moveto
-566 503 563 494 561 486 curveto
-559 479 559 477 561 472 curveto
-563 465 566 459 570 454 curveto
+newpath 765 610 moveto
+673 603 506 586 489 566 curveto
+478 553 489 538 502 525 curveto
 stroke
-newpath 568 453 moveto
-576 446 lineto
-572 456 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 503 527 moveto
+509 519 lineto
+500 524 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-576 476 moveto 22 -0.5 (*, Add) alignedtext
+507 556 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	EmptyHdrCrLf
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-261 429 66 18 ellipse_path
+1192 503 66 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-261 424 moveto 111 -0.5 (EmptyHdrCrLf) alignedtext
+1192 498 moveto 111 -0.5 (EmptyHdrCrLf) alignedtext
 end grestore
 end grestore
 
 %	EWSPostColon -> EmptyHdrCrLf
-newpath 521 522 moveto
-426 512 249 491 244 486 curveto
-240 481 244 467 249 454 curveto
+newpath 857 599 moveto
+885 585 929 565 969 552 curveto
+1021 535 1081 522 1127 513 curveto
 stroke
-newpath 246 455 moveto
-252 447 lineto
-250 457 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1125 516 moveto
+1135 512 lineto
+1125 511 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-306 476 moveto 97 -0.5 (CR, Reset|DiscardKnown) alignedtext
+1023 556 moveto 99 -0.5 (CR, Reset|DiscardKnown) alignedtext
 end grestore
 
 %	InAng
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-881 329 33 18 ellipse_path
+613 391 33 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-881 324 moveto 45 -0.5 (InAng) alignedtext
+613 386 moveto 45 -0.5 (InAng) alignedtext
 end grestore
 end grestore
 
 %	EWSPostColon -> InAng
-newpath 638 522 moveto
-695 515 777 502 805 486 curveto
-843 463 835 436 872 411 curveto
-897 393 918 411 936 386 curveto
-939 380 938 377 936 372 curveto
-931 362 922 353 913 346 curveto
+newpath 820 597 moveto
+813 578 804 548 801 521 curveto
+798 505 798 500 801 485 curveto
+803 470 808 468 811 454 curveto
+811 447 814 444 811 440 curveto
+802 428 709 408 653 399 curveto
 stroke
-newpath 912 348 moveto
-905 341 lineto
-915 344 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 654 397 moveto
+644 397 lineto
+653 402 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-934 426 moveto 116 -0.5 (LAQUOT, Add  \(dCommaSep\)) alignedtext
+867 500 moveto 124 -0.5 (LAQUOT, Add  \(dCommaSep\)) alignedtext
 end grestore
 
 %	InQ
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-345 329 27 18 ellipse_path
+271 391 27 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-345 324 moveto 26 -0.5 (InQ) alignedtext
+271 386 moveto 26 -0.5 (InQ) alignedtext
 end grestore
 end grestore
 
 %	EWSPostColon -> InQ
-newpath 537 516 moveto
-446 486 392 480 345 386 curveto
-340 377 339 366 340 356 curveto
+newpath 763 613 moveto
+714 609 701 606 652 601 curveto
+517 585 476 587 359 521 curveto
+316 497 295 496 273 454 curveto
+267 443 266 430 267 418 curveto
 stroke
-newpath 337 357 moveto
-341 347 lineto
-342 357 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 269 419 moveto
+268 409 lineto
+264 419 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-442 426 moveto 102 -0.5 (QUOT, Add  \(dCommaSep\)) alignedtext
+421 500 moveto 110 -0.5 (QUOT, Add  \(dCommaSep\)) alignedtext
 end grestore
 
 %	BuildData -> EWSPostColon
-newpath 589 505 moveto
-591 498 594 492 595 486 curveto
-596 479 595 461 594 447 curveto
+newpath 760 606 moveto
+687 596 577 578 562 566 curveto
+547 555 540 535 536 521 curveto
 stroke
-newpath 593 502 moveto
-587 511 lineto
-588 501 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 759 608 moveto
+769 607 lineto
+759 603 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-698 476 moveto 198 -0.5 (COMMA,  Data|Reset|DiscardKnown \(dCommaSep\)) alignedtext
+671 556 moveto 203 -0.5 (COMMA, Data|Reset|DiscardKnown \(dCommaSep\)) alignedtext
 end grestore
 
 %	BuildData -> BuildData
-newpath 624 416 moveto
-641 414 656 418 656 429 curveto
-656 438 645 443 632 442 curveto
+newpath 564 490 moveto
+581 488 596 492 596 503 curveto
+596 512 587 516 574 516 curveto
 stroke
-newpath 634 445 moveto
-624 442 lineto
-634 440 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 574 514 moveto
+564 516 lineto
+574 519 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-671 426 moveto 22 -0.5 (*, Add) alignedtext
+614 500 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	BuildData -> InAng
-newpath 623 415 moveto
-656 401 708 379 729 372 curveto
-750 365 806 349 843 339 curveto
+newpath 556 488 moveto
+568 479 582 467 591 454 curveto
+598 443 603 429 607 418 curveto
 stroke
-newpath 841 337 moveto
-851 337 lineto
-842 342 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 609 419 moveto
+609 409 lineto
+604 418 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-791 376 moveto 116 -0.5 (LAQUOT, Add \(dCommaSep\)) alignedtext
+661 444 moveto 121 -0.5 (LAQUOT, Add \(dCommaSep\)) alignedtext
 end grestore
 
 %	BuildData -> InQ
-newpath 550 421 moveto
-483 409 359 386 359 386 curveto
-351 378 347 367 346 356 curveto
+newpath 489 497 moveto
+429 488 300 469 285 454 curveto
+276 444 273 430 271 418 curveto
 stroke
-newpath 344 357 moveto
-345 347 lineto
-349 357 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 274 419 moveto
+270 409 lineto
+269 419 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-421 376 moveto 102 -0.5 (QUOT, Add \(dCommaSep\)) alignedtext
+345 444 moveto 108 -0.5 (QUOT, Add \(dCommaSep\)) alignedtext
 end grestore
 
 %	BuildDataCrLf
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-575 329 64 18 ellipse_path
+783 391 64 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-575 324 moveto 106 -0.5 (BuildDataCrLf) alignedtext
+783 386 moveto 106 -0.5 (BuildDataCrLf) alignedtext
 end grestore
 end grestore
 
 %	BuildData -> BuildDataCrLf
-newpath 589 411 moveto
-586 396 582 373 580 356 curveto
+newpath 578 500 moveto
+620 495 682 483 729 454 curveto
+744 444 757 429 767 416 curveto
 stroke
-newpath 578 357 moveto
-578 347 lineto
-583 356 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 768 419 moveto
+772 409 lineto
+764 416 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-613 376 moveto 52 -0.5 (CR, None|Flat) alignedtext
+776 444 moveto 55 -0.5 (CR, None|Flat) alignedtext
 end grestore
 
 %	EmptyHdrCrLf -> EndMsg
-newpath 261 411 moveto
-261 391 261 357 261 329 curveto
-261 329 261 329 261 128 curveto
-261 11 662 54 778 34 curveto
-788 32 791 31 802 30 curveto
-804 29 806 29 809 29 curveto
+newpath 1196 485 moveto
+1200 463 1206 424 1206 391 curveto
+1206 391 1206 391 1206 168 curveto
+1206 0 1011 83 843 59 curveto
 stroke
-newpath 807 27 moveto
-817 29 lineto
-807 32 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 844 57 moveto
+834 58 lineto
+844 62 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-291 226 moveto 51 -0.5 (*, Bad|Discard) alignedtext
+1239 276 moveto 57 -0.5 (X, Bad|Discard) alignedtext
 end grestore
 
 %	EmptyHdrCont
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-65 329 65 18 ellipse_path
+1082 391 65 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-65 324 moveto 109 -0.5 (EmptyHdrCont) alignedtext
+1082 386 moveto 109 -0.5 (EmptyHdrCont) alignedtext
 end grestore
 end grestore
 
 %	EmptyHdrCrLf -> EmptyHdrCont
-newpath 216 416 moveto
-194 408 167 398 144 386 curveto
-141 384 117 366 96 351 curveto
+newpath 1141 491 moveto
+1121 484 1100 472 1087 454 curveto
+1080 444 1078 430 1078 418 curveto
 stroke
-newpath 96 354 moveto
-89 346 lineto
-99 350 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1080 419 moveto
+1079 409 lineto
+1075 419 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-200 376 moveto 95 -0.5 (LF, Reset|DiscardKnown) alignedtext
+1139 444 moveto 97 -0.5 (LF, Reset|DiscardKnown) alignedtext
 end grestore
 
 %	EmptyHdrCont -> BuildHdr
-newpath 890 726 moveto
-729 718 19 723 19 629 curveto
-19 629 19 629 19 429 curveto
-19 398 38 366 51 347 curveto
+newpath 1127 828 moveto
+1235 809 1345 836 1345 726 curveto
+1345 726 1345 726 1345 503 curveto
+1345 457 1211 420 1134 402 curveto
 stroke
-newpath 886 724 moveto
-896 726 lineto
-886 729 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1127 825 moveto
+1118 830 lineto
+1128 830 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-62 526 moveto 77 -0.5 (*, Reset|Back|Discard) alignedtext
+1413 612 moveto 128 -0.5 (X, Reset|Back|Discard|EmptyHdr) alignedtext
 end grestore
 
 %	EmptyHdrCont -> EWSPostColon
-newpath 511 526 moveto
-402 518 138 521 74 447 curveto
-62 432 62 376 64 347 curveto
+newpath 854 592 moveto
+876 573 909 545 937 521 curveto
+993 471 1006 446 1057 408 curveto
 stroke
-newpath 508 523 moveto
-517 527 lineto
-507 528 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 853 590 moveto
+847 598 lineto
+856 593 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-133 426 moveto 104 -0.5 (LWS, Reset|DiscardKnown) alignedtext
-end grestore
-
-%	InAng -> BuildData
-newpath 645 424 moveto
-734 419 780 446 857 386 curveto
-863 381 870 362 875 347 curveto
-stroke
-newpath 647 426 moveto
-637 425 lineto
-647 421 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-898 376 moveto 61 -0.5 (RAQUOT, Add) alignedtext
-end grestore
-
-%	InAng -> InAng
-newpath 905 316 moveto
-919 314 932 318 932 329 curveto
-932 337 925 341 915 342 curveto
-stroke
-newpath 915 345 moveto
-905 342 lineto
-915 340 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-947 326 moveto 22 -0.5 (*, Add) alignedtext
-end grestore
-
-%	InAngQ
-gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-897 229 39 18 ellipse_path
-stroke
-gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-897 224 moveto 57 -0.5 (InAngQ) alignedtext
-end grestore
-end grestore
-
-%	InAng -> InAngQ
-newpath 884 311 moveto
-887 296 890 273 893 256 curveto
-stroke
-newpath 890 257 moveto
-894 247 lineto
-895 257 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-916 276 moveto 46 -0.5 (QUOT, Add) alignedtext
-end grestore
-
-%	InQ -> BuildData
-newpath 557 412 moveto
-528 397 489 379 473 372 curveto
-463 368 404 348 369 337 curveto
-stroke
-newpath 555 408 moveto
-563 415 lineto
-553 413 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-533 376 moveto 46 -0.5 (QUOT, Add) alignedtext
-end grestore
-
-%	InQ -> InQ
-newpath 365 317 moveto
-378 313 390 317 390 329 curveto
-390 338 383 342 375 342 curveto
-stroke
-newpath 375 344 moveto
-365 341 lineto
-375 340 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-405 326 moveto 22 -0.5 (*, Add) alignedtext
-end grestore
-
-%	InQEsc
-gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-400 229 36 18 ellipse_path
-stroke
-gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-400 224 moveto 50 -0.5 (InQEsc) alignedtext
-end grestore
-end grestore
-
-%	InQ -> InQEsc
-newpath 342 311 moveto
-341 303 340 294 340 286 curveto
-339 279 337 277 340 272 curveto
-343 265 356 255 370 247 curveto
-stroke
-newpath 366 246 moveto
-376 243 lineto
-369 251 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-372 276 moveto 55 -0.5 (LSLASH, Add) alignedtext
-end grestore
-
-%	BuildDataCrLf -> EndMsg
-newpath 577 311 moveto
-579 299 581 284 586 272 curveto
-611 196 612 170 664 110 curveto
-711 53 737 40 809 31 curveto
-stroke
-newpath 807 29 moveto
-817 29 lineto
-808 34 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-649 175 moveto 51 -0.5 (*, Bad|Discard) alignedtext
-end grestore
-
-%	CheckCont
-gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-687 229 49 18 ellipse_path
-stroke
-gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-687 224 moveto 77 -0.5 (CheckCont) alignedtext
-end grestore
-end grestore
-
-%	BuildDataCrLf -> CheckCont
-newpath 580 311 moveto
-585 299 592 283 603 272 curveto
-614 260 629 252 643 245 curveto
-stroke
-newpath 641 243 moveto
-651 241 lineto
-643 248 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-632 276 moveto 50 -0.5 (LF, None|Flat) alignedtext
-end grestore
-
-%	CheckCont -> BuildHdr
-newpath 937 705 moveto
-934 657 931 548 972 472 curveto
-979 457 993 462 1000 447 curveto
-1006 432 1002 426 1000 411 curveto
-993 365 989 353 971 311 curveto
-962 292 963 283 947 272 curveto
-929 260 804 243 734 234 curveto
-stroke
-newpath 940 701 moveto
-937 711 lineto
-935 701 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-1025 476 moveto 97 -0.5 (*, Data|Reset|Back|Discard) alignedtext
-end grestore
-
-%	CheckCont -> BuildData
-newpath 626 408 moveto
-634 402 642 394 647 386 curveto
-675 341 684 278 686 247 curveto
-stroke
-newpath 628 410 moveto
-618 414 lineto
-625 406 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-699 326 moveto 39 -0.5 (LWS, Add ) alignedtext
+1030 500 moveto 107 -0.5 (LWS, Reset|DiscardKnown) alignedtext
 end grestore
 
 %	CheckEndHdr
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-734 128 61 18 ellipse_path
+913 168 61 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-734 123 moveto 100 -0.5 (CheckEndHdr) alignedtext
+913 163 moveto 100 -0.5 (CheckEndHdr) alignedtext
 end grestore
+end grestore
+
+%	EmptyHdrCont -> CheckEndHdr
+newpath 1074 373 moveto
+1055 329 1007 222 1001 216 curveto
+989 203 974 194 959 186 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 961 184 moveto
+951 182 lineto
+959 189 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+1111 276 moveto 135 -0.5 (CR,  Data|Reset|Discard|EmptyHdr) alignedtext
+end grestore
+
+%	CheckEndHdr -> EndMsg
+newpath 909 150 moveto
+905 136 898 117 887 105 curveto
+873 89 853 78 835 70 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 837 68 moveto
+827 67 lineto
+835 73 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+930 109 moveto 57 -0.5 (X, Bad|Discard) alignedtext
+end grestore
+
+%	CheckEndHdr -> EndMsg
+newpath 859 160 moveto
+835 153 808 141 794 119 curveto
+787 109 786 95 787 83 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 789 84 moveto
+789 74 lineto
+784 83 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+839 109 moveto 81 -0.5 (LF, EndHdrs|Discard) alignedtext
+end grestore
+
+%	InAng -> BuildData
+newpath 515 478 moveto
+509 466 506 452 513 440 curveto
+528 415 558 403 582 397 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 512 478 moveto
+519 486 lineto
+517 476 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+549 444 moveto 63 -0.5 (RAQUOT, Add) alignedtext
+end grestore
+
+%	InAng -> InAng
+newpath 637 378 moveto
+651 376 664 380 664 391 curveto
+664 399 657 403 647 404 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 647 402 moveto
+637 404 lineto
+647 407 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+682 388 moveto 29 -0.5 (X, Add) alignedtext
+end grestore
+
+%	InAngQ
+gsave 10 dict begin
+557 279 39 18 ellipse_path
+stroke
+gsave 10 dict begin
+557 274 moveto 57 -0.5 (InAngQ) alignedtext
+end grestore
+end grestore
+
+%	InAng -> InAngQ
+newpath 589 379 moveto
+575 370 560 358 552 342 curveto
+546 331 547 317 549 306 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 551 307 moveto
+551 297 lineto
+546 306 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+580 332 moveto 49 -0.5 (QUOT, Add) alignedtext
+end grestore
+
+%	InQ -> BuildData
+newpath 486 489 moveto
+456 474 445 458 405 440 curveto
+368 423 323 407 296 399 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 484 491 moveto
+494 493 lineto
+486 486 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+461 444 moveto 49 -0.5 (QUOT, Add) alignedtext
+end grestore
+
+%	InQ -> InQ
+newpath 291 379 moveto
+304 375 316 379 316 391 curveto
+316 400 309 404 301 404 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 301 402 moveto
+291 403 lineto
+301 406 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+334 388 moveto 29 -0.5 (X, Add) alignedtext
+end grestore
+
+%	InQEsc
+gsave 10 dict begin
+274 279 36 18 ellipse_path
+stroke
+gsave 10 dict begin
+274 274 moveto 50 -0.5 (InQEsc) alignedtext
+end grestore
+end grestore
+
+%	InQ -> InQEsc
+newpath 274 373 moveto
+276 364 278 352 278 342 curveto
+279 330 278 317 277 306 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 280 307 moveto
+276 297 lineto
+275 307 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+312 332 moveto 58 -0.5 (LSLASH, Add) alignedtext
+end grestore
+
+%	BuildDataCrLf -> EndMsg
+newpath 782 373 moveto
+781 327 778 205 783 105 curveto
+783 95 781 88 780 81 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 783 83 moveto
+780 73 lineto
+778 83 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+812 220 moveto 57 -0.5 (X, Bad|Discard) alignedtext
+end grestore
+
+%	CheckCont
+gsave 10 dict begin
+889 279 49 18 ellipse_path
+stroke
+gsave 10 dict begin
+889 274 moveto 77 -0.5 (CheckCont) alignedtext
+end grestore
+end grestore
+
+%	BuildDataCrLf -> CheckCont
+newpath 787 373 moveto
+790 359 797 340 808 328 curveto
+819 315 834 305 848 297 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 849 299 moveto
+856 292 lineto
+846 295 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+838 332 moveto 53 -0.5 (LF, None|Flat) alignedtext
+end grestore
+
+%	CheckCont -> BuildHdr
+newpath 1081 811 moveto
+1085 731 1094 499 1088 485 curveto
+1068 439 1042 443 1008 409 curveto
+969 370 926 321 904 296 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 1079 810 moveto
+1081 820 lineto
+1084 810 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+1145 556 moveto 103 -0.5 (X, Data|Reset|Back|Discard) alignedtext
+end grestore
+
+%	CheckCont -> BuildData
+newpath 588 501 moveto
+597 499 601 499 612 497 curveto
+701 481 731 497 811 454 curveto
+835 440 842 433 856 409 curveto
+876 373 884 324 887 297 curveto
+stroke
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 588 499 moveto
+578 501 lineto
+588 504 lineto
+closepath
+fill
+0.000 0.000 0.000 edgecolor
+end grestore
+gsave 10 dict begin
+8.00 /Helvetica set_font
+895 388 moveto 44 -0.5 (LWS, Add ) alignedtext
 end grestore
 
 %	CheckCont -> CheckEndHdr
-newpath 695 211 moveto
-703 195 713 172 722 154 curveto
+newpath 893 261 moveto
+897 243 903 215 907 195 curveto
 stroke
-newpath 719 154 moveto
-726 146 lineto
-724 156 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 909 196 moveto
+909 186 lineto
+904 195 lineto
 closepath
 fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-759 175 moveto 86 -0.5 (CR, Data|Reset|Discard) alignedtext
+0.000 0.000 0.000 edgecolor
 end grestore
-
-%	CheckEndHdr -> EndMsg
-newpath 770 113 moveto
-792 104 816 93 825 85 curveto
-830 80 838 65 845 52 curveto
-stroke
-newpath 841 54 moveto
-848 46 lineto
-846 56 lineto
-closepath
-fill
 gsave 10 dict begin
 8.00 /Helvetica set_font
-863 75 moveto 51 -0.5 (*, Bad|Discard) alignedtext
-end grestore
-
-%	CheckEndHdr -> EndMsg
-newpath 729 110 moveto
-727 98 726 82 734 71 curveto
-757 37 780 39 813 36 curveto
-stroke
-newpath 810 34 moveto
-820 35 lineto
-810 39 lineto
-closepath
-fill
-gsave 10 dict begin
-8.00 /Helvetica set_font
-778 75 moveto 79 -0.5 (LF, EndHdrs|Discard) alignedtext
+949 220 moveto 88 -0.5 (CR, Data|Reset|Discard) alignedtext
 end grestore
 
 %	InAngQ -> InAng
-newpath 916 315 moveto
-928 308 941 298 947 286 curveto
-956 269 939 253 923 243 curveto
+newpath 618 364 moveto
+618 352 618 339 613 328 curveto
+606 313 593 301 581 293 curveto
 stroke
-newpath 918 317 moveto
-908 319 lineto
-916 312 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 616 363 moveto
+617 373 lineto
+621 363 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-975 276 moveto 46 -0.5 (QUOT, Add) alignedtext
+644 332 moveto 49 -0.5 (QUOT, Add) alignedtext
 end grestore
 
 %	InAngQ -> InAngQ
-newpath 925 216 moveto
-940 214 954 218 954 229 curveto
-954 237 946 242 936 242 curveto
+newpath 585 266 moveto
+600 264 614 268 614 279 curveto
+614 287 606 292 596 292 curveto
 stroke
-newpath 935 245 moveto
-925 242 lineto
-935 240 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 595 290 moveto
+585 292 lineto
+595 295 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-969 226 moveto 22 -0.5 (*, Add) alignedtext
+632 276 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	InAngQEsc
 gsave 10 dict begin
-0.000 0.000 0.827 nodecolor
-901 128 51 18 ellipse_path
+574 168 51 18 ellipse_path
 stroke
 gsave 10 dict begin
-0.000 0.000 0.000 nodecolor
-901 123 moveto 81 -0.5 (InAngQEsc) alignedtext
+574 163 moveto 81 -0.5 (InAngQEsc) alignedtext
 end grestore
 end grestore
 
 %	InAngQ -> InAngQEsc
-newpath 884 212 moveto
-875 200 865 186 865 185 curveto
-863 179 862 176 865 171 curveto
-865 170 872 162 880 153 curveto
+newpath 566 261 moveto
+571 252 576 241 578 230 curveto
+580 218 580 206 579 195 curveto
 stroke
-newpath 878 152 moveto
-886 146 lineto
-881 155 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 582 196 moveto
+578 186 lineto
+577 196 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-897 175 moveto 55 -0.5 (LSLASH, Add) alignedtext
+611 220 moveto 58 -0.5 (LSLASH, Add) alignedtext
 end grestore
 
 %	InAngQEsc -> InAngQ
-newpath 917 206 moveto
-923 198 930 190 932 185 curveto
-934 179 933 176 932 171 curveto
-929 161 923 152 917 145 curveto
+newpath 540 255 moveto
+534 243 529 229 534 216 curveto
+538 204 546 193 554 185 curveto
 stroke
-newpath 920 206 moveto
-912 212 lineto
-916 203 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 537 255 moveto
+544 262 lineto
+541 252 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-947 175 moveto 22 -0.5 (*, Add) alignedtext
+552 220 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 
 %	InQEsc -> InQ
-newpath 376 315 moveto
-388 308 401 298 407 286 curveto
-410 279 407 261 404 247 curveto
+newpath 249 369 moveto
+239 357 232 342 237 328 curveto
+241 316 250 304 257 295 curveto
 stroke
-newpath 378 317 moveto
-368 319 lineto
-376 312 lineto
+gsave 10 dict begin
+solid
+0.000 0.000 0.000 edgecolor
+newpath 247 370 moveto
+255 376 lineto
+250 367 lineto
 closepath
 fill
+0.000 0.000 0.000 edgecolor
+end grestore
 gsave 10 dict begin
 8.00 /Helvetica set_font
-422 276 moveto 22 -0.5 (*, Add) alignedtext
+256 332 moveto 29 -0.5 (X, Add) alignedtext
 end grestore
 endpage
 grestore
 %%PageTrailer
 %%EndPage: 1
-%%Trailer
-%%Pages: 1
-end
-restore
-%%EOF
