@@ -4,13 +4,20 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Embedded.hxx"
 #include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/util/Logger.hxx"
+
+using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::TEST
 
 using namespace std;
 using namespace Vocal2;
 
 int
-main()
+main(int argc, char** argv)
 {
+   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
+
    {
       Data foo("abcdefghi1232454435");
       assert(Embedded::encode(foo) == foo);
@@ -111,7 +118,7 @@ main()
          foo.encode(str);
       }
       cerr << buf << endl;
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-1&CSeq=4178%20ACK");
+      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch.0-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo.0-1&CSeq=4178%20ACK");
    }
 
    {
@@ -156,7 +163,7 @@ main()
    {
       cerr << "Parse Uri with multiple headers" << endl;
       
-      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-1&CSeq=4178%20ACK");
+      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch.0-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo.0-1&CSeq=4178%20ACK");
       NameAddr na(nad);
 
       assert(na.uri().hasEmbedded());
