@@ -394,10 +394,8 @@ CSeqCategory::parse(ParseBuffer& pb)
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
                            // don't move
    mMethod = getMethodType(anchorPtr, pb.position() - anchorPtr);
-   if (mMethod == UNKNOWN)
-   {
-      pb.data(mUnknownMethodName, anchorPtr);
-   }
+   // for backward compatibility, set the method name even if the method is known
+   pb.data(mUnknownMethodName, anchorPtr);
 }
 
 std::ostream& 
@@ -1487,10 +1485,8 @@ RequestLine::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    mMethod = getMethodType(start, pb.position() - start);
-   if (mMethod == UNKNOWN)
-   {
-      pb.data(mUnknownMethodName, start);
-   }
+   // for backward compatibility, set the method name even if the method is known
+   pb.data(mUnknownMethodName, start);
    pb.skipWhitespace();
    mUri.parse(pb);
    start = pb.skipWhitespace();
