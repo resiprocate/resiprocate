@@ -179,6 +179,7 @@ class SipMessage : public Message
       mutable HeaderFieldValueList* mBody;
 
       Data mTransactionId;  // !jf!
+      mutable Data mRFC2543TransactionId;
       mutable bool mRequest;
       mutable bool mResponse;
 
