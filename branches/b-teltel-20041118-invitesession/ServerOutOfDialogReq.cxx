@@ -83,7 +83,7 @@ ServerOutOfDialogReq::answerOptions()
 
 	// Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
 	mResponse.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-	mResponse.header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes();
+	mResponse.header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes(INVITE);
 	mResponse.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
 	mResponse.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
 	mResponse.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
