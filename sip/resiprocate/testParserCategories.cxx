@@ -148,7 +148,7 @@ main(int arc, char** argv)
       assert(requestLine.uri().host() == "foo.com");
       assert(requestLine.uri().port() == 5060);
       assert(requestLine.getMethod() == INVITE);
-      assert(requestLine.param(p_maddr) == "1.2.3.4");
+      assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
       cerr << requestLine.getSipVersion() << endl;
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
@@ -198,6 +198,54 @@ main(int arc, char** argv)
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
       assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      char *nameAddrString = "Bob<sips:bob@foo.com>;tag=456248;mobility=hobble";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "Bob");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+      
+      cerr << "Uri params: ";
+      nameAddr.uri().encodeParameters(cerr) << endl;
+      cerr << "Header params: ";
+      nameAddr.encodeParameters(cerr) << endl;
+
+      assert(nameAddr.uri().param(p_tag) == "456248");
+      assert(nameAddr.uri().param(p_mobility) == "hobble");
+
+      assert(nameAddr.exists(p_tag) == false);
+      assert(nameAddr.exists(p_mobility) == false);
+   }
+   {
+      cerr << "NameAddr parse, quoted displayname, parameterMove" << endl;
+      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+      
+      cerr << "Uri params: ";
+      nameAddr.uri().encodeParameters(cerr) << endl;
+      cerr << "Header params: ";
+      nameAddr.encodeParameters(cerr) << endl;
+
+      assert(nameAddr.uri().param(p_tag) == "456248");
+      assert(nameAddr.uri().param(p_mobility) == "hobble");
+
+      assert(nameAddr.exists(p_tag) == false);
+      assert(nameAddr.exists(p_mobility) == false);
    }
 }
 
