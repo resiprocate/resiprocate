@@ -37,9 +37,8 @@ class ServerRegistration: public BaseUsage
    protected:
       virtual ~ServerRegistration();
    private:
-      friend class DialogUsageManager;
-      ServerRegistration(DialogUsageManager& dum,
-                         Dialog& dialog);
+      friend class Dialog;
+      ServerRegistration(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       ServerRegistration::Handle mHandle;
 

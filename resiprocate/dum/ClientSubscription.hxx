@@ -41,7 +41,7 @@ class ClientSubscription: public BaseUsage
    protected:
       virtual ~ClientSubscription();
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
       
       Data mEventType;

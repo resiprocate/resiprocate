@@ -38,10 +38,8 @@ class ServerOutOfDialogReq : public BaseUsage
       virtual ~ServerOutOfDialogReq();
 
    private:
-      friend class DialogUsageManager;
-      ServerOutOfDialogReq(DialogUsageManager& dum,
-                           Dialog& dialog,
-                           const SipMessage& req);
+      friend class Dialog;
+      ServerOutOfDialogReq(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& req);
       
       ServerOutOfDialogReq::Handle mHandle;
 

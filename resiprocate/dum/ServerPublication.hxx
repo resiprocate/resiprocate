@@ -32,9 +32,8 @@ class ServerPublication : public BaseUsage
    protected:
       virtual ~ServerPublication();
    private:
-      friend class DialogUsageManager;
-      ServerPublication(DialogUsageManager& dum,
-                        Dialog& dialog);
+      friend class Dialog;
+      ServerPublication(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
       
       ServerPublication::Handle mHandle;
 };
