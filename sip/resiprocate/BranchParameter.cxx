@@ -55,6 +55,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       const char* anchor = pb.position();
       // rfc3261cookie-sip2cookie-tid.clientseq1.clientseq2-transportseq-clientdata
       //                          ^                        ^
+      // !dlb! skip at least one dot to avoid dashes in external tid
+      pb.skipToChar(Symbols::DOT[0]);
       pb.skipToChar(Symbols::DASH[0]);
       pb.skipBackToChar(Symbols::DOT[0]);
       pb.skipBackChar();
