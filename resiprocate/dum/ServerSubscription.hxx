@@ -1,8 +1,7 @@
 #if !defined(RESIP_SERVERSUBSCRIPTION_HXX)
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/dum/SubscriptionState.hxx"
+#include "resiprocate/dum/BaseSubscription.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 namespace resip
@@ -10,7 +9,7 @@ namespace resip
 
 class DialogUsageManager;
 
-class ServerSubscription : public BaseUsage 
+class ServerSubscription : public BaseSubscription 
 {
    public:
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
@@ -48,8 +47,8 @@ class ServerSubscription : public BaseUsage
       friend class Dialog;
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
-
-      SipMessage mLastRequest;
+      const Contents* mCurrentEventDocument;
+      SipMessage mLastRequest;  //?dcm? -- enough for both subscribe and notify?
 
       // disabled
       ServerSubscription(const ServerSubscription&);

@@ -2,7 +2,7 @@
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
 #include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/dum/SubscriptionState.hxx"
+#include "resiprocate/dum/BaseSubscription.hxx"
 
 namespace resip
 {
@@ -11,7 +11,7 @@ class DialogUsageManager;
 
 //!dcm! -- update contact in dialog if required
 
-class ClientSubscription: public BaseUsage
+class ClientSubscription: public BaseSubscription
 {
    public:      
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
@@ -22,9 +22,6 @@ class ClientSubscription: public BaseUsage
       void requestRefresh();
       virtual void end();
 
-      bool matches(const SipMessage& subOrNotify);
-      //void process(const SipMessage& subOrNotify);
-
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
@@ -34,10 +31,8 @@ class ClientSubscription: public BaseUsage
    private:
       friend class Dialog;
       
-      Data mEventType;
-      Data mSubscriptionId;
       SubscriptionState mSubState;
-      const Contents* mCurrentEventDocument;
+      const Contents* mCurrentEventDocument;//!dcm! -- unused?
       UInt64 mExpirationTime;
       SipMessage& mLastRequest;
 
