@@ -13,7 +13,7 @@ using namespace std;
 void 
 add( char* pUsername, char* pRealm, char* pPasswd )
 {
-   UserDB db;  
+   UserDb db;  
 
    Data fullName = Data::Empty;
    Data email = Data::Empty;
@@ -29,7 +29,7 @@ add( char* pUsername, char* pRealm, char* pPasswd )
 void
 remove( char* pAor )
 { 
-   UserDB db;
+   UserDb db;
    
    db.removeUser( Data(pAor) );
 }
@@ -38,7 +38,7 @@ remove( char* pAor )
 void
 list()
 {
-   UserDB db; 
+   UserDb db; 
    
    Data key = db.getFirstKey();
    while ( !key.empty() )
