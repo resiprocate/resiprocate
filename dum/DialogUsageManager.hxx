@@ -49,6 +49,8 @@ class InviteSessionCreator;
 class AppDialogSetFactory;
 class DumShutdownHandler;
 
+class KeepAliveManager;
+
 class DialogUsageManager : public HandleManager
 {
    public:
@@ -93,6 +95,8 @@ class DialogUsageManager : public HandleManager
       
       //optional handler to track the progress of DialogSets
       void setDialogSetHandler(DialogSetHandler* handler);
+
+      void setKeepAliveManager(std::auto_ptr<KeepAliveManager> keepAlive);
 
       //There is a default RedirectManager.  Setting one may cause the old one
       //to be deleted. 
@@ -243,6 +247,8 @@ class DialogUsageManager : public HandleManager
       friend class BaseUsage;
       friend class ClientPagerMessage;
       friend class ServerPagerMessage;
+      friend class KeepAliveAssociation;
+      friend class NetworkAssociation;
 
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
@@ -328,6 +334,7 @@ class DialogUsageManager : public HandleManager
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
+      std::auto_ptr<KeepAliveManager> mKeepAliveManager;
 
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;

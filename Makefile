@@ -55,7 +55,6 @@ SRC = \
 	IntegerCategory.cxx \
 	Mime.cxx \
 	NameAddr.cxx \
-	RAckCategory.cxx \
 	RequestLine.cxx \
 	StatusLine.cxx \
 	StringCategory.cxx \
@@ -151,7 +150,8 @@ SRC = \
 	UnknownParameter.cxx \
 	Uri.cxx \
 	X509Contents.cxx \
-	XMLCursor.cxx 
+	XMLCursor.cxx \
+	KeepAliveMessage.cxx
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
