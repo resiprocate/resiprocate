@@ -65,31 +65,48 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
    SSL_set_bio( ssl, bio, bio );
 
    int ok=0;
-   if (server)
-   {
-      ok = SSL_accept(ssl);
-   }
-   else
-   {
-      ok = SSL_connect(ssl);
-   }
-   if ( ok != 1 )
-   {
-      int err = SSL_get_error(ssl,ok);
-      char buf[256];
-      ERR_error_string_n(err,buf,sizeof(buf));
-      
-      ErrLog( << "TLS connection failed "
-              << " err=" << err << " " << buf );
-      
-      bio = NULL;
 
-      throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
-   }
-   else
+   bool again=true;
+   
+   while (again)
    {
-      DebugLog( << "TLS connected" ); 
+      again = false;
+      
+      if (server)
+      {
+         ok = SSL_accept(ssl);
+      }
+      else
+      {
+         ok = SSL_connect(ssl);
+      }
+      
+#if 0 
+      if ( ok <= 0 )
+      {
+         int err = SSL_get_error(ssl,ok);
+         char buf[256];
+         ERR_error_string_n(err,buf,sizeof(buf));
+         
+         switch (err)
+         {
+            case SSL_ERROR_WANT_READ:
+               DebugLog( << "TLS connection want read" );
+               again = true;
+               break;
+            default:
+               ErrLog( << "TLS connection failed "
+                       << "ok=" << ok << " err=" << err << " " << buf );
+               
+               bio = NULL;
+               
+               throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
+         }
+      }
+#endif
    }
+   
+   InfoLog( << "TLS connected" ); 
 }
 
       
@@ -124,7 +141,7 @@ TlsConnection::read( const void* buf, const int count )
          {
             char buf[256];
             ERR_error_string_n(err,buf,sizeof(buf));
-            ErrLog( << "Got TLS read error " << err  << " " << buf  );
+            ErrLog( << "Got TLS read ret=" << ret << " error=" << err  << " " << buf  );
             return 0;
          }
          break;
@@ -158,31 +175,29 @@ TlsConnection::write( const void* buf, const int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            DebugLog( << "Got TLS write got codition of " << err  );
+            DebugLog( << "Got TLS write got condition of " << err  );
             return 0;
          }
          break;
          default:
          {
-      while (true)
-      {
-         const char* file;
-         int line;
-         
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
-         {
-            break;
-         }
-
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
-      }
-      
-
-            ErrLog( << "Got TLS write error " << err  );
+            while (true)
+            {
+               const char* file;
+               int line;
+               
+               unsigned long code = ERR_get_error_line(&file,&line);
+               if ( code == 0 )
+               {
+                  break;
+               }
+               
+               char buf[256];
+               ERR_error_string_n(code,buf,sizeof(buf));
+               ErrLog( << buf  );
+               DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+            }
+            ErrLog( << "Got TLS write error=" << err << " ret=" << ret  );
             return 0;
          }
          break;
@@ -1367,6 +1382,7 @@ Security::decrypt( Pkcs7Contents* sBody )
       case NID_pkcs7_enveloped:
       {
          if ( (!privateKey) || (!publicCert) )
+
          { 
             InfoLog( << "Don't have a private certifact to user for  PKCS7_decrypt" );
             return NULL;
