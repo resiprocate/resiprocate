@@ -1,39 +1,39 @@
 #include "BaseUsage.hxx"
 
 SipMessage* 
-BaseUsage::makeInviteSession(const Uri& target)
+BaseUsage::makeInviteSession()
 {
-   return mDialog.makeInviteSession(target);
+   return mDialog.makeInviteSession();
 }
 
 SipMessage* 
-BaseUsage::makeSubscription(const Uri& aor, const Data& eventType)
+BaseUsage::makeSubscription()
 {
-   return mDialog.makeSubscription(aor, eventType);
+   return mDialog.makeSubscription();
 }
 
 SipMessage* 
-BaseUsage::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
+BaseUsage::makeRefer()
 {
-   return mDialog.makeRefer(aor, referTo);
+   return mDialog.makeRefer();
 }
 
 SipMessage* 
-BaseUsage::makePublication(const Uri& aor, const Data& eventType)
+BaseUsage::makePublication()
 {
-   return mDialog.makePublication(aor, eventType);
+   return mDialog.makePublication();
 }
 
 SipMessage* 
-BaseUsage::makeRegistration(const Uri& aor)
+BaseUsage::makeRegistration()
 {
-   return mDialog.makeRegistration(aor);
+   return mDialog.makeRegistration();
 }
 
 SipMessage* 
-BaseUsage::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
+BaseUsage::makeOutOfDialogRequest()
 {
-   return mDialog.makeOutOfDialogRequest(aor, meth);
+   return mDialog.makeOutOfDialogRequest();
 }
 
 
