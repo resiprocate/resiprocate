@@ -357,7 +357,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
    DnsResult* result=0;
    if (msg->isRequest())
    {
-      // If this is an RESIP_ACK we need to fix the tid to reflect that
+      // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
           //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
@@ -527,7 +527,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // port to send on
          source = determineSourceInterface(msg, target);
 
-         // would already be specified for RESIP_ACK or CANCEL
+         // would already be specified for ACK or CANCEL
          if (target.transport == 0)
          {
             if (target.getType() == TLS)

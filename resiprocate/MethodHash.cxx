@@ -91,22 +91,22 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 
   static struct methods wordlist[] =
     {
-      {"RESIP_BYE", RESIP_BYE},
-      {"INFO", RESIP_INFO},
-      {"REFER",RESIP_REFER},
-      {"RESIP_NOTIFY", RESIP_NOTIFY},
-      {"RESIP_OPTIONS", RESIP_OPTIONS},
-      {"RESPONSE", RESIP_RESPONSE},
-      {"RESIP_SUBSCRIBE", RESIP_SUBSCRIBE},
-      {"CANCEL", RESIP_CANCEL},
-      {"MESSAGE", RESIP_MESSAGE},
-      {"RESIP_REGISTER", RESIP_REGISTER},
-      {"RESIP_INVITE", RESIP_INVITE},
-      {"SERVICE", RESIP_SERVICE},
-      {"RESIP_ACK", RESIP_ACK},
-      {"PRACK", RESIP_PRACK},
-      {"UPDATE", RESIP_UPDATE},
-      {"RESIP_PUBLISH", RESIP_PUBLISH}
+      {"BYE", BYE},
+      {"INFO", INFO},
+      {"REFER", REFER},
+      {"NOTIFY", NOTIFY},
+      {"OPTIONS", OPTIONS},
+      {"RESPONSE", RESPONSE},
+      {"SUBSCRIBE", SUBSCRIBE},
+      {"CANCEL", CANCEL},
+      {"MESSAGE", MESSAGE},
+      {"REGISTER", REGISTER},
+      {"INVITE", INVITE},
+      {"SERVICE", SERVICE},
+      {"ACK", ACK},
+      {"PRACK", PRACK},
+      {"UPDATE", UPDATE},
+      {"PUBLISH", PUBLISH}
     };
 
   static signed char lookup[] =

@@ -19,7 +19,7 @@ UnknownParameterType::UnknownParameterType(const char* name)
    pb.skipNonWhitespace();
    mName = pb.data(anchor);
    assert(!mName.empty());
-   assert(ParameterTypes::getType(mName.data(), mName.size()) == ParameterTypes::RESIP_UNKNOWN);
+   assert(ParameterTypes::getType(mName.data(), mName.size()) == ParameterTypes::UNKNOWN);
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

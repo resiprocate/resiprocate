@@ -102,7 +102,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             
             if (offans.first == Answer)
             {
-               //no late media required, so just send the RESIP_ACK
+               //no late media required, so just send the ACK
                send(makeAck());
             }
             if (offans.first != None)
@@ -161,7 +161,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                }
                if (mOfferState == Answered)
                {
-                  //no late media required, so just send the RESIP_ACK
+                  //no late media required, so just send the ACK
                   send(makeAck());
                }
             }
@@ -180,13 +180,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          if (msg.isResponse())
          {
             int code = msg.header(h_StatusLine).statusCode();
-            if (code / 100 == 2 && msg.header(h_CSeq).method() == RESIP_INVITE)
+            if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
             {
                //!dcm! -- ack the crossover 200?
                mState = Connected;               
                end();
             }
-            else if (code >= 300 && msg.header(h_CSeq).method() == RESIP_INVITE)
+            else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
                sendSipFrag(msg);            
 	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
@@ -247,7 +247,7 @@ ClientInviteSession::send(SipMessage& msg)
       return;
    }
 
-   if (msg.isRequest() && msg.header(h_RequestLine).method() == RESIP_CANCEL)
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
    {
       mDum.send(msg);
       if (mServerSub.isValid())
@@ -280,11 +280,11 @@ ClientInviteSession::end()
    switch (mState)
    {
       case Early:
-         //if there is no fork, CANCEL, if there is a fork send a RESIP_BYE
+         //if there is no fork, CANCEL, if there is a fork send a BYE
          if (mDialog.mDialogSet.mDialogs.size() > 1)
          {
             InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
-            mDialog.makeRequest(mLastRequest, RESIP_BYE);
+            mDialog.makeRequest(mLastRequest, BYE);
             assert(mLastRequest.header(h_Vias).size() == 1);
             mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
@@ -335,7 +335,7 @@ ClientInviteSession::sendPrack(const SipMessage& response)
           response.header(h_StatusLine).statusCode() < 200);
    
    SipMessage prack;
-   mDialog.makeRequest(prack, RESIP_PRACK);
+   mDialog.makeRequest(prack, PRACK);
    
    if (mProposedRemoteSdp)
    {
@@ -391,7 +391,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //    {
 //       switch (msg.header(h_CSeq).method())
 //       {
-//          case RESIP_INVITE:
+//          case INVITE:
 //             break;
             
 //          case PRACK:
@@ -475,7 +475,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //       {
 //          mState = Connected;
 //          // !jf!
-//          //if (mReceived2xx) // retransmit RESIP_ACK
+//          //if (mReceived2xx) // retransmit ACK
 //          {
 //             mDum.send(mAck);
 //             return;
@@ -505,7 +505,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //          {
 //             if (mProposedLocalSdp)
 //             {
-//                // Got a 2xx with no answer (sent an RESIP_INVITE with an offer,
+//                // Got a 2xx with no answer (sent an INVITE with an offer,
 //                // unreliable provisionals)
 //                end();
 //                return;
@@ -514,7 +514,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //             {        Transport::error( e );
 //                InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
 //                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-//                // Got a 2xx with no offer (sent an RESIP_INVITE with no offer,
+//                // Got a 2xx with no offer (sent an INVITE with no offer,
 //                // unreliable provisionals)
 //                end();
 //                return;

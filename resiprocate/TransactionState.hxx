@@ -100,7 +100,7 @@ class TransactionState : public DnsHandler
       DnsResult* mDnsResult;
 
       // current selection from the DnsResult. e.g. it is important to send the
-      // CANCEL to exactly the same tuple as the original RESIP_INVITE went to. 
+      // CANCEL to exactly the same tuple as the original INVITE went to. 
       Tuple mTarget; 
       Tuple mResponseTarget; // used to reply to requests
 
