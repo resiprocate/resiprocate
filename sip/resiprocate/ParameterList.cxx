@@ -44,7 +44,7 @@ void ParameterList::insert(Parameter* param)
    first = param;
 }
 
-Parameter* ParameterList::find(Parameter::ParamType type)
+Parameter* ParameterList::find(Parameter::ParamType type) const
 {
    if (first)
    {
@@ -91,6 +91,53 @@ void ParameterList::erase(Parameter::ParamType type)
    }	 
 }
 
+Parameter* ParameterList::find(const string& type) const
+{
+   if (first)
+   {
+      Parameter* p = first;
+      
+      do
+      {
+         if (p->getName() == type)
+         {
+            return p;
+         }
+      }
+      while((p = p->next) != 0);
+      return 0;
+   }
+   return 0;
+}
+
+void ParameterList::erase(const string& type)
+{
+   if(first)
+   {
+      if (first->getName() == type)
+      {
+         Parameter* tmp = first;
+         first = first->next;
+         delete tmp;
+         return;
+      }
+      
+      Parameter* lag = first;
+      Parameter* p = first->next;
+      while (p != 0)
+      {
+         if (p->getName() == type)
+         {
+            lag->next = p->next;
+            delete p;
+            return;
+         }
+         lag = p;
+         p = p->next;
+      }
+   }	 
+}
+
 ostream& operator<<(ostream& stream, ParameterList& pList)
 {
    if (pList.first)
@@ -99,9 +146,11 @@ ostream& operator<<(ostream& stream, ParameterList& pList)
       
       do
       {
-         stream << p->getName() << " ";
+         stream << p->getName() << "@" << p << " ";
       }
       while((p = p->next) != 0);
    }
    return stream;
 }
+
+
