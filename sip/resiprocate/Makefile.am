@@ -198,10 +198,8 @@ resiprocate_include_HEADERS = \
 	UnknownParameterType.hxx \
 	Uri.hxx \
 	XMLCursor.hxx \
-	XPidf.hxx \
 	X_msMsgsInvite.hxx \
-	config.hxx \
-	supported.hxx
+	config.hxx
 
 resiprocate_os_includedir=$(includedir)/resiprocate/os
 resiprocate_os_include_HEADERS = \
