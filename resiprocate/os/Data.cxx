@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.32 2002/11/13 20:42:24 davidb Exp $";
+"$Id: Data.cxx,v 1.33 2002/11/15 06:01:37 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -228,7 +228,9 @@ Data::Data(unsigned long value)
    v = value;
    while (v)
    {
-      mBuf[c--] = '0' + v%10;
+      unsigned int digit = v%10;
+	  unsigned char d = (char)digit;
+      mBuf[c--] = '0' + d;
       v /= 10;
    }
 }
