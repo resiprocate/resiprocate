@@ -43,12 +43,18 @@ TlsTransport::TlsTransport(Fifo<Message>& fifo,
 TlsTransport::~TlsTransport()
 {
 }
+  
 
 Connection* 
 TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
 {
+   assert(this);
    who.transport = this;
-   return new TlsConnection(who, fd, mSecurity, server);
+   assert(  who.transport );
+
+   Connection* conn = new TlsConnection(who, fd, mSecurity, server);
+   assert( conn->transport() );
+   return conn;
 }
 
 
