@@ -738,8 +738,16 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
 
-   return outBody;
+   // !cj! change these from using unkonw paramters types 
+   outBody->header(h_ContentType).type() = "application";
+   outBody->header(h_ContentType).subType() = "pkcs7-mime";
+   outBody->header(h_ContentType).param( "smime-type" ) = "enveloped-data";
+   outBody->header(h_ContentType).param( "name" ) = "smime.p7m";
+   outBody->header(h_ContentDisposition).param( p_handling ) = "required";
+   outBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7";
+   outBody->header(h_ContentDisposition).value() =  "attachment" ;
    
+   return outBody;
 }
 
 
