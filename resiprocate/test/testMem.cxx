@@ -27,6 +27,8 @@ main(int argc, char* argv[])
       exit(1);
    }
 
+   assert( sizeof(int) == 4);
+   
    size = (1 << atoi( argv[1] )) - 1;
    num  = atoi( argv[2] );
    clog << "Doing " << num << " interations on " << size << " bytes " << endl;
@@ -34,14 +36,16 @@ main(int argc, char* argv[])
    assert( num > 1 );
    assert( size > 1 );
 
+   clog << "Filling mem ... ";
    // initalize the memory space
    Random::initialize();
    data = new int[size+1];
    for (i=0;i<=size;i++)
    {
-      data[i] = Random::getRandom();
+      data[i] = (0x7FFF) & Random::getRandom();
       //clog << data[i] << endl;
    }
+   clog << " Done" << endl;
    
    // compute the function across memory 
    UInt64 t1 = Timer::getTimeMicroSec();
@@ -49,10 +53,19 @@ main(int argc, char* argv[])
    n = num;
    while ( --n > 0 )
    {
-      i = data[i] & size;
+      //data[i] |= 0x8000;
+      i = (data[i]+n) & size;
+      //clog << i << endl;
    }
    UInt64 t2 = Timer::getTimeMicroSec();
    
+   n=0;
+   for (i=0;i<=size;i++)
+   {
+      if ( data[i] & 0x8000 ) n++;
+   }
+   clog << "Hit " << n << " out of " << size << " or " << n*100/size << "%" <<endl;
+         
    clog << "Time is " << t2-t1 << " uSec" << endl;
    clog << "Time is " << (t2-t1)/1000000 << " seconds" << endl;
    assert ( t2-t1 > 0 );
