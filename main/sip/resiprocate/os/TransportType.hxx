@@ -12,6 +12,7 @@ typedef enum
    TLS,
    SCTP,
    DCCP,
+   DTLS,
    MAX_TRANSPORT
 } TransportType;
 
