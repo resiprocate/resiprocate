@@ -3,11 +3,15 @@
 #include <iostream>
 
 #include "repro/UserDb.hxx"
+#include "repro/WebAdmin.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
 void 
@@ -36,6 +40,23 @@ remove( char* pAor )
 
 
 void
+web(int port)
+{
+   WebAdmin webAdmin( port );
+   
+   while (1)
+   {
+      FdSet fdset; 
+     
+      webAdmin.buildFdSet(fdset);
+      fdset.selectMilliSeconds( 10*1000 );
+
+      webAdmin.process(fdset);
+   }
+}
+
+
+void
 list()
 {
    UserDb db; 
@@ -57,18 +78,27 @@ usage()
    clog << "Command line options are" << endl
         << "  -list" << endl
         << "  -add user realm password" << endl
-        << "  -remove aor" << endl;
+        << "  -remove aor" << endl
+        << "  -web" << endl;
 }
 
 
 int 
 main(int argc, char* argv[])
 {
+   Log::initialize(Log::Cerr, Log::Err, argv[0]);
+   Log::setLevel(Log::Debug);
+
    for ( int i=1; i<argc; i++ )
    {
       if ( !strcmp(argv[i],"-list" ) )
       {
          list();
+      }
+      if ( !strcmp(argv[i],"-web" ) )
+      {
+         int port=5080;
+         web(port);
       }
       else if (!strcmp(argv[i],"-add"))
       {
