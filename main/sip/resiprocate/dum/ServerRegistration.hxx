@@ -29,6 +29,7 @@ class ServerRegistration: public BaseUsage
       void reject(int statusCode);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ServerRegistration::Handle getHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;

@@ -24,6 +24,7 @@ class ServerPublication : public BaseUsage
       void reject(int statusCode);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ServerPublication::Handle getHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;
