@@ -66,19 +66,14 @@ SipMessage::brief() const
 }
 
 std::ostream& 
-SipMessage::dump(ostream& strm)
+SipMessage::dump(std::ostream& str) const
 {
+   return encode(str);
 }
+
 
 std::ostream& 
-Vocal2::operator<<(std::ostream& strm, const Vocal2::SipMessage& msg)
-{
-   return strm;
-}
-
-
-ostream& 
-SipMessage::encode(ostream& str) const
+SipMessage::encode(std::ostream& str) const
 {
    if (mStartLine != 0)
    {
