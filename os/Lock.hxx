@@ -1,6 +1,36 @@
 #if !defined(VOCAL_LOCK_HXX)
 #define VOCAL_LOCK_HXX
 
+
+static const char* const Lock_hxx_Version =
+    "$Id: Lock.hxx,v 1.2 2002/10/15 15:46:24 alan Exp $";
+
+
+#include <util/Lockable.hxx>
+
+namespace Vocal2
+{
+
+enum LockType
+{
+   VOCAL_LOCK = 0,
+   VOCAL_READLOCK,
+   VOCAL_WRITELOCK
+};
+
+class Lock
+{
+    public:
+        Lock(Lockable &, LockType = VOCAL_LOCK);
+        virtual ~Lock();
+
+    private:
+        Lockable	&   myLockable;
+};
+
+} // namespace Vocal2
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -50,35 +80,5 @@
  * <http://www.vovida.org/>.
  *
  */
-
-
-static const char* const Lock_hxx_Version =
-    "$Id: Lock.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
-
-
-#include <util/Lockable.hxx>
-
-namespace Vocal2
-{
-
-enum LockType
-{
-   VOCAL_LOCK = 0,
-   VOCAL_READLOCK,
-   VOCAL_WRITELOCK
-};
-
-class Lock
-{
-    public:
-        Lock(Lockable &, LockType = VOCAL_LOCK);
-        virtual ~Lock();
-
-    private:
-        Lockable	&   myLockable;
-};
-
-} // namespace Vocal2
-
 
 #endif // !defined(VOCAL_LOCK_HXX)
