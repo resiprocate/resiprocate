@@ -643,3 +643,4 @@ void Dialog::possiblyDie()
       delete this;
    }
 }
+

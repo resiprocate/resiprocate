@@ -86,6 +86,7 @@ class Dialog
 
       DialogId mId;  
       DialogUsageManager& mDum;
+      DialogSet& mDialogSet;
 
       std::list<ClientSubscription*> mClientSubscriptions;
       ServerSubscription* mServerSubscription;
