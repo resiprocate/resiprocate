@@ -1,7 +1,9 @@
 #include "DialogSetId.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
 
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -24,6 +26,7 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
          }
          else
          {
+            InfoLog ( <<  "********** Generated Local Tag *********** " );            
             mTag = Helper::computeTag(Helper::tagSize);
          }
       }

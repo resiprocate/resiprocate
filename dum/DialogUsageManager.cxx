@@ -250,6 +250,7 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler*
 SipMessage& 
 DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
 {
+   InfoLog (<< "DialogUsageManager::makeNewSession" );   
    if (appDs == 0)
    {
       appDs = new AppDialogSet(*this);
@@ -260,9 +261,13 @@ DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
    appDs->mDialogSetId = ds->getId();
    ds->mAppDialogSet = appDs;
    
+   InfoLog ( << "************* Adding DialogSet ***************" ); 
+   InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
-
-   DebugLog (<< "RegistrationCreator: " << creator->getLastRequest());
+   InfoLog ( << "After: " << Inserter(mDialogSetMap) );
+   
+   
+   DebugLog (<< "Creator: " << creator->getLastRequest());
    return creator->getLastRequest();
 }
 
@@ -318,7 +323,7 @@ DialogUsageManager::makePublication(const Uri& targetDocument,
 void
 DialogUsageManager::send(SipMessage& msg)
 {
-   InfoLog (<< "SEND: " << msg);
+   InfoLog (<< "SEND: " << msg.brief());
    if (msg.isRequest()) //!dcm! -- invariant?
    {
       //will have no affect unless a strict route is sent
@@ -400,12 +405,15 @@ DialogUsageManager::process(FdSet& fdset)
 //             InfoLog (<< "Failed to validation " << *sipMsg);
 //             return;
 //          }
-  
-       if (mergeRequest(*sipMsg) )
+         if (sipMsg->header(h_From).exists(p_tag))
          {
-            InfoLog (<< "Merged request: " << *sipMsg);
-            return;
+            if (mergeRequest(*sipMsg) )
+            {
+               InfoLog (<< "Merged request: " << *sipMsg);
+               return;
+            }
          }
+         
          if ( mServerAuthManager )
          { 
             if ( mServerAuthManager->handle(*sipMsg) )
@@ -598,9 +606,11 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case INFO :   // handle non-dialog (illegal) INFOs
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          {
-            DialogSetId id(request);
+            {
+               DialogSetId id(request);
             //cryptographically dangerous
-            assert(mDialogSetMap.find(id) == mDialogSetMap.end()); 
+               assert(mDialogSetMap.find(id) == mDialogSetMap.end()); 
+            }
             try
             {
                DialogSet* dset =  new DialogSet(request, *this);
@@ -609,7 +619,11 @@ DialogUsageManager::processRequest(const SipMessage& request)
                appDs->mDialogSetId = dset->getId();
                dset->mAppDialogSet = appDs;
 
-               mDialogSetMap[id] = dset;
+               InfoLog ( << "************* Adding DialogSet ***************" ); 
+               InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
+               mDialogSetMap[dset->getId()] = dset;
+               InfoLog ( << "After: " << Inserter(mDialogSetMap) );
+               
                dset->dispatch(request);
             }
             catch (BaseException& e)
@@ -667,6 +681,8 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
+   InfoLog ( << "DialogUsageManager::processResponse: " << response);
+   
    DialogSet* ds = findDialogSet(DialogSetId(response));
   
    if (ds)
@@ -683,6 +699,8 @@ DialogUsageManager::processResponse(const SipMessage& response)
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
+   InfoLog ( << "Looking for dialogSet: " << id << " in map:" );
+   InfoLog ( << Inserter(mDialogSetMap) );   
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
    
     if (it == mDialogSetMap.end())
@@ -711,7 +729,10 @@ DialogUsageManager::findCreator(const DialogId& id)
 
 void DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
+   InfoLog ( << "************* Removing DialogSet ***************" ); 
+   InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
+   InfoLog ( << "After: " << Inserter(mDialogSetMap) );
 
    if (mDialogSetMap.empty() && mDumShutdownHandler)
    {
