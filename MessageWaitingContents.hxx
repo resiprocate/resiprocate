@@ -26,13 +26,13 @@ class MessageWaitingContents : public Contents
 
       virtual Contents* clone() const;
 
-      //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       class Header;
+
       Header& header(HeaderType ht) const;
       bool exists(HeaderType ht) const;
       void remove(HeaderType ht);
@@ -45,6 +45,8 @@ class MessageWaitingContents : public Contents
       Data& header(const Data& hn) const;
       bool exists(const Data& hn) const;
       void remove(const Data& hn);
+
+      bool& hasMessages() { return mHasMessages; }
 
       class Header
       {
