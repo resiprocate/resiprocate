@@ -102,6 +102,7 @@ RedirectManager::TargetSet::makeNextRequest(SipMessage& request)
          if (request.isRequest() && request.header(h_RequestLine).method() == INVITE)
          {
             DebugLog(<< "RedirectManager::TargetSet::makeNextRequest: " << request);
+            request.header(h_CSeq).sequence()++;
             return true;
          }
       }
