@@ -3,7 +3,6 @@
 
 namespace resip
 {
-class ProcessNofificationHandler;
 
 class ProcessNotifier
 {
