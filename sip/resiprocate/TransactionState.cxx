@@ -646,7 +646,7 @@ TransactionState::processServerNonInvite(  Message* msg )
          // ignore
          delete msg;
       }
-      else if (mState == Proceeding)
+      else if (mState == Proceeding || mState == Completed)
       {
          resendToWire(mMsgToRetransmit);
          delete msg;
@@ -1014,7 +1014,8 @@ TransactionState::processStale(  Message* msg )
 	    break;
 	    
 	 default:
-	    assert(0);
+	    DebugLog (<< "ignoring timer " << timer->brief());
+	    delete msg;
 	    break;
       }
    }
