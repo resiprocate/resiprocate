@@ -289,6 +289,7 @@ ClientInviteSession::end()
             return mLastRequest;
          }         
       case Initial:
+         InfoLog ( << "ClientInviteSession::end, Early/Initial)" );        
          mDialog.makeCancel(mLastRequest);
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
          //can't toast themselves
@@ -298,12 +299,15 @@ ClientInviteSession::end()
       case Terminated: 
       case Connected:
       case ReInviting:
+         InfoLog ( << "ClientInviteSession::end, Terminated/Connected/ReInviting)" );        
          return InviteSession::end();
          break;
       case Cancelled: //user error
-         throw new UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+         InfoLog ( << "ClientInviteSession::end, Cannot end a session that has already been cancelled.)" );        
+         throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
       default:
-         throw new UsageUseException("Progammer error", __FILE__, __LINE__);
+         InfoLog ( << "ClientInviteSession::end, Progammer error)" );        
+         assert(false);//throw UsageUseException("Progammer error", __FILE__, __LINE__);
    }
 }
 
