@@ -162,6 +162,13 @@ class DialogUsageManager : public HandleManager
       ServerPublicationHandle findServerPublication(DialogId id);
       std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);
       ServerOutOfDialogReqHandle findServerOutOfDialog(DialogId id);
+
+      ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
+      ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
+
+      ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
+      ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
+
    private:
       friend class Dialog;
       friend class DialogSet;
@@ -236,12 +243,6 @@ class DialogUsageManager : public HandleManager
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
-
-      ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
-      ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
-
-      ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
-      ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
 	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 

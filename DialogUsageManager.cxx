@@ -340,7 +340,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer, ServerSu
    contents.message().header(h_StatusLine).reason() = "Trying";
    //will be cloned...ServerSub may not have the most efficient API possible
    SipMessage& notify = serverSub->update(&contents);
-   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
+//   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
    serverSub->send(notify);
 
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, refer.header(h_ReferTo).uri(), 
