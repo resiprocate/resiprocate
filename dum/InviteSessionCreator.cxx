@@ -12,7 +12,8 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum),
      mState(Initialized),
-     mServerSub(serverSub)
+     mServerSub(serverSub),
+     mInitialOffer(0)
 {
    makeInitialRequest(target, from, INVITE);
    if(mDum.getProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
