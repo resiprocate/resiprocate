@@ -11,7 +11,7 @@ class ParseException : public VException
    public:
       ParseException(const Data& msg, const Data& file, const int line)
          : VException(msg, file, line) {}
-      Data getName() const { return "ParseException"; }
+      const char* name() const { return "ParseException"; }
 };
  
 }
