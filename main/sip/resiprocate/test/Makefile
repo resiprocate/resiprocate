@@ -18,8 +18,11 @@ ifdef USE_POPT
 LDLIBS += -lpopt
 endif
 
-TESTPROGRAMS += makeSelfCert.cxx \
-		limpc.cxx \
+ifeq ($(USE_SSL), true)
+TESTPROGRAMS += makeSelfCert.cxx 
+endif
+
+TESTPROGRAMS += limpc.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
 		testPidf.cxx \
