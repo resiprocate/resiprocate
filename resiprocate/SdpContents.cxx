@@ -1580,7 +1580,16 @@ Codec::Codec(const Codec& rhs)
      mRate(rhs.mRate),
      mPayloadType(rhs.mPayloadType),
      mParameters(rhs.mParameters)
-{}
+{
+}
+
+Codec::Codec(const Data& name, int payloadType, int rate) 
+   : mName(name),
+     mPayloadType(payloadType),
+     mRate(rate),
+     mParameters()
+{
+}
 
 Codec& 
 Codec::operator=(const Codec& rhs)
