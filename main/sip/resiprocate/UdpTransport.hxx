@@ -23,6 +23,7 @@ class UdpTransport : public Transport
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
       Transport::Type transport() const { return UDP; }
+      virtual void buildFdSet( FdSet& fdset);
 
    private:
       Preparse mPreparse;
