@@ -2,7 +2,6 @@
 #define RESIP_INVITESESSION_HXX
 
 #include "resiprocate/dum/DialogUsage.hxx"
-#include "resiprocate/dum/RefCountedDestroyer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
 
@@ -209,10 +208,6 @@ class InviteSession : public DialogUsage
       int  mSessionInterval;
       bool mSessionRefresherUAS;
       int  mSessionTimerSeq;
-
-      typedef RefCountedDestroyer<InviteSession> Destroyer;
-      Destroyer mDestroyer;
-      friend class Destroyer::Guard;
 
    private:
       friend class Dialog;
