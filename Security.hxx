@@ -103,6 +103,7 @@ class BaseSecurity
       bool hasUserPrivateKey(const Data& aor) const;
       bool removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyPEM(const Data& aor) const;
+      Data getUserPrivateKeyDER(const Data& aor) const;
 
       void generateUserCert (const Data& aor, const Data& passPhrase);
 

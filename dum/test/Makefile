@@ -3,6 +3,10 @@
 BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
+ifdef USE_POPT
+LDLIBS += -lpopt
+endif
+
 PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 
 TARGET_LIBRARY = 
