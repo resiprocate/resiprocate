@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.73 2003/09/14 23:40:44 davidb Exp $";
+// "$Id: Data.cxx,v 1.74 2003/09/19 23:29:43 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -1042,7 +1042,7 @@ __gnu_cxx::hash<resip::Data>::operator()(const resip::Data& data) const
    }
 
    // convert from network to host byte order
-   return ntohl((size_t)(byte3));
+   return ntohl((size_t)(byte0));
 }
 #endif
 
