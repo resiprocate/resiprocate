@@ -326,10 +326,10 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) 
       }
    
       Tuple source(dest);
-      source.setPort(via.sentPort());
-      
       socklen_t len = source.length();  
       ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+      source.setPort(via.sentPort());
+
       if (ret < 0)
       {
          int e = getErrno();
@@ -338,7 +338,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) 
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
-      DebugLog (<< "Looked up source for " << dest << " -> " << source);
+      DebugLog (<< "Looked up source for " << dest << " -> " << source << " sent-by=" << via.sentHost() << " sent-port=" << via.sentPort());
 
       // Unconnect
       if (dest.isV4())
