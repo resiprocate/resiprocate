@@ -1,21 +1,8 @@
-
-#ifndef WIN32
-#include <errno.h>
-#include <fcntl.h>
-#include <iostream>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#endif
-
 #include <memory>
+#include "sip2/util/compat.hxx"
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
-#include "sip2/util/compat.hxx"
 #include "sip2/sipstack/TlsTransport.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Preparse.hxx"
