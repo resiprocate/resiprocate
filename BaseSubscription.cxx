@@ -8,15 +8,21 @@ using namespace resip;
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
    mState(Initial),
+   mLastRequest(request),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
    mSubscriptionState(Invalid)
    
 {
-   if (request.header(h_RequestLine).method() == REFER)
+   if (request.header(h_RequestLine).method() == REFER) 
    {
       mEventType = "refer";
+   }
+   else if (request.header(h_RequestLine).method() == NOTIFY)  // ClientSubscriptions for Refer are created with the first Notify
+   {
+      mEventType = "refer";
+	  mLastRequest.releaseContents();  // Remove the SipFrag - so that reSubscribes do not contain SipFrag
    }
    else
    {
