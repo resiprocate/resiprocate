@@ -19,7 +19,7 @@ Transport::TransportException::what() const throw()
 
 Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
    mPort(portNum), 
-   mRxFifo(rxFifo),
+   mStateMachineFifo(rxFifo),
    mShutdown(false)
 {
 }
