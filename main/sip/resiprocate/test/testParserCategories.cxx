@@ -21,6 +21,48 @@ int
 main(int arc, char** argv)
 {
    {
+      cerr << "Test typeless parameter copy" << endl;
+      Token s;
+      s.value() = "value";
+      s.param(p_expires) = 17;
+      s.param(p_lr);
+      s.param("foobie") = "quux";
+
+      Token s1;
+      s1.value() = "other";
+      s1.param(p_ttl) = 21;
+
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      assert(s.value() == "value");
+      assert(s.param(p_ttl) == 21);
+      assert(s.param(p_lr));
+      assert(s.param("foobie") == "quux");
+   }
+
+   {
+      cerr << "Test typeless parameter overwrite" << endl;
+      Token s;
+      s.value() = "value";
+      s.param(p_expires) = 17;
+      s.param(p_ttl) = 12;
+      s.param(p_lr);
+      s.param("foobie") = "quux";
+
+      Token s1;
+      s1.value() = "other";
+      s1.param(p_ttl) = 21;
+
+      s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
+      assert(s.value() == "value");
+      assert(s.param(p_ttl) == 21);
+      assert(s.param(p_lr));
+      assert(s.param("foobie") == "quux");
+
+      s.encode(cerr);
+      cerr << endl;
+   }
+
+   {
       cerr << "Test StringCategory" << endl;
       Data stringString("Lame Agent");
       HeaderFieldValue hfv(stringString.data(), stringString.size());
