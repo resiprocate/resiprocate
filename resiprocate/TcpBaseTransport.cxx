@@ -18,11 +18,11 @@ using namespace resip;
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
-TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
-                                   const Data& pinterface, bool ipv4)
-   : Transport(fifo, portNum, pinterface, ipv4)
+TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, IpVersion version,
+                                   const Data& pinterface)
+   : Transport(fifo, portNum, version, pinterface)
 {
-   mFd = Transport::socket(TCP, ipv4);
+   mFd = Transport::socket(TCP, version==V4);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
 #if !defined(WIN32)
