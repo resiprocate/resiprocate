@@ -18,20 +18,13 @@ class TlsTransport : public TcpBaseTransport
    public:
       RESIP_HeapCount(TlsTransport);
       TlsTransport(Fifo<TransactionMessage>& fifo, 
-                   const Data& sipDomain, 
-                   const Data& interfaceObj, 
                    int portNum, 
-                   const Data& keyDir, 
-                   const Data& privateKeyPassPhrase, 
-                   bool ipv4,
-                   SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                   IpVersion version,
+                   const Data& interfaceObj,
+                   Security& security,
+                   const Data& sipDomain, 
+                   SecurityTypes::SSLType sslType
                    );
-	TlsTransport(Fifo<TransactionMessage>& fifo, 
-                 const Data& sipDomain, 
-                 const Data& interfaceObj, 
-                 int portNum, 
-                 Security& security,
-                 bool ipv4);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
@@ -42,6 +35,7 @@ class TlsTransport : public TcpBaseTransport
 
       Data mDomain;
       Security* mSecurity;
+      SecurityTypes::SSLType mSslType;
 };
 
 }

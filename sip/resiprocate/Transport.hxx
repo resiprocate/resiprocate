@@ -30,9 +30,9 @@ class Transport : public ThreadIf
       
       // portNum is the port to receive and/or send on
       Transport(Fifo<TransactionMessage>& rxFifo, 
-                int portNum, 
-                const Data& interfaceObj, 
-                bool ipv4);
+                int portNum,  
+                IpVersion version,
+                const Data& interfaceObj);
       virtual ~Transport();
 
       bool isFinished() const;
