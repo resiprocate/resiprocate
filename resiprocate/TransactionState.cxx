@@ -18,64 +18,83 @@ Vocal2::TransactionState::process(SipStack& stack)
       timer = dynamic_cast<TimerMessage*>(message);
    }
    
-      Data& tid = message->getTransactionId();
-      TransactionState* state = stack.mTransactionMap.find(tid);
-      if (state) // found transaction for sip msg
+   Data& tid = message->getTransactionId();
+   TransactionState* state = stack.mTransactionMap.find(tid);
+   if (state) // found transaction for sip msg
+   {
+      switch (state->mMachine)
       {
-
+         case ClientNonInvite:
+            processClientNonInvite(message);
+            break;
+         case ClientInvite:
+            processClientInvite(message);
+            break;
+         case ServerNonInvite:
+            processServerNonInvite(message);
+            break;
+         case ServerInvite:
+            processClientInvite(message);
+            break;
+         case Stale:
+            processStale(message);
+            break;
+         default:
+            assert(0);
       }
-      else // new transaction
+   }
+   else // new transaction
+   {
+      if (sip)
       {
-         if (sip)
+         if (sip->isRequest())
          {
-            if (sip->isRequest())
-            {
-               // create a new state object and insert in the TransactionMap
+            // create a new state object and insert in the TransactionMap
                
-               if (sip->isExternal()) // new sip msg from transport
-               {
-                  if (sip[RequestLine].getMethod() == INVITE)
-                  {
-                     TransactionState* state = new TransactionState(ServerInvite, Proceeding);
-                     stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
-                        stack.mTransactionMap.add(tid,state);
-                  }
-                  else 
-                  {
-                     TransactionState* state = new TransactionState(ServerNonInvite,Trying);
-                     stack.mTransactionMap.add(tid,state);
-                  }
-                  stack.mTUFifo.add(sip);
-               }
-               else // new sip msg from the TU
-               {
-                  if (sip[RequestLine].getMethod() == INVITE)
-                  {
-                     TransactionState* state = new TransactionState(ClientInvite, Calling);
-                     stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
-                     stack.mTransactionMap.add(tid,state);
-                  }
-                  else 
-                  {
-                     TransactionState* state = new TransactionState(ClientNonInvite, Trying);
-                     stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
-                     stack.mTransactionMap.add(tid,state);
-                  }
-                  stack.mTransportSelector.send(sip);
-               }
-            }
-            else if (sip->isResponse()) // stray response
+            if (sip->isExternal()) // new sip msg from transport
             {
-               if (stack.mDiscardStrayResponses)
+               if (sip[RequestLine].getMethod() == INVITE)
                {
-                  DebugLog (<< "discarding stray response: " << sip->brief());
-                  delete message;
+                  TransactionState* state = new TransactionState(ServerInvite, Proceeding);
+                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
+                     stack.mTransactionMap.add(tid,state);
                }
-               else
+               else 
                {
-                  // forward this statelessly
-                  assert(0);
+                  TransactionState* state = new TransactionState(ServerNonInvite,Trying);
+                  stack.mTransactionMap.add(tid,state);
                }
+               stack.mTUFifo.add(sip);
+            }
+            else // new sip msg from the TU
+            {
+               if (sip[RequestLine].getMethod() == INVITE)
+               {
+                  TransactionState* state = new TransactionState(ClientInvite, Calling);
+                  stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
+                  stack.mTransactionMap.add(tid,state);
+               }
+               else 
+               {
+                  TransactionState* state = new TransactionState(ClientNonInvite, Trying);
+                  stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
+                  stack.mTransactionMap.add(tid,state);
+               }
+               stack.mTransportSelector.send(sip);
+            }
+         }
+         else if (sip->isResponse()) // stray response
+         {
+            if (stack.mDiscardStrayResponses)
+            {
+               DebugLog (<< "discarding stray response: " << sip->brief());
+               delete message;
+            }
+            else
+            {
+               // forward this statelessly
+               assert(0);
+            }
          }
          else // wasn't a request or a response
          {
@@ -88,29 +107,7 @@ Vocal2::TransactionState::process(SipStack& stack)
          delete message;
       }
    }
-   else
-   {
-      DebugLog (<< "discarding unknown message: " << sip->brief());
-   }
-   
 }
-
-
-void
-TransactionState::process( Message* msg )
-{
-   switch (mMachine)
-   {
-      case ClientNonInvite: processClientNonInvite( msg ); break;
-      case ClientInvite:    processClientInvite( msg ); break;
-      case ServerNonInvite: processServerNonInvite( msg ); break;
-      case ServerInvite:    processServerInvite( msg ); break;
-      case Stale: processStale( msg ); break;
-      default:
-         assert(0);
-   }
-}
-
 
 void
 TransactionState::processClientNonInvite(  Message* msg )
@@ -127,6 +124,7 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
+   
 }
 
 
