@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+# include "resiprocate/config.hxx"
+#endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -15,7 +18,6 @@ main(int argc, char *argv[])
 {
 
    int sockfd;
-   typedef int socklen_t;
    char buffer[1024];
 
    socklen_t len;
@@ -49,43 +51,6 @@ main(int argc, char *argv[])
              << DnsUtil::inet_ntop(cliaddr.sin_addr)
              << std::endl;
 
-   Data interfaceHost;
-   Tuple destination;
-   destination.port = 5060;
-   DnsUtil::inet_pton(argv[1],destination.ipv4);
-
-   sockaddr_in ephemeral;
-   memset(&ephemeral,0,sizeof(ephemeral));
-   inet_pton(AF_INET, argv[1], &ephemeral.sin_addr);
-   ephemeral.sin_family = AF_INET;
-   ephemeral.sin_port = htons(destination.port);
-   
-   
-   int mSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-   std::cout << " socket = " << mSocket
-             << ":  for tx to "  << DnsUtil::inet_ntop(destination.ipv4)
-             << std::endl;
-
-   {
-      connect(sockfd,
-              (const sockaddr*)&destination.ipv4,
-              sizeof(destination.ipv4));
-
-      sockaddr_in cli;
-      int len = sizeof(cli);
-
-      getsockname(mSocket,(sockaddr*)&cli,
-                  &len);
-
-      char newbuf[1024];
-      int xlen=sizeof(newbuf)/sizeof(*newbuf);
-      inet_ntop(AF_INET, &cli.sin_addr, buffer, xlen);
-      std::cout << " old inet_ntop returned " << buffer << std::endl;
-      interfaceHost = DnsUtil::inet_ntop(cli.sin_addr);//.sin_addr);
-         
-   }
-   std::cout << " new address is " << interfaceHost << std::endl;
 
    return 0;
 }
