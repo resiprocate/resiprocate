@@ -95,8 +95,10 @@ SipMessage::~SipMessage()
 const Data& 
 SipMessage::getTransactionId() const
 {
-   // !jf! lookup the transactionId the first time and cache it
-   return mTransactionId;
+   assert (!header(h_Vias).empty());
+   assert (header(h_Vias).front().exists(p_branch));
+   assert (!header(h_Vias).front().param(p_branch).empty());
+   return header(h_Vias).front().param(p_branch);
 }
 
 bool
