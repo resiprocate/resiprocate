@@ -16,6 +16,18 @@ DnsInterface::DnsInterface()
    : mHandler(0),
      mSupportTLS(true)
 {
+#if defined(USE_ARES)
+   int status=0;
+   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   {
+      ErrLog (<< "Failed to initialize async dns library (ares)");
+      char* errmem=0;
+      ErrLog (<< ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+      throw Exception("failed to initialize ares", __FILE__,__LINE__);
+   }
+#endif
+
    mSupportedTransports.insert(Transport::UDP);
    mSupportedTransports.insert(Transport::TCP);
 }
@@ -24,6 +36,18 @@ DnsInterface::DnsInterface(DnsInterface::Handler* handler)
    : mHandler(handler),
      mSupportTLS(true)
 {
+#if defined(USE_ARES)
+   int status=0;
+   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   {
+      ErrLog (<< "Failed to initialize async dns library (ares)");
+      char* errmem=0;
+      ErrLog (<< ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+      throw Exception("failed to initialize ares", __FILE__,__LINE__);
+   }
+#endif
+
    mSupportedTransports.insert(Transport::UDP);
    mSupportedTransports.insert(Transport::TCP);
 }
