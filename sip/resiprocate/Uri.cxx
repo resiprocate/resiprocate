@@ -275,19 +275,23 @@ Uri::getAor() const
       mOldHost = mHost;
       mOldUser = mUser;
       mOldPort = mPort;
-       
+
+      // mAor.reserve(mUser.size() + mHost.size() + 10); !dlb!
       if (mUser.empty())
       {
          mAor = mHost;
       }
       else
       {
-         mAor = mUser + Symbols::AT_SIGN + mHost;
+         mAor += mUser;
+         mAor += Symbols::AT_SIGN;
+         mAor += mHost;
       }
 
       if (mPort != 0)
       {
-         mAor += Data(Symbols::COLON) + Data(mPort);
+         mAor += Symbols::COLON;
+         mAor += Data(mPort);
       }
    }
    return mAor;
