@@ -174,8 +174,6 @@ class SipMessage : public Message
       Data mTransactionId;  // !jf!
       mutable bool mRequest;
       mutable bool mResponse;
-
-      Data mEncoded;
 };
 
 
