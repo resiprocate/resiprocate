@@ -28,6 +28,8 @@ class ResponseContext
       void processResponse(const resip::SipMessage& response);
       
    private:
+      int getPriority(const resip::SipMessage& msg);
+
       RequestContext& mRequestContext;
       
       class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
