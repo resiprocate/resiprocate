@@ -168,7 +168,13 @@ Mime::encodeParsed(std::ostream& str) const
 //====================
 Auth::Auth(const Auth& rhs)
    : ParserCategory(rhs)
-{}
+{
+   if (isParsed())
+   {
+      scheme() = rhs.scheme();
+   }
+}
+
 
 Auth&
 Auth::operator=(const Auth& rhs)
@@ -176,7 +182,7 @@ Auth::operator=(const Auth& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      mScheme = rhs.mScheme;
+      scheme() = rhs.scheme();
    }
    return *this;
 }
@@ -211,6 +217,8 @@ Auth::encodeParsed(std::ostream& str) const
 {
    if (!mScheme.empty())
    {
+      cerr << "Auth::encodeParsed, in if, scheme: " << mScheme << endl;
+      
       str << mScheme << Symbols::SPACE;
    }
 
@@ -223,14 +231,6 @@ ParserCategory*
 Auth::clone() const
 {
    return new Auth(*this);
-}
-
-
-Data&
-Auth::scheme()
-{
-   checkParsed();
-   return mScheme;
 }
 
 void
