@@ -813,21 +813,27 @@ Uri::encodeParsed(std::ostream& str) const
 }
 
 SipMessage&
-Uri::embedded() const
+Uri::embedded()
 {
    checkParsed();
    if (mEmbeddedHeaders == 0)
    {
-      Uri* ncthis = const_cast<Uri*>(this);
-      ncthis->mEmbeddedHeaders = new SipMessage();
+      this->mEmbeddedHeaders = new SipMessage();
       if (!mEmbeddedHeadersText.empty())
       {
          ParseBuffer pb(mEmbeddedHeadersText.data(), mEmbeddedHeadersText.size());
-         ncthis->parseEmbeddedHeaders(pb);
+         this->parseEmbeddedHeaders(pb);
       }
    }
 
    return *mEmbeddedHeaders;
+}
+
+const SipMessage&
+Uri::embedded() const
+{
+   Uri* ncthis = const_cast<Uri*>(this);
+   return ncthis->embedded();
 }
 
 void

@@ -22,19 +22,27 @@ class Uri : public ParserCategory
       //static Uri fromTel(const Uri&, const Data& host);  // deprecate...
       static Uri fromTel(const Uri&, const Uri& hostUri);
 
-      Data& host() const {checkParsed(); return mHost;}
-      Data& user() const {checkParsed(); return mUser;}
-      Data& userParameters() const {checkParsed(); return mUserParameters;}
-      Data& opaque() const {checkParsed(); return mHost;}
+      Data& host() {checkParsed(); return mHost;}
+      const Data& host() const {checkParsed(); return mHost;}
+      Data& user() {checkParsed(); return mUser;}
+      const Data& user() const {checkParsed(); return mUser;}
+      Data& userParameters() {checkParsed(); return mUserParameters;}
+      const Data& userParameters() const {checkParsed(); return mUserParameters;}
+      Data& opaque() {checkParsed(); return mHost;}
+      const Data& opaque() const {checkParsed(); return mHost;}
 
       const Data& getAor() const;
       const Data getAorNoPort() const;
-      Data& scheme() const {checkParsed(); return mScheme;}
-      int& port() const {checkParsed(); return mPort;}
+      Data& scheme() {checkParsed(); return mScheme;}
+      const Data& scheme() const {checkParsed(); return mScheme;}
+      int& port() {checkParsed(); return mPort;}
+      int port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
+      const Data& password() {checkParsed(); return mPassword;}
 
       bool hasEmbedded() const;
-      SipMessage& embedded() const;
+      SipMessage& embedded();
+      const SipMessage& embedded() const;
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
