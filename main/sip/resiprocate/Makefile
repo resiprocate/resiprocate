@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.114 2003/04/29 20:22:40 davidb Exp $
+# $Id: Makefile,v 1.115 2003/04/30 19:32:06 ryker Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -63,6 +63,7 @@ SRC = \
 	MessageWaitingContents.cxx \
 	MethodTypes.cxx \
 	MultipartMixedContents.cxx \
+	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterTypes.cxx \
 	ParserCategories.cxx \
