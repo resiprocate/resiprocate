@@ -377,8 +377,8 @@ class RequestLine : public ParserCategory
 class StatusLine : public ParserCategory
 {
    public:
-      StatusLine() : ParserCategory(), mResponseCode(-1), mSipVersion(), mReason() {}
-      StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mResponseCode(-1), mSipVersion(), mReason() {}
+      StatusLine() : ParserCategory(), mResponseCode(-1), mSipVersion(Symbols::DefaultSipVersion), mReason() {}
+      StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mResponseCode(-1), mSipVersion(Symbols::DefaultSipVersion), mReason() {}
       StatusLine(const StatusLine&);
       StatusLine& operator=(const StatusLine&);
 
