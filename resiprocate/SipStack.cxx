@@ -1,4 +1,9 @@
 
+#include <unistd.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Fifo.hxx"
 #include "sip2/util/Data.hxx"
