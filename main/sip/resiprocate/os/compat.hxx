@@ -9,20 +9,7 @@
 #endif
 
 // perhaps not the best thing to do here
-#include <util/Data.hxx>
 #include <sys/socket.h> // for u_int32_t
-
-namespace Vocal2
-{
-
-// do a case-insensitive match
-inline bool isEqualNoCase(const Data& left, const Data& right)
-{
-   return ( (left.size() == right.size()) &&
-            (strncasecmp(left.data(), right.data(), left.size()) == 0) );
-}
- 
-}
 
 #endif
 /* ====================================================================

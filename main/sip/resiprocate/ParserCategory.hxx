@@ -83,12 +83,12 @@ class ParserCategory
       typedef std::list<Parameter*> ParameterList; 
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
-
    private:
+      void ParserCategory::clear();
+      void ParserCategory::copyParametersFrom(const ParserCategory& other);
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;
       bool mMine;
-   protected: // !rk! moved mIsParsed to protected for debugging
       bool mIsParsed;
 };
 
