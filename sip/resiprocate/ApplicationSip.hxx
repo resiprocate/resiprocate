@@ -21,11 +21,12 @@ class ApplicationSip : public SipFrag
       ApplicationSip(const ApplicationSip& rhs);
       ApplicationSip& operator=(const ApplicationSip& rhs);
       virtual Contents* clone() const;
-      static const Mime& getStaticType() ;
+      static const Mime& getStaticType();
 
-   private:
-      static ContentsFactory<ApplicationSip> Factory;
+      static bool init();
 };
+
+static bool invokeApplicationSipInit = ApplicationSip::init();
 
 }
 
