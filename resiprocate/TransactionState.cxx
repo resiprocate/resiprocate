@@ -56,7 +56,7 @@ TransactionState::process(SipStack& stack)
    DebugLog (<< "got message out of state machine fifo: " << *message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   TimerMessage* timer=dynamic_cast<TimerMessage*>(message);;
+   //TimerMessage* timer=dynamic_cast<TimerMessage*>(message);;
    
    Data tid = message->getTransactionId();
    if (sip && !sip->isExternal() &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK) 
