@@ -60,6 +60,12 @@ Token::operator=(const Token& rhs)
    return *this;
 }
 
+bool
+Token::operator<(const Token& rhs) const
+{
+   return (value() < rhs.value());
+}
+
 void
 Token::parse(ParseBuffer& pb)
 {
