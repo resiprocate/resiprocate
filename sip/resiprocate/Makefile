@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.56 2002/10/22 15:58:50 jason Exp $
+# $Id: Makefile,v 1.57 2002/10/30 02:14:05 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -15,7 +15,6 @@ SRC =	\
 	HeaderFieldValueList.cxx \
 	Headers.cxx \
 	Helper.cxx \
-	HostSpecification.cxx \
 	IntegerParameter.cxx \
 	Message.cxx \
 	MethodTypes.cxx \
@@ -24,6 +23,7 @@ SRC =	\
 	ParserCategory.cxx \
 	ParserCategories.cxx \
 	Preparse.cxx \
+	Resolver.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
