@@ -307,6 +307,8 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
       assert (request.header(h_Contacts).size() == 1);
 
       Helper::makeResponse(response, request, code, mContact);
+      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+
       if (request.exists(h_RecordRoutes))
       {
          mRouteSet = request.header(h_RecordRoutes);
