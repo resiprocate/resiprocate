@@ -44,6 +44,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
 
+      // !dlb! 481 NOTIFY iff state is dead?
+
       //!dcm! -- heavy, should just store enough information to make response
       mLastNotify = msg;
 
@@ -177,6 +179,38 @@ ClientSubscription::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
+      else if (msg.header(h_StatusLine).statusCode() == 408)
+      {
+         InfoLog (<< "Received 408 to SUBSCRIBE "
+                  << mLastRequest.header(h_To));
+
+         int retry = handler->onRequestRetry(getHandle(), 0, msg);
+         if (retry < 0)
+         {
+            DebugLog(<< "Application requested failure on Retry-After");
+         }
+         else if (retry == 0)
+         {
+            DebugLog(<< "Application requested immediate retry on Retry-After");
+            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            mDum.send(sub);
+            return;
+         }
+         else 
+         {
+            // leave the usage around until the timeout
+            // !dlb! would be nice to set the state to something dead, but not used
+            mDum.addTimer(DumTimeout::SubscriptionRetry, 
+                          retry, 
+                          getBaseHandle(),
+                          ++mTimerSeq);
+            // leave the usage around until the timeout
+            return;
+         }
+            
+         delete this;
+         return;
+      }
       else if (msg.header(h_StatusLine).statusCode() >= 300)
       {
          handler->onTerminated(getHandle(), msg);
@@ -191,19 +225,31 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 {
    if (timer.seq() == mTimerSeq)
    {
-      requestRefresh();
+      if (timer.type() == DumTimeout::SubscriptionRetry)
+      {
+         SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+         delete this;
+         mDum.send(sub);
+      }
+      else
+      {
+         requestRefresh();
+      }
    }
 }
 
 void
-ClientSubscription::requestRefresh()
+ClientSubscription::requestRefresh(int expires)
 {
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
       //!dcm! -- need a mechanism to retrieve this for the event package...part of
       //the map that stores the handlers, or part of the handler API
-      //mLastRequest.header(h_Expires).value() = 300;
+      if(expires > 0)
+      {
+         mLastRequest.header(h_Expires).value() = expires;
+      }
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
       send(mLastRequest);
    }
