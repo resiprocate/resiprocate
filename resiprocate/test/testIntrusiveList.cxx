@@ -6,7 +6,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-class Foo : public IntrusiveListElement<Foo*, 1>
+class Foo : public IntrusiveListElement<Foo*>
 {
    public:
       Foo(int v) : va1(v) {}
@@ -14,12 +14,11 @@ class Foo : public IntrusiveListElement<Foo*, 1>
       int va2;
 };
 
-enum {Read, Write};
-class FooFoo : public IntrusiveListElement<FooFoo*, Read>, public IntrusiveListElement<FooFoo*, Write>
+class FooFoo : public IntrusiveListElement<FooFoo*>, public IntrusiveListElement1<FooFoo*>
 {
    public:
-      typedef IntrusiveListElement<FooFoo*, Read> read;
-      typedef IntrusiveListElement<FooFoo*, Write> write;
+      typedef IntrusiveListElement<FooFoo*> read;
+      typedef IntrusiveListElement1<FooFoo*> write;
 
       FooFoo(int v) : va1(v) {}
 
@@ -47,6 +46,15 @@ main(int argc, char* argv[])
       fooHead->push_front(foo1);
       assert(!fooHead->empty());
       cerr << endl << "first" << endl;
+      assert((*fooHead->begin())->va1 == 1);
+      assert((*fooHead->end())->va1 == -1);
+
+      Foo::iterator j = fooHead->begin();
+      ++j;
+      cerr << (*j)->va1 << endl;
+      assert((*j)->va1 == -1);      
+      assert(*j == *fooHead->end());
+
       for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
       {
          cerr << (*f)->va1 << endl;
