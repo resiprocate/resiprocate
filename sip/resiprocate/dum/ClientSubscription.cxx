@@ -208,7 +208,6 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
    send(mLastResponse);
 }
 
