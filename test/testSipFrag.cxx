@@ -5,6 +5,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "TestSupport.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <iostream>
 #include <memory>
@@ -12,9 +13,47 @@
 using namespace resip;
 using namespace std;
 
+#define CRLF "\r\n"
+
 int
-main()
+main(int argc, char* argv[])
 {
+    Log::initialize(Log::COUT, Log::INFO, argv[0]);
+
+   {
+      // tests end of message problem (MsgHeaderScanner?)
+      Data txt("NOTIFY sip:proxy@66.7.238.210:5060 SIP/2.0" CRLF
+               "Via: SIP/2.0/UDP  66.7.238.211:5060" CRLF
+               "From: <sip:4155540578@66.7.238.211>;tag=525CEC-12FE" CRLF
+               "To: <sip:4082401918@larry.gloo.net>;tag=1fd9ba58" CRLF
+               "Date: Tue, 23 Sep 2003 05:18:21 GMT" CRLF
+               "Call-ID: 2A599BF9-ECBC11D7-8026C991-401DDB71@66.7.238.211" CRLF
+               "User-Agent: Cisco-SIPGateway/IOS-12.x" CRLF
+               "Max-Forwards: 6" CRLF
+               "Route: <sip:AUTO@larry.gloo.net:5200>" CRLF
+               "Timestamp: 1064294301" CRLF
+               "CSeq: 102 NOTIFY" CRLF
+               "Event: refer" CRLF
+               "Contact: <sip:4155540578@66.7.238.211:5060>" CRLF
+               "Content-Length: 35" CRLF
+               "Content-Type: message/sipfrag" CRLF
+               CRLF
+               "SIP/2.0 503 Service Unavailable" CRLF " " // space causes MsgHeaderScanner to claim not at end of message
+               CRLF);
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      
+      Contents* body = msg->getContents();
+
+      assert(body != 0);
+      SipFrag* frag = dynamic_cast<SipFrag*>(body);
+      assert(frag != 0);
+
+      assert(frag->message().header(h_StatusLine).responseCode() == 503);
+      msg->encode(cerr);
+
+      return 0;
+   }
+
    {
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
