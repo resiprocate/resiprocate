@@ -4,6 +4,7 @@
 .deps
 .gdb_history
 .libs
+Makefile.in
 SipTortureTests
 bin.*
 lg
