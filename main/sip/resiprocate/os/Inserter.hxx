@@ -78,7 +78,7 @@ std::ostream&
 insert(std::ostream& s, const hash_map<K,V,H>& c)
 {
    s << "[";
-   for (typename HM::const_iterator i = c.begin();
+   for (typename hash_map<K,V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
@@ -93,8 +93,6 @@ insert(std::ostream& s, const hash_map<K,V,H>& c)
    s << "]";
    return s;
 }
-
-#undef HM
 
 // map
 template <class K, class V, class H>
