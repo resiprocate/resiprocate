@@ -56,6 +56,8 @@ const char* Symbols::Isub = "isub=";
 const char* Symbols::Postd = "postd=";
 
 const char* Symbols::auth = "auth";
+const char* Symbols::Digest = "Digest";
+const char* Symbols::Basic = "Basic";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
 const char * const Symbols::resipCookie= "-c87542-";
