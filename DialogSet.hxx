@@ -28,7 +28,7 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      void cancel(const SipMessage& cancelMsg);
+      void cancel();
       void dispatch(const SipMessage& msg);
       
    private:
@@ -42,6 +42,7 @@ class DialogSet
       BaseCreator* mCreator;
       DialogSetId mId;
       DialogUsageManager& mDum;
+      bool mCancelled;
 };
  
 }
