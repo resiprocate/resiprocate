@@ -1,7 +1,8 @@
-#ifndef resip_Vmd5_hxx
-#define resip_Vmd5_hxx
+#if !defined(RESIP_VMD5_HXX)
+#define RESIP_VMD5_HXX 
 
-static const char* const resipvmd5HeaderVersion = "$Id: vmd5.hxx,v 1.11 2003/03/25 06:33:48 jason Exp $";
+static const char* const resipvmd5HeaderVersion =
+   "$Id: vmd5.hxx,v 1.12 2003/06/02 20:52:32 ryker Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -24,6 +25,7 @@ static const char* const resipvmd5HeaderVersion = "$Id: vmd5.hxx,v 1.11 2003/03/
  *  - Ian Jackson <ijackson@nyx.cs.du.edu>.
  * Still in the public domain.
  */
+
 #if defined(__sparc)
 #include <inttypes.h>
 

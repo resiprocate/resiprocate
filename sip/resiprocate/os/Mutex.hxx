@@ -1,5 +1,5 @@
-#if !defined(resip_Mutex_hxx)
-#define resip_Mutex_hxx
+#if !defined(RESIP_MUTEX_HXX)
+#define RESIP_MUTEX_HXX 
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Lockable.hxx"
@@ -28,8 +28,7 @@ class Mutex : public Lockable
 #endif
 };
 
-} // namespace resip
-
+}
 
 #endif
 

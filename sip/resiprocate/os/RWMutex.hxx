@@ -1,5 +1,40 @@
-#if !defined(resip_RWMutex_HXX)
-#define resip_RWMutex_HXX
+#if !defined(RESIP_RWMUTEX_HXX)
+#define RESIP_RWMUTEX_HXX 
+
+static const char* const resipRWMutex_hxx_Version =
+   "$Id: RWMutex.hxx,v 1.3 2003/06/02 20:52:32 ryker Exp $";
+
+#include "Lockable.hxx"
+#include "Mutex.hxx"
+#include "Condition.hxx"
+
+namespace resip
+{
+
+class RWMutex : public Lockable
+{
+    public:
+      RWMutex();
+      ~RWMutex();
+      void readlock();
+      void writelock();
+      void lock();
+      void unlock();
+      unsigned int readerCount() const;
+      unsigned int pendingWriterCount() const;
+      
+   private:
+      Mutex mMutex;
+      Condition mReadCondition;
+      Condition mPendingWriteCondition;
+      unsigned int mReaderCount;
+      bool mWriterHasLock;
+      unsigned int mPendingWriterCount;
+};
+
+}
+
+#endif 
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -50,39 +85,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-
-static const char* const resipRWMutex_hxx_Version =
-    "$Id: RWMutex.hxx,v 1.2 2003/03/25 06:33:48 jason Exp $";
-
-#include "Lockable.hxx"
-#include "Mutex.hxx"
-#include "Condition.hxx"
-
-namespace resip
-{
-
-class RWMutex : public Lockable
-{
-    public:
-      RWMutex();
-      ~RWMutex();
-      void readlock();
-      void writelock();
-      void lock();
-      void unlock();
-      unsigned int readerCount() const;
-      unsigned int pendingWriterCount() const;
-      
-   private:
-      Mutex mMutex;
-      Condition mReadCondition;
-      Condition mPendingWriteCondition;
-      unsigned int mReaderCount;
-      bool mWriterHasLock;
-      unsigned int mPendingWriterCount;
-};
-
-} // namespace resip
-
-#endif 
