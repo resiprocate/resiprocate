@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.23 2002/11/04 06:34:33 derekm Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.24 2002/11/05 02:56:36 derekm Exp $";
 
 #include <iostream>
 #include <string>
@@ -52,6 +52,10 @@ class Data
 
       // compute an md5 hash (return in asciihex)
       Data md5() const;
+      
+      //covert this data(in place) to lower/upper case
+      Data& lowercase();
+      Data& uppercase();
       
    private:
       friend class TestData;
