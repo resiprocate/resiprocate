@@ -51,29 +51,37 @@
  *
  */
 
-static const char* const Mutex_hxx_Version =
-    "$Id: Mutex.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
-
-#ifndef WIN32
-#include <util/vthread.hxx>
+#ifdef WIN32
+#  include <windows.h>
+#  include <winbase.h>
+#else
+#  include <pthread.h>
 #endif
+
 #include <util/Lockable.hxx>
+
 
 namespace Vocal2
 {
-
+	class Condition;
+	
 class Mutex : public Lockable
 {
+	friend Condition;
+	
     public:
         Mutex();
         virtual ~Mutex();
         virtual void    lock();
         virtual void    unlock();
-        vmutex_t    *   getId() const;
 
     private:
-#ifndef WIN32
-      mutable vmutex_t    myId;
+#ifdef WIN32   
+	HANDLE mId;
+#else
+      mutable  pthread_mutex_t mId;
+
+        pthread_mutex_t   *   getId() const;
 #endif
 };
 

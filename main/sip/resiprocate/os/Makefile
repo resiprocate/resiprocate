@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2002/09/28 04:44:52 fluffy Exp $
+# $Id: Makefile,v 1.7 2002/09/28 16:41:18 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -8,6 +8,7 @@ PROG = sipstack
 SRC =	\
 	Condition.cxx \
 	Data.cxx \
+	Fifo.cxx \
 	Lock.cxx \
 	Log.cxx \
 	Logger.cxx \

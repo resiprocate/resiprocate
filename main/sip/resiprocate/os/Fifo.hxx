@@ -53,12 +53,14 @@
 
 
 static const char* const Fifo_h_Version =
-    "$Id: Fifo.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
+    "$Id: Fifo.hxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
 
 #include <util/Mutex.hxx>
 #include <util/Condition.hxx>
 #include <util/Lock.hxx>
 #include <list>
+
+#include <errno.h>
 
 
 /** Infrastructure common to VOCAL.
@@ -113,7 +115,142 @@ class Fifo
 };
 
 
-#include <util/Fifo.cc>
+template <class Msg>
+Fifo<Msg>::Fifo()
+{
+}
+
+template <class Msg>
+Fifo<Msg>::~Fifo()
+{
+}
+
+template <class Msg>
+void
+Fifo<Msg>::add(Msg* msg)
+{
+    Lock lock(mMutex); (void)lock;
+    mFifo.push_back(msg);
+    wakeup();
+}
+
+template <class Msg>
+Msg*
+Fifo<Msg> ::getNext()
+{
+    Lock lock(mMutex); (void)lock;
+
+    // Wait while there are no messages available.
+    //
+    while ( !messageAvailableNoLock() )
+    {
+        blockNoLock();
+    }
+
+    // Return the first message on the fifo.
+    //
+    Msg* firstMessage = mFifo.front();
+    mFifo.pop_front();
+
+    return ( firstMessage );
+}
+
+
+template <class Msg>
+unsigned int
+Fifo<Msg> ::size() const
+{
+    Lock lock(mMutex); (void)lock;
+
+    return mFifo.size(); 
+}
+
+template <class Msg>
+bool
+Fifo<Msg>::messageAvailable() const
+{
+    Lock lock(mMutex); (void)lock;
+    
+    return ( messageAvailableNoLock() );
+}
+
+template <class Msg>
+bool
+Fifo<Msg>::messageAvailableNoLock() const
+{
+    return ( mFifo.size() > 0);
+}
+
+template <class Msg>
+int
+Fifo<Msg>::blockNoLock()
+{
+    // Wait for an event. A timer expiry or signal will return a 0 here.
+    //
+    int numberActive = wait();
+
+    if ( numberActive > 0 )
+    {
+        return ( numberActive );
+    }
+
+    // See if a timer has expired.  If it has expired, return 1 to indicate
+    // a message is available from the timer.
+    //
+    if ( messageAvailableNoLock() )
+    {
+        return ( 1 );
+    }
+
+    // To get here, either a signal woke us up, or the we used the
+    // relativeTimeout value, meaning that a message isn't available from
+    // the timer container.
+    //
+    return ( 0 );
+}
+
+
+template <class Msg>
+void
+Fifo<Msg>::wakeup()
+{
+    // Tell any waiting threads the FIFO is no longer empty
+    //
+    int error = mCondition.signal();
+    assert( !error );
+}
+
+
+template <class Msg>
+int
+Fifo<Msg>::wait()
+{
+    // This will unlock the object's mutex, wait for a condition's signal,
+    // and relock.
+    //
+    int error = mCondition.wait(&mMutex);
+
+    if ( error != 0 )
+    {
+        // If we have been awaken due to a unix signal, i.e. SIGTERM,
+        // or a timeout return 0 to indicate no activity.
+        //
+        if ( error == EINTR || error == ETIMEDOUT )
+        {
+            return ( 0 );
+        }
+
+        // Defensive, shouldn't ever get here.
+        //
+        else
+        {
+            assert( 0 );
+        }
+    }
+
+    return ( mFifo.size() );
+}
+
 
 
 } // namespace Vocal2
