@@ -173,7 +173,11 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security( const Data& pathToCerts = Data::Empty );
+#ifdef WIN32
+      Security( const Data& pathToCerts = "C:\\sipCerts\\");
+#else
+      Security( const Data& pathToCerts = "~/.sipCerts/" );
+#endif
 
       virtual void preload();
 
