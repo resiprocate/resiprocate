@@ -8,6 +8,7 @@
 #include <list>
 #include <vector>
 #include "HashMap.hxx"
+#include "resiprocate/os/compat.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be
@@ -21,8 +22,9 @@
 namespace resip
 {
 
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+//#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 /// Completely generic insert function
+#ifdef REASONABLE_TEMPLATES
 template <class T>
 std::ostream&
 insert(std::ostream& s, const T& t)
@@ -158,12 +160,12 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
          s << ", ";
       }
       // recurse
-#ifndef WIN32
+//#ifndef WIN32
 	  insert(s, i->first);
 	  static const char* arrow(" -> ");
       s << arrow;
       insert(s, i->second);  
-#endif
+//#endif
    }
    s << "]";
    return s;
@@ -218,6 +220,7 @@ Inserter(const T& t)
 {
    return InserterClass<T>(t);
 }
+
 
 /* Example of use
 int
