@@ -406,6 +406,7 @@ InviteSession::refer(const NameAddr& referTo)
       SipMessage refer;
       mDialog.makeRequest(refer, REFER);
       refer.header(h_ReferTo) = referTo;
+      refer.header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
       mDialog.send(refer);
    }
    else
@@ -436,6 +437,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       mDialog.makeRequest(refer, REFER);
 
       refer.header(h_ReferTo) = referTo;
+      refer.header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
       CallId replaces;
       DialogId id = sessionToReplace->mDialog.getId();
       replaces.value() = id.getCallId();
