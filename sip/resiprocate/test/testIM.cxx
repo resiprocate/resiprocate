@@ -143,8 +143,8 @@ processStdin(  TuIM& tuIM, Uri* dest )
          
          cout << "Send to <" << *dest << ">";
          
-         //tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
-         tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
+         tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
+         //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
          //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
          //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
       }
@@ -198,6 +198,11 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          dest = Uri(Data(argv[i]));
+
+         dest.param(p_transport) = "tcp";
+         
+         cout << "Destination is " << dest << endl;
+         
       } 
       else
       { 
@@ -221,7 +226,8 @@ main(int argc, char* argv[])
    }
 #endif
    
-   sipStack.addTransport(Transport::UDP, port);
+//   sipStack.addTransport(Transport::UDP, port);
+   sipStack.addTransport(Transport::TCP, port);
 
    TestPageCallback pageCallback;
    pageCallback.mDest = &dest;
@@ -234,7 +240,10 @@ main(int argc, char* argv[])
    
    Uri contact("sip:me-contact@localhost");
    contact.port() = port;
-   
+   contact.param(p_transport) = "tcp";
+   dest.param(p_transport) = "tcp";
+   aor.param(p_transport) = "tcp";
+
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
     
    //Vocal2::makeSocketNonBlocking( fileno(stdin) );
