@@ -123,6 +123,15 @@ UdpTransport::process(FdSet& fdset)
          delete [] buffer; buffer=0;
          return;
       }
+
+      //handle incoming CRLFCRLF keep-alive packets
+      if (len == 4 &&
+          strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+      {
+         StackLog(<<"Throwing away incoming firewall keep-alive");
+         return;
+      }
+
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
       //DebugLog ( << "UDP Rcv : " << len << " b" );

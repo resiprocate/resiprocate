@@ -342,7 +342,7 @@ DnsUtil::inet_ntop(int af, const void * __restrict src, char * __restrict dst,
    switch (af) {
       case AF_INET:
          return (inet_ntop4((const u_char *)src, dst, size));
-#ifdef IPV6
+#ifdef USE_IPV6
       case AF_INET6:
          return (inet_ntop6((const u_char *)src, dst, size));
 #endif
@@ -468,7 +468,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
 }
 
 static int	inet_pton6(const char *src, u_char *dst);
-#endif //IPV6
+#endif //USE_IPV6
 
 static int	inet_pton4(const char *src, u_char *dst);
 

@@ -1,47 +1,25 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#if !defined(RESIP_KEEPALIVEMESSAGE_HXX)
+#define RESIP_KEEPALIVEMESSAGE_HXX 
+
+#include "resiprocate/SipMessage.hxx"
+
+namespace resip
+{
+class KeepAliveMessage : public SipMessage
+{
+   public:
+      RESIP_HeapCount(KeepAliveMessage);
+      KeepAliveMessage();      
+      KeepAliveMessage(const KeepAliveMessage& message);
+      virtual Message* clone() const;
+      KeepAliveMessage& operator=(const KeepAliveMessage& rhs);      
+      virtual ~KeepAliveMessage();
+      virtual std::ostream& encode(std::ostream& str) const;
+};
+}
+
 #endif
 
-#include "UnknownHeaderType.hxx"
-#include "HeaderTypes.hxx"
-#include "resiprocate/os/Logger.hxx"
-
-#include <cassert>
-#include <string.h>
-#include "resiprocate/os/ParseBuffer.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
-using namespace resip;
-
-UnknownHeaderType::UnknownHeaderType(const char* name)
-{
-   assert(name);
-   ParseBuffer pb(name, strlen(name));
-   const char* anchor = pb.skipWhitespace();
-   pb.skipNonWhitespace();
-   mName = pb.data(anchor);
-   if (mName.empty())
-   {
-      assert(false);
-      throw Exception("Empty unknown header",__FILE__,__LINE__);
-   }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
-}
-
-UnknownHeaderType::UnknownHeaderType(const Data& name)
-{
-   ParseBuffer pb(name);
-   const char* anchor = pb.skipWhitespace();
-   pb.skipNonWhitespace();
-   mName = pb.data(anchor);
-   if (mName.empty())
-   {
-      assert(false);
-      throw Exception("Empty unknown header",__FILE__,__LINE__);
-   }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

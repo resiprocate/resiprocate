@@ -131,6 +131,12 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
           cout << name << ": ClientRegistration-onRemoved" << endl;
       }
 
+      virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
+      {
+          cout << name << ": ClientRegistration-onRequestRetry (" << retrySeconds << ") - " << response.brief() << endl;
+          return -1;
+      }
+
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          cout << name << ": ClientInviteSession-onNewSession - " << msg.brief() << endl;
@@ -428,7 +434,7 @@ main (int argc, char** argv)
    dumUac->setClientRegistrationHandler(&uac);
    dumUac->addOutOfDialogHandler(OPTIONS, &uac);
 
-   auto_ptr<testAppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
+   auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
    dumUac->setAppDialogSetFactory(uac_dsf);
 
 #if !defined(NO_REGISTRATION)
@@ -473,7 +479,7 @@ main (int argc, char** argv)
    dumUas->setInviteSessionHandler(&uas);
    dumUas->addOutOfDialogHandler(OPTIONS, &uas);
 
-   auto_ptr<testAppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
+   auto_ptr<AppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
    dumUas->setAppDialogSetFactory(uas_dsf);
 
 #if !defined(NO_REGISTRATION)
