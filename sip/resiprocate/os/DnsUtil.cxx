@@ -43,7 +43,7 @@ DnsUtil::getLocalHostName()
          throw Exception("could not find local hostname",__FILE__,__LINE__);
       }
    }
-   return buffer;
+   return Data(buffer);
 }
 
 
