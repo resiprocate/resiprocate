@@ -3,14 +3,14 @@
 #include <iostream>
 
 #undef defineParamType
-#define defineParamType(_class, _enum, _name, _type, _RFC_ref_ignored)          \
-ParameterTypes::Type                                                            \
-_class::getTypeNum() const {return ParameterTypes::_enum;}                      \
-_class::_class()                                                                \
-{                                                                               \
-   ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;    \
-   ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;               \
-}                                                                               \
+#define defineParamType(_class, _enum, _name, _type, _RFC_ref_ignored)        \
+ParameterTypes::Type                                                          \
+_class::getTypeNum() const {return ParameterTypes::_enum;}                    \
+_class::_class()                                                              \
+{                                                                             \
+   ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;  \
+   ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;             \
+}                                                                             \
 _class Vocal2::p_##_enum
 
 int strncasecmp(char*,char*,int);
@@ -102,216 +102,15 @@ Qop_Factory_Param Vocal2::p_qopFactory;
    defineParamType(Charset_Param, charset, "charset", DataParameter, "RFC 2045");
    defineParamType(Access_Type_Param, accessType, "access-type", DataParameter, "RFC 2046");
 
-/* C++ code produced by gperf version 2.7.2 */
-/* Command-line: gperf -g -Z ParamHash -E -L C++ -t -k '*' -D parameters.gperf  */
-struct params { char *name; ParameterTypes::Type type; };
-/* maximum key range = 141, duplicates = 1 */
-
-class ParamHash
-{
-private:
-  static inline unsigned int hash (const char *str, unsigned int len);
-public:
-  static struct params *in_word_set (const char *str, unsigned int len);
-};
-
-inline unsigned int
-ParamHash::hash (register const char *str, register unsigned int len)
-{
-  static unsigned char asso_values[] =
-    {
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145,   0, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145,   0,  25,  15,
-       20,   0,  35,  15,   5,   0, 145, 145,  45,  56,
-        0,   0,   0,  56,   0,   0,   0,  26,  20, 145,
-        5,   0,  10, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
-      145, 145, 145, 145, 145, 145
-    };
-  register int hval = len;
-
-  switch (hval)
-    {
-      default:
-      case 11:
-        hval += asso_values[(unsigned char)tolower(str[10])];
-      case 10:
-        hval += asso_values[(unsigned char)tolower(str[9])];
-      case 9:
-        hval += asso_values[(unsigned char)tolower(str[8])];
-      case 8:
-        hval += asso_values[(unsigned char)tolower(str[7])];
-      case 7:
-        hval += asso_values[(unsigned char)tolower(str[6])];
-      case 6:
-        hval += asso_values[(unsigned char)tolower(str[5])];
-      case 5:
-        hval += asso_values[(unsigned char)tolower(str[4])];
-      case 4:
-        hval += asso_values[(unsigned char)tolower(str[3])];
-      case 3:
-        hval += asso_values[(unsigned char)tolower(str[2])];
-      case 2:
-        hval += asso_values[(unsigned char)tolower(str[1])];
-      case 1:
-        hval += asso_values[(unsigned char)tolower(str[0])];
-        break;
-    }
-  return hval;
-}
-
-struct params *
-ParamHash::in_word_set (register const char *str, register unsigned int len)
-{
-  enum
-    {
-      TOTAL_KEYWORDS = 53,
-      MIN_WORD_LENGTH = 1,
-      MAX_WORD_LENGTH = 11,
-      MIN_HASH_VALUE = 4,
-      MAX_HASH_VALUE = 144
-    };
-
-  static struct params wordlist[] =
-    {
-      {"site", ParameterTypes::site},
-      {"rport", ParameterTypes::rport},
-      {"reason", ParameterTypes::reason},
-      {"response", ParameterTypes::response},
-      {"transport", ParameterTypes::transport},
-      {"expires", ParameterTypes::expires},
-      {"size", ParameterTypes::size},
-      {"expiration", ParameterTypes::expiration},
-      {"nc", ParameterTypes::nc},
-      {"tag", ParameterTypes::tag},
-      {"nonce", ParameterTypes::nonce},
-      {"to-tag", ParameterTypes::toTag},
-      {"id", ParameterTypes::id},
-      {"server", ParameterTypes::server},
-      {"charset", ParameterTypes::charset},
-      {"uri", ParameterTypes::uri},
-      {"user", ParameterTypes::user},
-      {"purpose", ParameterTypes::purpose},
-      {"cnonce", ParameterTypes::cnonce},
-      {"access-type", ParameterTypes::accessType},
-      {"directory", ParameterTypes::directory},
-      {"d-ver", ParameterTypes::dVer},
-      {"retry-after", ParameterTypes::retryAfter},
-      {"lr", ParameterTypes::lr},
-      {"ttl", ParameterTypes::ttl},
-      {"stale", ParameterTypes::stale},
-      {"branch", ParameterTypes::branch},
-      {"duration", ParameterTypes::duration},
-      {"q", ParameterTypes::q},
-      {"qop", ParameterTypes::qopFactory},
-      {"name", ParameterTypes::name},
-      {"name", ParameterTypes::name},
-      {"received", ParameterTypes::received},
-      {"permission", ParameterTypes::permission},
-      {"protocol", ParameterTypes::protocol},
-      {"comp", ParameterTypes::comp},
-      {"boundary", ParameterTypes::boundary},
-      {"mode", ParameterTypes::mode},
-      {"d-qop", ParameterTypes::dQop},
-      {"domain", ParameterTypes::domain},
-      {"d-alg", ParameterTypes::dAlg},
-      {"method", ParameterTypes::method},
-      {"opaque", ParameterTypes::opaque},
-      {"username", ParameterTypes::username},
-      {"handling", ParameterTypes::handling},
-      {"maddr", ParameterTypes::maddr},
-      {"realm", ParameterTypes::realm},
-      {"from-tag", ParameterTypes::fromTag},
-      {"smime-type", ParameterTypes::smimeType},
-      {"algorithm", ParameterTypes::algorithm},
-      {"mobility", ParameterTypes::mobility},
-      {"micalg", ParameterTypes::micalg},
-      {"filename", ParameterTypes::filename}
-    };
-
-  static signed char lookup[] =
-    {
-        -1,   -1,   -1,   -1,    0,    1,    2,   -1,
-         3,    4,   -1,   -1,    5,   -1,    6,    7,
-        -1,    8,    9,   -1,   10,   11,   12,   -1,
-        -1,   -1,   13,   14,   -1,   15,   16,   -1,
-        -1,   17,   -1,   -1,   18,   -1,   -1,   -1,
-        -1,   19,   -1,   -1,   20,   21,   22,   23,
-        24,   -1,   25,   26,   -1,   -1,   27,   -1,
-        -1,   28,   -1,   29, -115,  -23,   -2,   32,
-        -1,   -1,   33,   -1,   34,   -1,   -1,   -1,
-        -1,   -1,   -1,   35,   -1,   -1,   -1,   36,
-        37,   38,   39,   -1,   -1,   40,   -1,   41,
-        42,   -1,   43,   -1,   -1,   44,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   45,   -1,   -1,
-        -1,   -1,   46,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   47,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   48,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   49,   -1,   -1,   -1,   50,   -1,
-        -1,   51,   -1,   -1,   -1,   -1,   -1,   -1,
-        52
-    };
-
-  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
-    {
-      register int key = hash (str, len);
-
-      if (key <= MAX_HASH_VALUE && key >= 0)
-        {
-          register int index = lookup[key];
-
-          if (index >= 0)
-            {
-              register const char *s = wordlist[index].name;
-
-              if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
-                return &wordlist[index];
-            }
-          else if (index < -TOTAL_KEYWORDS)
-            {
-              register int offset = - 1 - TOTAL_KEYWORDS - index;
-              register struct params *wordptr = &wordlist[TOTAL_KEYWORDS + lookup[offset]];
-              register struct params *wordendptr = wordptr + -lookup[offset + 1];
-
-              while (wordptr < wordendptr)
-                {
-                  register const char *s = wordptr->name;
-
-                  if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
-                    return wordptr;
-                  wordptr++;
-                }
-            }
-        }
-    }
-  return 0;
-}
+#include "sip2/sipstack/ParameterHash.hxx"
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
 {
    struct params* p;
-   p = ParamHash::in_word_set(name, len);
+   p = ParameterHash::in_word_set(name, len);
    return p ? p->type : ParameterTypes::UNKNOWN;
+   
 }
 
 /* ====================================================================
