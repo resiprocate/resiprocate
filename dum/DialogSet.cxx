@@ -110,8 +110,7 @@ DialogSet::dispatch(const SipMessage& msg)
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
-      dialog = new Dialog(mDum, msg);
-      this->addDialog(dialog);
+      dialog = new Dialog(mDum, msg, *this);
    }
    dialog->dispatch(msg);
 }
