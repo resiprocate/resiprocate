@@ -45,7 +45,11 @@ HeaderFieldValueList::encode(int headerEnum, std::ostream& str)
    }
    else
    {
-      str << headerName << Symbols::COLON << Symbols::SPACE;
+      if (!headerName.empty())
+      {
+         str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+      }
+
       for (HeaderFieldValueList::const_iterator j = begin();
            j != end(); j++)
       {
@@ -57,7 +61,7 @@ HeaderFieldValueList::encode(int headerEnum, std::ostream& str)
             }
             else
             {
-               str << headerName << Symbols::COLON << Symbols::SPACE;
+               str << Symbols::CRLF << headerName << Symbols::COLON << Symbols::SPACE;
             }
          }
          (*j)->encode(str);
