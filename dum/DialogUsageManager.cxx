@@ -2,7 +2,7 @@
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/StatisticsMessage.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
@@ -47,7 +47,7 @@
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager(SipStack& stack) :
+DialogUsageManager::DialogUsageManager() :
    mProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
@@ -58,8 +58,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
-   mStack(stack),
-   mStackThread(stack),
+   mStack(false),
+   mStackThread(mStack),
    mDumShutdownHandler(0),
    mDestroying(false)
 {
@@ -76,6 +76,15 @@ DialogUsageManager::~DialogUsageManager()
    }
 }
 
+bool 
+DialogUsageManager::addTransport( TransportType protocol,
+                                  int port, 
+                                  IpVersion version,
+                                  const Data& ipInterface)
+{
+   return mStack.addTransport(protocol, port, version, ipInterface);
+}
+
 void 
 DialogUsageManager::shutdown()
 {
@@ -86,92 +95,32 @@ DialogUsageManager::shutdown()
 }
 
 
-void DialogUsageManager::shutdown(DumShutdownHandler* h)
+void 
+DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
    mDumShutdownHandler = h;
    shutdownWhenEmpty();
 }
 
+void 
+DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long giveUpSeconds)
+{
+   mDumShutdownHandler = h;
+   assert(0);
+}
+
+void 
+DialogUsageManager::forceShutdown(DumShutdownHandler* h)
+{
+   mDumShutdownHandler = h;
+   //HandleManager::shutdown();  // clear out usages
+   mStack.shutdown();
+}
 
 void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
 {
    mAppDialogSetFactory = factory;
 }
-
-#if 0
-AppDialogSet* 
-DialogUsageManager::createAppDialogSet()
-{
-   return new AppDialogSet(*this);
-}
-
-AppDialog* 
-DialogUsageManager::createAppDialog()
-{
-   return new AppDialog(*this);
-}
-
-ClientRegistration* 
-DialogUsageManager::createAppClientRegistration(Dialog& dialog, BaseCreator& creator)
-{
-   return new ClientRegistration(*this, dialog, creator.getLastRequest());
-}
-
-ClientInviteSession* 
-DialogUsageManager::createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator)
-{
-   return new ClientInviteSession(*this, dialog, creator.getLastRequest(), creator.getInitialOffer());   
-}
-
-ClientSubscription* 
-DialogUsageManager::createAppClientSubscription(Dialog& dialog, BaseCreator& creator)
-{
-   return new ClientSubscription(*this, dialog, creator.getLastRequest());
-}
-
-ClientOutOfDialogReq* 
-DialogUsageManager::createAppClientOutOfDialogRequest(Dialog& dialog, BaseCreator& creator)
-{
-   return new ClientOutOfDialogReq(*this, dialog, creator.getLastRequest());
-}
-
-ClientPublication* 
-DialogUsageManager::createAppClientPublication(Dialog& dialog, BaseCreator& creator)
-{
-   return new ClientPublication(*this, dialog, creator.getLastRequest());
-}
-
-ServerInviteSession*
-DialogUsageManager::createAppServerInviteSession()
-{
-   return 0;
-}
-
-ServerSubscription* 
-DialogUsageManager::createAppServerSubscription()
-{
-   return 0;
-}
-
-ServerPublication* 
-DialogUsageManager::createAppServerPublication()
-{
-   return 0;
-}
-
-ServerRegistration* 
-DialogUsageManager::createAppServerRegistration()
-{
-   return 0;
-}
-
-ServerOutOfDialogReq* 
-DialogUsageManager::createAppServerOutOfDialogRequest()
-{
-   return 0;
-}
-#endif
-
 
 Profile* 
 DialogUsageManager::getProfile()
@@ -645,19 +594,15 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
-bool
-DialogUsageManager::process(bool separateThread)
+void
+DialogUsageManager::run()
 {
-   if (separateThread)
-   {
-      static bool started = false;
-      if (!started)
-      {
-         mStackThread.run();
-         started = true;
-      }
-   }
+   mStackThread.run();
+}
 
+bool
+DialogUsageManager::process()
+{
    try 
    {
       std::auto_ptr<Message> msg( mStack.receiveAny() );
@@ -736,11 +681,19 @@ DialogUsageManager::process(bool separateThread)
          StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
          if (stats)
          {
-            static StatisticsMessage::Payload payload;
-            stats->loadOut(payload);
-            stats->logStats(RESIPROCATE_SUBSYSTEM, payload);
+            stats->loadOut(mStatsPayload);
+            stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
          }
-      
+
+         ShutdownMessage* end = dynamic_cast<ShutdownMessage*>(msg.get());
+         if (end)
+         {
+            InfoLog (<< "Shutting down stack thread");
+            mStackThread.shutdown();
+            mStackThread.join();
+            DialogUsageManager::shutdown();
+         }
+
          // !jf! might want to do something with StatisticsMessage
          //ErrLog(<<"Unknown message received." << msg->brief());
          //assert(0);
@@ -761,7 +714,7 @@ DialogUsageManager::process(FdSet& fdset)
    try 
    {
       mStack.process(fdset);
-      process(false);
+      process();
    }
    catch(BaseException& e)
    {
@@ -1004,6 +957,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
             if (!checkEventPackage(request))
             {
+               InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
          case INVITE:   // new INVITE
@@ -1095,6 +1049,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             else
             {
+               InfoLog (<< "Handling in-dialog request: " << request.brief());
                ds->dispatch(request);
             }
          }
