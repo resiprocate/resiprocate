@@ -33,7 +33,6 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
     mUnknownParameterList(hfv.mUnknownParameterList),
     mMine(true)
 {
-
   // if this isn't parsed, chunk and copy the block of memory
   // the copy for the param lists will end up with empty lists
   if (!(isParsed()))
@@ -44,7 +43,6 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   
   // if it is, the above will end up with null unparsed fields and valid 
   // param lists
-  
 }
 
 HeaderFieldValue::~HeaderFieldValue()
@@ -69,8 +67,6 @@ HeaderFieldValue::getParameter(ParameterTypes::Type type)
 {
    assert(0);
 }
-
-
       
 void 
 HeaderFieldValue::parseParameters(const char* start)
