@@ -2,11 +2,13 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <openssl/blowfish.h>
 #include <string.h>
 #include <iomanip>
 #include <algorithm>
 
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Coders.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -899,6 +901,96 @@ Helper::validateMessage(const SipMessage& message)
    }
 }
 
+static const Data sep("[]");
+static const Data pad("\0\0\0\0\0\0\0", 7);
+static const Data GRUU("_GRUU");
+static const int saltBytes(16);
+
+Data
+Helper::gruuUserPart(const Data& instanceId,
+                     const Data& aor,
+                     const Data& key)
+{
+   unsigned char ivec[8];      
+
+   ivec[0] = '\x6E';
+   ivec[1] = '\xE7';
+   ivec[2] = '\xB0';
+   ivec[3] = '\x4A';
+   ivec[4] = '\x45';
+   ivec[5] = '\x93';
+   ivec[6] = '\x7D';
+   ivec[7] = '\x51';
+
+   BF_KEY fish;
+   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+
+   const Data salt(resip::Random::getRandomHex(saltBytes));
+
+   const Data token(salt + instanceId + sep + aor + '\0' +
+                    pad.substr(0, (8 - ((salt.size() + 
+                                         instanceId.size() + 
+                                         sep.size() + 1 
+                                         + aor.size() ) % 8))
+                               % 8));
+   unsigned char out[token.size()];
+   BF_cbc_encrypt((const unsigned char*)token.data(),
+                  out,
+                  token.size(),
+                  &fish,
+                  ivec, 
+                  BF_ENCRYPT);
+
+   return GRUU + Base64Coder::encode(Data(out, token.size()));
+}
+
+std::pair<Data,Data> 
+Helper::fromGruuUserPart(const Data& gruuUserPart,
+                         const Data& key)
+{
+   unsigned char ivec[8];      
+
+   ivec[0] = '\x6E';
+   ivec[1] = '\xE7';
+   ivec[2] = '\xB0';
+   ivec[3] = '\x4A';
+   ivec[4] = '\x45';
+   ivec[5] = '\x93';
+   ivec[6] = '\x7D';
+   ivec[7] = '\x51';
+
+   static const std::pair<Data, Data> empty;
+
+   if (gruuUserPart.size() < GRUU.size())
+   {
+      return empty;
+   }
+
+   const Data gruu = gruuUserPart.substr(GRUU.size());
+
+   BF_KEY fish;
+   BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
+
+   const Data decoded = Base64Coder::decode(gruu);
+
+   unsigned char out[gruuUserPart.size()+1];
+   BF_cbc_encrypt((const unsigned char*)decoded.data(),
+                  out,
+                  decoded.size(),
+                  &fish,
+                  ivec, 
+                  BF_DECRYPT);
+   const Data pair(out, decoded.size());
+
+   Data::size_type pos = pair.find(sep);
+   if (pos == Data::npos)
+   {
+      return empty;
+   }
+
+   return std::make_pair(pair.substr(2*saltBytes, pos), // strip out the salt
+                         pair.substr(pos+sep.size()).c_str());
+}
       
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
