@@ -125,6 +125,20 @@ Mime::encodeParsed(std::ostream& str) const
    return str;
 }
 
+#if defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::Mime>::operator()(const resip::Mime& data) const
+{
+   return data.type().hash() ^ data.subType().hash();
+}
+#endif
+
+#if defined(__INTEL_COMPILER)
+size_t std::hash_value(const resip::Mime& data)
+{
+   return data.type().hash() ^ data.subType().hash();
+}
+#endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

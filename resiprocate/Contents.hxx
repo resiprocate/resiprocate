@@ -1,7 +1,6 @@
 #if !defined(RESIP_CONTENTS_HXX)
 #define RESIP_CONTENTS_HXX 
 
-#include <map>
 #include <iosfwd>
 
 #include "resiprocate/LazyParser.hxx"
@@ -11,6 +10,7 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 using namespace std;
 
@@ -95,7 +95,7 @@ class Contents : public LazyParser
       int& verion() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
 
-      static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
+      static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
 
    protected:
       void clear();
@@ -113,7 +113,7 @@ class Contents : public LazyParser
       mutable int mMinorVersion;
 
    private:
-      static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
+      static HashMap<Mime, ContentsFactoryBase*>* FactoryMap;
 };
 
 template<class T>
@@ -123,7 +123,19 @@ class ContentsFactory : public ContentsFactoryBase
       ContentsFactory()
       {
          HeaderFieldValue hfv;
+         assert(Contents::getFactoryMap().count(T::getStaticType()) == 0);
          Contents::getFactoryMap()[T::getStaticType()] = this;
+      }
+
+      virtual ~ContentsFactory()
+      {
+         HashMap<Mime, ContentsFactoryBase*>::iterator i;
+         i = Contents::getFactoryMap().find(T::getStaticType());
+         Contents::getFactoryMap().erase(i);
+         if (Contents::getFactoryMap().size() == 0)
+         {
+            delete &Contents::getFactoryMap();
+         }
       }
       
       // pass Mime instance for parameters
