@@ -59,6 +59,31 @@ class Tuple
 
       Transport* transport;
       ConnectionId connectionId;
+
+      // special comparitors
+      class AnyInterfaceCompare
+      {
+         public:
+            bool operator()(const Tuple& x,
+                            const Tuple& y) const;
+      };
+      friend class AnyInterfaceCompare;
+
+      class AnyPortCompare
+      {
+         public:
+            bool operator()(const Tuple& x,
+                            const Tuple& y) const;
+      };
+      friend class AnyPortCompare;
+
+      class AnyPortAnyInterfaceCompare
+      {
+         public:
+            bool operator()(const Tuple& x,
+                            const Tuple& y) const;
+      };
+      friend class AnyPortAnyInterfaceCompare;
       
    private:
       // !ah! needs to big enough for the IPv6 address.

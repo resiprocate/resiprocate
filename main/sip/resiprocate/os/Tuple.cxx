@@ -247,7 +247,8 @@ bool Tuple::operator==(const Tuple& rhs) const
    // !dlb! don't include connection 
 }
 
-bool Tuple::operator<(const Tuple& rhs) const
+bool
+Tuple::operator<(const Tuple& rhs) const
 {
    if (mTransportType < rhs.mTransportType)
    {
@@ -317,7 +318,7 @@ bool Tuple::operator<(const Tuple& rhs) const
 #endif
    else
    {
-      assert(0);
+      //assert(0);
       return false;
    }
 }
@@ -456,6 +457,160 @@ Tuple::toData(TransportType type)
 }
 
 
+// special comparitors
+bool
+Tuple::AnyInterfaceCompare::operator()(const Tuple& lhs,
+                                       const Tuple& rhs) const
+{
+   if (lhs.mTransportType < rhs.mTransportType)
+   {
+      return true;
+   }
+   else if (lhs.mTransportType > rhs.mTransportType)
+   {
+      return false;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
+   {
+      if (lhs.m_anonv4.sin_port < rhs.m_anonv4.sin_port)
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+#ifdef USE_IPV6
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      if (lhs.m_anonv6.sin6_port < rhs.m_anonv6.sin6_port)
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET)
+   {
+      return true;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      return false;
+   }
+#endif
+   else
+   {
+      return false;
+   }
+};
+
+bool
+Tuple::AnyPortCompare::operator()(const Tuple& lhs,
+                                  const Tuple& rhs) const
+{
+   if (lhs.mTransportType < rhs.mTransportType)
+   {
+      return true;
+   }
+   else if (lhs.mTransportType > rhs.mTransportType)
+   {
+      return false;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
+   {
+      int c = memcmp(&lhs.m_anonv4.sin_addr,
+                     &rhs.m_anonv4.sin_addr,
+                     sizeof(in_addr));
+
+      if (c < 0)
+      {
+         return true;
+      }
+      else if (c > 0)
+      {
+         return false;
+      }
+   }
+#ifdef USE_IPV6
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      int c = memcmp(&lhs.m_anonv6.sin6_addr,
+                     &rhs.m_anonv6.sin6_addr,
+                     sizeof(in6_addr));
+      if (c < 0)
+      {
+         return true;
+      }
+      else if (c > 0)
+      {
+         return false;
+      }
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET)
+   {
+      return true;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      return false;
+   }
+#endif
+   else
+   {
+      return false;
+   }
+}
+
+bool
+Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
+                                              const Tuple& rhs) const
+{
+   CerrLog(<< "AnyPortAnyInterfaceCompare");
+   if (lhs.mTransportType < rhs.mTransportType)
+   {
+      CerrLog(<< "return 1");
+      return true;
+   }
+   else if (lhs.mTransportType > rhs.mTransportType)
+   {
+      return false;
+   }
+#ifdef USE_IPV6
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      CerrLog(<< "return 3");
+      return true;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET)
+   {
+      CerrLog(<< "return 4");
+      return true;
+   }
+   else if (lhs.mSockaddr.sa_family == AF_INET &&
+            rhs.mSockaddr.sa_family == AF_INET6)
+   {
+      return false;
+   }
+#endif
+   else
+   {
+      return false;
+   }
+
+   return false;
+};
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
