@@ -11,7 +11,7 @@
 #include <sipstack/Timer.hxx>
 #include <sipstack/Logger.hxx>
 
-static const char version[] = "$Id: Timer.cxx,v 1.4 2002/09/22 04:15:00 jason Exp $";
+static const char version[] = "$Id: Timer.cxx,v 1.5 2002/09/22 22:32:10 dabryan Exp $";
 
 using namespace Vocal2;
 
@@ -42,6 +42,9 @@ Vocal2::Timer::TD = 32000;
 const unsigned long
 Vocal2::Timer::TC = 3*60*1000;
 
+const unsigned long
+Vocal2::Timer::TS = 32000;
+
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -49,13 +52,15 @@ Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
    mWhen(tms + getTimeMs()),
    mId(++mTimerCount),
    mType(type),
-   mTransactionId(transactionId)
+   mTransactionId(transactionId),
+   mDuration(tms)
 {
 }
 
 Timer::Timer(unsigned long tms) :
    mWhen(tms + getTimeMs()),
-   mId(0)
+   mId(0),
+   mDuration(tms)
 {
 }
 
@@ -63,7 +68,8 @@ Timer::Timer(const Timer& other) :
    mWhen(other.mWhen),
    mId(other.mTimerCount),
    mType(other.mType),
-   mTransactionId(other.mTransactionId)
+   mTransactionId(other.mTransactionId),
+   mDuration(other.mDuration)
 {
 }
 
@@ -76,6 +82,7 @@ Timer::operator=(const Timer& other)
       mId = other.mTimerCount;
       mType = other.mType;
       mTransactionId = other.mTransactionId;
+      mDuration = other.mDuration;
    }
    return *this;
 }
