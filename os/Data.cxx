@@ -27,7 +27,7 @@ Data::Data()
      mCapacity(LocalAlloc),
      mMine(false)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -43,7 +43,7 @@ Data::Data(int capacity, bool)
      mMine(capacity > LocalAlloc)
 {
    assert( capacity >= 0 );
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -58,7 +58,7 @@ Data::Data(const char* str, int length)
      mMine(mSize > LocalAlloc)
 {
    assert( mSize >= 0 );
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -78,7 +78,7 @@ Data::Data(const unsigned char* str, int length)
      mMine(mSize > LocalAlloc)
 {
    assert( mSize >= 0 );
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -97,7 +97,7 @@ Data::Data(const char* str, int length, bool)
      mMine(false)
 {
    assert(str);
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer, int length)
@@ -107,7 +107,7 @@ Data::Data(ShareEnum se, const char* buffer, int length)
      mMine(se == Take)
 {
    assert(buffer);
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
@@ -117,7 +117,7 @@ Data::Data(ShareEnum se, const char* buffer)
      mMine(se == Take)
 {
    assert(buffer);
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
@@ -126,7 +126,10 @@ Data::Data(ShareEnum se, const Data& staticData)
      mCapacity(mSize),
      mMine(false)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
+   // !dlb! maybe:
+   // if you are trying to use Take, but make sure that you unset the mMine on
+   // the staticData
    assert(se == Share); // makes no sense to call this with 'Take'.
 }
 //=============================================================================
@@ -141,7 +144,7 @@ Data::Data(const char* str)
                : LocalAlloc),
      mMine(mSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (str)
    {
       memcpy(mBuf, str, mSize+1);
@@ -162,7 +165,7 @@ Data::Data(const string& str)
                : LocalAlloc),
      mMine(mSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
@@ -176,7 +179,7 @@ Data::Data(const Data& data)
                : LocalAlloc),
      mMine(mSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize)
    {
       memcpy(mBuf, data.mBuf, mSize);
@@ -197,7 +200,7 @@ Data::Data(int val)
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
 
    if (val == 0)
    {
@@ -255,7 +258,7 @@ Data::Data(unsigned long value)
                : LocalAlloc),
      mMine(MaxLongSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -296,7 +299,7 @@ Data::Data(double value, int precision)
                : LocalAlloc),
      mMine(DoubleMaxSize + precision > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   memset(mPreBuffer, 0, LocalAlloc+1);
    assert(precision >= 0);
    assert(precision < DoubleMaxPrecision);
 
@@ -380,7 +383,7 @@ Data::Data(unsigned int value)
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -420,7 +423,7 @@ Data::Data(char c)
                : LocalAlloc),
      mMine(CharMaxSize > LocalAlloc)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[0] = c;
    mBuf[1] = 0;
 }
@@ -431,7 +434,7 @@ Data::Data(bool value)
      mCapacity(0),
      mMine(false)
 {
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   memset(mPreBuffer, 0, LocalAlloc+1);
 
    static char truec[] = "true";
    static char falsec[] = "false";
@@ -1136,26 +1139,29 @@ size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data
    // 4 byte Pearson's hash
    // essentially random hashing
 
-   // .dlb. better if layed out in host byte order
+   union 
+   {
+         size_t st;
+         unsigned char bytes[4];
+   };
 
-   // network order is big endian:
-   unsigned char byte0(randomPermutation[0]);
-   unsigned char byte1(randomPermutation[1]);
-   unsigned char byte2(randomPermutation[2]);
-   unsigned char byte3(randomPermutation[3]);
+   bytes[0] = randomPermutation[0];
+   bytes[1] = randomPermutation[1];
+   bytes[2] = randomPermutation[2];
+   bytes[3] = randomPermutation[3];
 
    const char* c = data.data();
    const char* end = c + data.size();
    for ( ; c != end; ++c)
    {
-      byte0 = randomPermutation[*c ^ byte0];
-      byte1 = randomPermutation[*c ^ byte1];
-      byte2 = randomPermutation[*c ^ byte2];
-      byte3 = randomPermutation[*c ^ byte3];
+      bytes[0] = randomPermutation[*c ^ bytes[0]];
+      bytes[1] = randomPermutation[*c ^ bytes[1]];
+      bytes[2] = randomPermutation[*c ^ bytes[2]];
+      bytes[3] = randomPermutation[*c ^ bytes[3]];
    }
 
    // convert from network to host byte order
-   return ntohl((size_t)(byte0));
+   return ntohl(st);
 }
 #endif
 
@@ -1187,7 +1193,6 @@ size_t std::hash_value(const resip::Data& data)
    return ntohl((size_t)(byte0));
 }
 #endif
-
 
 Data 
 Data::base64decode() const
