@@ -380,11 +380,19 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // This will result in no NAPTR results. In this case, send out SRV
       // queries for each supported protocol
      NAPTRFail:
-      // For now, don't add _sips._tcp in this case. 
-      lookupSRV("_sip._tcp." + mTarget);
-      mSRVCount++;
-      lookupSRV("_sip._udp." + mTarget);
-      mSRVCount++;
+      if (mSips)
+      {
+         lookupSRV("_sips._tcp." + mTarget);
+         mSRVCount++;
+      }
+      else
+      {
+         // For now, don't add _sips._tcp in this case. 
+         lookupSRV("_sip._tcp." + mTarget);
+         mSRVCount++;
+         lookupSRV("_sip._udp." + mTarget);
+         mSRVCount++;
+      }
       DebugLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
    }
 }
@@ -475,8 +483,8 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       {
          if (mSips)
          {
-            mTransport = TCP;
-            mPort = 5060;
+            mTransport = TLS;
+            mPort = 5061;
          }
          else
          {
