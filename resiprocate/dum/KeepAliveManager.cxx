@@ -9,20 +9,27 @@
 using namespace resip;
 using namespace std;
 
-void KeepAliveManager::add(const Tuple& target)
+void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
 {
    assert(mStack);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
       InfoLog( << "First keep alive for: " << target );
-      mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, 0));
+      NetworkAssociationInfo info;
+      info.refCount = 1;
+      info.keepAliveInterval = keepAliveInterval;
+      mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, info));
       KeepAliveTimeout t(target);
-      mStack->postMS(t, KeepAliveInterval);
+      mStack->post(t, keepAliveInterval);
    }
    else
    {
-      (*it).second++;
+      (*it).second.refCount++;
+      if(keepAliveInterval < (*it).second.keepAliveInterval)
+      {
+          (*it).second.keepAliveInterval = keepAliveInterval;  // !slg! only allow value to be shortened???  What if 2 different profiles with different keepAliveTime settings are sharing this network association?
+      }
    }
 }
 
@@ -31,7 +38,7 @@ void KeepAliveManager::remove(const Tuple& target)
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it != mNetworkAssociations.end())
    {
-      if (0 == --(*it).second)
+      if (0 == --(*it).second.refCount)
       {
          mNetworkAssociations.erase(target);
       }
@@ -47,7 +54,7 @@ void KeepAliveManager::process(KeepAliveTimeout& timeout)
    {
       mStack->sendTo(msg, timeout.target());
       KeepAliveTimeout t(it->first);
-      mStack->postMS(t, KeepAliveInterval);
-      InfoLog( << "Refreshing keep alive for: " << timeout.target());
+      mStack->post(t, it->second.keepAliveInterval);
+      InfoLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
    }
 }
