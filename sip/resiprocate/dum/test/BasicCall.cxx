@@ -18,7 +18,7 @@
 
 #include <sstream>
 #include <time.h>
-#include <windows.h>
+//#include <windows.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -27,9 +27,9 @@ using namespace resip;
 void sleepSeconds(unsigned int seconds)
 {
 #ifdef WIN32
-         Sleep(seconds*1000);
+   Sleep(seconds*1000);
 #else
-         sleep(seconds);
+   sleep(seconds);
 #endif
 }
 
@@ -73,6 +73,10 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          InfoLog(  << "TestInviteSessionHandler::TestInviteSessionHandler(" << name << ")");         
       }
 
+      virtual ~TestInviteSessionHandler()
+      {
+      }
+      
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {         
          registerHandle = h;   
@@ -80,7 +84,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          {
             stringstream s;
             s << "Handle created: " << &h;
-            OutputDebugString(s.str().c_str());
+            //OutputDebugString(s.str().c_str());
          }
          InfoLog( << "###Register::onSuccess: ###" << name << endl);
          registered = true;
@@ -222,7 +226,7 @@ class TestUac : public TestInviteSessionHandler
          sdp = new SdpContents(hfv, type);
       }
 
-      ~TestUac()
+      virtual ~TestUac()
       {
          delete sdp;
       }
@@ -416,7 +420,7 @@ main (int argc, char** argv)
    NameAddr uacAor("sip:UAC@127.0.0.1:12005");
 #endif
 
-   dumUac->getProfile()->setDefaultAor(uacAor);
+   dumUac->getProfile()->setDefaultFrom(uacAor);
    dumUac->getProfile()->setDefaultRegistrationTime(70);
    dumUac->getProfile()->addSupportedLanguage(Token("en"));
    dumUac->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
@@ -449,7 +453,7 @@ main (int argc, char** argv)
 #endif
 
    dumUas->getProfile()->setDefaultRegistrationTime(70);
-   dumUas->getProfile()->setDefaultAor(uasAor);
+   dumUas->getProfile()->setDefaultFrom(uasAor);
    dumUas->getProfile()->addSupportedLanguage(Token("en"));
    dumUas->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
    dumUas->getProfile()->addSupportedMethod(INVITE);
@@ -500,7 +504,7 @@ main (int argc, char** argv)
      {
         FdSet fdset;
         dumUac->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(100);
+        int err = fdset.selectMilliSeconds(dumUac->getTimeTillNextProcessMS());
         assert ( err != -1 );
         dumUac->process(fdset);
      }
@@ -508,7 +512,7 @@ main (int argc, char** argv)
      {
         FdSet fdset;
         dumUas->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(100);
+        int err = fdset.selectMilliSeconds(dumUas->getTimeTillNextProcessMS());
         assert ( err != -1 );
         dumUas->process(fdset);
      }
@@ -524,10 +528,10 @@ main (int argc, char** argv)
 #endif
 
               InfoLog( << "#### Sending Options Request ####");
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor.uri(), OPTIONS));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               InfoLog( << "#### Sending Invite ####");
-              dumUac->send(dumUac->makeInviteSession(uasAor.uri(), uac.sdp));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp));
            }
 
         if (bHangupAt!=0)

@@ -7,10 +7,10 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& aor)
+RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target)
    : BaseCreator(dum)
 {
-   makeInitialRequest(aor, REGISTER);
+   makeInitialRequest(target, target, REGISTER);
    mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest.header(h_Expires).value() = dum.getProfile()->getDefaultRegistrationTime();
 
