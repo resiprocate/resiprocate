@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
 
@@ -42,6 +43,25 @@ typedef ParserContainer<Mime> Mimes;
 
  
 }
+
+#if  defined(__INTEL_COMPILER )
+namespace std
+{
+size_t hash_value(const resip::Mime& data);
+}
+
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
+{
+
+template<>
+struct hash<resip::Mime>
+{
+      size_t operator()(const resip::Mime& data) const;
+};
+
+}
+#endif // HASHMAP
 
 #endif
 
