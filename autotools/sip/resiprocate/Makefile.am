@@ -119,6 +119,7 @@ libresiprocate_la_SOURCES = \
 
 # These are sources that we might conditionally include
 EXTRA_libresiprocate_la_SOURCES = \
+	ApplicationSip.hxx \
 	CpimContents.cxx \
 	GenericContents.cxx \
 	MessageWaitingContents.cxx \
@@ -140,7 +141,6 @@ libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
-	ApplicationSip.hxx \
 	BranchParameter.hxx \
 	Connection.hxx \
 	ConnectionManager.hxx \
