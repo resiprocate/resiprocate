@@ -19,6 +19,13 @@ SipFrag::SipFrag(HeaderFieldValue* hfv, const Mime& contentsType)
 {
 }
  
+SipFrag::SipFrag(const Data& data, const Mime& contentsType)
+   : Contents(contentsType),
+     mMessage(0)
+{
+   assert(0);
+}
+ 
 SipFrag::SipFrag(const SipFrag& rhs)
    : Contents(rhs),
      mMessage(rhs.mMessage ? new SipMessage(*rhs.mMessage) : 0)

@@ -6,6 +6,7 @@ const char * const Symbols::DefaultSipVersion = "SIP/2.0";
 const char * const Symbols::DefaultSipScheme = "sip";
 
 const char * const Symbols::CRLF = "\r\n";
+const char * const Symbols::CRLFCRLF = "\r\n\r\n";
 const char * const Symbols::CR = "\r";
 const char * const Symbols::LF = "\n";
 const char * const Symbols::TAB = "\t";
