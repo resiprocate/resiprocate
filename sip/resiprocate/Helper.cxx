@@ -182,6 +182,16 @@ Helper::makeRequest(const NameAddr& target, MethodTypes method)
    return junk;
 }
 
+SipMessage*
+Helper::makeCancel(const SipMessage& request)
+{
+   assert(request.isRequest());
+   assert(request.header(h_RequestLine).getMethod() == INVITE);
+   assert(0);
+   SipMessage* junk=0;
+   return junk;
+}
+
 
 // This interface should be used by the stack (TransactionState) to create an
 // AckMsg to a failure response
