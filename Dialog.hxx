@@ -41,7 +41,7 @@ class Dialog
       SipMessage* makeResponse(const SipMessage& request, int code=200);
       
       // This happens when a dialog gets created on a UAC when 
-      // a UAC receives a response that creates a dialog. Also works for NOTIFY
+      // a UAC receives a response that creates a dialog. Also works for RESIP_NOTIFY
       // requests which create a dialog
       void createDialogAsUAC(const SipMessage& response);
 

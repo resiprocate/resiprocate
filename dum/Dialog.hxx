@@ -104,7 +104,7 @@ class Dialog
       typedef enum // need to add
       {
          Invitation,   // RESIP_INVITE dialog
-         Subscription, // Created by a SUBSCRIBE / NOTIFY / REFER
+         Subscription, // Created by a RESIP_SUBSCRIBE / RESIP_NOTIFY / REFER
          Fake          // Not really a dialog (e.g. created by a RESIP_REGISTER)
       } DialogType;
       

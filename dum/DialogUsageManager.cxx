@@ -917,7 +917,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case RESIP_BYE:
          case RESIP_UPDATE:
             //case INFO: // !rm! in an ideal world
-            //case NOTIFY: // !rm! in an ideal world
+            //case RESIP_NOTIFY: // !rm! in an ideal world
          {
             SipMessage failure;
             makeResponse(failure, request, 481);
@@ -963,7 +963,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case RESIP_INVITE:   // new RESIP_INVITE
          case RESIP_REFER:    // out-of-dialog REFER
          case RESIP_INFO :    // handle non-dialog (illegal) INFOs
-         case RESIP_OPTIONS : // handle non-dialog OPTIONS
+         case RESIP_OPTIONS : // handle non-dialog RESIP_OPTIONS
          case RESIP_MESSAGE :
          {
             {
@@ -1083,7 +1083,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
    int failureCode = 0;   
    MethodTypes method = request.header(h_RequestLine).method();
 
-//       || (method == NOTIFY && !request.exists(h_SubscriptionState)))
+//       || (method == RESIP_NOTIFY && !request.exists(h_SubscriptionState)))
    if (!request.exists(h_Event))
    {
       failureCode = 400;
