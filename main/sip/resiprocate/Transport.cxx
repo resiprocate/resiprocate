@@ -331,12 +331,13 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
   errMsg->header(h_CallId) = msg.header(h_CallId);
   errMsg->header(h_CSeq) = msg.header(h_CSeq);
   errMsg->header(h_StatusLine).reason() = "Bad Request";
-  errMsg->header(h_Warning).code() = responseCode;
-  errMsg->header(h_Warning).hostname() = DnsUtil::getLocalHostName(); 
-                                // !ah! hostname should be from transport.
-  errMsg->header(h_Warning).text() = Data(warning ?
-                                          warning :
-                                          "Original request had no Vias.");
+  WarningCategory warn;
+  warn.code() = responseCode;
+  warn.hostname() = DnsUtil::getLocalHostName(); // !ah! hostname should be from transport.
+  warn.text() = Data(warning ?
+                     warning :
+                     "Original request had no Vias.");
+  errMsg->header(h_Warnings).push_back(warn);
   Via v;
   v.sentPort() = dest.getPort();
   v.sentHost() = DnsUtil::inet_ntop(dest);
@@ -428,7 +429,6 @@ resip::operator<<(std::ostream& strm, const resip::Transport& rhs)
    if (!rhs.mInterface.empty()) strm << " on " << rhs.mInterface;
    return strm;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
