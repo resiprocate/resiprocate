@@ -1,9 +1,9 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
-#include "resiprocate/dum/DialogUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
+#include "resiprocate/dum/DialogUsage.hxx"
 
 #include <map>
 
@@ -198,6 +198,9 @@ class InviteSession : public DialogUsage
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
+
+      void sendAck(const SdpContents *sdp=0);
+      void sendBye();
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;

@@ -41,11 +41,10 @@ class InviteSessionHandler
       /// times out
       typedef enum
       {
-         PeerEnded, // received a BYE or CANCEL from peer
-         //Ended, // ended by the application
+         PeerEnded,      // received a BYE or CANCEL from peer
+         Ended,          // ended by the application
          GeneralFailure, // ended due to a failure
-         Cancelled,
-         SessionExpired
+         Cancelled       // ended by the application via Cancel
       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
@@ -107,6 +106,10 @@ class InviteSessionHandler
 
       /// will be called if reINVITE or UPDATE in dialog fails
       virtual void onIllegalNegotiation(InviteSessionHandle, const SipMessage& msg);     
+
+      /// will be called if Session-Timers are used and Session Timer expires
+      /// default behaviour is to send a BYE to send the dialog
+      virtual void onSessionExpired(InviteSessionHandle);
 };
 
 }

@@ -56,12 +56,13 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         transition(Terminated);
-
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
          response.header(h_Contacts) = contacts;
          mDialog.send(response);
+
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          mDum.destroy(this);
          break;
       }
@@ -300,12 +301,9 @@ ServerInviteSession::end()
          else
          {
              // ACK has likely timedout - hangup immediately
+             sendBye();
              transition(Terminated);
-
-             SipMessage bye;
-             mDialog.makeRequest(bye, BYE);
-             InfoLog (<< "Sending " << bye.brief());
-             mDialog.send(bye);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
          }
          break;
 
@@ -346,8 +344,6 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         transition(Terminated);
-
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
          if(warning)
@@ -355,6 +351,9 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
             response.header(h_Warnings).push_back(*warning);
          }
          mDialog.send(response);
+
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          mDum.destroy(this);
          break;
       }
@@ -612,11 +611,9 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         sendBye();
          transition(Terminated);
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
       }
       
@@ -631,10 +628,11 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 
       case OnBye:
       {
-         transition(Terminated);
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
          mDialog.send(b200);
+
+         transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
          mDum.destroy(this);
          break;
@@ -669,11 +667,9 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         sendBye();
          transition(Terminated);
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
          break;
       }
       
@@ -688,10 +684,11 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 
       case OnBye:
       {
-         transition(Terminated);
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
          mDialog.send(b200);
+
+         transition(Terminated);
     	 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
     	 mDum.destroy(this);
          break;
@@ -816,12 +813,10 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         transition(Terminated);
 
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         InfoLog (<< "Sending " << bye.brief());
-         mDialog.send(bye);
+         sendBye();
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
          break;
       }
       
@@ -833,9 +828,6 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 void
 ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
-   transition(Terminated);
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-
    SipMessage c200;
    mDialog.makeResponse(c200, msg, 200);
    mDialog.send(c200);
@@ -844,16 +836,14 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+   transition(Terminated);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
    mDum.destroy(this);
 }
 
 void
 ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
-   transition(Terminated);
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-
    SipMessage b200;
    mDialog.makeResponse(b200, msg, 200);
    mDialog.send(b200);
@@ -862,16 +852,14 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+   transition(Terminated);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
    mDum.destroy(this);
 }
 
 void
 ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
-   transition(Terminated);
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-
    SipMessage r481; // !jf! what should we send here? 
    mDialog.makeResponse(r481, msg, 481);
    mDialog.send(r481);
@@ -880,7 +868,8 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDialog.makeResponse(i400, mFirstRequest, 400);
    mDialog.send(i400);
 
-   handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+   transition(Terminated);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
    mDum.destroy(this);
 }
 

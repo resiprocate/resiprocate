@@ -24,6 +24,13 @@ InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const Sip
    InfoLog(<< "InviteSessionHandler::onIllegalNegotiation");
 }
 
+void 
+InviteSessionHandler::onSessionExpired(InviteSessionHandle handle)
+{
+   InfoLog(<< "InviteSessionHandler::onSessionExpired");
+   handle->end();
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
