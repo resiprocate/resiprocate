@@ -218,16 +218,13 @@ Profile::hasOutboundProxy() const
 void 
 Profile::disableGruu()
 {
+   assert(0);
 }
 
 void 
 Profile::addDigestCredential( const Data& realm, const Data& user, const Data& password)
 {
-    DigestCredential dc;
-    dc.realm = realm;
-    dc.user = user;
-    dc.password = password;
-    mDigestCredentials.insert(dc);
+   mDigestCredentials.insert(DigestCredential(realm, user, password));
 }
      
 Profile::DigestCredentialHandler* 
@@ -253,6 +250,21 @@ Profile::getDigestCredential( const Data& realm )
    static const DigestCredential empty;
    return empty;
 }
+
+Profile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& p) :
+   realm(r),
+   user(u),
+   password(p)
+{
+}
+
+Profile::DigestCredential::DigestCredential() : 
+   realm(Data::Empty),
+   user(Data::Empty),
+   password(Data::Empty)
+{
+}
+   
 
 bool
 Profile::DigestCredential::operator<(const DigestCredential& rhs) const
