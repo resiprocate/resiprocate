@@ -52,12 +52,12 @@ HeaderFieldValueList::clone() const
    return new HeaderFieldValueList(*this);
 }
 
-ParserCategory&
+ParserCategory*
 HeaderFieldValueList::getParserCategory()
 {
-   if (mParserContainer)
+   if (mParserContainer != 0)
    {
-      return *mParserContainer;
+      return mParserContainer;
    }
    else
    {
