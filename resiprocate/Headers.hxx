@@ -98,6 +98,8 @@ defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
 defineHeader(MIMEVersion, "Mime-Version", Token, "RFC ????");
 defineHeader(Priority, "Priority", Token, "RFC ????");
 defineHeader(Event, "Event", Token, "RFC 3265");
+defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
+
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
@@ -109,7 +111,6 @@ defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????");
 defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC ????");
 defineMultiHeader(Require, "Require", Token, "RFC ????");
 defineMultiHeader(Supported, "Supported", Token, "RFC ????");
-defineMultiHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
 defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????");
 defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????");
 defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????");
