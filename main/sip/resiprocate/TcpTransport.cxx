@@ -201,7 +201,11 @@ TcpTransport::processAllWrites( FdSet& fdset )
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
-      Connection* conn = mConnectionMap.get(data->destination);
+      Connection* conn = data->destination.connection;
+      if (conn == 0)
+      {
+         conn = mConnectionMap.get(data->destination);
+      }
         
       if (conn == 0)
       { 
