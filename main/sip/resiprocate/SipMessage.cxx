@@ -332,7 +332,7 @@ SipMessage::encode(std::ostream& str) const
       {
          if (mHeaders[i] != 0)
          {
-            mHeaders[i]->encode(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
+            mHeaders[i]->encode(Headers::getHeaderName(i), str);
          }
       }
       else
@@ -394,7 +394,7 @@ SipMessage::encodeEmbedded(std::ostream& str) const
             {
                str << Symbols::AMPERSAND;
             }
-            mHeaders[i]->encodeEmbedded(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
+            mHeaders[i]->encodeEmbedded(Headers::getHeaderName(i), str);
          }
       }
    }
