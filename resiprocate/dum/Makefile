@@ -22,6 +22,7 @@ SRC =   \
 	DumTimeout.cxx \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
+	InviteSessionHandler.cxx \
 	OutOfDialogReqCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
