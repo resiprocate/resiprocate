@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/09/26 00:30:27 jason Exp $
+# $Id: Makefile,v 1.4 2002/09/26 00:34:43 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -31,7 +31,7 @@ endif
 
 OBJ = obj.$(ARCH)
 BIN = bin.$(ARCH)
-LIB = lib.$(ARCH)
+LIB = ../lib.$(ARCH)
 
 OBJS = $(patsubst %.cxx,$(OBJ)/%.o,$(SRC))
 
@@ -59,7 +59,7 @@ $(OBJ):
 	- mkdir $(OBJ)
 
 $(LIB):
-	- mkdir ../$(LIB)
+	- mkdir $(LIB)
 
 html:
 	- mkdir html
@@ -84,7 +84,7 @@ $(OBJ)/%.o: %.cxx
 
 $(BIN)/libutil2.a: $(OBJS)
 	ar $(ARFLAGS) $@ $^
-	-@ ln -s $(shell pwd)/$@ ../$(LIB)
+	-@ ln -s $(shell pwd)/$@ $(LIB)
 
 
 -include $(OBJ)/*.d
