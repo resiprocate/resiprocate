@@ -1,5 +1,5 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.1 2002/11/11 21:46:02 jason Exp $";
+    "$Id: BaseException.cxx,v 1.2 2003/01/20 02:40:31 fluffy Exp $";
 
 
 #include "sip2/util/BaseException.hxx"
@@ -9,6 +9,7 @@ using namespace Vocal2;
 using namespace std;
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
+
 
 BaseException::BaseException( const Data& msg,
                         const Data& file,
@@ -20,10 +21,12 @@ BaseException::BaseException( const Data& msg,
    DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
 }
 
+
 BaseException::~BaseException()
     throw()
 {
 }
+
 
 ostream& Vocal2::operator<<(ostream& strm, const BaseException& e)
 {
@@ -31,6 +34,13 @@ ostream& Vocal2::operator<<(ostream& strm, const BaseException& e)
    return strm;
 }
 
+
+const char* 
+BaseException::name() const
+{
+	assert(0);
+	return "Unkown BaseException";
+}
 
 
 /* ====================================================================
