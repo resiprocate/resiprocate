@@ -92,7 +92,7 @@ class Contents : public LazyParser
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
    protected:
-      virtual void clear();
+      void clear();
 
       // MIME version? version & minorVersion as ints?
       mutable Mime mType;

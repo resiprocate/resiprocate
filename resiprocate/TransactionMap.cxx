@@ -6,6 +6,15 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
 
+TransactionMap::~TransactionMap()
+{
+   while (!mMap.empty())
+   {
+      delete mMap.begin()->second;
+      mMap.erase(mMap.begin());
+   }
+}
+
 TransactionState* 
 TransactionMap::find( const Data& tid ) const
 {
