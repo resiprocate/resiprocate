@@ -180,36 +180,24 @@ DnsResolver::lookupARecords(const Data& transactionId,
 {
    struct hostent hostbuf; 
    struct hostent* result=0;
-   int ret=1;
+   int ret=0;
    int herrno=0;
    char buffer[8192];
 
-#ifdef __QNX__
-   result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
-   if (result == 0)
-   {
-#endif
-
-#ifdef WIN32
-	assert(0); // !cj! 
-	ret = -1;
-	if (0)
-	{
-#endif
-
-#if defined(__SUNPRO_CC)
- result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
-  if (result == 0) 
-  {
-#endif
-
 #if defined(__linux__)
-   ret = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
-
-   if (ret != 0)
-   {
+#elif defined(WIN32)
+   result = gethostbyname( host.c_str() );
+   herrono = h_error;
+#elif defined(__QNX__) || defined(__SUNPRO_CC)
+   result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
+#else
+#error "need to define some version of gethostbyname for your arch"
 #endif
+
+   if ( (ret!=0) || (result==0) )
+   {
 
       switch (herrno)
       {
@@ -232,7 +220,6 @@ DnsResolver::lookupARecords(const Data& transactionId,
       assert(result);
       assert(result->h_length == 4);
       
-      
       Entry* entry;
       if (id)
       {
@@ -244,7 +231,6 @@ DnsResolver::lookupARecords(const Data& transactionId,
       }
       
       DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
-      char str[256];
       bool first = true;
       TupleList::iterator start;
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
@@ -263,7 +249,10 @@ DnsResolver::lookupARecords(const Data& transactionId,
             first = false;
          }
          
-#ifndef WIN32
+#ifdef WIN32
+         DebugLog (<< inet_ntoa(tuple.ipv4) << ":" << port);
+#else
+	 char str[256];
          DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.s_addr, str, sizeof(str)) << ":" << port);
 #endif
 
