@@ -1,6 +1,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/GenericContents.hxx"
 
 using namespace resip;
 
@@ -125,8 +126,15 @@ Contents::getFactoryMap()
 Contents*
 Contents::getContents(const Mime& m)
 {
-   assert(Contents::getFactoryMap().find(m) != Contents::getFactoryMap().end());
-   return Contents::getFactoryMap()[m]->convert(getContents());
+   if (Contents::getFactoryMap().find(m) != Contents::getFactoryMap().end())
+   {
+      return Contents::getFactoryMap()[m]->convert(getContents());
+   }
+   else
+   {
+      // return a generic contents and hope for the best
+      return new GenericContents(mHeaderField, m);
+   }
 }
 
 Contents*
