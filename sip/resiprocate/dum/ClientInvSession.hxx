@@ -7,6 +7,11 @@ namespace resip
 class ClientInvSession : public BaseUsage
 {
    public:
+      
+      class Handle
+      {
+      };
+
       void offer(SdpContents* offer);
       void answer(SdpContents* answer);
       void end();
