@@ -1,0 +1,61 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+digraph UAC {
+        rankdir=LR;
+        node [shape = box];
+
+        Start -> OfferReliable [ label = "onInviteOfferReliable/app::onOffer" ];
+        Start -> NoOfferReliable [ label = "onInviteNoOfferReliable" ];
+        //Start -> Terminated [ label = "dum::end/send::4XXI" ];
+
+        OfferReliable -> FirstEarlyReliable [ label = "dum::provideAnswer/send::1xx-answer,timer::1xx" ];
+        //OfferReliable -> Terminated [ label = "dum::end/send::4XXI" ];
+
+        NoOfferReliable -> FirstSentOfferReliable [ label = "dum::provideOffer/send::1xx-offer,timer::1xx" ];
+
+        FirstSentOfferReliable -> FirstSentOfferReliable [ label = "onTimer/resend::1xx" ];
+        FirstSentOfferReliable -> EarlyReliable [ label = "onPRACK/200P,app::onAnswer" ];
+        FirstSentOfferReliable -> WaitingToTerminate [ label = "dum::end" ];
+
+        FirstEarlyReliable -> FirstEarlyReliable [ label = "onTimer/resend::1xx,timer::1xx" ];
+        FirstEarlyReliable -> Accepted [ label = "dum::accept/queue::2xx" ];
+        FirstEarlyReliable -> EarlyReliable [ label = "onPRACK/200P" ];
+        FirstEarlyReliable -> WaitingToTerminate [ label = "dum::end" ];
+
+        Accepted -> Connected [ label = "onPRACK/send::2XXP,send::2XXI" ];
+        Accepted -> Terminated [ label = "dum::end/send::4XXI" ];
+        Accepted -> WaitingToHangup [ label = "dum::end" ];
+
+        EarlyReliable -> EarlyReliable [ label = "onPRACK/send::200P" ];
+        EarlyReliable -> EarlyReliable [ label = "dum::provisional/send::1xx,timer::1xx" ];
+        EarlyReliable -> EarlyReliable [ label = "onTimer/resend::1xx" ];
+        EarlyReliable -> Connected [ label = "dum::accept/send::2xx,timer::2xx" ];
+        EarlyReliable -> ReceivedUpdate [ label = "onUpdate/app::onOffer" ];
+        EarlyReliable -> SentUpdate [ label = "dum::provideOffer/send::UPDATE" ];
+        //EarlyReliable -> Terminated [ label = "dum::end/send::4XXI" ];
+
+        SentUpdate -> SentUpdateAccepted [ label = "dum::accept/send::2xxI" ];
+        SentUpdate -> EarlyReliable [ label = "on2XXU" ];
+        //SentUpdate -> Terminated [ label = "dum::end/send::4XXI" ];
+
+        SentUpdateAccepted -> Connected [ label = "on2xxU/app::onAnswer" ];
+        SentUpdateAccepted -> Connected [ label = "on4XXU/app::onOfferRejected" ];
+        SentUpdateAccepted -> WaitingToHangup [ label = "dum::end" ];
+
+        ReceivedUpdate -> ReceivedUpdateWaitingAnswer [ label = "dum::accept" ];
+        ReceivedUpdate -> EarlyReliable [ label = "dum::provideAnswer/send::200U" ];
+        //ReceivedUpdate -> Terminated [ label = "dum::end/send::4XXU,send::4XXI" ];
+
+        ReceivedUpdateWaitingAnswer -> Connected [ label = "dum::provideAnswer/send::2XXU,send::2XXI" ];
+        ReceivedUpdateWaitingAnswer -> WaitingToHangup [ label = "dum::end" ];
+
+        Connected -> Connected [ label = "onTimer/resend::2xx" ];
+        Connected -> Terminated [ label = "dum::end/send::BYE" ];
+
+        WaitingToTerminate -> Terminated [ label = "onPRACK/send::4xx" ];
+        WaitingToHangup -> Terminated [ label = "onPRACK/send::BYE" ];
+}
