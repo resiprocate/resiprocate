@@ -32,13 +32,13 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mClientData()
 {
    pb.skipChar(Symbols::EQUALS[0]);
-   if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
+   if (strncasecmp(pb.position(), Symbols::MagicCookie.data(), 7) == 0)
    {
       mHasMagicCookie = true;
       pb.skipN(7);
    }
 
-   if (mHasMagicCookie && (strncasecmp(pb.position(), Symbols::Vocal2Cookie, 7) == 0))
+   if (mHasMagicCookie && (strncasecmp(pb.position(), Symbols::Vocal2Cookie.data(), 7) == 0))
    {
       mIsMyBranch = true;
       pb.skipN(8);

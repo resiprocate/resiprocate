@@ -10,11 +10,13 @@ using namespace std;
 ContentsFactory<Pkcs7Contents> Pkcs7Contents::Factory;
 
 Pkcs7Contents::Pkcs7Contents()
-   : mText()
+   : Contents(getStaticType()),
+     mText()
 {}
 
 Pkcs7Contents::Pkcs7Contents(const Data& txt)
-   : mText(txt)
+   : Contents(getStaticType()),
+     mText(txt)
 {}
 
 Pkcs7Contents::Pkcs7Contents(const Data& txt, const Mime& contentsType)

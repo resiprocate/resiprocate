@@ -20,9 +20,9 @@ class Security
       Security( );
       ~Security();
       
-      /* The security stuff is for managing certifaces that are used by the
+      /* The security stuff is for managing certificates that are used by the
        * S/MIME and TLS stuff. Filenames can be provided for all these items but
-       * the default asumption if no filename is provided is that the itme can
+       * the default asumption if no filename is provided is that the item can
        * be loaded from the default location. The default location is a file in
        * the director ~/.certs on UNIX machines and certs in the directory where
        * the application is installed in Windows. The format of the files is
