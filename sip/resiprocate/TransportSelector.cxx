@@ -345,14 +345,14 @@ TransportSelector::dnsResolve(SipMessage* msg,
           //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
           result = mDns.lookup(msg->getForceTarget(), handler);
       }
-      else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
-      {
-         // put this into the target, in case the send later fails, so we don't
-         // lose the target
-         msg->setForceTarget(msg->header(h_Routes).front().uri());
-         DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-         result = mDns.lookup(msg->getForceTarget(), handler);
-      }
+//       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
+//       {
+//          // put this into the target, in case the send later fails, so we don't
+//          // lose the target
+//          msg->setForceTarget(msg->header(h_Routes).front().uri());
+//          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
+//          result = mDns.lookup(msg->getForceTarget(), handler);
+//       }
       else
       {
          DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());

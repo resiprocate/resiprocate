@@ -81,7 +81,7 @@ class TransportSelector
       class DefaultExternalSelector : public ExternalSelector
       {
          public:
-            Tuple TransportSelector::DefaultExternalSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+            Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
             virtual void externalTransportAdded(Transport* externalTransport);
          private:
             typedef std::map<TransportType, Transport*> ExternalTransportMap;
