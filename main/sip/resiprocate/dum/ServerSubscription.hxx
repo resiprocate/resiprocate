@@ -8,7 +8,6 @@ namespace resip
 
 class DialogUsageManager;
 
-
 //!dcm! -- no Subscription State expires parameter generation yet. 
 class ServerSubscription : public BaseSubscription 
 {
@@ -39,6 +38,7 @@ class ServerSubscription : public BaseSubscription
 
    private:
       friend class Dialog;
+      
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
       void makeNotifyExpires();

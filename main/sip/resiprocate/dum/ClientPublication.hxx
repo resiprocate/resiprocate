@@ -13,21 +13,23 @@ class ClientPublication : public BaseUsage
 
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
-      
+
+      //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
 
-      virtual SipMessage& unpublish();
+      virtual SipMessage& end();
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
    protected:
       virtual ~ClientPublication();
-
    private:
       friend class Dialog;
-      
+
       SipMessage& mPublish;
+      Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
 
       // disabled
