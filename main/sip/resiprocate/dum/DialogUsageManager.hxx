@@ -106,9 +106,12 @@ class DialogUsageManager
       };
       
    private:
-      InviteSession::Handle createInviteSession();
+      // creates a specific usage, adds to usage map, returns specific type
+      // handle with id...
+      ClientInviteSession::Handle createClientInviteSession();
+      ServerInviteSession::Handle createServerInviteSession();
       ClientSubscription::Handle createClientSubscription();
-      ServerSubscription::Handle createServerSubscription();
+      ServerSubscription::Handle createServerSubscription(const SipMessage& msg);
       ClientRegistration::Handle createClientRegistration();
       ServerRegistration::Handle createServerRegistration();
       ClientPublication::Handle createClientPublication();

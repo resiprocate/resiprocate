@@ -9,15 +9,14 @@ ClientSubscription::matches(const SipMessage& subOrNotify)
               subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
 }
 
-ClientSubscription::Handle::Handle(const ClientSubscription& handled)
-   : mDum(handled.mDum),
-     mDialogId(handled.dialog().getId())
+ClientSubscription::Handle::Handle(DialogUsageManager& dum)
+   : DialogUsageManager::Handle(dum)
 {}
 
 ClientSubscription*
 ClientSubscription::Handle::operator->()
 {
-   const list<&mDum.findClientSubscriptions(mDialogId);
+   return static_cast<ClientSubscription*>get();
 }
 
 /* ====================================================================

@@ -21,8 +21,8 @@ class InviteSession : public BaseUsage
             Handle(InviteClientSession::Handle);
             Handle(ServerClientSession::Handle);
 
-         private:
-            DialogUsageManager& mDum;
+         protected:
+            Handle(DialogUsageManager& dum);
       };
 
       /// Called to set the offer that will be used in the next messages that
