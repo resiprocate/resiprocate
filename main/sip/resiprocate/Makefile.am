@@ -2,7 +2,8 @@ SUBDIRS = test
 CXX = ${DISTCC} @CXX@
 LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
-EXTRA_DIST = PreparseInlines.cxx PreparseDiagnostic.cxx config.hxx
+EXTRA_DIST = PreparseInlines.cxx PreparseDiagnostic.cxx
+
 lib_LTLIBRARIES = libresiprocate.la
 libresiprocate_la_SOURCES = \
 	os/BaseException.cxx \
@@ -210,6 +211,8 @@ resiprocate_os_include_HEADERS = \
 	os/compat.hxx \
 	os/vmd5.hxx \
 	os/vthread.hxx
+
+libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 SUFFIXES = .gperf .cxx
 GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
