@@ -51,7 +51,7 @@ TransactionState::~TransactionState()
    const Data& id = tid(mMsgToRetransmit);
    
    DebugLog (<< "Deleting TransactionState " << id);
-   mStack.mTransactionMap.remove(id);
+   mStack.mTransactionMap.erase(id);
 
    // mCancelStateMachine will take care of deleting itself
    
@@ -148,11 +148,7 @@ TransactionState::process(SipStack& stack)
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                }
             }
-            else if (sip->header(h_RequestLine).getMethod() == ACK)
-            {
-               // !jf! no transaction need be created here
-            }
-            else 
+            else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
                DebugLog(<<"Adding non-INVITE transaction state " << sip->brief());
                TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
@@ -252,6 +248,11 @@ TransactionState::processStateless(Message* message)
    else if (result)
    {
       // the pseudotransaction ends on successful transmission
+      if (mMsgToRetransmit)
+      {
+         terminateClientTransaction(mMsgToRetransmit->getTransactionId());
+      }
+      
       delete message;
       delete this;
    }
@@ -1010,7 +1011,7 @@ TransactionState::processServerInvite(  Message* msg )
          case Timer::TimerG:
             if (mState == Completed)
             {
-               DebugLog (<< "TimerG fired. retransmit, and readd TimerG");
+               DebugLog (<< "TimerG fired. retransmit, and re-add TimerG");
                resendToWire(mMsgToRetransmit);
                mStack.mTimers.add(Timer::TimerG, msg->getTransactionId(), timer->getDuration()*2 );
             }
@@ -1224,7 +1225,8 @@ TransactionState::isSentUnreliable(Message* msg) const
 const Data&
 TransactionState::tid(SipMessage* sip) const
 {
-   assert((mMachine == Stateless && !mId.empty()) || sip);
+   assert (mMachine != Stateless || (mMachine == Stateless && !mId.empty()));
+   assert (mMachine == Stateless || (mMachine != Stateless && sip));
    return (mId.empty() && sip) ? sip->getTransactionId() : mId;
 }
 

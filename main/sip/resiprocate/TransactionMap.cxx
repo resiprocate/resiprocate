@@ -11,7 +11,6 @@ TransactionMap::~TransactionMap()
    while (!mMap.empty())
    {
       delete mMap.begin()->second;
-      mMap.erase(mMap.begin());
    }
 }
 
@@ -50,7 +49,7 @@ TransactionMap::add(const Data& tid, TransactionState* state  )
 }
  
 void 
-TransactionMap::remove(const Data& tid )
+TransactionMap::erase(const Data& tid )
 {
    MapIterator i = mMap.find(tid);
    if (i != mMap.end())

@@ -15,7 +15,7 @@ namespace Vocal2
         
         TransactionState* find( const Data& transactionId ) const;
         void add( const Data& transactionId, TransactionState* state  );
-        void remove( const Data& transactionId );
+        void erase( const Data& transactionId );
         
      private:
         typedef HashMap<Data, TransactionState*> Map;
