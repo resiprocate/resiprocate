@@ -6,14 +6,13 @@
 using namespace resip;
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request)
-   : BaseUsage(dum, dialog),
+   : BaseSubscription(dum, dialog, request),
      mLastRequest(request)
 {
 }
 
 ClientSubscription::~ClientSubscription()
 {
-   
    mDialog.mClientSubscriptions.remove(this);
 }
 
@@ -23,29 +22,43 @@ ClientSubscription::getHandle()
    return ClientSubscriptionHandle(mDum, getBaseHandle().getId());
 }
 
-bool
-ClientSubscription::matches(const SipMessage& subOrNotify)
-{
-   return (subOrNotify.exists(h_Event) && 
-           subOrNotify.header(h_Event).value() == mEventType && 
-           ( !subOrNotify.header(h_Event).exists(p_id) || 
-             subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
-}
-
 void 
 ClientSubscription::dispatch(const SipMessage& msg)
 {
    //std::vector<ClientSubscriptionHandler*>& handler = mDum.mClientSubscriptionHandler;
    
-   // toss out requests we don't care about 
+   // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
+      if (!msg.exists(h_SubscriptionState))
+      {         
+         //!dcm! -- appropriate 4xx response?
+         return;         
+      }
+      if (msg.header(h_SubscriptionState).value() == "active")
+      {
+         
+      }
+      else if (msg.header(h_SubscriptionState).value() == "pending")
+      {
+         
+      }
+      else if (msg.header(h_SubscriptionState).value() == "terminated")
+      {
+         
+      }
+      else
+      {
+         //do nothing for now, but extensions are legal, so...
+      }
    }
    else
-   {
+   {      
       assert( msg.isResponse());
       assert( (msg.header(h_CSeq).method() == SUBSCRIBE) ||  (msg.header(h_CSeq).method() == CANCEL) );
+      msg.header(h_CSeq).method() == CANCEL;
+      
    }
    
    // deal with NOTIFY we receive 
