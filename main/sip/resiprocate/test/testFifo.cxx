@@ -4,7 +4,10 @@
 #include "resiprocate/os/FiniteFifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 #include <unistd.h>
+
+// #define VERBOSE
 
 using namespace resip;
 using namespace std;
@@ -18,6 +21,80 @@ class Foo
 
       Data mVal;
 };
+
+class Consumer: public ThreadIf
+{
+  public: 
+    Consumer(TimeLimitFifo<Foo>&);
+    ~Consumer() {};
+
+    void thread();
+
+  private:
+    TimeLimitFifo<Foo>& mFifo;
+};
+
+class Producer: public ThreadIf
+{
+  public: 
+    Producer(TimeLimitFifo<Foo>&);
+    ~Producer() {};
+
+    void thread();
+
+  private:
+    TimeLimitFifo<Foo>& mFifo;
+};
+
+Consumer::Consumer(TimeLimitFifo<Foo>& f) :
+    mFifo(f)
+{}
+
+void Consumer::thread()
+{
+    static unsigned wakeups[6] = { 1, 2, 3, 0, 1, 3 };
+    unsigned int w = 0;
+
+    while(!mShutdown) {
+	if (mFifo.messageAvailable())
+	    mFifo.getNext();
+	else
+	{
+	    unsigned wakeup = wakeups[w];
+	    w = (w + 1) % 6;
+#ifdef VERBOSE
+	    cerr << "Consumer sleeping for " << wakeup << " seconds with mSize " << mFifo.size() << endl;
+#endif
+	    if (wakeup > 0)
+		sleep(wakeup);
+	}
+    }
+}
+
+Producer::Producer(TimeLimitFifo<Foo>& f) :
+    mFifo(f)
+{}
+
+void Producer::thread()
+{
+    static unsigned wakeups[6] = { 0, 1, 0, 2, 3, 1 };
+    unsigned int w = 0;
+
+    for (unsigned long n = 0; n < 0x1ffff; n++) {
+	if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
+	    mFifo.add(new Foo(Data(n)), TimeLimitFifo<Foo>::EnforceTimeDepth);
+	else
+	{
+	    unsigned wakeup = wakeups[w];
+	    w = (w + 1) % 6;
+#ifdef VERBOSE
+	    cerr << "Producer sleeping for " << wakeup << " seconds at " << n << " with mSize " << mFifo.size() << endl;
+#endif
+	    if (wakeup > 0)
+		sleep(wakeup);
+	}
+    }
+}
 
 bool
 isNear(int value, int reference, int epsilon=250)
@@ -47,7 +124,9 @@ main()
    
       assert(!tlf.empty());
       assert(tlf.size() == 1);
+#ifdef VERBOSE
       cerr << tlf.timeDepth() << endl;
+#endif
       assert(tlf.timeDepth() == 0);
 
       sleep(2);
@@ -80,11 +159,6 @@ main()
       delete fp;
       c = tlf.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-
-      while (!tlf.empty())
-      {
-         delete tlf.getNext();
-      }
    }
 
    {
@@ -108,11 +182,6 @@ main()
       delete fp;
       c = tlfNS.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-
-      while (!tlfNS.empty())
-      {
-         delete tlfNS.getNext();
-      }
    }
 
    {
@@ -145,11 +214,6 @@ main()
 
       c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-
-      while (!tlfNS.empty())
-      {
-         delete tlfNS.getNext();
-      }
    }
 
    {
@@ -187,11 +251,6 @@ main()
 
       c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-
-      while (!tlfNS.empty())
-      {
-         delete tlfNS.getNext();
-      }
    }
 
    {
@@ -209,13 +268,28 @@ main()
          assert(c);
          sleep(1);
       }
-
-      while (!tlfNS.empty())
-      {
-         delete tlfNS.getNext();
-      }
    }
    
+   {
+       TimeLimitFifo<Foo> tlfNS(20, 5000);
+       Producer prod(tlfNS);
+       Consumer cons(tlfNS);
+
+       cons.run();
+       prod.run();
+#ifdef VERBOSE
+       cerr << "Producer and consumer threads are running" << endl;
+#endif
+       prod.join();
+#ifdef VERBOSE
+       cerr << "Producer thread finished" << endl;
+#endif
+       cons.shutdown();
+       cons.join();
+#ifdef VERBOSE
+       cerr << "Consumer thread finished" << endl;
+#endif
+   }
    cerr << "All OK" << endl;
    return 0;
 }
