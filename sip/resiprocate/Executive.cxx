@@ -1,4 +1,14 @@
-uses namespace Vocal2;
+#include <sipstack/Executive.hxx>
+#include <sipstack/SipStack.hxx>
+
+using namespace Vocal2;
+
+
+Executive::Executive( SipStack& stack)
+  : mStack(stack)
+{
+
+}
 
 
 void
@@ -21,7 +31,7 @@ Executive::process()
 	}
 
       if ( processStateMachine()) 
-	{x
+	{
 	  workToDo=true;
 	}
     }
@@ -29,14 +39,16 @@ Executive::process()
 
  
 bool 
-processTransports() 
+Executive::processTransports() 
 {
    mStack.mTransportSelector.process();
+
+   return false
 }
 
 
 bool 
-processStateMachine()
+Executive::processStateMachine()
 {
   if ( mStack.mStateMacFifo.size() == 0 ) 
     {
@@ -50,7 +62,7 @@ processStateMachine()
 
 
 bool 
-processTimer()
+Executive::processTimer()
 {
   mStack.mTimers.process();
 
