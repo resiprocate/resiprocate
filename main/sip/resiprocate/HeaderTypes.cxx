@@ -63,6 +63,15 @@ Headers::isCommaTokenizing(Type type)
    return CommaTokenizing[type];
 }
 
+
+// !ah! We might not want this
+Headers::Type& Vocal2::operator++(Headers::Type& t)
+{
+   t = static_cast<Headers::Type>(t + 1);
+   return t;
+}
+
+
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
 struct params { char *name; Headers::Type type; };
