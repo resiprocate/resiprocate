@@ -29,8 +29,9 @@
 
 #include "resiprocate/os/vmd5.hxx"
 
-/* Add _BIG_ENDIAN for Solaris    -ctam */
-#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN)
+/* Add _BIG_ENDIAN for Solaris */
+/* Add _BIG_ENDIAN__ for MAC OSX */
+#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN) || defined( __BIG_ENDIAN__ )
 void
 resip::byteSwap(u_int32_t *buf, unsigned words)
 {
