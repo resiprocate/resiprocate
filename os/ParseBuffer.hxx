@@ -30,8 +30,8 @@ class ParseBuffer
          public:
             Exception(const Data& msg, const Data& file, const int line)
                : VException(msg, file, line) {}
-
-            Data getName() const { return "ParseBuffer::Exception"; }
+            
+            const char* name() const { return "ParseBuffer::Exception"; }
       };
       
       // allow the buffer to be rolled back
