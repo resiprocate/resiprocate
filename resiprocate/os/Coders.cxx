@@ -79,9 +79,6 @@ Data Base64Coder::decode(const Data& source)
 
    const char * p = static_cast<const char *>(source.data());
 
-   int c = 0;
-
-   unsigned int out = 0;
    for( int index = 0 ; index < srcLen ; index+=4)
    {
       if (index+1 >= srcLen) break;
