@@ -41,6 +41,11 @@ class ParserContainer : public ParserContainerBase
             mParsers.push_back(new T(**i));
          }
       }
+
+      ~ParserContainer()
+      {
+         clear();
+      }
       
       ParserContainer& operator=(const ParserContainer& other)
       {
