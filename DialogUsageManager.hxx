@@ -1,6 +1,8 @@
 #if !defined(RESIP_DIALOGUSAGEMANAGER_HXX)
 #define RESIP_DIALOGUSAGEMANAGER_HXX
 
+#include <list>
+
 namespace resip 
 {
 
@@ -47,6 +49,8 @@ class DialogUsageManager
       SubscriptionCreator makeRefer(BaseUsage&, const Uri& aor);
       PublicationCreator makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
       RegistrationCreator makeRegistration(BaseUsage&, const Uri& aor);
+
+      void process();
       
       DialogIdSet findAllDialogs();
       UsageSet    findAllUsages();
@@ -73,13 +77,13 @@ class DialogUsageManager
       ServerInviteSessionHandler* mServerInviteSessionHandler;      
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
-      ClientSubscriptionHandler* mClientSubscriptionHandler;
-      ServerSubscriptionHandler* mServerSubscriptionHandler;      
-      ClientPublicationHandler* mClientPublicationHandler;
-      ServerPublicationHandler* mServerPublicationHandler;  
-      OutOfDialogHandler* mClientOutOfDialogHandler;
-      OutOfDialogHandler* mServerOutOfDialogHandler;
-      
+
+      std::list<ClientSubscriptionHandler*> mClientSubscriptionHandler;
+      std::list<ServerSubscriptionHandler*> mServerSubscriptionHandler;      
+      std::list<ClientPublicationHandler*> mClientPublicationHandler;
+      std::list<ServerPublicationHandler*> mServerPublicationHandler;      
+      OutOfDialogHandler* mOutOfDialogHandler;
+	  
       SipStack& mStack;
 };
 
