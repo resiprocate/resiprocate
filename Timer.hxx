@@ -39,7 +39,7 @@ class Timer
       Timer& operator=(const Timer& t);
       
       // returns the unique identifier
-      Id getId() const;
+      Id getId() const { return mId; }
       
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
