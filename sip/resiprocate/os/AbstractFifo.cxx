@@ -1,3 +1,4 @@
+#include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
 
 using namespace resip;
@@ -9,17 +10,7 @@ AbstractFifo::AbstractFifo(unsigned int maxSize)
 }
 
 AbstractFifo::~AbstractFifo()
-{}
-
-bool
-AbstractFifo::add(void* msg)
 {
-   Lock lock(mMutex); (void)lock;
-   mFifo.push_back(msg);
-   mSize++;
-   mCondition.signal();
-
-   return true;
 }
 
 void*

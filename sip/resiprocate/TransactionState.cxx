@@ -91,7 +91,7 @@ TransactionState::process(TransactionController& controller)
    TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
-   RESIP_STATISTICS(sip && sip->isExternal() && controller.getStatisticsManager().received(sip));
+   RESIP_STATISTICS(sip && sip->isExternal() && controller.mStatsManager.received(sip));
 
    // !jf! this is a first cut at elementary back pressure. hope it works :)
    if (sip && sip->isExternal() && sip->isRequest() && 
@@ -1461,7 +1461,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       }
    }
 
-   RESIP_STATISTICS(mController.getStatisticsManager().sent(sip, resend));
+   RESIP_STATISTICS(mController.mStatsManager.sent(sip, resend));
 }
 
 void

@@ -66,6 +66,9 @@ class TimeLimitFifo : public AbstractFifo
    private:
       time_t timeDepthInternal() const;
       inline bool wouldAcceptInteral(DepthUsage usage) const;
+      TimeLimitFifo(const TimeLimitFifo& rhs);
+      TimeLimitFifo& operator=(const TimeLimitFifo& rhs);
+
       time_t mMaxDurationSecs;
       unsigned int mUnreservedMaxSize;
 };
@@ -85,10 +88,12 @@ TimeLimitFifo<Msg>::~TimeLimitFifo()
    while (!mFifo.empty())
    {
       Timestamped* ts = static_cast<Timestamped*>(mFifo.front());
+      mFifo.pop_front();
       delete ts->mMsg;
       delete ts;
-      mFifo.pop_front();
    }
+   assert(mFifo.empty());
+   mSize = 0UL - 1;
 }
 
 template <class Msg>
