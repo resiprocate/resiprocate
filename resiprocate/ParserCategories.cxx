@@ -467,7 +467,7 @@ Via::parse(ParseBuffer& pb)
    }
    else
    {
-      mSentPort = Symbols::DefaultSipPort;
+      mSentPort = 0;
    }
    parseParameters(pb);
 }
@@ -476,7 +476,11 @@ ostream&
 Via::encode(ostream& str) const
 {
    str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
-       << Symbols::SPACE << mSentHost << Symbols::COLON << mSentPort;
+       << Symbols::SPACE << mSentHost;
+   if (mSentPort != 0)
+   {
+      str << Symbols::COLON << mSentPort;
+   }
    encodeParameters(str);
    return str;
 }
@@ -765,10 +769,12 @@ StatusLine::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    mResponseCode = pb.integer();
    start = pb.skipNonWhitespace();
-
-   start = pb.skipChar(' ');
-   pb.reset(pb.end());
-   pb.data(mReason, start);
+   if (*pb.position() != ' ' && pb.position() != pb.end())
+   {
+      start = pb.skipChar(' ');
+      pb.reset(pb.end());
+      pb.data(mReason, start);
+   }
 }
 
 ostream&
