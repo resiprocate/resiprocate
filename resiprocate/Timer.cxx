@@ -11,7 +11,7 @@
 #include <sipstack/Timer.hxx>
 #include <sipstack/Logger.hxx>
 
-static const char version[] = "$Id: Timer.cxx,v 1.1 2002/09/22 00:15:32 jason Exp $";
+static const char version[] = "$Id: Timer.cxx,v 1.2 2002/09/22 00:23:44 jason Exp $";
 
 using namespace Vocal2;
 
@@ -40,6 +40,26 @@ Timer::Timer(unsigned long tms) :
 {
 }
 
+Timer::Timer(const Timer& other) : 
+   mWhen(other.mWhen),
+   mId(other.mTimerCount),
+   mType(other.mType),
+   mTransactionId(other.mTransactionId)
+{
+}
+
+Timer&
+Timer::operator=(const Timer& other)
+{
+   if (this != &other)
+   {
+      mWhen = other.mWhen;
+      mId = other.mTimerCount;
+      mType = other.mType;
+      mTransactionId = other.mTransactionId;
+   }
+   return *this;
+}
 
 UInt64
 Timer::getSystemTime()
