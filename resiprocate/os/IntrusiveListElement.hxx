@@ -181,7 +181,7 @@ class IntrusiveListElement
          mPrev = 0;
       }
 
-   private:
+   protected:
       mutable P mNext;
       mutable P mPrev;
 };
@@ -318,7 +318,7 @@ class IntrusiveListElement1
          mPrev = 0;
       }
 
-   private:
+   protected:
       mutable P mNext;
       mutable P mPrev;
 };
@@ -455,7 +455,7 @@ class IntrusiveListElement2
          mPrev = 0;
       }
 
-   private:
+   protected:
       mutable P mNext;
       mutable P mPrev;
 };
