@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/GenericContents.hxx"
 #include "resiprocate/Rlmi.hxx"
 #include "resiprocate/Pidf.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
@@ -28,6 +29,7 @@ traverseMulti(const MultipartMixedContents* mp,
       for (MultipartRelatedContents::Parts::const_iterator i = mp->parts().begin();
            i != mp->parts().end(); ++i)
       {
+         GenericContents* generic;
          Pidf* pidf;
          Rlmi* rlmi;
          MultipartSignedContents* mps;
@@ -60,6 +62,11 @@ traverseMulti(const MultipartMixedContents* mp,
             indent(level);
             cerr << "discovered a multipart with " << mpm->parts().size() << " parts " << endl;
             traverseMulti(mpm, level+1);
+         }
+         else if ((generic = dynamic_cast<GenericContents*>(*i)))
+         {
+            indent(level);
+            cerr << "discovered an unknown type " << generic->getType() << endl;
          }
          else 
          {
