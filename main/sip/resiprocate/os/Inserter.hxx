@@ -22,6 +22,7 @@
 namespace resip
 {
 
+#if !defined(__SUNPRO_CC)
 /// Completely generic insert function
 template <class T>
 std::ostream&
@@ -32,7 +33,9 @@ insert(std::ostream& s, const T& t)
    return s;
 }
 
-#ifndef WIN32
+#endif
+
+#if !defined(WIN32) && !defined(__SUNPRO_CC)
 // !cj! help - can someone look at this - do we really need it 
 // it does not compile under windows 
 
@@ -156,6 +159,8 @@ class InserterClass
       const T& _t;
 };
 
+#if !defined(__SUNPRO_CC)
+
 /// Function to allow an Inserter to be used directly with a stream
 template <class T>
 std::ostream&
@@ -163,6 +168,8 @@ operator<<(std::ostream& s, const InserterClass<T>& inserter)
 {
    return insert(s, inserter._t);
 }
+
+#endif
 
 /// Templatized function to construct an instance of InserterClass for a
 /// container to be inserted. The function induces the template type, saving the
