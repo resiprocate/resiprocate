@@ -19,7 +19,8 @@ class TuIM
 {
    private:
       class Buddy;
-      
+      class StateAgent;
+            
 public:
       class Callback
       {
@@ -68,7 +69,7 @@ public:
 
       // Presence management
       void setMyPresence( const bool open, const Data& status = Data::Empty );
-      void addStateAgent( const Uri& ur );
+      void addStateAgent( const Uri& uri );
       
    private:
       void processRequest(SipMessage* msg);
@@ -82,6 +83,7 @@ public:
       void processSubscribeResponse(SipMessage* msg, Buddy& buddy );
 
       void sendNotify(Dialog* dialog);
+      void sendPublish(StateAgent& dialog);
       
       void setOutbound( SipMessage& msg );
       
@@ -105,8 +107,18 @@ public:
       };
 
       // people I subscribe to
-      std::vector<Buddy> mBuddy;
+      std::vector<Buddy> mBuddies;
       typedef std::vector<Buddy>::iterator BuddyIterator;
+
+      class StateAgent
+      {
+         public:
+            Uri uri;
+            Dialog* dialog;
+      };
+      // people I publish to
+      std::list<StateAgent> mStateAgents;
+      typedef std::list<StateAgent>::iterator StateAgentIterator;
 
       // people who subscribe to me 
       std::list<Dialog*> mSubscribers;

@@ -270,7 +270,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
     UInt64 now = Timer::getTimeMs();
     Uri from = msg->header(h_From).uri();
 
-    for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
+    for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
     {
        Data buddyAor = i->uri.getAor();
        
@@ -337,7 +337,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    bool changed = true;
 
    // update if found in budy list 
-   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
+   for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       Uri u = i->uri; // getBuddyUri(i);
       
@@ -482,7 +482,7 @@ TuIM::processResponse(SipMessage* msg)
    }
    
    // see if it is a subscribe response 
-   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
+   for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       Buddy& buddy = *i;
       assert(  buddy.presDialog );
@@ -648,7 +648,7 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
       
       bool changed = true;
       
-      for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
+      for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
       {
          Uri u = i->uri; // getBuddyUri(i);
          
@@ -695,7 +695,7 @@ TuIM::process()
    }
    
    // check if any subscribes need refresh
-   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
+   for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       if (  now > i->mNextTimeToSubscribe )
       {
@@ -775,7 +775,7 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
 int 
 TuIM::getNumBuddies() const
 {
-   return int(mBuddy.size());
+   return int(mBuddies.size());
 }
 
 
@@ -785,7 +785,7 @@ TuIM::getBuddyUri(const int index)
    assert( index >= 0 );
    assert( index < getNumBuddies() );
 
-   return mBuddy[index].uri;
+   return mBuddies[index].uri;
 }
 
 
@@ -795,7 +795,7 @@ TuIM::getBuddyGroup(const int index)
    assert( index >= 0 );
    assert( index < getNumBuddies() );
 
-   return mBuddy[index].group;
+   return mBuddies[index].group;
 }
 
 
@@ -807,10 +807,10 @@ TuIM::getBuddyStatus(const int index, Data* status)
 
    if (status)
    {
-      *status =  mBuddy[index].status;
+      *status =  mBuddies[index].status;
    }
    
-   bool online = mBuddy[index].online;
+   bool online = mBuddies[index].online;
 
    return online;
 }
@@ -844,9 +844,9 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    buddy.presDialog = new Dialog( NameAddr(mContact) );
    assert( buddy.presDialog );
    
-   subscribeBuddy( buddy );
+   mBuddies.push_back( buddy );
 
-   mBuddy.push_back( buddy );
+   subscribeBuddy( buddy );
 }
 
 
@@ -855,8 +855,8 @@ TuIM::removeBuddy( const Uri& name)
 {
    TuIM::BuddyIterator i;
 	
-   i = mBuddy.begin();	
-   while ( i != mBuddy.end() )
+   i = mBuddies.begin();	
+   while ( i != mBuddies.end() )
    {
       Uri u = i->uri;
 
@@ -864,7 +864,7 @@ TuIM::removeBuddy( const Uri& name)
       {
          // remove this buddy 
          // !cj! - should unsubscribe 
-         i = mBuddy.erase(i);
+         i = mBuddies.erase(i);
       }
       else
       {
@@ -899,6 +899,25 @@ TuIM::sendNotify(Dialog* dialog)
 
 
 void 
+TuIM::sendPublish(StateAgent& sa)
+{ 
+   assert( sa.dialog );
+   
+   auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
+
+   Pidf* pidf = new Pidf( *mPidf );
+
+   msg->header(h_Event).value() = "presence";
+
+   msg->setContents( pidf );
+   
+   setOutbound( *msg );
+
+   mStack->send( *msg );
+}
+
+
+void 
 TuIM::setMyPresence( const bool open, const Data& status )
 {
    assert( mPidf );
@@ -910,6 +929,11 @@ TuIM::setMyPresence( const bool open, const Data& status )
       assert( dialog );
       
       sendNotify(dialog);
+   } 
+
+   for ( StateAgentIterator i=mStateAgents.begin(); i != mStateAgents.end(); i++)
+   {
+      sendPublish( *i );
    }
 }
 
@@ -977,6 +1001,20 @@ void
 TuIM::setDefaultProtocol( TransportType protocol )
 {
    mDefaultProtocol = protocol;
+}
+
+
+void 
+TuIM::addStateAgent( const Uri& uri )
+{
+   StateAgent sa;
+   
+   sa.dialog = new  Dialog( NameAddr(mContact) );
+   sa.uri = uri;
+   
+   mStateAgents.push_back( sa );
+   
+   sendPublish( sa );
 }
 
 
