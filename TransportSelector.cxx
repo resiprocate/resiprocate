@@ -98,7 +98,7 @@ TransportSelector::process(FdSet& fdset)
       {
          (*i)->process(fdset);
       }
-      catch (VException& e)
+      catch (BaseException& e)
       {
          InfoLog (<< "Uncaught exception: " << e);
       }
