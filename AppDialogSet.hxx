@@ -16,13 +16,19 @@ class AppDialogSet : public Handled
    public:
       AppDialogSet(DialogUsageManager& dum);
 
-      virtual ~AppDialogSet();
+      // by default, calls the destructor. application can override this if it
+      // wants to manage memory on its own. 
+      virtual void destroy();
+
       virtual void cancel();
       virtual AppDialog* createAppDialog(const SipMessage&);
       AppDialogSetHandle getHandle();
       const DialogSetId& getDialogSetId();
+
    protected:
       DialogUsageManager& mDum;      
+      virtual ~AppDialogSet();
+
    private:
       friend class DialogUsageManager;
       DialogSetId mDialogSetId;
