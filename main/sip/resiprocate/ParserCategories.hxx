@@ -25,7 +25,7 @@ class Unknown : public ParserCategory
          checkParsed();
          return *mHeaderField->get(param);
       }
-      void parse() {}
+      virtual void parse();
 };
 typedef ParserContainer<Unknown> Unknowns;
 
