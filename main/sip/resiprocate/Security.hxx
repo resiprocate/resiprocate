@@ -81,18 +81,18 @@ class Security
       *    also unwrap any signatures. It will fail if the signatures are not
       *    trusted. */ 
       enum OperationNeeded {
+         isUnknown,
+         isBad,
          isPlain, // Body is not signed or encrypted
-         isSigned, // It is signed with trusted signature 
          isEncrypted, // It is a valid encryped 
-         isSignedAndEncrypted, // it is signed by trusted party and encrypted
-                               // for us
          badEncryption, // decrytpion failed - may have been for someone else 
+         isSigned, // It is signed with trusted signature 
          newGoodSignature, // signature is new and is signed by a root we trust 
-         untrustedSignature, // signature is new and is not signed by someone we
+         untrustedSignature, // signature is new and is not signed by a CA we
                              // trust 
          badSignature // signature is not valid
       };
-      OperationNeeded operationNeeded( Pkcs7Contents* );
+      OperationNeeded operationNeeded( Contents* );
       struct CertificateInfo 
       {
             char name[1024];
@@ -107,7 +107,9 @@ class Security
                                      // to use this but should use addAndAve
       void addAndSaveCertificate( Pkcs7Contents*, const Data& filePath=Data::Empty ); // add cert and
                                                                 // saves on disk
-      Contents* uncode( Pkcs7Contents* ); // returns NULL if fails 
+      Contents* uncode( Pkcs7Contents*, Data* signedBy=NULL ); // returns NULL if fails 
+
+      Contents* uncodeSingle( Pkcs7Contents*, Data* signedBy=NULL ); // returns NULL if fails 
                
 
    private:

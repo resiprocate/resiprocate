@@ -21,6 +21,8 @@ class ContentsFactoryBase
    public:
       virtual Contents* create(HeaderFieldValue* hfv, 
                                const Mime& contentType) const = 0;
+      virtual Contents* create(const Data& data,
+                               const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;
 };
       
@@ -30,6 +32,7 @@ class Contents : public LazyParser
    public:
       // pass Mime instance for parameters
       Contents(HeaderFieldValue* headerFieldValue, const Mime& contentsType);
+      Contents(const Mime& contentsType);
       Contents(const Contents& rhs);
       virtual ~Contents();
       Contents& operator=(const Contents& rhs);
@@ -65,6 +68,12 @@ class ContentsFactory : public ContentsFactoryBase
       virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
       {
          return new T(hfv, contentType);
+      }
+
+      // pass Mime instance for parameters
+      virtual Contents* create(const Data& data, const Mime& contentType) const
+      {
+         return new T(data, contentType);
       }
 
       virtual Contents* convert(Contents* c) const

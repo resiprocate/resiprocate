@@ -56,7 +56,7 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from )
    }
    
    cerr << from << " says:\n";
-   cerr << msg << endl;
+   cerr << msg.escaped() << endl;
 }
 
 
