@@ -404,6 +404,7 @@ Dialog::dispatch(const SipMessage& msg)
             case INVITE:
             case CANCEL:
             case REFER: 
+            case BYE:
                if (mInviteSession == 0)
                {
                   //spurious
@@ -732,6 +733,7 @@ void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 {
    assert( code >= 100 );
+   response.remove(h_Contacts);   
    if (code < 300 && code > 100)
    {
       assert(request.isRequest());
@@ -739,7 +741,10 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
              request.header(h_RequestLine).getMethod() == BYE ||
              request.header(h_RequestLine).getMethod() == CANCEL ||
-             request.header(h_RequestLine).getMethod() == NOTIFY 
+             request.header(h_RequestLine).getMethod() == REFER ||
+             request.header(h_RequestLine).getMethod() == MESSAGE ||
+             request.header(h_RequestLine).getMethod() == NOTIFY ||
+             request.header(h_RequestLine).getMethod() == OPTIONS 
              );
       
       assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
