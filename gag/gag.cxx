@@ -30,7 +30,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 void shutdown (SipStack *stack)
 {
