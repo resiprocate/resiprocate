@@ -296,7 +296,7 @@ main(int argc, char* argv[])
          FdSet srcFdset;
          src.buildFdSet(srcFdset);
          {
-            int err = srcFdset.select(5000);
+            int err = srcFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          src.process(srcFdset);
@@ -304,7 +304,7 @@ main(int argc, char* argv[])
          FdSet destFdset;
          dest.buildFdSet(destFdset);
          {
-            int err = destFdset.select(5000);
+            int err = destFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          dest.process(destFdset);
@@ -360,7 +360,7 @@ main(int argc, char* argv[])
          FdSet srcFdset;
          src.buildFdSet(srcFdset);
          {
-            int err = srcFdset.selectMiliSeconds(5000);
+            int err = srcFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          src.process(srcFdset);
@@ -368,7 +368,7 @@ main(int argc, char* argv[])
          FdSet destFdset;
          dest.buildFdSet(destFdset);
          {
-            int err = destFdset.selectMiliSeconds(5000);
+            int err = destFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          dest.process(destFdset);
@@ -388,12 +388,11 @@ main(int argc, char* argv[])
          TransportMessage* okMsg = dynamic_cast<TransportMessage*>(msg);
          cerr << *okMsg << endl;
          
-         delete sipMsg;
-         delete okMsg;
-
-
          Data reply(smallMessageWithLargeBody);
          dest.send(sipMsg->getSource(), reply, transactionId);
+
+         delete sipMsg;
+         delete okMsg;
       }
       
 
@@ -403,7 +402,7 @@ main(int argc, char* argv[])
          FdSet destFdset;
          dest.buildFdSet(destFdset);
          {
-            int err = destFdset.selectMiliSeconds(5000);
+            int err = destFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          dest.process(destFdset);
@@ -411,7 +410,7 @@ main(int argc, char* argv[])
          FdSet srcFdset;
          src.buildFdSet(srcFdset);
          {
-            int err = srcFdset.selectMiliSeconds(5000);
+            int err = srcFdset.selectMilliSeconds(5);
             assert (err != -1);
          }
          src.process(srcFdset);
