@@ -1,8 +1,8 @@
 #if defined(USE_SSL)
 
 #include <sys/types.h>
-#include <dirent.h>
 
+#include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
@@ -11,15 +11,20 @@
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
+#ifndef WIN32
+#include <dirent.h>
+#endif
+
+#include "sip2/util/Socket.hxx"
+
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Security.hxx"
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/Pkcs7Contents.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
-#include "sip2/util/Logger.hxx"
 #include "sip2/util/Random.hxx"
 #include "sip2/util/DataStream.hxx"
-
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 
@@ -139,6 +144,9 @@ TlsConnection::peerName()
    assert(ssl);
    Data ret = Data::Empty;
 
+#ifdef WIN32
+   assert(0);
+#else
    ErrLog("request peer certificate" );
    X509* cert = SSL_get_peer_certificate(ssl);
    if ( !cert )
@@ -205,6 +213,7 @@ TlsConnection::peerName()
    }
    
    X509_free(cert); cert=NULL;
+#endif
    return ret;
 }
 
@@ -381,6 +390,9 @@ Security::loadPublicCert(  const Data& filePath )
 { 
    assert( !filePath.empty() );
 
+#ifdef WIN32
+   assert(0);
+#else
    DIR* dir = opendir( filePath.c_str() );
   
    if (!dir )
@@ -428,7 +440,8 @@ Security::loadPublicCert(  const Data& filePath )
    }
    
    closedir( dir );
-   
+#endif
+
    return true;
 }
 
@@ -437,6 +450,7 @@ bool
 Security::savePublicCert( const Data& certName,  const Data& filePath )
 {
    assert(0);
+   return false;
 }
 
 
