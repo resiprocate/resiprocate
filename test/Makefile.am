@@ -10,6 +10,19 @@ libtestsupport_la_SOURCES = \
 	Resolver.cxx \
 	TestSupport.cxx \
 	Transceiver.cxx
+
+noinst_HEADERS = \
+	digcalc.hxx \
+	md5.hxx \
+	Resolver.hxx \
+	InviteClient.hxx \
+	Transceiver.hxx \
+	Register.hxx \
+	testIM.hxx \
+	InviteServer.hxx \
+	Registrar.hxx \
+	TestSupport.hxx
+
 LDADD = libtestsupport.la ../libresiprocate.la
 check_PROGRAMS = \
 	SipTortureTests \
@@ -47,6 +60,7 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor
+
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
 lg_SOURCES = lg.cxx
