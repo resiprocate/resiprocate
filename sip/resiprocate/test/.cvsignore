@@ -4,11 +4,13 @@
 bin.debug.Linux.i686
 bin.debug.Linux.i686
 bin.debug.QNX.x86pc
+bin.opt.Linux.i686
 bin.opt.QNX.x86pc
 foo.i
 obj.debug.Linux.i686
 obj.debug.Linux.i686
 obj.debug.QNX.x86pc
+obj.opt.Linux.i686
 obj.opt.QNX.x86pc
 spam.ps
 tassert.h
