@@ -12,9 +12,6 @@ class Uri;
 class HostSpecification
 {
    public:
-      // for localhost
-      HostSpecification();
-
       // specified like sip.vovida.org:5060
       HostSpecification(const Data& hostPort);
 
@@ -38,6 +35,9 @@ class HostSpecification
       // return true if data of the form a.b.c.d
       static bool isIpAddress(const Data& data);
 
+      // return the localhostname (posix: gethostname())
+      static Data getHostName();
+      
       std::list<Tuple>::const_iterator mCurrent;
 
    private:
