@@ -44,7 +44,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
-     mDestroying(false)
+     mDestroying(false),
+     mAppDialog(0)
 {
    assert(msg.isExternal());
 
