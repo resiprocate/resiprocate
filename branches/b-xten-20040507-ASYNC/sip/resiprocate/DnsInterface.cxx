@@ -123,20 +123,27 @@ DnsInterface::process(FdSet& fdset)
 }
 
 DnsResult*
-DnsInterface::lookup(const Uri& uri, DnsHandler* handler)
+DnsInterface::createDnsResult(DnsHandler* handler)
 {
    DnsResult* result = new DnsResult(*this, handler);
-   result->lookup(uri);
    return result;
 }
 
-DnsResult* 
-DnsInterface::lookup(const Via& via, DnsHandler* handler)
+void 
+DnsInterface::lookup(DnsResult* res, const Uri& uri)
 {
-   assert(0);
-   //DnsResult* result = new DnsResult(*this);
-   return NULL;
+   res->lookup(uri);   
 }
+
+
+
+// DnsResult* 
+// DnsInterface::lookup(const Via& via, DnsHandler* handler)
+// {
+//    assert(0);
+//    //DnsResult* result = new DnsResult(*this);
+//    return NULL;
+// }
 
 void 
 DnsInterface::handle_NAPTR(ExternalDnsRawResult res)

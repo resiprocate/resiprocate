@@ -75,8 +75,12 @@ class DnsInterface : public ExternalDnsHandler
       // continue to ask the DnsResult to return more tuples. If the tuples for
       // the current transport are exhausted, move on to the next preferred
       // transport (if there is one)
-      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
-      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
+
+      DnsResult* createDnsResult(DnsHandler* handler=0);
+      void lookup(DnsResult* res, const Uri& uri);
+
+//      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
+//      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
 
       //callbacks for mDnsProvider
       virtual void handle_NAPTR(ExternalDnsRawResult res);

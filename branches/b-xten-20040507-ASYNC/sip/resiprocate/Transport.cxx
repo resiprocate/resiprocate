@@ -194,10 +194,17 @@ void
 Transport::stampReceived(SipMessage* message)
 {
    // set the received= and rport= parameters in the message if necessary !jf!
+
+
    if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
-      message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
+      if(message->header(h_Vias).front().exists(p_branch) 
+         && message->header(h_Vias).front().param(p_branch).hasMagicCookie() )
+      {
+         message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
+      }
+      
       if (message->header(h_Vias).front().exists(p_rport))
       {
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
