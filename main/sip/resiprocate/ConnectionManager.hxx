@@ -56,13 +56,13 @@ class ConnectionManager
       // intrusive list management
       Connection mHead;
 
-      Connection::writeList* mWriteHead;
-      Connection::writeList::iterator mWriteIter;
+      ConnectionWriteList* mWriteHead;
+      ConnectionWriteList::iterator mWriteIter;
 
-      Connection::readList* mReadHead;
-      Connection::readList::iterator mReadIter;
+      ConnectionReadList* mReadHead;
+      ConnectionReadList::iterator mReadIter;
 
-      Connection::lruList* mLRUHead;
+      ConnectionLruList* mLRUHead;
 
       // reset iterators if they've been invalidated
       void checkIterators();
