@@ -516,22 +516,22 @@ Contents::encodeHeaders(ostream& str) const
           << Symbols::CRLF;
    }
 
-#if 1
-    str << "Content-Length" << Symbols::COLON[0] << Symbols::SPACE[0]
-        << getBodyData().size()
-        << Symbols::CRLF;
-#endif
-
+   if (mLength)
+   {
+      str << "Content-Length" << Symbols::COLON[0] << Symbols::SPACE[0]
+          <<  *mLength 
+          << Symbols::CRLF;
+   }
+   
    str << Symbols::CRLF;
    return str;
 }
-
 
 Data
 Contents::getBodyData() const 
 {
    ErrLog( << "Need to implement getBodyData function for " << getType() );
-   //assert(0);
+   assert(0);
    return Data::Empty;
 }
 
