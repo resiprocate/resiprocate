@@ -328,7 +328,7 @@ SipMessage::encode(std::ostream& str) const
       {
          if (mHeaders[i] != 0)
          {
-            mHeaders[i]->encode(Headers::getHeaderName(i), str);
+            mHeaders[i]->encode(i, str);
          }
       }
       else
@@ -599,7 +599,8 @@ SipMessage::header(const UnknownHeaderType& headerName) const
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
    }
-   throw Exception(Data("missing extension header ") + headerName.getName(), __FILE__, __LINE__);
+   // missing extension header
+   assert(false);
 }
 
 StringCategories& 
@@ -724,7 +725,8 @@ SipMessage::header(const RequestLineType& l) const
    assert (!isResponse());
    if (mStartLine == 0 )
    { 
-      throw Exception("request line missing", __FILE__, __LINE__);
+      // request line missing
+      assert(false);
    }
    return dynamic_cast<ParserContainer<RequestLine>*>(mStartLine->getParserContainer())->front();
 }
@@ -749,7 +751,8 @@ SipMessage::header(const StatusLineType& l) const
    assert (!isRequest());
    if (mStartLine == 0 )
    { 
-      throw Exception("status line missing", __FILE__, __LINE__);
+      // status line missing
+      assert(false);
    }
    return dynamic_cast<ParserContainer<StatusLine>*>(mStartLine->getParserContainer())->front();
 }
@@ -776,7 +779,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single)
    {
       if (hfvs->parsedEmpty())
       {
-         // create an unparsed shared header field value
+         // create an unparsed shared header field value // !dlb! when will this happen?
          hfvs->push_back(new HeaderFieldValue(Data::Empty.data(), 0));
       }
    }
@@ -792,16 +795,16 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
    // empty?
    if (hfvs == 0)
    {
-      WarningLog(<< "Missing " << Headers::HeaderNames[type+1] << " in " << *this);
-      throw Exception(Headers::HeaderNames[type+1] + " missing", __FILE__, __LINE__);
+      // header missing
+      assert(false);
    }
    // !dlb! not thrilled about checking this every access
    else if (single)
    {
       if (hfvs->parsedEmpty())
       {
-         WarningLog(<< "Missing " << Headers::HeaderNames[type+1] << " in " << *this);
-         throw Exception(Headers::HeaderNames[type+1] + " missing", __FILE__, __LINE__);
+         // !dlb! when will this happen?
+         assert(false);
       }
    }
 
