@@ -287,10 +287,6 @@ void
 DialogSet::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
-   if (handledByAuthOrRedirect(msg))
-   {
-      return;
-   }
 
    if (mState == WaitingToEnd)
    {
@@ -318,6 +314,10 @@ DialogSet::dispatch(const SipMessage& msg)
                   dialog.makeRequest(bye, BYE);
                   dialog.send(bye);
                }
+               else
+               {
+                  mDum.destroy(this);
+               }
                break;
             case SUBSCRIBE:
                assert(0);
@@ -332,6 +332,11 @@ DialogSet::dispatch(const SipMessage& msg)
          mDum.makeResponse(response, msg, 481);
          mDum.send(response);
       }
+      return;
+   }
+
+   if (handledByAuthOrRedirect(msg))
+   {
       return;
    }
 
