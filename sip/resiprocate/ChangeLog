@@ -1,3 +1,11 @@
+2003-08-07  Wensong Zhang  <wensong@purplecomm.com>
+
+	* TcpTransport.cxx (processWrite): fixed to use send() instead of
+	write() on the WIN32 platform.
+
+	* TcpTransport.cxx (processRead): fixed to use recv() instead of
+	read() on the WIN32 platform.
+
 2003-08-01  Wensong Zhang  <wensong@purplecomm.com>
 
 	* Makefile.am (libresiprocate_la_SOURCES): added the new
