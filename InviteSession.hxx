@@ -12,36 +12,38 @@ namespace resip
 
 class SdpContents;
 
+/// Base class for class ClientInviteSession and class ServerInviteSession.
+/// Implements common attributes and behavior (i.e.t post connected) of the two classes.
 class InviteSession : public DialogUsage
 {
    public:
       /// Called to set the offer that will be used in the next messages that
-      /// sends and offer. Does not send an offer 
-      virtual void provideOffer(const SdpContents& offer);
-      
+      /// sends and offer. Does not send an offer
+     virtual void provideOffer(const SdpContents& offer);
+
       /// Called to set the answer that will be used in the next messages that
       /// sends an offer. Does not send an answer
       virtual void provideAnswer(const SdpContents& answer);
 
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
-      
+
       /// Rejects an offer at the SIP level. So this can send a 488 to a
       /// reINVITE or UPDATE
       virtual void reject(int statusCode);
-      
+
       //accept a re-invite, etc.  Always 200?
       //this is only applicable to the UAS
       //virtual void accept(int statusCode=200);
-      
+
       // will resend the current sdp in an UPDATE or reINVITE
       virtual void targetRefresh(const NameAddr& localUri);
- 
+
       // Following methods are for sending requests within a dialog
       virtual void refer(const NameAddr& referTo);
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
       virtual void info(const Contents& contents);
-      
+
       const SdpContents* getLocalSdp() const;
       const SdpContents* getRemoteSdp() const;
       bool peerSupportsUpdateMethod() const;
@@ -57,12 +59,12 @@ class InviteSession : public DialogUsage
       typedef enum
       {
          Undefined,  // Not used
-         Connected,  
-         Updating, // Sent an UPDATE
-         Reinviting, // Sent a reINVITE
-         UpdatePending, // Received an UPDATE
-         ReinvitePending, // Received a reINVITE
-         ReinvitePendingNoOffer, // Received a reINVITE with no offer
+         Connected,
+         SentUpdate, // Sent an UPDATE
+         SentReinvite, // Sent a reINVITE
+         ReceivedUpdate, // Received an UPDATE
+         ReceivedReinvite, // Received a reINVITE
+         ReceivedReinviteNoOffer, // Received a reINVITE with no offer
          Terminated // Ended. waiting to delete
       } State;
 
@@ -93,21 +95,21 @@ class InviteSession : public DialogUsage
       void sendSdp(SdpContents* sdp);
 
       std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
-      
+
 
       State mState;
 
       typedef enum
       {
-         NitComplete, 
+         NitComplete,
          NitProceeding
       } NitState;
-      
-      NitState mNitState;               
+
+      NitState mNitState;
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
       SipMessage& makeAck();
-      SipMessage& makeFinalResponse(int code);      
+      SipMessage& makeFinalResponse(int code);
 #endif
 
 
@@ -118,9 +120,9 @@ class InviteSession : public DialogUsage
       typedef map<int, SipMessage> CSeqToMessageMap;
       CSeqToMessageMap mAckMap;
       CSeqToMessageMap mFinalResponseMap;
-      
+
       bool mUserConnected;
-      SipMessage* mQueuedBye;     
+      SipMessage* mQueuedBye;
 
       // Session Timer settings
       int  mSessionInterval;
@@ -128,16 +130,16 @@ class InviteSession : public DialogUsage
       int  mSessionTimerSeq;
 
       virtual ~InviteSession();
-      
+
       typedef RefCountedDestroyer<InviteSession> Destroyer;
       Destroyer mDestroyer;
-      friend class Destroyer::Guard;      
+      friend class Destroyer::Guard;
 
    private:
-      friend class Dialog;      
-      friend class DialogUsageManager;      
+      friend class Dialog;
+      friend class DialogUsageManager;
 
-      unsigned long mCurrentRetransmit200;      
+      unsigned long mCurrentRetransmit200;
 
       // disabled
       InviteSession(const InviteSession&);
@@ -152,22 +154,22 @@ class InviteSession : public DialogUsage
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -177,7 +179,7 @@ class InviteSession : public DialogUsage
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -191,9 +193,9 @@ class InviteSession : public DialogUsage
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
