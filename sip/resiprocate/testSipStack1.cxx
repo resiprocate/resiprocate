@@ -42,9 +42,9 @@ main(int argc, char* argv[])
       dest = from;
       contact = from;
             
-      SipMessage message = Helper::makeInvite( dest, from, contact);
-      DebugLog ( << "Sending msg:" << message );
-      sipStack.send( message );
+      auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, contact));
+      DebugLog ( << "Sending msg:" << *message );
+      sipStack.send( *message );
 
       while (1)
       {

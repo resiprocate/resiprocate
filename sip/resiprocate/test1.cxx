@@ -45,16 +45,16 @@ main(int argc, char* argv[])
    
    for (int i=0; i<100000; i++)
    {
-      SipMessage message = Helper::makeInvite( dest, from, from);
+      auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
       Resolver resolver(dest.uri());
       
-      message.header(h_Vias).front().transport() = Transport::toData(udp->transport()); 
-      message.header(h_Vias).front().sentHost() = udp->hostname();
-      message.header(h_Vias).front().sentPort() = udp->port();
+      message->header(h_Vias).front().transport() = Transport::toData(udp->transport()); 
+      message->header(h_Vias).front().sentHost() = udp->hostname();
+      message->header(h_Vias).front().sentPort() = udp->port();
 
       Data encoded(2048, true);
       DataStream strm(encoded);
-      message.encode(strm);
+      message->encode(strm);
       strm.flush();
       udp->send(&resolver.mCurrent->ipv4, encoded.data(), encoded.size()); 
       
