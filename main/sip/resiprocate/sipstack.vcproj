@@ -22,7 +22,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="../.."
+				AdditionalIncludeDirectories="c:\sip"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="../.."
+				AdditionalIncludeDirectories="c:\sip"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -104,7 +104,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\openssl-0.9.7\inc32&quot;;../.."
+				AdditionalIncludeDirectories="C:\sip;C:\openssl\inc32"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -146,7 +146,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;C:\openssl-0.9.7\inc32&quot;;../.."
+				AdditionalIncludeDirectories="c:\sip;C:\openssl\inc32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -180,7 +180,16 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
+				RelativePath="os\BaseException.cxx">
+			</File>
+			<File
 				RelativePath="BranchParameter.cxx">
+			</File>
+			<File
+				RelativePath="os\Coders.cxx">
+			</File>
+			<File
+				RelativePath="os\Condition.cxx">
 			</File>
 			<File
 				RelativePath="Connection.cxx">
@@ -192,7 +201,16 @@
 				RelativePath="Contents.cxx">
 			</File>
 			<File
+				RelativePath="os\CountStream.cxx">
+			</File>
+			<File
+				RelativePath="os\Data.cxx">
+			</File>
+			<File
 				RelativePath="DataParameter.cxx">
+			</File>
+			<File
+				RelativePath="os\DataStream.cxx">
 			</File>
 			<File
 				RelativePath="Dialog.cxx">
@@ -243,6 +261,18 @@
 				RelativePath="LazyParser.cxx">
 			</File>
 			<File
+				RelativePath="os\Lock.cxx">
+			</File>
+			<File
+				RelativePath="os\Log.cxx">
+			</File>
+			<File
+				RelativePath="os\Logger.cxx">
+			</File>
+			<File
+				RelativePath="os\MD5Stream.cxx">
+			</File>
+			<File
 				RelativePath="Message.cxx">
 			</File>
 			<File
@@ -261,6 +291,12 @@
 				RelativePath="MultipartSignedContents.cxx">
 			</File>
 			<File
+				RelativePath="os\Mutex.cxx">
+			</File>
+			<File
+				RelativePath="OctetContents.cxx">
+			</File>
+			<File
 				RelativePath="Parameter.cxx">
 			</File>
 			<File
@@ -268,6 +304,9 @@
 			</File>
 			<File
 				RelativePath="ParameterTypes.cxx">
+			</File>
+			<File
+				RelativePath="os\ParseBuffer.cxx">
 			</File>
 			<File
 				RelativePath="ParserCategories.cxx">
@@ -292,6 +331,15 @@
 			</File>
 			<File
 				RelativePath="QuotedDataParameter.cxx">
+			</File>
+			<File
+				RelativePath="os\RWMutex.cxx">
+			</File>
+			<File
+				RelativePath="os\Random.cxx">
+			</File>
+			<File
+				RelativePath="os\RecursiveMutex.cxx">
 			</File>
 			<File
 				RelativePath="Registration.cxx">
@@ -321,13 +369,25 @@
 				RelativePath="SipStack.cxx">
 			</File>
 			<File
+				RelativePath="os\Socket.cxx">
+			</File>
+			<File
 				RelativePath="Subscription.cxx">
+			</File>
+			<File
+				RelativePath="os\Subsystem.cxx">
 			</File>
 			<File
 				RelativePath="Symbols.cxx">
 			</File>
 			<File
 				RelativePath="TcpTransport.cxx">
+			</File>
+			<File
+				RelativePath="os\ThreadIf.cxx">
+			</File>
+			<File
+				RelativePath="os\Timer.cxx">
 			</File>
 			<File
 				RelativePath="TimerMessage.cxx">
@@ -374,12 +434,27 @@
 			<File
 				RelativePath="XMLCursor.cxx">
 			</File>
+			<File
+				RelativePath="os\vmd5.cxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
+				RelativePath="os\BaseException.hxx">
+			</File>
+			<File
 				RelativePath="BranchParameter.hxx">
+			</File>
+			<File
+				RelativePath="os\CircularBuffer.hxx">
+			</File>
+			<File
+				RelativePath="os\Coders.hxx">
+			</File>
+			<File
+				RelativePath="os\Condition.hxx">
 			</File>
 			<File
 				RelativePath="Connection.hxx">
@@ -391,7 +466,16 @@
 				RelativePath="Contents.hxx">
 			</File>
 			<File
+				RelativePath="os\CountStream.hxx">
+			</File>
+			<File
+				RelativePath="os\Data.hxx">
+			</File>
+			<File
 				RelativePath="DataParameter.hxx">
+			</File>
+			<File
+				RelativePath="os\DataStream.hxx">
 			</File>
 			<File
 				RelativePath="Dialog.hxx">
@@ -415,7 +499,13 @@
 				RelativePath="ExistsParameter.hxx">
 			</File>
 			<File
+				RelativePath="os\Fifo.hxx">
+			</File>
+			<File
 				RelativePath="FloatParameter.hxx">
+			</File>
+			<File
+				RelativePath="os\HashMap.hxx">
 			</File>
 			<File
 				RelativePath="HeaderFieldValue.hxx">
@@ -436,10 +526,28 @@
 				RelativePath="Helper.hxx">
 			</File>
 			<File
+				RelativePath="os\Inserter.hxx">
+			</File>
+			<File
 				RelativePath="IntegerParameter.hxx">
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
+			</File>
+			<File
+				RelativePath="os\Lock.hxx">
+			</File>
+			<File
+				RelativePath="os\Lockable.hxx">
+			</File>
+			<File
+				RelativePath="os\Log.hxx">
+			</File>
+			<File
+				RelativePath="os\Logger.hxx">
+			</File>
+			<File
+				RelativePath="os\MD5Stream.hxx">
 			</File>
 			<File
 				RelativePath="Message.hxx">
@@ -460,6 +568,9 @@
 				RelativePath="MultipartSignedContents.hxx">
 			</File>
 			<File
+				RelativePath="os\Mutex.hxx">
+			</File>
+			<File
 				RelativePath="Parameter.hxx">
 			</File>
 			<File
@@ -470,6 +581,9 @@
 			</File>
 			<File
 				RelativePath="ParameterTypes.hxx">
+			</File>
+			<File
+				RelativePath="os\ParseBuffer.hxx">
 			</File>
 			<File
 				RelativePath="ParseException.hxx">
@@ -505,6 +619,18 @@
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
+				RelativePath="os\RWMutex.hxx">
+			</File>
+			<File
+				RelativePath="os\Random.hxx">
+			</File>
+			<File
+				RelativePath="os\RandomHex.hxx">
+			</File>
+			<File
+				RelativePath="os\RecursiveMutex.hxx">
+			</File>
+			<File
 				RelativePath="Registration.hxx">
 			</File>
 			<File
@@ -538,13 +664,31 @@
 				RelativePath="SipStack.hxx">
 			</File>
 			<File
+				RelativePath="os\Socket.hxx">
+			</File>
+			<File
 				RelativePath="Subscription.hxx">
+			</File>
+			<File
+				RelativePath="os\Subsystem.hxx">
 			</File>
 			<File
 				RelativePath="Symbols.hxx">
 			</File>
 			<File
+				RelativePath="os\SysLogBuf.hxx">
+			</File>
+			<File
+				RelativePath="os\SysLogStream.hxx">
+			</File>
+			<File
 				RelativePath="TcpTransport.hxx">
+			</File>
+			<File
+				RelativePath="os\ThreadIf.hxx">
+			</File>
+			<File
+				RelativePath="os\Timer.hxx">
 			</File>
 			<File
 				RelativePath="TimerMessage.hxx">
@@ -601,7 +745,16 @@
 				RelativePath="XMLCursor.hxx">
 			</File>
 			<File
+				RelativePath="os\compat.hxx">
+			</File>
+			<File
 				RelativePath="supported.hxx">
+			</File>
+			<File
+				RelativePath="os\vmd5.hxx">
+			</File>
+			<File
+				RelativePath="os\vthread.hxx">
 			</File>
 		</Filter>
 	</Files>
