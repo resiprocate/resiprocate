@@ -382,8 +382,8 @@ Security::getTlsCtx(bool isServer)
       return ctx;
    }
    
-   //   ctx=SSL_CTX_new( TLSv1_method() );
-   ctx=SSL_CTX_new(  SSLv23_method() );
+   ctx=SSL_CTX_new( TLSv1_method() );
+   //ctx=SSL_CTX_new(  SSLv23_method() );
    assert( ctx );
    
    if ( isServer )
@@ -394,6 +394,7 @@ Security::getTlsCtx(bool isServer)
    
    int ok;
    
+#if 0 // !cj! - fix 
    if ( publicCert )
    {
       ok = SSL_CTX_use_certificate(ctx, publicCert);
@@ -405,6 +406,7 @@ Security::getTlsCtx(bool isServer)
       ok = SSL_CTX_use_PrivateKey(ctx,privateKey);
       assert( ok == 1);
    }
+#endif
    
    assert( certAuthorities );
    SSL_CTX_set_cert_store(ctx, certAuthorities);
