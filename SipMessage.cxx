@@ -726,6 +726,17 @@ SipMessage::remove(const HeaderBase& headerType)
 };
 
 #ifndef PARTIAL_TEMPLATE_SPECIALIZATION
+ParserContainer<AllowEvents_MultiHeader::Type>&
+SipMessage::header(const AllowEvents_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<AllowEvents_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<AllowEvents_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
 CSeq_Header::Type&
 SipMessage::header(const CSeq_Header& headerType) const
 {
