@@ -28,17 +28,109 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool ipv4) : 
+   mV4(ipv4),
    mFd(-1),
    mPort(portNum), 
    mInterface(intfc),
-   mStateMachineFifo(rxFifo),
-   mV4(ipv4)
+   mStateMachineFifo(rxFifo)
 {
 }
 
 Transport::~Transport()
 {
    mFd = -2;
+}
+
+Socket
+Transport::socket(TransportType type, bool ipv4)
+{
+   Socket fd;
+   switch (type)
+   {
+      case UDP:
+         fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+         break;
+      case TCP:
+      case TLS:
+         fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
+         break;
+      default:
+         InfoLog (<< "Try to create an unsupported socket type: " << Tuple::toData(type));
+         assert(0);
+         throw Exception("Unsupported transport", __FILE__,__LINE__);
+   }
+   
+   if ( fd == INVALID_SOCKET )
+   {
+      InfoLog (<< "Failed to create socket: " << strerror(errno));
+      throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
+   }
+
+   return fd;
+}
+
+void 
+Transport::bind(Socket fd, int portNum, const Data& netInterface, bool ipv4)
+{
+   sockaddr saddr;
+   if (ipv4)
+   {
+      sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&saddr);
+      memset(addr4, 0, sizeof(*addr4));
+      
+      addr4->sin_family = AF_INET;
+      addr4->sin_port = htons(portNum);
+      if (netInterface == Data::Empty)
+      {
+         addr4->sin_addr.s_addr = htonl(INADDR_ANY); 
+      }
+      else
+      {
+         DnsUtil::inet_pton(netInterface, addr4->sin_addr);
+      }
+   }
+   else
+   {
+#if defined(USE_IPV6)
+      sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&saddr);;
+      memset(addr6, 0, sizeof(*addr6));
+      
+      addr6->sin6_family = AF_INET6;
+      addr6->sin6_port = htons(portNum);
+      if (netInterface == Data::Empty)
+      {
+         addr6->sin6_addr = in6addr_any;
+      }
+      else
+      {
+         DnsUtil::inet_pton(netInterface, addr6->sin6_addr);
+      }
+#else
+      assert(0);
+#endif
+   }
+   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(saddr));
+   
+   if ( ::bind( fd, &saddr, sizeof(saddr)) == SOCKET_ERROR )
+   {
+      if ( errno == EADDRINUSE )
+      {
+         ErrLog (<< "port " << portNum << " already in use");
+         throw Exception("port already in use", __FILE__,__LINE__);
+      }
+      else
+      {
+         ErrLog (<< "Could not bind to port: " << portNum);
+         throw Exception("Could not use port", __FILE__,__LINE__);
+      }
+   }
+   
+   bool ok = makeSocketNonBlocking(fd);
+   if ( !ok )
+   {
+      ErrLog (<< "Could not make socket non-blocking " << portNum);
+      throw Exception("Failed making socket non-blocking", __FILE__,__LINE__);
+   }
 }
 
 
