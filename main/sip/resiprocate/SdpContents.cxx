@@ -142,16 +142,10 @@ SdpContents::SdpContents(const SdpContents& rhs)
 SdpContents& 
 SdpContents::operator=(const SdpContents& rhs)
 {
-   cerr << "this=" << *this << endl;
-   cerr << "rhs=" << rhs << endl;
-
    if (this != &rhs)
    {
-      cerr << "pre parent" << endl;
       Contents::operator=(rhs);
-      cerr << "post parent" << endl;
       mSession = rhs.mSession;
-      cerr << "post session" << endl;
    }
    return *this;
 }
