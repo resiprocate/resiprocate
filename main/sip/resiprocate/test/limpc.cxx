@@ -574,20 +574,44 @@ myMain(int argc, char* argv[])
       {
          i++;
          assert( i<argc );
-         aor = Uri(Data(argv[i]));
+         try
+         {
+            aor = Uri(Data(argv[i]));
+         }
+         catch (...)
+         {
+            ErrLog( <<"AOR URI is not valid - must start with sip: ");
+            exit(-1);
+         }
          haveAor=true;
       } 
       else if (!strcmp(argv[i],"-outbound"))
       {
          i++;
          assert( i<argc );
-         outbound = Uri(Data(argv[i]));
+          try
+         {
+            outbound = Uri(Data(argv[i]));
+         }
+          catch (...)
+          {
+             ErrLog( <<"Outbound URI is not valid - must start with sip: ");
+             exit(-1);
+         }
       } 
       else if (!strcmp(argv[i],"-contact"))
       {
          i++;
          assert( i<argc );
-         contact = Uri(Data(argv[i]));
+         try
+         {
+            contact = Uri(Data(argv[i]));
+         }
+         catch (...)
+         {
+            ErrLog( <<"Contact URI is not valid - must start with sip: ");
+            exit(-1);
+         }
          haveContact=true;
       } 
       else if (!strcmp(argv[i],"-add"))
@@ -595,14 +619,32 @@ myMain(int argc, char* argv[])
          i++;
          assert( i<argc );
          addList[numAdd++] = Data(argv[i]);
-         assert( numAdd < 100 );
+         assert( numAdd < 100 ); 
+         try
+         {
+            Uri uri(Data(argv[i]));
+         }
+         catch (...)
+         {
+            ErrLog( <<"URI in -add is not valid - must start with sip: ");
+            exit(-1);
+         }
       } 
       else if (!strcmp(argv[i],"-pub"))
       {
          i++;
          assert( i<argc );
          pubList[numPub++] = Data(argv[i]);
-         assert( numPub < 100 );
+         assert( numPub < 100 ); 
+         try
+         {
+            Uri uri(Data(argv[i]));
+         }
+         catch (...)
+         {
+            ErrLog( <<"Pub URI is not valid - must start with sip: ");
+            exit(-1);
+         }
       } 
       else if (!strcmp(argv[i],"-aorPassword"))
       {
@@ -614,9 +656,17 @@ myMain(int argc, char* argv[])
       {
          i++;
          assert( i<argc );
-         dest = Uri(Data(argv[i]));
+         try
+         {
+            dest = Uri(Data(argv[i])); 
+         }
+         catch (...)
+         {
+            ErrLog( <<"To URI is not valid - must start with sip: ");
+            exit(-1);
+         }
       } 
-     else if (!strcmp(argv[i],"-key"))
+      else if (!strcmp(argv[i],"-key"))
       {
          i++;
          assert( i<argc );
@@ -681,12 +731,20 @@ myMain(int argc, char* argv[])
    //InfoLog( << "Using port " << port );
   
 #ifdef USE_SSL
-   Security security( tlsServer, useTls );
-   SipStack sipStack( false /*multihtread*/, &security );  
+   Security* security=NULL;
+   try
+   {
+      security = new Security( tlsServer, useTls );
+   }
+   catch( ... )
+   {
+      security = NULL;
+      ErrLog( << "Got a exception setting up Security" );
+   }
+   SipStack sipStack( false /*multihtread*/, security );  
 #else
    SipStack sipStack( false /*multihtread*/ );  
 #endif
-
 
    if ( key == Data("-") )
    {
@@ -698,11 +756,18 @@ myMain(int argc, char* argv[])
    }
    
 #ifdef USE_SSL
-   assert( sipStack.security );
-   bool ok = sipStack.security->loadAllCerts( key , Data::Empty );
-   if ( !ok )
+   try
    {
-      InfoLog( << "Could not load the certificates" );
+      assert( sipStack.security );
+      bool ok = sipStack.security->loadAllCerts( key , Data::Empty );
+      if ( !ok )
+      {
+         InfoLog( << "Could not load the certificates" );
+      } 
+   }
+   catch( ... )
+   {
+      ErrLog( << "Got a exception loading certificates" );
    }
 #endif
 
