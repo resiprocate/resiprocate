@@ -46,7 +46,16 @@ TransactionState::process(SipStack& stack)
    {
       timer = dynamic_cast<TimerMessage*>(message);
    }
+   else if (!sip->isExternal() && 
+            sip->isRequest() && 
+            sip->header(h_RequestLine).getMethod() == ACK) 
+   {
+      // for ACK messages from the TU, there is no transaction, send it directly
+      // to the wire // rfc3261 17.1 Client Transaction
+      stack.mTransportSelector.send(sip);
+   }
    
+
    const Data& tid = message->getTransactionId();
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
@@ -340,8 +349,10 @@ TransactionState::processClientInvite(  Message* msg )
             {
                if (mIsReliable)
                {
-                  delete mMsgToRetransmit;
-                  mMsgToRetransmit = makeAck(sip);
+                  SipMessage* invite = mMsgToRetransmit;
+                  mMsgToRetransmit = Helper::makeFailureAck(invite, sip);
+                  delete invite;
+                  
                   sendToWire(mMsgToRetransmit); 
                   sendToTU(msg); // don't delete msg
                   delete this;
@@ -351,9 +362,10 @@ TransactionState::processClientInvite(  Message* msg )
                   if (mState == Calling || mState == Proceeding)
                   {
                      mState = Completed;
-                     delete mMsgToRetransmit;
+                     SipMessage* invite = mMsgToRetransmit;
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
-                     mMsgToRetransmit = makeAck(sip);
+                     mMsgToRetransmit = Helper::makeFailureAck(invite, sip);
+                     delete invite;
                      sendToWire(mMsgToRetransmit); 
                      sendToTU(msg); // don't delete msg
                   }
@@ -842,15 +854,6 @@ TransactionState::make100(SipMessage* request) const
 {
    SipMessage* sip=new SipMessage(Helper::makeResponse(*request, 100));
    return sip;
-}
-
-SipMessage*
-TransactionState::makeAck(SipMessage* response) const
-{
-   SipMessage* ack = 0;
-   assert(0);
-   // NOTREACHED
-   return ack;
 }
 
 
