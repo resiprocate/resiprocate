@@ -39,7 +39,6 @@ libresiprocate_la_SOURCES = \
 	Connection.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
-	CpimContents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
 	DialogSet.cxx \
@@ -49,7 +48,6 @@ libresiprocate_la_SOURCES = \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
-	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	HeaderHash.cxx \
@@ -59,13 +57,9 @@ libresiprocate_la_SOURCES = \
 	IntegerParameter.cxx \
 	LazyParser.cxx \
 	Message.cxx \
-	MessageWaitingContents.cxx \
 	MethodHash.cxx \
 	MethodTypes.cxx \
 	MsgHeaderScanner.cxx \
-	MultipartMixedContents.cxx \
-	MultipartSignedContents.cxx \
-	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
@@ -91,16 +85,12 @@ libresiprocate_la_SOURCES = \
 	ParserCategory.cxx \
 	Pidf.cxx \
 	ParseUtil.cxx \
-	Pkcs7Contents.cxx \
-	PlainContents.cxx \
 	Rlmi.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	Registration.cxx \
 	RportParameter.cxx \
-	SdpContents.cxx \
 	Security.cxx \
-	SipFrag.cxx \
 	SipMessage.cxx \
 	SipSession.cxx \
 	SipStack.cxx \
@@ -119,7 +109,6 @@ libresiprocate_la_SOURCES = \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
-	TuIM.cxx \
 	UdpTransport.cxx \
 	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
@@ -127,6 +116,26 @@ libresiprocate_la_SOURCES = \
 	Uri.cxx \
 	XMLCursor.cxx \
 	X_msMsgsInvite.cxx
+
+
+# These are sources that we might conditionally include
+EXTRA_libresiprocate_la_SOURCES = \
+	CpimContents.cxx \
+	GenericContents.cxx \
+	MessageWaitingContents.cxx \
+	MultipartMixedContents.cxx \
+	MultipartSignedContents.cxx \
+	OctetContents.cxx \
+	Pkcs7Contents.cxx \
+	PlainContents.cxx \
+	SdpContents.cxx \
+	SipFrag.cxx \
+	TuIM.cxx
+
+
+libresiprocate_la_LIBADD = @CONTENTS_OBJS@
+
+libresiprocate_la_DEPENDENCIES = @CONTENTS_OBJS@
 
 libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
