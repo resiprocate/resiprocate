@@ -153,6 +153,7 @@ class ParserContainer : public ParserContainerBase
 
       iterator erase(iterator i)
       {
+         delete *i.mIt;
          return iterator(mParsers.erase(i.mIt));
       }
 
