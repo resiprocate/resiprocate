@@ -10,11 +10,12 @@
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/ParameterTypes.hxx"
+#include "resiprocate/MethodTypes.hxx"
 
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 volatile bool signalled = false;
 
@@ -31,6 +32,7 @@ struct {
       int len;
 } headerInfo[(int)(Headers::MAX_HEADERS)];
 
+
 unsigned int  InitHeaderInfo()
 {
    int i = static_cast<int>(Headers::UNKNOWN)+1;
@@ -42,7 +44,7 @@ unsigned int  InitHeaderInfo()
    {
        Headers::Type t = static_cast<Headers::Type>(i);
        
-      char* p = strdup(Headers::getHeaderName(i).c_str());
+      char* p = strdup(resip::Headers::getHeaderName(i).c_str());
       
       headerInfo[i].len = Headers::getHeaderName(i).size();
       headerInfo[i].keyword = p;
@@ -54,6 +56,29 @@ unsigned int  InitHeaderInfo()
 
    return i;
    
+}
+
+bool checkMethods()
+{
+    int i = static_cast<int>(resip::UNKNOWN)+1;
+    int max = static_cast<int>(resip::MAX_METHODS);
+    bool failure = false;
+    for( ; i < max ; ++i)
+    {
+        MethodTypes t = static_cast<MethodTypes>(i);
+        Data& d(resip::MethodNames[t]);
+        MethodTypes nt = resip::getMethodType(d.data(),d.size());
+        bool ok = nt == t;
+        // DebugLog(<<resip::MethodNames[t]<<" : " << (ok ? "OK":"FAIL"));
+        DebugLog(<< (ok ? "   " : "***" ) << ' '
+                 << t << ' ' << resip::MethodNames[t] 
+                 << '(' << d << ')'
+                 << " -> " 
+                 << nt << ' ' << resip::MethodNames[nt]);
+        // if (!ok) ErrLog(<<resip::MethodNames[t] << " : HASH FAILURE");
+        failure |= !ok;
+    }
+    return !failure;
 }
 
 bool
@@ -105,11 +130,7 @@ unsigned short randomUShort()
 int
 main()
 {
-   int randomList[100*1024];
    bool failure = false;
-   
-
-   unsigned int nRandom = sizeof(randomList)/sizeof(*randomList);
    
    register unsigned int i = 0;
 
@@ -119,7 +140,6 @@ main()
 
    // Verify that the hash function works.
    InfoLog(<<"Checking that hash function works for all known headers");
-   
    for(i=0;i<nKeywords;i++)
    {
       Headers::Type t = Headers::getType(headerInfo[i].keyword,
@@ -137,14 +157,23 @@ main()
       
    }
    
+   InfoLog(<<"Checking methods.");
 
-   bool p = checkParameters();
+   bool p = checkMethods();
+   
+   InfoLog(<<" methods: " << (p?"OK":"FAIL"));
+
+   p = checkParameters();
+
    InfoLog(<<" parameters: " << (p?"OK":"FAIL"));
    
 
 #if defined (TIME_HASH_TEST)   
+   int randomList[100*1024];
+
    // Make a large random list so we don't take a hit with 
    // random() calcs during the hash.
+   unsigned int nRandom = sizeof(randomList)/sizeof(*randomList);
 
    InfoLog(<< "Pre-loading random list of " << nRandom << " entries");
    
