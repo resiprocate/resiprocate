@@ -26,6 +26,7 @@ Log::Type Log::_type = Cout;
 Data Log::_appName;
 Data Log::_hostname;
 Data Log::_logFileName;
+ExternalLogger* Log::_externalLogger = 0;
 
 #ifdef WIN32
 	int Log::_pid=0;
@@ -64,7 +65,8 @@ Log::initialize(const char* typed, const char* leveld, const char* appName, cons
 }
 
 void
-Log::initialize(const Data& typed, const Data& leveld, const Data& appName, const char *logFileName)
+Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
+                const char *logFileName)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -79,7 +81,9 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName, cons
 }
 
 void 
-Log::initialize(Type type, Level level, const Data& appName, const char * logFileName)
+Log::initialize(Type type, Level level, const Data& appName, 
+                const char * logFileName,
+                ExternalLogger* externalLogger)
 {
    string copy(appName.c_str());
    
@@ -88,7 +92,12 @@ Log::initialize(Type type, Level level, const Data& appName, const char * logFil
 
     if (logFileName)
     {
- 	   _logFileName = logFileName;
+       _logFileName = logFileName;
+    }
+    
+    if (externalLogger)
+    {
+       _externalLogger = externalLogger;
     }
 
    string::size_type pos = copy.find_last_of('/');
@@ -113,6 +122,15 @@ Log::initialize(Type type, Level level, const Data& appName, const char * logFil
 #ifndef WIN32
    pthread_key_create(&Log::_levelKey, freeThreadSetting);
 #endif
+}
+
+void
+Log::initialize(Type type,
+                Level level,
+                const Data& appName,
+                ExternalLogger& logger)
+{
+   initialize(type, level, appName, 0, &logger);
 }
 
 void
