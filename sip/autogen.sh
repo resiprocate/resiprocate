@@ -14,6 +14,8 @@ if [ $irep -lt 10705 ]; then
     aclocal --version
     exit 1
 fi
+echo +++ Running libtoolize && \
+libtoolize --force --copy && \
 echo +++ Running aclocal && \
 aclocal && \
 echo +++ Running autoheader && \
