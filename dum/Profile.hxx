@@ -73,8 +73,7 @@ class Profile
 
       /// The following functions deal with getting digest credentals 
       //@{ 
-
-      void addDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
+      void setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
       
       /** This class is used as a callback to get digest crednetials. The
        * derived class must define one of computeA1 or getPaswword. computeA1 is
