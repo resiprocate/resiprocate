@@ -40,13 +40,13 @@ Transport::~Transport()
 void
 Transport::run()
 {
-   while(!mShutdown)
+   while (!mShutdown)
    {
       FdSet fdset; 
       fdset.reset();
       fdset.setRead(mFd);
       fdset.setWrite(mFd);
-      int  err = fdset.selectMiliSeconds(0);
+      int  err = fdset.selectMilliSeconds(0);
       if (err == 0)
       {
          try
@@ -96,7 +96,7 @@ void
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
    SendData* data = new SendData(dest, d, tid);
-   //DebugLog (<< "Adding message to tx buffer: " << endl << d.escaped().c_str());
+   DebugLog (<< "Adding message to tx buffer to: " << dest << " " << d.escaped());
    mTxFifo.add(data); // !jf!
 }
 
@@ -242,7 +242,7 @@ Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 	ostrm << "[ " ;
 
 #if defined(WIN32) 
-	ostrm   << inet_ntoa(tuple.ipv4);
+//	ostrm   << inet_ntoa(tuple.ipv4);
 	
 #else	
 	char str[128];
