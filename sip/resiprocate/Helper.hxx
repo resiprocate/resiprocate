@@ -12,6 +12,8 @@ class Helper
       static SipMessage makeResponse(SipMessage& request, int responseCode);
       static SipMessage makeResponse(SipMessage& request, int responseCode, NameAddr& myContact);
 
+      static SipMessage makeRequest(MethodTypes method);
+
       // copy the values from Url into rline (with sip-uri parameters?)
       static void setURI(RequestLineComponent& rLine, Url& url);
       static void setURI(ResponeLineComponent& rLine, Url& url);
