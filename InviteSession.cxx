@@ -32,9 +32,9 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mProposedLocalSdp(0),
      mProposedRemoteSdp(0),
      mNextOfferOrAnswerSdp(0),
+     mUserConnected(false),
      mDestroyer(this),
-     mCurrentRetransmit200(Timer::T1),
-     mUserConnected(false)
+     mCurrentRetransmit200(Timer::T1)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
