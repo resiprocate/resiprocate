@@ -36,7 +36,7 @@ ServerRegistration::accept(SipMessage& ok)
 {
   ok.remove(h_Contacts);
 
-  InfoLog( << "accepted a registration" );
+  InfoLog( << "accepted a registration " << mAor );
   
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
@@ -67,17 +67,15 @@ ServerRegistration::accept(SipMessage& ok)
 void
 ServerRegistration::accept(int statusCode)
 {
-   InfoLog( << "accepted a registration with statusCode=" << statusCode );
-
-  SipMessage success;
-  mDum.makeResponse(success, mRequest, statusCode);
-  accept(success);
+   SipMessage success;
+   mDum.makeResponse(success, mRequest, statusCode);
+   accept(success);
 }
 
 void
 ServerRegistration::reject(int statusCode)
 {
-   InfoLog( << "rejected a registration with statusCode=" << statusCode );
+   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
 
   // First, we roll back the contact database to
   // the state it was before the registration request.

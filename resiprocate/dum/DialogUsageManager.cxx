@@ -813,12 +813,11 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    {
       InfoLog (<< "Got: " << msg->brief());
 
-      InfoLog(<< "Test if sip message" );
-
+      //InfoLog(<< "Test if sip message" );
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
       if (sipMsg)
       {
-         DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
+         //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
          if (sipMsg->isRequest())
          {
             // Validate Request URI

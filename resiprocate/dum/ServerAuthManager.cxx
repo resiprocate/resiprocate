@@ -38,6 +38,7 @@ ServerAuthManager::handleUserAuthInfo(std::auto_ptr<Message>& msg)
    mMessages.erase(it);
    if (userAuth->getA1().empty())
    {
+      InfoLog (<< "Account does not exist " << userAuth->getUser() << " in " << userAuth->getRealm());
       SipMessage response;
       Helper::makeResponse(*requestWithAuth, 404, "Account does not exist.");
       mDum.send(response);
@@ -62,6 +63,8 @@ ServerAuthManager::handleUserAuthInfo(std::auto_ptr<Message>& msg)
       }
       else
       {
+         InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+
          SipMessage response;
          Helper::makeResponse(*requestWithAuth, 403, "Invalid password provided");
          mDum.send(response);
@@ -75,7 +78,7 @@ ServerAuthManager::handleUserAuthInfo(std::auto_ptr<Message>& msg)
 bool 
 ServerAuthManager::handle(std::auto_ptr<Message>& msg)
 {
-   InfoLog( << "trying to do auth" );
+   //InfoLog( << "trying to do auth" );
 
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
    assert(sipMsg);
@@ -117,6 +120,7 @@ ServerAuthManager::handle(std::auto_ptr<Message>& msg)
    }
    catch(BaseException& e)
    {
+      InfoLog (<< "Invalid auth header provided " << e);
       SipMessage response;
       Helper::makeResponse(*sipMsg, 400, "Invalid auth header");
       mDum.send(response);
