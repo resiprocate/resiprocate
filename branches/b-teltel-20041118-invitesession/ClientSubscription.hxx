@@ -30,6 +30,7 @@ class ClientSubscription: public BaseSubscription
       friend class InviteSession;      
 
       bool mOnNewSubscriptionCalled;      
+      bool mEnded;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
       
