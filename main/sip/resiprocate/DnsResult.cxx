@@ -75,6 +75,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler)
 
 DnsResult::~DnsResult()
 {
+   DebugLog (<< "DnsResult::~DnsResult() " << *this);
    assert(mType != Destroyed);
 }
 
@@ -142,17 +143,11 @@ DnsResult::lookup(const Uri& uri)
 
       if (isNumeric) // IP address specified
       {
-         Tuple tuple;
-         tuple.transportType = mTransport;
-         tuple.transport = 0;
-		 DnsUtil::inet_pton( mTarget, tuple.ipv4); // !jf! - check return 
          mPort = getDefaultPort(mTransport, uri.port());
-         tuple.port = mPort;
-
+         Tuple tuple(mTarget, mPort, mTransport);
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          mType = Available;
-         //mHandler->handle(this); // !jf! should I call this? 
       }
       else if (uri.port() != 0)
       {
@@ -175,17 +170,10 @@ DnsResult::lookup(const Uri& uri)
 
          if (isNumeric) // IP address specified
          {
-            Tuple tuple;
-            tuple.transportType = mTransport;
-            tuple.transport = 0;
-			DnsUtil::inet_pton( mTarget, tuple.ipv4 ); // !jf! check return 
-
+            Tuple tuple(mTarget, mPort, mTransport);
             mPort = getDefaultPort(mTransport, uri.port());
-            tuple.port = mPort;
-
             mResults.push_back(tuple);
             mType = Available;
-            //mHandler->handle(this); // !jf! should I call this? 
          }
          else // port specified so we know the transport
          {
@@ -654,13 +642,11 @@ DnsResult::processHost(int status, struct hostent* result)
    if (status == ARES_SUCCESS)
    {
       DebugLog (<< "DNS A lookup canonical name: " << result->h_name);
-      Tuple tuple;
-      tuple.port = mPort;
-      tuple.transportType = mTransport;
-      tuple.transport = 0;
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+         in_addr addr;
+         addr.s_addr = *((u_int32_t*)(*pptr));
+         Tuple tuple(addr, mPort, mTransport);
          mResults.push_back(tuple);
       }
    }
@@ -716,11 +702,7 @@ DnsResult::primeResults()
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Tuple tuple;
-            tuple.port = next.port;
-            tuple.transportType = next.transport;
-            tuple.transport = 0;
-            tuple.ipv4 = *i;
+            Tuple tuple(*i, next.port, next.transport);
             mResults.push_back(tuple);
          }
 #ifndef WIN32

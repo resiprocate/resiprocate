@@ -225,7 +225,7 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
    
    if (destination.transport == 0)
    {
-      if (destination.transportType == TLS)
+      if (destination.getType() == TLS)
       {
          destination.transport = findTlsTransport(msg->getTlsDomain());
       }
@@ -256,11 +256,9 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
          // wing in the transport address based on where this is going.
          Data interfaceHost;
          
-         sockaddr server;
-         sockaddr client;
-         destination.toSockaddr(server);
-         
+         const sockaddr& server = destination.getSockaddr();
          connect(mSocket, &server, sizeof(server));
+         sockaddr client;
          socklen_t len = sizeof(client);
          getsockname(mSocket, &client, &len);
          interfaceHost = DnsUtil::inet_ntop(client);
@@ -322,7 +320,7 @@ TransportSelector::buildFdSet( FdSet& fdset )
 Transport*
 TransportSelector::findTransport(const Tuple& tuple) const
 {
-    return findTransport(tuple.transportType);
+   return findTransport(tuple.getType());
 }
 
 Transport*

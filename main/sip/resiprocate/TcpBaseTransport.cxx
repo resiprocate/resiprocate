@@ -154,7 +154,6 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-
       // There is no connection yet, so make a client connection
       if (conn == 0)
       {
@@ -177,8 +176,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          }
 
          assert(sock != INVALID_SOCKET);
-         sockaddr servaddr;
-         data->destination.toSockaddr(servaddr); // load tuple into servaddr
+         const sockaddr& servaddr = data->destination.getSockaddr(); 
          
          DebugLog (<<"Opening new connection to " << data->destination);
          makeSocketNonBlocking(sock);         

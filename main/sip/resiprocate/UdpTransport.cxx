@@ -54,10 +54,9 @@ UdpTransport::process(FdSet& fdset)
       //DebugLog (<< "Sending message on udp.");
 
       assert( &(*sendData) );
-      assert( sendData->destination.port != 0 );
+      assert( sendData->destination.getPort() != 0 );
       
-      sockaddr addr;
-      sendData->destination.toSockaddr(addr);
+      const sockaddr& addr = sendData->destination.getSockaddr();
       int count = sendto(mFd, 
                          sendData->data.data(), sendData->data.size(),  
                          0, // flags
