@@ -487,8 +487,9 @@ myMain(int argc, char* argv[])
    bool sign=false;
    Data key("password");
    bool useTls = true;
-   bool tls = false;
-   bool tcp = false;
+   bool noTls = false;
+   bool noTcp = false;
+   bool noUdp = false;
    
    for ( int i=1; i<argc; i++)
    {
@@ -520,13 +521,17 @@ myMain(int argc, char* argv[])
       {
          useTls = false;
       }
-      else if (!strcmp(argv[i],"-tcp"))
+      else if (!strcmp(argv[i],"-noTcp"))
       {
-         tcp = true;
+         noTcp = true;
       }
-      else if (!strcmp(argv[i],"-tls"))
+      else if (!strcmp(argv[i],"-noTls"))
       {
-         tls = true;
+         noTls = true;
+      }
+      else if (!strcmp(argv[i],"-noUdp"))
+      {
+         noUdp = true;
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -596,7 +601,7 @@ myMain(int argc, char* argv[])
       { 
          clog <<"Bad command line opion: " << argv[i] << endl;
          clog <<"options are: " << endl
-              << "\t [-v] [-vv] [-tcp] [-tls] [-port 5060] [-tlsport 5061]" << endl
+              << "\t [-v] [-vv] [-tls] [-port 5060] [-tlsport 5061]" << endl
               << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
               << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
               << "\t [-sign] [-encrypt] [-key secret]" << endl
@@ -607,8 +612,9 @@ myMain(int argc, char* argv[])
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
-              << " -tcp uses tcp instead of UDP" << endl
-              << " -tls uses tls instead of UDP" << endl
+              << " -noUdp don't use TCP" << endl
+              << " -noTcp don't use TCP" << endl
+              << " -noTls don't use TLS" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsServer - sets to act as tls server instead of  client" << endl
@@ -646,9 +652,9 @@ myMain(int argc, char* argv[])
   
 #ifdef USE_SSL
    Security security( tlsServer, useTls );
-      SipStack sipStack( false /*multihtread*/, &security );  
+   SipStack sipStack( false /*multihtread*/, &security );  
 #else
-      SipStack sipStack( false /*multihtread*/ );  
+   SipStack sipStack( false /*multihtread*/ );  
 #endif
 
 
@@ -673,13 +679,22 @@ myMain(int argc, char* argv[])
    DebugLog( << "About to add the transports " );   
    if (port!=0)
    {
-      sipStack.addTransport(UDP, port);
-      sipStack.addTransport(TCP, port);
+      if ( noUdp != true )
+      {
+         sipStack.addTransport(UDP, port);
+      }
+      if ( noTcp != true )
+      {
+         sipStack.addTransport(TCP, port);
+      }
    }
 #if USE_SSL
    if ( tlsPort != 0 )
    {
-      sipStack.addTlsTransport(tlsPort);
+      if ( noTls != true )
+      {
+         sipStack.addTlsTransport(tlsPort);
+      }
    }
 #endif
    DebugLog( << "Done adding the transports " );   
@@ -722,15 +737,6 @@ myMain(int argc, char* argv[])
    if ( !outbound.host().empty() )
    {
       tuIM->setOutboundProxy( outbound );
-   }
-   
-   if ( tcp )
-   {
-      tuIM->setDefaultProtocol( TCP );
-   }
-   if ( tls )
-   {
-      tuIM->setDefaultProtocol( TLS );
    }
    
    if ( haveAor )
