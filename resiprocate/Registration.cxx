@@ -2,18 +2,123 @@
 #include "resiprocate/config.hxx"
 #endif
 
-
 #include <cassert>
-
 #include "resiprocate/os/Data.hxx"
-
+#include "resiprocate/os/Timer.hxx"
 #include "resiprocate/Registration.hxx"
-
-
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
+
+Registration::Registration(const Uri& aor)
+   : mAor(aor),
+     mFrom(aor), 
+     mTimeTillExpiration(3600),
+     mState(Initialized)
+{
+}
+
+Registration::Registration(const Uri& aor, const Uri& contact)
+   : mAor(aor),
+     mContact(contact),
+     mFrom(aor),
+     mTimeTillExpiration(3600),
+     mState(Initialized)
+{
+}
+
+Registration::Registration(const Uri& from, const Uri& aor, const Uri& contact)
+   : mAor(aor),
+     mContact(contact),
+     mFrom(from),
+     mTimeTillExpiration(3600),
+     mState(Initialized)
+{
+}
+
+void
+Registration::setExpiration(int secs)
+{
+   mTimeTillExpiration = secs;
+   if (mState == Active)
+   {
+      assert(0);
+      // !jf! need to reregister now
+   }
+}
+
+SipMessage&
+Registration::getRegistration() 
+{
+   switch (mState)
+   {
+      case Initialized:
+         mRegister = std::auto_ptr<SipMessage>(Helper::makeRegister(mAor, mFrom, mContact));
+         break;
+      default:
+         break;
+   }
+   return *mRegister;
+}
+
+SipMessage&
+Registration::refreshRegistration() 
+{
+   //assert(mState == Active);
+   mRegister->header(h_CSeq).sequence()++;
+   mRegister->header(h_Vias).front().param(p_branch).reset();
+   return *mRegister;
+}
+
+SipMessage&
+Registration::unregister() 
+{
+   assert(mState == Active);
+   mRegister->header(h_CSeq).sequence()++;
+   mRegister->header(h_Contacts).clear();
+   NameAddr wildcard;
+   wildcard.setAllContacts();
+   mRegister->header(h_Contacts).push_front(wildcard);
+   return *mRegister;
+}
+
+void
+Registration::handleResponse(const SipMessage& response)
+{
+   assert(response.isResponse());
+   if (response.header(h_StatusLine).statusCode() == 200)
+   {
+      mState = Active;
+      mContacts = response.header(h_Contacts);
+      mTimeTillExpiration = response.header(h_Expires).value() * 1000;
+   }
+   else
+   {
+      mContacts.clear();
+      mState = Terminated;
+   }
+}
+
+const CallID& 
+Registration::getCallID() const
+{
+   return mRegister->header(h_CallID);
+}
+
+bool
+Registration::isRegistered() const
+{
+   return mState == Active;
+}
+
+UInt64
+Registration::getTimeToRefresh() const
+{
+   return mTimeTillExpiration;
+}
 
 
 /* ====================================================================
