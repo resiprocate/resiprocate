@@ -1,4 +1,4 @@
-
+ 
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/TransactionState.hxx"
@@ -982,8 +982,10 @@ TransactionState::processStale(  Message* msg )
    DebugLog (<< "TransactionState::processStale: " << msg->brief());
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   if ( sip && sip->header(h_RequestLine).getMethod() == ACK ||
-	isResponse(msg, 200, 299 ) )
+   if ( (sip &&
+	 sip->isRequest() &&
+	 sip->header(h_RequestLine).getMethod() == ACK ) ||
+	 isResponse(msg, 200, 299 ) )
    {
       if (isFromTU(msg))
       { 
