@@ -20,9 +20,14 @@ class TransactionState
 
       void process( Message* msg );
      
-      
    private:
 
+      void processClientNonInvite(  Message* msg );
+      void processClientInvite(  Message* msg );
+      void processServerNonInvite(  Message* msg );
+      void processServerInvite(  Message* msg );
+      void processStale(  Message* msg );
+      
       typedef enum 
       {
          ClientNonInvite,
@@ -46,6 +51,7 @@ class TransactionState
       State mState;
             
       TransactionState* cancelStateMachine;
+
       SipMessage* msgToRetransmit;
       
 };
