@@ -16,8 +16,6 @@ class TransactionState
       TransactionState();
       
       static void process(SipStack& stack); 
-
-      void process( Message* msg );
      
    private:
 
