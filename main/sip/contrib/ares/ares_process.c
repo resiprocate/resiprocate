@@ -514,7 +514,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     return -1;
 
   /* Set the socket non-blocking. */
-#if WIN32
+#ifdef WIN32
   {
 	unsigned long noBlock = 1;
 	int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
