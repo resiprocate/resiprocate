@@ -8,6 +8,27 @@ int
 main(int arc, char** argv)
 {
    {
+      char *buf = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToTermCRLF();
+      pb.skipChars("\r\n");
+      pb.skipChars("\r\n");
+      pb.assertEof();
+   }
+
+   {
+      char *buf = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars("French");
+      pb.skipN(strlen("French"));
+      pb.skipWhitespace();
+      pb.skipChar(',');
+      pb.skipLWS();
+      std::cerr << pb.position();
+      pb.skipChars("LISP");
+   }
+
+   {
       char *buf = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("some");
