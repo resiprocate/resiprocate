@@ -14,7 +14,7 @@ Executive::Executive( SipStack& stack)
 
 
 void
-Executive::process(fd_set* fdSet)
+Executive::process(FdSet& fdset)
 {
    bool workToDo = true;
    
@@ -24,7 +24,7 @@ Executive::process(fd_set* fdSet)
    {
       workToDo = false;
      
-      if ( processTransports(fdSet) )
+      if ( processTransports(fdset) )
       {
          workToDo=true;
       }
@@ -45,10 +45,9 @@ Executive::process(fd_set* fdSet)
 
  
 bool 
-Executive::processTransports(fd_set* fdSet) 
+Executive::processTransports(FdSet& fdset) 
 {
-   mStack.mTransportSelector.process(fdSet);
-
+   mStack.mTransportSelector.process(fdset);
    return false;
 }
 
@@ -88,12 +87,9 @@ Executive::getTimeTillNextProcess()
 
 
 void 
-Executive::buildFdSet( fd_set* fdSet, int* fdSetSize )
+Executive::buildFdSet( FdSet& fdset)
 {
-   assert( fdSet );
-   assert( fdSetSize );
-	
-   mStack.mTransportSelector.buildFdSet( fdSet, fdSetSize );
+   mStack.mTransportSelector.buildFdSet( fdset );
 }
 
 
