@@ -4,6 +4,22 @@
 #include "sip2/sipstack/supported.hxx"
 #include "sip2/util/Data.hxx"
 
+// !dlb! could use the following hack:
+// requires ViaCategory etc.
+// requires using int instead of Headers::Type in some base classes
+// advantage -- won't compile if named parser doesn't exist
+#if 0
+#include "sip2/sipstack/ParserCategories.hxx"
+#define single(_enum, _type) _enum, _enum##_type = _type::UnknownParserCategory
+#define multi(_enum, _type) _enum, _enum##_type = _type::UnknownParserCategory
+#endif
+
+// eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
+#define UNUSEDsingle(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define UNUSEDmulti(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define single(_enum, _category) _enum
+#define multi(_enum, _category) _enum
+
 namespace Vocal2
 {
 
@@ -17,61 +33,63 @@ class Headers
       // Headers.hxx and gperf in Headers.cxx
       enum Type
       {
-         To, 
-         From, 
-         Via, 
-         Call_ID, 
-         CSeq, 
-         Route, 
-         Record_Route, 
-         Contact, 
-         Subject, 
-         Expires, 
-         Max_Forwards, 
-         Accept, 
-         Accept_Encoding, 
-         Accept_Language, 
-         Alert_Info,
-         Allow, 
-         Authentication_Info, 
-         Call_Info, 
-         Content_Disposition, 
-         Content_Encoding, 
-         Content_Language, 
-         Content_Type, 
-         Date, 
-         Error_Info, 
-         In_Reply_To, 
-         Min_Expires, 
-         MIME_Version, 
-         Organization, 
-         Priority, 
-         Proxy_Authenticate, 
-         Proxy_Authorization, 
-         Proxy_Require, 
-         Reply_To, 
-         Require, 
-         Retry_After, 
-         Server, 
-         Supported, 
-         Timestamp, 
-         Unsupported, 
-         User_Agent, 
-         Warning, 
-         WWW_Authenticate,
-         Subscription_State,
-         Refer_To,
-         Referred_By,
-         Authorization, 
-         Replaces,
-         Event,
-         Allow_Events,
-         Security_Client,
-         Security_Server,
-         Security_Verify,
-         Content_Length, 
-         UNKNOWN,
-         MAX_HEADERS = UNKNOWN,
+         UNKNOWN = -1,
+         single(To, NameAddr), 
+         single(From, NameAddr),
+         multi(Via, Via),
+         single(CallId, CallId),
+         single(CSeq, CSeqCategory),
+         multi(Route, NameAddr),
+         multi(RecordRoute, NameAddr),
+         multi(Contact, NameAddr),
+         single(Subject, StringCategory),
+         single(Expires, IntegerCategory),
+         single(MaxForwards, IntegerCategory),
+         multi(Accept, Mime),
+         multi(AcceptEncoding, AcceptEncoding),
+         multi(AcceptLanguage, Token),
+         multi(AlertInfo, GenericURI),
+         multi(Allow, Token),
+         single(AuthenticationInfo, Auth),
+         multi(CallInfo, GenericURI),
+         single(ContentDisposition, Token),
+         single(ContentEncoding, Token),
+         multi(ContentLanguage, Token),
+         single(ContentTransferEncoding, Token), // !dlb! multi
+         single(ContentType, Mime),
+         single(Date, DateCategory),
+         UNUSEDmulti(ErrorInfo, GenericURI),
+         single(InReplyTo, CallId),
+         single(MinExpires, IntegerCategory),
+         single(MIMEVersion, Token),
+         single(Organization, StringCategory),
+         single(Priority, Token),
+         multi(ProxyAuthenticate, Auth),
+         multi(ProxyAuthorization, Auth),
+         multi(ProxyRequire, Token),
+         single(ReplyTo, NameAddr),
+         multi(Require, Token),
+         single(RetryAfter, IntegerCategory),
+         single(Server, StringCategory),
+         multi(Supported, Token),
+         single(Timestamp, StringCategory),
+         multi(Unsupported, Token),
+         single(UserAgent, StringCategory),
+         single(Warning, WarningCategory),
+         multi(WWWAuthenticate, Auth),
+         multi(SubscriptionState,Token),
+         single(ReferTo, NameAddr),
+         single(ReferredBy, NameAddr),
+         multi(Authorization, header),
+         single(Replaces, CallId),
+         single(Event, Token),
+         multi(AllowEvents, Token),
+         multi(SecurityClient, Token),
+         multi(SecurityServer, Token),
+         multi(SecurityVerify, Token),
+         single(ContentLength, Token),
+
+         MAX_HEADERS,
          NONE
       };
 
