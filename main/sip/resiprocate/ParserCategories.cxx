@@ -175,6 +175,51 @@ StringComponent::encode(std::ostream& str) const
    return str;
 }
 
+
+//====================
+// Via:
+//====================
+ParserCategory *
+Via::clone(HeaderFieldValue*) const
+{
+  assert(0);
+}
+
+void
+Via::parse()
+{
+   assert(0);
+}
+
+ostream&
+Via::encode(ostream& str) const
+{
+   assert(0);
+}
+
+
+//====================
+// CallId:
+//====================
+ParserCategory *
+CallId::clone(HeaderFieldValue*) const
+{
+  assert(0);
+}
+
+void
+CallId::parse()
+{
+   assert(0);
+}
+
+ostream&
+CallId::encode(ostream& str) const
+{
+   assert(0);
+}
+
+
 //====================
 // Url:
 //====================
