@@ -103,7 +103,7 @@ TcpTransport::processListen(FdSet& fdset)
    {
       struct sockaddr_in peer;
 		
-      socklen_t peerLen=sizeof(peer);
+      socklen_t peerLen = sizeof(peer);
       Socket sock = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( sock == -1 )
       {
@@ -133,7 +133,7 @@ TcpTransport::processRead(Connection* c)
 {
    std::pair<char*, size_t> writePair = c->getWriteBuffer();
    
-   size_t bytesToRead = vocal2Min(writePair.second, TcpTransport::MaxReadSize);
+   size_t bytesToRead = resipMin(writePair.second, TcpTransport::MaxReadSize);
 
    int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
    DebugLog (<< "received " << bytesRead << " bytes on " << *c);
@@ -349,7 +349,7 @@ TcpTransport::processWrite(Connection* c)
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
    
-   size_t bytesToWrite = vocal2Min(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
+   size_t bytesToWrite = resipMin(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
 
    int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos, bytesToWrite);
    int err = errno;
