@@ -253,6 +253,8 @@ TuIM::processSubscribeRequest(SipMessage* msg)
       mSubscribers.push_back( dialog );
    }
    
+   dialog->setExpirySeconds( expires );
+   
    auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
  
    response->header(h_Expires).value() = expires;
@@ -721,6 +723,8 @@ TuIM::process()
       }
    }
 
+   // TODO - go and clean out any subscrption to us that have expired
+
    // check for any messages from the sip stack 
    SipMessage* msg( mStack->receive() );
    if ( msg )
@@ -881,7 +885,7 @@ TuIM::sendNotify(Dialog* dialog)
 
    Token state;
    state.value() = Data("active");
-   state.param(p_expires) = 666; // TODO !cj! - weird this is not showing up in the message
+   state.param(p_expires) = dialog->getExpirySeconds(); 
    notify->header(h_SubscriptionStates).push_front(state);
 
    notify->setContents( pidf );
