@@ -88,10 +88,10 @@ main()
       SdpContents* sdp = dynamic_cast<SdpContents*>(body);
       assert(sdp != 0);
 
-      assert(sdp->getSession().getVersion() == 0);
-      assert(sdp->getSession().getOrigin().getUser() == "alice");
-      assert(!sdp->getSession().getMedia().empty());
-      assert(sdp->getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      assert(sdp->session().getVersion() == 0);
+      assert(sdp->session().getOrigin().getUser() == "alice");
+      assert(!sdp->session().getMedia().empty());
+      assert(sdp->session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
 
       msg->encode(cerr);
    }
@@ -128,10 +128,10 @@ main()
       SdpContents* sdp = dynamic_cast<SdpContents*>(body);
       assert(sdp != 0);
 
-      assert(sdp->getSession().getVersion() == 0);
-      assert(sdp->getSession().getOrigin().getUser() == "alice");
-      assert(!sdp->getSession().getMedia().empty());
-      assert(sdp->getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      assert(sdp->session().getVersion() == 0);
+      assert(sdp->session().getOrigin().getUser() == "alice");
+      assert(!sdp->session().getMedia().empty());
+      assert(sdp->session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
 
       msg->encode(cerr);
    }

@@ -13,12 +13,24 @@ namespace Vocal2
 
 class SdpContents;
 
+class AttributeHelper
+{
+   public:
+      bool exists(const Data& key) const;
+      const list<Data>& getValue(const Data& key) const;
+      ostream& encode(ostream& s) const;
+      void parse(ParseBuffer& pb);
+      void addAttribute(const Data& key, const Data& value = Data::Empty);
+   private:
+      std::map< Data, std::list<Data> > mAttributes;
+};
+
 class SdpContents : public Contents
 {
    public:
       typedef enum {IP4=1, IP6} AddrType;
 
-		class Session;
+      class Session;
 
       class Session 
       {
@@ -128,7 +140,7 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const Data getModifier() const {return mModifier;}
+                  const Data& getModifier() const {return mModifier;}
                   unsigned int getKbPerSecond() const {return mKbPerSecond;}
 
                private:
@@ -211,18 +223,17 @@ class SdpContents : public Contents
             class Encryption
             {
                public:
-                  typedef enum {Prompt=1, Clear, Base64, UriKey} KeyType;
+                  typedef enum {NoEncryption = 0, Prompt, Clear, Base64, UriKey} KeyType;
                   Encryption(const KeyType& method,
                              const Data& key);
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
                   const KeyType& getMethod() const {return mMethod;}
-				  void setMethod( const KeyType& k) { mMethod=k; }
+                  void setMethod( const KeyType& k) { mMethod=k; }
                   const Data& getKey() const {return mKey;}
 
-			
-				  Encryption();
+                  Encryption();
                private:
              
                   KeyType mMethod;
@@ -259,7 +270,7 @@ class SdpContents : public Contents
                   const std::list<Connection>& getConnections() const;
                   const Encryption& getEncryption() const;
                   bool exists(const Data& key) const;
-                  const Data& getValue(const Data& key) const;
+                  const list<Data>& getValue(const Data& key) const;
 
                private:
                   Medium();
@@ -278,7 +289,7 @@ class SdpContents : public Contents
                   std::list<Connection> mConnections;
                   std::list<Bandwidth> mBandwidths;
                   Encryption mEncryption;
-                  std::map<Data, Data> mAttributes;
+                  AttributeHelper mAttributeHelper;
 
                   friend class Session;
             };
@@ -297,7 +308,8 @@ class SdpContents : public Contents
             const Uri& getUri() const {return mUri;}
             const std::list<Email>& getEmails() const {return mEmails;}
             const std::list<Phone>& getPhones() const {return mPhones;}
-            const Connection getConnection() const {return mConnection;}
+            Connection& connection() {return mConnection;}
+            const Connection& connection() const {return mConnection;}
             const std::list<Bandwidth>& getBandwidths() const {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
@@ -311,7 +323,7 @@ class SdpContents : public Contents
             void addMedium(const Medium& medium);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
-            const Data& getValue(const Data& key) const;
+            const list<Data>& getValue(const Data& key) const;
 
          private:
             Session() {}
@@ -331,7 +343,7 @@ class SdpContents : public Contents
             std::list<Time> mTimes;
             Timezones mTimezones;
             Encryption mEncryption;
-            std::map<Data, Data> mAttributes;
+            AttributeHelper mAttributeHelper;
 
             friend class SdpContents;
       };
@@ -341,7 +353,8 @@ class SdpContents : public Contents
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       virtual Contents* clone() const;
 
-      const Session& getSession() const {checkParsed(); return mSession;}
+      Session& session() {checkParsed(); return mSession;}
+      const Session& session() const {checkParsed(); return mSession;}
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);

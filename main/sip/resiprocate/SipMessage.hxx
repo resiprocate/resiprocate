@@ -87,6 +87,7 @@ class SipMessage : public Message
       Content_Length_Header::Type& header(const Content_Length_Header& headerType) const;
       Content_Type_Header::Type& header(const Content_Type_Header& headerType) const;
       Date_Header::Type& header(const Date_Header& headerType) const;
+      Event_Header::Type& header(const Event_Header& headerType) const;
       Expires_Header::Type& header(const Expires_Header& headerType) const;
       From_Header::Type& header(const From_Header& headerType) const;
       In_Reply_To_Header::Type& header(const In_Reply_To_Header& headerType) const;
