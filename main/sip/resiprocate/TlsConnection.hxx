@@ -25,6 +25,10 @@ class TlsConnection : public Connection
       Data peerName();
       
    private:
+    enum State { Broken, Accepting, Connecting, Handshaking, Up } mState;
+
+    State checkState();
+
 #if USE_SSL
       SSL* ssl;
       BIO* bio;
