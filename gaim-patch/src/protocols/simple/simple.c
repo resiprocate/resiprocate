@@ -635,10 +635,10 @@ simple_tooltip_text(GaimBuddy *b)
 
 static GaimPluginProtocolInfo prpl_info =
 {
+        2,			/* API version number */
 	0,			/* GaimProtocolOptions */
 	NULL,			/* user_splits */
 	NULL,			/* protocol_options */
-	NULL,			/* protocol_prefs */
  	sippy_list_icon, 	/* list_icon */
 	NULL, 			/* list_emblems  */
 	simple_status_text,	/* status_text */
@@ -654,7 +654,6 @@ static GaimPluginProtocolInfo prpl_info =
 	NULL,			/* send_typing */
 	NULL,			/* get_info */
 	sippy_set_presence, 	/* set_away */
-	NULL,			/* get_away */
 	NULL,			/* set_dir */
 	NULL,			/* get_dir */
 	NULL,			/* dir_search */
@@ -671,6 +670,7 @@ static GaimPluginProtocolInfo prpl_info =
 	NULL,			/* set_permit_deny */
 	NULL,			/* warn */
 	NULL,			/* join_chat */
+        NULL,                   /* reject_chat */
 	NULL,			/* chat_invite */
 	NULL,			/* chat_leave */
 	NULL,			/* chat_whisper */
@@ -684,12 +684,20 @@ static GaimPluginProtocolInfo prpl_info =
 	NULL,			/* rename_group */
 	NULL,			/* buddy_free */
 	NULL, 			/* convo_closed */ /* XXX: thread_ids */
-	NULL 			/* normalize */
+	NULL, 			/* normalize */
+        NULL,			/* set_buddy_icon */
+        NULL,			/* remove_group */
+        NULL,			/* get_cb_real_name */
+        NULL,			/* set_chat_topic */
+        NULL,			/* find_blist_chat */
+        NULL,			/* roomlist_get_list */
+        NULL,			/* roomlist_expand_category */
+        NULL			/* chat_menu */
 };
 
 static GaimPluginInfo info =
 {
-	2,                                                /**< api_version    */
+	3,                                                /**< api_version    */
 	GAIM_PLUGIN_PROTOCOL,                             /**< type           */
 	NULL,                                             /**< ui_requirement */
 	0,                                                /**< flags          */
@@ -711,7 +719,8 @@ static GaimPluginInfo info =
 	NULL,                                             /**< destroy        */
 
 	NULL,                                             /**< ui_info        */
-	&prpl_info                                        /**< extra_info     */
+	&prpl_info,                                       /**< extra_info     */
+        NULL						  /**< prefs_info     */
 };
 
 static void
