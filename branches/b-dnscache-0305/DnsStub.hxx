@@ -123,7 +123,7 @@ class DnsStub
                else
                {
                   Cache* cache = new RRCache<QueryType::Type>;
-                  mStub.mCacheMap.insert(IntToCache(QueryType::getRRType(), cache));
+                  mStub.mCacheMap.insert(CacheMap::value_type(QueryType::getRRType(), cache));
                   return cache;
                }
              }
@@ -273,8 +273,8 @@ class DnsStub
       // add in constructor, always required.
       RRCache<DnsCnameRecord> mCnameCache;
 
-      typedef std::pair<short, RRCacheBase*> IntToCache;
-      std::map<short, RRCacheBase*> mCacheMap;
+      typedef std::map<short, RRCacheBase*> CacheMap;
+      CacheMap mCacheMap;
 
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                            const unsigned char *abuf,
