@@ -11,6 +11,7 @@
 #endif
 
 #include "sip2/util/Mutex.hxx"
+#include "sip2/util/Condition.hxx"
 
 namespace Vocal2
 {
@@ -55,6 +56,10 @@ class ThreadIf
       // request the thread running thread() to return, by setting  mShutdown 
       void shutdown();
 
+      //waits for waitMs, or stops waiting and returns true if shutdown was
+      //called
+      bool waitForShutdown(int ms) const;
+
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
 
@@ -83,6 +88,7 @@ class ThreadIf
       bool mShutdown;
 
       mutable Mutex mShutdownMutex;
+      mutable Condition mShutdownCondition;
 
       // Suppress copying
       ThreadIf(const ThreadIf &);
