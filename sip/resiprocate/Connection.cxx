@@ -91,7 +91,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       case NewMessage:
       {
          mPreparse.reset();
-         mMessage = new SipMessage(SipMessage::FromWire);
+         assert(mWho.transport);
+         mMessage = new SipMessage(mWho.transport);
          DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
       }

@@ -21,15 +21,25 @@ using namespace resip;
 const size_t TlsTransport::MaxWriteSize = 4096;
 const size_t TlsTransport::MaxReadSize = 4096;
 
-
-TlsTransport::TlsTransport(const Data& sendhost, int portNum, 
-                           const Data& nic, Fifo<Message>& fifo,Security* security) : 
-   Transport(sendhost, portNum, nic , fifo)
+TlsTransport::TlsTransport(const Data& domain, 
+                           const Data& sendhost, int portNum, 
+                           const Data& keyDir, const Data& privateKeyPassPhrase,
+                           const Data& nic, Fifo<Message>& fifo) : 
+   Transport(sendhost, portNum, nic , fifo),
+   mDomain(domain),
+   mSecurity(new Security(true, true))
 {
+   InfoLog (<< "Creating TLS transport for domain " 
+            << domain << " host=" << sendhost 
+            << " port=" << portNum << " nic=" << nic);
+   
+   bool ok = true;
+   ok = mSecurity->loadRootCerts( keyDir + "root.pem") ? ok : false;
+   ok = mSecurity->loadMyPublicCert( keyDir + domain + "_cert.pem") ? ok : false;
+   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, keyDir + domain + "_key.pem") ? ok : false;
+   
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
-   mSecurity = security;
-   assert( mSecurity );
    
    if ( mFd == INVALID_SOCKET )
    {
