@@ -10,12 +10,11 @@
 using namespace resip;
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
-                                       BaseCreator* creator,
                                        Dialog& dialog,
-                                       const SipMessage& req)
+                                       const SipMessage& request)
    : BaseUsage(dum, dialog),
      mHandle(dum),
-     mLastRequest(creator->getLastRequest())
+     mLastRequest(request)
 {
    if (mLastRequest.exists(h_Contacts))
    {
@@ -105,6 +104,28 @@ ClientRegistration::allContacts()
    return mAllContacts;
 }
 
+void
+ClientRegistration::updateMyContacts(const NameAddrs& allContacts)
+{
+   NameAddrs myNewContacts;
+   for (NameAddrs::iterator i=allContacts.begin(); i != allContacts.end(); i++)
+   {
+      for (NameAddrs::iterator j=mMyContacts.begin(); j != mMyContacts.end(); i++)
+      {
+         if (i->uri() == j->uri())
+         {
+            if (i->exists(p_gruu))
+            {
+               mDum.getProfile()->addGruu(mLastRequest.header(h_To).uri().getAor(), *i);
+            }
+            myNewContacts.push_back(*i);
+         }
+      }
+   }
+   mMyContacts = myNewContacts;
+}
+
+
 void 
 ClientRegistration::dispatch(const SipMessage& msg)
 {
@@ -117,10 +138,19 @@ ClientRegistration::dispatch(const SipMessage& msg)
    }
    else if (code < 300) // success
    {
+      Profile* profile = mDum.getProfile();
+      
       // !jf! consider what to do if no contacts
       mAllContacts = msg.header(h_Contacts);
-      // make timers to re-register
-      // store the GRUUs
+      updateMyContacts(mAllContacts);
+      if (!mMyContacts.empty())
+      {
+         // make timers to re-register
+         mDum.addTimer(DumTimer::Registration, 
+                       Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
+                       mLastRequest.header(h_CSeq).sequence());
+      }
+
       mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
    }
    else
