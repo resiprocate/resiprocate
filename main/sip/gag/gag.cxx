@@ -3,6 +3,7 @@
 #endif
 
 #include <list>
+#include <errno.h>
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -54,12 +55,21 @@ main (int argc, char **argv)
     err = fdset.selectMilliSeconds(time);
     if (err < 0)
     {
-      // XXX send error message to GAIM
+      // send error message to GAIM
+      Data error;
+      error = "Error in select(): [";
+      error += errno;
+      error += "] ";
+      error += strerror(errno);
+
+      GagErrorMessage errorMessage(error);
+      errorMessage.serialize(cout);
     }
 
     if (fdset.readyToRead(fileno(stdin)))
     {
-      // XXX process incoming GAIM command
+      GagMessage *message = GagMessage::getMessage(cin);
+      delete message;
     }
     else
     {
