@@ -187,7 +187,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
       if (type == ParameterTypes::UNKNOWN)
       {
-         mParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+	 // bko -- changed this to mUnknownParameters
+         mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
       }
       else
       {
@@ -578,3 +579,7 @@ ParserCategory::param(const Rport_Param& paramType) const
  * <http://www.vovida.org/>.
  *
  */
+
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */

@@ -445,14 +445,32 @@ GenericURI::operator=(const GenericURI& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      assert(0);
+      mUri = rhs.mUri;
    }
    return *this;
 }
+
+
 void
 GenericURI::parse(ParseBuffer& pb)
 {
-   assert(0);
+   pb.skipWhitespace();
+   const char* anchor = pb.skipChar(Symbols::LA_QUOTE[0]);
+
+   pb.skipToChar(Symbols::RA_QUOTE[0]);
+   pb.data(mUri, anchor);
+   pb.skipChar(Symbols::RA_QUOTE[0]);
+
+   pb.skipWhitespace();
+
+   parseParameters(pb);
+}
+
+
+Data& GenericURI::uri()
+{
+   checkParsed();
+   return mUri;
 }
 
 ParserCategory* 
@@ -464,6 +482,12 @@ GenericURI::clone() const
 std::ostream& 
 GenericURI::encode(std::ostream& str) const
 {
+   str << Symbols::LA_QUOTE[0]
+       << mUri
+       << Symbols::RA_QUOTE[0];
+
+   encodeParameters(str);
+
    return str;
 }
 
@@ -910,3 +934,7 @@ StatusLine::encode(ostream& str) const
  * <http://www.vovida.org/>.
  *
  */
+
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
