@@ -299,9 +299,9 @@ Dialog::clear()
    mLocalEmpty = true;
    mLocalTag = "";
    mRemoteTag = "";
-   mRemoteUri = 0;
-   mLocalUri = 0;
-   mRemoteTarget = 0;
+   //mRemoteUri = 0;
+   //mLocalUri = 0;
+   //mRemoteTarget = 0;
    mDialogId = "";
 }
 
