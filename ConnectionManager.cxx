@@ -13,12 +13,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-// typedef not available for method naming, sigh
-#if defined(__SUNPRO_CC)
-  typedef IntrusiveListElement<Connection*> lruList;
-  typedef IntrusiveListElement1<Connection*> readList;
-  typedef IntrusiveListElement2<Connection*> writeList;
-#endif
 
 // smallest time to reuse
 const UInt64 
@@ -30,11 +24,11 @@ ConnectionManager::MaxLastUsed = 1000;
 
 ConnectionManager::ConnectionManager() : 
    mHead(),
-   mWriteHead(Connection::writeList::makeList(&mHead)),
+   mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mWriteIter(mWriteHead->begin()),
-   mReadHead(Connection::readList::makeList(&mHead)),
+   mReadHead(ConnectionReadList::makeList(&mHead)),
    mReadIter(mReadHead->begin()),
-   mLRUHead(Connection::lruList::makeList(&mHead)),
+   mLRUHead(ConnectionLruList::makeList(&mHead)),
    mConnectionIdGenerator(1) 
 {
 }
@@ -114,13 +108,13 @@ ConnectionManager::getNextWrite()
 void
 ConnectionManager::buildFdSet(FdSet& fdset)
 {
-   for (Connection::readList::iterator i = mReadHead->begin(); 
+   for (ConnectionReadList::iterator i = mReadHead->begin(); 
         i != mReadHead->end(); ++i)
    {
       fdset.setRead((*i)->getSocket());
    }
 
-   for (Connection::writeList::iterator i = mWriteHead->begin(); 
+   for (ConnectionWriteList::iterator i = mWriteHead->begin(); 
         i != mWriteHead->end(); ++i)
    {
       fdset.setWrite((*i)->getSocket());
@@ -139,7 +133,7 @@ ConnectionManager::removeFromWritable()
    assert(!mWriteHead->empty());
    Connection* current = *mWriteIter;
    ++mWriteIter;
-   current->writeList::remove();
+   current->ConnectionWriteList::remove();
 
    if (mWriteIter == mWriteHead->end())
    {
@@ -175,9 +169,9 @@ ConnectionManager::removeConnection(Connection* connection)
    mIdMap.erase(connection->mWho.connectionId);
    mAddrMap.erase(connection->mWho);
 
-   connection->readList::remove();
-   connection->writeList::remove();
-   connection->lruList::remove();
+   connection->ConnectionReadList::remove();
+   connection->ConnectionWriteList::remove();
+   connection->ConnectionLruList::remove();
 
    // keep the iterators valid
    mReadIter = mReadHead->begin();
@@ -191,7 +185,7 @@ ConnectionManager::gc(UInt64 relThreshhold)
    UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
    InfoLog(<< "recycling connections older than " << relThreshhold/1000.0 << " seconds");
 
-   for (Connection::lruList::iterator i = mLRUHead->begin();
+   for (ConnectionLruList::iterator i = mLRUHead->begin();
         i != mLRUHead->end();)
    {
       if ((*i)->mLastUsed < threshhold)
@@ -213,6 +207,6 @@ ConnectionManager::gc(UInt64 relThreshhold)
 void
 ConnectionManager::touch(Connection* connection)
 {
-   connection->lruList::remove();
+   connection->ConnectionLruList::remove();
    mLRUHead->push_back(connection);
 }
