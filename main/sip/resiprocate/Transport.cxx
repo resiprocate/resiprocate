@@ -133,37 +133,37 @@ Transport::toData(Transport::Type type)
 Transport::Type
 Transport::toTransport(const Data& type)
 {
-   if (type == "UDP")
+   if (isEqualNoCase(type, "UDP"))
    {
       return UDP;
    }
-   else if (type == "TCP")
+   else if (isEqualNoCase(type, "TCP"))
    {
       return TCP;
    }
-   else if (type == "TLS")
+   else if (isEqualNoCase(type, "TLS"))
    {
       return TLS;
    }
-   else if (type == "SCTP")
+   else if (isEqualNoCase(type, "SCTP"))
    {
       return SCTP;
    }
-   else if (type == "DCCP")
+   else if (isEqualNoCase(type, "DCCP"))
    {
       return DCCP;
    }
 #if defined(USETESTTRANSPORT)
-   else if (type == "TestReliable")
+   else if (isEqualNoCase(type, "TestReliable"))
    {
       return TestReliable;
    }
-   else if (type == "TestUnreliable")
+   else if (isEqualNoCase(type, "TestUnreliable"))
    {
       return TestUnreliable;
    }
 #endif
-   else if (type == "Unknown")
+   else if (isEqualNoCase(type, "Unknown"))
    {
       return Unknown;
    }
@@ -171,7 +171,6 @@ Transport::toTransport(const Data& type)
    {
       assert(0);
    }
-
    return Unknown;
 };
 
