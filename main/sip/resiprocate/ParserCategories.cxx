@@ -1,10 +1,16 @@
-#include <sipstack/ParserCategories.hxx>
+#include <algorithm>
 #include <iostream>
 #include <cassert>
+
+#include <util/Data.hxx>
+#include <util/Logger.hxx>
+#include <sipstack/ParserCategories.hxx>
 
 
 using namespace Vocal2;
 using namespace std;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 //====================
 // Token
@@ -17,8 +23,11 @@ Token::Token(const Token& rhs)
 void
 Token::parse()
 {
-   assert(0);
-   // remember to call parseParameters()
+   const char* pstart = getHeaderField().mField;
+   const char* pos = find(pstart, pstart+getHeaderField().mFieldLength, Symbols::SEMI_COLON[0]);
+   mValue = Data(pstart, pos-pstart);
+   DebugLog (<< "Token::parse() --> " << mValue);
+   parseParameters(pos-pstart);
 }
 
 ParserCategory* 
@@ -98,15 +107,27 @@ CSeqComponent::CSeqComponent(const CSeqComponent& rhs)
      mSequence(rhs.mSequence)
 {}
 
-ParserCategory* CSeqComponent::clone() const
+ParserCategory* 
+CSeqComponent::clone() const
 {
    return new CSeqComponent(*this);
 }
 
+// examples to test: 
+// "CSeq:15 ACK"  // ok
+// "CSeq:ACK"     // bad
+// "CSeq:JOE"     // ok
+// "CSeq:1 JOE"   // ok
+// "CSeq:1323333 INVITE" // ok 
+// "CSeq:1323333 Invite" // ok - not invite
+// "CSeq:1323333 InviTe" // ok - not invite
+// "CSeq:\t\t  \t15\t\t\t    \t ACK"  // ok
+// "CSeq:\t\t  \t15\t\t\t    \t"  // bad
+
 void
 CSeqComponent::parse()
 {
-
+   // !jf! this does not need to copy the memory until after parsing - see Token
    Data number;
    Data method = Data(mHeaderField->mField, mHeaderField->mFieldLength);
    int ret = method.match(" ", &number, true);
@@ -117,13 +138,13 @@ CSeqComponent::parse()
    }
    else if (ret == NOT_FOUND)
    {
-      ParseException except;
-      throw except;
+      DebugLog(<< "Failed to parse CSeq: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
+      throw ParseException("failed parse of CSeq", __FILE__,__LINE__);
    }
    else if (ret == FIRST)
    {
-      ParseException except;
-      throw except;
+      DebugLog(<< "Failed to parse CSeq: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
+      throw ParseException("failed parse of CSeq", __FILE__,__LINE__);
    }
 }
 
@@ -214,8 +235,8 @@ IntegerComponent::parse()
   // Starts with a comment, bad
   if (retn == FIRST)
   {
-     ParseException except;
-     throw except;
+     DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
+     throw ParseException("failed parse of Integer", __FILE__,__LINE__);
   }
 
   // we have a comment, handle it
@@ -232,8 +253,8 @@ IntegerComponent::parse()
      // is empty. Either is illegal
      if (retn != FOUND)
      {
-        ParseException except;
-        throw except;
+        DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
+        throw ParseException("failed parse of Integer", __FILE__,__LINE__);
      }
 
      mComment = comment;
@@ -248,8 +269,8 @@ IntegerComponent::parse()
         {
            // something between the comment and the ;, or something
            // after the ) and no ;. Both are bad.
-           ParseException except;
-           throw except;
+           DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
+           throw ParseException("failed parse of Integer", __FILE__,__LINE__);
         }
         else
         {

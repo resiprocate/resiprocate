@@ -40,7 +40,7 @@ class ParserCategory
          return ((typename ParameterType<T>::Type&)mHeaderField->getParameter((typename ParameterTypes::Type)T)).value();
       }
       
-      void parseParameters(const char* start);
+      void parseParameters(unsigned int start);
 
       bool isParsed() const
       {
@@ -58,6 +58,7 @@ class ParserCategory
       // call before every access 
       void checkParsed()
       {
+         // !dlb! thread safety?
          if (!mIsParsed)
          {
             mIsParsed = true;
