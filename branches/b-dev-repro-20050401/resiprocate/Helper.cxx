@@ -581,7 +581,8 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << realm
       << Symbols::COLON
       << password;
-
+   a1.flush();
+   
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount);
 }
@@ -747,6 +748,13 @@ Helper::authenticateRequest(const SipMessage& request,
                return Failed;
             }
          
+            InfoLog (<< " username=" << (i->param(p_username))
+                     << " password=" << password
+                     << " realm=" << realm
+                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                     << " uri=" << i->param(p_uri)
+                     << " nonce=" << i->param(p_nonce));
+            
             if (i->exists(p_qop))
             {
                if (i->param(p_qop) == Symbols::auth)
@@ -962,7 +970,7 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
 }
 
 Auth 
-Helper::makeChallengeResponseAuthWithA1(SipMessage& request,
+Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                         const Data& username,
                                         const Data& a1,
                                         const Auth& challenge,

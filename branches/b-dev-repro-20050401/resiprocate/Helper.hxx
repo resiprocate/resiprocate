@@ -138,7 +138,7 @@ class Helper
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
-      static Auth makeChallengeResponseAuthWithA1(SipMessage& request,
+      static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
                                                   const Data& passwordHashA1,
                                                   const Auth& challenge,
