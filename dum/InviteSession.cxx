@@ -199,7 +199,7 @@ InviteSession::dispatch(const SipMessage& msg)
 }
 
 SipMessage& 
-InviteSession::makeRefer(const H_ReferTo::Type& referTo)
+InviteSession::makeRefer(const NameAddr& referTo)
 {
    assert(0);
    return mLastRequest;
