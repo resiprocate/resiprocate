@@ -215,12 +215,10 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                //terminating existing dialogs(branches) as this is a final
                //response--?dcm?--merge w/ forking logic somehow?                              
-               DialogMap::iterator last = mDialogs.end();
-               last--;   
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
                mDestroying = true;               
-               for (DialogMap::iterator it = mDialogs.begin(); it != last;)
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end();)
                {
                   //cancel could invalidate it
                   Dialog* d = it->second;
