@@ -134,6 +134,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                {
                   mProposedRemoteSdp = sdp->clone();
                   handler->onOffer(getHandle(), msg);
+
+                  // handler must provide an answer
+                  assert(mProposedLocalSdp);
                }
             }
             else
@@ -230,9 +233,35 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 void
 ClientInviteSession::sendPrack(const SipMessage& response)
 {
+   assert(response.isResponse());
+   assert(response.header(h_StatusLine).statusCode() > 100 && 
+          response.header(h_StatusLine).statusCode() < 200);
+   
+   SipMessage prack;
+   mDialog.makePrack(prack);
+
+   if (mProposedRemoteSdp)
+   {
+      assert(mProposedLocalSdp);
+      // send an answer
+      prack.setContents(mProposedLocalSdp);
+      
+   }
+   else if (mProposedLocalSdp)
+   {
+      // send a counter-offer
+      prack.setContents(mProposedRemoteSdp);
+   }
+   else
+   {
+      // no sdp
+   }
+   
    // much later!!! the deep rathole ....
    // if there is a pending offer or answer, will include it in the PRACK body
    assert(0);
+
+   
 }
 
 void
