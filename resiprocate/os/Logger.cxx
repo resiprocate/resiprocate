@@ -1,70 +1,40 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/RecursiveMutex.hxx"
 
 using namespace resip;
 
 std::ostream* 
 GenericLogImpl::mLogger=0;
 
-struct LogState
+static pthread_t currentThread;
+
+AssertOnRecursiveLock::AssertOnRecursiveLock()
 {
-      LogState()
-         : isDebug(true)
-      {}
-
-      RecursiveMutex mutex;
-      bool isDebug;
-};
-
-static LogState logState;
-
-bool
-checkAndSetLogState(bool isDebug)
-{
-   logState.mutex.lock();
-
-   if (isDebug)
-   {
-      // nested debug logs permitted
-      return true;
-   }
-   else
-   {
-      // nested non-debug logs not permitted
-      if (!logState.isDebug)
-      {
-         return false;
-      }
-      else
-      {
-         // note that lock is non-debug
-         logState.isDebug = false;
-      }
-      return true;
-   }
-}
-
-RecursiveLogLock::RecursiveLogLock(Log::Level level)
-   : isDebug(level >= Log::DEBUG)
-{
+#ifdef CHECK_RECURSIVE_LOG
 #ifdef WIN32
 #else
-   assert(checkAndSetLogState(isDebug));
+   // should be atomic
+   assert(currentThread != ThreadIf::selfId());
+#endif
 #endif
 }
 
-RecursiveLogLock::~RecursiveLogLock()
+void
+AssertOnRecursiveLock::set()
+{
+#ifdef CHECK_RECURSIVE_LOG
+#ifdef WIN32
+#else
+   currentThread = ThreadIf::selfId();
+#endif
+#endif
+}
+
+AssertOnRecursiveLock::~AssertOnRecursiveLock()
 {
 #ifdef WIN32
 #else
-   // backtrack the log debug state
-   if (!isDebug)
-   {
-      logState.isDebug = true;
-   }
-   logState.mutex.unlock();
-
+   currentThread = 0;
 #endif
 }
 
