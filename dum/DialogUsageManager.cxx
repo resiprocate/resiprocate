@@ -76,6 +76,68 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 {
 }
 
+SipMessage* 
+DialogUsageManager::makeInviteSession(const Uri& target)
+{
+   SipMessage* invite = Helper::makeInvite(target, mProfile->getDefaultAor());
+   prepareInitialRequest(*invite);
+   return invite;
+}
+
+// !jf! add rest of make??? methods here
+
+
+SipMessage* 
+DialogUsageManager::makeInviteSession(DialogId id, const Uri& target)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makeInviteSession(target);
+}
+
+SipMessage* 
+DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makeSubscription(aor, eventType);
+}
+
+SipMessage* 
+DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makeRefer(aor, referTo);
+}
+
+SipMessage* 
+DialogUsageManager::makePublication(const Uri& aor, const Data& eventType)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makePublication(aor, eventType);
+}
+
+SipMessage* 
+DialogUsageManager::makeRegistration(const Uri& aor)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makeRegistration(aor);
+}
+
+SipMessage* 
+DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
+{
+   Dialog& dialog = findDialog(id); // could throw
+   return dialog.makeOutOfDialogRequest(aor, meth);
+}
+
+
+void
+DialogUsageManager::prepareInitialRequest(SipMessage& request)
+{
+   // !jf! 
+   request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
+   request.header(h_Allows) = mProfile->getAllowedMethods();
+}
+
 void
 DialogUsageManager::process()
 {
