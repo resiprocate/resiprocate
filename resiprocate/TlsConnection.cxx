@@ -166,7 +166,7 @@ TlsConnection::checkState()
 	       case SSL_ERROR_WANT_CONNECT:
 		   DebugLog( << "TLS connection want connect" );
 		   return mState;
-#if 0
+#if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
 	       case SSL_ERROR_WANT_ACCEPT:
 		   DebugLog( << "TLS connection want accept" );
 		   return mState;
@@ -185,7 +185,8 @@ TlsConnection::checkState()
 		   ErrLog( <<" (SSL Error ssl)" );
 		   break;
 	       case SSL_ERROR_WANT_READ: 
-		   ErrLog( <<" (SSL Error want read)" ); break;
+		   ErrLog( <<" (SSL Error want read)" ); 
+                   break;
 	       case SSL_ERROR_WANT_WRITE: 
 		   ErrLog( <<" (SSL Error want write)" ); 
 		   break;
@@ -552,17 +553,15 @@ TlsConnection::computePeerName()
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
 
    // add the certificate to the Security store
-#if 0 // TODO !cj! TURN THIS ON 
    assert( mPeerName != Data::Empty );
-   if ( !security->hasDomainCert( mPeerName ) )
+   if ( !mSecurity->hasDomainCert( mPeerName ) )
    {
-      char* buf = NULL;
+      unsigned char* buf = NULL;
       int len = i2d_X509( cert, &buf );
       Data derCert( buf, len );
-      security->addDomainCertDER(mPeerName,derCert);
-      free buf; buf=NULL;
+      mSecurity->addDomainCertDER(mPeerName,derCert);
+      free(buf); buf=NULL; // TODO - this may leak 
    }
-#endif
 
    X509_free(cert); cert=NULL;
 }
