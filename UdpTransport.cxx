@@ -29,6 +29,8 @@ const int UdpTransport::MaxBufferSize = 8192;
 UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
+   DebugLog (<< "Creating udp transport host=" << sendhost << " port=" << portNum << " nic=" << nic);
+   
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
    if ( mFd == INVALID_SOCKET )
@@ -101,7 +103,8 @@ UdpTransport::process(FdSet& fdset)
       if ( count == SOCKET_ERROR )
       {
          int err = errno;
-         ErrLog (<< "UDPTransport - sendto failed " << strerror(err) );
+         InfoLog (<< strerror(err));
+         InfoLog (<< "Failed sending to " << sendData->destination);
          fail(sendData->transactionId);
       }
       else
@@ -216,14 +219,18 @@ UdpTransport::process(FdSet& fdset)
    if (err)
    {
       InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented.");
-      delete message; message=0; 
+      DebugLog(<< Data(buffer, len));
+      delete message; 
+      message=0; 
       return;
    }
 
    if ( !mPreparse.isHeadersComplete() )
    {
       InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
-      delete message; message=0;
+      DebugLog(<< Data(buffer, len));
+      delete message; 
+      message=0;
       return;
    }
 

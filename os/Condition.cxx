@@ -58,10 +58,9 @@
 #include <sys/time.h>
 #endif
 
+#include "sip2/util/compat.hxx"
 #include "sip2/util/Condition.hxx"
 #include "sip2/util/Mutex.hxx"
-
-
 #include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;

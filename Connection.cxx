@@ -9,8 +9,8 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
-char* 
-Connection::connectionStates[Connection::MAX] = { "NewMessage", "ReadingHeaders", "PartialBody" };
+char 
+Connection::connectionStates[Connection::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
 
 Connection::Connection()
