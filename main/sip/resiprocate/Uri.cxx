@@ -210,9 +210,10 @@ Uri::operator<(const Uri& other) const
 const Data&
 Uri::getAor() const
 {
+   checkParsed();
    // did anything change?
-   if (mOldHost != mHost ||
-       mOldUser != mUser ||
+   if (mOldUser != mUser ||
+       mOldHost != mHost ||
        mOldPort != mPort)
    {
       mOldHost = mHost;
