@@ -20,6 +20,8 @@ class ParserCategory
    public:
       ParserCategory(HeaderFieldValue* headerFieldValue)
          : mHeaderField(headerFieldValue),
+           mParameters(),
+           mUnknownParameters(),
            mIsParsed(false),
            mMine(false)
       {}

@@ -10,6 +10,7 @@ using namespace std;
 DataParameter::DataParameter(ParameterTypes::Type type,
                              ParseBuffer& pb)
    : Parameter(type), 
+     mValue(),
      mQuoted(false)
 {
    if (*pb.position() != '=')
@@ -38,6 +39,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
 
 DataParameter::DataParameter(ParameterTypes::Type type)
    : Parameter(type),
+     mValue(),
      mQuoted(false)
 {
 }

@@ -46,6 +46,9 @@ class HeaderFieldValue
       const unsigned int mFieldLength;
 
    private:
+      HeaderFieldValue(const HeaderFieldValue&);
+      HeaderFieldValue& operator=(const HeaderFieldValue&);
+      
       bool mMine;
 
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
