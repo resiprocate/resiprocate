@@ -45,7 +45,7 @@ class ParserContainer : public ParserContainerBase
          : ParserContainerBase(other)
       {
          for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
-              i != other.mParsers.end(); i++)
+              i != other.mParsers.end(); ++i)
          {
             mParsers.push_back(new T(**i));
          }
@@ -62,7 +62,7 @@ class ParserContainer : public ParserContainerBase
          {
             clear();
             for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
-                 i != other.mParsers.end(); i++)
+                 i != other.mParsers.end(); ++i)
             {
                mParsers.push_back(new T(**i));
             }
@@ -192,7 +192,7 @@ class ParserContainer : public ParserContainerBase
             }
          
             for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
-                 i != mParsers.end(); i++)
+                 i != mParsers.end(); ++i)
             {
                if (i != mParsers.begin())
                {
@@ -224,7 +224,7 @@ class ParserContainer : public ParserContainerBase
 
             bool first = true;
             for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
-                 i != mParsers.end(); i++)
+                 i != mParsers.end(); ++i)
             {
                if (first)
                {
