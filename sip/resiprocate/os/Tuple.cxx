@@ -314,34 +314,14 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
-       char str[256];
-       ostrm << "V6 ";
-       ostrm << inet_ntop(AF_INET6, 
-                          &(tuple.m_anonv6.sin6_addr),
-                          str,
-                          sizeof(str));       
-       ostrm << " port=" << ntohs(tuple.m_anonv6.sin6_port);
+       ostrm << "V6 " << DnsUtil::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
     }
     else
 #endif
      if (tuple.mSockaddr.sa_family == AF_INET)
 	 {
-       ostrm << "V4 ";
-#ifdef WIN32
-	   ostrm << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b1) << "." 
-             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b2) << "." 
-             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b3) << "." 
-             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b4) ;
-#elif defined (__CYGWIN__)
-	   ostrm << inet_ntoa(tuple.m_anonv4.sin_addr);
-#else
-	    char str[256];
-	    ostrm << inet_ntop(AF_INET,
-                          &(tuple.m_anonv4.sin_addr),
-                          str, sizeof(str));
-#endif
-       ostrm << ":" << ntohs(tuple.m_anonv4.sin_port);
-    }
+        ostrm << "V4 " << DnsUtil::inet_ntop(tuple.m_anonv4.sin_addr) << ":" << tuple.getPort();
+     }
 	 else
 	 {
 		 assert(0);
