@@ -123,6 +123,14 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
       //DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
       curr->performWrite();
    }
+   else if (curr && fdset.hasException(curr->getSocket()))
+   {
+        int errNum = 0;
+        int errNumSize = sizeof(errNum);
+        getsockopt(curr->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
+        InfoLog (<< "Exception writing to socket " << curr->getSocket() << " code: " << errNum << "; closing connection");
+        delete curr;
+   }
 }
 
 void
@@ -161,6 +169,14 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          {
             assert(0);
          }
+      }
+      else if (fdset.hasException(currConnection->getSocket()))
+      {
+            int errNum = 0;
+            int errNumSize = sizeof(errNum);
+            getsockopt(currConnection->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
+            InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+            delete currConnection;
       }
    } 
 }
