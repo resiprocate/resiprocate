@@ -66,6 +66,7 @@ AresDns::getHandler(void* arg)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
+   delete p;
    return thisp;
 }
 
@@ -74,6 +75,7 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
+   delete p;
    
    if (status != ARES_SUCCESS)
    {
@@ -91,6 +93,7 @@ AresDns::aresHostCallback(void *arg, int status, struct hostent* result)
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
    void* userArg = reinterpret_cast<void*>(p->second);
+   delete p;
 
    if (status != ARES_SUCCESS)
    {
@@ -148,9 +151,10 @@ AresDns::errorMessage(long errorCode)
    const char* aresMsg = ares_strerror(errorCode);
 
    int len = strlen(aresMsg);
-   char* errorString = new char[len];
+   char* errorString = new char[len+1];
 
    strncpy(errorString, aresMsg, len);
+   errorString[len] = '\0';
    return errorString;
 }
 
