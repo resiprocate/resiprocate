@@ -333,16 +333,7 @@ class DateCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      DateCategory() : 
-         ParserCategory(),
-         mDayOfWeek(Sun),
-         mDayOfMonth(),
-         mMonth(Jan),
-         mYear(0),
-         mHour(0),
-         mMin(0),
-         mSec(0)
-      {}
+      DateCategory();
 
       explicit DateCategory(HeaderFieldValue* hfv)
          : ParserCategory(hfv),
