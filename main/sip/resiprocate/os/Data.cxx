@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.44 2002/12/04 20:44:22 derekm Exp $";
+// "$Id: Data.cxx,v 1.45 2002/12/07 07:43:55 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -639,12 +639,12 @@ Data::md5() const
    return ret;
 }
 
-static char map[] = "0123456789abcdef";
+static char map[] = "0123456789ABCDEF";
 
 Data 
 Data::escaped() const
 { 
-   Data ret(size(), true );  
+   Data ret(2*size(), true );  
 
    const char* p = data();
    for (size_type i=0; i < size(); i++)
@@ -653,9 +653,8 @@ Data::escaped() const
 
       switch (c)
       {
-         case 0x08: // H Tab
          case 0x0A: // LF
-         case 0x0d: // CR
+         case 0x0D: // CR
          {
             ret += c;
             continue;
