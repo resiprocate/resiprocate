@@ -110,6 +110,9 @@ class Data
       // necessarily NULL terminated -- often copies
       const char* c_str() const;
 
+      const char* begin() const;
+      const char* end() const;
+      
       // compute an md5 hash (return in asciihex)
       Data md5() const;
       
