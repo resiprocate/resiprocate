@@ -375,7 +375,11 @@ class Via : public ParserCategory
               mProtocolVersion(Symbols::ProtocolVersion),
               mTransport(Symbols::UDP),
               mSentHost(),
-              mSentPort(0) {}
+              mSentPort(0) 
+      {
+         // insert a branch in all Vias (default constructor)
+         this->param(p_branch);
+      }
 
       Via(HeaderFieldValue* hfv) : ParserCategory(hfv),
                                    mProtocolName(Symbols::ProtocolName),

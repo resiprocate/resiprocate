@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.68 2002/11/05 19:54:34 bko Exp $
+# $Id: Makefile,v 1.69 2002/11/05 21:35:21 jason Exp $
 
 BUILD = ../../build
 
@@ -22,6 +22,7 @@ endif
 
 
 SRC = \
+	BranchParameter.cxx \
 	TestTransport.cxx \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
