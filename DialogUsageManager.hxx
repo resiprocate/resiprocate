@@ -116,7 +116,7 @@ class DialogUsageManager
       ServerOutOfDialogReq::Handle createServerOutOfDialog();
 
       // delete the usage, remove from usage handle map
-      void destroyUsage(BaseUsage::Handle handle);
+      void destroyUsage(BaseUsage* usage);
 
       typedef HashMap<BaseUsage::Handle::Id, BaseUsage*> UsageHandleMap;
       UsageHandleMap mUsageMap;

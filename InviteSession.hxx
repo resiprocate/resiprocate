@@ -53,6 +53,8 @@ class InviteSession : public BaseUsage
 
       void process(const SipMessage& msg);
 
+      virtual InviteSession::Handle getSessionHandle() = 0;
+
    protected:
       InviteSession(DialogUsageManager& dum);
       DialogUsageManager& mDum;
@@ -62,6 +64,8 @@ class InviteSession : public BaseUsage
       SdpContents* mPendingReceivedOffer;
 
    private:
+      InviteSession::Handle mHandle;
+      
       friend class DialogUsageManager;
       
       // disabled
