@@ -78,28 +78,28 @@ class BaseSecurity
       bool removeDomainCert(const Data& domainName);
       Data getDomainCertDER(const Data& domainName) const;
 
-      void setDomainPassPhrase(const Data& domainName, const Data& passphrase);
-      bool hasDomainPassPhrase(const Data& domainName);
-
       void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM);
       bool hasDomainPrivateKey(const Data& domainName) const;
       bool removeDomainPrivateKey(const Data& domainName);
+      Data getDomainPrivateKeyPEM(const Data& domainName) const;
 
       void addUserCertPEM(const Data& aor, const Data& certPEM);
       void addUserCertDER(const Data& aor, const Data& certDER);
-      bool hasUserCert(const Data& aor);
+      bool hasUserCert(const Data& aor) const;
       bool removeUserCert(const Data& aor);
-      Data getUserCertDER(const Data& aor);
+      Data getUserCertDER(const Data& aor) const;
 
       void setUserPassPhrase(const Data& aor, const Data& passPhrase);
-      bool hasUserPassPhrase(const Data& aor);
+      bool hasUserPassPhrase(const Data& aor) const;
+      bool removeUserPassPhrase(const Data& aor);
+      Data getUserPassPhrase(const Data& aor) const;
 
       void addUserPrivateKeyPEM(const Data& aor, const Data& cert);
-      //void addUserPrivateKeyDER(const Data& aor, const Data& cert);
-      bool hasUserPrivateKey(const Data& aor);
+      bool hasUserPrivateKey(const Data& aor) const;
       bool removeUserPrivateKey(const Data& aor);
-      Data getUserPrivateKeyDER(const Data& aor);
+      Data getUserPrivateKeyPEM(const Data& aor) const;
 
+      void generateUserCert (const Data& aor, const Data& passPhrase);
 
       // produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
@@ -137,11 +137,10 @@ class BaseSecurity
 
       X509Map        mDomainCerts;
       PrivateKeyMap  mDomainPrivateKeys;
-      PassPhraseMap  mDomainPassPhrases;
 
       X509Map        mUserCerts;
-      PrivateKeyMap  mUserPrivateKeys;
       PassPhraseMap  mUserPassPhrases;
+      PrivateKeyMap  mUserPrivateKeys;
 
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
