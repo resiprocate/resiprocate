@@ -9,13 +9,13 @@ TimerMessage::~TimerMessage()
 Data 
 TimerMessage::brief() const
 {
-   return mTransactionId;
+   return Data("Timer: ") + Timer::toData(mType) + Data(" ") + Data(mDuration);
 }
 
 std::ostream& TimerMessage::encode(std::ostream& strm) const
 {
    return strm << "TimerMessage TransactionId[" << mTransactionId << "] "
-               << " Type[" << mType << "]"
+               << " Type[" << Timer::toData(mType) << "]"
                << " duration[" << mDuration << "]";
 }
 
