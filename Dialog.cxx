@@ -180,6 +180,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
    mDialogSet.addDialog(this);
 }
 
+Dialog::~Dialog()
+{
+   mDialogSet.mDialogs.remove(this);
+}
+
 DialogId
 Dialog::getId() const
 {
