@@ -88,7 +88,7 @@ UdpTransport::process(FdSet& fdset)
    if (mTxFifo.messageAvailable())
    {
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
-      DebugLog (<< "Sending message on udp.");
+      //DebugLog (<< "Sending message on udp.");
       
       sockaddr_in addrin;
       addrin.sin_addr = sendData->destination.ipv4;
@@ -139,7 +139,7 @@ UdpTransport::process(FdSet& fdset)
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
- //DebugLog( << "completed recvfrom" );
+   //DebugLog( << "completed recvfrom" );
 
    if ( len == SOCKET_ERROR )
    {
@@ -148,7 +148,7 @@ UdpTransport::process(FdSet& fdset)
       
       switch (err)
       {
-	  case 0:
+         case 0:
          case EWOULDBLOCK:
          {
          }
@@ -170,8 +170,8 @@ UdpTransport::process(FdSet& fdset)
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
          InfoLog(<<"Possibly truncated");
       }
-      DebugLog ( << "UDP Rcv : " << len << " b" );
-      DebugLog ( << Data(buffer, len).escaped().c_str());
+      //DebugLog ( << "UDP Rcv : " << len << " b" );
+      //DebugLog ( << Data(buffer, len).escaped().c_str());
       
       SipMessage* message = new SipMessage(true);
       
@@ -203,23 +203,23 @@ UdpTransport::process(FdSet& fdset)
       }
       else
       {
-          // no pp error
-          size_t used = mPreparse.nBytesUsed();
+         // no pp error
+         size_t used = mPreparse.nBytesUsed();
 
-          if (used < ulen)
-          {
-              // body is present .. add it up.
-              // NB. The Sip Message uses an overlay (again)
-              // for the body. It ALSO expects that the body
-              // will be contiguous (of course).
-              // it doesn't need a new buffer in UDP b/c there
-              // will only be one datagram per buffer. (1:1 strict)
+         if (used < ulen)
+         {
+            // body is present .. add it up.
+            // NB. The Sip Message uses an overlay (again)
+            // for the body. It ALSO expects that the body
+            // will be contiguous (of course).
+            // it doesn't need a new buffer in UDP b/c there
+            // will only be one datagram per buffer. (1:1 strict)
 
-              message->setBody(buffer+used,len-used);
-              DebugLog(<<"added " << len-used << " byte body");
-          }
+            message->setBody(buffer+used,len-used);
+            //DebugLog(<<"added " << len-used << " byte body");
+         }
           
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
+         //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
          // set the received= and rport= parameters in the message if necessary !jf!
          if (message->isRequest() && !message->header(h_Vias).empty())
          {
