@@ -1,0 +1,208 @@
+#if !defined(RESIP_SECURITY_HXX)
+#define RESIP_SECURITY_HXX
+
+
+#include <map>
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/SecurityTypes.hxx"
+
+#if defined(USE_SSL)
+#include <openssl/ssl.h>
+#else
+// to ensure compilation and object size invariance.
+typedef void BIO;
+typedef void SSL;
+typedef void X509;
+typedef void X509_STORE;
+typedef void SSL_CTX;
+typedef void EVP_PKEY;
+#endif
+
+namespace resip
+{
+ 
+class Contents;
+class Pkcs7Contents;
+class Security;
+class MultipartSignedContents;
+
+     
+class BaseSecurity
+{
+   public:
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line);
+            const char* name() const { return "SecurityException"; }
+      };
+      
+      /// Backwards compatible ctor.
+      BaseSecurity(SecurityTypes::SSLType);
+      virtual ~BaseSecurity();
+      
+      // used to initialize the openssl library
+      static void initialize();
+      
+      typedef enum
+      {
+         RootCert,
+         DomainCert,
+         DomainPrivateKey,
+         UserCert,
+         UserPrivateKey
+      } PEMType;
+         
+      virtual void preload();
+      // name refers to the domainname or username which could be converted to a
+      // filename by convention
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer)=0;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
+      
+      struct CertificateInfo 
+      {
+            Data name;
+            Data fingerprint;
+            Data validFrom;
+            Data validTo;
+      };
+      std::vector<CertificateInfo> getRootCertDescriptions() const;
+
+      // All of these guys can throw SecurityException
+
+      void addRootCertPEM(const Data& x509PEMEncodedRootCerts);
+
+      void addDomainCertPEM(const Data& domainName, const Data& cert);
+      bool hasDomainCert(const Data& domainName);
+      
+      void addDomainPrivateKeyPEM(const Data& domainName, const Data& cert);
+      bool hasDomainPrivateKey(const Data& domainName);
+
+      void addUserCertPEM(const Data& aor, const Data& cert);
+      void addUserCertDER(const Data& aor, const Data& cert);
+      bool hasDomainCert(const Data& aor);
+      Data getUserCertDER(const Data& aor);
+      
+      void addUserPrivateKeyPEM(const Data& aor, const Data& cert);
+      void addUserPrivateKeyDER(const Data& aor, const Data& cert);
+      bool hasUserPrivateKey(const Data& aor);
+      Data getUserPrivateKeyDER(const Data& aor);
+
+      bool hasPassPhrase(const Data& aor);
+      void setPassPhrase(const Data& aor, const Data& passphrase);
+      
+      // produces a detached signature
+      MultipartSignedContents* sign(const Data& senderAor, Contents* );
+      Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
+      Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
+      
+      Data computeIdentity( const Data& signerDomain, const Data& in );
+      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig );
+      
+      // returns NULL if it fails
+      Contents* decrypt( Pkcs7Contents* );
+      
+      enum SignatureStatus 
+      {
+         none, // there is no signature 
+         isBad,
+         trusted, // It is signed with trusted signature 
+         caTrusted, // signature is new and is signed by a root we trust 
+         notTrusted // signature is new and is not signed by a CA we
+      };
+
+      // returns NULL if fails. returns the data that was originally signed
+      Contents* checkSignature( MultipartSignedContents*, Data& signedBy, SignatureStatus& sigStat );
+      
+   private:
+      SSL_CTX* getTlsCtx(bool isServer);
+      
+      // bit mask of SSLType enum
+      unsigned int mSSLMode;
+
+      // map of name to certificates
+      typedef std::map<Data,X509*> X509Map;
+      typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
+      typedef std::map<Data,Data> PassPhraseMap;
+
+      // root cert list 
+      X509_STORE* mCertAuthorities;
+
+      X509Map mDomainCerts;
+      X509Map mUserCerts;
+      PassPhraseMap mUserPassPhrases;
+      PrivateKeyMap mUserPrivateKeys;
+      PrivateKeyMap mDomainPrivateKeys;
+
+      SSL_CTX* ctxTls;
+};
+ 
+
+class Security : public BaseSecurity
+{
+   public:
+      Security( const Data& pathToCerts );
+
+      virtual void preload(const Data& directory);
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer)=0;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
+};
+
+
+}
+
+
+#endif
+
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */
+
+
