@@ -38,12 +38,15 @@ class ClientInviteSession : public InviteSession
                           Dialog& dialog,
                           const SipMessage& request,
                           const SdpContents* initialOffer);
-      void dispatch(const SipMessage& msg);
-      void dispatch(const DumTimeout& timer);
+
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimeout& timer);
+      virtual void send(const SipMessage& msg);
+
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
       void sendAck(const SipMessage& ok);
-      
+
 
       typedef enum
       {
