@@ -87,8 +87,9 @@ main(int argc, char*argv[])
       tassert(message->exists(h_From));
       tassert(message->header(h_From).uri().user() == "caller");
       tassert(message->header(h_From).uri().host() == "caller-company.com");
+
       InfoLog(<<*message);
-      
+      InfoLog(<<'>'<<message->header(h_From).param(p_tag)<<'<');
       tassert(message->header(h_From).param(p_tag) == "98asjd8");
 
       tassert(message->exists(h_MaxForwards));
