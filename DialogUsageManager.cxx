@@ -3,6 +3,14 @@
 #include "resiprocate/Helper.hxx"
 #include "Profile.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "InviteSessionCreator.hxx"
+#include "SubscriptionCreator.hxx"
+#include "PublicationCreator.hxx"
+#include "ClientAuthManager.hxx"
+#include "ServerAuthManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -82,8 +90,8 @@ SipMessage&
 DialogUsageManager::makeNewSession(BaseCreator* creator)
 {
    prepareInitialRequest(creator->getLastRequest());
-   DialogSet inv = new DialogSet(creator);
-   mDialogSetMap[inv.getId()] = inv;
+   DialogSet* inv = new DialogSet(creator);
+   mDialogSetMap[inv->getId()] = inv;
    return creator->getLastRequest();
 }
 
@@ -99,6 +107,7 @@ DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
    return makeNewSession(new SubscriptionCreator(eventType));
 }
 
+#if 0
 SipMessage&
 DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
 {
@@ -123,14 +132,13 @@ DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& me
    //return makeNewSession(new OutOfDialogReqCreator(???)); // !jf!
 }
 
-SipMessage* 
+SipMessage&
 DialogUsageManager::makeInviteSession(DialogId id, const Uri& target)
 {
    Dialog& dialog = findDialog(id); // could throw
    return dialog.makeInviteSession(target);
 }
 
-#if 0
 SipMessage* 
 DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
 {
@@ -207,58 +215,58 @@ DialogUsageManager::process(FdSet& fdset)
 bool
 DialogUsageManager::validateRequest(const SipMessage& request)
 {
-   if (!mProfile.isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
+   if (!mProfile->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
    {
       InfoLog (<< "Received an unsupported scheme: " << request.brief());
-      std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 416));
+      std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 416));
       mStack.send(*failure);
       return false;
    }
-   else if (!mProfile.isMethodSupported(request.header(h_RequestLine).getMethod()))
+   else if (!mProfile->isMethodSupported(request.header(h_RequestLine).getMethod()))
    {
       InfoLog (<< "Received an unsupported method: " << request.brief());
-      std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
-      failure->header(h_Allows) = mProfile.getAllowedMethods();
+      std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 405));
+      failure->header(h_Allows) = mProfile->getAllowedMethods();
       mStack.send(*failure);
       return false;
    }
    else
    {
-      Tokens unsupported = mProfile.isSupported(msg.header(h_Requires));
+      Tokens unsupported = mProfile->isSupported(request.header(h_Requires));
       if (!unsupported.empty())
       {
          InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
-         std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 420));
+         std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 420));
          failure->header(h_Unsupporteds) = unsupported;
          mStack.send(*failure);
          return false;
       }
-      else if (msg.exists(h_ContentDisposition))
+      else if (request.exists(h_ContentDisposition))
       {
-         if (msg.header(h_ContentDisposition).exists(p_handling) && 
-             isEqualNoCase(msg.header(h_ContentDisposition).param(p_handling), Symbols::Required))
+         if (request.header(h_ContentDisposition).exists(p_handling) && 
+             isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Required))
          {
-            if (!mProfile.isMimeTypeSupported(msg.header(h_ContentType)))
+            if (!mProfile->isMimeTypeSupported(request.header(h_ContentType)))
             {
                InfoLog (<< "Received an unsupported mime type: " << request.brief());
-               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
-               failure->header(h_Accepts) = mProfile.getSupportedMimeTypes();
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 415));
+               failure->header(h_Accepts) = mProfile->getSupportedMimeTypes();
                mStack.send(*failure);
 
                return false;
             }
-            else if (!mProfile.isContentEncodingSupported(msg.header(h_ContentEncoding)))
+            else if (!mProfile->isContentEncodingSupported(request.header(h_ContentEncoding)))
             {
                InfoLog (<< "Received an unsupported mime type: " << request.brief());
-               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
-               failure->header(h_AcceptEncoding) = mProfile.getSupportedEncodings();
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 415));
+               failure->header(h_AcceptEncodings) = mProfile->getSupportedEncodings();
                mStack.send(*failure);
             }
-            else if (!mProfile.isLanguageSupported(msg.header(h_ContentLanguages)))
+            else if (!mProfile->isLanguageSupported(request.header(h_ContentLanguages)))
             {
                InfoLog (<< "Received an unsupported language: " << request.brief());
-               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
-               failure->header(h_AcceptLanguages) = mProfile.getSupportedLanguages();
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 415));
+               failure->header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
                mStack.send(*failure);
             }
          }
@@ -266,7 +274,6 @@ DialogUsageManager::validateRequest(const SipMessage& request)
    }
          
    return true;
-
 }
 
 bool
@@ -280,21 +287,14 @@ DialogUsageManager::validateTo(const SipMessage& request)
 bool
 DialogUsageManager::mergeRequest(const SipMessage& request)
 {
-   // merge requrests here
-   if ( !msg->header(h_To).param(p_tag).exists() )
+   if (!request.header(h_To).exists(p_tag))
    {
-      DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
-      for (DialogSet::const_iterator i=dialogs.begin(); i!=dialogs.end(); i++)
+      DialogSet& dialogs = findDialogSet(DialogSetId(request));
+      if (dialogs.mergeRequest(request))
       {
-         if (i->shouldMerge(request))
-         {
-            InfoLog (<< "Merging request for: " << request.brief());
-            
-            std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 482));
-            mStack.send(*failure);
-            
-            return true;
-         }
+         std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 482));
+         mStack.send(*failure);
+         return true;
       }
    }
    return false;
@@ -303,7 +303,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
-   if ( !request.header(h_To).param(p_tag).exists() )
+   if (!request.header(h_To).exists(p_tag))
    {
       switch (request.header(h_RequestLine).getMethod())
       {
