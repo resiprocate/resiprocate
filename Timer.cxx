@@ -11,7 +11,7 @@
 #include <sipstack/Timer.hxx>
 #include <sipstack/Logger.hxx>
 
-static const char version[] = "$Id: Timer.cxx,v 1.3 2002/09/22 00:56:51 dabryan Exp $";
+static const char version[] = "$Id: Timer.cxx,v 1.4 2002/09/22 04:15:00 jason Exp $";
 
 using namespace Vocal2;
 
@@ -23,6 +23,25 @@ Vocal2::Timer::mBootTime=0L;
 
 unsigned long
 Vocal2::Timer::mTimerCount = 0L;
+
+const unsigned long
+Vocal2::Timer::T1 = 500;
+
+const unsigned long
+Vocal2::Timer::T2 = 8 * T1;
+
+const unsigned long
+Vocal2::Timer::T4 = 10 * T1;
+
+const unsigned long
+Vocal2::Timer::T100 = 80;
+
+const unsigned long
+Vocal2::Timer::TD = 32000;
+
+const unsigned long
+Vocal2::Timer::TC = 3*60*1000;
+
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 

@@ -13,7 +13,6 @@ class SipStack;
 class TransactionState
 {
    public:
-      
       TransactionState();
       
       static void process(SipStack& stack); 
@@ -37,8 +36,6 @@ class TransactionState
          Stale
       } Machine;
       
-      Machine mMachine;
-      
       typedef enum 
       {
          Calling,
@@ -47,7 +44,16 @@ class TransactionState
          Completed,
          Terminated
       } State;
+
+      TransactionState(Machine m, State s) : mMachine(m), mState(s){}
       
+      static void process(SipStack& stack); 
+
+      void process( Message* msg );
+     
+   private:
+
+      Machine mMachine;
       State mState;
             
       TransactionState* cancelStateMachine;
