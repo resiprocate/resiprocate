@@ -234,7 +234,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  controller.mTUFifo.add(Helper::makeResponse(*sip, 481));
+                  sendToTu(Helper::makeResponse(*sip,481));
                   delete sip;
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
@@ -243,19 +243,18 @@ TransactionState::process(TransactionController& controller)
                   DebugLog (<< *matchingInvite);
                   DebugLog (<< *sip);
 
-                  // !jf! the code here used to send a 200 and a 487 to the TU,
                   // if no INVITE had been sent out yet. -- i.e. dns result not
                   // processed yet 
 
-                  // The CANCEL was received before the INVITE was sent!
-                  //SipMessage* response200 = Helper::makeResponse(*sip, 200);
-                  //sendToTU(response200);
-                  //SipMessage* response487 = Helper::makeResponse(matchingInvite->mMsgToRetransmit, 487);
-                  //sendToTU(response487);
-                  //delete matchingInvite;
-                  
+                  // The CANCEL was received before the INVITE was sent
+                  // This can happen in odd cases. Too common to assert.
+                  // Be graceful.
+                  sendToTU(Helper::makeResponse(*sip, 200));
+                  sendToTU(Helper::makeResponse(matchingInvite->mMsgToRetransmit, 487));
+
+                  delete matchingInvite;
                   delete sip;
-                  assert(0);
+
                }
                else if (matchingInvite->mState == Completed)
                {
