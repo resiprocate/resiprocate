@@ -45,11 +45,8 @@ class ClientAuthManager
          public:     
             AuthState();
             
-            void clear() 
-            {
-               proxyCredentials.clear();
-               wwwCredentials.clear();
-            }
+            void clear();
+
             //could work to iterator pointing to digest credential
             typedef std::map<Auth, Profile::DigestCredential, CompareAuth > CredentialMap;            
             CredentialMap proxyCredentials;
