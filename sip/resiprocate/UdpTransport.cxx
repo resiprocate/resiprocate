@@ -142,8 +142,8 @@ UdpTransport::process(FdSet& fdset)
             DebugLog (<< " UdpTransport recvfrom got EWOULDBLOCK");
             break;
 
-	    //case 0:
-            ErrLog (<< " UdpTransport recvfrom got error 0 ");
+	    case 0:
+            DebugLog (<< " UdpTransport recvfrom got error 0 ");
             break;
 
  	    //case 9:
