@@ -18,7 +18,7 @@ class UdpTransport : public Transport
       void send( const sockaddr_in& address, const  char* buffer, size_t length); //, TransactionId txId) ;
       void process(fd_set* fdSet=NULL) ;
       bool isReliable() const { return false; }
-      TransportType transport() const { return UDP; }
+      Transport::Type transport() const { return UDP; }
 
    private:
       static const size_t MaxBufferSize;
