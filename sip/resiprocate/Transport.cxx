@@ -5,6 +5,8 @@
 
 #include <sipstack/Transport.hxx>
 #include <sipstack/SipMessage.hxx>
+#include <sipstack/SendingMessage.hxx>
+#include <sipstack/DnsMessage.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -24,6 +26,11 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
    mShutdown(false)
 {
 }
+
+Transport::~Transport()
+{
+}
+
 
 void
 Transport::run()
@@ -71,14 +78,23 @@ Transport::shutdown()
    mShutdown = true;
 }
 
-Transport::~Transport()
+void
+Transport::fail(const Data& tid)
 {
+   mStateMachineFifo.add(new SendingMessage(tid, SendingMessage::Failed));
 }
 
-void 
-Transport::send( const sockaddr_in dest, const Data& d)
+void
+Transport::ok(const Data& tid)
 {
-   SendData* data = new  SendData(dest, d);
+   mStateMachineFifo.add(new SendingMessage(tid, SendingMessage::Succeeded));
+}
+
+
+void 
+Transport::send( const Tuple& dest, const Data& d, const Data& tid)
+{
+   SendData* data = new  SendData(dest, d, tid);
    DebugLog (<< "Adding message to tx buffer: " << endl << d.c_str());
    mTxFifo.add(data); // !jf!
 }
@@ -156,16 +172,21 @@ Transport::toTransport(const Data& type)
    }
 };
 
-Transport::Tuple::Tuple()
+Transport::Tuple::Tuple() : 
+   port(0), 
+   transportType(Unknown), 
+   transport(0)
 {
+   memset(&ipv4, 0, sizeof(ipv4));
 }
 
-Transport::Tuple::Tuple(sockaddr_in _ipv4,
-                        int _port,
-                        Transport::Type _transport)
-   : ipv4(_ipv4),
-     port(_port),
-     transport(_transport)
+Transport::Tuple::Tuple(in_addr pipv4,
+                        int pport,
+                        Transport::Type ptype)
+   : ipv4(pipv4),
+     port(pport),
+     transportType(ptype),
+     transport(0)
 {
 }
 
@@ -173,7 +194,8 @@ bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
 {
    return (memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4)) == 0 &&
            port == rhs.port &&
-           transport == rhs.transport);
+           transport == rhs.transport && 
+           transportType == rhs.transportType);
 }
 
 bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
