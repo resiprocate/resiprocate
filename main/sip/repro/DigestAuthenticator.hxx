@@ -1,72 +1,26 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
+#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+
+namespace repro
+{
+  class DigestAuthenticator : public RequestProcessor
+  {
+    public:
+      typedef map<Data, Data> RealmMap;
+
+      DigestAuthenticator(RealmMap &rm = RealmMap());
+      ~DigestAuthenticator();
+
+      virtual processor_action_t handleRequest(RequestContext &);
+
+    private:
+      void challengeRequest(RequestContext &);
+      void requestUserAuthInfo(RequestContext &);
+
+      RealmMap mRealmMap;
+  };
+}
 #endif
-
-#include "resiprocate/SipMessage.hxx"
-#include "repro/RequestProcessorChain.hxx"
-#include "repro/RequestContext.hxx"
-
-using namespace resip;
-using namespace repro;
-using namespace std;
-
-repro::RequestProcessorChain::RequestProcessorChain()
-{
-}
-
-repro::RequestProcessorChain::~RequestProcessorChain()
-{
-  Chain::iterator i;
-  for (i = chain.begin(); i != chain.end(); i++)
-  {
-    delete *i;
-  }
-}
-
-void
-repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
-{
-  chain.push_back(rp.release());
-}
-
-repro::RequestProcessor::processor_action_t
-repro::RequestProcessorChain::handleRequest(RequestContext &rc)
-{
-  Chain::iterator i;
-  processor_action_t action;
-
-  if (rc.chainIteratorStackIsEmpty())
-  {
-    i = chain.begin();
-  }
-  else
-  {
-    i = rc.popChainIterator();
-  }
-
-  for (; i != chain.end(); i++)
-  {
-    action = (**i).handleRequest(rc);
-
-    if (action == SkipAllChains)
-    {
-      return SkipAllChains;
-    }
-
-    if (action == WaitingForEvent)
-    {
-      rc.pushChainIterator(i);
-      return WaitingForEvent;
-    }
-
-    if (action == SkipThisChain)
-    {
-      return Continue;
-    }
-
-  }
-  return Continue;
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
