@@ -118,7 +118,10 @@ main(int argc, char** argv)
 
      auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
      dum->setServerAuthManager(uasAuth);
+     stack.registerTransactionUser(*dum);
    }
+   stack.registerTransactionUser(proxy);
+   
 
    /* Make it all go */
    stackThread.run();
