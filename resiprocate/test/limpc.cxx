@@ -474,8 +474,7 @@ myMain(int argc, char* argv[])
    bool haveContact=false;
    Uri outbound;
    bool noRegister = false;
-   bool tlsServer=false;
-   bool dtlsServer=false;
+   Data tlsDomain = Data::Empty;
 
    int numAdd=0;
    Data addList[100];
@@ -495,7 +494,6 @@ myMain(int argc, char* argv[])
    bool noV6 = false;
    bool noV4 = false;
    bool genUserCert = false;
-   
    
    for ( int i=1; i<argc; i++)
    {
@@ -523,13 +521,11 @@ myMain(int argc, char* argv[])
       {
          sign = true;
       }
-      else if (!strcmp(argv[i],"-tlsServer"))
+      else if (!strcmp(argv[i],"-tlsDomain"))
       {
-         tlsServer = true;
-      }
-      else if (!strcmp(argv[i],"-dtlsServer"))
-      {
-          dtlsServer = true;
+         i++;
+         assert( i<argc );
+         tlsDomain = Data(argv[i]);
       }
       else if (!strcmp(argv[i],"-ssl"))
       {
@@ -700,7 +696,8 @@ myMain(int argc, char* argv[])
               << "\t [-contact sip:me@example.com] " << endl
               << "\t [-outbound \"sip:example.com;lr\"] " << endl
               << "\t [-noRegister] " << endl
-              << "\t [-pub sip:foo.com] " << endl; 
+              << "\t [-pub sip:foo.com] " << endl
+              << "\t [-tlsDomain foo.com] " << endl; 
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
@@ -714,8 +711,7 @@ myMain(int argc, char* argv[])
               << " -prefTls prefer TLS" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
-              << " -tlsServer - sets to act as tls server instead of  client" << endl
-              << " -dtlsServer - sets to act as dtls server instead of client" << endl
+              << " -tlsDomain domainName - sets tls and dtls to act as tls server instead of client" << endl
               << " -ssl - use ssl instead of tls" << endl
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPassword sets the password to use for registration" << endl
@@ -839,15 +835,23 @@ myMain(int argc, char* argv[])
       {
          if (!noV4) 
          {
-            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, Data( "test" ) );
+            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, tlsDomain );
          }
    //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
-#endif
 #if USE_DTLS
    if ( dtlsPort != 0 )
-      sipStack.addTransport(DTLS, dtlsPort, V4, Data::Empty, Data( "test" ) );
+   {
+     if ( noTls != true )
+      {
+         if (!noV4) 
+         {
+            sipStack.addTransport(DTLS, dtlsPort, V4, Data::Empty, tlsDomain );
+         }
+      }
+   }
+#endif
 #endif
 
    DebugLog( << "Done adding the transports " );   
