@@ -214,15 +214,19 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
       int bytesUsed;
    
       mMessage->addBuffer(mBuffer);
-      PreparseState::TransportAction status;
+
+      Preparse::Status status;
+#if 0 // !ah! needs porting
+
       preparse.process(*mMessage, mBuffer, mBytesRead + bytesRead, bytesUsed, status);
-      if (status == PreparseState::preparseError)
+#endif
+      if (status & PreparseConst::stPreparseError)
       {
          delete mMessage;
          //socket cleanup code
          return false;
       }
-      if (status == PreparseState::fragment)
+      if (status & PreparseConst::stFragmented)
       {
          char* partialHeader = new char[(bytesRead - bytesUsed) + maxBufferSize];
          memcpy(partialHeader, mBuffer + bytesUsed, (bytesRead - bytesUsed));
@@ -233,7 +237,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
          mState = PartialHeaderRead;
          return true;
       }
-      if (status == PreparseState::headersComplete)
+      if (status == PreparseConst::stHeadersComplete)
       {
          return readAnyBody(bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
       }
