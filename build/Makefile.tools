@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.8 2003/10/03 02:35:17 jason Exp $
+# $Id: Makefile.tools,v 1.9 2003/10/05 02:45:42 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -54,7 +54,7 @@ DFLAG_INTEGRATED = -MMD
 REPO_FLAG       = -frepo -fPIC
 DEBUG_FLAG	= -g -O2
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
-OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops -fomit-frame-pointer -march=pentium4 
+OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops -fomit-frame-pointer 
 MAKE_SEPARATE_DEPENDENCY = 1
 
 endif

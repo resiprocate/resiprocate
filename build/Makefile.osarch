@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.5 2003/10/03 02:35:17 jason Exp $
+# $Id: Makefile.osarch,v 1.6 2003/10/05 02:45:42 jason Exp $
 
 ######################################################################
 
@@ -26,7 +26,7 @@ endif
 ifeq ($(OSTYPE),Linux)
 
 ifeq ($(ARCH),i686)
-	CXXFLAGS += -march=pentium4
+	CXXFLAGS += -march=i686
 endif
 ifeq ($(ARCH),i486)
 	CXXFLAGS += -march=i486
@@ -35,8 +35,8 @@ ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
 
-	CXXFLAGS += -D_REENTRANT
-	CFLAGS   += -D_REENTRANT
+	CXXFLAGS += -D_REENTRANT -DHAVE_POPT_H
+	CFLAGS   += -D_REENTRANT -DHAVE_POPT_H
 	DISTCC   = distcc 
 endif
 
