@@ -58,19 +58,25 @@ class SipStack
       void shutdown();
       
       // Used by the application to add in a new transport
-      // by default, you will get UDP and TCP on 5060 (for now)
       // hostname parameter is used to specify the host portion of the uri that
       // describes this sip element (proxy or ua)
       // nic is used to specify an ethernet interface by name. e.g. eth0
-      void addTransport( Transport::Type, int port, const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
+      void addTransport( Transport::Type protocol,
+                         int port, 
+                         const Data& hostName = Data::Empty, 
+                         const Data& nic = Data::Empty);
 
       // If port = 0, use DNS to lookup the port number for the specified
       // domain. Only allow messages to be sent as the specified domain. 
-      // For default case, you can pass in domainname = DnsUtil::getLocalDomainName()
-      void addTlsTransport( const Data& domainname, 
-                            const Data& keyDir, const Data& privateKeyPassPhrase,
-                            int port = 5061,
-                            const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
+      // For default case, you can pass in domainname =
+      // DnsUtil::getLocalDomainName()
+      // Note the SipDomainName is often your host name not your server domainname
+      void addTlsTransport(  int port = 5061,
+                             const Data& keyDir = Data::Empty, 
+                             const Data& privateKeyPassPhrase = Data::Empty,
+                             const Data& sipDomainname = Data::Empty, 
+                             const Data& hostName = Data::Empty, 
+                             const Data& nic = Data::Empty);
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
