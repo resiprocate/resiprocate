@@ -4,7 +4,7 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include <iostream>
 #include <list>
-#include <map>
+#include "resiprocate/os/HashMap.hxx"
 
 namespace resip
 {
@@ -42,7 +42,7 @@ namespace resip
 
 // E.g.: Depth first traversal
 //
-// void traverse(XMLCursor c)
+// void traverse(XMLCursor& c)
 // {
 //    if (c.firstChild())
 //    {
@@ -57,6 +57,39 @@ namespace resip
 //       traverse(c);
 //    }
 // }
+//
+// E.g.: Lexical Order traversal
+//
+// void
+// traverse(XMLCursor& c, int i = 0)
+// {
+//    for (int ii = 0; ii < i; ++ii)
+//    {
+//       cerr << " ";
+//    }
+
+//    cerr << c.getTag();
+//    if (c.atLeaf())
+//    {
+//       cerr << "[" << c.getValue() << "]" << endl;
+//    }
+//    else
+//    {
+//       cerr << endl;
+//    }
+
+//    if (c.firstChild())
+//    {
+//       traverse(c, i+2);
+//       c.parent();
+//    }
+   
+//    if (c.nextSibling())
+//    {
+//       traverse(c, i+2);
+//    }
+// }
+
 */
 
 class XMLCursor;
@@ -80,11 +113,12 @@ class XMLCursor
       bool atLeaf() const;
 
       const Data& getTag() const;
-      typedef std::map<Data, Data> AttributeMap;
+      typedef HashMap<Data, Data> AttributeMap;
       const AttributeMap& getAttributes() const;
       const Data& getValue() const;
 
-	        class Node;
+      static std::ostream& encode(std::ostream& strm, const AttributeMap& attrs);
+      class Node;
 
    private:
       static void skipProlog(ParseBuffer& pb);
@@ -135,11 +169,11 @@ public:
             Node(const Node&);
             Node& operator=(const Node&);
 
-			friend std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
-	        // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
+            friend std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
+            // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
       };
-private:
-
+   private:
+      
       friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
       friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
 
