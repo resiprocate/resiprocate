@@ -18,7 +18,8 @@ class ParserCategory
          : mHeaderField(headerFieldValue) 
       {}
 
-      ParserCategory(const ParserCategory& other);
+      //!dcm! -- will need to add different type of clones to HeaderFieldValue
+      //in order to write copy constructor
 
       virtual ~ParserCategory() {}
       virtual ParserCategory* clone(HeaderFieldValue*) const = 0;

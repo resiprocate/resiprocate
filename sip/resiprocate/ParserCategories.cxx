@@ -2,11 +2,13 @@
 
 using namespace Vocal2;
 
+ParserCategory* 
+StringComponent::clone(HeaderFieldValue*) const
+{
+   assert(0);
+   return 0;
+}
 
-/*StringComponent::StringComponent(const StringComponent& other)
-   : mValue(other.mValue)
-{}
-*/
 void 
 StringComponent::parse()
 {
@@ -19,7 +21,6 @@ StringComponent::encode(std::ostream& str) const
    str << mValue;
    return str;
 }
-
 
 Data& 
 StringComponent::value() 
