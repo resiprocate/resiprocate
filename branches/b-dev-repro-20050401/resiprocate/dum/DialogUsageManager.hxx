@@ -307,8 +307,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void destroy(DialogSet*);
       void destroy(Dialog*);
 
-      TimeLimitFifo<Message> mFifo;
-      
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             

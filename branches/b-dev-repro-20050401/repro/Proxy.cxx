@@ -2,12 +2,16 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "repro/RequestProcessorChain.hxx"
+#include "repro/Proxy.hxx"
+
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
-#include "repro/RequestProcessorChain.hxx"
-#include "repro/Proxy.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -46,16 +50,21 @@ Proxy::getUserDb()
 void
 Proxy::thread()
 {
-   while (!isShutdown())
+   InfoLog (<< "Proxy::thread start");
+
+   while (1)
    {
-      Message* msg;
+      Message* msg=0;
+      //DebugLog (<< "TransactionUser::postToTransactionUser " << " &=" << &mFifo << " size=" << mFifo.size());
+
       if ((msg = mFifo.getNext(100)) != 0)
       {
+         DebugLog (<< "Got: " << *msg);
          
          SipMessage* sip = dynamic_cast<SipMessage*>(msg);
          ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
          TransactionTerminated* term = dynamic_cast<TransactionTerminated*>(msg);
-
+         
          if (sip)
          {
             if (sip->isRequest())
@@ -143,6 +152,7 @@ Proxy::thread()
          }
       }
    }
+   InfoLog (<< "Proxy::thread exit");
 }
 
 void

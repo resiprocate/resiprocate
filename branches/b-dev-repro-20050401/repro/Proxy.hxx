@@ -38,9 +38,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       RequestProcessorChain mRequestProcessorChain;
       
-      /// the sip stack will hand events up to the proxy through this fifo
-      resip::Fifo<resip::Message> mFifo; 
-      
       /** a map from transaction id to RequestContext. Store the server
           transaction and client transactions in this map. The
           TransactionTerminated events from the stack will be passed to the
