@@ -1003,7 +1003,7 @@ SdpContents::Session::parse(ParseBuffer& pb)
       mBandwidths.back().parse(pb);
    }
 
-   while (*pb.position() == 't')
+   while (!pb.eof() && *pb.position() == 't')
    {
       addTime(Time());
       mTimes.back().parse(pb);

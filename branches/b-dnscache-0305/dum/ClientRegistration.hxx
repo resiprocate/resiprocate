@@ -24,7 +24,7 @@ class ClientRegistration: public NonDialogUsage
       void removeBinding(const NameAddr& contact);
       void removeAll(bool stopRegisteringWhenDone=false);
       void removeMyBindings(bool stopRegisteringWhenDone=false);
-      void requestRefresh();
+      void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
       
       //kills the usgage, call removeMyBindings to deregister
       void stopRegistering(); 
