@@ -29,10 +29,10 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(bool multiThreaded)
+SipStack::SipStack(bool multiThreaded, Security* security)
    : 
 #ifdef USE_SSL
-   security( 0 ),
+   security( security ),
 #endif
    mExecutive(*this),
    mTransportSelector(*this),
@@ -46,7 +46,10 @@ SipStack::SipStack(bool multiThreaded)
    initNetwork();
 
 #ifdef USE_SSL
-   security = new Security;
+   if ( !security )
+   {
+      security = new Security( true );
+   }
 #endif
 
    //addTransport(Transport::UDP, 5060);

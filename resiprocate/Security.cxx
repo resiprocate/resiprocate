@@ -347,12 +347,13 @@ TlsConnection::peerName()
 }
 
 
-Security::Security()
+Security::Security( bool tlsServer )
 {
    privateKey = NULL;
    publicCert = NULL;
    certAuthorities = NULL;
-   ctx = NULL;
+   ctxTls = NULL;
+   mTlsServer = tlsServer;
    
    static bool initDone=false;
    if ( !initDone )
@@ -377,14 +378,14 @@ Security::Security()
 SSL_CTX* 
 Security::getTlsCtx(bool isServer)
 {
-   if ( ctx )
+   if ( ctxTls )
    {
-      return ctx;
+      return ctxTls;
    }
    
-   ctx=SSL_CTX_new( TLSv1_method() );
-   //ctx=SSL_CTX_new(  SSLv23_method() );
-   assert( ctx );
+   //ctxTls=SSL_CTX_new( TLSv1_method() );
+   ctxTls=SSL_CTX_new(  SSLv23_method() );
+   assert( ctxTls );
    
    if ( isServer )
    {
@@ -394,29 +395,31 @@ Security::getTlsCtx(bool isServer)
    
    int ok;
    
-#if 0 // !cj! - fix 
-   if ( publicCert )
+   if ( mTlsServer )
    {
-      ok = SSL_CTX_use_certificate(ctx, publicCert);
-      assert( ok == 1);
+      if ( publicCert )
+      {
+         ok = SSL_CTX_use_certificate(ctxTls, publicCert);
+         assert( ok == 1);
+      }
+      
+      if (privateKey)
+      {
+         ok = SSL_CTX_use_PrivateKey(ctxTls,privateKey);
+         assert( ok == 1);
+      }
    }
-   
-   if (privateKey)
-   {
-      ok = SSL_CTX_use_PrivateKey(ctx,privateKey);
-      assert( ok == 1);
-   }
-#endif
    
    assert( certAuthorities );
-   SSL_CTX_set_cert_store(ctx, certAuthorities);
+   SSL_CTX_set_cert_store(ctxTls, certAuthorities);
 
-   return ctx;
+   return ctxTls;
 }
 
 
 Security::~Security()
 {
+   // TODO !cj! shoudl clean up contexts 
 }
   
 
@@ -478,6 +481,7 @@ Security::loadAllCerts( const Data& password, const Data& dirPath )
    if (ok)
    {
       getTlsCtx();
+      getSmimeCtx();
    }
 #endif
    
