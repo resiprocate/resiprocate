@@ -116,7 +116,6 @@ class Dialog
       DialogType mType; // !jf! is this necessary?
       Data mLocalTag;
       Data mRemoteTag;
-      CallID mCallId;
       NameAddrs mRouteSet;
       
       //variants
@@ -124,6 +123,9 @@ class Dialog
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
       NameAddr mRemoteTarget;
+      NameAddr mLocalNameAddr;
+      NameAddr mRemoteNameAddr;
+      CallID mCallId;
 
       AppDialog* mAppDialog;
       

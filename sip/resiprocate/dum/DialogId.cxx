@@ -1,5 +1,8 @@
 #include "DialogId.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -44,6 +47,7 @@ DialogId::DialogId(const SipMessage& msg) :
          }
       }
    }
+   InfoLog ( << "DialogId::DialogId: " << *this);   
 }
 
 DialogId::DialogId(const Data& callId, const Data& localTag, const Data& remoteTag) : 
@@ -56,6 +60,7 @@ DialogId::DialogId(const DialogSetId& id, const Data& remoteTag) :
    mDialogSetId(id),
    mRemoteTag(remoteTag)
 {
+   InfoLog ( << "DialogId::DialogId: " << *this);   
 }
 
 bool
@@ -108,10 +113,20 @@ DialogId::getRemoteTag() const
    return mRemoteTag; 
 }
 
+
+std::ostream&
+resip::operator<<(std::ostream& os, const DialogId& id)
+{
+    return os << id.mDialogSetId << "-" << id.mRemoteTag;
+}
+
+
 size_t DialogId::hash() const 
 {
    return mDialogSetId.hash() ^ mRemoteTag.hash();
 }
+
+
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogId>::operator()(const resip::DialogId& id) const
 {
