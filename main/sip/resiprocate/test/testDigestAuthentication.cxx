@@ -435,7 +435,7 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
                                cnonce,
                                nc);
 
-      assert(nc = 10);
+      assert(nc == 10);
 
       cerr << *request << endl;
 
