@@ -70,7 +70,7 @@ DialogSet::~DialogSet()
 {
    mDestroying = true;
 
-   if (mDum.mClientAuthManager)
+   if (mDum.mClientAuthManager.get())
    {
       mDum.mClientAuthManager->dialogSetDestroyed(getId());
    }
@@ -195,7 +195,7 @@ DialogSet::dispatch(const SipMessage& msg)
       if (getCreator() &&
           msg.header(h_CSeq).method() == getCreator()->getLastRequest().header(h_RequestLine).method())
       {
-         if (mDum.mClientAuthManager)
+         if (mDum.mClientAuthManager.get())
          {
             if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
             {
