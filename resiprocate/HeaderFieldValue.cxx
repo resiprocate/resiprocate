@@ -117,6 +117,10 @@ HeaderFieldValue::get(const Data& type)
 ostream& 
 HeaderFieldValue::encode(ostream& str) const
 {
+   if (mParserCategory != 0 && mParserCategory->isParsed())
+   {
+      return mParserCategory->encode(str);
+   }
    str.write(mField, mFieldLength);
    str << endl;
    return str;
