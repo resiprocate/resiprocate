@@ -1,9 +1,9 @@
 #ifndef BranchParameter_hxx
 #define BranchParameter_hxx
 
-#include <sipstack/Parameter.hxx>
-#include <sipstack/ParameterTypeEnums.hxx>
-#include <util/Data.hxx>
+#include "sipstack/Parameter.hxx"
+#include "sipstack/ParameterTypeEnums.hxx"
+#include "util/Data.hxx"
 #include <iostream>
 
 namespace Vocal2

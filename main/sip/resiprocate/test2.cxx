@@ -9,11 +9,11 @@
 #include <arpa/inet.h>
 
 
-#include <sipstack/Helper.hxx>
-#include <sipstack/SipMessage.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/SipStack.hxx>
-#include <util/Logger.hxx>
+#include "sipstack/Helper.hxx"
+#include "sipstack/SipMessage.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/SipStack.hxx"
+#include "util/Logger.hxx"
 
 
 using namespace Vocal2;

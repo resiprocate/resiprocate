@@ -1,6 +1,6 @@
-#include <sipstack/ConnectionMap.hxx>
-#include <util/Socket.hxx>
-#include <sipstack/Preparse.hxx>
+#include "sipstack/ConnectionMap.hxx"
+#include "util/Socket.hxx"
+#include "sipstack/Preparse.hxx"
 
 #ifndef WIN32
 #include <errno.h>

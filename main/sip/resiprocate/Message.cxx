@@ -1,4 +1,4 @@
-#include <sipstack/Message.hxx>
+#include "sipstack/Message.hxx"
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::Message& msg)

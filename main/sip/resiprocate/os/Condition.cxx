@@ -50,8 +50,8 @@
 
 #include <cassert>
 
-#include <util/Condition.hxx>
-#include <util/Mutex.hxx>
+#include "util/Condition.hxx"
+#include "util/Mutex.hxx"
 
 
 using namespace Vocal2;

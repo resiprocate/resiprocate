@@ -1,9 +1,9 @@
 #ifndef Parameter_hxx
 #define Parameter_hxx
 
-#include <util/Data.hxx>
+#include "util/Data.hxx"
 #include <iostream>
-#include <sipstack/ParameterTypeEnums.hxx>
+#include "sipstack/ParameterTypeEnums.hxx"
 
 
 namespace Vocal2
