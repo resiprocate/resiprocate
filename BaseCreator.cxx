@@ -50,6 +50,10 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    }
    else
    {
+      if (mDum.getProfile()->hasOverrideHostAndPort())
+      {
+         contact.uri() = mDum.getProfile()->getOverideHostAndPort();
+      }
       contact.uri().user() = from.uri().user();      
       mLastRequest.header(h_Contacts).push_front(contact);
    }
