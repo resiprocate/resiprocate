@@ -72,7 +72,7 @@ DialogSetId::operator<(const DialogSetId& rhs) const
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {
-   return mCallId.hash() ^ mTag.hash();
+   return id.mCallId.hash() ^ id.mTag.hash();
 }
 #endif
 

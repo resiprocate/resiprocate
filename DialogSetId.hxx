@@ -23,6 +23,13 @@ class DialogSetId
    private:
       Data mCallId;
       Data mTag;
+
+#if defined(HASH_MAP_NAMESPACE)
+      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogSetId>;
+#endif
+#if defined(__INTEL_COMPILER )
+      friend size_t hash_value(const resip::DialogSetId& id);
+#endif
 };
 
 }
