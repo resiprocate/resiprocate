@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2002/10/21 22:50:23 jason Exp $
+# $Id: Makefile,v 1.12 2002/10/30 23:48:39 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -21,6 +21,7 @@ SRC =	\
 	Timer.cxx \
 	VException.cxx \
 	vmd5.cxx \
+	DataStream.cxx \
 
 OSRC =   *.hxx Makefile
 
@@ -111,6 +112,11 @@ testParseBuffer:  $(OBJS) $(OBJ)/testParseBuffer.o
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testData:  $(OBJS) $(OBJ)/testData.o 
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
+
+testDataStream:  $(OBJS) $(OBJ)/testDataStream.o 
 	@$(MAKE) $(^:.o=.d)
 	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
