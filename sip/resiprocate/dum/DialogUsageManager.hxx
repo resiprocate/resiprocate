@@ -137,7 +137,13 @@ class DialogUsageManager
       friend class BaseUsage::Handle;
 
       SipMessage& makeNewSession(BaseCreator* creator);
-      void addTimer(DumTimeout::Type type, unsigned long duration, resip::BaseUsage::Handle target, int cseq, int rseq=-1);
+
+      void addTimer(DumTimeout::Type type,
+                    unsigned long duration,
+                    resip::BaseUsage::Handle target, 
+                    int seq, 
+                    int altseq=-1);
+
 
       ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
       ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
