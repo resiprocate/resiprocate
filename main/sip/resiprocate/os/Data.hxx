@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.24 2002/11/05 02:56:36 derekm Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.25 2002/11/06 02:32:39 derekm Exp $";
 
 #include <iostream>
 #include <string>
@@ -15,6 +15,7 @@ class Data
 {
       
    public:
+      typedef int size_type;
       Data();
       Data(int capacity, bool);
       Data(const char* str);

@@ -6,7 +6,8 @@
 #include <util/SysLogStream.hxx>
 #include <util/Lock.hxx>
 
-#if defined (__SUNPRO_CC)
+#if ( defined(__SUNPRO_CC) || (__GNUC__ >= 3) )
+
 
 // variadic to handle comma in template arguments
 #define DebugLog(args__)                                                 \
@@ -24,6 +25,7 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args__)
 
 #define InfoLog(args__) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args__)
+
 
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
