@@ -21,6 +21,37 @@ int
 main(int arc, char** argv)
 {
    {
+      cerr << "Test StringCategory" << endl;
+      Data stringString("Lame Agent");
+      HeaderFieldValue hfv(stringString.data(), stringString.size());
+      
+      StringCategory str(&hfv);
+      assert(str.value() == stringString);
+
+      Data buff;
+      {
+         DataStream s(buff);
+         str.encode(s);
+      }
+      cerr << buff << endl;
+      assert(buff == stringString);
+
+      StringCategory copy(str);
+      assert(copy.value() == stringString);
+
+      str.value() = "foo";
+      assert(str.value() == "foo");
+   }
+
+   {
+      cerr << "Test Token parameters" << endl;
+      Token state;
+      state.value() = Data("active");
+      state.param(p_expires) = 666;
+      cerr << state << endl;
+   }
+
+   {
       cerr << "StatusLine, with reason code" << endl;
       Data statusLineString("SIP/2.0 180 Ringing");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
