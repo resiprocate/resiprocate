@@ -91,11 +91,15 @@ SRC = \
 	MessageWaitingContents.cxx \
 	MethodTypes.cxx \
 	MultipartMixedContents.cxx \
+	MultipartAlternativeContents.cxx \
+	MultipartRelatedContents.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
 	Pkcs7Contents.cxx \
+	Pkcs8Contents.cxx \
+	X509Contents.cxx \
 	PlainContents.cxx \
 	CpimContents.cxx \
 	MsgHeaderScanner.cxx \
