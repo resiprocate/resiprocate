@@ -21,7 +21,14 @@ class Handle
 
       bool isValid() const
       {
-         return mHam->isValidHandle(mId);
+         if (!mHam)
+         {
+            return false;
+         }
+         else
+         {
+            return mHam->isValidHandle(mId);
+         }
       }
       
       // throws if not found
