@@ -273,7 +273,6 @@ DialogUsageManager::makeResponse(SipMessage& response,
                                  const Data& reason) const
 {
    assert(request.isRequest());
-   assert(response.isResponse());
    Helper::makeResponse(response, request, responseCode, reason);
 }
 
@@ -317,23 +316,27 @@ DialogUsageManager::makePublication(const Uri& targetDocument,
 
 
 void
-DialogUsageManager::send(SipMessage& request)
+DialogUsageManager::send(SipMessage& msg)
 {
-   InfoLog (<< "SEND: " << request);
-   if (request.isRequest()) //!dcm! -- invariant?
+   InfoLog (<< "SEND: " << msg);
+   if (msg.isRequest()) //!dcm! -- invariant?
    {
       //will have no affect unless a strict route is sent
-      Helper::processStrictRoute(request);
+      Helper::processStrictRoute(msg);
 
       if (getProfile()->hasOutboundProxy())
       {
          DebugLog ( << "Using outbound proxy");
-         mStack.sendTo(request, getProfile()->getOutboundProxy().uri());         
+         mStack.sendTo(msg, getProfile()->getOutboundProxy().uri());         
       }
       else
       {
-         mStack.send(request);
+         mStack.send(msg);
       }
+   }   
+   else
+   {
+      sendResponse(msg);
    }   
 }
 
