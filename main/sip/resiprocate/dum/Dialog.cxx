@@ -13,8 +13,6 @@
 using namespace resip;
 using namespace std;
 
-class ServerInviteSession;
-
 Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds) 
    : mId(msg),
      mDum(dum),
@@ -249,8 +247,9 @@ Dialog::dispatch(const SipMessage& msg)
                   }
                   else
                   {
-                     std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
-                     mDum.send(*failure);
+                     SipMessage failure;
+                     makeResponse(failure, request, 481);
+                     mDum.sendResponse(failure);
                      return;
                   }
                }
@@ -339,6 +338,7 @@ Dialog::dispatch(const SipMessage& msg)
          }
                
          case PUBLISH:
+            // !jf! could assert that no other usages exist
             if (mClientPublication == 0)
             {
                mClientPublication = makeClientPublication(response);
@@ -347,6 +347,7 @@ Dialog::dispatch(const SipMessage& msg)
             break;
                
          case REGISTER:
+            // !jf! could assert that no other usages exist
             if (mClientRegistration == 0)
             {
                mClientRegistration = makeClientRegistration(response);
@@ -577,7 +578,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
 
 void 
-Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
+Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 {
    assert( code >= 100 );
    response.header(h_To).param(p_tag) = mLocalTag;
@@ -659,7 +660,6 @@ Dialog::makeClientOutOfDialogReq(const SipMessage& response)
    return usage;
 }
 
-#if 0
 ServerInviteSession*
 Dialog::makeServerInviteSession(const SipMessage& request)
 {
@@ -667,7 +667,6 @@ Dialog::makeServerInviteSession(const SipMessage& request)
    mDum.addUsage(usage);
    return usage;
 }
-#endif
 
 ServerSubscription* 
 Dialog::makeServerSubscription(const SipMessage& request)
