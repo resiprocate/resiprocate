@@ -13,7 +13,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
-
+#include "resiprocate/Message.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 class TestTransportSelector;
 
@@ -21,7 +21,6 @@ namespace resip
 {
 
 class DnsHandler;
-class Message;
 class TransactionMessage;
 class SipMessage;
 class TlsTransport;
