@@ -8,7 +8,50 @@ int
 main(int arc, char** argv)
 {
    {
-      
+      char *buf = "Here is a \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+
+      pb.skipChars("Here is a");
+   }
+
+   {
+      char *buf = "Here is a \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+
+      while (0)
+      {
+         try
+         {
+            pb.skipChars("Here isn't a");
+         }
+         catch (ParseBuffer::Exception& e)
+         {
+            break;
+         }
+         assert(0);
+      }
+   }
+
+   {
+      char *buf = "Here is a buf.";
+      ParseBuffer pb(buf, strlen(buf));
+
+      while (0)
+      {
+         try
+         {
+            pb.skipChars("Here is a ");
+            pb.skipChars("buffer");
+         }
+         catch (ParseBuffer::Exception& e)
+         {
+            break;
+         }
+         assert(0);
+      }
+   }
+   
+   {
       char *buf = "Here is a \t buffer with some stuff.";
 
       ParseBuffer pb(buf, strlen(buf));
@@ -100,6 +143,8 @@ main(int arc, char** argv)
       pb.data(t2, start);
       // should survive scope exit
    }
+
+   std::cerr << "All OK" << std::endl;
 }
 
 /* ====================================================================
@@ -151,3 +196,4 @@ main(int arc, char** argv)
  * <http://www.vovida.org/>.
  *
  */
+

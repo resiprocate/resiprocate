@@ -11,7 +11,7 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
      mValue(0)
 {
    pb.skipWhitespace();
-   pb.skipChar('=');
+   pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
 
    // hack to allow expires to have an 2543 style quoted Date
