@@ -478,6 +478,16 @@ SipMessage::setContents(const Contents* contents)
    {
       header(h_ContentLanguages) = mContents->header(h_ContentLanguages);
    }
+   if (mContents->exists(h_ContentType))
+   {
+      header(h_ContentType) = mContents->header(h_ContentType);
+      assert( header(h_ContentType).type() == mContents->getType().type() );
+      assert( header(h_ContentType).subType() == mContents->getType().subType() );
+   }
+   else
+   {
+      header(h_ContentType) = mContents->getType();
+   }
 }
 
 Contents*
@@ -501,6 +511,10 @@ SipMessage::getContents() const
       if (exists(h_ContentLanguages))
       {
          mContents->header(h_ContentLanguages) = header(h_ContentLanguages);
+      }
+      if (exists(h_ContentType))
+      {
+         mContents->header(h_ContentType) = header(h_ContentType);
       }
       // contents' headers from message
       mContents->mHeadersFromMessage = true;
