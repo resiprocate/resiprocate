@@ -3,7 +3,7 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD 
+PACKAGES += RESIPROCATE ARES PTHREAD 
 
 CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
@@ -26,6 +26,7 @@ SRC = \
 	os/Logger.cxx \
 	os/MD5Stream.cxx \
 	os/Mutex.cxx \
+	os/Poll.cxx \
 	os/RecursiveMutex.cxx \
 	os/ParseBuffer.cxx \
 	os/RWMutex.cxx \
@@ -60,7 +61,6 @@ SRC = \
 	\
 	Rlmi.cxx \
 	GenericContents.cxx \
-	SipSession.cxx	\
 	XMLCursor.cxx \
 	UnknownHeaderType.cxx \
 	UnknownParameterType.cxx \
