@@ -59,3 +59,6 @@ library.
    Then, all the library and header files are installed under the
 /usr/local directory. If you want to install them to other directory,
 you just need add the --prefix option in running the configure scripts.
+
+   Optionally, type `make check' to run any self-tests that come with
+the package.
