@@ -55,8 +55,8 @@ class Mime : public ParserCategory
       Mime& operator=(const Mime&);
       bool operator<(const Mime& rhs) const;
       
-      Data& type();
-      Data& subType();
+      Data& type() const {checkParsed(); return mType;}
+      Data& subType() const {checkParsed(); return mSubType;}
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
