@@ -262,6 +262,9 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
+      // !dlb! doesn't work for repeated known parameters
+      // fixable with (inst =) interface, but painful
+      // might be easier to sort?
       for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
