@@ -745,7 +745,7 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
       {
          switch (mOfferState)
          {
-            case None: 
+            case Nothing: 
                ret.first = Offer;
                ret.second = contents;
                break;
