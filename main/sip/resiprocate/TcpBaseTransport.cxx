@@ -86,9 +86,8 @@ TcpBaseTransport::processListen(FdSet& fdset)
 {
    if (fdset.readyToRead(mFd))
    {
-      struct sockaddr peer;
-      
-      socklen_t peerLen = sizeof(peer);
+      struct sockaddr& peer = mTuple.getMutableSockaddr();
+      socklen_t peerLen = mTuple.length();
       Socket sock = accept( mFd, &peer, &peerLen);
       if ( sock == SOCKET_ERROR )
       {
@@ -105,11 +104,9 @@ TcpBaseTransport::processListen(FdSet& fdset)
       }
       makeSocketNonBlocking(sock);
       
-      Tuple who(peer, transport());
-      who.transport = this;
-
-      DebugLog (<< "Received TCP connection from: " << who << " as fd=" << sock);
-      createConnection(who, sock, true);
+      mTuple.transport = this;
+      DebugLog (<< "Received TCP connection from: " << mTuple << " as fd=" << sock);
+      createConnection(mTuple, sock, true);
    }
 }
 
@@ -143,7 +140,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          assert(bytesToRead > 0);
          int bytesRead = currConnection->read(writePair.first, bytesToRead);
          DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead <= 0)
+         if (bytesRead < 0)
          {
             InfoLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
