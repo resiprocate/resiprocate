@@ -22,7 +22,7 @@
 namespace resip
 {
 
-#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 /// Completely generic insert function
 template <class T>
 std::ostream&
@@ -160,7 +160,7 @@ class InserterClass
       const T& _t;
 };
 
-#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 
 /// Function to allow an Inserter to be used directly with a stream
 template <class T>
