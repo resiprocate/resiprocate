@@ -91,23 +91,28 @@ Contents::operator=(const Contents& rhs)
       mType = rhs.mType;
       if (rhs.mDisposition)
       {
-         mDisposition = new H_ContentDisposition::Type(*rhs.mDisposition);
+          if (mDisposition) delete mDisposition;
+          mDisposition = new H_ContentDisposition::Type(*rhs.mDisposition);
       }
       if (rhs.mTransferEncoding)
       {
-         mTransferEncoding = new H_ContentTransferEncoding::Type(*rhs.mTransferEncoding);
+          if (mTransferEncoding) delete mTransferEncoding;
+          mTransferEncoding = new H_ContentTransferEncoding::Type(*rhs.mTransferEncoding);
       }
       if (rhs.mLanguages)
       {
-         mLanguages = new H_ContentLanguages::Type(*rhs.mLanguages);
+          if (mLanguages) delete mLanguages;
+          mLanguages = new H_ContentLanguages::Type(*rhs.mLanguages);
       }
       if (rhs.mId)
       {
-         mId = new Token(*rhs.mId);
+          if (mId) delete mId;
+          mId = new Token(*rhs.mId);
       }
       if (rhs.mDescription)
       {
-         mDescription = new StringCategory(*rhs.mDescription);
+          if (mDescription) delete mDescription;
+          mDescription = new StringCategory(*rhs.mDescription);
       }
 
       mVersion = rhs.mVersion;
@@ -463,14 +468,20 @@ Contents::encodeHeaders(ostream& str) const
    if (exists(h_ContentLanguages))
    {
       str <<  "Content-Languages" << Symbols::COLON[0] << Symbols::SPACE[0];
-      
+
+      int count = 0;
+      int size = header(h_ContentLanguages).size();
+
       for (H_ContentLanguages::Type::iterator 
               i = header(h_ContentLanguages).begin();
-           i != header(h_ContentLanguages).end(); i++)
+           i != header(h_ContentLanguages).end(); ++i)
       {
          i->encode(str);
-         str << Symbols::CRLF;
+
+         if (++count < size)
+             str << Symbols::COMMA << Symbols::SPACE;
       }
+      str << Symbols::CRLF;
    }
 
    if (mTransferEncoding)
