@@ -47,16 +47,10 @@ BaseUsage::getBaseHandle()
 std::ostream& 
 BaseUsage::dump(std::ostream& strm) const
 {
-   strm << "Usage: " << mId;
+   strm << "BaseUsage: " << mId;
    return strm;
 }
 
-
-std::ostream& 
-resip::operator<<(std::ostream& strm, const BaseUsage& usage)
-{
-   return usage.dump(strm);
-}
 
 
 /* ====================================================================
