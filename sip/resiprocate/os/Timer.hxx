@@ -91,6 +91,7 @@ class Timer
       static unsigned long mTimerCount; // counter to genreate unique timers ids 
 
       friend bool operator<(const Timer& t1, const Timer& t2);
+      friend bool operator>(const Timer& t1, const Timer& t2);
       friend std::ostream& operator<<(std::ostream&, const Timer&);
       friend class TimerQueue;
 };
