@@ -156,7 +156,7 @@ DialogUsageManager::shutdown()
 void
 DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
-   InfoLog (<< "shutdown giveup=" << giveUpSeconds);
+   InfoLog (<< "shutdown giveup=" << giveUpSeconds << " dialogSets=" << mDialogSetMap.size());
 
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
@@ -176,8 +176,9 @@ DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long give
 void
 DialogUsageManager::forceShutdown(DumShutdownHandler* h)
 {
-   InfoLog (<< "force shutdown");
-
+   WarningLog (<< "force shutdown ");
+   dumpHandles();
+   
    mDumShutdownHandler = h;
    //HandleManager::shutdown();  // clear out usages
    mShutdownState = ShutdownRequested;
@@ -1176,9 +1177,9 @@ DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
 
-   if (mShutdownState != Running)
+   if (mShutdownState != Running && mShutdownState != ShutdownRequested)
    {
-      InfoLog (<< "Ignoring a request since we are shutting down " << request.brief());
+      WarningLog (<< "Ignoring a request since we are shutting down " << request.brief());
 
       SipMessage failure;
       makeResponse(failure, request, 480, "UAS is shutting down");
