@@ -42,25 +42,19 @@ main(int argc, char* argv[])
    from.uri().port() = 5070;
    
    
-   struct timeval tv;
-   
    for (int i=0; i<1; i++)
    {
       {
          auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
 
-         fd_set fdSet; 
-         int fdSetSize=0;
-         FD_ZERO(&fdSet); 
-         stack1.buildFdSet(&fdSet, &fdSetSize);
+         FdSet fdset;
+         stack1.buildFdSet(fdset);
 
-         tv.tv_sec=0;
-         tv.tv_usec= 5000;
-         int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
+         int err = fdset.select(5000);
          assert (err != -1);
       
          stack1.send(*message);
-         stack1.process(&fdSet);
+         stack1.process(fdset);
       
          SipMessage* received = (stack1.receive());
          if (received)
@@ -79,14 +73,12 @@ main(int argc, char* argv[])
       
       
       {
-         fd_set fdSet; 
-         int fdSetSize=0;
-         FD_ZERO(&fdSet); 
-         stack2.buildFdSet(&fdSet, &fdSetSize);
-         int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
+         FdSet fdset; 
+         stack2.buildFdSet(fdset);
+         int  err = fdset.select(5000);
          assert (err != -1);
       
-         stack2.process(&fdSet);
+         stack2.process(fdset);
       
          SipMessage* received = (stack2.receive());
          if (received)

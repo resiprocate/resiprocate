@@ -79,9 +79,9 @@ SipStack::receive()
 
 
 void 
-SipStack::process(fd_set* fdSet)
+SipStack::process(FdSet& fdset)
 {
-   mExecutive.process(fdSet);
+   mExecutive.process(fdset);
 }
 
 
@@ -94,12 +94,9 @@ SipStack::getTimeTillNextProcess()
 
 
 void 
-SipStack::buildFdSet( fd_set* fdSet, int* fdSetSize )
+SipStack::buildFdSet(FdSet& fdset)
 {
-	assert( fdSet );
-	assert( fdSetSize );
-	
-	mExecutive.buildFdSet( fdSet, fdSetSize );
+   mExecutive.buildFdSet( fdset );
 }
 
 
