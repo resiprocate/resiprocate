@@ -11,7 +11,7 @@
 #include "resiprocate/os/compat.hxx"
 
 #include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
+#include "resiprocate/ExtensionParameter.hxx"
 
 #include <iostream>
 #include <cassert>
@@ -106,7 +106,7 @@ ParserCategory::~ParserCategory()
 }
 
 const Data&
-ParserCategory::param(const UnknownParameterType& param) const
+ParserCategory::param(const ExtensionParameter& param) const
 {
    checkParsed();
    Parameter* p = getParameterByData(param.getName());
@@ -119,7 +119,7 @@ ParserCategory::param(const UnknownParameterType& param) const
 }
 
 Data&
-ParserCategory::param(const UnknownParameterType& param)
+ParserCategory::param(const ExtensionParameter& param)
 {
    checkParsed();
    Parameter* p = getParameterByData(param.getName());
@@ -148,14 +148,14 @@ ParserCategory::remove(const ParamBase& paramType)
 }
 
 void 
-ParserCategory::remove(const UnknownParameterType& param)
+ParserCategory::remove(const ExtensionParameter& param)
 {
    checkParsed();
    removeParameterByData(param.getName());
 }
 
 bool 
-ParserCategory::exists(const UnknownParameterType& param) const
+ParserCategory::exists(const ExtensionParameter& param) const
 {
    checkParsed();
    return getParameterByData(param.getName()) != NULL;
