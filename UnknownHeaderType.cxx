@@ -24,7 +24,6 @@ UnknownHeaderType::UnknownHeaderType(const char* name)
    if (mName.empty())
    {
       assert(false);
-      DebugLog( << "bad" );
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
@@ -39,7 +38,6 @@ UnknownHeaderType::UnknownHeaderType(const Data& name)
    if (mName.empty())
    {
       assert(false);
-         DebugLog( << "bad" );
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
