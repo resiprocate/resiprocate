@@ -1,0 +1,57 @@
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+
+using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+DumProcessHandler::DumProcessHandler(ExternalTimer* et) :
+   mDum(0),
+   mExternalTimer(et),
+   mStopped(false)
+{
+}
+
+void 
+DumProcessHandler::start(DialogUsageManager* dum)
+{
+   mDum = dum;
+   //!dcm! -- temporary
+   mTimerID = mExternalTimer->generateAsyncID();   
+   mExternalTimer->createRecurringTimer(mTimerID, 30);   
+}
+
+void
+DumProcessHandler::handleProcessNotification()
+{
+   //only works when there is exactly one thread causing notifications; could be
+   //made thread safecancelled
+   if (!mCurrentlyProcessing && !mStopped)
+   {
+      mCurrentlyProcessing = true;
+      //very temporary
+      //FD_ISSET     ??
+      FdSet fds;
+      mDum.buildFdSet(fds);
+      if (fds.size > 0)
+      {         
+         fds.selectMilliSeconds((long)0);
+      }
+      mDum.process(fds);      
+   }
+   mCurrentlyProcessing = false;
+}
+
+void 
+DumProcessHandler::handleTimeout(AsyncID timerID)
+{
+   handleProcessNotification();   
+}
+
+void 
+DumProcessHandler::stop()
+{
+   mStopped = true;
+   mExternalTimer->deleteTimer(mTimerID);   
+}
+
