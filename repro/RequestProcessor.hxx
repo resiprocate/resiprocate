@@ -3,18 +3,19 @@
 
 namespace repro
 {
+  class RequestContext;
+
   class RequestProcessor
   {
     public:
       RequestProcessor();
       virtual ~RequestProcessor();
 
-
       typedef enum
       {
-        CONTINUE,
-        SKIP_THIS_CHAIN,
-        SKIP_ALL_CHAINS
+        Continue,
+        SkipThisChain,
+        SkipAllChains
       }
       processor_action_t;
 

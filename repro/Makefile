@@ -12,6 +12,8 @@ TESTPROGRAMS =
 SRC =   \
 	Repro.cxx \
 	RequestContext.cxx \
-	ResponseContext.cxx 
+	ResponseContext.cxx \
+        RequestProcessor.cxx \
+        RequestProcessorChain.cxx
 
 include $(BUILD)/Makefile.post
