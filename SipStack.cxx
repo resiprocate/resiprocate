@@ -72,7 +72,7 @@ SipStack::addAlias(const Data& domain)
 }
 
 Data 
-SipStack::getHostname() const
+SipStack::getHostname()
 {
    // if you change this, please #def old version for windows 
    char hostName[1024];

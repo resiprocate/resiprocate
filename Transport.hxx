@@ -108,7 +108,7 @@ class SendData
          data(pdata),
          transactionId(tid) 
       {}
-      const Transport::Tuple destination;
+      Transport::Tuple destination;
       const Data data;
       const Data transactionId;
 };

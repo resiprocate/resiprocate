@@ -56,7 +56,7 @@ class SipStack
       
       // get one of the names for this host (calls through to gethostbyname) and
       // is not threadsafe
-      Data getHostname() const;
+      static Data getHostname();
 
       /// interface for the TU to send a message. makes a copy of the
       /// SipMessage. Caller is responsible for deleting the memory and may do
