@@ -99,12 +99,21 @@ ParserCategory::~ParserCategory()
    clear();
 }
 
-Data&
+const Data&
 ParserCategory::param(const UnknownParameterType& param) const
 {
    checkParsed();
    Parameter* p = getParameterByData(param.getName());
-   if(!p)
+   assert(p);
+   return static_cast<UnknownParameter*>(p)->value();
+}
+
+Data&
+ParserCategory::param(const UnknownParameterType& param)
+{
+   checkParsed();
+   Parameter* p = getParameterByData(param.getName());
+   if (!p)
    {
       p = new UnknownParameter(param.getName());
       mUnknownParameters.push_back(p);
@@ -350,12 +359,7 @@ ParserCategory::param(const _enum##_Param& paramType) const                     
    checkParsed();                                                                                       \
    _enum##_Param::Type* p =                                                                             \
       static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
-   if (!p)                                                                                              \
-   {                                                                                                    \
-      throw SipMessage::Exception(ParameterTypes::ParameterNames[paramType.getTypeNum()] + " missing",  \
-                                  __FILE__,                                                             \
-                                  __LINE__);                                                            \
-   }                                                                                                    \
+   assert(p);                                                                                           \
    return p->value();                                                                                   \
 }
 
