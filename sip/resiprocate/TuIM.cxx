@@ -280,7 +280,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    if ( !contents )
    {
       InfoLog(<< "Received NOTIFY message event with no contents" );
-      mCallback->presenseUpdate( from, true, Data::Empty );
+      mCallback->presenceUpdate( from, true, Data::Empty );
       return;
    }
 
@@ -291,7 +291,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    if ( !body )
    {
       InfoLog(<< "Received NOTIFY message event with no PIDF contents" );
-      mCallback->presenseUpdate( from, true, Data::Empty );
+      mCallback->presenceUpdate( from, true, Data::Empty );
       return;
    }
  
@@ -322,7 +322,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    if (changed)
    {
       assert(mCallback);
-      mCallback->presenseUpdate( from, open, note );
+      mCallback->presenceUpdate( from, open, note );
    }
 }
 
@@ -629,7 +629,7 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 
       if ( changed )
       {
-         mCallback->presenseUpdate( to, false, Data::Empty );
+         mCallback->presenceUpdate( to, false, Data::Empty );
       }
       
       // try to contact this buddy agian in 10 minutes 
@@ -853,7 +853,7 @@ TuIM::sendNotify(Dialog* dialog)
 
 
 void 
-TuIM::setMyPresense( const bool open, const Data& status )
+TuIM::setMyPresence( const bool open, const Data& status )
 {
    assert( mPidf );
    mPidf->setSimpleStatus( open, status, mContact.getAor() );

@@ -122,7 +122,7 @@ displayPres()
 class TestCallback: public TuIM::Callback
 {
    public:
-      virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+      virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
       virtual void receivedPage( const Data& msg, const Uri& from ,
                                  const Data& signedBy,  Security::SignatureStatus sigStatus,
                                  bool wasEncryped  );
@@ -134,7 +134,7 @@ class TestCallback: public TuIM::Callback
   
 
 void 
-TestCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
+TestCallback::presenceUpdate(const Uri& from, bool open, const Data& status )
 {
    const char* stat = (open)?"online":"offline";
    //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
@@ -369,7 +369,7 @@ processStdin( Uri* dest, bool sign, bool encryp )
          waddstr(textWin,">\n");
          wrefresh(textWin);
 
-         tuIM->setMyPresense( !stat.empty(), stat );
+         tuIM->setMyPresence( !stat.empty(), stat );
       }
       else if ( (num==1) && (!strncmp(".",buf,1)) )
       {
@@ -589,7 +589,7 @@ main(int argc, char* argv[])
               << " -noRegister causes it not to register - by default the AOR is registered" << endl
               << " -to sets initial location to send messages to" << endl
               << " -outbound sets the outbound proxy" << endl
-              << " -add adds a budy who's presense will be monitored" << endl
+              << " -add adds a budy who's presence will be monitored" << endl
               << " -sign signs message you send and -encryp encrypt them " << endl
               << "\t(You need PKI certs for this to work)" << endl
               << " -key allows you to enter a secret used to load your private key."<< endl
@@ -747,7 +747,7 @@ main(int argc, char* argv[])
    waddstr(textWin,"Use -help on the command line to view options\n");
    waddstr(textWin,"To set where your messages will get sent type\n");
    waddstr(textWin,"    to: sip:alice@example.com \n");
-   waddstr(textWin,"To monitores someeone presense type\n");
+   waddstr(textWin,"To monitores someeone presence type\n");
    waddstr(textWin,"    add: sip:buddy@example.com \n");
    waddstr(textWin,"To change you online status type\n");
    waddstr(textWin,"    status: in meeting\n");
