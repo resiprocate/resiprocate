@@ -83,7 +83,7 @@ main(int argc, char* argv[])
       FdSet fdset;
       stack1.buildFdSet(fdset);
       stack2.buildFdSet(fdset);
-      int err = fdset.select(0);
+      int err = fdset.selectMiliSeconds(0);
       assert (err != -1);
 
       stack1.process(fdset);

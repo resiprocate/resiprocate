@@ -95,14 +95,14 @@ class FdSet
          return ::select(size, &read, &write, NULL, &tv);
       }
 
-      int select(unsigned long usec)
+      int selectMiliSeconds(unsigned long ms)
       {
          struct timeval tv;
-         tv.tv_sec = 0;
-         tv.tv_usec = usec;
+         tv.tv_sec = (ms/1000);
+         tv.tv_usec = (ms%1000)*1000;
          return ::select(size, &read, &write, NULL, &tv);
       }
-      
+
       bool readyToRead(Socket fd)
       {
          return ( FD_ISSET(fd, &read) != 0);
