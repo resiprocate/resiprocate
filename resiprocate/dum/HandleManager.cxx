@@ -44,7 +44,7 @@ void HandleManager::shutdownWhenEmpty()
    }
    else
    {
-      WarningLog (<< "Shutdown waiting for all usages to be deleted (" << mHandleMap.size() << ")");
+      DebugLog (<< "Shutdown waiting for all usages to be deleted (" << mHandleMap.size() << ")");
    }
 }
 
@@ -67,7 +67,7 @@ HandleManager::remove(Handled::Id id)
    }
    else
    {
-      InfoLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
+      DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
    }
 }
 
@@ -85,6 +85,7 @@ HandleManager::getHandled(Handled::Id id) const
    if (i == mHandleMap.end())
    {
       InfoLog (<< "Reference to stale handle: " << id);
+      assert(0);
       throw HandleException("Stale handle", __FILE__, __LINE__);
    }
    else
