@@ -41,6 +41,7 @@ class Transport : public ThreadIf
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
+      virtual int maxFileDescriptors() const = 0;
       
       void thread(); // from ThreadIf
       

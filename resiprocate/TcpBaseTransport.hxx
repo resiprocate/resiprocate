@@ -12,12 +12,15 @@ class SipMessage;
 class TcpBaseTransport : public Transport
 {
    public:
+      enum {MaxFileDescriptors = 100000};
+
       TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4);
       virtual  ~TcpBaseTransport();
-
+      
       void process(FdSet& fdset);
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
+      int maxFileDescriptors() const { return MaxFileDescriptors; }
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
 
