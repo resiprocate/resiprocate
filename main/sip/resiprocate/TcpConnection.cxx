@@ -13,7 +13,7 @@ using namespace resip;
 
 TcpConnection::TcpConnection(const Tuple& who, Socket fd) : Connection(who, fd)
 {
-   InfoLog (<< "Creating TCP connection " << who << " on " << fd);
+   DebugLog (<< "Creating TCP connection " << who << " on " << fd);
 }
 
 int 
