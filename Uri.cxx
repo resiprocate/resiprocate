@@ -617,6 +617,8 @@ Uri::GreaterQ::operator()(const Uri& lhs, const Uri& rhs) const
 const Data
 Uri::getAorNoPort() const
 {
+   // CJ - TODO - check this in inline with the getAor code (see v6 stuff)
+
    checkParsed();
    getAor();
 
