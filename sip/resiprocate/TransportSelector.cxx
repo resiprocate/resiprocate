@@ -258,7 +258,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
-          DebugLog(<< "!ah! request with force target : " << msg->getForceTarget() );
+          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
           result = mDns.lookup(msg->getForceTarget(), handler);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
@@ -394,25 +394,30 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
             destination.transport = findTransport(source);
          }
       }
-      
+
       if (destination.transport)
       {
+          //DebugLog(<<"!ah! destination transport is " << *destination.transport);
          // insert the via
          if (msg->isRequest())
          {
-            assert(!msg->header(h_Vias).empty());
-            msg->header(h_Vias).front().remove(p_maddr); // !jf! why do this? 
-            if (!msg->header(h_Vias).front().sentHost().size())
-            {
-                msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
+             assert(!msg->header(h_Vias).empty());
+             Via& topVia(msg->header(h_Vias).front());
+
+             topVia.remove(p_maddr); // !jf! why do this? 
+
+             if (!topVia.transport().size())
+             {
+                 topVia.transport() = Tuple::toData(destination.transport->transport());
+             }
+             if (!topVia.sentHost().size())
+             {
                 msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+             }
+             if (!topVia.sentPort())
+             {
                 msg->header(h_Vias).front().sentPort() = destination.transport->port();
-                DebugLog(<<"!ah! set Via to " << msg->header(h_Vias).front());
-            }
-            else
-            {
-                DebugLog(<<"!ah! Via left alone " << msg->header(h_Vias).front());
-            }
+             }
          }
 
          // There is a contact header and it contains exactly one entry
