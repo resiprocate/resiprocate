@@ -135,36 +135,41 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case INVITE:
          case SUBSCRIBE:
          case REFER:
-            if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
+            if (response.header(h_StatusLine).statusCode() > 100 &&
+                response.header(h_StatusLine).statusCode() < 300)
             {
-               const NameAddr& contact = response.header(h_Contacts).front();
-               if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
-                   isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
+               
+               if  (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
                {
-                  BaseCreator* creator = mDum.findCreator(mId);
-                  assert(creator);// !jf! throw or something here
+                  const NameAddr& contact = response.header(h_Contacts).front();
+                  if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
+                      isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
+                  {
+                     BaseCreator* creator = mDum.findCreator(mId);
+                     assert(creator);// !jf! throw or something here
                   
-                  mLocalContact = creator->getLastRequest().header(h_Contacts).front();
-                  mRemoteTarget = contact;
+                     mLocalContact = creator->getLastRequest().header(h_Contacts).front();
+                     mRemoteTarget = contact;
+                  }
+                  else
+                  {
+                     InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+                     DebugLog (<< response);
+                     throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
+                  }
                }
                else
                {
-                  InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+                  InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
                   DebugLog (<< response);
-                  throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
+                  throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
                }
+               break;
+               default:
+                  break;
             }
-            else
-            {
-               InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
-               DebugLog (<< response);
-               throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
-            }
-            break;
-         default:
-            break;
       }
-
+      
       mLocalCSeq = response.header(h_CSeq).sequence();
       mRemoteCSeq = 0;
       

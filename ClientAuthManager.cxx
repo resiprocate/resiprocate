@@ -40,12 +40,17 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
       {                                                            
          const Data& realm = i->param(p_realm);                   
                                                                         
-         const Profile::DigestCredential& credential =            
-            mProfile.getDigestCredential(realm);           
+         //!dcm! -- icky, expose static empty soon...ptr instead of reference?
+         Profile::DigestCredential credential =            
+            mProfile.getDigestCredential(realm);
          if ( credential.password.empty() )                       
-         {                                                        
-            InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
-            return false;                                        
+         {                                        
+            credential = mProfile.getDigestCredential(response);
+            if ( credential.password.empty() )                       
+            {                                        
+               InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
+               return false;                                        
+            }
          }                                                        
                                                                         
          const Data cnonce = Data::Empty;                         

@@ -94,7 +94,8 @@ class Profile
       
       DigestCredentialHandler* getDigestHandler();
       const DigestCredential& getDigestCredential( const Data& realm );
-      
+      const DigestCredential& getDigestCredential( const SipMessage& challenge );      
+
    private:
       NameAddr mAor;
       int mDefaultRegistrationExpires;

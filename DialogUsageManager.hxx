@@ -138,6 +138,7 @@ class DialogUsageManager : public HandleManager
       void cancel(DialogSetId invSessionId);
       void send(const SipMessage& request); 
       
+      void buildFdSet(FdSet& fdset);
       void process(FdSet& fdset);
       
       InviteSessionHandle findInviteSession(DialogId id);
