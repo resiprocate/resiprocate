@@ -1,0 +1,14 @@
+# Place global architecture / cross compilation stuff in here.
+#
+ifeq ($(ARCH),i686)
+CXXFLAGS += -mcpu=i686 -march=i686 -DDEBUGOUTPUTMEMORY
+endif
+
+
+ifeq ($(ARCH),i486)
+CXXFLAGS += -mcpu=i486 -march=i486
+endif
+
+ifeq ($(ARCH),i386)
+CXXFLAGS += -mcpu=i386 -march=i386
+endif
