@@ -138,7 +138,14 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    mDum.send(mLastRequest);
 }
 
-void ClientRegistration::stopRegistering()
+void
+ClientRegistration::end()
+{
+   stopRegistering();
+}
+
+void 
+ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
    delete this;     

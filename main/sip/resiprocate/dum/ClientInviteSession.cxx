@@ -184,7 +184,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             {
                //!dcm! -- ack the crossover 200?
                mState = Connected;               
-               send(end());
+               end();
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
@@ -208,7 +208,7 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
        && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
-      send(end());  // Terminate call
+      end();  // Terminate call
    }
    else
    {
@@ -225,9 +225,14 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
       contents.message().header(h_StatusLine) = response.header(h_StatusLine);
       //will be cloned...ServerSub may not have the most efficient API possible
       int code = response.header(h_StatusLine).statusCode();
-      SipMessage& notify = (code >= 200) ? mServerSub->end(NoResource, &contents) : mServerSub->update(&contents);
-//      mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
-      mServerSub->send(notify);
+      if (code >= 200)
+      {
+         mServerSub->end(NoResource, &contents);
+      }
+      else
+      {
+         mServerSub->send(mServerSub->update(&contents));
+      }
    }   
 }
 
@@ -251,7 +256,7 @@ ClientInviteSession::send(SipMessage& msg)
          contents.message().header(h_StatusLine).statusCode() = 487;
          contents.message().header(h_StatusLine).reason() = "Request Cancelled";
          //will be cloned...ServerSub may not have the most efficient API possible
-         mServerSub->send(mServerSub->end(NoResource, &contents));
+         mServerSub->end(NoResource, &contents);
       }   
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
       guard.destroy();
@@ -269,7 +274,7 @@ ClientInviteSession::send(SipMessage& msg)
    mDum.send(msg);
 }
 
-SipMessage&
+void
 ClientInviteSession::end()
 {
    switch (mState)
@@ -283,7 +288,7 @@ ClientInviteSession::end()
             assert(mLastRequest.header(h_Vias).size() == 1);
             mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
-            return mLastRequest;
+            send(mLastRequest);
          }         
       case Initial:
          InfoLog ( << "ClientInviteSession::end, Early/Initial)" );        
@@ -291,13 +296,13 @@ ClientInviteSession::end()
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
          //can't toast themselves
          mState = Cancelled;
-         return mLastRequest;
+         send(mLastRequest);
          break;
       case Terminated: 
       case Connected:
       case ReInviting:
          InfoLog ( << "ClientInviteSession::end, Terminated/Connected/ReInviting)" );        
-         return InviteSession::end();
+         InviteSession::end();
          break;
       case Cancelled: //user error
          InfoLog ( << "ClientInviteSession::end, Cannot end a session that has already been cancelled.)" );        
@@ -306,8 +311,6 @@ ClientInviteSession::end()
          InfoLog ( << "ClientInviteSession::end, Progammer error)" );        
          assert(false);//throw UsageUseException("Progammer error", __FILE__, __LINE__);
    }
-   SipMessage *temp = 0;
-   return *temp;
 }
 
 //!dcm! -- probably kill

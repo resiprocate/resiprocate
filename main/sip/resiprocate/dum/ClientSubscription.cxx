@@ -165,13 +165,15 @@ ClientSubscription::requestRefresh()
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
    //mLastRequest.header(h_Expires).value() = 300;   
-   InfoLog (<< "Request ClientSubscription refresh: " << endl << mLastRequest);
+   InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
    send(mLastRequest);
 }
 
 void  
 ClientSubscription::end()
 {
+   InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
+   
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
    mLastRequest.header(h_Expires).value() = 0;   
    send(mLastRequest);
