@@ -1,5 +1,5 @@
-#include "sipstack/UnknownParameter.hxx"
-#include "util/ParseBuffer.hxx"
+#include "sip2/sipstack/UnknownParameter.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cassert>
 
-#include "util/Socket.hxx"
+#include "sip2/util/Socket.hxx"
 
 using namespace Vocal2;
 using namespace std;

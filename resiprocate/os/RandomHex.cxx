@@ -2,11 +2,11 @@
 #include <cstdlib>
 
 #include <stdio.h>
-#include "util/RandomHex.hxx"
+#include "sip2/util/RandomHex.hxx"
 #include <cstdlib>
-#include "util/Timer.hxx"
-#include "util/Mutex.hxx"
-#include "util/Lock.hxx"
+#include "sip2/util/Timer.hxx"
+#include "sip2/util/Mutex.hxx"
+#include "sip2/util/Lock.hxx"
 
 
 #ifndef USE_OPENSSL

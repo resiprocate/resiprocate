@@ -1,5 +1,5 @@
-#include "util/DataStream.hxx"
-#include "util/RandomHex.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/RandomHex.hxx"
 
 using namespace Vocal2;
 

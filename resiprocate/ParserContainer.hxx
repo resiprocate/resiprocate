@@ -1,9 +1,9 @@
 #ifndef ParserContainer_hxx
 #define ParserContainer_hxx
 
-#include "sipstack/HeaderFieldValueList.hxx"
-#include "sipstack/ParserContainerBase.hxx"
-#include "sipstack/Symbols.hxx"
+#include "sip2/sipstack/HeaderFieldValueList.hxx"
+#include "sip2/sipstack/ParserContainerBase.hxx"
+#include "sip2/sipstack/Symbols.hxx"
 #include <cassert>
 #include <list>
 

@@ -1,13 +1,13 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.26 2002/11/07 02:44:49 derekm Exp $";
+"$Id: Data.cxx,v 1.27 2002/11/07 03:07:27 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
 
-#include "util/Data.hxx"
-#include "util/vmd5.hxx"
-#include "util/RandomHex.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/vmd5.hxx"
+#include "sip2/util/RandomHex.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -291,6 +291,21 @@ Data::operator+=(char c)
 
    return *this;
 }
+
+char& 
+Data::operator[](size_type p)
+{
+   assert(p > 0 && p < mSize);
+   return mBuf[p];
+}
+
+char 
+Data::operator[](size_type p) const
+{
+   assert(p > 0 && p < mSize);
+   return mBuf[p];
+}
+
 
 Data& 
 Data::operator=(const char* str)

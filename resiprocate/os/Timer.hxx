@@ -1,7 +1,7 @@
 #if !defined(TIMER_HXX)
 #define TIMER_HXX
      
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 #include <iostream>
 
 #if defined( WIN32 )

@@ -1,7 +1,7 @@
 #ifndef ParseException_hxx
 #define ParseException_hxx
 
-#include "util/VException.hxx"
+#include "sip2/util/VException.hxx"
 
 namespace Vocal2
 {

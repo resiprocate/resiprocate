@@ -1,11 +1,11 @@
-#include "sipstack/HeaderTypes.hxx"
-#include "sipstack/Preparse.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "util/Data.hxx"
-#include "util/Lock.hxx"
-#include "util/Logger.hxx"
-#include "util/Mutex.hxx"
-#include "util/Socket.hxx"
+#include "sip2/sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/Preparse.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/Lock.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/Mutex.hxx"
+#include "sip2/util/Socket.hxx"
 #include <iostream> // debug only !ah!
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
