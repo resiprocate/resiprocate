@@ -1,3 +1,4 @@
+#include "resiprocate/config.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
