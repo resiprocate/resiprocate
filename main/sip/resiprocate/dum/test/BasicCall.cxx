@@ -95,7 +95,12 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          InfoLog( << "###Register::onFailure: ###" << name << endl);
          assert(0);
       }
-      
+
+      virtual void onRemoved(ClientRegistrationHandle)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onRemoved(" << name << ")");
+      }
+
       /// called when an initial INVITE arrives 
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
@@ -136,6 +141,11 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)
       {
          InfoLog(  << "TestInviteSessionHandler::onStaleCallTimeout" );
+      }
+
+      virtual void onRedirected(ClientInviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onRedirected " << msg.brief());
       }
 
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)
@@ -352,9 +362,9 @@ class TestShutdownHandler : public DumShutdownHandler
       {
       }
       bool dumShutDown;
-      virtual void onDumDestroyed() 
+      virtual void onDumCanBeDeleted() 
       {
-         InfoLog ( << "TestShutdownHandler::onDumDestroyed" );         
+         InfoLog ( << "TestShutdownHandler::onDumCanBeDeleted" );         
          dumShutDown = true;
       }
 };
@@ -399,9 +409,9 @@ main (int argc, char** argv)
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
 
    Profile uacProfile;      
-   ClientAuthManager uacAuth(uacProfile);
+   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager(uacProfile));
    dumUac->setProfile(&uacProfile);
-   dumUac->setClientAuthManager(&uacAuth);
+   dumUac->setClientAuthManager(uacAuth);
 
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
@@ -438,9 +448,9 @@ main (int argc, char** argv)
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    
    Profile uasProfile;   
-   ClientAuthManager uasAuth(uasProfile);
+   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager(uasProfile));
    dumUas->setProfile(&uasProfile);
-   dumUas->setClientAuthManager(&uasAuth);
+   dumUas->setClientAuthManager(uasAuth);
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
@@ -558,5 +568,8 @@ main (int argc, char** argv)
         }
      }
    }
+   // OK to delete DUM objects now
+   delete dumUac; 
+   delete dumUas;
    InfoLog ( << "!!!!!!!!!!!!!!!!!! Somewhat successful !!!!!!!!!! " );
 }
