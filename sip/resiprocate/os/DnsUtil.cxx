@@ -1,15 +1,4 @@
-#ifndef WIN32   
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <errno.h>
-
-#endif
+#include <stdio.h>
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
@@ -50,7 +39,7 @@ DnsUtil::getLocalHostName()
 Data 
 DnsUtil::getLocalDomainName()
 {
-#if defined( __MACH__ ) || defined( WIN32 ) || defined(__SUNPRO_CC)
+#if defined( __MACH__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
    assert(0);
  // !cj! TODO 
    return NULL;
@@ -275,7 +264,7 @@ DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
    
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined (__sun__)
    struct ifconf ifc;
    
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -370,3 +359,4 @@ DnsUtil::getInterfaces(const Data& matching)
  * <http://www.vovida.org/>.
  *
  */
+
