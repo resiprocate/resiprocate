@@ -12,21 +12,26 @@ TESTPROGRAMS =
 SRC =   \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
+	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
 	ClientOutOfDialogReq.cxx \
 	ClientPublication.cxx \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
 	Dialog.cxx \
+	DialogId.cxx \
+	DialogSet.cxx \
+	DialogSetId.cxx \
 	DialogUsageManager.cxx \
 	DumTimeout.cxx \
-	InviteSessionCreator.cxx \
 	InviteSession.cxx \
+	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
 	OutOfDialogReqCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
 	RegistrationCreator.cxx \
+	ServerAuthManager.cxx \
 	ServerInviteSession.cxx \
 	ServerOutOfDialogReq.cxx \
 	ServerPublication.cxx \
@@ -34,7 +39,5 @@ SRC =   \
 	ServerSubscription.cxx \
 	SubscriptionCreator.cxx \
 	UInt64Hash.cxx \
-	DialogSet.cxx \
-	DialogSetId.cxx \
 
 include $(BUILD)/Makefile.post
