@@ -128,20 +128,15 @@ class Security
       void addAndSaveCertificate( Pkcs7Contents*, const Data& filePath=Data::Empty ); // add cert and
       // saves on disk
 
-      Contents* uncode( Pkcs7Contents*,       
-                        Data* signedBy, 
-                        SignatureStatus* sigStat, 
-                        bool* encryped ); // returns NULL if fails 
-
+      Contents* decrypt( Pkcs7Contents* );
+      
       Contents* uncodeSigned( MultipartSignedContents*,       
                               Data* signedBy, 
                               SignatureStatus* sigStat ); // returns NULL if fails 
 
    private:
-      Contents* uncodeSingle( Pkcs7Contents*, bool verifySig,
-                              Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
-               
       Data getPath( const Data& dir, const Data& file );
+
 #ifdef USE_SSL   
       SSL_CTX* getTlsCtx();
       
