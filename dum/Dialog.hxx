@@ -118,8 +118,11 @@ class Dialog
       unsigned long mRemoteCSeq;
       NameAddr mRemoteTarget;
 
+      friend ostream& operator<<(ostream& strm, const Dialog& dialog);
 };
- 
+
+ostream& operator<<(ostream& strm, const Dialog& dialog);
+
 }
 
 #endif
