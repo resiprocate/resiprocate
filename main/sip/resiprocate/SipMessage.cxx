@@ -192,7 +192,7 @@ SipMessage::compute2543TransactionHash() const
       strm << header(h_RequestLine).uri().password();
       strm << header(h_RequestLine).uri().commutativeParameterHash();
 
-      if (!header(h_Vias).empty())
+      if (exists(h_Vias) && !header(h_Vias).empty())
       {
          strm << header(h_Vias).front().protocolName();
          strm << header(h_Vias).front().protocolVersion();
