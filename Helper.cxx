@@ -748,6 +748,11 @@ Helper::getSentPort(SipMessage& request)
    return port;
 }
 
+Uri 
+Helper::fromAor(const Data& aor, const Data& scheme)
+{
+   return Uri(scheme + Symbols::COLON + aor);
+}
 
 
 /* ====================================================================
