@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "sip2/sipstack/HeaderTypes.hxx"
+
 namespace Vocal2 {
 using namespace std;
 using namespace Vocal2;
@@ -247,12 +248,10 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
           register int index = lookup[key];
-
           if (index >= 0)
             {
               register const char *s = wordlist[index].name;
-
-              if (*str == *s && !strcmp (str + 1, s + 1))
+              if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
                 return &wordlist[index];
             }
         }
