@@ -1,7 +1,7 @@
 #ifndef VMD5_H
 #define VMD5_H
 
-static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.4 2002/11/06 23:31:49 veer Exp $";
+static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.5 2002/11/07 00:12:12 veer Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -52,7 +52,7 @@ void MD5Init(struct MD5Context *context);
 void MD5Update(struct MD5Context *context, md5byte const *buf, unsigned len);
 void MD5Final(unsigned char digest[16], struct MD5Context *context);
 void MD5Transform(u_int32_t buf[4], u_int32_t const in[16]);
- 
+void byteSwap(u_int32_t *buf, unsigned words); 
 }
 
 /* !MD5_H */
