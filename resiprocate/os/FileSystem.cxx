@@ -13,6 +13,11 @@ FileSystem::Directory::Directory(const Data& path)
 
 #ifndef WIN32
 
+// !jf! added this constructor since it was missing - don't know if it is correct
+FileSystem::Directory::iterator::iterator() : mNixDir(0), mDirent(0)
+{
+}
+
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    assert(!dir.getPath().empty());   
