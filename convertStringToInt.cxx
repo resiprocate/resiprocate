@@ -46,4 +46,5 @@ main()
    cout << "NOT " << " " << f("NOT ") << endl;
 #endif
 
+   return 0;
 }
