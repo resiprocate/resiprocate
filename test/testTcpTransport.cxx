@@ -390,10 +390,12 @@ main(int argc, char* argv[])
          
          delete sipMsg;
          delete okMsg;
-      }
 
-      Data reply(smallMessageWithLargeBody);
-      dest.send(srcIp.mNextHops.front(), reply, transactionId);
+
+         Data reply(smallMessageWithLargeBody);
+         dest.send(sipMsg->getSource(), reply, transactionId);
+      }
+      
 
       while (!srcFifo.messageAvailable() && count < 50)
       {
