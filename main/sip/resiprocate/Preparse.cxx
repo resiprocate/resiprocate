@@ -184,9 +184,9 @@ Preparse::InitStatePreparseStateTable()
     AE( EmptyHdrCrLf,X,X,EndMsg,actBad|actDiscard);
     AE( EmptyHdrCrLf,X,LF,EmptyHdrCont,actReset|actDiscardKnown);
     
-    AE( EmptyHdrCont,X,X,BuildHdr,actReset|actBack|actDiscard|actData);
+    AE( EmptyHdrCont,X,X,BuildHdr,actReset|actBack|actDiscard|actEmptyHdr);
     AE( EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
-    AE( EmptyHdrCont,X,CR, CheckEndHdr, actData|actReset|actFlat|actDiscard);
+    AE( EmptyHdrCont,X,CR, CheckEndHdr, actData|actReset|actDiscard|actEmptyHdr);
     
     // Add edges that will ''skip'' data building and
     // go straight to quoted states
@@ -367,6 +367,16 @@ Preparse::process(SipMessage& msg,
            PP_DIAG_ACTION(edge.workMask & actFlat);
            buffer[traversalOff] = ' ';
 	 }
+
+         if (edge.workMask & actEmptyHdr)
+         {
+           PP_DIAG_ACTION(edge.workMask & actEmptyHdr);
+           msg.addHeader(mHeaderType,
+                         &buffer[mHeaderOff],
+                         mHeaderLength,
+                         0,
+                         0);
+         }
 
          if (edge.workMask & actData) // there is some header data to pass up
          {
