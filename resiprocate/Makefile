@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2002/09/21 06:49:59 jason Exp $
+# $Id: Makefile,v 1.7 2002/09/21 15:30:47 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -29,40 +29,13 @@ OSRC =   *.hxx Makefile
 #CXXFLAGS += -O5 -DNDEBUG
 CXXFLAGS += -O -g
 #CXXFLAGS += -g
-#CXXFLAGS += -DAPR11
-#SRC += LeakTracer.cxx
 LDFLAGS  += 
-CXXFLAGS += -I. -MMD -Wall
+CXXFLAGS += -I. -I../../. -MMD -Wall
 LDLIBS   += 
 
-# Add for static link on linux 
-#LDFLAGS += -static
-#LDLIBS  += -lSM -lICE
-
-# comment out one of follwing lines and touch thread.hxx
-#CXXFLAGS += -DNOTHREADS
-#LDLIBS   += -lpthread
-
-ifeq ($(ARCH),sun4)
-CXXFLAGS +=
-LDFLAGS  +=
-LDLIBS   +=
-endif
-
-
 ifeq ($(ARCH),i686)
-#CXXFLAGS += -mcpu=pentiumpro -march=pentiumpro
 CXXFLAGS += -mcpu=i686 -march=i686
-#CXXFLAGS += -ffast-math -fno-math-errno 
-#CXXFLAGS += -mmx -mmx-only 
-#CXXFLAGS += -I/opt/pgcc/include
-#LDFLAGS  += -L/opt/pgcc/lib
-CXXFLAGS +=
-LDFLAGS  +=
-LDLIBS   +=
 endif
-
-CXXFLAGS += -I../../.
 
 OBJ = obj.$(ARCH)
 BIN = bin.$(ARCH)
