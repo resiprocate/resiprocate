@@ -2,7 +2,6 @@
 #define RESIP_CLIENTINVITESESSION_HXX
 
 #include "InviteSession.hxx"
-#include "Usagehandle.hxx"
 
 namespace resip
 {
@@ -50,6 +49,10 @@ class ClientInviteSession : public InviteSession
          
    private:
       friend class DialogUsageManager;
+      ClientInviteSession(DialogUsageManager& dum,
+                          Dialog& dialog,
+                          const SipMessage& msg);
+      
       ClientInviteSession::Handle mHandle;
 };
  
