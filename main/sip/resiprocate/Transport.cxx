@@ -1,3 +1,11 @@
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include <iostream>
 
 #include "resiprocate/os/compat.hxx"
@@ -35,6 +43,53 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
    mStateMachineFifo(rxFifo),
    mShutdown(false)
 {
+   if (!mInterface.empty())
+   {
+      struct ifconf ifc;
+   
+      int s = socket( AF_INET, SOCK_DGRAM, 0 );
+      int len = 100 * sizeof(struct ifreq);
+
+      char buf[ len ];
+   
+      ifc.ifc_len = len;
+      ifc.ifc_buf = buf;
+   
+      int e = ioctl(s,SIOCGIFCONF,&ifc);
+      char *ptr = buf;
+      int tl = ifc.ifc_len;
+      int count=0;
+  
+      int maxRet = 10;
+      while ( (tl > 0) && ( count < maxRet) )
+      {
+         struct ifreq* ifr = (struct ifreq *)ptr;
+      
+         int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
+         tl -= si;
+         ptr += si;
+         char* name = ifr->ifr_ifrn.ifrn_name;
+ 
+         struct ifreq ifr2;
+         ifr2 = *ifr;
+      
+         e = ioctl(s,SIOCGIFADDR,&ifr2);
+
+         struct sockaddr a = ifr2.ifr_addr;
+         struct sockaddr_in* addr = (struct sockaddr_in*) &a;
+      
+         char str[256];
+         inet_ntop(AF_INET, (u_int32_t*)(&addr->sin_addr.s_addr), str, sizeof(str));
+         DebugLog (<< "Considering: " << name << " -> " << str);
+      
+         if (nic == Data(name))
+         {
+            mIpAddress = str;
+            InfoLog (<< "Using interface: " << mInterface << "->" << mIpAddress);
+            break;
+         }
+      }
+   }
 }
 
 Transport::~Transport()
