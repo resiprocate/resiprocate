@@ -51,3 +51,9 @@ AppDialog::getInviteSession()
    return mDialog->getInviteSession();
 }
 
+DialogId 
+AppDialog::getDialogId() const
+{
+   return mDialog->getId();   
+}
+
