@@ -101,6 +101,10 @@ class Profile
       bool& rportEnabled();      
       const bool rportEnabled() const;      
 
+      void setUserAgent( const Data& userAgent );
+      const Data& getUserAgent() const;
+      bool hasUserAgent() const;
+
    private:
       NameAddr mDefaultFrom;
       int mDefaultRegistrationExpires;
@@ -120,7 +124,9 @@ class Profile
 
       bool mLooseToTagMatching;
       bool mRportEnabled;
+      bool mHasUserAgent;      
       
+      Data mUserAgent;      
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
