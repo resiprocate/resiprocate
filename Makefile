@@ -119,6 +119,7 @@ SRC = \
 	TlsConnection.cxx \
 	TcpBaseTransport.cxx \
 	TcpTransport.cxx \
+	TimeAccumulate.cxx \
 	TlsTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
