@@ -99,7 +99,7 @@ MessageWaitingContents::operator=(const MessageWaitingContents& rhs)
 }
 
 const Mime& 
-MessageWaitingContents::getType() const
+MessageWaitingContents::getStaticType() const
 {
    static Mime type("application", "simple-message-summary");
    return type;
