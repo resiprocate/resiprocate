@@ -348,6 +348,8 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
              << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b2) << "." 
              << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b3) << "." 
              << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b4) ;
+#elif defined (__CYGWIN__)
+	   ostrm << inet_ntoa(tuple.m_anonv4.sin_addr);
 #else
 	    char str[256];
 	    ostrm << inet_ntop(AF_INET,
