@@ -93,6 +93,12 @@ ClientRegistration::removeMyBindings()
    mDum.send(mLastRequest);
 }
 
+void ClientRegistration::stopRegistering()
+{
+   //timers aren't a concern, as DUM checks for Handle validity before firing.
+   delete this;     
+}
+
 void 
 ClientRegistration::requestRefresh()
 {
