@@ -44,6 +44,7 @@ class Pidf : public Contents
       };
 
       std::vector<Tuple>& getTuples();
+      const std::vector<Tuple>& getTuples() const;
       // ?dlb? consider returning an XML cursor as well?
 
       int getNumTuples() const;
