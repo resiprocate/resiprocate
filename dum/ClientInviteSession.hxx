@@ -44,9 +44,13 @@ class ClientInviteSession : public InviteSession
       /// Rejects an offer at the SIP level. So this can send a 487 to a
       /// reINVITE or and UPDATE
       virtual void rejectOffer(int statusCode);
-      
+
+      virtual InviteSession::Handle getSessionHandle();
+      ClientInviteSession::Handle getHandle() {return mHandle;}
+         
    private:
       friend class DialogUsageManager;
+      ClientInviteSession::Handle mHandle;
 };
  
 }

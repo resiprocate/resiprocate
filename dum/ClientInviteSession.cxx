@@ -2,7 +2,8 @@
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, 
                                          const SipMessage& msg) 
-   : InviteSession(dum)
+   : InviteSession(dum),
+     mHandle(dum)
 {
 }
 
@@ -44,6 +45,13 @@ ClientInviteSession*
 ClientInviteSession::Handle::operator->()
 {
    return static_cast<ClientInviteSession*>get();
+}
+
+InviteSession::Handle 
+ClientInviteSession::getSessionHandle()
+{
+   // don't ask, don't tell
+   return (InviteSession::Handle)mHandle;
 }
 
 /* ====================================================================
