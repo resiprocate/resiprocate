@@ -61,8 +61,17 @@ Log::initialize(Type type, Level level, const Data& appName)
    
    _type = type;
    _level = level;
-   string sub = copy.substr(copy.find_last_of("/"));
-   _appName = Data(sub.c_str()+1);
+
+
+   string::size_type pos = copy.find_last_of('/');
+   if ( pos == string::npos || pos == copy.size())
+   {
+      _appName = appName;
+   }
+   else
+   {
+      _appName = Data(copy.substr(pos+1).c_str());
+   }
  
   char buffer[1024];  
   gethostname(buffer, sizeof(buffer));
