@@ -110,10 +110,10 @@ class BaseSecurity
       Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
 
-      Data computeIdentity( const Data& signerDomain, const Data& in );
-      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig );
+      Data computeIdentity( const Data& signerDomain, const Data& in ) const;
+      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig ) const;
 
-      void checkAndSetIdentity( const SipMessage& msg );
+      void checkAndSetIdentity( const SipMessage& msg ) const;
 
 
       // returns NULL if it fails
