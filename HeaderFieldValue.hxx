@@ -49,9 +49,9 @@ class HeaderFieldValue
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 
       ParserCategory* mParserCategory;
-   private:
       const char* mField;
       const unsigned int mFieldLength;
+   private:
       SubComponentList mSubComponentList;
       SubComponentList mUnknownSubComponentList;
       bool mMine;
