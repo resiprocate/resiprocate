@@ -9,34 +9,30 @@ namespace resip
 
 class DialogUsageManager;
 
+
+//!dcm! -- no Subscription State expires parameter generation yet. 
 class ServerSubscription : public BaseSubscription 
 {
    public:
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
       ServerSubscriptionHandle getHandle();
-      
-      typedef enum
-      {
-         Rejected,
-         NoResource,
-         Deactivated,
-         Probation,
-         Timeout,
-         Giveup
-      } TerminateReason;
-
-      // 202
-      SipMessage& acceptPending();
-      // 200
-      SipMessage& acceptActive();
-      SipMessage& update(const Contents* document);
-      void end(TerminateReason reason);
+     
+      //only 200 and 202 are permissable.  SubscriptionState is not affected,
+      //although it may be correct to transition to Active for a 200. 
+      SipMessage& accept(int statusCode = 200);
       void reject(int responseCode);
-      
-      void setCurrentEventDocument(const Contents* document);
-      void setSubscriptionState(SubscriptionState state, Reason reason);
 
-      virtual void end();
+      SubscriptionState getSubscriptionState();      
+      void setSubscriptionState(SubscriptionState state);
+
+      SipMessage& update(const Contents* document);
+      SipMessage& end(TerminateReason reason, const Contents* document = 0);
+
+      virtual void send(SipMessage& msg);
+
+//      void setTerminationState(TerminateReason reason);
+//      void setCurrentEventDocument(const Contents* document);
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
@@ -47,10 +43,17 @@ class ServerSubscription : public BaseSubscription
       friend class Dialog;
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
-      const Contents* mCurrentEventDocument;
-      SipMessage mLastRequest;  //?dcm? -- enough for both subscribe and notify?
+      void makeNotifyExpires();
+
+      SubscriptionState mSubscriptionState;
+
+//      const Contents* mCurrentEventDocument;
+      SipMessage mLastRequest;
       SipMessage mLastResponse;
-      
+      SipMessage mLastNotify;
+
+      int mExpires;
+
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
