@@ -81,6 +81,8 @@ class Helper
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
       static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
+
+      static void processStrictRoute(SipMessage& request);
 };
  
 }
