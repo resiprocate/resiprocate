@@ -17,7 +17,7 @@ class HeaderFieldValueList;
 class Token : public ParserCategory
 {
    public:
-      Token(HeaderFieldValue& hvf) {}
+      Token(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -33,8 +33,8 @@ typedef ParserContainer<Token> Tokens;
 class Mime : public ParserCategory
 {
    public:
-      Mime(HeaderFieldValueList& hvfs) {}
-      Mime(HeaderFieldValue& hvf) {}
+      Mime(HeaderFieldValueList& hfvs) {}
+      Mime(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -50,8 +50,8 @@ typedef ParserContainer<Mime> Mimes;
 class Auth : public ParserCategory
 {
    public:
-      Auth(HeaderFieldValueList& hvfs) {}
-      Auth(HeaderFieldValue& hvf) {}
+      Auth(HeaderFieldValueList& hfvs) {}
+      Auth(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
 };
 
@@ -60,15 +60,29 @@ class Auth : public ParserCategory
 //====================
 class IntegerComponent : public ParserCategory
 {
-   public:
-      IntegerComponent(HeaderFieldValueList& hvfs) {}
-      IntegerComponent(HeaderFieldValue& hvf) {}
-      ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+public:
+
+  IntegerComponent(HeaderFieldValueList& hfvs) {}
+  IntegerComponent(HeaderFieldValue& hfv);
+  ParserCategory* clone(HeaderFieldValue*) const;
+  UnknownSubComponent& operator[](const Data& param)
+  {
+    checkParsed();
+    return *mHeaderField->get(param);
+  }
+
+  virtual void parse();
+  virtual std::ostream& encode(std::ostream& str) const;
+
+  int& value();
+  Data& comment();
+
+private:
+  
+  int mValue;
+  Data mComment;
+  bool mHasComment;
+
 };
 
 //====================
@@ -77,7 +91,7 @@ class IntegerComponent : public ParserCategory
 class StringComponent : public ParserCategory
 {
    public:
-      StringComponent(HeaderFieldValue& hvf) {}
+      StringComponent(HeaderFieldValue& hfv) {}
       virtual ParserCategory* clone(HeaderFieldValue*) const;
       virtual void parse();
       virtual std::ostream& encode(std::ostream& str) const;
@@ -93,8 +107,8 @@ typedef ParserContainer<StringComponent> StringComponents;
 class GenericURI : public ParserCategory
 {
    public:
-      GenericURI(HeaderFieldValueList& hvfs) {}
-      GenericURI(HeaderFieldValue& hvf) {}
+      GenericURI(HeaderFieldValueList& hfvs) {}
+      GenericURI(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -110,8 +124,8 @@ typedef ParserContainer<GenericURI> GenericURIs;
 class NameAddr : public ParserCategory
 {
    public:
-      NameAddr(HeaderFieldValueList& hvfs) {}
-      NameAddr(HeaderFieldValue& hvf) {}
+      NameAddr(HeaderFieldValueList& hfvs) {}
+      NameAddr(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -127,8 +141,8 @@ typedef ParserContainer<NameAddr> NameAddrs;
 class NameAddrOrAddrSpec : public ParserCategory
 {
    public:
-      NameAddrOrAddrSpec(HeaderFieldValueList& hvfs) {}
-      NameAddrOrAddrSpec(HeaderFieldValue& hvf) {}
+      NameAddrOrAddrSpec(HeaderFieldValueList& hfvs) {}
+      NameAddrOrAddrSpec(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -144,8 +158,8 @@ class NameAddrOrAddrSpec : public ParserCategory
 class Contact : public ParserCategory
 {
    public:
-      Contact(HeaderFieldValueList& hvfs) {}
-      Contact(HeaderFieldValue& hvf) {}
+      Contact(HeaderFieldValueList& hfvs) {}
+      Contact(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -161,8 +175,8 @@ typedef ParserContainer<Contact> Contacts;
 class CallId : public ParserCategory
 {
    public:
-      CallId(HeaderFieldValueList& hvfs) {}
-      CallId(HeaderFieldValue& hvf) {}
+      CallId(HeaderFieldValueList& hfvs) {}
+      CallId(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -177,10 +191,24 @@ typedef ParserContainer<CallId> CallIds;
 //====================
 class CSeqComponent : public ParserCategory
 {
-   public:
-      CSeqComponent(HeaderFieldValue& hvf) {}
-      CSeqComponent(HeaderFieldValueList& hvfs) {}
-      ParserCategory* clone(HeaderFieldValue*) const;
+public:
+
+  CSeqComponent(HeaderFieldValue& hfv);
+  CSeqComponent(HeaderFieldValueList& hfvs) {}
+  ParserCategory* clone(HeaderFieldValue*) const;
+  //  CSeqComponent(CSeqComponent &copy);
+
+  enum MethodTypes getMethod();
+  int& cSeq();
+
+  virtual void parse();
+  virtual std::ostream& encode(std::ostream& str) const;
+
+private:
+  
+  enum MethodTypes mMethod;
+  int mCSeq;
+
 };
 
 //====================
@@ -189,8 +217,8 @@ class CSeqComponent : public ParserCategory
 class DateComponent : public ParserCategory
 {
    public:
-      DateComponent(HeaderFieldValueList& hvfs) {}
-      DateComponent(HeaderFieldValue& hvf) {}
+      DateComponent(HeaderFieldValueList& hfvs) {}
+      DateComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
 };
 
@@ -200,8 +228,8 @@ class DateComponent : public ParserCategory
 class WarningComponent : public ParserCategory
 {
    public:
-      WarningComponent(HeaderFieldValueList& hvfs) {}
-      WarningComponent(HeaderFieldValue& hvf) {}
+      WarningComponent(HeaderFieldValueList& hfvs) {}
+      WarningComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
 };
 
@@ -211,8 +239,8 @@ class WarningComponent : public ParserCategory
 class Via : public ParserCategory
 {
    public:
-      Via(HeaderFieldValueList& hvfs) {}
-      Via(HeaderFieldValue& hvf) {}
+      Via(HeaderFieldValueList& hfvs) {}
+      Via(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
       {
@@ -228,8 +256,8 @@ typedef ParserContainer<Via> Vias;
 class RequestLineComponent : public ParserCategory
 {
    public:
-      RequestLineComponent(HeaderFieldValueList& hvfs) {}
-      RequestLineComponent(HeaderFieldValue& hvf) {}
+      RequestLineComponent(HeaderFieldValueList& hfvs) {}
+      RequestLineComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       MethodTypes getMethod() const;
 };
@@ -240,8 +268,8 @@ class RequestLineComponent : public ParserCategory
 class StatusLineComponent : public ParserCategory
 {
    public:
-      StatusLineComponent(HeaderFieldValueList& hvfs) {}
-      StatusLineComponent(HeaderFieldValue& hvf) {}
+      StatusLineComponent(HeaderFieldValueList& hfvs) {}
+      StatusLineComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       int getResponseCode() const;
 };
