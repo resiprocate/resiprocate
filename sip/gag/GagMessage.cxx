@@ -95,7 +95,7 @@ GagMessage::parse(istream &is, Data &data)
   int size;
   char *temp;
 
-  is.read((char *)size, sizeof(size));
+  is.read((char *)&size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
   is.read(temp, size);
@@ -110,7 +110,7 @@ GagMessage::parse(istream &is, Uri &uri)
   int size;
   char *temp;
 
-  is.read((char *)size, sizeof(size));
+  is.read((char *)&size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
   is.read(temp, size);
@@ -125,7 +125,7 @@ GagMessage::parse(istream &is, bool &flag)
   int size;
   char *temp;
 
-  is.read((char *)size, sizeof(size));
+  is.read((char *)&size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
   is.read(temp, size);
