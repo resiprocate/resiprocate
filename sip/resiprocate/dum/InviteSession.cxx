@@ -160,6 +160,7 @@ InviteSession::dispatch(const SipMessage& msg)
                case INVITE:
                   mState = AcceptingReInvite;
                   mDialog.update(msg);
+				  mLastRequest = msg; // !slg!
                   mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
                   if (offans.first != None)
                   {
@@ -327,7 +328,7 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
          mOfferState = Answered;
-         if (sdp)
+         if (sdp)  // !slg! There currenlty doesn't seem to be anyone calling this with sdp == 0
          {
             delete mCurrentLocalSdp;
             delete mCurrentRemoteSdp;
@@ -433,18 +434,15 @@ InviteSession::sendSdp(SdpContents* sdp)
       case CounterOfferred:
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
-         if (sdp)
+         if (sdp)  // !slg! There currenlty doesn't seem to be anyone calling this with sdp == 0
          {
             delete mCurrentLocalSdp;
             delete mCurrentRemoteSdp;
             mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
             mCurrentRemoteSdp = mProposedRemoteSdp;
          }
-         else
-         {
-            mProposedLocalSdp = 0;
-            mProposedRemoteSdp = 0;
-         }
+         mProposedLocalSdp = 0;
+         mProposedRemoteSdp = 0;
          mOfferState = Answered;
          break;
    }
