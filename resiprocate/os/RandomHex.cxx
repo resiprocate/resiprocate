@@ -1,7 +1,7 @@
 #include <stdio.h>
 //#include <openssl/rand.h>
 #include <util/RandomHex.hxx>
-#include <util/Lock.hxx>
+
 #include <stdlib.h>
 
 using namespace Vocal2;
