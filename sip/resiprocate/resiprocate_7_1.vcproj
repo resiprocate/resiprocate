@@ -537,6 +537,9 @@
 				RelativePath="TcpTransport.cxx">
 			</File>
 			<File
+				RelativePath="TuSelector.cxx">
+                        </File> 
+			<File
 				RelativePath="os\ThreadIf.cxx">
 			</File>
 			<File
