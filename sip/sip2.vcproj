@@ -20,7 +20,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="C:\vocal\sip2"
+				AdditionalIncludeDirectories="C:\vocal"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -117,10 +117,10 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="sipstack\BranchParameter.cxx">
+				RelativePath="util\BaseException.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\Circular.cxx">
+				RelativePath="sipstack\BranchParameter.cxx">
 			</File>
 			<File
 				RelativePath="util\Coders.cxx">
@@ -154,9 +154,6 @@
 			</File>
 			<File
 				RelativePath="sipstack\ExistsParameter.cxx">
-			</File>
-			<File
-				RelativePath="util\Fifo.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\FloatParameter.cxx">
@@ -237,12 +234,6 @@
 				RelativePath="sipstack\Symbols.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\TcpTransport.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\TestTransport.cxx">
-			</File>
-			<File
 				RelativePath="util\ThreadIf.cxx">
 			</File>
 			<File
@@ -276,13 +267,7 @@
 				RelativePath="sipstack\Uri.cxx">
 			</File>
 			<File
-				RelativePath="util\VException.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\junk.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\testSipStack1.cxx">
+				RelativePath="sipstack\test\testSipStack1.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
@@ -292,7 +277,13 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
+				RelativePath="util\BaseException.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\BranchParameter.hxx">
+			</File>
+			<File
+				RelativePath="util\CircularBuffer.hxx">
 			</File>
 			<File
 				RelativePath="util\Coders.hxx">
