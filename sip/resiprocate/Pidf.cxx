@@ -104,7 +104,7 @@ Pidf::encodeParsed(std::ostream& str) const
       str    << "     <status><basic>"<<status<<"</basic></status>" << Symbols::CRLF;;
       if ( !mTuple[i].contact.empty() )
       {
-         str << "     <contact priority=\""<<mTuple[i].contactPriority<<"\">"<<mTuple[i].contact<<"</contact>" << Symbols::CRLF;;
+         str << "     <contact priority=\""<<mTuple[i].contactPriority<<"\">"<< "sip:" << mTuple[i].contact<<"</contact>" << Symbols::CRLF;;
       }
       if ( !mTuple[i].timeStamp.empty() )
       {
