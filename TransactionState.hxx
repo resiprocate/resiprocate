@@ -80,7 +80,7 @@ class TransactionState : public DnsHandler
       void terminateServerTransaction(const Data& tid); 
       const Data& tid(SipMessage* sip) const;
       
-      static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine);
+      static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       
       TransactionController& mController;
       
