@@ -616,19 +616,20 @@ main(int argc, char* argv[])
       InfoLog( << "Could not load the certificates" );
    }
 #endif
-   
+
+   DebugLog( << "About to add the transports " );   
    if (port!=0)
    {
       sipStack.addTransport(UDP, port);
       sipStack.addTransport(TCP, port);
    }
-   
 #if USE_SSL
    if ( tlsPort != 0 )
    {
       sipStack.addTlsTransport(tlsPort);
    }
 #endif
+   DebugLog( << "Done adding the transports " );   
 
    if (!haveContact)
    {
