@@ -20,17 +20,19 @@ namespace Vocal2
 class SipMessage;
 
 class SendData
+{
+   public:
+      SendData(const sockaddr_in* dest, const char* buff, size_t len) : 
+         destination(dest),
+         buffer(buff),
+         length(len) 
       {
-	  public:
-            SendData(const sockaddr_in& dest)
-               : destination(dest) 
-               {}
-            
-            const sockaddr_in destination;
-            //TransactionId tid;
-            const char* buffer;
-            size_t length;
-      };
+      }
+      
+      const sockaddr_in* destination;
+      const char* buffer;
+      size_t length;
+};
 
 class Transport
 {
@@ -60,7 +62,7 @@ class Transport
       
       virtual ~Transport();
       
-      virtual void send( const sockaddr_in& address, const  char* buffer, size_t length)=0; //, TransactionId txId) = 0;
+      virtual void send( const sockaddr_in* address, const  char* buffer, size_t length)=0; //, TransactionId txId) = 0;
       virtual void process(fd_set* fdSet=NULL) = 0 ;
       virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
