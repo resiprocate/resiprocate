@@ -1,5 +1,5 @@
-#ifndef ParseException_hxx
-#define ParseException_hxx
+#if !defined(RESIP_PARSEEXCEPTION_HXX)
+#define RESIP_PARSEEXCEPTION_HXX 
 
 #include "resiprocate/os/BaseException.hxx"
 
@@ -17,7 +17,6 @@ class ParseException : public BaseException
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
