@@ -43,6 +43,7 @@ class ParseBuffer
       const char* skipN(int count);
       const char* skipToEnd();
       void assertEof();
+      void assertNotEof();
 
       // make the passed in data share memory with the buffer
       void data(Data& data, const char* start) const;
