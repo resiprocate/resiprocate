@@ -4,6 +4,8 @@
 
 #include <list>
 #include <errno.h>
+#include <sys/fcntl.h>
+#include <sstream>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -165,9 +167,14 @@ main (int argc, char **argv)
   // Main processing loop
   int time;
   int err;
+
+  // Make stdin nonblocking
+  fcntl(0, F_SETFL, O_NONBLOCK);
+
   while (1)
   {
     FdSet fdset;
+
     sipStack.buildFdSet(fdset);
     time = sipStack.getTimeTillNextProcessMS();
 
@@ -202,11 +209,24 @@ main (int argc, char **argv)
 
     if (fdset.readyToRead(fileno(stdin)))
     {
+      stringstream input;
+      char buffer[256];
+      int len;
+
       DebugLog ( << "stdin is ready to read" );
+
       do
       {
-        DebugLog ( << "reading message from cin" );
-        GagMessage *message = GagMessage::getMessage(cin);
+        len = read(0, buffer, sizeof(buffer));
+        DebugLog ( << "Read " << len << " bytes from stdin");
+        input.write(buffer, len);
+      }
+      while (len == sizeof(buffer));
+
+      while (input.rdbuf()->in_avail())
+      {
+        GagMessage *message = GagMessage::getMessage(input);
+
         if (message)
         {
           conduit.handleMessage(message);
@@ -229,7 +249,6 @@ main (int argc, char **argv)
         sipStack.process(fdset);
         conduit.process();
       }
-      while (cin.rdbuf()->in_avail());
     }
     else
     {
