@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "resiprocate/Dialog.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -11,6 +12,7 @@ namespace resip
 {
 
 class Pidf;
+class Dialog;
 
 class TuIM
 {
@@ -97,11 +99,11 @@ public:
             bool online;
             Data status;
       };
-      vector<Buddy> mBuddy;
-	  typedef vector<Buddy>::iterator BuddyIterator;
+      std::vector<Buddy> mBuddy;
+	  typedef std::vector<Buddy>::iterator BuddyIterator;
 
       // people who subscribe to me 
-      vector<Dialog*> mSubscribers;
+      std::vector<Dialog*> mSubscribers;
       Pidf* mPidf;
       
       // registration information

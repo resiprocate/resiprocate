@@ -6,6 +6,8 @@
 #endif
 
 #include <map>
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 #if defined(USE_SSL)
 #define PERL5

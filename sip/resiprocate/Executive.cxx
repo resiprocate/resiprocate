@@ -9,96 +9,27 @@ using namespace resip;
 Executive::Executive( SipStack& stack)
   : mStack(stack)
 {
-
 }
-
 
 void
 Executive::process(FdSet& fdset)
 {
-   processTransports(fdset);
-   processTimer();
-   processDns(fdset);
-   
-   while( processStateMachine() );
+   mStack.mTransactionController.process(fdset);
 }
-
  
-bool 
-Executive::processTransports(FdSet& fdset) 
-{
-   mStack.mTransportSelector.process(fdset);
-   return false;
-}
-
-
-bool 
-Executive::processStateMachine()
-{
-   if ( mStack.mStateMacFifo.size() == 0 ) 
-   {
-      return false;
-   }
-
-   if (mStack.mStateless)
-   {
-      mStack.mStatelessHandler.process();
-   }
-   else
-   {
-      TransactionState::process(mStack);
-   }
-   
-   return true;
-}
-
-bool 
-Executive::processTimer()
-{
-   mStack.mTimers.process();
-   return false;
-}
-
-bool
-Executive::processDns(FdSet& fdset)
-{
-   mStack.mDnsResolver.process(fdset);
-   return false;
-}
-
 
 /// returns time in milliseconds when process next needs to be called 
 int 
 Executive::getTimeTillNextProcessMS()
 {
-   if ( mStack.mStateMacFifo.size() != 0 ) 
-   {
-      return 0;
-   }
-
-   if ( mStack.mTransportSelector.hasDataToSend() )
-   {
-      return 0;
-   }
-   
-   int ret = mStack.mTimers.msTillNextTimer();
-
-#if 1 // !cj! just keep a max of 500ms for good luck - should not be needed   
-   if ( ret > 1 )
-   {
-      ret = 1;
-   }
-#endif
-
-   return ret;
+   return mStack.mTransactionController.getTimeTillNextProcessMS();
 } 
 
 
 void 
 Executive::buildFdSet( FdSet& fdset)
 {
-   mStack.mTransportSelector.buildFdSet( fdset );
-   mStack.mDnsResolver.buildFdSet( fdset );
+   mStack.mTransactionController.buildFdSet(fdset);
 }
 
 
