@@ -50,6 +50,15 @@ class ParserCategory : public LazyParser
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
 
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line)
+               : BaseException(msg, file, line) {}
+
+            const char* name() const { return "ParserCategory::Exception"; }
+      };
+
       defineParam(accessType, "access-type", DataParameter, "RFC 2046");
       defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
       defineParam(boundary, "boundary", DataParameter, "RFC 2046");
