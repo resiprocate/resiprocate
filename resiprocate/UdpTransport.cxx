@@ -146,7 +146,7 @@ void UdpTransport::process()
       Preparse preParser(*message,buffer,len);
       
       preParser.process();
-      
+      // this won't work if UDPs are fragd !ah!
       // save the interface information in the message
       // preparse the message
       // stuff the message in the 
