@@ -31,20 +31,20 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
 }
 
 std::ostream&
-HeaderFieldValueList::encode(Headers::Type headerType, std::ostream& str)
+HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
 {
    if (getParserContainer() != 0)
    {
-      getParserContainer()->encode(str);
+      getParserContainer()->encode(headerName, str);
    }
    else
    {
       for (HeaderFieldValueList::const_iterator j = begin();
            j != end(); j++)
       {
-         if (headerType != Headers::NONE)
+         if (!headerName.empty())
          {
-            str << Headers::HeaderNames[headerType] << Symbols::COLON << Symbols::SPACE;
+            str << headerName << Symbols::COLON << Symbols::SPACE;
          }
          (*j)->encode(str);
          str << Symbols::CRLF;

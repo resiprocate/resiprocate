@@ -116,14 +116,14 @@ class ParserContainer : public ParserContainerBase
          return new ParserContainer(*this);
       }
 
-      virtual std::ostream& encode(std::ostream& str) const
+      virtual std::ostream& encode(const Data& headerName, std::ostream& str) const
       {
          for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
-            if (mType != Headers::NONE)
+            if (!headerName.empty())
             {
-               str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
+               str << headerName << Symbols::COLON << Symbols::SPACE;
             }
             if ((*i)->isParsed())
             {
