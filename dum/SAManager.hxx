@@ -5,7 +5,8 @@ class SAManager
 {
    public:
       SAManager(SipStack& stack);
-
+      ~SAManager();
+      
       void setProfile(Profile* profile);
 
       void setManager(RedirectManager* redirect);
