@@ -221,9 +221,13 @@ Profile::disableGruu()
 }
 
 void 
-Profile::addDigestCredential( const Data& realm, const Data& users, const Data& password)
+Profile::addDigestCredential( const Data& realm, const Data& user, const Data& password)
 {
-   
+    DigestCredential dc;
+    dc.realm = realm;
+    dc.user = user;
+    dc.password = password;
+    mDigestCredentials.insert(dc);
 }
      
 Profile::DigestCredentialHandler* 
