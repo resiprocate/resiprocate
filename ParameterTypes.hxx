@@ -5,10 +5,10 @@
 #include <sipstack/IntegerParameter.hxx>
 #include <sipstack/FloatParameter.hxx>
 #include <sipstack/ExistsParameter.hxx>
-
-#include <sipstack/Data.hxx>
 #include <sipstack/ParameterTypeEnums.hxx>
 #include <sipstack/Symbols.hxx>
+
+#include <util/Data.hxx>
 
 namespace Vocal2
 {

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.41 2002/09/25 22:02:46 jason Exp $
+# $Id: Makefile,v 1.42 2002/09/25 22:25:34 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -6,8 +6,6 @@ ARCH = i686
 PROG = sipstack
 
 SRC =	\
-	Condition.cxx \
-	Data.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
 	Executive.cxx \
@@ -18,12 +16,8 @@ SRC =	\
 	HeaderTypes.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
-	Lock.cxx \
-	Log.cxx \
-	Logger.cxx \
 	Message.cxx \
 	MethodTypes.cxx \
-	Mutex.cxx \
 	Parameter.cxx \
 	ParameterList.cxx \
 	ParameterTypes.cxx \
@@ -32,10 +26,7 @@ SRC =	\
 	Preparse.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
-	Subsystem.cxx \
 	Symbols.cxx \
-	ThreadIf.cxx \
-	Timer.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TransactionMap.cxx \

@@ -2,8 +2,8 @@
 #include <sipstack/SipStack.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/TimerMessage.hxx>
-#include <sipstack/Logger.hxx>
 #include <sipstack/MethodTypes.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 
