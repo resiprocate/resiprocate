@@ -168,12 +168,13 @@ processTimeouts(int arg)
 	}
 	if (newMessage)
 	{
-	    DebugLog( << "Warning: unexpected message seen at the transport");
+	    DebugLog( << "Warning: unexpected message seen at the transport: " 
+		      << message);
 	    delete newMessage;
 	}
 	else
 	{
-	    DebugLog( << "Success: expected message seen on the wire");
+	    DebugLog( << "Success: expected message seen at the transport");
 	}
     }
 
@@ -225,7 +226,8 @@ processTimeouts(int arg)
 	}
 	if (message)
 	{
-	    DebugLog( << "Warning: unexpected message seen at the TU");
+	    DebugLog( << "Warning: unexpected message seen at the TU: "
+		      << *message);
 	    delete message;
 	}
 	else
