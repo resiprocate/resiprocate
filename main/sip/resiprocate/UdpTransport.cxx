@@ -36,7 +36,9 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
    }
    
    sockaddr_in addr4;
+#ifdef USE_IPV6
    sockaddr_in6 addr6;
+#endif
    sockaddr* saddr=0;
    int saddrLen = 0;
    
@@ -61,7 +63,8 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
    }
    else
    {
-      memset(&addr6, 0, sizeof(addr6));
+#ifdef USE_IPV6
+	   memset(&addr6, 0, sizeof(addr6));
 
       addr6.sin6_family = AF_INET6;
       addr6.sin6_port = htons(portNum);
@@ -76,6 +79,9 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
 
       saddr = reinterpret_cast<sockaddr*>(&addr6);
       saddrLen = sizeof(addr6);
+#else
+	   assert(0);
+#endif
    }
    assert(saddr);
    assert(saddrLen);
@@ -243,6 +249,7 @@ UdpTransport::process(FdSet& fdset)
       tuple.transport = this;      
       message->setSource(tuple);
    }
+#ifdef USE_IPV6
    else if (from.sa_family == AF_INET6)
    {
       sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&from);
@@ -250,6 +257,7 @@ UdpTransport::process(FdSet& fdset)
       tuple.transport = this;      
       message->setSource(tuple);
    }
+#endif
    else
    {
       assert(0);
