@@ -33,7 +33,9 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv,
    {
       // !dlb! remove this when comfortable that reallocation occurs
       // only when necessary
-      assert(0);
+      //assert(0);
+      InfoLog (<< "Making a copy of a HFV" << hex << this);
+      
       const_cast<char*&>(mField) = new char[mFieldLength];
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
    }
