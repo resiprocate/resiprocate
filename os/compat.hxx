@@ -1,8 +1,16 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
 #undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
+#endif
+
+#if defined(HAVE_SYS_INT_TYPES_H)
+#include <sys/int_types.h>
 #endif
 
 #ifdef WIN32
@@ -28,14 +36,6 @@
 # include <winsock2.h>
 # include <io.h>
 typedef unsigned int u_int32_t;
-#endif
-
-#if defined(__sparc)
-#include <inttypes.h>
-/* typedef unsigned char u_int8_t; */
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
 #endif
 
 #if defined(__SUNPRO_CC)
