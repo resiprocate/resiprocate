@@ -41,6 +41,11 @@ class ServerSubscription : public BaseUsage
       
       void setCurrentEventDocument(const Contents* document);
       void setSubscriptionState(SubscriptionState state,Reason reason);
+
+   private:
+      friend class DialogUsageManager;
+
+      ServerSubscription::Handle mHandle;
 };
  
 }
