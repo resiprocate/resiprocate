@@ -651,7 +651,7 @@ main(int argc, char** argv)
       inv.header(h_Bar).push_back(StringCategory("bar1"));
       inv.header(h_Bar).push_back(StringCategory("bar2"));
 
-      inv.header(h_Vias);
+      //inv.header(h_Vias);
       inv.header(h_To);
       
       inv.header(h_RequestLine) = RequestLine(INVITE);
@@ -685,12 +685,11 @@ main(int argc, char** argv)
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
                    "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
-                   "Via: \r\n"
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
                    "Content-Length: 31\r\n"
-                   "foo: \r\n"
+//                   "foo: \r\n"
                    "bar: bar1\r\n"
                    "bar: bar2\r\n"
                    "\r\n"
