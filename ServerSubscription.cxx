@@ -173,6 +173,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          }
       }
    }
+   return false;   
 }
 
 void 

@@ -234,7 +234,7 @@ Dialog::getId() const
 }
 
 void
-Dialog::cancel()
+Dialog::end()
 {
    if (mInviteSession)
    {
@@ -242,24 +242,7 @@ Dialog::cancel()
    }
    else
    {
-      if (mDialogSet.getCreator())
-      {
-         SipMessage& request = mDialogSet.getCreator()->getLastRequest();
-         if (request.header(h_RequestLine).method() == INVITE)
-         {
-            makeCancel(request);
-            mDum.send(request);
-            delete this;
-         }
-         else
-         {
-            throw UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
-         }
-      }
-      else
-      {
-         throw UsageUseException("Attempting to cancel UAS dialogSet", __FILE__, __LINE__);
-      }
+      //!dcm! -- end subscriptions
    }
 }
 
@@ -1058,3 +1041,24 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
    return strm;
 }
 
+void 
+Dialog::forked(const SipMessage& msg)
+{
+   assert(msg.isResponse() && msg.header(h_StatusLine).statusCode() < 200);
+
+   ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
+   if (uac)
+   {
+      uac->forked();
+   }
+}
+
+void 
+Dialog::cancel()
+{
+   ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
+   if (uac)
+   {
+      uac->cancel();
+   }
+}
