@@ -127,6 +127,15 @@ DialogSet::dispatch(const SipMessage& msg)
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
+      if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
+      {
+         for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+         {
+            it->second->dispatch(msg);
+         }
+         return;         
+      }
+
       InfoLog ( << "Creating a new Dialog from msg: " << msg);
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
