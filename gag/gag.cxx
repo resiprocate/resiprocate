@@ -17,7 +17,6 @@
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
-#include "resiprocate/ApiCheck.hxx"
 #include "resiprocate/ApiCheckList.hxx"
 
 #include "contrib/getopt/getopt.h"
@@ -119,10 +118,6 @@ main (int argc, char **argv)
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
-
-  {
-    volatile ApiCheck api(resipApiSizeList); 
-  }
 
   // Read commandline options
 
