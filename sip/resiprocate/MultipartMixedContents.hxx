@@ -28,7 +28,7 @@ class MultipartMixedContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      typedef list<Contents*> Parts;
+      typedef std::list<Contents*> Parts;
       Parts& parts() {checkParsed(); return mContents;}
       const Parts& parts() const {checkParsed(); return mContents;}
 
