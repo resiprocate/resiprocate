@@ -259,14 +259,13 @@ Uri::parse(ParseBuffer& pb)
    pb.skipToChar(Symbols::COLON[0]);
    pb.data(mScheme, start);
    pb.skipChar();   
-   if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
+
+   if (!(isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)))
    {
-   }
-   else
-   {
-      // asume sip if nothing else found
-      mScheme = Symbols::Sip;
-      pb.reset(start);
+      start = pb.position();
+      pb.skipToEnd();
+      pb.data(mHost, start);
+      return;
    }
    
    mScheme.lowercase();
@@ -342,18 +341,6 @@ Uri::encodeParsed(std::ostream& str) const
    encodeParameters(str);
    return str;
 }
-
-
-const Data 
-Uri::value() const
-{
-	Data ret;
-	DataStream str(ret);
-	encodeParsed(str);
-	str.flush();
-	return ret;
-}
-
 
 void
 Uri::parseEmbeddedHeaders()
