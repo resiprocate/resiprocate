@@ -458,7 +458,7 @@ Preparse::process(SipMessage& msg,
      
      while ( traversalOff < length && mState != EndMsg )
      {
-         Edge& edge(mTransitionTable[mState][mDisposition][buffer[traversalOff]]);
+         Edge& edge(mTransitionTable[mState][mDisposition][buffer[traversalOff] & 0x7f]);
 
 #if defined(PP_DEBUG)
          // for suppressing the most common uninteresting messages
