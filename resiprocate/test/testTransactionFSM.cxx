@@ -93,6 +93,7 @@ FdSet clientFdSet;
 struct sockaddr_in clientSa;
 int clientFd;
 Fifo<SipMessage> fakeTxFifo;
+int errorCount = 0;
 
 // --------------------------------------------------
 
@@ -103,8 +104,6 @@ int
 sendto(int s, const void *msg, size_t len, int flags,
        const struct sockaddr *to, socklen_t tolen)
 {
-    cerr << "In local sendto() function!" << endl;
-    cerr.flush();
     fakeTxFifo.add(Helper::makeMessage(Data((const char *)msg, (int)len), true));
     return len;
 }
@@ -275,11 +274,13 @@ processTimeouts(int arg)
 	    {
 		DebugLog(<< "Error: timeout waiting for "
 		         << MethodNames[(*i)->mMethod] << " method");
+		++errorCount;
 	    }
 	    else
 	    {
 		DebugLog(<< "Error: timeout waiting for "
 		         << (*i)->mResponseCode << " status code");
+		++errorCount;
 	    }
 	    delete *i;
 	    WaitQueue.erase(i++);
@@ -347,11 +348,9 @@ processInject()
     }
     else
     {
-	// SipMessage* message = Helper::makeMessage(start, false);
-	// assert(message);
-	// client->send(*message);
-	sendto(clientFd, start, strlen(start), 0,
-		(struct sockaddr*)& clientSa, sizeof(clientSa));
+	SipMessage* message = Helper::makeMessage(start, false);
+	assert(message);
+	client->send(*message);
     }
 }
 
@@ -559,7 +558,17 @@ main(int argc, char *argv[])
     if (!WaitQueue.empty())
     {
 	DebugLog( << "Warning: ending with expect clauses outstanding"); 
+	++errorCount;
     }
 
-    return 0;
+    if (errorCount > 0)
+    {
+	cerr << "FAIL" << endl;
+    }
+    else
+    {
+	cerr << "PASS" << endl;
+    }
+
+    return errorCount;
 }
