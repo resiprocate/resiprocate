@@ -35,6 +35,15 @@ class Helper
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
+      static void makeResponse(SipMessage& response, 
+                               const SipMessage& request, 
+                               int responseCode, 
+                               const Data& reason = Data::Empty);
+      static void makeResponse(SipMessage& response, 
+                               const SipMessage& request, 
+                               int responseCode, 
+                               const NameAddr& myContact, 
+                               const Data& reason = Data::Empty);
       static SipMessage* makeResponse(const SipMessage& request,int responseCode,const Data& reason = Data::Empty);
       static SipMessage* makeResponse(const SipMessage& request, int responseCode, const NameAddr& myContact, const Data& reason = Data::Empty);
 
