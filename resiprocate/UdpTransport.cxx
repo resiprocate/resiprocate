@@ -99,12 +99,8 @@ UdpTransport::process(FdSet& fdset)
       }
       else
       {
-         if (count == int(sendData->data.size()) )
+         if (count != int(sendData->data.size()) )
          {
-            ok(sendData->transactionId);
-         }
-         else
-         {  
             ErrLog (<< "UDPTransport - send buffer full" );
             fail(sendData->transactionId);
          }

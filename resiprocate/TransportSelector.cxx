@@ -2,22 +2,21 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/ReliabilityMessage.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/Uri.hxx"
+#include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransportMessage.hxx"
-#include "resiprocate/ReliabilityMessage.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/TransportSelector.hxx"
+#include "resiprocate/UdpTransport.hxx"
+#include "resiprocate/Uri.hxx"
 
 #include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
 
 #include <sys/types.h>
 
@@ -32,8 +31,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 
-TransportSelector::TransportSelector(SipStack& stack) :
-   mStack(stack)
+TransportSelector::TransportSelector(Fifo<Message>& fifo) :
+   mStateMacFifo(fifo)
 {
 }
 
@@ -66,10 +65,10 @@ TransportSelector::addTransport( Transport::Type protocol,
    switch ( protocol )
    {
       case Transport::UDP:
-         transport = new UdpTransport(hostname, port, nic, mStack.mStateMacFifo);
+         transport = new UdpTransport(hostname, port, nic, mStateMacFifo);
          break;
       case Transport::TCP:
-         transport = new TcpTransport(hostname, port, nic, mStack.mStateMacFifo);
+         transport = new TcpTransport(hostname, port, nic, mStateMacFifo);
          break;
       default:
          assert(0);
@@ -97,15 +96,15 @@ TransportSelector::addTlsTransport(const Data& domainName,
    }
    if (port == 0)
    {
-      list<DnsUtil::Srv> records = DnsUtil::lookupSRVRecords(domainName);
-      for (list<DnsUtil::Srv>::iterator i=records.begin(); i!=records.end(); i++)
+      std::list<DnsUtil::Srv> records = DnsUtil::lookupSRVRecords(domainName);
+      for (std::list<DnsUtil::Srv>::iterator i=records.begin(); i!=records.end(); i++)
       {
          if (i->transport == DnsUtil::TLS)
          {
             TlsTransport* transport = new TlsTransport(domainName, 
                                                        hostname, i->port, 
                                                        keyDir, privateKeyPassPhrase,
-                                                       nic, mStack.mStateMacFifo);
+                                                       nic, mStateMacFifo);
             mTlsTransports[domainName] = transport;
             break;
          }
@@ -116,7 +115,7 @@ TransportSelector::addTlsTransport(const Data& domainName,
       TlsTransport* transport = new TlsTransport(domainName, 
                                                  hostname, port, 
                                                  keyDir, privateKeyPassPhrase,
-                                                 nic, mStack.mStateMacFifo);      
+                                                 nic, mStateMacFifo);      
       mTlsTransports[domainName] = transport;
    }
    
@@ -129,6 +128,8 @@ TransportSelector::addTlsTransport(const Data& domainName,
 void 
 TransportSelector::process(FdSet& fdset)
 {
+   mDns.process(fdset);
+   
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       try
@@ -179,56 +180,54 @@ TransportSelector::hasDataToSend() const
 }
 
 
-void
-TransportSelector::dnsResolve( SipMessage* msg, const Data& tid)
+DnsResult*
+TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
 {
    // Picking the target destination:
    //   - for request, use forced target if set
    //     otherwise use loose routing behaviour (route or, if none, request-uri)
    //   - for response, use forced target if set, otherwise look at via  
 
+   //!jf! the problem here is that DnsResult is returned after looking
+   //mDns.lookup() but this can result in a synchronous call to handle() which
+   //assumes that dnsresult has been assigned to the TransactionState
+   DnsResult* result=0;
    if (msg->isRequest())
    {
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasTarget())
       {
-         mStack.mDnsResolver.lookup(tid, msg->getTarget());
+         result = mDns.lookup(msg->getTarget(), handler);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setTarget(msg->header(h_Routes).front().uri());
-         //msg->header(h_Routes).pop_front();
-         mStack.mDnsResolver.lookup(tid, msg->getTarget());
+         result = mDns.lookup(msg->getTarget(), handler);
       }
       else
       {
-         mStack.mDnsResolver.lookup(tid, msg->header(h_RequestLine).uri());
+         result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
       }
    }
    else if (msg->isResponse())
    {
-      assert (!msg->header(h_Vias).empty());
-      if (msg->hasTarget())
-      {
-         mStack.mDnsResolver.lookup(tid, msg->getTarget());
-      }
-      else
-      {
-         mStack.mDnsResolver.lookup(tid, msg->header(h_Vias).front());
-      }
+      assert(0);
    }
    else
    {
       assert(0);
    }
+
+   assert(result);
+   return result;
 }
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Data& tid, bool isResend )
+TransportSelector::transmit( SipMessage* msg, Transport::Tuple& destination)
 {
    assert( &destination != 0 );
 
@@ -269,7 +268,7 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
 
          const Via &v(msg->header(h_Vias).front());
 
-         if (!DnsResolver::isIpAddress(v.sentHost()) &&  destination.transport->port() == 5060)
+         if (!DnsUtil::isIpAddress(v.sentHost()) &&  destination.transport->port() == 5060)
          {
             DebugLog(<<"supressing port 5060 w/ symname");
             // backward compat for 2543 and the symbolic host w/ 5060 ;
@@ -287,18 +286,16 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
       msg->encode(encodeStream);
       encodeStream.flush();
 
+      assert(!msg->getEncoded().empty());
       //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
    
       // send it over the transport
-      destination.transport->send(destination, encoded, tid);
-      if (! isResend)
-      {
-          mStack.mStateMacFifo.add(new ReliabilityMessage(tid, destination.transport->isReliable()));
-      }
+      destination.transport->send(destination, encoded, msg->getTransactionId());
    }
    else
    {
-      mStack.mStateMacFifo.add(new TransportMessage(tid, true));
+      InfoLog (<< "Failed to find a transport for " << msg->getTransactionId() << " to " << destination);
+      mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
    }
 }
 
@@ -306,6 +303,7 @@ void
 TransportSelector::retransmit(SipMessage* msg, Transport::Tuple& destination)
 {
    assert(destination.transport);
+   assert(!msg->getEncoded().empty());
    destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
 }
 
@@ -313,6 +311,8 @@ TransportSelector::retransmit(SipMessage* msg, Transport::Tuple& destination)
 void 
 TransportSelector::buildFdSet( FdSet& fdset )
 {
+   mDns.buildFdSet(fdset);
+   
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       (*i)->buildFdSet( fdset );

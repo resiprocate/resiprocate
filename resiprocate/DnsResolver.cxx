@@ -22,8 +22,8 @@
 #include "resiprocate/DnsResolver.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionState.hxx"
+#include "resiprocate/TransactionController.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
@@ -31,7 +31,7 @@
 using namespace resip;
 using namespace std;
 
-DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
+DnsResolver::DnsResolver(TransactionController& controller) : mController(controller)
 {
 #if defined(USE_ARES)
    int status=0;
@@ -194,7 +194,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             {
                WarningLog (<< "Trying to lookup a dns when scheme is not specified: " << uri);
                //assert(0);
-               mStack.mStateMacFifo.add(new DnsMessage(transactionId));
+               mController.mStateMacFifo.add(new DnsMessage(transactionId));
                return;
             }
          }
@@ -206,15 +206,15 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 #if defined(USE_ARES)
             DebugLog(<<"For now doing TCP _and_ UDP SRV queries");
 
-            Request* request = new Request(mStack, transactionId,
+            Request* request = new Request(mController, transactionId,
                                            target, 0, Transport::TCP, uri.scheme());
 
             // Priority: SRV TCP, SRV UDP, A/AAAA
-            if (mStack.mTransportSelector.findTransport(Transport::TCP))
+            if (mController.mTransportSelector.findTransport(Transport::TCP))
             {
                request->otherTransports.push_back(Transport::TCP);
             }
-            if (mStack.mTransportSelector.findTransport(Transport::UDP))
+            if (mController.mTransportSelector.findTransport(Transport::UDP))
             {
                request->otherTransports.push_back(Transport::UDP);
             }
@@ -265,7 +265,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
 
 {
 #if defined(USE_ARES)
-   Request* request = new Request(mStack, transactionId, host, port, transport, Data::Empty);
+   Request* request = new Request(mController, transactionId, host, port, transport, Data::Empty);
    ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallbackHost, request);
 #else   
    struct hostent* result=0;
@@ -331,7 +331,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
          DebugLog(<< tuple);
          dns->mTuples.push_back(tuple);
       }
-      mStack.mStateMacFifo.add(dns);
+      mController.mStateMacFifo.add(dns);
    }
 #endif
 }
@@ -394,7 +394,7 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
    {
       dns->isFinal = true;
    }
-   request->stack.mStateMacFifo.add(dns);
+   request->controller.mStateMacFifo.add(dns);
 }
 #endif
 
@@ -608,7 +608,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
          Data srvTarget =
             determineSrvPrefix(request->scheme, Transport::UDP)
             + "." + request->host;
-         ares_query(request->stack.mDnsResolver.mChannel, srvTarget.c_str(),
+         ares_query(request->controller.mDnsResolver.mChannel, srvTarget.c_str(),
                     C_IN, T_SRV,
                     DnsResolver::aresCallbackSrvUdp, new Request(*request));
       }
@@ -632,7 +632,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
 
    for (DnsResolver::SrvIterator s = srvset->begin(); s != srvset->end(); s++)
    {
-      Request* resolve = new Request(request->stack,
+      Request* resolve = new Request(request->controller,
                                      request->tid,
                                      s->host,
                                      s->port,
@@ -642,7 +642,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
       {
          resolve->isFinal = true;
       }
-      ares_gethostbyname(request->stack.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+      ares_gethostbyname(request->controller.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
    }
 
    delete request;
@@ -675,7 +675,7 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
          Data srvTarget =
             determineSrvPrefix(request->scheme, Transport::TCP)
             + "." + request->host;
-         ares_query(request->stack.mDnsResolver.mChannel, srvTarget.c_str(),
+         ares_query(request->controller.mDnsResolver.mChannel, srvTarget.c_str(),
                     C_IN, T_SRV,
                     DnsResolver::aresCallbackSrvTcp, new Request(*request));
       }
@@ -699,7 +699,7 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
 
    for (DnsResolver::SrvIterator s = srvset->begin(); s != srvset->end(); s++)
    {
-      Request* resolve = new Request(request->stack,
+      Request* resolve = new Request(request->controller,
                                      request->tid,
                                      s->host,
                                      s->port,
@@ -709,7 +709,7 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
       {
          resolve->isFinal = true;
       }
-      ares_gethostbyname(request->stack.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+      ares_gethostbyname(request->controller.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
 
    }
 

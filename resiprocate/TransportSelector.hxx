@@ -12,21 +12,22 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Transport.hxx"
-
+#include "resiprocate/DnsInterface.hxx"
 
 namespace resip
 {
 
-class DnsResolver;
+class DnsHandler;
+class Message;
 class SipMessage;
 class TlsTransport;
-class SipStack;
+class TransactionController;
 
-class TransportSelector
+class TransportSelector 
 {
    public:
-      TransportSelector(SipStack& stack);
-      ~TransportSelector();
+      TransportSelector(Fifo<Message>& fifo);
+      virtual ~TransportSelector();
       bool hasDataToSend() const;
       
       void process(FdSet& fdset);
@@ -37,13 +38,13 @@ class TransportSelector
                            const Data& keyDir, const Data& privateKeyPassPhrase,
                            int port, 
                            const Data& hostName="", const Data& nic="");
-      void dnsResolve(SipMessage* msg, const Data& tid);
+      DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
       // message to be encoded and via updated
-      void send( SipMessage* msg, Transport::Tuple destination, const Data& tid, bool isResend=false );
-
+      void transmit( SipMessage* msg, Transport::Tuple& destination );
+      
       // just resend to the same transport as last time
       void retransmit(SipMessage* msg, Transport::Tuple& destination );
       
@@ -52,7 +53,8 @@ class TransportSelector
       Transport* findTransport(const Transport::Tuple& tuple) const;
       Transport* findTlsTransport(const Data& domain);
 
-      SipStack& mStack;
+      DnsInterface mDns;
+      Fifo<Message>& mStateMacFifo;
       std::vector<Transport*> mTransports;
 
       // map from domain name to transport

@@ -24,6 +24,7 @@ TimerMessage::isClientTransaction() const
       case Timer::TimerF:
       case Timer::TimerK:
       case Timer::TimerStaleClient:
+      case Timer::TimerCleanUp:
          return true;
 
       case Timer::TimerG:
