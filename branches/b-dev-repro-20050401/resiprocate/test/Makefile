@@ -5,7 +5,7 @@ CONTRIB = ../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD
+PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), true)
 TESTPROGRAMS += makeSelfCert.cxx 
