@@ -28,6 +28,7 @@ class Token : public ParserCategory
       Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
       Token(const Token&);
       Token& operator=(const Token&);
+      bool operator==(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
       Data& value() const {checkParsed(); return mValue;}
