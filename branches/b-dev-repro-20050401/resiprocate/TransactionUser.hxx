@@ -16,7 +16,11 @@ class TransactionUser
 {
    public:
       void post(Message *);
+      bool isMyDomain(const Uri& uri) const;
+      bool isMyDomain(const Data& domain) const;
 
+      void addDomain(const Data& domain);
+      void addDomain(const Data& domain, int port);      
    protected:
       TransactionUser();
       TransactionUser(MessageFilterRuleList &rules);
@@ -27,6 +31,9 @@ class TransactionUser
       TimeLimitFifo<Message> mFifo;
 
    private:
+      typedef std::vector<Uri> DomainList;
+      DomainList mDomainList;
+      
       void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
