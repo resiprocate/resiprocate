@@ -3,6 +3,7 @@
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/compat.hxx"
 #include "sip2/util/vmd5.hxx"
+#include "sip2/util/Coders.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -124,7 +125,9 @@ SipMessage::getTransactionId() const
                       key.size() );
            md5byte digest[16];
            MD5Final( digest, &context );
-           mRFC2543TransactionId = Data( reinterpret_cast<const char*>(digest), 16 );
+           // !ah! needs to be rethought -- perhaps a const char * interface to
+           // encode is warranted after all .. This creates a temp object.
+           mRFC2543TransactionId = Base64Coder::encode( Data( reinterpret_cast<const char*>(digest), 16 ) ) ;
        }
        return mRFC2543TransactionId;
    }
