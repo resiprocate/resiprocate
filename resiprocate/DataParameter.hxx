@@ -20,7 +20,6 @@ class DataParameter : public Parameter
 		    const char* terminators);
       explicit DataParameter(ParameterTypes::Type);
 
-      Data& value();            // does not return a quoted string
       bool isQuoted() const { return mQuoted; }
       void setQuoted(bool b) { mQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
 
@@ -40,8 +39,14 @@ class DataParameter : public Parameter
       {
       }
 
-      Data mValue;
+      Type mValue;
       bool mQuoted;
+
+   private:
+      friend class ParserCategory;
+      friend class Auth;
+      friend class Uri;
+      Type& value() {return mValue;}            // does not return a quoted string
 };
  
 }
