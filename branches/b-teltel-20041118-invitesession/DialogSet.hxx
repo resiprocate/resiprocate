@@ -31,7 +31,6 @@ class DialogSet
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
-	  Data& getCreatingTransactionId();
 
       UserProfile* getUserProfile();
       void setUserProfile(UserProfile *userProfile);
@@ -81,7 +80,6 @@ class DialogSet
       DialogMap mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
-	  Data mCreatingTransactionId;  
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
       bool mEnded;
