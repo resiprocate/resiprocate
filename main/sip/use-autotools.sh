@@ -12,6 +12,7 @@ AUTOTOOLS_CONFLICTS="
         resiprocate/Makefile.in 
         resiprocate/configure.in 
         resiprocate/config.hxx 
+	resiprocate/config.hxx.in
         missing 
         aclocal.m4
 "
