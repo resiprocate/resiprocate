@@ -388,6 +388,16 @@ class SdpContents : public Contents
                   const std::vector<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
+                  const Codec& findFirstMatchingCodecs(const std::vector<Codec>& codecs) const;
+                  const Codec& findFirstMatchingCodecs(const Medium& medium) const
+                  {
+                     if (&medium == this)
+                        return codecs().front();
+                     else
+                        return findFirstMatchingCodecs(medium.codecs());
+                  }
+
+
                private:
                   void setSession(Session* session);
                   Session* mSession;
