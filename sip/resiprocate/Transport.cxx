@@ -65,7 +65,7 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
       struct ifconf ifc;
    
       int s = socket( AF_INET, SOCK_DGRAM, 0 );
-      int len = 100 * sizeof(struct ifreq);
+      const int len = 100 * sizeof(struct ifreq);
 
       char buf[ len ];
    
