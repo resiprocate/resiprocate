@@ -99,6 +99,9 @@ defineHeader(Priority, "Priority", Token, "RFC ????");
 defineHeader(Event, "Event", Token, "RFC 3265");
 defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
 
+defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
+defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
+
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
