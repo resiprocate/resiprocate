@@ -68,9 +68,8 @@ AttributeHelper::getValues(const Data& key) const
 {
    if (!exists(key))
    {
-      assert(false);
-      static const list<Data> errorList;
-      return errorList;
+      static const list<Data> emptyList;
+      return emptyList;
    }
    return mAttributes.find(key)->second;
 }
@@ -1285,7 +1284,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    {
       addConnection(Connection());
       mConnections.back().parse(pb);
-      if (*pb.position() == Symbols::SLASH[0])
+      if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
          int num = pb.integer();
@@ -1453,8 +1452,13 @@ const list<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
-   connections.push_front(mSession->connection());
-
+   if (connections.empty())
+   {
+      if (mSession->isConnection())
+      {         
+         connections.push_back(mSession->connection());
+      }
+   }
    return connections;
 }
 
