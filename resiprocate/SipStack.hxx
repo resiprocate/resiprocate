@@ -49,6 +49,10 @@ class SipStack
       // return true if domain is handled by this stack
       bool isMyDomain(const Data& domain) const;
       
+	  // get one of the names for this host 
+	  Data getHostname();
+
+	  ///
       void send(const SipMessage& msg);
 
       // this is only if you want to send to a destination not in the route. You

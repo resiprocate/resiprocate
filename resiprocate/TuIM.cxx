@@ -177,7 +177,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
       Dialog* d = mSubscribers[i];
       assert( d );
       
-      if ( d->getCallId() == id );
+      if ( d->getCallId() == id )
       {
          // found the subscrition in list of current subscrbtions 
          dialog = d;

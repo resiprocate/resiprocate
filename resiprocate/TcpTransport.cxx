@@ -138,7 +138,11 @@ bool
 TcpTransport::processRead(Connection* c)
 {
    std::pair<char* const, size_t> writePair = c->getWriteBuffer();
-   size_t bytesToRead = std::min(writePair.second, TcpTransport::MaxReadSize);
+   size_t bytesToRead = writePair.second;
+   if ( bytesToRead > TcpTransport::MaxReadSize)
+   {
+	   bytesToRead = TcpTransport::MaxReadSize;
+   }
 
    int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
    DebugLog (<< "received " << bytesRead << " bytes on " << *c);
