@@ -153,7 +153,6 @@ class TestData
             assert(!(b < a));
          }
 
-// ==
          {
             const char* f = "asdasda";
             Data d("asdasd");
