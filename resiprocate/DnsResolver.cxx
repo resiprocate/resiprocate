@@ -145,19 +145,51 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             {
                transport = Transport::UDP;
             }
+            else if (uri.scheme() == Symbols::Sips)
+            {
+               transport = Transport::TCP;
+            }
             else
             {
-                assert(0);
-                mStack.mStateMacFifo.add(new DnsMessage(transactionId));
-                return;
+               assert(0);
+               mStack.mStateMacFifo.add(new DnsMessage(transactionId));
+               return;
             }
          }
          else
          {
-            //should be doing Naptr, Srv, a la 3263 Sec 4.1
-           DebugLog(<<"hould be doing Naptr, Srv, a la 3263 Sec 4.1");
-           transport = Transport::UDP;
-         }         
+#if 0
+            /*
+            !rk! Perform NAPTR and SRV lookups per RFC 3263 sections
+            4.1 & 4.2.	We could get a list of targets here.  You also have
+            to filter out results that are not usable (e.g. SCTP entries if
+            you don't support that, SIPS entries if you don't do TLS).
+
+            1. Foreach NAPTR result in the sorted/ordered list of compatible
+               NAPTR records => "R" (Replacement) and "T" (transport) {
+        	 Foreach SRV result in the sorted list of SRV records
+        	 found for R => "H" (Host) and "P" (Port) {
+        	   Foreach A/AAAA result found for H => "A" {
+        	     lookupARecords(transactionId, A, P, T);
+        	   }
+        	 }
+               }
+
+            2. If more results are needed, choose TCP for SIPS and UDP
+            for SIP.  Do an SRV lookup on the target using _sips or
+            _sip as appropriate along with _tcp or _udp as determined
+            in the last sentence.  If the SRV query returns no results,
+            resolve the target into a list of A/AAAA records to try
+            in sequence with the determined protocol and transport and
+            default port, 5060 for SIP or 5061 for SIPS.
+            */
+
+            return;
+#else
+            DebugLog(<<"Should be doing NAPTR+SRV per RFC 3263 s4.1, 4.2");
+            transport = Transport::UDP;
+#endif
+	 }
       }
    }
 
