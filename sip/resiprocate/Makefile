@@ -63,61 +63,63 @@ SRC = \
 	Via.cxx \
 	WarningCategory.cxx \
 	\
-	Rlmi.cxx \
-	GenericContents.cxx \
-	XMLCursor.cxx \
-	UnknownHeaderType.cxx \
-	UnknownParameterType.cxx \
-	Embedded.cxx \
-	Pidf.cxx \
-	MultipartSignedContents.cxx \
-	LazyParser.cxx \
+	Aor.cxx \
+	ApiCheck.cxx \
+	ApplicationSip.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
+	ConnectionManager.cxx \
 	Contents.cxx \
+	CpimContents.cxx \
 	DataParameter.cxx \
-	Dialog.cxx \
+	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	DtlsTransport.cxx \
+	Embedded.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
 	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
+	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
+	HeaderHash.cxx \
 	HeaderTypes.cxx \
 	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
 	LazyParser.cxx \
+	LazyParser.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
+	MethodHash.cxx \
 	MethodTypes.cxx \
-	MultipartMixedContents.cxx \
+	MsgHeaderScanner.cxx \
 	MultipartAlternativeContents.cxx \
+	MultipartMixedContents.cxx \
 	MultipartRelatedContents.cxx \
+	MultipartSignedContents.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
+	ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
+	Pidf.cxx \
 	Pkcs7Contents.cxx \
 	Pkcs8Contents.cxx \
-	X509Contents.cxx \
 	PlainContents.cxx \
-	CpimContents.cxx \
-	MsgHeaderScanner.cxx \
 	QopParameter.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
 	Registration.cxx \
+	Rlmi.cxx \
 	RportParameter.cxx \
 	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \
 	SipFrag.cxx \
-	ApplicationSip.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
@@ -125,15 +127,14 @@ SRC = \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \
-	ConnectionManager.cxx \
-	TcpConnection.cxx \
-	TlsConnection.cxx \
 	TcpBaseTransport.cxx \
+	TcpConnection.cxx \
 	TcpTransport.cxx \
 	TimeAccumulate.cxx \
-	TlsTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
+	TlsConnection.cxx \
+	TlsTransport.cxx \
 	TlsTransport.cxx \
 	TransactionController.cxx \
 	TransactionMap.cxx \
@@ -143,13 +144,12 @@ SRC = \
 	TransportSelector.cxx \
 	TuIM.cxx \
 	UdpTransport.cxx \
+	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
-	Aor.cxx \
+	UnknownParameterType.cxx \
 	Uri.cxx \
-	HeaderHash.cxx \
-	ParameterHash.cxx \
-	ApiCheck.cxx \
-	MethodHash.cxx
+	X509Contents.cxx \
+	XMLCursor.cxx 
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
