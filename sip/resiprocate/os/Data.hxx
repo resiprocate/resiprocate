@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.66 2003/06/17 23:17:45 davidb Exp $";
+   "$Id: Data.hxx,v 1.67 2003/07/03 19:07:29 ryker Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -138,6 +138,7 @@ class Data
       char* mBuf;
       size_type mCapacity;
       bool mMine;
+      // The invariant for a Data with !mMine is mSize == mCapacity
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
