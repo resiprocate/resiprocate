@@ -49,12 +49,18 @@
  */
 
 #include <cassert>
+
+#include "sip2/util/Socket.hxx"
+
+#ifndef WIN32
 #include <pthread.h>
 #include <errno.h>
+#include <sys/time.h>
+#endif
 
 #include "sip2/util/Condition.hxx"
 #include "sip2/util/Mutex.hxx"
-#include <sys/time.h>
+
 
 #include "sip2/util/Logger.hxx"
 
@@ -109,7 +115,9 @@ bool
 Condition::wait (Mutex* mutex, int ms)
 {
 #ifdef WIN32 
-   WaitForSingleObject(mId,INFINITE, ms);
+   WaitForSingleObject(mId, ms);
+
+   return true;
 #else
 //   DebugLog("In conditions timed wait.");
    timeval waitTime;
