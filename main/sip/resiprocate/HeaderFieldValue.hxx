@@ -26,54 +26,6 @@ class HeaderFieldValue
 
       HeaderFieldValue* clone() const;
 
-#ifndef WIN32
-      template <typename ParameterTypes::Type T>
-      typename ParameterType<T>::Type& getParameter(const ParameterType<T>& type)
-      {
-         Parameter* p = mParameterList.find(T);
-         if (p == 0)
-         {
-            mParameterList.insert(p = new typename ParameterType<T>::Type(T));
-         }
-         assert(p);
-         return *(dynamic_cast<typename ParameterType<T>::Type*>(p));
-      }
-#endif
-
-      template <typename ParameterTypes::Type T>
-      bool exists(const ParameterType<T> type)
-      {
-         return mParameterList.find(T);
-      }
-
-      template <typename ParameterTypes::Type T>
-      void 
-      remove(const ParameterType<T> type)
-      {
-         mParameterList.erase(T);
-      }
-
-      ParameterList& getParameters();
-
-      ParameterList& getUnknownParameters();
-
-      void parseParameters(ParseBuffer& pb);
-
-      void encodeParameters(std::ostream& str)
-      {
-         mParameterList.encode(str);
-      }
-
-      UnknownParameter* get(const Data& type);
-
-      bool exists(const Data& parameter);
-
-
-      //shouldn't complain if parameter doesn't exists, otherwise there will be
-      //two list walks
-      void remove(const ParameterTypes::Type type);
-      void remove(const Data& parameter);
-      
       bool isParsed() const;
 
       ParserCategory* getParserCategory()
@@ -94,8 +46,6 @@ class HeaderFieldValue
       const unsigned int mFieldLength;
 
    private:
-      ParameterList mParameterList;
-      ParameterList mUnknownParameterList;
       bool mMine;
 
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
