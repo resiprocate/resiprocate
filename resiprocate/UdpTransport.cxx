@@ -174,7 +174,6 @@ UdpTransport::process(FdSet& fdset)
    if (len == MaxBufferSize)
    {
       InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-      InfoLog(<< Data(buffer, len).escaped().c_str());
       delete [] buffer; buffer=0;
       return;
    }
@@ -199,6 +198,7 @@ UdpTransport::process(FdSet& fdset)
    tuple.port = ntohs(from.sin_port);
    tuple.transport = this;
    tuple.transportType = transport();
+   
    message->setSource(tuple);
 
    // Tell the SipMessage about this datagram buffer.
