@@ -24,6 +24,7 @@ class GagMessage
       LOGOUT             = 0x41,
       ADD_BUDDY          = 0x42,
       REMOVE_BUDDY       = 0x43,
+      SHUTDOWN           = 0x44,
 
       // GAG --> GAIM
       ERROR              = 0x80
@@ -175,6 +176,15 @@ class GagRemoveBuddyMessage : public GagMessage
   private:
     Uri us;
     Uri them;
+};
+
+class GagShutdownMessage : public GagMessage
+{
+  public:
+    GagShutdownMessage() {messageType = SHUTDOWN;}
+    GagShutdownMessage(istream &is) {messageType = SHUTDOWN;}
+    virtual ostream &serialize(ostream &os) const {return os;}
+    virtual void parse(istream &is) {return;}
 };
 
 class GagErrorMessage : public GagMessage
