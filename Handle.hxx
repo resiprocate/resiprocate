@@ -36,8 +36,20 @@ class Handle
          return mId;
       }
 
+      static Handle<T> NotValid()
+      {
+         static Handle<T> notValid;
+         return notValid;
+      }
+      
+
    protected:
       Handle(HandleManager& ham, Handled* handled) : mHam(&ham), mId(mHam->create(this)) 
+      {
+      }
+
+      //for invalid handles
+      Handle() : mHam(0)
       {
       }
 

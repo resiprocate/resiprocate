@@ -19,16 +19,19 @@ class ClientInviteSession : public InviteSession
       ClientInviteSessionHandle getHandle();
 
       virtual SipMessage& end();
-      virtual SipMessage& rejectOffer(int statusCode);
+      
+      /// Completes the three way handshake.  In some circumstances, setAnswer
+      /// must have been called or else this will throw(3261 13.2.1)
+      virtual SipMessage& ackConnection();
          
    private:
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      virtual void send(const SipMessage& msg);
+      virtual void send(SipMessage& msg);
 
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
-      void sendAck(const SipMessage& ok);
+//      void sendAck(const SipMessage& ok);
 
       int lastReceivedRSeq;
       int lastExpectedRSeq;
