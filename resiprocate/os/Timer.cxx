@@ -164,7 +164,7 @@ Timer::getSystemTicks()
    tick <<= 32;
    tick |= lowtick;
 #else  
-#  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
+#  if defined(__linux__) && ( defined(__i686__) || defined(__i386__) )
    asm("rdtsc" : "=A" (tick));
 #else
 #if defined (__SUNPRO_CC)	
