@@ -11,20 +11,23 @@ using namespace repro;
 using namespace std;
 
 RequestContext::RequestContext(Proxy& proxy, 
-                               std::auto_ptr<resip::SipMessage> sipMsg, 
                                RequestProcessorChain& chain) : 
-   mOriginalRequest(sipMsg),
    mRequestProcessorChain(chain),
+   mOriginalRequest(0),
    mTransactionCount(1),
-   mProxy(proxy)
+   mProxy(proxy),
+   mHaveSentFinalResponse(false),
+   mResponseContext(*this)
 {
- //!RjS! Be sure to call fixStrictRouterDamage()
- //      and checkTopRouteForSelf() before 
- //      visiting the monkeys
 }
 
 RequestContext::~RequestContext()
 {
+  if (mOriginalRequest!=mCurrentEvent)
+  {
+     delete mOriginalRequest;
+  }
+  delete mCurrentEvent;
 }
 
 
@@ -41,7 +44,28 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
-   mCurrentEvent = msg;
+   mCurrentEvent = msg.release();
+   if (!mOriginalRequest) 
+   { 
+     mOriginalRequest=mCurrentEvent; 
+     assert(dynamic_cast<SipMessage*>(mOriginalRequest));
+     fixStrictRouterDamage();
+     checkTopRouteForSelf();
+   }
+
+   mRequestProcessorChain.handleRequest(mCurrentEvent); 
+
+    // if it's a CANCEL I need to call processCancel here 
+
+   // Do the lemurs if its a response
+   // Call handle Response if its a response
+
+   // Do this is its any other message
+   if (!mHaveSentFinalResponse)
+   {
+     mResponseContext.processCandidates();
+   }
+
 }
 
 resip::SipMessage& 
@@ -102,9 +126,13 @@ void
 RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
+
+//TODO Send the damn thing
+
+   mHaveSentFinalResponse=true;
 }
 
-//!RjS! This function assumes that if ;lr shows up in the
+//      This function assumes that if ;lr shows up in the
 //      RURI, that it's a URI we put in a Record-Route header
 //      earlier. It will do the wrong thing if some other 
 //      malbehaving implementation lobs something at us with
