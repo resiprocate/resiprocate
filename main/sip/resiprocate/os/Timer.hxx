@@ -44,7 +44,6 @@ class Timer
       static Data toData(Type timer);
 
       Timer(unsigned long ms, Type type, const Data& transactionId);
-      Timer(unsigned long ms); // for TimerQueue only - don't use
       Timer(const Timer& t);
       Timer& operator=(const Timer& t);
       
@@ -61,10 +60,9 @@ class Timer
       static UInt64 getRandomFutureTimeMs( UInt64 futureMs ); // in ms
       static UInt64 getForever(); //infinit time in future
 
-      static int getCpuSpeedMhz() { return mCpuSpeedMHz; }
-            
       // These values can be changed but it is not recommended to do so after a
       // stack is up and running since they are not mutexed
+      // These times are all in ms 
       static unsigned long T1;
       static unsigned long T2;
       static unsigned long T4;
@@ -74,18 +72,16 @@ class Timer
       static unsigned long TS;
       
    private:
+      Timer(unsigned long ms); // for TimerQueue only - don't use
       static UInt64 getSystemTime();
-      static UInt64 getSystemTicks();
 
-      UInt64 mWhen;
+      UInt64 mWhen; // time when the timer "goes off" in MS 
       Id mId;
       Type mType;
       Data mTransactionId;
-      unsigned long mDuration;
+      unsigned long mDuration; // duration of time in ms 
 
-      static unsigned long mCpuSpeedMHz;
-      static UInt64 mBootTime;
-      static unsigned long mTimerCount;
+      static unsigned long mTimerCount; // counter to genreate unique timers ids 
 
       friend bool operator<(const Timer& t1, const Timer& t2);
       friend std::ostream& operator<<(std::ostream&, const Timer&);
