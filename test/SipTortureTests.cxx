@@ -125,7 +125,7 @@ test1()
       tassert(message->header(h_Vias).front().sentPort() == 0);
       tassert(message->header(h_Vias).front().exists(p_branch));
       tassert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
-      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
       tassert(!message->exists(h_Subject));
       tassert(message->header(h_Subject).value().empty());
 
@@ -203,7 +203,7 @@ test1()
       // !ah! -- transaction id DOES NOT include the magic cookie
       // (removed z9hG4bK)
 
-      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
       tassert_verify(2);
 
    }
@@ -275,7 +275,7 @@ test3()
       tassert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       tassert(message->header(h_Vias).front().sentPort() == 0);
       tassert(message->header(h_Vias).front().exists(p_branch));
-      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
 
       //TODO: Check value 
       CritLog(<<"TODO: Check value of ContentType");
@@ -344,7 +344,7 @@ test4()
       tassert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       tassert(message->header(h_Vias).front().sentPort() == 0);
       tassert(message->header(h_Vias).front().exists(p_branch));
-      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
 
       tassert(message->exists(h_Expires));
       /* 
@@ -440,7 +440,7 @@ test5()
       tassert(message->header(h_Vias).front().sentPort() == 0);
       tassert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
       // !ah! this should go away when parser fixed.
-      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
       tassert(message->header(h_Vias).front().param(p_branch).clientData() == "");
 
       tassert(message->header(h_ContentType).type() == "application");
