@@ -88,6 +88,9 @@
 /* set when debugging requested in MsgHeaderScanner */
 #undef RESIP_MSG_HEADER_SCANNER_DEBUG
 
+/* BaseException DebugLog Disposition */
+#undef RESIP_NO_EXCEPTION_DEBUG_LOGS
+
 /* The version number of resip */
 #undef RESIP_VERSION
 
