@@ -136,6 +136,46 @@ Dialog::createDialogAsUAC(const SipMessage& response)
 }
 
 
+
+void 
+Dialog::createRegistrationAsUAC(const SipMessage& response)
+{
+   if (!mCreated)
+   {
+      assert(response.isResponse());
+
+      // reverse order from response
+      if (response.exists(h_RecordRoutes))
+      {
+         mRouteSet = response.header(h_RecordRoutes).reverse();
+      }
+	
+      mRemoteSequence = 0;
+      mRemoteEmpty = true;
+      mLocalSequence = response.header(h_CSeq).sequence();
+      mLocalEmpty = false;
+      mCallId = response.header(h_CallId);
+      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
+      {
+          mLocalTag = response.header(h_From).param(p_tag);  
+      }
+      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
+      {
+          mRemoteTag = response.header(h_To).param(p_tag); 
+      }
+      mRemoteUri = response.header(h_To);
+      mLocalUri = response.header(h_From);
+
+      mDialogId = mCallId;
+      mDialogId.param(p_toTag) = mLocalTag;
+      mDialogId.param(p_fromTag) = mRemoteTag;
+
+      mCreated = true;
+   }
+}
+
+
+
 void 
 Dialog::targetRefreshResponse(const SipMessage& response)
 {
