@@ -1,23 +1,24 @@
-#include "PublicationCreator.hxx"
+#if !defined(RESIP_KEEPALIVEMESSAGE_HXX)
+#define RESIP_KEEPALIVEMESSAGE_HXX 
+
 #include "resiprocate/SipMessage.hxx"
 
-using namespace resip;
-
-PublicationCreator::PublicationCreator(DialogUsageManager& dum,
-                                       const NameAddr& target, 
-                                       UserProfile& userProfile,
-                                       const Contents& body, 
-                                       const Data& eventType, 
-                                       unsigned expireSeconds )
-   : BaseCreator(dum, userProfile)
+namespace resip
 {
-   makeInitialRequest(target, PUBLISH);
-
-   mLastRequest.header(h_Event).value() = eventType;
-   mLastRequest.setContents(&body);
-   mLastRequest.header(h_Expires).value() = expireSeconds;
+class KeepAliveMessage : public SipMessage
+{
+   public:
+      RESIP_HeapCount(KeepAliveMessage);
+      KeepAliveMessage();      
+      KeepAliveMessage(const KeepAliveMessage& message);
+      virtual Message* clone() const;
+      KeepAliveMessage& operator=(const KeepAliveMessage& rhs);      
+      virtual ~KeepAliveMessage();
+      virtual std::ostream& encode(std::ostream& str) const;
+};
 }
 
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
