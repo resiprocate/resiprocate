@@ -20,21 +20,27 @@ const UInt64
 ConnectionManager::MaxLastUsed = 1000;
 
 ConnectionManager::ConnectionManager() : 
-   mWriteHead(Connection::writeList::makeList(new Connection)),
+   mHead(),
+   mWriteHead(Connection::writeList::makeList(&mHead)),
    mWriteIter(mWriteHead->begin()),
-   mReadHead(Connection::readList::makeList(new Connection)),
+   mReadHead(Connection::readList::makeList(&mHead)),
    mReadIter(mReadHead->begin()),
-   mLRUHead(Connection::lruList::makeList(new Connection)),
+   mLRUHead(Connection::lruList::makeList(&mHead)),
    mConnectionIdGenerator(1) 
 {
 }
 
 ConnectionManager::~ConnectionManager()
 {
-   for (Connection* c = getNextRead(); c != 0; delete c );
-   delete mWriteHead;
-   delete mReadHead;
-   delete mLRUHead;
+   for (Connection::readList::iterator i = mReadHead->begin();
+        i != mReadHead->end(); ++i)
+   {
+      delete *i;
+   }
+
+   assert(mReadHead->empty());
+   assert(mWriteHead->empty());
+   assert(mLRUHead->empty());
 }
 
 Connection*
@@ -156,11 +162,22 @@ ConnectionManager::removeConnection(Connection* connection)
    DebugLog (<< "ConnectionManager::removeConnection()");
 
    assert(!mReadHead->empty());
+
+   // keep the iterators valid
+   if (*mReadIter == connection)
+   {
+      ++mReadIter;
+   }
+
+   if (*mWriteIter == connection)
+   {
+      ++mWriteIter;
+   }
+
    connection->readList::remove();
    connection->writeList::remove();
    connection->lruList::remove();
 
-   checkIterators();
 }
 
 // release excessively old connections (free up file descriptors)
@@ -186,8 +203,6 @@ ConnectionManager::gc(UInt64 relThreshhold)
          break;
       }
    }
-
-   checkIterators();
 }
 
 // move to youngest
@@ -196,18 +211,4 @@ ConnectionManager::touch(Connection* connection)
 {
    connection->lruList::remove();
    mLRUHead->push_back(connection);
-}
-
-void
-ConnectionManager::checkIterators()
-{
-   if (mReadIter != mReadHead->end())
-   {
-      mReadIter = mReadHead->begin();
-   }
-
-   if (mWriteIter != mWriteHead->end())
-   {
-      mWriteIter = mWriteHead->begin();
-   }
 }
