@@ -1,6 +1,8 @@
 #if !defined(RESIP_BASEUSAGE_HXX)
 #define RESIP_BASEUSAGE_HXX
 
+#include "resiprocate/sam/DialogUsageManager.hxx"
+
 namespace resip
 {
 class BaseUsage
@@ -22,7 +24,7 @@ class BaseUsage
       DialogUsageManager& dum();
       Dialog& dialog();
       
-      virtual void end();
+    virtual void end();
 
    private:
       DialogUsageManager& mDUM;

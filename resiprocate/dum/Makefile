@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/04/04 05:08:10 fluffy Exp $
+# $Id: Makefile,v 1.2 2004/04/04 20:37:18 ken Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -17,7 +17,7 @@ LDLIBS += -lpopt
 TESTPROGRAMS +=
 endif
 
-TESTPROGRAMS += test1.cxx
+TESTPROGRAMS += Dialog.cxx
 
 SRC = Dialog.cxx \
 	DialogSet.cxx
