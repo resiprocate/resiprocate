@@ -86,6 +86,8 @@ main(int argc, char** argv)
 	 
 	 // [TODO] !rwm! put Tel URI monkey here 
   
+     // [TODO] !jf! put static route monkey here
+
      LocationServer* ls = new LocationServer(regData);
      locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
   
@@ -93,8 +95,8 @@ main(int argc, char** argv)
     
      if (!args.mNoChallenge)
      {
-       DigestAuthenticator* da = new DigestAuthenticator();
-       requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+        DigestAuthenticator* da = new DigestAuthenticator();
+        //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
      }
    }
  
@@ -102,10 +104,13 @@ main(int argc, char** argv)
 
    Proxy proxy(stack, requestProcessors, userDb);
    proxy.addDomain(DnsUtil::getLocalHostName());
+   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
    proxy.addDomain(DnsUtil::getLocalIpAddress());
+   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
+      //InfoLog (<< "Adding domain " << i->host() << " " << i->port());
       proxy.addDomain(i->host(), i->port());
    }
 

@@ -88,15 +88,22 @@ ResponseContext::processPendingTargets()
 
       if (request.exists(h_MaxForwards))
       {
-         request.header(h_MaxForwards).value()--;
+         if (request.header(h_MaxForwards).value() < 20)
+         {
+            request.header(h_MaxForwards).value()--;
+         }
+         else
+         {
+            request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
+         }
       }
       else
       {
-         request.header(h_MaxForwards).value() = 70; // !jf! use Proxy to retrieve this
+         request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
       }
       
       // Record-Route addition
-      if (0 ) // not ACK
+      if (1) // not ACK
       {
          NameAddr rt;
          // !jf! could put unique id for this instance of the proxy in user portion
