@@ -2,7 +2,7 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.14 2003/06/02 20:52:32 ryker Exp $";
+   "$Id: Fifo.hxx,v 1.15 2003/06/03 15:15:05 ryker Exp $";
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
@@ -72,7 +72,7 @@ Fifo<Msg>::~Fifo()
       delete mFifo.front();
       mFifo.pop_front();
    }
-   mSize = -1;
+   mSize = -1UL;
 }
 
 template <class Msg>
