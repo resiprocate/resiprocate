@@ -69,6 +69,24 @@ DnsUtil::getLocalDomainName()
 }
 
 Data
+DnsUtil::getLocalIpAddress(const Data& myInterface)
+{
+   std::list<std::pair<Data,Data> > ifs = DnsUtil::getInterfaces(myInterface);
+   if (ifs.empty())
+   {
+      throw Exception("No matching interface", __FILE__,__LINE__);
+   }
+   else if (ifs.size() > 1)
+   {
+      assert(0);
+   }
+   else
+   {
+      return ifs.front().second;
+   }
+}
+
+Data
 DnsUtil::inet_ntop(const Tuple& tuple)
 {
    if (!tuple.isV4())
@@ -242,7 +260,7 @@ DnsUtil::isIpAddress(const Data& ipAddress)
 
 
 std::list<std::pair<Data,Data> > 
-DnsUtil::getInterfaces()
+DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
    
@@ -279,13 +297,12 @@ DnsUtil::getInterfaces()
       e = ioctl(s,SIOCGIFADDR,&ifr2);
 
       struct sockaddr a = ifr2.ifr_addr;
-      struct sockaddr_in* addr = (struct sockaddr_in*) &a;
-      
-      char str[256];
-      ::inet_ntop(AF_INET, (u_int32_t*)(&addr->sin_addr.s_addr), str, sizeof(str));
-      DebugLog (<< "Considering: " << name << " -> " << str);
-      
-      results.push_back(std::make_pair(name, str));
+      Data ip = DnsUtil::inet_ntop(a);
+      DebugLog (<< "Considering: " << name << " -> " << ip << " flags=" << ifr2.ifr_flags);
+      if (matching == Data::Empty || matching == name)
+      {
+         results.push_back(std::make_pair(name, ip));
+      }
    }
 #else // !WIN32
    assert(0);
