@@ -139,7 +139,10 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       // reverse order from response
       mRouteSet = response.header(h_RecordRoutes).reverse();
 
-      mRemoteTarget = response.header(h_Contacts).front();
+      if ( response.exists(h_Contacts) )
+      {
+         mRemoteTarget = response.header(h_Contacts).front();
+      }
       mRemoteSequence = 0;
       mRemoteEmpty = true;
       mLocalSequence = response.header(h_CSeq).sequence();
@@ -213,6 +216,8 @@ Dialog::makeInitialRegister(const NameAddr& registrar,
    mLocalTag = msg->header(h_From).param(p_tag);  
    mRemoteUri = msg->header(h_To);
    mLocalUri = msg->header(h_From);
+   
+   mRemoteTarget = mRemoteUri;
    
    return msg;
 }
