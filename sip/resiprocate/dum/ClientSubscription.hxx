@@ -31,9 +31,8 @@ class ClientSubscription: public BaseSubscription
    private:
       friend class Dialog;
       
-      SubscriptionState mSubState;
-      const Contents* mCurrentEventDocument;//!dcm! -- unused?
-      UInt64 mExpirationTime;
+//       const Contents* mCurrentEventDocument;//!dcm! -- unused?
+//       UInt64 mExpirationTime;
 
       // disabled
       ClientSubscription(const ClientSubscription&);

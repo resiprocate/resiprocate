@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/SubscriptionState.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -21,10 +22,19 @@ class BaseSubscription: public BaseUsage
       friend class Dialog;
 
       BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+
+      SubscriptionState getSubscriptionState();      
+
       virtual ~BaseSubscription();
+
+      SipMessage mLastRequest;
+      SipMessage mLastResponse;
       
       Data mEventType;
       Data mSubscriptionId;
+      int mTimerSeq;      
+      SubscriptionState mSubscriptionState;
+
       // disabled
       BaseSubscription(const BaseSubscription&);
       BaseSubscription& operator=(const BaseSubscription&);
