@@ -160,6 +160,7 @@ MethodHash.cxx: MethodHash.gperf
 	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< >  $@
 
 # rule for insensitive clods
+#${SRC}: ${@:%.cxx=%.gperf} -- more portable?
 %.cxx: %.gperf
 	gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \

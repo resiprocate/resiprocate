@@ -5,6 +5,7 @@
 #include <set>
 
 #include "resiprocate/Embedded.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/NameAddr.hxx" 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
@@ -19,6 +20,7 @@
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
 Uri::Uri() 
    : ParserCategory(),
@@ -64,6 +66,7 @@ Uri::Uri(const Uri& rhs)
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
+
 
 Uri::~Uri()
 {
@@ -247,7 +250,7 @@ void
 Uri::removeEmbedded()
 {
    delete mEmbeddedHeaders;
-   mEmbeddedHeaders = 0;   
+   mEmbeddedHeaders = 0;
    mEmbeddedHeadersText = Data::Empty;   
 }
 
@@ -726,12 +729,20 @@ Uri::parse(ParseBuffer& pb)
       pb.reset(start);
       start = pb.position();
       pb.skipToOneOf(":@");
+#ifdef HANDLE_CHARACTER_ESCAPING
+      pb.dataUnescaped(mUser, start);
+#else
       pb.data(mUser, start);
+#endif
       if (!pb.eof() && *pb.position() == Symbols::COLON[0])
       {
          start = pb.skipChar();
          pb.skipToChar(Symbols::AT_SIGN[0]);
+#ifdef HANDLE_CHARACTER_ESCAPING
+         pb.dataUnescaped(mPassword, start);
+#else
          pb.data(mPassword, start);
+#endif
       }
       start = pb.skipChar();
    }
@@ -781,6 +792,74 @@ Uri::clone() const
 {
    return new Uri(*this);
 }
+
+inline bool //.dcm. replace with lookup array
+shoudEscapeUserChar(char c)
+{
+   if ( (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9'))
+   {
+      return false;      
+   }
+   switch(c)
+   {
+      //mark
+      case '-':
+      case '_':
+      case '.':
+      case '!':
+      case '~':
+      case '*':
+      case '\'':
+      case '(':
+      case ')':
+         //user unreserved
+      case '&':
+      case '=':
+      case '+':
+      case '$':
+      case ',':
+         case ';':
+      case '?':
+      case '/':
+         return false;
+      default:
+         return true;
+   }
+}
+
+inline bool //.dcm. replace with lookup array
+shouldEscapePasswordChar(char c)
+{
+   if ( (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9'))
+   {
+      return false;      
+   }
+   switch(c)
+   {
+      //mark
+      case '-':
+      case '_':
+      case '.':
+      case '!':
+      case '~':
+      case '*':
+      case '\'':
+      case '(':
+      case ')':
+         //password unreserved
+      case '&':
+      case '=':
+      case '+':
+      case '$':
+         return false;
+      default:
+         return true;
+   }
+}
  
 // should not encode user parameters unless its a tel?
 std::ostream& 
@@ -789,14 +868,23 @@ Uri::encodeParsed(std::ostream& str) const
    str << mScheme << Symbols::COLON; 
    if (!mUser.empty())
    {
+#ifdef HANDLE_CHARACTER_ESCAPING
+      mUser.escapeToStream(str, shoudEscapeUserChar); 
+#else
       str << mUser;
+#endif
       if (!mUserParameters.empty())
       {
          str << Symbols::SEMI_COLON[0] << mUserParameters;
       }
       if (!mPassword.empty())
       {
-         str << Symbols::COLON << mPassword;
+         str << Symbols::COLON;
+#ifdef HANDLE_CHARACTER_ESCAPING
+         mPassword.escapeToStream(str, shouldEscapePasswordChar);
+#else
+         str << mPassword;
+#endif
       }
    }
    if (!mHost.empty())
