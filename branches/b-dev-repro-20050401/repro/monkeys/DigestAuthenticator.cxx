@@ -77,6 +77,15 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
          case Helper::Authenticated:
             InfoLog (<< "Authentication ok for " << user);
             rc.setDigestIdentity(user);
+            if (sipMessage->header(h_From).uri().user() == user &&
+                sipMessage->header(h_From).uri().host() == realm)
+            {
+               sipMessage->header(h_Identity);
+               static Data http("http://");
+               static Data post(":5080/cert?domain=");
+               sipMessage->header(h_IdentityInfo).uri() = http + realm + post + realm;
+            }
+            
             return Continue;
 
          case Helper::Expired:

@@ -28,10 +28,12 @@ using namespace std;
 
 WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
                      RegistrationPersistenceManager& regDb,
+                     Security& security,
                      int port, 
                      IpVersion version):
    HttpBase( port, version ),
    mUserDb(userDb),
+   mSecurity(security),
    mRegDb(regDb)
 {
 }
@@ -49,9 +51,10 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    Data pageName;
    pb.data(pageName,anchor);
    
+   Data domain;
    if (pb.eof())
    {
-         DebugLog (<< "  got page name " << pageName );
+      DebugLog (<< "  got page name " << pageName );
    }
    else
    {
@@ -65,43 +68,47 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
       
       while ( !pb.eof() )
       {
-           const char* anchor1 = pb.position();
-           pb.skipToChar('=');
-           Data key;
-           pb.data(key,anchor1);
+         const char* anchor1 = pb.position();
+         pb.skipToChar('=');
+         Data key;
+         pb.data(key,anchor1);
  
-           const char* anchor2 = pb.skipChar('=');
-           pb.skipToChar('&');
-           Data value;
-           pb.data(value,anchor2); 
+         const char* anchor2 = pb.skipChar('=');
+         pb.skipToChar('&');
+         Data value;
+         pb.data(value,anchor2); 
            
-           if ( !pb.eof() )
-           {
-              pb.skipChar('&');
-           }
+         if ( !pb.eof() )
+         {
+            pb.skipChar('&');
+         }
            
-           DebugLog (<< "  key=" << key << " value=" << value );
+         DebugLog (<< "  key=" << key << " value=" << value );
 
-           if ( key == Data("user") )
-           {
-              user = value;
-           }
-           if ( key == Data("password") )
-           {
-              password = value;
-           }
-          if ( key == Data("realm") )
-           {
-              realm = value;
-           }
-           if ( key == Data("name") )
-           {
-               name = value;
-           }
-           if ( key == Data("email") )
-           {
-               email = value;
-           }
+         if ( key == Data("user") )
+         {
+            user = value;
+         }
+         if ( key == Data("password") )
+         {
+            password = value;
+         }
+         if ( key == Data("realm") )
+         {
+            realm = value;
+         }
+         if ( key == Data("name") )
+         {
+            name = value;
+         }
+         if ( key == Data("email") )
+         {
+            email = value;
+         }
+         if ( key == Data("domain") )
+         {
+            domain = value;
+         }
            
       }
 
@@ -117,6 +124,7 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    if ( pageName == Data("showRegs.html") ) page=buildShowRegsPage();
    if ( pageName == Data("showRoutes.html") ) page=buildShowRoutesPage();
    if ( pageName == Data("showUsers.html") ) page=buildShowUsersPage();
+   if ( pageName == Data("cert") && !domain.empty()) page=buildCertPage(domain);
    if ( pageName == Data("index.html") ) page=buildDefaultPage();
 
    setPage( page, pageNumber );
@@ -131,42 +139,42 @@ WebAdmin::buildAddRoutePage()
       DataStream s(ret);
       
       s << 
-"<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
-"<title>Repro Proxy Add Route</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<p>Add Route</p>"
-"<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
-"<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
-"<tr>"
-"<td>URI</td>"
-"<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td>Method</td>"
-"<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td>Event</td>"
-"<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td>Destination</td>"
-"<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
-"</tr>"
-"</table>"
-"<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
-"</form>"
-"</body>"
-""
-"</html>"
+         "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
+         "<title>Repro Proxy Add Route</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<p>Add Route</p>"
+         "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
+         "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>URI</td>"
+         "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td>Method</td>"
+         "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td>Event</td>"
+         "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td>Destination</td>"
+         "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
+         "</tr>"
+         "</table>"
+         "<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
+         "</form>"
+         "</body>"
+         ""
+         "</html>"
          " ";
       
       s.flush();
@@ -183,110 +191,110 @@ WebAdmin::buildAddUserPage()
       DataStream s(ret);
       
       s << 
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"<title>Repo Proxy Add User</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td>"
-"<h1>Repro Proxy</h1>"
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td valign=\"top\">"
-"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"<tr>"
-"<td>"
-"<p><b><a href=\"addUser.html\">Add User</a></b></p>"
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"<p><a href=\"showUsers.html\">Show </a><a href=\"showUsers.html\">Users</a></p>"
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"<p><a href=\"showRegs.html\">Registrations</a></p>"
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"<p><a href=\"addRoute.html\">Add Route</a></p>"
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"<p><a href=\"showRoutes.html\">Show Routes</a></p>"
-"</td>"
-"</tr>"
-"</table>"
-"</td>"
-"<td align=\"left\" valign=\"top\" width=\"85%\">"
-"<table width=\"64\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"<tr>"
-"<td>"
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repo Proxy Add User</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>"
+         "<h1>Repro Proxy</h1>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td valign=\"top\">"
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>"
+         "<p><b><a href=\"addUser.html\">Add User</a></b></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showUsers.html\">Show </a><a href=\"showUsers.html\">Users</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showRegs.html\">Registrations</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"addRoute.html\">Add Route</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showRoutes.html\">Show Routes</a></p>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</td>"
+         "<td align=\"left\" valign=\"top\" width=\"85%\">"
+         "<table width=\"64\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>"
 
 
-"<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
-"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td align=\"right\" valign=\"middle\">User Name:</td>"
-"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td align=\"right\" valign=\"middle\" >Realm:</td>"
-"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td align=\"right\" valign=\"middle\" >Password:</td>"
-"<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td align=\"right\" valign=\"middle\" >Full Name:</td>"
-"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
-"</tr>"
-"<tr>"
-"<td align=\"right\" valign=\"middle\" >Email:</td>"
-"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
-"</tr>"
-"</table>"
+         "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\">User Name:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Realm:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Password:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Full Name:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Email:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
+         "</tr>"
+         "</table>"
 
-" <input type=\"reset\" value=\"Reset\"/>"
-"    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
-
-
-"</form>"
+         " <input type=\"reset\" value=\"Reset\"/>"
+         "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
 
 
-"</td>"
-"</tr>"
-"<tr>"
-"<td>"
-"</td>"
-"</tr>"
-"</table>"
-"<hr/>"
-"</td>"
-"</tr>"
-"</table>"
-"</td>"
-"</tr>"
-"</table>"
-"</body>"
-""
-"</html>"
+         "</form>"
+
+
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "<hr/>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</body>"
+         ""
+         "</html>"
          " ";
       
       s.flush();
@@ -404,13 +412,13 @@ WebAdmin::buildShowUsersPage()
          "</tr>" ;
       
 /*
-"<tr>"
-"<td>fluffy</td>"
-"<td>example.com</td>"
-"<td>Cullen Jennings</td>"
-"<td>fluffy@example.com</td>"
-"<td><input type=\"checkbox\" name=\"removeUser\" value=\"removeUser\"/></td>"
-"</tr>"
+  "<tr>"
+  "<td>fluffy</td>"
+  "<td>example.com</td>"
+  "<td>Cullen Jennings</td>"
+  "<td>fluffy@example.com</td>"
+  "<td><input type=\"checkbox\" name=\"removeUser\" value=\"removeUser\"/></td>"
+  "</tr>"
 */
       s << endl;
       
@@ -452,49 +460,56 @@ WebAdmin::buildShowRoutesPage()
       DataStream s(ret);
       
       s << 
- "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
-"<title>Repro Proxy Show Route</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<h1>Routes</h1>"
-"<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-"<button name=\"removeAllRoute\" value=\"\" type=\"button\">Remove All</button>"
-""
-"<hr/>"
-"<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td>URI</td>"
-"<td>Method</td>"
-"<td>Event</td>"
-"<td>Destination</td>"
-"<td><button name=\"removeRoute\" type=\"button\">Remove</button></td>"
-"</tr>"
+         "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
+         "<title>Repro Proxy Show Route</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>Routes</h1>"
+         "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+         "<button name=\"removeAllRoute\" value=\"\" type=\"button\">Remove All</button>"
+         ""
+         "<hr/>"
+         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>URI</td>"
+         "<td>Method</td>"
+         "<td>Event</td>"
+         "<td>Destination</td>"
+         "<td><button name=\"removeRoute\" type=\"button\">Remove</button></td>"
+         "</tr>"
 /*
-"<tr>"
-"<td>f*.com</td>"
-"<td>INVITE</td>"
-"<td>*</td>"
-"<td>b.com</td>"
-"<td><input type=\"checkbox\" name=\"removeRoute\" value=\"3\"/></td>"
-"</tr>"
+  "<tr>"
+  "<td>f*.com</td>"
+  "<td>INVITE</td>"
+  "<td>*</td>"
+  "<td>b.com</td>"
+  "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"3\"/></td>"
+  "</tr>"
 */
-"</table>"
-"</form>"
-"</body>"
-""
-"</html>"
-        " ";
+         "</table>"
+         "</form>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
       
       s.flush();
    }
    return ret;
+}
+
+Data
+WebAdmin::buildCertPage(const Data& domain)
+{
+   assert(!domain.empty());
+   return mSecurity.getDomainCertDER(domain);
 }
 
 
@@ -506,26 +521,26 @@ WebAdmin::buildDefaultPage()
       DataStream s(ret);
       
       s << 
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"<title>Repro Proxy</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<p><a href=\"addUser.html\">add users</a></p>"
-"<p><a href=\"showRegs.html\">show registrations</a></p>"
-"<p><a href=\"showUsers.html\">show users</a></p>"
-"<p><a href=\"addRoute.html\">add route</a></p>"
-"<p><a href=\"showRoutes.html\">show routes</a></p>"
-"</body>"
-""
-"</html>"
-    " ";
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<p><a href=\"addUser.html\">add users</a></p>"
+         "<p><a href=\"showRegs.html\">show registrations</a></p>"
+         "<p><a href=\"showUsers.html\">show users</a></p>"
+         "<p><a href=\"addRoute.html\">add route</a></p>"
+         "<p><a href=\"showRoutes.html\">show routes</a></p>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
       
       s.flush();
    }
