@@ -28,7 +28,11 @@ GenericContents::~GenericContents()
 GenericContents& 
 GenericContents::operator=(const GenericContents& rhs)
 {
-   this->PlainContents::operator=(rhs);
+   if (this != &rhs)
+   {
+      this->PlainContents::operator=(rhs);
+   }
+   return *this;
 }
 
 Contents* 
