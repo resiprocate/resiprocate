@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.55 2003/09/25 21:30:25 jason Exp $
+# $Id: Makefile,v 1.56 2003/09/29 20:25:31 davidb Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -11,6 +11,7 @@ LDLIBS += -lncurses -lpopt
 #LDLIBS   += /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a 
 
 TESTPROGRAMS =	testTcp.cxx testUdp.cxx testStack.cxx \
+		testIntrusiveList.cxx \
 		testSelect.cxx \
 		limpc.cxx \
 		testParseUtil.cxx \
