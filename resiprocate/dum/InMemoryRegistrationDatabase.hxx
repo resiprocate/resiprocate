@@ -2,8 +2,12 @@
 #define RESIP_INMEMORYREGISTRATIONDATABASE_HXX
 
 #include <map>
+#include <set>
 
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Condition.hxx"
+#include "resiprocate/os/Lock.hxx"
 
 namespace resip
 {
@@ -33,8 +37,13 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
     virtual contact_list_t getContacts(Uri &aor);
 
   private:
-    typedef std::map<Uri,contact_list_t> database_map_t;
+    typedef std::map<Uri,contact_list_t *> database_map_t;
     database_map_t mDatabase;
+    Mutex mDatabaseMutex;
+
+    std::set<Uri> mLockedRecords;
+    Mutex mLockedRecordsMutex;
+    Condition mRecordUnlocked;
 };
  
 }
