@@ -26,6 +26,13 @@
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/StatisticsManager.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif 
+
 #ifdef WIN32
 #pragma warning( disable : 4355 )
 #endif
@@ -344,7 +351,10 @@ SipStack::receiveAny()
 void 
 SipStack::process(FdSet& fdset)
 {
-   RESIP_STATISTICS(mStatsManager.process());
+   if(!mShuttingDown)
+   {
+      RESIP_STATISTICS(mStatsManager.process());
+   }
    mTransactionController.process(fdset);
 
    Lock lock(mAppTimerMutex);
