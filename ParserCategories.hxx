@@ -440,6 +440,7 @@ class Via : public ParserCategory
       {
          // insert a branch in all Vias (default constructor)
          this->param(p_branch);
+         this->param(p_rport); // add the rport parameter by default as per rfc 3581
       }
 
       Via(HeaderFieldValue* hfv, Headers::Type type) 
