@@ -100,7 +100,7 @@ SipMessage::SipMessage(const SipMessage& from)
       }
       if (from.mForceTarget != 0)
       {
-	 mForceTarget = new Uri(*from.mForceTarget);
+         mForceTarget = new Uri(*from.mForceTarget);
       }
    }
 }
@@ -131,8 +131,7 @@ SipMessage::~SipMessage()
 }
 
 SipMessage*
-SipMessage::make(const Data& data, 
-                 bool isExternal)
+SipMessage::make(const Data& data,  bool isExternal)
 {
    Transport* external = (Transport*)(0xFFFF);
    SipMessage* msg = new SipMessage(isExternal ? external : 0);
@@ -144,7 +143,7 @@ SipMessage::make(const Data& data,
 
    memcpy(buffer,data.data(), len);
 
-#ifndef NEW_MSG_HEADER_SCANNER // {
+#ifndef NEW_MSG_HEADER_SCANNER 
 
    using namespace PreparseConst;
    Preparse pre;
@@ -158,12 +157,12 @@ SipMessage::make(const Data& data,
    }
    else
    {
-       size_t used = pre.nBytesUsed();
-       assert(pre.nBytesUsed() == pre.nDiscardOffset());
+      size_t used = pre.nBytesUsed();
+      assert(pre.nBytesUsed() == pre.nDiscardOffset());
        
-       // no pp error
-       if (pre.isHeadersComplete() &&
-           used < len)
+      // no pp error
+      if (pre.isHeadersComplete() &&
+          used < len)
       {
          // body is present .. add it up.
          // NB. The Sip Message uses an overlay (again)
@@ -174,11 +173,11 @@ SipMessage::make(const Data& data,
    }
    return msg;
 
-#else //defined (NEW_MSG_HEADER_SCANNER) } {
+#else //defined (NEW_MSG_HEADER_SCANNER) 
    MsgHeaderScanner msgHeaderScanner;
-
+   
    msgHeaderScanner.prepareForMessage(msg);
-
+   
    char *unprocessedCharPtr;
    if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
@@ -206,15 +205,19 @@ SipMessage::make(const Data& data,
    }
 
    return msg;
-#endif //defined (NEW_MSG_HEADER_SCANNER) }
+#endif //defined (NEW_MSG_HEADER_SCANNER) 
 }
+
 
 const Data& 
 SipMessage::getTransactionId() const
 {
-   // !jf! this should be caught early on just after preparsing and the message
-   // should be rejected. 
-   assert(!header(h_Vias).empty());
+   if (!this->exists(h_Vias) || this->header(h_Vias).empty())
+   {
+      InfoLog (<< "Bad message with no Vias: " << *this);
+   }
+
+   assert(exists(h_Vias) && !header(h_Vias).empty());
    if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
@@ -398,13 +401,15 @@ SipMessage::brief() const
       result += response;
       result += Data(header(h_StatusLine).responseCode());
    }
-   if (exists(h_Vias))
+   if (exists(h_Vias) && !this->header(h_Vias).empty())
    {
-     result += tid;
-     result += getTransactionId();
+      result += tid;
+      result += getTransactionId();
    }
    else
-     result += " MISSING-TID ";
+   {
+      result += " NO-VIAS ";
+   }
 
    result += cseq;
    if (header(h_CSeq).method() != UNKNOWN)
@@ -950,6 +955,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       // header missing
       // assert(false);
       InfoLog( << "Missing Header " << type );
+      DebugLog (<< *this);
       throw Exception("Missing header", __FILE__, __LINE__);
    }
    // !dlb! not thrilled about checking this every access
@@ -960,6 +966,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
          // !dlb! when will this happen?
          // assert(false);
          InfoLog( << "Missing Header " << type );
+         DebugLog (<< *this);
          throw Exception("Empty header", __FILE__, __LINE__);
       }
    }
