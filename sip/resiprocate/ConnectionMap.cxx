@@ -4,7 +4,6 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/ConnectionMap.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
@@ -48,8 +47,8 @@ ConnectionMap::touch(Connection* connection)
 Connection*
 ConnectionMap::add(Transport::Tuple& who, Socket socket)
 {
-   assert(mConnections.find(who) == mConnections.end());
-
+   assert(mConnections.count(who) == 0);
+   
    Connection* connection = new Connection(who, socket);
    who.connection = connection;
    mConnections[who] = connection;
@@ -68,7 +67,6 @@ ConnectionMap::get(const Transport::Tuple& who)
    {
       return i->second;
    }
-   
    return 0;
 }
 
