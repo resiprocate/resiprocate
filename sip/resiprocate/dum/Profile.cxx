@@ -191,10 +191,25 @@ Profile:: getGruu(const Data& aor, const NameAddr& contact)
 }
 
 void 
-Profile::setOutboundProxy( const Data& uri )
+Profile::setOutboundProxy( const Uri& uri )
 {
+   mOutboundProxy = NameAddr(uri);
+   mHasOutboundProxy = true;
 }
 
+const NameAddr&
+Profile::getOutboundProxy() const
+{
+   assert(mHasOutboundProxy);
+   return mOutboundProxy;
+}
+
+bool
+Profile::hasOutboundProxy() const
+{
+   return mHasOutboundProxy;
+}
+   
 void 
 Profile::disableGruu()
 {
