@@ -264,6 +264,12 @@ SipStack::postMS(const ApplicationMessage& message,
    mTransactionController.post(message, ms);
 }
 
+bool
+SipStack::hasMessage() const
+{
+   return mTUFifo.messageAvailable();
+}
+
 SipMessage* 
 SipStack::receive()
 {
