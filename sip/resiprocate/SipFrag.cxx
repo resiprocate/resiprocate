@@ -76,6 +76,20 @@ SipFrag::getStaticType()
    return type;
 }
 
+SipMessage& 
+SipFrag::message() 
+{
+   checkParsed(); 
+   return *mMessage;
+}
+
+const SipMessage& 
+SipFrag::message() const 
+{
+   checkParsed(); 
+   return *mMessage;
+}
+
 std::ostream& 
 SipFrag::encodeParsed(std::ostream& str) const
 {
