@@ -47,6 +47,8 @@ Pidf::Pidf(const Pidf& rhs)
       Tuple t = rhs.mTuple[i];
       mTuple.push_back( t ); // !ah! gratuitous temporary
    }
+   assert(  mTuple.size() ==  rhs.mTuple.size() );
+
 }
 
 Pidf::~Pidf()
@@ -166,7 +168,7 @@ Pidf::setSimpleId( const Data& id )
       Tuple t;
       mTuple.push_back( t );
    }
-
+   assert(mTuple.size() > 0 );
    mTuple[0].id = id;
 }
 
@@ -193,10 +195,7 @@ Pidf::getSimpleStatus( Data* note )
 {
    checkParsed();
 
-   if ( mTuple.empty() )
-   {
-     return false;
-   }
+   assert(mTuple.size() > 0);
 
    if ( note )                  // !ass! this function appears naive.
                                 // why only the 1st mTuple ?
