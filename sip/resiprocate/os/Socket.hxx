@@ -3,6 +3,7 @@
 
 #include "compat.hxx"
 
+
 namespace Vocal2
 {
 
