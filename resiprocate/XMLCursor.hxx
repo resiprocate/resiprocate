@@ -59,6 +59,8 @@ namespace resip
 // }
 */
 
+class XMLCursor;
+
 class XMLCursor
 {
    public:
@@ -82,6 +84,8 @@ class XMLCursor
       const AttributeMap& getAttributes() const;
       const Data& getValue() const;
 
+	        class Node;
+
    private:
       static void skipProlog(ParseBuffer& pb);
       static void decode(Data&);
@@ -89,7 +93,6 @@ class XMLCursor
 
       void parseNextRootChild();
 
-      class Node;
 
       Node* mRoot;
       Node* mCursor;
@@ -107,6 +110,7 @@ class XMLCursor
       // store attributes for reference
       mutable AttributeMap mAttributes;
 
+public:
       class Node
       {
          public:
@@ -130,7 +134,11 @@ class XMLCursor
          private:
             Node(const Node&);
             Node& operator=(const Node&);
+
+			friend std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
+	        // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
       };
+private:
 
       friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
       friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
