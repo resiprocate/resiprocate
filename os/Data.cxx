@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.51 2003/01/10 16:17:09 davidb Exp $";
+// "$Id: Data.cxx,v 1.52 2003/01/11 01:54:55 alan Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -521,10 +521,10 @@ Data::operator+=(char c)
 char& 
 Data::operator[](size_type p)
 {
-   assert(p < mSize);
+   assert(p < mCapacity);
    if (!mMine)
    {
-      resize(mSize, true);
+      resize(mCapacity, true);
    }
    return mBuf[p];
 }
@@ -669,7 +669,7 @@ Data::md5() const
 }
 
 //must be lowercase for MD5
-static char map[] = "0123456789abcdef";
+static char hexmap[] = "0123456789abcdef";
 
 Data 
 Data::escaped() const
@@ -698,8 +698,8 @@ Data::escaped() const
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
 	   
-         ret += map[hi];
-         ret += map[low];
+         ret += hexmap[hi];
+         ret += hexmap[low];
          continue;
       }
 
@@ -723,8 +723,8 @@ Data::hex() const
       int hi = (temp & 0xf0)>>4;
       int low = (temp & 0xf);
       
-      *r++ = map[hi];
-      *r++ = map[low];
+      *r++ = hexmap[hi];
+      *r++ = hexmap[low];
    }
    *r = 0;
    ret.mSize = 2*mSize;
