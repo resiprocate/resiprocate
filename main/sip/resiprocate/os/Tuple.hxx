@@ -45,7 +45,7 @@ class Tuple
       sockaddr& getMutableSockaddr() { return mSockaddr; }
 
       TransportType getType() const { return mTransportType; }
-      void setAny(); // set to INADDR_ANY
+      void setType(TransportType type) { mTransportType = type ;}
       void setPort(int port);
       int getPort() const;
       bool isV4() const;
