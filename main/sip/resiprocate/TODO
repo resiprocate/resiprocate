@@ -1,4 +1,4 @@
-$Id: TODO,v 1.7 2002/11/08 17:41:26 jason Exp $
+$Id: TODO,v 1.8 2002/12/11 20:15:26 jason Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -46,3 +46,7 @@ Convert Data to unsigned char interface.
 Add correct const semantics to parserCategories
 explicity disallow paramaters or declare parameter accessors where they can be used
 If we proper const parameter retrieval we should probably throw if the user tries to retrieve a parameter that doesn't exist.
+
+make case sensitive/case insensitive datas
+
+handle the case where a request gets sent over the wire to the stack with no via. currently will assert when getTransactionId() is called
