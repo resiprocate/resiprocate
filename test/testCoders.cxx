@@ -8,111 +8,83 @@ using namespace std;
 using namespace Vocal2;
 
 
-unsigned char * randomData(int size)
+Data randomData(int size)
 {
-   unsigned char * p = new unsigned char[size];
+   Data rv(size);
 
-   int fd = open("/dev/urandom",O_RDONLY);
-
-   if (fd < 0 || (read(fd,p,size) != size))
+   for(int i = 0 ; i < size-1 ; i++)
    {
-      delete p;
-      p = 0;
+      rv += (char)i&0xff;
    }
-   return p;
+   rv += '\0';
+   return rv;
 }
 
 
-void showData(const unsigned  char * data, int len)
+void showData(const Data& data)
 {
-   cout << "Data (n=" << len << "): ";
-   for(int i = 0 ; i < len ; i++)
+   cout << "Data (n=" << data.size() << "): ";
+   for(int i = 0 ; i < data.size() ; i++)
    {
-      cout << hex << (unsigned int)data[i] << ' ';
+      cout << hex << (unsigned int)data.data()[i] << ' ';
    }
    cout << endl;
-
 }
 
-void showCoded(const unsigned  char * data, int len, const string& coded)
+void showCoded(const Data& data)
 {
-    showData(data,len);
-    
-//    cout << endl << " encoded: " << coded << endl;
-
+   showData(data);
 }
 
-int compareBuffers(unsigned char *b1, unsigned char *b2, int len)
+int compareData(const Data &a, const Data& b)
 {
-   for(int i = 0 ; i < len ; i++)
-   {
-      if (b1[i] != b2[i]) return -(i+1);
-   }
-   return 0;
+   return a == b;
 }
 
 int
 main()
 {
-  string testString("The quick brown fox jumped over the lazy dog.");
+  Data testData("The quick brown fox jumped over the lazy dog.");
 
-  int len = testString.length();
+  Data encoded =    
+     Base64Coder::encode(testData);
 
-  string encoded =    
-    Base64Coder::encode(
-			 reinterpret_cast<const unsigned char*>
-			 (testString.c_str()),len);
+  Data decoded = Base64Coder::decode(encoded);
 
-  unsigned char decoded[len+1];
-
-  int retVal = Base64Coder::decode(encoded, decoded, len);
-  if(retVal > 0) decoded[retVal] = 0;
   cout << "encoded: '" << encoded << "'" << endl;
-  cout << "retVal: " << retVal << endl;
   cout << "decoded: '" << decoded << "'" << endl;
 
+
   int rVal = 0; // test return val
-  for(int i=0;i<32;i++)
+  for(int i=0;i<320;i++)
   {
-     unsigned char * originalData = randomData(i);
-     cout << "-------" << endl;
-     
-     if (!originalData)
-     {
-	cerr << " unable to allocate test case for " << i << " bytes " << endl;
-	rVal = -1;
-	break;
-     }
+     Data originalData = randomData(i);
+     cout << i << "-------" << endl;
+
 
      // encrypt this data
 
-     string coded = Base64Coder::encode(originalData,i);
+     Data coded = Base64Coder::encode(originalData);
 
-     showData(originalData,i);
+//     showData(originalData);
 
-     unsigned char recoveredData[i];
+     Data decoded = Base64Coder::decode(coded);
 
-     int nbytes = Base64Coder::decode(coded, recoveredData, i);
-     if (nbytes != i)
-     {
-	cout << i << ": unable to recover length " << nbytes << endl;
-	rVal = -1;
-     }
+     assert(originalData.size() == decoded.size());
 
-     showData(recoveredData, nbytes);
+//     showData(decoded);
 
      cout << "encoded: " << coded << endl;
      
      int b = 0;
-     if ((b = compareBuffers(originalData, recoveredData,i)) < 0)
+     if ( originalData != decoded )
      {
 	cout << i << ": symetry failure (encode/decode) at byte " << -b-1 << endl;
 	rVal = -1;
      }
-     
-     delete originalData;
   }
   return rVal;
+
 }
 // Local Variables:
 // mode:c++
