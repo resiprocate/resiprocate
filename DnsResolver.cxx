@@ -27,7 +27,7 @@ typedef uint32_t u_int32_t;
 #include "sip2/sipstack/SipStack.hxx"
 
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
+#define VOCAL_SUBSYSTEM Vocal2::Subsystem::TRANSACTION
 
 using namespace Vocal2;
 using namespace std;
