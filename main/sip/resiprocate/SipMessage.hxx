@@ -146,7 +146,9 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-      void setSource(const Transport::Tuple& tuple);
+      void setSource(const Transport::Tuple& tuple) { mSource = tuple; }
+      const Transport::Tuple& getSource() const { return mSource; }
+
       void setDestination(const Transport::Tuple& dest);
       
       void addBuffer(char* buf);
