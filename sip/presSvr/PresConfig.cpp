@@ -19,8 +19,8 @@ void
 PresConfig::initializeStack(SipStack& stack, int argc, char **argv)
 {
     int fromPort = (argc>2?atoi(argv[2]):5060);
-    stack.addTransport(Transport::UDP, fromPort);
-    stack.addTransport(Transport::TCP, fromPort);
+    stack.addTransport(UDP, fromPort);
+    stack.addTransport(TCP, fromPort);
 //    stack.addTransport(Transport::UDP, fromPort,Data("207.219.179.228"));
 //    stack.addTransport(Transport::TCP, fromPort,Data("207.219.179.228"));
 }
