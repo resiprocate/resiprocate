@@ -56,7 +56,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
 void 
 ClientRegistration::removeAll()
 {
-   mAllContacts.clear();
+   mOtherContacts.clear();
    mMyContacts.clear();
    
    NameAddr all;
@@ -75,7 +75,7 @@ ClientRegistration::removeMyBindings()
    {
       i->param(p_expires) = 0;
    }
-   // !jf! might want to remove from mAllContacts
+
    mLastRequest.header(h_Contacts) = mMyContacts;
    mLastRequest.remove(h_Expires);
    mLastRequest.header(h_CSeq).sequence()++;
@@ -101,12 +101,17 @@ ClientRegistration::myContacts()
 const NameAddrs& 
 ClientRegistration::allContacts()
 {
-   return mAllContacts;
+    // !ah! need to combine mMyContacts
+    assert(0);
+   return mOtherContacts;
 }
 
 void
 ClientRegistration::updateMyContacts(const NameAddrs& allContacts)
 {
+    //!ah! not used
+    assert(0);
+
    NameAddrs myNewContacts;
    for (NameAddrs::const_iterator i=allContacts.begin(); i != allContacts.end(); i++)
    {
@@ -141,8 +146,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
       //Profile* profile = mDum.getProfile();
       
       // !jf! consider what to do if no contacts
-      mAllContacts = msg.header(h_Contacts);
-      updateMyContacts(mAllContacts);
+       // !ah! take list of ctcs and push into mMy or mOther as required.
+
+      mOtherContacts = msg.header(h_Contacts);
+      // goes away -- updateMyContacts(mOtherContacts);
       if (!mMyContacts.empty())
       {
          // make timers to re-register
@@ -158,6 +165,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
       if (code == 423) // interval too short
       {
          // maximum 1 day 
+          // !ah! why max check? -- profile?
          if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
          {
             mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
@@ -173,13 +181,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
 void
 ClientRegistration::dispatch(const DumTimer& timer)
 {
-   if (mLastRequest.header(h_CSeq).sequence() == timer.cseq())
-   {
-      if (!mMyContacts.empty())
-      {
-         requestRefresh();
-      }
-   }
+    if (timer.seq() == mTimerSeq)
+    {
+        if (!mMyContacts.empty())
+        {
+            requestRefresh();
+        }
+    }
 }
 
 ClientRegistration::Handle::Handle(DialogUsageManager& dum)
