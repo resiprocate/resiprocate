@@ -43,11 +43,6 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type, int value)
      mValue(value)
 {}
       
-int& IntegerParameter::value()
-{
-   return mValue;
-}
-
 Parameter* 
 IntegerParameter::clone() const
 {

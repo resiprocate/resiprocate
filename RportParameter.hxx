@@ -25,8 +25,6 @@ class RportParameter : public Parameter
          return new RportParameter(type, pb, terminators);
       }
 
-      Type& value() { return *this; }
-
       int& port() {return mValue;}
       int port() const {return mValue;}
 
@@ -37,6 +35,9 @@ class RportParameter : public Parameter
       virtual Parameter* clone() const;
       
    private:
+      friend class ParserCategory;
+      Type& value() { return *this; }
+
       int mValue;
       bool mHasValue;
 };

@@ -36,11 +36,6 @@ FloatParameter::FloatParameter(ParameterTypes::Type type)
      mValue(0.0)
 {}
       
-float& FloatParameter::value()
-{
-   return mValue;
-}
-
 Parameter* 
 FloatParameter::clone() const
 {
