@@ -6,6 +6,7 @@ MassagedSipMessage
 a.out
 backup
 bin.*
+gmon.out
 headers-hash.c
 html
 memprof.sh

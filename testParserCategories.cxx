@@ -238,6 +238,16 @@ main(int arc, char** argv)
       assert(nameAddr.exists(p_tag) == false);
       assert(nameAddr.exists(p_mobility) == false);
    }
+   {
+      cerr << "NameAddr parse, problematic?" << endl;
+      char *nameAddrString = "SIP:101@localhost:5080;transport=UDP";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "");
+      assert(nameAddr.uri().scheme() == "SIP");
+      assert(nameAddr.uri().user() == "101");
+   }
 }
 
 
