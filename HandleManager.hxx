@@ -7,6 +7,8 @@
 namespace resip
 {
 
+
+
 class HandleManager
 {
    public:
