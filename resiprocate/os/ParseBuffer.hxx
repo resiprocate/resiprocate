@@ -31,7 +31,7 @@ class ParseBuffer
       ParseBuffer& operator=(const ParseBuffer& other);
       void reset(const char* pos);
 
-      bool eof() { return mTraversalPtr >= mEnd;}
+      bool eof() { return ( (mEnd==0) || (mTraversalPtr >= mEnd) );}
       const char* position() { return mTraversalPtr; }
       const char* end() { return mEnd; }
 
