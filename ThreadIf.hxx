@@ -1,9 +1,82 @@
-#if !defined(VOCAL_POSIX_VTHREAD_H)
-#define VOCAL_POSIX_VTHREAD_H
+#ifndef THREADIF_HXX
+#define THREADIF_HXX
 
-#ifdef WIN32
-#error this should not be used in win32 
-#endif
+#include "Mutex.hxx"
+
+static const char* const ThreadIf_hxx_version = "$Id: ThreadIf.hxx,v 1.1 2002/09/25 19:42:09 jason Exp $";
+
+namespace Vocal2
+{
+
+/* A wrapper class to create and spawn a thread.  It is a base class.
+   ThreadIf::thread() is a pure virtual method .
+   
+   <P>Usage:
+   To use this class, derive from it and override the thread() method.
+   To start the thread, call the run() method.  The code in thread() will
+   run in a separate thread.
+   
+   <P>Call shutdown() from the constructing thread to shut down the
+   code.  This will set the bool shutdown_ to true.  The code in
+   thread() should react properly to shutdown_ being set, by
+   returning.  Call join() to join the code.
+   <P>Sample:
+   <PRE>
+   ...
+   DerivedThreadIf thread;
+   thread.run();
+   ... do stuff ...
+   thread.shutdown();
+   thread.join();
+   </PRE>
+*/
+class ThreadIf
+{
+   public:
+      ThreadIf();
+      virtual ~ThreadIf();
+
+      // runs the code in thread() .  Returns immediately
+      virtual void run();
+
+      // joins to the thread running thread()
+      virtual void join();
+
+      // forces the thread running to exit()
+      virtual void exit();
+
+      // request the thread running thread() to return, by setting  mShutdown 
+      void shutdown();
+
+      // returns true if the thread has been asked to shutdown or not running
+      bool isShutdown() const;
+
+      vthread_t selfId() const;
+
+      /* thread is a virtual method.  Users should derive and define
+        thread() such that it returns when isShutdown() is true.
+      */
+      virtual void thread() = 0;
+
+   protected:
+      // protected so that thread() can retrieve its threadId 
+      vthread_t mId;
+      
+   private:
+
+      bool mShutdown;
+      mutable Mutex mShutdownMutex;
+
+      // Suppress copying
+      ThreadIf(const ThreadIf &);
+      const ThreadIf & operator=(const ThreadIf &);
+};
+ 
+}
+
+
+#endif // THREADIF_HXX
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -54,61 +127,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-
-static const char* const posix_vthread_h_Version =
-    "$Id: vthread.hxx,v 1.3 2002/09/25 19:42:09 jason Exp $";
-
-
-#include <pthread.h>
-
-
-typedef pthread_t vthread_t;
-typedef pthread_mutex_t vmutex_t;
-typedef pthread_cond_t vcondition_t;
-typedef pthread_attr_t vthread_attr_t;    
-
-
-#define     vmutex_init(mutex) \
-                pthread_mutex_init((mutex),0)
-                
-
-#define     vmutex_destroy(mutex) \
-                pthread_mutex_destroy((mutex))
-                
-
-#define     vmutex_lock(mutex) \
-                pthread_mutex_lock((mutex))
-
-
-#define     vmutex_unlock(mutex) \
-                pthread_mutex_unlock((mutex))
-                
-
-#define     vcond_init(cond) \
-                pthread_cond_init((cond),0)
-                
-
-#define     vcond_destroy(cond) \
-                pthread_cond_destroy((cond))
-                
-
-#define     vcond_wait(cond, mutex) \
-                pthread_cond_wait((cond),(mutex))
-
-
-#define     vcond_timedwait(cond, mutex, timeout) \
-                pthread_cond_timedwait((cond),(mutex),(timeout))
-
-
-#define     vcond_signal(cond) \
-                pthread_cond_signal((cond))
-
-
-#define     vcond_broadcast(cond) \
-                pthread_cond_broadcast((cond))
-                
-
-
-
-#endif // !defined(VOCAL_POSIX_VTHREAD_H)
