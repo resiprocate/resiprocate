@@ -8,14 +8,14 @@ endif
 
 all: resiprocate dum tests 
 
-resiprocate: contrib
+resiprocate: contrib 
 	cd resiprocate; $(MAKE)
+
+dum: resiprocate
+	cd resiprocate/dum; $(MAKE)
 
 tests: resiprocate
 	cd resiprocate/test; $(MAKE)
-
-dum:	resiprocate
-	cd resiprocate/dum; $(MAKE)
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
