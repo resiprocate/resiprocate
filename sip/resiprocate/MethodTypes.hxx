@@ -9,6 +9,7 @@ class Data;
 
 typedef enum
 {
+   UNKNOWN=-1,
    defineMethod(ACK, "ACK", " RFC 3261"),
    defineMethod(BYE, "BYE", "RFC 3261"),
    defineMethod(CANCEL, "CANCEL", "RFC 3261"),
@@ -25,8 +26,6 @@ typedef enum
    defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
    defineMethod(SERVICE, "SERVICE", "!RFC"),
    defineMethod(UPDATE, "UPDATE", "RFC 3311"),
-
-   defineMethod(UNKNOWN, "UNKNOWN", ""),
    MAX_METHODS
 } MethodTypes;
 
