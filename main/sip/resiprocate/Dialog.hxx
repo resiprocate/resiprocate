@@ -93,7 +93,7 @@ class Dialog
       // return status code of response to generate - 0 if ok
       int targetRefreshRequest(const SipMessage& request);
 
-      const CallId& dialogId() const { return mDialogId; }
+      const Data& dialogId() const { return mDialogId; }
       const Data& getLocalTag() const { return mLocalTag; }
       const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       const CallId& getCallId() const { return mCallId; }
@@ -113,7 +113,7 @@ class Dialog
       void clear();
       
    private:
-      void setRequestDefaults(SipMessage& request);
+      SipMessage* makeRequest(MethodTypes method);
       void incrementCSeq(SipMessage& request);
       void copyCSeq(SipMessage& request);
 
@@ -133,7 +133,7 @@ class Dialog
       Data mRemoteTag;
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
-      CallId mDialogId;
+      Data mDialogId;
 
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
 };
