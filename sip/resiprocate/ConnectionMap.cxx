@@ -214,6 +214,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
       int bytesUsed;
    
       mMessage->addBuffer(mBuffer);
+#if 0
       PreparseState::TransportAction status;
       preparse.process(*mMessage, mBuffer, mBytesRead + bytesRead, bytesUsed, status);
       if (status == PreparseState::preparseError)
@@ -238,7 +239,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
          return readAnyBody(bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
       }
       assert(0);  // we should never get here
-
+#endif
       return false;
       
    }
