@@ -11,9 +11,12 @@ class GagConduit: public TuIM::Callback
 {
   public:
     GagConduit(SipStack &stack, int udpPort);
+    ~GagConduit();
 
     void handleMessage(GagMessage *);
     void process();
+    bool isRunning() { return running; }
+    void removeAllUsers();
 
     // Methods to handle commands from GAIM
     void gaimIm(GagImMessage *);
@@ -23,6 +26,7 @@ class GagConduit: public TuIM::Callback
     void gaimLogout(GagLogoutMessage *);
     void gaimAddBuddy(GagAddBuddyMessage *);
     void gaimRemoveBuddy(GagRemoveBuddyMessage *);
+    void gaimShutdown(GagShutdownMessage *);
     void gaimError(GagErrorMessage *);
 
     // Callback Methods
@@ -45,5 +49,6 @@ class GagConduit: public TuIM::Callback
     map<Uri,TuIM *> tuIM;
     SipStack *sipStack;
     int udpPort;
+    bool running;
 };
 #endif
