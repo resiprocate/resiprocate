@@ -1,0 +1,7 @@
+
+class Timer
+{
+public:
+private:
+
+};

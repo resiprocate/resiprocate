@@ -9,17 +9,17 @@ public:
 private:
   SipStack& mStack;
 
-  bool haveUdpThread;
-  void processUDP();
+  //bool haveUdpThread;
+  bool processTransports(); // return true if more work to do
 
-  bool haveTCPThread;
-  void processTCP();
+  //bool haveTCPThread;
+  //void processTCP();
 
-  bool haveStateMachineThread;
-  void processStateMachine();
+  ///bool haveStateMachineThread;
+  bool processStateMachine();// return true if more work to do
 
-  bool haveTimerThread;
-  void processTimer();
+  //bool haveTimerThread;
+  bool processTimer();// return true if more work to do
 
 
 };
