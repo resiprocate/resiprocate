@@ -92,6 +92,7 @@ bool ClientAuthManager::handleAuthHeader(const Auth& auth, SipMessage& origReque
    Helper::addAuthorization(origRequest,response,           
                             credential.user,credential.password, 
                             cnonce,nonceCount);
+   origRequest.header(h_CSeq).sequence()++;
    return true;
 }
 
