@@ -25,6 +25,12 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   int runs = 100000;
+   if (argc == 2)
+   {
+      runs = atoi(argv[1]);
+   }
+   cout << "Performing " << runs << " runs." << endl;
    
    Fifo<Message> received;
    
@@ -43,12 +49,14 @@ main(int argc, char* argv[])
    
    struct timeval tv;
    
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<runs; i++)
    {
       auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
       Resolver resolver(dest.uri());
       
-      message->header(h_Vias).front().transport() = Transport::toData(udp->transport()); 
+      Transport::Type t = udp->transport();
+      Data foo = Transport::toData(t); 
+      message->header(h_Vias).front().transport() = foo;
       message->header(h_Vias).front().sentHost() = udp->hostname();
       message->header(h_Vias).front().sentPort() = udp->port();
 
