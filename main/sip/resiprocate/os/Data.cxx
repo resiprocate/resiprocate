@@ -1133,8 +1133,8 @@ static const unsigned char randomPermutation[256] =
    235, 217, 165, 122, 15, 141, 158, 147, 240, 24, 162, 18, 60, 73, 227, 248
 };
 
-#if defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data) const
+size_t
+Data::rawHash(const char* c, size_t size)
 {
    // 4 byte Pearson's hash
    // essentially random hashing
@@ -1150,8 +1150,7 @@ size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data
    bytes[2] = randomPermutation[2];
    bytes[3] = randomPermutation[3];
 
-   const char* c = data.data();
-   const char* end = c + data.size();
+   const char* end = c + size;
    for ( ; c != end; ++c)
    {
       bytes[0] = randomPermutation[*c ^ bytes[0]];
@@ -1163,34 +1162,24 @@ size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data
    // convert from network to host byte order
    return ntohl(st);
 }
+
+size_t
+Data::hash() const
+{
+   return rawHash(this->data(), this->size());
+}
+
+#if defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data) const
+{
+   return data.hash();
+}
 #endif
 
 #if defined(__INTEL_COMPILER)
 size_t std::hash_value(const resip::Data& data)
 {
-   // 4 byte Pearson's hash
-   // essentially random hashing
-
-   // .dlb. better if layed out in host byte order
-
-   // network order is big endian:
-   unsigned char byte0(randomPermutation[0]);
-   unsigned char byte1(randomPermutation[1]);
-   unsigned char byte2(randomPermutation[2]);
-   unsigned char byte3(randomPermutation[3]);
-
-   const char* c = data.data();
-   const char* end = c + data.size();
-   for ( ; c != end; ++c)
-   {
-      byte0 = randomPermutation[*c ^ byte0];
-      byte1 = randomPermutation[*c ^ byte1];
-      byte2 = randomPermutation[*c ^ byte2];
-      byte3 = randomPermutation[*c ^ byte3];
-   }
-
-   // convert from network to host byte order
-   return ntohl((size_t)(byte0));
+   return data.hash();
 }
 #endif
 
