@@ -1,38 +1,43 @@
-#if !defined(RESIP_UDPTRANSPORT_HXX)
-#define RESIP_UDPTRANSPORT_HXX
+#if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
+#define RESIP_GENERIC_IP_ADDRESS_HXX
 
-#include "resiprocate/InternalTransport.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 namespace resip
 {
+  struct GenericIPAddress
+  {
+  public:   
+    GenericIPAddress()
+    {
+    }
+    
+    GenericIPAddress(const sockaddr_in& v4) : v4Address(v4), mIsVersion4(true)
+    {
+    }
 
-class SipMessage;
+#ifdef USE_IPV6
+    GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6), mIsVersion4(false)
+    {
+    }
+#endif
 
-class UdpTransport : public InternalTransport
-{
-   public:
-      // Specify which udp port to use for send and receive
-      // interface can be an ip address or dns name. If it is an ip address,
-      // only bind to that interface.
-      UdpTransport(Fifo<Message>& fifo,
-                   int portNum,
-                   const Data& interfaceObj=Data::Empty, 
-                   bool ipv4=true);
-      virtual  ~UdpTransport();
-
-      void process(FdSet& fdset);
-      bool isReliable() const { return false; }
-      TransportType transport() const { return UDP; }
-      virtual void buildFdSet( FdSet& fdset);
-//      virtual int maxFileDescriptors() const { return 1; }
-
-   private:
-      MsgHeaderScanner mMsgHeaderScanner;
-      static const int MaxBufferSize;
-};
-
+    socklen_t length() const;
+    bool isVersion6() const { return !mIsVersion4; }
+    bool isVersion4() const { return mIsVersion4; }
+    
+    union
+    {
+      sockaddr address;
+      sockaddr_in v4Address;
+#ifdef USE_IPV6
+      sockaddr_in6 v6Address;
+#endif
+    };
+  private:
+    bool mIsVersion4;
+  };
 }
 
 #endif

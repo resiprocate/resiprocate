@@ -76,7 +76,7 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
-   Message* message = controller.mStateMacFifo.getNext();
+   Message* message = controller.mStateMacFifo->getNext();
    assert(message);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
@@ -1229,7 +1229,7 @@ TransactionState::handle(DnsResult* result)
          case DnsResult::Available:
             mTarget = mDnsResult->next();
             processReliability(mTarget.getType());
-            mController.mTransportSelector.transmit(mMsgToRetransmit, mTarget);
+            mController.transportSelector().transmit(mMsgToRetransmit, mTarget);
             break;
             
          case DnsResult::Finished:
@@ -1367,23 +1367,23 @@ TransactionState::sendToWire(Message* msg, bool resend)
 
       if (resend)
       {
-         mController.mTransportSelector.retransmit(sip, target);
+         mController.transportSelector().retransmit(sip, target);
       }
       else
       {
-         mController.mTransportSelector.transmit(sip, target);
+         mController.transportSelector().transmit(sip, target);
       }
    }
    else if (sip->getDestination().transport)
    {
-      mController.mTransportSelector.transmit(sip, sip->getDestination()); // dns not used
+      mController.transportSelector().transmit(sip, sip->getDestination()); // dns not used
    }
    else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
       StackLog (<< "sendToWire with no dns result: " << *this);
       assert(sip->isRequest());
       assert(!mIsCancel);
-      mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
+      mDnsResult = mController.transportSelector().dnsResolve(sip, this);
       assert(mDnsResult); // !ah! is this really an assertion or an error?
 
       // do it now, if there is an immediate result
@@ -1398,11 +1398,11 @@ TransactionState::sendToWire(Message* msg, bool resend)
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
       if (resend)
       {
-         mController.mTransportSelector.retransmit(sip, mTarget);
+         mController.transportSelector().retransmit(sip, mTarget);
       }
       else
       {
-         mController.mTransportSelector.transmit(sip, mTarget);
+         mController.transportSelector().transmit(sip, mTarget);
       }
    }
 }

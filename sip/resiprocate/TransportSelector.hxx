@@ -11,6 +11,8 @@
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/AresDns.hxx"
 
 class TestTransportSelector;
 
@@ -22,11 +24,22 @@ class Message;
 class SipMessage;
 class TlsTransport;
 class TransactionController;
+class ExternalAsyncCLessTransport;
+
+class ExternalSelector
+{
+   public:
+      virtual Transport* selectExternalTransport(SipMessage* msg, const Tuple& dest) = 0;
+      virtual void externalTransportAdded(Transport* externalTransport) = 0;
+};
 
 class TransportSelector 
 {
    public:
-      TransportSelector(bool multithreaded, Fifo<Message>& fifo);
+      TransportSelector(bool multithreaded, Fifo<Message>& fifo, 
+                        ExternalDns* dnsProvider = new AresDns(),
+                        ExternalSelector* ets = 0);
+      
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
@@ -36,10 +49,15 @@ class TransportSelector
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
+      //ownedByMe determines who destroys the external transport
+      //this is a factory method, so return the instance...used by the sipstack to set aliases
+      Transport* addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
+
       void addTransport( TransportType,
                          int port,
                          IpVersion version,
                          const Data& ipInterface=Data::Empty);
+
       void addTlsTransport(const Data& domainName, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
@@ -58,6 +76,18 @@ class TransportSelector
       void retransmit(SipMessage* msg, Tuple& target );
       
    private:
+      // Just supports one transport per TransportType.  Silently overwrites if more than one
+      // of a given type is added.  You have been warned.  
+      class DefaultExternalSelector : public ExternalSelector
+      {
+	 public:
+	    virtual Transport* selectExternalTransport(SipMessage* msg, const Tuple& dest);
+	    virtual void externalTransportAdded(Transport* externalTransport);
+	 private:
+	    typedef std::map<TransportType, Transport*> ExternalTransportMap;
+	    ExternalTransportMap mExternalTransports;
+      };
+      
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
@@ -84,6 +114,11 @@ class TransportSelector
       
       HashMap<Data, TlsTransport*> mTlsTransports;      // domain name -> Transport
       
+      typedef std::list<Transport*> ExternalTransportList;
+      ExternalTransportList mExternalTransports;
+
+      ExternalSelector* mExternalSelector;
+
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
@@ -93,6 +128,9 @@ class TransportSelector
 #ifdef USE_IPV6
 	  struct sockaddr_in6 mUnspecified6;
 #endif
+
+      //to avoid connect calls when not required. Should become an int if tranport removal is supported
+      bool hasBuiltInTransports;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

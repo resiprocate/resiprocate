@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/AsyncCLessTransport.hxx"
+#include "resiprocate/external/AsyncTransportInterfaces.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TcpTransport.hxx"
@@ -30,11 +32,13 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
-TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
+TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo, 
+                                     ExternalDns* dnsProvider, ExternalSelector* ets) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET )
+   mSocket6( INVALID_SOCKET ),
+   mDns(dnsProvider)
 {
    memset(&mUnspecified, 0, sizeof(sockaddr_in));
    mUnspecified.sin_family = AF_UNSPEC;
@@ -43,10 +47,20 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    memset(&mUnspecified6, 0, sizeof(sockaddr_in6));
    mUnspecified6.sin6_family = AF_UNSPEC;
 #endif
+
+   if (ets == 0)
+   {
+      mExternalSelector = new TransportSelector::DefaultExternalSelector();
+   }
+   else
+   {
+      mExternalSelector = ets;
+   }
 }
 
 TransportSelector::~TransportSelector()
 {
+   //?dcm? -- odd approach, why not just iterate and delete the elements pointed to, then clear() the map? 
    while (!mExactTransports.empty())
    {
       ExactTupleMap::const_iterator i = mExactTransports.begin();
@@ -62,19 +76,26 @@ TransportSelector::~TransportSelector()
       mAnyInterfaceTransports.erase(i->first);
       delete t;
    }
+
+   for (ExternalTransportList::iterator it = mExternalTransports.begin(); it != mExternalTransports.end(); it++)
+   {
+      delete *it;
+   }
+   mExternalTransports.clear();
+   delete mExternalSelector;
 }
 
 void
 TransportSelector::shutdown()
 {
-   for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
-   {
-      i->second->shutdown();
-   }
-   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
-   {
-      i->second->shutdown();
-   }
+//    for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+//    {
+//       i->second->shutdown();
+//    }
+//    for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+//    {
+//       i->second->shutdown();
+//    }
 }
 
 bool
@@ -91,6 +112,14 @@ TransportSelector::isFinished() const
    return true;
 }
 
+Transport*
+TransportSelector::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, bool ownedByMe)
+{
+   AsyncCLessTransport* transport = new AsyncCLessTransport(mStateMacFifo, externalTransport, ownedByMe);
+   InfoLog (<< "Adding transport: " << transport->getTuple());
+   mExternalSelector->externalTransportAdded(transport);
+   return transport;
+}
 
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
 void 
@@ -129,7 +158,7 @@ TransportSelector::addTransport(TransportType protocol,
 
    if (mMultiThreaded)
    {
-      transport->run();
+      //      transport->run();
    }
    
    Tuple key(ipInterface, port, version == V4, protocol);
@@ -156,7 +185,7 @@ TransportSelector::addTransport(TransportType protocol,
 void 
 TransportSelector::addTlsTransport(const Data& domainName, 
                                    const Data& keyDir,
-				   const Data& privateKeyPassPhrase,
+                                   const Data& privateKeyPassPhrase,
                                    int port,
                                    IpVersion version,
                                    const Data& ipInterface)
@@ -188,8 +217,11 @@ TransportSelector::addTlsTransport(const Data& domainName,
 void 
 TransportSelector::process(FdSet& fdset)
 {
-   mDns.process(fdset);
-   
+   if (mDns.requiresProcess())
+   {
+      mDns.process(fdset);
+   }
+
    if (!mMultiThreaded)
    {
       for (ExactTupleMap::const_iterator i = mExactTransports.begin();
@@ -338,7 +370,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          if (mSocket == INVALID_SOCKET)
          {
-            mSocket = Transport::socket(UDP, target.isV4()); // may throw
+            mSocket = InternalTransport::socket(UDP, target.isV4()); // may throw
          }
          tmp = mSocket;
       }
@@ -346,7 +378,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          if (mSocket6 == INVALID_SOCKET)
          {
-            mSocket6 = Transport::socket(UDP, target.isV4()); // may throw
+            mSocket6 = InternalTransport::socket(UDP, target.isV4()); // may throw
          }
          tmp = mSocket6;
       }
@@ -457,7 +489,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(tempTuple);
+               msg->header(h_Vias).front().sentHost() = tempTuple.presentationFormat();
             }
             if (!topVia.sentPort())
             {
@@ -488,7 +520,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is. 
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = DnsUtil::inet_ntop(tempTuple);
+                  contact.uri().host() = tempTuple.presentationFormat();
                   contact.uri().port() = target.transport->port();
                   if (target.transport->transport() != UDP)
                   {
@@ -507,7 +539,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-		   << " via " << tempTuple << endl << encoded.escaped());
+                   << " via " << tempTuple << endl << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
@@ -537,7 +569,10 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 void 
 TransportSelector::buildFdSet(FdSet& fdset)
 {
-   mDns.buildFdSet(fdset);
+   if (mDns.requiresProcess())
+   {
+      mDns.buildFdSet(fdset);
+   }
    
    if (!mMultiThreaded)
    {
@@ -643,6 +678,26 @@ TransportSelector::findTlsTransport(const Data& domainname)
    }
 }
 
+//TransportSelector::DefaultExternalSelector
+void
+TransportSelector::DefaultExternalSelector::externalTransportAdded(Transport* externalTransport)
+{
+   mExternalTransports[externalTransport->transport()] = externalTransport;
+}
+
+Transport* 
+TransportSelector::DefaultExternalSelector::selectExternalTransport(SipMessage* msg, const Tuple& dest)
+{
+   ExternalTransportMap::const_iterator i = mExternalTransports.find(dest.getType());
+   if (i != mExternalTransports.end())
+   {
+      return i->second;
+   }
+   else
+   {
+      return 0;
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

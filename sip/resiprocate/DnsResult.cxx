@@ -17,6 +17,18 @@
 #include <netinet/in.h>
 #endif
 
+#ifdef WIN32
+
+#include <winsock2.h>
+
+//#include <stdlib.h>
+
+//#include <io.h>
+
+#include <WS2TCPIP.H>
+
+#endif
+
 #if defined(USE_ARES)
 extern "C"
 {
@@ -213,7 +225,7 @@ DnsResult::lookupAAAARecords(const Data& target)
 #if defined(USE_IPV6)
    DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
-   ares_query(mInterface.mChannel, target.c_str(), C_IN, T_AAAA, DnsResult::aresAAAACallback, this); 
+   mInterface.lookupAAAARecords(target, this);
 #else // !USE_IPV6
    lookupARecords(target);
 #endif
@@ -223,59 +235,60 @@ void
 DnsResult::lookupARecords(const Data& target)
 {
    DebugLog (<< "Doing Host (A) lookup: " << target);
-   ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
+   mInterface.lookupARecords(target, this);
 }
 
 void
 DnsResult::lookupNAPTR()
 {
    DebugLog (<< "Doing NAPTR lookup: " << mTarget);
-   ares_query(mInterface.mChannel, mTarget.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
+   mInterface.lookupNAPTR(mTarget, this);
 }
 
 void
 DnsResult::lookupSRV(const Data& target)
 {
    DebugLog (<< "Doing SRV lookup: " << target);
-   ares_query(mInterface.mChannel, target.c_str(), C_IN, T_SRV, DnsResult::aresSRVCallback, this); 
+   mInterface.lookupSRV(target, this);
 }
 
-void
-DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
-{
-   DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   StackLog (<< "Received A result for: " << thisp->mTarget);
-   thisp->processHost(status, result);
-}
+// void
+// DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
+// {
+//    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
+//    StackLog (<< "Received A result for: " << thisp->mTarget);
+//    thisp->processHost(status, result);
+// }
+
+// void
+// DnsResult::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
+// {
+//    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
+//    StackLog (<< "Received NAPTR result for: " << thisp->mTarget);
+//    thisp->processNAPTR(status, abuf, alen);
+// }
+
+
+// void
+// DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
+// {
+//    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
+//    StackLog (<< "Received SRV result for: " << thisp->mTarget);
+//    thisp->processSRV(status, abuf, alen);
+// }
+
+// void
+// DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
+// {
+//    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
+//    StackLog (<< "Received AAAA result for: " << thisp->mTarget);
+//    thisp->processAAAA(status, abuf, alen);
+// }
 
 void
-DnsResult::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
+DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
 {
-   DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   StackLog (<< "Received NAPTR result for: " << thisp->mTarget);
-   thisp->processNAPTR(status, abuf, alen);
-}
-
-
-void
-DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   StackLog (<< "Received SRV result for: " << thisp->mTarget);
-   thisp->processSRV(status, abuf, alen);
-}
-
-void
-DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   StackLog (<< "Received AAAA result for: " << thisp->mTarget);
-   thisp->processAAAA(status, abuf, alen);
-}
-
-void
-DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
-{
+   StackLog (<< "Received NAPTR result for: " << mTarget);
    StackLog (<< "DnsResult::processNAPTR() " << status);
 
    // This function assumes that the NAPTR query that caused this
@@ -287,7 +300,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       return;
    }
 
-   if (status == ARES_SUCCESS)
+   if (status == 0)
    {
       const unsigned char *aptr = abuf + HFIXEDSZ;
       int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
@@ -373,11 +386,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
    }
    else
    {
-      {
-         char* errmem=0;
-         StackLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
-         ares_free_errmem(errmem);
-      }
+      StackLog (<< "NAPTR lookup failed: " << mInterface.errorMessage(status));
       
       // This will result in no NAPTR results. In this case, send out SRV
       // queries for each supported protocol
@@ -400,8 +409,9 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 }
 
 void
-DnsResult::processSRV(int status, unsigned char* abuf, int alen)
+DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
 {
+   StackLog (<< "Received SRV result for: " << mTarget);
    assert(mSRVCount>=0);
    mSRVCount--;
    StackLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
@@ -415,7 +425,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       return;
    }
 
-   if (status == ARES_SUCCESS)
+   if (status == 0)
    {
       const unsigned char *aptr = abuf + HFIXEDSZ;
       int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
@@ -473,9 +483,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    }
    else
    {
-      char* errmem=0;
-      StackLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
+      StackLog (<< "SRV lookup failed: " << mInterface.errorMessage(status));
    }
 
    // no outstanding queries 
@@ -506,8 +514,9 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 }
 
 void
-DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
+DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 {
+   StackLog (<< "Received AAAA result for: " << mTarget);
 #ifdef USE_IPV6
    StackLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
@@ -518,7 +527,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
       destroy();
       return;
    }
-   if (status == ARES_SUCCESS)
+   if (status == 0)
    {
      const unsigned char *aptr = abuf + HFIXEDSZ;
 
@@ -546,9 +555,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
    }
    else
    {
-      char* errmem=0;
-      StackLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
+      StackLog (<< "Failed async dns query: " << mInterface.errorMessage(status));
    }
    lookupARecords(mPassHostFromAAAAtoA);
 #else
@@ -557,8 +564,9 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 }
 
 void
-DnsResult::processHost(int status, struct hostent* result)
+DnsResult::processHost(int status, const struct hostent* result)
 {
+   StackLog (<< "Received A result for: " << mTarget);
    StackLog (<< "DnsResult::processHost() " << status);
    
    // This function assumes that the A query that caused this callback
@@ -570,7 +578,7 @@ DnsResult::processHost(int status, struct hostent* result)
       return;
    }
 
-   if (status == ARES_SUCCESS)
+   if (status == 0)
    {
       StackLog (<< "DNS A lookup canonical name: " << result->h_name);
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
@@ -586,9 +594,7 @@ DnsResult::processHost(int status, struct hostent* result)
    }
    else
    {
-      char* errmem=0;
-      StackLog (<< "Failed async A query: " << ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
+      StackLog (<< "Failed async A query: " << mInterface.errorMessage(status));
    }
 
    if (mSRVCount == 0)

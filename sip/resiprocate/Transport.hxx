@@ -1,15 +1,13 @@
 #if !defined(RESIP_TRANSPORT_HXX)
 #define RESIP_TRANSPORT_HXX
 
-#include <exception>
+//#include <exception>
 
+#include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
 
 namespace resip
 {
@@ -18,7 +16,7 @@ class SipMessage;
 class SendData;
 class Connection;
 
-class Transport : public ThreadIf
+class Transport
 {
    public:
       class Exception : public BaseException
@@ -30,25 +28,35 @@ class Transport : public ThreadIf
       
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
+      Transport(Fifo<Message>& rxFifo, const GenericIPAddress& address);
       Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       virtual ~Transport();
 
-      bool isFinished() const;
-      void shutdown();
-      
-      // shared by UDP, TCP, and TLS
-      static Socket socket(TransportType type, bool ipv4);
-      static void error( int err );
-      void bind();
+      virtual bool isFinished() const=0;
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
+
+      //only call buildFdSet and process if requiresProcess is true. This won't
+      //be true for most external transports, or transports that have their own
+      //threading model. 
+      virtual bool requiresProcess() = 0;
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
-      virtual int maxFileDescriptors() const = 0;
+
+      virtual bool hasDataToSend() const = 0;
       
-      void thread(); // from ThreadIf
+      
+//  virtual int maxFileDescriptors() const = 0; !dcm! -- not used anywhere
+
+
+      virtual TransportType transport() const = 0 ;
+      virtual bool isReliable() const = 0;
+
+      // void shutdown();
       
       void fail(const Data& tid); // called when transport failed
+      
+      static void error(int e);
       
       // These methods are used by the TransportSelector
       const Data& interfaceName() const { return mInterface; } 
@@ -59,47 +67,42 @@ class Transport : public ThreadIf
       const sockaddr& boundInterface() const { return mTuple.getSockaddr(); }
       const Tuple& getTuple() const { return mTuple; }
 
-      virtual TransportType transport() const =0 ;
-      virtual bool isReliable() const =0;
-      
       // Perform basic sanity checks on message. Return false
       // if there is a problem eg) no Vias. --SIDE EFFECT--
       // This will queue a response if it CAN for a via-less 
       // request. Response will go straight into the TxFifo
-
       bool basicCheck(const SipMessage& msg);
 
-      SendData* makeFailedResponse(const SipMessage& msg,
-                                   int responseCode = 400,
-                                   const char * warning = 0);
+      void makeFailedResponse(const SipMessage& msg,
+                              int responseCode = 400,
+                              const char * warning = 0);
 
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
-      bool hasDataToSend() const;
 
       // also used by the TransportSelector. 
       // requires that the two transports be 
       bool operator==(const Transport& rhs) const;
 
    protected:
-      Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mInterface;
       Tuple mTuple;
-      
-      Fifo<SendData> mTxFifo; // owned by the transport
+
       Fifo<Message>& mStateMachineFifo; // passed in
       bool mShuttingDown;
+
+      //not a great name, just adds the message to the fifo in the synchronous(default) case,
+      //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
+      //transports would require another copy.
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid) = 0;
       
    private:
       static const Data transportNames[MAX_TRANSPORT];
       friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
-      
 };
 
-std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
-      
-
+//!dcm! -- move into own header
 class SendData
 {
    public:
@@ -113,6 +116,8 @@ class SendData
       const Data transactionId;
 };
 
+std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      
 }
 
 #endif

@@ -16,6 +16,7 @@ namespace resip
 
 class Data;
 class Transport;
+struct GenericIPAddress;
 
 // WARNING!!
 // When you change this structure, make sure to update the hash function,
@@ -29,6 +30,7 @@ class Tuple
 {
    public:
       Tuple();
+      Tuple(const GenericIPAddress& genericAddress, TransportType type=UNKNOWN_TRANSPORT);
       Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT);
       Tuple(const Data& printableAddress, int port, TransportType type);
       Tuple(const in_addr& pipv4, int pport, TransportType ptype);
@@ -50,9 +52,13 @@ class Tuple
       
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
+           
+      Data presentationFormat() const;
       
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
+
+      GenericIPAddress toGenericIPAddress() const;
 
       Transport* transport;
       ConnectionId connectionId;
@@ -91,6 +97,7 @@ class Tuple
             sockaddr_in6 m_anonv6;
 #endif
       };
+
       TransportType mTransportType;
 
       friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);

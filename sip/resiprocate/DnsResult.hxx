@@ -106,18 +106,20 @@ class DnsResult
       // used. Otherwise, load the results into mResults
       void lookupSRV(const Data& target);
     
+      //status of 0 is success for the processBlah calls, the error can be
+      //retrieved from DnsInterface::errorMessage
       // process a NAPTR record as per rfc3263
-      void processNAPTR(int status, unsigned char* abuf, int alen);
+      void processNAPTR(int status, const unsigned char* abuf, int alen);
 
       // process an SRV record as per rfc3263 and rfc2782. There may be more
       // than one SRV dns request outstanding at a time
-      void processSRV(int status, unsigned char* abuf, int alen);
+      void processSRV(int status, const unsigned char* abuf, int alen);
 
       // process the result of a AAAA query
-      void processAAAA(int status, unsigned char* abuf, int alen);
+      void processAAAA(int status, const unsigned char* abuf, int alen);
       //
       // process an A record as per rfc3263
-      void processHost(int status, struct hostent* result);
+      void processHost(int status, const struct hostent* result);
       
       // compute the cumulative weights for the SRV entries with the lowest
       // priority, then randomly pick according to RFC2782 from the entries with
@@ -139,11 +141,6 @@ class DnsResult
                                            const unsigned char* abuf,
                                            int alen);
 
-      // The callbacks associated with ares queries
-      static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresHostCallback(void *arg, int status, struct hostent* result);
 
       // Some utilities for parsing dns results
       static const unsigned char* skipDNSQuestion(const unsigned char *aptr,
@@ -156,11 +153,11 @@ class DnsResult
 
 #ifdef USE_IPV6
       static const unsigned char* parseAAAA(const unsigned char *aptr,
-                                           const unsigned char *abuf, 
-                                           int alen,
-                                           in6_addr * aaaa);
+                                            const unsigned char *abuf, 
+                                            int alen,
+                                            in6_addr * aaaa);
 #endif
-
+      
       static const unsigned char* parseNAPTR(const unsigned char *aptr,
                                              const unsigned char *abuf, 
                                              int alen,
