@@ -1,12 +1,12 @@
-#if !defined(RESIP_BASESESSION_HXX)
-#define RESIP_BASESESSION_HXX
+#if !defined(RESIP_BASEUSAGE_HXX)
+#define RESIP_BASEUSAGE_HXX
 
 namespace resip
 {
-class BaseSession
+class BaseUsage
 {
    public:
-      BaseSession(SAManager& sam);
+      BaseUsage(SAManager& sam);
       
       SAManager& sam();
       Dialog& dialog();
