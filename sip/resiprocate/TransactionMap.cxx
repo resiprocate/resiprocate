@@ -4,7 +4,7 @@
 
 using namespace Vocal2;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
 
 TransactionState* 
 TransactionMap::find( const Data& tid ) const
