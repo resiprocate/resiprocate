@@ -746,6 +746,14 @@ TuIM::setMyPresense( const bool open, const Data& status )
    }
 }
 
+void 
+TuIM::setOutboundProxy( const Uri& uri )
+{
+	// !cj! !jf! TODO 
+	ErrLog( << "No support for outbound proxies yet" );
+}
+
+
 
 
 /* ====================================================================
