@@ -49,8 +49,6 @@ using namespace resip;
 using namespace std;
 
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
-   mFifo(TransactionController::MaxTUFifoTimeDepthSecs,
-         TransactionController::MaxTUFifoSize),
    mMasterProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),

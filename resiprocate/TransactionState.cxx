@@ -200,24 +200,32 @@ TransactionState::process(TransactionController& controller)
       TransactionUser* tu = 0;      
       if (sip->isExternal())
       {
-         if (controller.mTuSelector.haveTransactionUsers())
+         if (controller.mTuSelector.haveTransactionUsers() && sip->isRequest())
          {
             tu = controller.mTuSelector.selectTransactionUser(*sip);
-
-            if (!tu && sip->isRequest() && 
-                sip->header(h_RequestLine).getMethod() != ACK)
+            if (!tu)
             {
+               InfoLog (<< "Didn't find a TU for " << sip->brief());
+
                SipMessage* noMatch = Helper::makeResponse(*sip, 500);
                Tuple target(sip->getSource());
                delete sip;
                controller.mTransportSelector.transmit(noMatch, target);
                return;
             }
+            else
+            {
+               InfoLog (<< "Found TU for " << sip->brief());
+            }
          }
       }
       else
       {
          tu = sip->getTransactionUser();
+         if (!tu)
+         {
+            InfoLog (<< "No TU associated with " << sip->brief());
+         }
       }
                
       if (sip->isRequest())
@@ -255,7 +263,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 481));
+                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
@@ -278,7 +286,7 @@ TransactionState::process(TransactionController& controller)
 
             // Incoming ACK just gets passed to the TU
             //StackLog(<< "Adding incoming message to TU fifo " << tid);
-            TransactionState::sendToTU(controller, sip);
+            TransactionState::sendToTU(tu, controller, sip);
          }
          else // new sip msg from the TU
          {
@@ -302,7 +310,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip,481));
+                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip,481));
                   delete sip;
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
@@ -317,7 +325,7 @@ TransactionState::process(TransactionController& controller)
                   // The CANCEL was received before the INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
-                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 200));
+                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
                   matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
 
                   delete matchingInvite;
@@ -1517,14 +1525,14 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 void
 TransactionState::sendToTU(TransactionMessage* msg) const
 {
-   msg->setTransactionUser(mTransactionUser);   
-   TransactionState::sendToTU(mController, msg);
+   TransactionState::sendToTU(mTransactionUser, mController, msg);
 }
 
 void
-TransactionState::sendToTU(TransactionController& controller, TransactionMessage* msg) 
+TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg) 
 {
-   StackLog(<< "Send to TU: " << *msg);
+   DebugLog(<< "Send to TU: " << *msg);
+   msg->setTransactionUser(tu);   
    controller.mTuSelector.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
 
