@@ -1,37 +1,52 @@
-#if !defined(RESIP_UDPTRANSPORT_HXX)
-#define RESIP_UDPTRANSPORT_HXX
+#if !defined(RESIP_INTERNAL_TRANSPORT_HXX)
+#define RESIP_INTERNAL_TRANSPORT_HXX
 
-#include "resiprocate/InternalTransport.hxx"
+#include <exception>
+
 #include "resiprocate/Message.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
 namespace resip
 {
 
 class SipMessage;
+class SendData;
+class Connection;
 
-class UdpTransport : public InternalTransport
+class InternalTransport : public Transport
 {
    public:
-      // Specify which udp port to use for send and receive
-      // interface can be an ip address or dns name. If it is an ip address,
-      // only bind to that interface.
-      UdpTransport(Fifo<Message>& fifo,
-                   int portNum,
-                   const Data& interfaceObj=Data::Empty, 
-                   bool ipv4=true);
-      virtual  ~UdpTransport();
+      // sendHost what to put in the Via:sent-by
+      // portNum is the port to receive and/or send on
+      InternalTransport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
+      virtual ~InternalTransport();
 
-      void process(FdSet& fdset);
-      bool isReliable() const { return false; }
-      TransportType transport() const { return UDP; }
-      virtual void buildFdSet( FdSet& fdset);
-//      virtual int maxFileDescriptors() const { return 1; }
+      bool isFinished() const;
+      bool hasDataToSend() const;
 
-   private:
-      MsgHeaderScanner mMsgHeaderScanner;
-      static const int MaxBufferSize;
+      virtual bool requiresProcess() { return true; }
+      
+      // shared by UDP, TCP, and TLS
+      static Socket socket(TransportType type, bool ipv4);
+      void bind();      
+
+      // also used by the TransportSelector. 
+      // requires that the two transports be 
+   protected:
+      Socket mFd; // this is a unix file descriptor or a windows SOCKET
+      
+      Fifo<SendData> mTxFifo; // owned by the transport
+
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid);
+
 };
+
 
 }
 

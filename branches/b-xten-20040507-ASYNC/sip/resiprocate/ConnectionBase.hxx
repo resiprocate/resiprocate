@@ -1,42 +1,96 @@
-#if !defined(RESIP_UDPTRANSPORT_HXX)
-#define RESIP_UDPTRANSPORT_HXX
+#if !defined(RESIP_CONNECTION_BASE_HXX)
+#define RESIP_CONNECTION_BASE_HXX 
 
-#include "resiprocate/InternalTransport.hxx"
-#include "resiprocate/Message.hxx"
+/**
+   !dlb!
+   Relationship between buffer allocation and parsing is broken.
+
+   If the read returns with a few bytes, a new buffer is allocated in performRead.
+
+   performRead should handle allocation, read, and parsing. it should be the only
+   public read accessor in Connection. read should be protected.
+
+   !dcm! -- reworking Connection.  Friendship is gone unless a
+   compelling arguement can be made, as ConnectionManager will now
+   have subclasses.  Accessors now instead of direct access to private
+   memebers.  All buffer stuff is hidden in read for synchronous
+   connections and handleRead for async connections.
+*/
+
+#include <list>
+
+#include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 
 namespace resip
 {
 
-class SipMessage;
+class Message;
+class ConnectionManager;
 
-class UdpTransport : public InternalTransport
+class ConnectionBase
 {
+      friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
-      // Specify which udp port to use for send and receive
-      // interface can be an ip address or dns name. If it is an ip address,
-      // only bind to that interface.
-      UdpTransport(Fifo<Message>& fifo,
-                   int portNum,
-                   const Data& interfaceObj=Data::Empty, 
-                   bool ipv4=true);
-      virtual  ~UdpTransport();
+      ConnectionBase(const Tuple& who);
+      ConnectionId getId() const;
 
-      void process(FdSet& fdset);
-      bool isReliable() const { return false; }
-      TransportType transport() const { return UDP; }
-      virtual void buildFdSet( FdSet& fdset);
-//      virtual int maxFileDescriptors() const { return 1; }
+      virtual void requestWrite(SendData* sendData)=0;
+      Transport* transport();
 
+      Tuple& who() { return mWho; }
+      const UInt64& whenLastUsed() { return mLastUsed; }
+
+      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here? 
+
+   protected:
+      enum State
+      {
+         NewMessage = 0,
+         ReadingHeaders,
+         PartialBody,
+         MAX
+      };
+	
+      State getCurrentState() const { return mState; }
+      void preparseNewBytes(int bytesRead, Fifo<Message>& fifo);
+      std::pair<char*, size_t> getWriteBuffer();
+	 
+      void setBuffer(char* bytes, int count);
+
+      Data::size_type mSendPos;
+      std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
+
+      ConnectionBase();
+      virtual ~ConnectionBase();
+      // no value semantics
+      ConnectionBase(const Connection&);
+      ConnectionBase& operator=(const Connection&);
+
+      ConnectionManager& getConnectionManager() const;
+
+   protected:
+      Tuple mWho;
    private:
+      SipMessage* mMessage;
+      char* mBuffer;
+      size_t mBufferPos;
+      size_t mBufferSize;
+
+      static char connectionStates[MAX][32];
+      UInt64 mLastUsed;
+      State mState;
       MsgHeaderScanner mMsgHeaderScanner;
-      static const int MaxBufferSize;
 };
+
+std::ostream& 
+operator<<(std::ostream& strm, const resip::ConnectionBase& c);
 
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

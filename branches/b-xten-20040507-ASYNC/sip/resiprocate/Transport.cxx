@@ -29,108 +29,35 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(Fifo<Message>& rxFifo,
-                     int portNum,
-                     const Data& intfc,
-                     bool ipv4) :
-   mFd(-1),
-   mInterface(intfc),
-   mTuple(intfc, portNum, ipv4),
+                                     const GenericIPAddress& address) :
+   mTuple(address),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false)
+{
+   mInterface = DnsUtil::inet_ntop(mTuple);
+}
+
+Transport::Transport(Fifo<Message>& rxFifo,
+				     int portNum,
+				     const Data& intfc,
+				     bool ipv4) :
+  mInterface(intfc),
+  mTuple(intfc, portNum, ipv4),
+  mStateMachineFifo(rxFifo),
+  mShuttingDown(false)
 {
 }
 
 Transport::~Transport()
 {
-   if (mFd != -1)
-   {
-      //DebugLog (<< "Closing " << mFd);
-      closeSocket(mFd);
-   }
-   mFd = -2;
 }
 
-bool
-Transport::isFinished() const
-{
-   return !mTxFifo.messageAvailable();
-}
-
-void
-Transport::shutdown()
-{
-   // !jf! should use the fifo to pass this in
-   mShuttingDown = true;
-}
-
-Socket
-Transport::socket(TransportType type, bool ipv4)
-{
-   Socket fd;
-   switch (type)
-   {
-      case UDP:
-#ifdef USE_IPV6
-         fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-#else
-         fd = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-#endif
-         break;
-      case TCP:
-      case TLS:
-#ifdef USE_IPV6
-         fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
-#else
-         fd = ::socket(PF_INET, SOCK_STREAM, 0);
-#endif
-         break;
-      default:
-         InfoLog (<< "Try to create an unsupported socket type: " << Tuple::toData(type));
-         assert(0);
-         throw Exception("Unsupported transport", __FILE__,__LINE__);
-   }
-   
-   if ( fd == INVALID_SOCKET )
-   {
-      int e = getErrno();
-      InfoLog (<< "Failed to create socket: " << strerror(e));
-      throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
-   }
-
-   DebugLog (<< "Creating fd=" << fd << (ipv4 ? " V4/" : " V6/") << (type == UDP ? "UDP" : "TCP"));
-   
-   return fd;
-}
-
-void 
-Transport::bind()
-{
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
-   
-   if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
-   {
-      int e = getErrno();
-      if ( e == EADDRINUSE )
-      {
-         error(e);
-         ErrLog (<< mTuple << " already in use ");
-         throw Exception("port already in use", __FILE__,__LINE__);
-      }
-      else
-      {
-         error(e);
-         ErrLog (<< "Could not bind to " << mTuple);
-         throw Exception("Could not use port", __FILE__,__LINE__);
-      }
-   }
-   
-   bool ok = makeSocketNonBlocking(mFd);
-   if ( !ok )
-   {
-      ErrLog (<< "Could not make socket non-blocking " << port());
-      throw Exception("Failed making socket non-blocking", __FILE__,__LINE__);
-   }
-}
+// void
+// Transport::shutdown()
+// {
+//    // !jf! should use the fifo to pass this in
+//    mShuttingDown = true;
+// }
 
 void
 Transport::error(int e)
@@ -218,92 +145,6 @@ Transport::error(int e)
    }
 }
 
-
-void
-Transport::thread()
-{
-   InfoLog (<< "Starting transport thread for " << mTuple);
-#if defined(USE_EPOLL)
-   int epollfd = ::open("/dev/epoll", O_RDWR);
-   if (epollfd < 0)
-   {
-      int e = getErrno();
-      Transport::error( e );
-      ErrLog (<< "Can't find epoll on this system");
-      assert(0);
-   }
-   
-   int ret = ::ioctl(epollfd, EP_ALLOC, maxFileDescriptors());
-   if (ret != 0)
-   {
-      int e = getErrno();
-      Transport::error( e );
-      ErrLog (<< "Failed to define for " << maxFileDescriptors() << " descriptors");
-      assert(0);
-   }
-
-   char *map = (char *)mmap(NULL, EP_MAP_SIZE(maxFileDescriptors(), 
-                                              PROT_READ | PROT_WRITE, MAP_PRIVATE, n
-                                              epollfd, 0));
-   if (map <= 0)
-   {
-      ErrLog (<< "Failed to allocate space for epoll in kernel for " << maxFileDescriptors() << " descriptors");
-      assert(0);
-   }
-   
-   while (!mShutdown)
-   {
-      struct pollfd pfd;
-      pfd.fd = fd;
-      pfd.events = POLLIN | POLLOUT | POLLERR | POLLHUP;
-      pfd.revents = 0;
-      
-      if (write(kdpfd, &pfd, sizeof(pfd)) != sizeof(pfd)) 
-      {
-         
-         /* report error */
-      }
-      
-
-
-
-      FdSet fdset; 
-      buildFdSet(fdset);
-      int  err = fdset.selectMilliSeconds(100);
-      if (err >= 0)
-      {
-         try
-         {
-            process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-   }
-#else // !USE_EPOLL
-   while (!mShutdown)
-   {
-      FdSet fdset; 
-      buildFdSet(fdset);
-      int  err = fdset.selectMilliSeconds(100);
-      if (err >= 0)
-      {
-         try
-         {
-            process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-   }
-#endif
-
-}
-
 void
 Transport::fail(const Data& tid)
 {
@@ -313,28 +154,21 @@ Transport::fail(const Data& tid)
    }
 }
 
-bool 
-Transport::hasDataToSend() const
-{
-   return mTxFifo.messageAvailable();
-}
-
-
 void 
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
-   SendData* data = new SendData(dest, d, tid);
    assert(dest.getPort() != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
-   mTxFifo.add(data); // !jf!
+   //mTxFifo.add(data); // !jf! -- !dcm! <--what was wrong with this?
+   transmit(dest, d, tid); 
 }
 
-SendData*
+void
 Transport::makeFailedResponse(const SipMessage& msg,
                               int responseCode,
                               const char * warning)
 {
-  if (msg.isResponse()) return 0;
+  if (msg.isResponse()) return;
 
   const Tuple& dest = msg.getSource();
 
@@ -352,9 +186,7 @@ Transport::makeFailedResponse(const SipMessage& msg,
   assert(!encoded.empty());
 
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
-  SendData * sd = new SendData( dest, encoded, Data::Empty );
-  
-  return sd;
+  transmit(dest, encoded, Data::Empty);
 }
 
 
@@ -388,9 +220,7 @@ Transport::basicCheck(const SipMessage& msg)
          {
             // this is VERY low-level b/c we don't have a transaction...
             // here we make a response to warn the offending party.
-            SendData * sd = makeFailedResponse(msg);
-            assert(sd);
-            mTxFifo.add(sd);
+            makeFailedResponse(msg);
          }
          return false;
       }
@@ -399,9 +229,7 @@ Transport::basicCheck(const SipMessage& msg)
          InfoLog (<< "Server has been shutdown, reject message with 503");
          // this is VERY low-level b/c we don't have a transaction...
          // here we make a response to warn the offending party.
-         SendData * sd = makeFailedResponse(msg, 503, "Server has been shutdown");
-         assert(sd);
-         mTxFifo.add(sd);
+         makeFailedResponse(msg, 503, "Server has been shutdown");
       }
    }
    return true;

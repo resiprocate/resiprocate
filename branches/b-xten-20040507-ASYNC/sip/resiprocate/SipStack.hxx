@@ -7,8 +7,8 @@
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
+#include "resiprocate/ProcessNotifier.hxx"
 
 namespace resip 
 {
@@ -16,12 +16,11 @@ namespace resip
 class Data;
 class Message;
 class SipMessage;
-class Executive;
 class Security;
 class Tuple;
 class Uri;
 	
-class SipStack
+class SipStack : public ProcessNotifier::Handler
 {
    public:
       // If multithreaded=true, run each transports in separate threads. The
@@ -29,7 +28,13 @@ class SipStack
       // transportSelector in it. 
       // Set stateless=true, if you want to use the stack for a stateless proxy
       // (no transactions)
-      SipStack(bool multiThreaded=false, Security* security=0, bool stateless=false);
+      SipStack(bool multiThreaded=false, Security* security=0, 
+               bool stateless=false, bool async=false, ProcessNotifier::Handler* asyncHandler=0);
+   
+      //could merge these constructors...handler for async will default to this
+      SipStack(ExternalSelector* tSelector, bool multiThreaded=false, Security* security=0, 
+               bool stateless=false, bool async=false, ProcessNotifier::Handler* asyncHandler=0);
+
       virtual ~SipStack();
 
       // inform the transaction state machine processor that it should not
@@ -65,6 +70,9 @@ class SipStack
                              const Data& sipDomainname = Data::Empty, 
                              IpVersion version = V4,
                              const Data& ipInterface = Data::Empty);
+
+      //external transports
+      void addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
@@ -112,9 +120,18 @@ class SipStack
       // called again. This must be called prior to calling process. 
       virtual void buildFdSet(FdSet& fdset);
 	
-      // should call buildFdSet before calling process. This allows the
-      // executive to give processing time to stack components. 
+      // should call buildFdSet before calling process. 
       virtual void process(FdSet& fdset);
+
+      //used with AsyncNotifier to cause processing to happen when asyncronous
+      //events such as Transport, Certificate or DNS happen.
+      //!dcm!  Will generate an FdSet to avoid impact on existing process methods, but
+      //since select() won't be called, nothing will happen. This is a hack,
+      //process() should probably eventually be diverged all the way down.
+      void process();
+
+      //default implementation of ProcessNotifier::Handler, chains through to process()
+      void handleProcessNotification();
 
       /// returns time in milliseconds when process next needs to be called 
       virtual int getTimeTillNextProcessMS(); 
@@ -141,9 +158,6 @@ class SipStack
       Fifo<Message> mTUFifo;
       TimerQueue mTUTimerQueue;
 
-      // Controls the processing of the various stack elements
-      Executive mExecutive;
-
       // All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
 
@@ -153,10 +167,13 @@ class SipStack
 
       bool mStrictRouting;
       bool mShuttingDown;
+
+      bool mCurrentlyProcessing;
       
+      ProcessNotifier::Handler* selectHander(bool async, ProcessNotifier::Handler* asyncHandler);
+
       friend class TransactionState;
       friend class StatelessHandler;
-      friend class Executive;
       friend class TestDnsResolver;
       friend class TestFSM;
 };

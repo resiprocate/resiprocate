@@ -53,6 +53,7 @@ Some assertions about message headers:
 class MsgHeaderScanner {
 
  public:
+  enum { MaxNumCharsChunkOverflow = 5 };
 
   enum TextPropBitMaskEnum {
     tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired

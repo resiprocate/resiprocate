@@ -21,23 +21,17 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-#if !defined(USE_ARES)
-#error Must have ARES
-#endif
-
-DnsInterface::DnsInterface(bool sync)
+DnsInterface::DnsInterface(ExternalDns* dnsProvider) : mDnsProvider(dnsProvider)
 {
-   assert(sync == false);
-   int status=0;
-   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   int retCode = mDnsProvider->init();
+   if (retCode != 0)
    {
-      ErrLog (<< "Failed to initialize async dns library (ares)");
-      char* errmem=0;
-      ErrLog (<< ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
-      throw Exception("failed to initialize ares", __FILE__,__LINE__);
+      ErrLog (<< "Failed to initialize async dns library");
+      char* errmem = mDnsProvider->errorMessage(retCode);      
+      ErrLog (<< errmem);
+      delete errmem;
+      throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
-   
    addTransportType(UDP);
    addTransportType(TCP);
 #if defined(USE_SSL)
@@ -47,7 +41,37 @@ DnsInterface::DnsInterface(bool sync)
 
 DnsInterface::~DnsInterface()
 {
-   ares_destroy(mChannel);
+   delete mDnsProvider;
+}
+
+void 
+DnsInterface::lookupARecords(const Data& target, DnsResult* dres)
+{
+   mDnsProvider->lookupARecords(target.c_str(), this, dres);
+}
+
+void 
+DnsInterface::lookupAAAARecords(const Data& target, DnsResult* dres)
+{
+   mDnsProvider->lookupAAAARecords(target.c_str(), this, dres);
+}
+
+void 
+DnsInterface::lookupNAPTR(const Data& target, DnsResult* dres)
+{
+   mDnsProvider->lookupNAPTR(target.c_str(), this, dres);
+}
+
+void 
+DnsInterface::lookupSRV(const Data& target, DnsResult* dres)
+{
+   mDnsProvider->lookupSRV(target.c_str(), this, dres);
+}
+
+Data 
+DnsInterface::errorMessage(int status)
+{
+   return Data(mDnsProvider->errorMessage(status));
 }
 
 void 
@@ -80,22 +104,23 @@ DnsInterface::isSupported(const Data& service)
    return mSupportedTransports.count(service) != 0;
 }
 
+bool 
+DnsInterface::requiresProcess()
+{
+   return mDnsProvider->requiresProcess();
+}
+
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
-   int size = ares_fds(mChannel, &fdset.read, &fdset.write);
-   if ( size > fdset.size )
-   {
-      fdset.size = size;
-   }
+   mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
 }
 
 void 
 DnsInterface::process(FdSet& fdset)
 {
-   ares_process(mChannel, &fdset.read, &fdset.write);
+   mDnsProvider->process(fdset.read, fdset.write);
 }
-
 
 DnsResult*
 DnsInterface::lookup(const Uri& uri, DnsHandler* handler)
@@ -113,6 +138,35 @@ DnsInterface::lookup(const Via& via, DnsHandler* handler)
    return NULL;
 }
 
+void 
+DnsInterface::handle_NAPTR(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsResult*>(res.userData)->processNAPTR(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
+}
+
+void 
+DnsInterface::handle_SRV(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsResult*>(res.userData)->processSRV(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
+}
+
+void 
+DnsInterface::handle_AAAA(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsResult*>(res.userData)->processAAAA(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
+}
+
+void 
+DnsInterface::handle_host(ExternalDnsHostResult res)
+{
+   reinterpret_cast<DnsResult*>(res.userData)->processHost(res.errorCode(), res.host);
+   mDnsProvider->freeResult(res);
+}
+
+//?dcm? -- why is there here?
 DnsHandler::~DnsHandler()
 {
 }

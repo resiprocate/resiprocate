@@ -1,64 +1,54 @@
-#if !defined(RESIP_DNSUTIL_HXX)
-#define RESIP_DNSUTIL_HXX
+#if !defined(RESIP_ASYNC_CONNECTION_HXX)
+#define RESIP_ASYNC_CONNECTION_HXX 
 
-#include <list>
-#include "BaseException.hxx"
-#include "Data.hxx"
+/**
+   !dlb!
+   Relationship between buffer allocation and parsing is broken.
 
+   If the read returns with a few bytes, a new buffer is allocated in performRead.
 
-struct in_addr;
+   performRead should handle allocation, read, and parsing. it should be the only
+   public read accessor in Connection. read should be protected.
+
+*/
+
+#include "resiprocate/ConnectionBase.hxx"
 
 namespace resip
 {
+   //write and connect requests are delegated to the connectionManager(for now)
+   class AsyncConnection : public ConnectionBase
+   {
+      public:
+	 AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager, 
+			 bool fromAccept);
 
-class Tuple;
+	 AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager);
 
-class DnsUtil
-{
-   public:
-      class Exception : public BaseException
-      {
-         public:
-            Exception(const Data& msg,
-                      const Data& file,
-                      const int line)
-               : BaseException(msg, file, line) {}            
-         protected:
-            virtual const char* name() const { return "DnsUtil::Exception"; }
-      };
+	 virtual void requestWrite(SendData* sendData);
+	 void handleRead(char* bytes, int count); 
+    
+	 const AsyncStreamID& getAsyncStreamID() { return mStreamID; }
+    
+	 enum State
+	 {
+	    New = 0, 
+	    Opening,
+	    Connected,
+	    Closing,
+	    Closed
+	 };
 
-      static Data getLocalHostName();
-      static Data getLocalDomainName();
-      static Data getLocalIpAddress(const Data& defaultInterface="eth0");
+	 State getState() { return mState; }
 
-      // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
-      static Data inet_ntop(const struct in_addr& addr);
-      static Data inet_ntop(const struct in6_addr& addr);
-      static Data inet_ntop(const struct sockaddr& addr);
-      static Data inet_ntop(const Tuple& tuple);
-
-      static int inet_pton(const Data& printableIp, struct in_addr& dst);
-      static int inet_pton(const Data& printableIp, struct in6_addr& dst);
-      
-      static bool isIpAddress(const Data& ipAddress);
-      static bool isIpV4Address(const Data& ipAddress);
-      static bool isIpV6Address(const Data& ipAddress);
-
-      //pass-throughs when supported, actual implemenation in the WIN32 case
-      static const char * DnsUtil::inet_ntop(int af, const void* src, char* dst, size_t size);      
-      static int inet_pton(int af, const char * src, void * dst);
-
-      // returns pair of interface name, ip address
-      static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
-
-      // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
-      // so string (case) comparison will work
-      // or something
-      static Data canonicalizeIpV6Address(const Data& ipV6Address);
-};
-
+      protected:
+	 AsyncConnection();
+	 virtual ~AsyncConnection();
+	 AsyncStreamID mStreamID;
+	 State mState;
+	 AsyncConnectionManager mAsyncConnectionManager;
+   };
 }
-
 
 #endif
 /* ====================================================================
@@ -109,4 +99,5 @@ class DnsUtil
  * Inc.  For more information on Vovida Networks, Inc., please see
  * <http://www.vovida.org/>.
  *
- */
+ *
+ /

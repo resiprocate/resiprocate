@@ -7,6 +7,7 @@
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/NotifierFifo.hxx"
 
 
 using namespace resip;
@@ -16,24 +17,64 @@ using namespace resip;
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
-TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, bool stateless) : 
+TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
+                                             bool stateless, ProcessNotifier::Handler* asyncHandler) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
-   mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
-   mTimers(mStateMacFifo),
+   mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler):  new Fifo<Message> ),
+   mTransportSelector(multi, *mStateMacFifo),
+   mTimers(*mStateMacFifo),
    StatelessIdCounter(1),
    mShuttingDown(false)
 {
+//    if (asyncHandler)
+//    {
+//       mStateMacFifo = new NotifierFifo<Message>(asyncHandler);
+//    }
+//    else
+//    {
+//       mStateMacFifo = new Fifo<Message>();
+//    }
+//    mTransportSelector = new TransportSelector(multi, *mStateMacFifo);
 }
+
+TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
+                                             ExternalSelector* tSelector, 
+                                             bool stateless, ProcessNotifier::Handler* asyncHandler) :
+   mStateless(stateless),
+   mRegisteredForTransactionTermination(false),
+   mDiscardStrayResponses(true),
+   mTUFifo(tufifo),
+   mStatelessHandler(*this),
+   mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler) : new Fifo<Message> ),
+   mTransportSelector(multi, *mStateMacFifo),
+   mTimers(*mStateMacFifo),
+   StatelessIdCounter(1),
+   mShuttingDown(false)
+{
+//    if (asyncHandler)
+//    {
+//       mStateMacFifo = new NotifierFifo<Message>(asyncHandler);
+//    }
+//    else
+//    {
+//       mStateMacFifo = new Fifo<Message>();
+//    }
+//    mTransportSelector = new TransportSelector(multi, *mStateMacFifo, tSelector);
+}
+
+
+
 #if defined(WIN32)
 #pragma warning( default : 4355 )
 #endif
 
 TransactionController::~TransactionController()
 {
+   delete mStateMacFifo;
 }
 
 void
@@ -48,7 +89,7 @@ TransactionController::process(FdSet& fdset)
 {
    if (mShuttingDown && 
        mTimers.empty() && 
-       !mStateMacFifo.messageAvailable() && 
+       !mStateMacFifo->messageAvailable() && 
        !mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
    {
@@ -59,7 +100,7 @@ TransactionController::process(FdSet& fdset)
       mTransportSelector.process(fdset);
       mTimers.process();
 
-      while (mStateMacFifo.messageAvailable())
+      while (mStateMacFifo->messageAvailable())
       {
          if (mStateless)
          {
@@ -76,7 +117,7 @@ TransactionController::process(FdSet& fdset)
 unsigned int 
 TransactionController::getTimeTillNextProcessMS()
 {
-   if ( mStateMacFifo.messageAvailable() ) 
+   if ( mStateMacFifo->messageAvailable() ) 
    {
       return 0;
    }
@@ -103,30 +144,30 @@ TransactionController::buildFdSet( FdSet& fdset)
    mTransportSelector.buildFdSet( fdset );
 }
 
-void
-TransactionController::addTransport( TransportType protocol, 
-                                     int port,
-                                     IpVersion version,
-                                     const Data& ipInterface)
-{
-   mTransportSelector.addTransport(protocol, port, version, ipInterface);
-}
+// void
+// TransactionController::addTransport( TransportType protocol, 
+//                                      int port,
+//                                      IpVersion version,
+//                                      const Data& ipInterface)
+// {
+//    mTransportSelector.addTransport(protocol, port, version, ipInterface);
+// }
 
-void 
-TransactionController::addTlsTransport( int port, 
-                                        const Data& keyDir,
-                                        const Data& privateKeyPassPhrase,
-                                        const Data& domainname,
-                                        IpVersion version,
-                                        const Data& ipInterface)
-{
-   mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
-}
+// void 
+// TransactionController::addTlsTransport( int port, 
+//                                         const Data& keyDir,
+//                                         const Data& privateKeyPassPhrase,
+//                                         const Data& domainname,
+//                                         IpVersion version,
+//                                         const Data& ipInterface)
+// {
+//    mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
+// }
 
 void
 TransactionController::send(SipMessage* msg)
 {
-   mStateMacFifo.add(msg);
+   mStateMacFifo->add(msg);
 }
 
 void

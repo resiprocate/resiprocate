@@ -19,6 +19,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/GenericIPAddress.hxx"
 
 using namespace resip;
 
@@ -33,6 +34,28 @@ Tuple::Tuple() :
    memset(addr4, 0, sizeof(sockaddr_in));
    mSockaddr.sa_family = AF_INET;
 }
+
+Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type) :
+  transport(0),
+  connectionId(0),
+  mTransportType(type)
+{
+  if (genericAddress.isVersion4())
+  {
+     m_anonv4 = genericAddress.v4Address;
+  }
+  else
+#ifdef USE_IPV6
+  {
+     m_anonv6 = genericAddress.v6Address;
+  }
+#else
+  {
+     assert(0);
+  }
+#endif
+}
+
 
 Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type) :
    transport(0),
@@ -137,7 +160,28 @@ Tuple::Tuple(const struct sockaddr& addr, TransportType ptype) :
 {
 }
 
-   
+Data 
+Tuple::presentationFormat() const
+{
+#ifdef USE_IPV6
+   if (isV4())
+   {
+      return DnsUtil::inet_ntop(*this);
+   }
+   else if (IN6_IS_ADDR_V4MAPPED(&m_anonv6.sin6_addr))
+   {
+      return DnsUtil::inet_ntop(*((in_addr*)(&m_anonv6.sin6_addr.s6_words[5])));
+   }
+   else
+   {
+      return DnsUtil::inet_ntop(*this);
+   }
+#else
+      return DnsUtil::inet_ntop(*this);
+#endif
+
+}
+
 void
 Tuple::setPort(int port)
 {
@@ -530,6 +574,26 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
 #endif
 
    return false;
+}
+
+GenericIPAddress 
+Tuple::toGenericIPAddress() const
+{
+   if (isV4())
+   {
+      return GenericIPAddress(m_anonv4);
+   }
+   else
+#ifdef USE_IPV6
+  {
+      return GenericIPAddress(m_anonv6);
+  }
+#else
+  {
+     assert(0);
+     return m_anonv4; //bogus
+  }
+#endif
 }
 
 bool
