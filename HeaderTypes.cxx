@@ -2,9 +2,12 @@
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Symbols.hxx>
 
+int strcasecmp(const char*, const char*);
+int strncasecmp(const char*, const char*, int len);
+
 using namespace Vocal2;
 
-Data Headers::HeaderNames[MAX_HEADERS] = {};
+Data Headers::HeaderNames[MAX_HEADERS];
 bool Headers::CommaTokenizing[] = {false};
 
 Header<Headers::Content_Disposition> Vocal2::h_ContentDisposition;
@@ -65,12 +68,14 @@ Headers::isCommaTokenizing(Type type)
 }
 
 
+#ifndef WIN32
 // !ah! We might not want this
 Headers::Type& Vocal2::operator++(Headers::Type& t)
 {
    t = static_cast<Headers::Type>(t + 1);
    return t;
 }
+#endif
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '3,$' headers.gperf  */
