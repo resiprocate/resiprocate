@@ -1,3 +1,14 @@
+2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
+
+	* README: added some description how to build and install the
+	resip library using the configure.ac and automake files.
+
+	* configure.ac: added major, minor and micro version number of the
+	resip library package.
+
+	* configure.in: recovered for the original configure system, and
+	moved the new configure.in to configure.ac.
+	
 2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
 
 	* acinclude.m4: fixed not to add -I/usr/include into CPPFLAGS and

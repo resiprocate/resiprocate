@@ -15,6 +15,11 @@ and scalability.  The ares resolver is packaged in the contrib/ares
 directory and can be installed using a standard `./configure; make;
 make install' process prior to building reSIProcate.
 
+Note that there are two building scripts shipped in reSIProcate, one
+is that the configure scripts is generated from configure.in, the
+other is that the configure scripts is generated from configure.ac and
+automake files.
+
 Special ./configure Options
 ===========================
 
@@ -32,3 +37,25 @@ In addition, you may wish to add:
   3. --enable-distcc[=DIR] to instruct the build to compile files
      in parallel with the distcc program.
      
+
+Using configure.ac and Automake
+===============================
+
+   First, we need to build and install the ares library (asynchronous
+DNS resolver).
+	cd contrib/ares
+	./configure
+	make
+	make install
+
+   Run the following commands to generate the configure scripts from
+the configure.ac and automake files, build and install the resiprocate
+library.
+	aclocal && autoconf && automake
+	./configure --with-openssl --with-ares --with-shared-libs
+	make
+	make install
+
+   Then, all the library and header files are installed under the
+/usr/local directory. If you want to install them to other directory,
+you just need add the --prefix option in running the configure scripts.
