@@ -162,6 +162,9 @@ ConnectionManager::removeConnection(Connection* connection)
 
    assert(!mReadHead->empty());
 
+   mIdMap.erase(connection->mWho.connectionId);
+   mAddrMap.erase(connection->mWho);
+
    connection->readList::remove();
    connection->writeList::remove();
    connection->lruList::remove();
