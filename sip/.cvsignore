@@ -1,2 +1,4 @@
 .make_prefs
+config.log
+config.status
 lib.debug.Linux.i686
