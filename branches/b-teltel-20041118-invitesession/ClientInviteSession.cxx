@@ -8,15 +8,9 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
-
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif // defined(WIN32) && defined(_DEBUG)
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/compat.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -27,19 +21,18 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          const SipMessage& request,
                                          const SdpContents* initialOffer,
                                          ServerSubscriptionHandle serverSub) :
-   InviteSession(dum, dialog, Initial),
+   InviteSession(dum, dialog),
    lastReceivedRSeq(0),
    lastExpectedRSeq(0),
    mStaleCallTimerSeq(1),
    mServerSub(serverSub)
 {
    assert(request.isRequest());
-   if (initialOffer)
-   {
-      sendSdp(static_cast<SdpContents*>(initialOffer->clone()));
-   }
-   mLastRequest = request;
-   mLastRequest.releaseContents();
+   mProposedLocalSdp = InviteSession::makeSdp(*initialOffer);
+   //mLastRequest = request;
+   //mLastRequest.releaseContents();
+
+   mState=UAC_Start;
 }
 
 ClientInviteSessionHandle
@@ -112,7 +105,7 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
             mLastSessionModification = req;
 
             //  Remember proposed local SDP.
-            mProposedLocalSdp = offer;
+            mProposedLocalSdp = InviteSession::makeSdp(offer);
 
             //  Send the req and do state transition.
             mDum.send(req);
@@ -141,86 +134,94 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
 void
 ClientInviteSession::provideAnswer (const SdpContents& answer)
 {
-    switch(mState)
-    {
-        case UAC_EarlyWithOffer:
-        {
-            //  Creates an PRACK request with application supplied offer.
-            SipMessage req;
-            mDialog.makeRequest(req, PRACK);
-            InviteSession::setSdp(req, offer);
+   switch(mState)
+   {
+      case UAC_EarlyWithOffer:
+      {
+         //  Creates an PRACK request with application supplied offer.
+         SipMessage req;
+         mDialog.makeRequest(req, PRACK);
+         InviteSession::setSdp(req, answer);
 
-            //  Remember last seesion modification.
-            mLastSessionModification = req;
+         //  Remember last seesion modification.
+         mLastSessionModification = req;
 
-            //  Remember proposed local SDP.
-            mProposedLocalSdp = offer;
+         //  Remember proposed local SDP.
+         mProposedLocalSdp = InviteSession::makeSdp(answer);
 
-            //  Send the req and do state transition.
-            mDum.send(req);
-            transition(UAC_PrackAnswerWait);
-            break;
-        }
+         //  Send the req and do state transition.
+         mDum.send(req);
+         transition(UAC_PrackAnswerWait);
+         break;
+      }
 
-        case UAC_Start:
-        case UAC_Early:
-        //case UAC_EarlyWithOffer:
-        case UAC_EarlyWithAnswer:
-        case UAC_WaitingForAnswerFromApp:
-        case UAC_Terminated:
-        case UAC_SentUpdateEarly:
-        case UAC_ReceivedUpdateEarly:
-        case UAC_PrackAnswerWait:
-        case UAC_Canceled:
-            assert(0);
-            break;
+      case UAC_Start:
+      case UAC_Early:
+         //case UAC_EarlyWithOffer:
+      case UAC_EarlyWithAnswer:
+      case UAC_WaitingForAnswerFromApp:
+      case UAC_Terminated:
+      case UAC_SentUpdateEarly:
+      case UAC_ReceivedUpdateEarly:
+      case UAC_PrackAnswerWait:
+      case UAC_Canceled:
+         assert(0);
+         break;
 
-        default:
-            InviteSession::provideOffer(offer);
-            break;
-    }
+      default:
+         InviteSession::provideAnswer(answer);
+         break;
+   }
 }
+
 void
 ClientInviteSession::end()
 {
 }
+
 void
 ClientInviteSession::reject (int statusCode)
 {
-    switch(mState)
-    {
-        case UAC_ReceivedUpdateEarly:
-        {
-            //  Creates an PRACK request with application supplied status code.
-            //  !kh! hopefully 488....
-            SipMessage req;
-            mDialog.makeRequest(req, PRACK);
-            req.header(h_StatusLine).statusCode() = statusCode;
+   switch(mState)
+   {
+      case UAC_ReceivedUpdateEarly:
+      {
+         //  Creates an PRACK request with application supplied status code.
+         //  !kh! hopefully 488....
+         SipMessage req;
+         mDialog.makeRequest(req, PRACK);
+         req.header(h_StatusLine).statusCode() = statusCode;
 
-            //  Send the req and do state transition.
-            mDum.send(req);
-            transition(UAC_EarlyWithAnswer);
-            break;
-        }
+         //  Send the req and do state transition.
+         mDum.send(req);
+         transition(UAC_EarlyWithAnswer);
+         break;
+      }
 
-        case UAC_Start:
-        case UAC_Early:
-        case UAC_EarlyWithOffer:
-        case UAC_EarlyWithAnswer:
-        case UAC_WaitingForAnswerFromApp:
-        case UAC_Terminated:
-        case UAC_SentUpdateEarly:
-        //case UAC_ReceivedUpdateEarly:
-        case UAC_PrackAnswerWait:
-        case UAC_Canceled:
-            assert(0);
-            break;
+      case UAC_Start:
+      case UAC_Early:
+      case UAC_EarlyWithOffer:
+      case UAC_EarlyWithAnswer:
+      case UAC_WaitingForAnswerFromApp:
+      case UAC_Terminated:
+      case UAC_SentUpdateEarly:
+         //case UAC_ReceivedUpdateEarly:
+      case UAC_PrackAnswerWait:
+      case UAC_Canceled:
+         assert(0);
+         break;
 
-        default:
-            InviteSession::reject(statusCode);
-            break;
-    }
+      default:
+         InviteSession::reject(statusCode);
+         break;
+   }
 }
+
+void
+ClientInviteSession::cancel()
+{
+}
+
 void
 ClientInviteSession::targetRefresh (const NameAddr& localUri)
 {
@@ -228,6 +229,7 @@ ClientInviteSession::targetRefresh (const NameAddr& localUri)
    assert(0);
    throw UsageUseException("Can't send TARGETREFRESH before Connected", __FILE__, __LINE__);
 }
+
 void
 ClientInviteSession::refer(const NameAddr& referTo)
 {
@@ -235,6 +237,7 @@ ClientInviteSession::refer(const NameAddr& referTo)
    assert(0);
    throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
+
 void
 ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
 {
@@ -242,6 +245,7 @@ ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionT
    assert(0);
    throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
+
 void
 ClientInviteSession::info(const Contents& contents)
 {
@@ -250,77 +254,125 @@ ClientInviteSession::info(const Contents& contents)
    throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
 }
 
-void
-ClientInviteSession::dispatchStart (const SipMessage& msg, const SdpContents* sdp)
-{
-    if (msg.isRequest())
-    {
-        mDum.mInviteSessionHandler->onInfoFailure(getSessionHandle(), msg);
-        return;
-    }
-
-    int         code = msg.header(h_StatusLine).statusCode();
-    MethodType  method = msg.header(h_CSeq).method();
-
-    if (is1xx(code) && method == INVITE)
-    {
-        mDum.mInviteSessionHandler->onNewSession(getSessionHandle(), msg, sdp);
-        mDum.mInviteSessionHandler->onProvisional(getSessionHandle(), msg, sdp);
-        mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
-    }
-
-}
-void
-ClientInviteSession::dispatchEarly (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchConnected (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchTerminated (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchPrackAnswerWait (const SipMessage& msg, const SdpContents* sdp)
-{
-}
-void
-ClientInviteSession::dispatchCanceled (const SipMessage& msg, const SdpContents* sdp)
-{
-}
 
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
-    switch(mState
-    {
-    case:
-
-    }
+   switch(mState)
+   {
+      case UAC_Start:
+         dispatchStart(msg);
+         break;
+      case UAC_Early:
+         dispatchEarly(msg);
+         break;
+      case UAC_EarlyWithOffer:
+         dispatchEarlyWithOffer(msg);
+         break;
+      case UAC_EarlyWithAnswer:
+         dispatchEarlyWithAnswer(msg);
+         break;
+      case UAC_WaitingForAnswerFromApp:
+         dispatchWaitingForAnswerFromApp(msg);
+         break;
+      case UAC_Terminated:
+         dispatchTerminated(msg);
+         break;
+      case UAC_SentUpdateEarly:
+         dispatchSentUpdateEarly(msg);
+         break;
+      case UAC_ReceivedUpdateEarly:
+         dispatchReceivedUpdateEarly(msg);
+         break;
+      case UAC_PrackAnswerWait:
+         dispatchPrackAnswerWait(msg);
+         break;
+      case UAC_Canceled:
+         dispatchCanceled(msg);
+         break;
+      default:
+         InviteSession::dispatch(msg);
+         break;
+   }
 }
 
+void
+ClientInviteSession::dispatch(const DumTimeout& timer)
+{
+}
+
+
+void
+ClientInviteSession::dispatchStart (const SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      //mDum.mInviteSessionHandler->onInfoFailure(getSessionHandle(), msg);
+      return;
+   }
+
+   int         code = msg.header(h_StatusLine).statusCode();
+   MethodTypes  method = msg.header(h_CSeq).method();
+
+   if (is1xx(code) && method == INVITE)
+   {
+      //mDum.mInviteSessionHandler->onNewSession(getSessionHandle(), msg, sdp);
+      //mDum.mInviteSessionHandler->onProvisional(getSessionHandle(), msg, sdp);
+      //mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
+   }
+}
+void
+ClientInviteSession::dispatchEarly (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchConnected (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchTerminated (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchPrackAnswerWait (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchCanceled (const SipMessage& msg)
+{
+}
+
+
+#if 0
 // !kh! ================
 
 void
@@ -662,6 +714,8 @@ void ClientInviteSession::redirected(const SipMessage& msg)
       delete this;
    }
 }
+
+#endif
 
 #if 0 //?dcm? --PRACKISH dispatch, or just cruft?
 // void
