@@ -642,6 +642,9 @@ main(int argc, char* argv[])
    TestCallback callback;
    tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
+   Data name("fluffy's really lame instant messaging program v0.2");
+   tuIM->setUANameProxy(  name );
+      
    if ( !outbound.host().empty() )
    {
       tuIM->setOutboundProxy( outbound );
