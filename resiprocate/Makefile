@@ -141,6 +141,7 @@ SRC = \
 	TlsTransport.cxx \
 	TlsTransport.cxx \
 	TransactionController.cxx \
+	MessageFilterRule.cxx \
 	TransactionUser.cxx \
 	TransactionUserMessage.cxx \
 	TransactionMap.cxx \
