@@ -62,7 +62,7 @@ class SipMessage : public Message
 
       template <int T>
       typename Header<T>::Type& 
-      get(const Header<T>& headerType)
+      header(const Header<T>& headerType)
       {
          HeaderFieldValueList* hfvs = mHeaders[T];
          // empty?
@@ -90,7 +90,7 @@ class SipMessage : public Message
 
       template <int T>
       ParserContainer<typename MultiHeader<T>::Type>& 
-      get(const MultiHeader<T>& headerType)
+      header(const MultiHeader<T>& headerType)
       {
          HeaderFieldValueList* hfvs = mHeaders[T];
          // empty?
@@ -114,10 +114,10 @@ class SipMessage : public Message
       }
 
       RequestLineComponent& 
-      get(const RequestLineType& l);
+      header(const RequestLineType& l);
 
       StatusLineComponent& 
-      get(const StatusLineType& l);
+      header(const StatusLineType& l);
       
       template <int T>
       void remove(const Header<T>& headerType)
@@ -131,7 +131,7 @@ class SipMessage : public Message
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      StringComponents& get(const Data& symbol);
+      StringComponents& header(const Data& symbol);
 
       void remove(const Data& symbol);
 
