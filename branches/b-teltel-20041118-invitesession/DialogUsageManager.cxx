@@ -1172,13 +1172,15 @@ DialogUsageManager::processRequest(const SipMessage& request)
             DialogSet* ds = findDialogSet(DialogSetId(request));
             if (ds == 0)
             {
-               //!dcm! -- temporary hack...do a map by TID?
+               //!dcm! -- temporary hack...do a map by TID?  !slg! Added TID matching - is this enough?
                for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
                {
-                  if (it->second->getId().getCallId() == request.header(h_CallID).value())
+                  if (it->second->getId().getCallId() == request.header(h_CallID).value() &&
+					  it->second->getCreatingTransactionId() == request.getTransactionId())
                   {
-                     it->second->dispatch(request);
-                     return;
+	                  InfoLog (<< "Received a CANCEL with no To tag - matching on CallID and TID");
+                      it->second->dispatch(request);
+                      return;
                   }
                }
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
