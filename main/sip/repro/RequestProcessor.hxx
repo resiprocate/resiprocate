@@ -9,7 +9,7 @@ namespace repro
   {
     public:
       RequestProcessor();
-      virtual ~RequestProcessor();
+      virtual ~RequestProcessor()=0;
 
       typedef enum
       {
