@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.16 2002/10/30 18:44:11 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.17 2002/10/30 23:48:39 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -31,11 +31,17 @@ class Data
       bool operator<(const Data& rhs) const;
 
       Data& operator=(const Data& data);
-      Data& operator+=(const Data& rhs);
-      Data operator+(const Data& rhs);
       Data& operator=(const char* str);
-      Data& operator+=(const char* str);
+
+      Data operator+(const Data& rhs);
       Data operator+(const char* str);
+      Data operator+(char c);
+
+      Data& operator+=(const char* str);
+      Data& operator+=(const Data& rhs);
+      Data& operator+=(char c);
+
+      Data& append(const char* str, unsigned int len);
 
       bool empty() const { return mSize == 0; }
       int size() const { return mSize; }
@@ -59,6 +65,7 @@ class Data
       friend bool operator!=(const char* s, const Data& d);
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
+      friend class DataBuffer;
 };
 
 bool operator==(const char* s, const Data& d);

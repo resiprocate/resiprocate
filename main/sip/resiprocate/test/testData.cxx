@@ -13,6 +13,15 @@ class TestData
       void main()
       {
          {
+            Data foo("foo");
+            foo.append("barbazquux",
+                       strlen("barbazquux"));
+            cerr << "!! " << foo << endl;
+            assert(foo == "foobarbazquux");
+            assert(foo.size() == 13);
+         }
+
+         {
             Data stuff("qwerqsdfawertq");
             char* cstuff("qwerqsdfawertq");
             __gnu_cxx::hash<Data> h;
@@ -230,6 +239,16 @@ class TestData
             s += "\r\n";
             assert (s == "c=foo\r\nbar\r\n");
          }
+
+         {
+            Data s;
+            s = "c=";
+            assert(s == "c=");
+            s += 'f';
+            assert(s == "c=f");
+            assert(s.size() == 3);
+         }
+
          {
             Data a("one");
             Data b("two");

@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.14 2002/10/30 20:30:48 jason Exp $";
+"$Id: Data.cxx,v 1.15 2002/10/30 23:48:39 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -213,7 +213,6 @@ Data::operator=(const Data& data)
       // could overlap!
       memmove(mBuf, data.mBuf, mSize);
       mBuf[mSize] = 0;
-      mMine = true;
    }
    return *this;
 }
@@ -258,6 +257,38 @@ Data::operator+=(const Data& data)
 }
 
 Data& 
+Data::operator+=(const char* str)
+{
+   return append(str, strlen(str));
+}
+
+Data&
+Data::operator+=(char c)
+{
+   if (mCapacity < mSize + c)
+   {
+      // .dlb. pad for future growth?
+      resize(mSize + 1, true);
+   }
+   else
+   {
+      if (!mMine)
+      {
+         char *oldBuf = mBuf;
+         mBuf = new char[mSize + 1];
+         memcpy(mBuf, oldBuf, mSize);
+         mMine = true;
+      }
+   }
+   mBuf[mSize] = c;
+   mSize += 1;
+   mBuf[mSize] = 0;
+   mCapacity = mSize;
+
+   return *this;
+}
+
+Data& 
 Data::operator=(const char* str)
 {
    unsigned int l = strlen(str);
@@ -277,7 +308,6 @@ Data::operator=(const char* str)
    mSize = l;
    // could conceivably overlap
    memmove(mBuf, str, mSize+1);
-   mMine = true;
 
    return *this;
 }
@@ -295,31 +325,44 @@ Data::operator+(const char* str)
    return tmp;
 }
 
-Data& 
-Data::operator+=(const char* str)
+Data&
+Data::append(const char* str, unsigned int len)
 {
-   unsigned int l = strlen(str);
-   if (mCapacity < mSize + l)
+   if (mCapacity < mSize + len)
    {
       // .dlb. pad for future growth?
-      resize(mSize + l, true);
+      resize(mSize + len, true);
    }
    else
    {
       if (!mMine)
       {
          char *oldBuf = mBuf;
-         mBuf = new char[mSize + l];
+         mBuf = new char[mSize + len];
          memcpy(mBuf, oldBuf, mSize);
          mMine = true;
       }
    }
    // could conceivably overlap
-   memmove(mBuf + mSize, str, l + 1);
-   mSize += l;
+   memmove(mBuf + mSize, str, len);
+   mSize += len;
+   mBuf[mSize] = 0;
    mCapacity = mSize;
 
    return *this;
+}
+
+Data
+Data::operator+(char c)
+{
+   Data tmp(mSize + 1, true);
+   tmp.mSize = mSize + 1;
+   tmp.mCapacity = tmp.mSize;
+   memcpy(tmp.mBuf, mBuf, mSize);
+   tmp.mBuf[mSize] = c;
+   tmp.mBuf[mSize+1] = 0;
+
+   return tmp;
 }
 
 const char* 
