@@ -59,7 +59,11 @@ check_PROGRAMS = \
 	testTimer \
 	testTransactionFSM \
 	testUri \
-	testXMLCursor
+	testXMLCursor \
+	limpc
+
+
+#bin_PROGRAMS = limpc
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
@@ -100,3 +104,4 @@ testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
+limpc_SOURCES = limpc.cxx
