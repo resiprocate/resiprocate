@@ -14,12 +14,16 @@ class Foo : public IntrusiveListElement<Foo*>
       int va2;
 };
 
-class FooFoo : public IntrusiveListElement<FooFoo*>, public IntrusiveListElement1<FooFoo*>
+class FooFoo;
+
+typedef IntrusiveListElement<FooFoo*> FooRead;
+typedef IntrusiveListElement1<FooFoo*> FooWrite;
+
+
+class FooFoo : public FooRead, public FooWrite
 {
    public:
-      typedef IntrusiveListElement<FooFoo*> read;
-      typedef IntrusiveListElement1<FooFoo*> write;
-
+      
       FooFoo(int v) : va1(v) {}
 
       int va1;
@@ -120,48 +124,48 @@ main(int argc, char* argv[])
       FooFoo* fooFoo3 = new FooFoo(3);
       FooFoo* fooFoo4 = new FooFoo(4);
 
-      FooFoo::read::makeList(fooFooHead);
-      FooFoo::write::makeList(fooFooHead);
-      assert(fooFooHead->read::empty());
-      assert(fooFooHead->write::empty());
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      FooRead::makeList(fooFooHead);
+      FooWrite::makeList(fooFooHead);
+      assert(fooFooHead->FooRead::empty());
+      assert(fooFooHead->FooWrite::empty());
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->read::push_front(fooFoo1);
-      assert(!fooFooHead->read::empty());
-      assert(fooFooHead->write::empty());
+      fooFooHead->FooRead::push_front(fooFoo1);
+      assert(!fooFooHead->FooRead::empty());
+      assert(fooFooHead->FooWrite::empty());
       cerr << endl << "first" << endl;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->read::push_front(fooFoo2);
+      fooFooHead->FooRead::push_front(fooFoo2);
       cerr << endl << "second" << endl;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->read::push_front(fooFoo3);   
+      fooFooHead->FooRead::push_front(fooFoo3);   
       cerr << endl << "third" << endl;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
       cerr << endl << "deleted second" << endl;
       delete fooFoo2;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
       cerr << endl << "fourth" << endl;
-      fooFooHead->read::push_front(fooFoo4);
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      fooFooHead->FooRead::push_front(fooFoo4);
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
@@ -169,14 +173,14 @@ main(int argc, char* argv[])
       cerr << endl << "deleted fourth, first" << endl;
       delete fooFoo1;
       delete fooFoo4;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
    
       cerr << endl << "deleted third (empty)" << endl;
       delete fooFoo3;
-      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      for (FooRead::iterator f = fooFooHead->FooRead::begin(); f != fooFooHead->FooRead::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
@@ -193,48 +197,48 @@ main(int argc, char* argv[])
       FooFoo* fooFoo3 = new FooFoo(3);
       FooFoo* fooFoo4 = new FooFoo(4);
 
-      FooFoo::write::makeList(fooFooHead);
-      FooFoo::read::makeList(fooFooHead);
-      assert(fooFooHead->write::empty());
-      assert(fooFooHead->read::empty());
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      FooWrite::makeList(fooFooHead);
+      FooRead::makeList(fooFooHead);
+      assert(fooFooHead->FooWrite::empty());
+      assert(fooFooHead->FooRead::empty());
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->write::push_front(fooFoo1);
-      assert(!fooFooHead->write::empty());
-      assert(fooFooHead->read::empty());
+      fooFooHead->FooWrite::push_front(fooFoo1);
+      assert(!fooFooHead->FooWrite::empty());
+      assert(fooFooHead->FooRead::empty());
       cerr << endl << "first" << endl;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->write::push_front(fooFoo2);
+      fooFooHead->FooWrite::push_front(fooFoo2);
       cerr << endl << "second" << endl;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
-      fooFooHead->write::push_front(fooFoo3);   
+      fooFooHead->FooWrite::push_front(fooFoo3);   
       cerr << endl << "third" << endl;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
       cerr << endl << "deleted second" << endl;
       delete fooFoo2;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
 
       cerr << endl << "fourth" << endl;
-      fooFooHead->write::push_front(fooFoo4);
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      fooFooHead->FooWrite::push_front(fooFoo4);
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
@@ -242,14 +246,14 @@ main(int argc, char* argv[])
       cerr << endl << "deleted fourth, first" << endl;
       delete fooFoo1;
       delete fooFoo4;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
    
       cerr << endl << "deleted third (empty)" << endl;
       delete fooFoo3;
-      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      for (FooWrite::iterator f = fooFooHead->FooWrite::begin(); f != fooFooHead->FooWrite::end(); ++f)
       {
          cerr << (*f)->va1 << endl;
       }
