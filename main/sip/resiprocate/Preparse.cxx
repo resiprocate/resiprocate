@@ -1,8 +1,8 @@
-#if defined(DEBUG)
-#include <iostream.h> // debug only !ah!
-#include <ctype.h> // debug only !ah!
+
+#include <iostream> // debug only !ah!
+
 #include <sipstack/Data.hxx>
-#endif
+
 
 #include <sipstack/Preparse.hxx>
 #include <sipstack/HeaderTypes.hxx>
@@ -24,9 +24,9 @@ Edge *** mTransitionTable = 0;
 
 // HACK REMOVE !ah!
 
-string showN(const char * p, size_t l)
+Data showN(const char * p, size_t l)
 {
-   string s;
+   Data s;
    
    for(unsigned int i = 0 ; i < l ; i++)
       s += p[i];
@@ -61,7 +61,7 @@ const char *  stateName(PreparseStateTable::State s)
 //{
 //   return os << stateName(s);
 //}
-
+#if 0
 ostream& outStateRange(ostream& os, int s, int e)
 {
    if ( s == e-1)
@@ -79,7 +79,7 @@ ostream& outStateRange(ostream& os, int s, int e)
 //{
 //   return os << '['<<s<<'-'<<e<<']';
 //}
-
+#if 0
 ostream& printable(ostream& os, char c)
 {
    if (isprint(c) && ! isspace(c))
@@ -87,15 +87,16 @@ ostream& printable(ostream& os, char c)
       os << '\'' << c << "\' ";
    }
 
-   os <<  "0x"<< hex << (int)c << dec;
+   os <<  "0x"<< ios::hex << (int)c << dec;
    return os;
    
 }
-
-string
+#endif
+#endif
+Data
 workString(int m)
 {
-   string s("[");
+   Data s("[");
 
    if ( m &  actNil) s += " actNil ";
    if ( m &  actAdd) s += " actAdd ";
@@ -118,7 +119,7 @@ showEdge(const char*msg, State s, Disposition d, char c, Edge& e)
 #if 0
    cout << msg;
    cout << stateName(s);
-   cout << hex << " (0x" << (int) c << ')';
+   cout << hex << " (" << (int) c << ')';
    cout << " -> " << stateName(e.nextState);
    showWork(cout, e.workMask);
 #endif
@@ -262,8 +263,16 @@ PreparseStateTable::InitStatePreparseStateTable()
 
    AE( BuildDataCrLf,X,XC,Done,actBad);
    AE( BuildDataCrLf,X,LF,CheckCont,actNil);
-   AE( CheckCont,X,XC, BuildHdr,actData | actReset | actBack ); // (push 1st then b/u)
+
+   // (push 1st then b/u)
+   AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack );
+
    AE( CheckCont,X,LWS,BuildData,actAdd );
+   
+   // Check if double CRLF (end of hdrs)
+   AE( CheckCont,X,CR,CheckEndHdr,actNil);
+   AE( CheckEndHdr,X,XC,Done,actBad);
+   AE( CheckEndHdr,X,LF,Done,actEndHdrs);
 
    // Disposition sensitive edges
 
@@ -365,17 +374,20 @@ Preparse::process()
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
 
-      DebugLog( << "EDGE " << ::stateName(mState) << hex << " (0x" << (int) *mPtr << ')' << " -> " << ::stateName(e.nextState) << ::workString(e.workMask) );
-      
+#if defined(DEBUG)
+      DebugLog( << "EDGE " << ::stateName(mState)
+                << " (0x" << (int) *mPtr << ')'
+                << " -> " << ::stateName(e.nextState)
+                << ::workString(e.workMask) );
+#endif      
       
       if (e.workMask & actAdd)
       {
 	 mAnchorEnd = mPtr;
-#if defined(DEBUG) && 0
-	 cout << "+++Adding char '";
-//         showchar(cout, *mPtr);
-         showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
-         cout << '\'' << endl;
+#if defined(DEBUG)         
+         DebugLog( << "+++Adding char '"
+                   << showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1)
+                   << '\'' );
 #endif
       }
 
@@ -393,12 +405,11 @@ Preparse::process()
             mDisposition = dContinuous;
          }
          
-#if defined(DEBUG)
-         cout << "+++Found Header: \'";
-         showN(cout, mHeader, mHeaderLength);
-         cout << "\' Type: " << mHeaderType << endl;
+         DebugLog(<<"Hdr \'"
+                  << showN(mHeader, mHeaderLength)
+                  << "\' Type: " << mHeaderType);
          
-#endif
+ 
       }
 
       if (e.workMask & actData)
@@ -410,43 +421,36 @@ Preparse::process()
                                mAnchorEnd - mAnchorBeg + 1
             );
                    
-#if defined(DEBUG)
-         cout << "+++Data element: \'";
-         showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
-         cout << '\'' << endl;
-#endif         
+         DebugLog(<<"DATA \'"
+                  << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
+                  << "\'");
+         
+
       }
 
       if (e.workMask & actFline)
       {
-#if defined(DEBUG)
-	 cout << "FirstLine(" ;
-         showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
-         cout << ")" << endl;
-#endif
+         DebugLog(<<"FLINE \'"
+                  << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
+                  << "\'");
+         
       }
 
       if (e.workMask & actBack)
       {
-#if defined(DEBUG)
-         cout << "+++Backing up " << endl;
-#endif
          mPtr--;
       }
 
       if (e.workMask & actBad)
       {
-#if defined(DEBUG)
-         cout << "+++BAD" <<endl;
-#endif         
+
+         DebugLog(<<"BAD");
          mDone = true;
       }
 
       if (e.workMask & actEndHdrs)
       {
-#if defined(DEBUG)
-         cout << "+++End Headers : report body" <<endl;
-#endif         
+         DebugLog(<<"END_HDR");
          mDone = true;
       }
       
@@ -456,9 +460,6 @@ Preparse::process()
       if (e.workMask & actReset)
       {
 	 mAnchorBeg = mAnchorEnd = mPtr;
-#if defined(DEBUG) && 0
-         cout << "+++Reset anchors." << endl;
-#endif
       }
       
    }
