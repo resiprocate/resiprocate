@@ -1,9 +1,9 @@
-#include "util/DataStream.hxx"
+#include "sip2/util/DataStream.hxx"
 
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Helper.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Helper.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Helper.hxx"
 
 #include <iostream>
 #include <memory>

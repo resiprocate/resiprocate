@@ -1,8 +1,8 @@
 #ifndef HeaderTypes_hxx
 #define HeaderTypes_hxx
 
-#include "sipstack/supported.hxx"
-#include "util/Data.hxx"
+#include "sip2/sipstack/supported.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

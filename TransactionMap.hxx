@@ -1,7 +1,7 @@
 #if !defined(TRANSACTIONMAP_HXX)
 #define TRANSACTIONMAP_HXX
 
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>

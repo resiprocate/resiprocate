@@ -3,15 +3,15 @@
 
 #define DELIM " | "
 
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 
 #ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
 #endif
 
-#include "util/Subsystem.hxx"
-#include "util/Mutex.hxx"
+#include "sip2/util/Subsystem.hxx"
+#include "sip2/util/Mutex.hxx"
 #include <iostream>
 
 

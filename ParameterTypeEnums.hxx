@@ -1,7 +1,7 @@
 #ifndef ParameterTypeEnums_hxx
 #define ParameterTypeEnums_hxx
 
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

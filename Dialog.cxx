@@ -1,8 +1,8 @@
 #include <iostream>
-#include "sipstack/Dialog.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Helper.hxx"
-#include "util/Logger.hxx"
+#include "sip2/sipstack/Dialog.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 
@@ -33,9 +33,9 @@ Dialog::Dialog(const NameAddr& localContact)
 }
 
 SipMessage*
-Dialog::createDialogAsUAS(const SipMessage& request, int code)
+Dialog::makeResponse(const SipMessage& request, int code)
 {
-   if (!mCreated)
+   if (!mCreated && code < 300 && code > 100)
    {
       assert (code > 100);
       assert (code < 300);      
@@ -65,14 +65,18 @@ Dialog::createDialogAsUAS(const SipMessage& request, int code)
       mDialogId = mCallId.value();
       mDialogId += mRemoteTag;
       mDialogId += mLocalTag;
-      
 
       return response;
    }
    else
    {
-      DebugLog (<< "Trying to create same dialog twice: " << mDialogId);
-      throw Exception("Trying to create a dialog a second time", __FILE__, __LINE__);
+      SipMessage* response = Helper::makeResponse(request, code);
+      if (mCreated)
+      {
+         assert (!response->header(h_To).uri().exists(p_tag));
+         response->header(h_To).uri().param(p_tag) = mLocalTag;
+      }
+      return response;
    }
 }
 
@@ -228,16 +232,15 @@ Dialog::makeCancel(const SipMessage& request)
    return cancel;
 }
 
-SipMessage* 
-Dialog::makeResponse(const SipMessage& request, int code)
+CallId 
+Dialog::makeReplaces()
 {
-   assert (mCreated);
-   
-   SipMessage* response = Helper::makeResponse(request, code);
-   assert (!response->header(h_To).uri().exists(p_tag));
-   response->header(h_To).uri().param(p_tag) = mLocalTag;
-   return response;
+   CallId callid = mCallId;
+   callid.param(p_toTag) = mRemoteTag; // !jf!
+   callid.param(p_fromTag) = mLocalTag;
+   return callid;
 }
+
 
 void
 Dialog::clear()
