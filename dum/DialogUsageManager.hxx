@@ -115,23 +115,27 @@ class DialogUsageManager : public HandleManager
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, const NameAddr& from, const SdpContents* initialOffer, AppDialogSet* = 0);
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
                                              const SdpContents* initialOffer, AppDialogSet* = 0);
       
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* = 0);
       //unsolicited refer
-      SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+      SipMessage& makeRefer(const Uri& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
-      SipMessage& makePublication(const Uri& target, const Contents& body, 
-                                  const Data& eventType, unsigned expiresSeconds, AppDialogSet* = 0);
+      SipMessage& makePublication(const Uri& target, 
+                                  const NameAddr& from, 
+                                  const Contents& body, 
+                                  const Data& eventType, 
+                                  unsigned expiresSeconds, 
+                                  AppDialogSet* = 0);
 
-      SipMessage& makeRegistration(const NameAddr& aor, AppDialogSet* = 0);
-      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes meth, AppDialogSet* = 0);
-
+      SipMessage& makeRegistration(const NameAddr& target, AppDialogSet* = 0);
+      SipMessage& makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* = 0);
+      
       // all can be done inside of INVITE or SUBSCRIBE only; !dcm! -- now live
       // in INVITE or SUBSCRIBE only
 //       SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);

@@ -12,7 +12,7 @@ class NameAddr;
 class RegistrationCreator : public BaseCreator 
 {
    public:
-      RegistrationCreator(DialogUsageManager& dum, const NameAddr& aor);
+      RegistrationCreator(DialogUsageManager& dum, const NameAddr& target);
 };
  
 }

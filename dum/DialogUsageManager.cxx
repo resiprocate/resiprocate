@@ -324,15 +324,17 @@ DialogUsageManager::sendResponse(SipMessage& response)
    
 
 SipMessage&
-DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSession(const NameAddr& target, const NameAddr& from, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, from, initialOffer), appDs);
    return inv;
 }
 
 SipMessage&
-DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle serverSub, 
-                                               const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               ServerSubscriptionHandle serverSub, 
+                                               const SdpContents* initialOffer, 
+                                               AppDialogSet* appDs)
 {
    //generate and send 100
    SipFrag contents;
@@ -343,9 +345,11 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer, ServerSu
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
    serverSub->send(notify);
 
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, refer.header(h_ReferTo).uri(), 
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, 
+                                                             refer.header(h_ReferTo), 
+                                                             refer.header(h_From), // !jf!???
                                                              initialOffer, serverSub), appDs);
-   inv.header(h_ReferredBy) =  mProfile->getDefaultAor();
+   inv.header(h_ReferredBy) =  refer.header(h_From); // !jf! ??
    
    return inv;
 }
@@ -353,31 +357,32 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer, ServerSu
 
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
+DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, eventType), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType), appDs);
 }
 
 SipMessage& 
-DialogUsageManager::makeRegistration(const NameAddr& aor, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, aor), appDs); 
+   return makeNewSession(new RegistrationCreator(*this, target), appDs); 
 }
 
 SipMessage& 
 DialogUsageManager::makePublication(const Uri& targetDocument,  
+                                    const NameAddr& from, 
                                     const Contents& body, 
                                     const Data& eventType, 
                                     unsigned expiresSeconds, 
                                     AppDialogSet* appDs)
 { 
-   return makeNewSession(new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds), appDs); 
+   return makeNewSession(new PublicationCreator(*this, targetDocument, from, body, eventType, expiresSeconds), appDs); 
 }
 
 SipMessage& 
-DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes meth, AppDialogSet* appDs)
+DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* appDs)
 {
-	return makeNewSession(new OutOfDialogReqCreator(*this, meth, aor), appDs);
+	return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, from), appDs);
 }
 
 void
