@@ -49,7 +49,9 @@ class SipStack
       // Used by the application to add in a new transport
       // ipInterface parameter is used to specify which ethernet interface to
       // bind to. If set to Data::Empty, bind to all interfaces 
-      void addTransport( TransportType protocol,
+      // Returns true, if the addTransport succeeded. false usually indicates
+      // the port is already in use. 
+      bool addTransport( TransportType protocol,
                          int port, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty);
@@ -59,7 +61,9 @@ class SipStack
       // For default case, you can pass in domainname =
       // DnsUtil::getLocalDomainName()
       // Note the SipDomainName is often your host name not your server domainname
-      void addTlsTransport(  int port = 5061,
+      // Returns true, if the addTransport succeeded. false usually indicates
+      // the port is already in use. 
+      bool addTlsTransport(  int port = 5061,
                              const Data& keyDir = Data::Empty, 
                              const Data& privateKeyPassPhrase = Data::Empty,
                              const Data& sipDomainname = Data::Empty, 
