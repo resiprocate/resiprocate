@@ -25,39 +25,35 @@
 using namespace Vocal2;
 using namespace std;
 
-#if defined(USE_ARES)
-ares_channel* DnsResolver::mChannel = 0;
-#endif
-
 DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 {
 #if defined(USE_ARES)
    int status=0;
-   if (mChannel == 0)
+   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
    {
-      mChannel = new ares_channel;
-      if ((status = ares_init(mChannel)) != ARES_SUCCESS)
-      {
-	 ErrLog (<< "Failed to initialize async dns library (ares)");
-	 char* errmem=0;
-	 ErrLog (<< ares_strerror(status, &errmem));
-	 ares_free_errmem(errmem);
-	 throw Exception("failed to initialize ares", __FILE__,__LINE__);
-      }
+      ErrLog (<< "Failed to initialize async dns library (ares)");
+      char* errmem=0;
+      ErrLog (<< ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+      throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
 #endif
 }
 
 
 DnsResolver::~DnsResolver()
-{}
+{
+#if defined(USE_ARES)
+   ares_destroy(mChannel);
+#endif
+}
 
 
 void
 DnsResolver::buildFdSet(FdSet& fdset)
 {
 #if defined(USE_ARES)
-   int size = ares_fds(*mChannel, &fdset.read, &fdset.write);
+   int size = ares_fds(mChannel, &fdset.read, &fdset.write);
    if ( size > fdset.size )
    {
       fdset.size = size;
@@ -69,7 +65,7 @@ void
 DnsResolver::process(FdSet& fdset)
 {
 #if defined(USE_ARES)
-   ares_process(*mChannel, &fdset.read, &fdset.write);
+   ares_process(mChannel, &fdset.read, &fdset.write);
 #endif
 }
 
@@ -223,7 +219,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 		Data srvTarget =
 		   determineSrvPrefix(uri.scheme(), Transport::TCP)
 		   + "." + target;
-		ares_query(*mChannel, srvTarget.c_str(), C_IN, T_SRV,
+		ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
 		   DnsResolver::aresCallbackSrvTcp, request);
 	    }
 	    else
@@ -232,7 +228,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 		Data srvTarget =
 		   determineSrvPrefix(uri.scheme(), Transport::UDP)
 		   + "." + target;
-		ares_query(*mChannel, srvTarget.c_str(), C_IN, T_SRV,
+		ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
 		   DnsResolver::aresCallbackSrvUdp, request);
 	    }
 
@@ -268,7 +264,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
 
 #if defined(USE_ARES)
    Request* request = new Request(mStack, transactionId, host, port, transport, Data::Empty);
-   ares_gethostbyname(*mChannel, host.c_str(), AF_INET, DnsResolver::aresCallbackHost, request);
+   ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallbackHost, request);
 #else   
    struct hostent* result=0;
    int ret=0;
@@ -591,6 +587,11 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
    DebugLog (<< "Received SRV/TCP result for: " << request->tid << " for "
              << request->host);
 
+   if (pstatus == ARES_EDESTRUCTION)
+   {
+      return;
+   }
+
    SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::TCP);
 
    if (request->otherTransports.size())
@@ -602,7 +603,8 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
 	 Data srvTarget =
 	    determineSrvPrefix(request->scheme, Transport::UDP)
 	    + "." + request->host;
-	 ares_query(*mChannel, srvTarget.c_str(), C_IN, T_SRV,
+	 ares_query(request->stack.mDnsResolver.mChannel, srvTarget.c_str(),
+	    C_IN, T_SRV,
 	    DnsResolver::aresCallbackSrvUdp, new Request(*request));
       }
       else if (next == Transport::Unknown)
@@ -635,7 +637,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
        {
            resolve->isFinal = true;
        }
-       ares_gethostbyname(*mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+       ares_gethostbyname(request->stack.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
    }
 
    delete request;
@@ -651,6 +653,11 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
 
    DebugLog (<< "Received SRV/UDP result for: " << request->tid << " for "
              << request->host);
+   
+   if (pstatus == ARES_EDESTRUCTION)
+   {
+      return;
+   }
 
    SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::UDP);
 
@@ -663,7 +670,8 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
 	 Data srvTarget =
 	    determineSrvPrefix(request->scheme, Transport::TCP)
 	    + "." + request->host;
-	 ares_query(*mChannel, srvTarget.c_str(), C_IN, T_SRV,
+	 ares_query(request->stack.mDnsResolver.mChannel, srvTarget.c_str(),
+	    C_IN, T_SRV,
 	    DnsResolver::aresCallbackSrvTcp, new Request(*request));
       }
       else if (next == Transport::Unknown)
@@ -696,7 +704,8 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
        {
            resolve->isFinal = true;
        }
-       ares_gethostbyname(*mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+       ares_gethostbyname(request->stack.mDnsResolver.mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+
    }
 
    delete request;
