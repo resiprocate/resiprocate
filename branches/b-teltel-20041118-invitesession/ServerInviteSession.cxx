@@ -713,7 +713,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle(), msg);
+   handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
    mDum.destroy(this);
 }
 
@@ -731,7 +731,7 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle(), msg);
+   handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
    mDum.destroy(this);
 }
 
@@ -749,7 +749,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDialog.makeResponse(i400, mFirstRequest, 400);
    mDialog.send(i400);
 
-   handler->onTerminated(getSessionHandle(), msg);
+   handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
    mDum.destroy(this);
 }
 

@@ -55,6 +55,10 @@ Profile::Profile(Profile *baseProfile) :
    }
 }
 
+Profile::~Profile()
+{
+}
+
 void
 Profile::setDefaultRegistrationTime(int secs)
 {
