@@ -74,5 +74,6 @@ DEFINES += USE_IPV6
 endif
 
 ifeq ($(USE_POPT),true)
-DEFINES += HAVE_POPT_H
+POPT_DEFINES := HAVE_POPT_H
+POPT_LIBNAME  := popt
 endif
