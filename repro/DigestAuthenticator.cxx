@@ -2,71 +2,89 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/SipMessage.hxx"
-#include "repro/RequestProcessorChain.hxx"
-#include "repro/RequestContext.hxx"
+#include "resiprocate/Auth.hxx"
+#include "repro/DigestAuthenticator.hxx"
+
+
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-repro::RequestProcessorChain::RequestProcessorChain()
+processor_action_t
+DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 {
-}
+  Message *message = getCurrentEvent();
 
-repro::RequestProcessorChain::~RequestProcessorChain()
-{
-  Chain::iterator i;
-  for (i = chain.begin(); i != chain.end(); i++)
+  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+  UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
+
+  if (sipMessage)
   {
-    delete *i;
+    if (!sipMessage.exists(h_ProxyAuthorizations))
+    {
+      challengeRequest(rc);
+      return SkipAllChains;
+    }
+    else
+    {
+      requestUserAuthInfo(rc);
+      return WaitingForEvent;
+    }
   }
+  else if (userAuthInfo)
+  {
+    // Handle response from user authentication database
+    sipMessage = rc.getOriginalMessage();
+    Helper::AuthResult result =
+      Helper::authenticateRequest(sipMessage, a1, 2);
+
+    switch (result)
+    {
+      case Failed:
+        // XXX Send 403
+        return SkipAllChains;
+
+        // !abr! Eventually, this should just append a counter to
+        // the nonce, and increment it on each challenge. 
+        // If this count is smaller than some reasonable limit,
+        // then we re-challenge; otherwise, we send a 403 instead.
+
+      case Authenticated:
+        // XXX Add user info to request context
+        return Continue;
+
+      case Expired:
+        challengeRequest(rc);
+        return SkipAllChains;
+
+      case BadlyFormed:
+        // XXX Send 403
+        return SkipAllChains;
+    }
+  }
+
+  return Continue;
 }
 
 void
-repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
+DigestAuthenticator::challengeRequest(repro::RequestContext &rc)
 {
-  chain.push_back(rp.release());
+  Data realm = sipMessage.
+  Helper::makeProxyChallenge();
+  rc.getProxy().sendResponse(challenge);
 }
 
-repro::RequestProcessor::processor_action_t
-repro::RequestProcessorChain::handleRequest(RequestContext &rc)
+void
+DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
 {
-  Chain::iterator i;
-  processor_action_t action;
-
-  if (rc.chainIteratorStackIsEmpty())
-  {
-    i = chain.begin();
-  }
-  else
-  {
-    i = rc.popChainIterator();
-  }
-
-  for (; i != chain.end(); i++)
-  {
-    action = (**i).handleRequest(rc);
-
-    if (action == SkipAllChains)
-    {
-      return SkipAllChains;
-    }
-
-    if (action == WaitingForEvent)
-    {
-      rc.pushChainIterator(i);
-      return WaitingForEvent;
-    }
-
-    if (action == SkipThisChain)
-    {
-      return Continue;
-    }
-
-  }
-  return Continue;
+  UserDB &database = rc.getProxy().getUserDB();
+  Auth &authorizationHeader = sipMessage.header(h_ProxyAuthorizations);
+  Data user;
+  Data realm;
+  database.requestUserAuthInfo(user, realm);
 }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
