@@ -10,8 +10,8 @@ using namespace std;
 
 ContentsFactory<SipFrag> SipFrag::Factory;
 
-SipFrag::SipFrag()
-   : Contents(getStaticType()),
+SipFrag::SipFrag(const Mime& contentsType)
+   : Contents(contentsType),
      mMessage(new SipMessage())
 {}
 
