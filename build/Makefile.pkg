@@ -37,7 +37,8 @@ endif
 
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := /usr/kerberos/include/
+OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
+OPENSSL_LIBDIRS := /usr/local/ssl/lib
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
 ARES_LIBDIRS := $(ROOT)/contrib/ares
