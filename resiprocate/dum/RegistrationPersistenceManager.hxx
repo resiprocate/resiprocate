@@ -25,6 +25,7 @@ class RegistrationPersistenceManager
     virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t()) = 0;
     virtual void removeAor(Uri &aor) = 0;
     virtual bool aorIsRegistered(Uri &aor) = 0;
+	virtual bool aorExists(Uri &aor) = 0;
 
     virtual void lockRecord(Uri &aor) = 0;
     virtual void unlockRecord(Uri &aor) = 0;
