@@ -263,13 +263,12 @@ BaseSecurity::addCertDER (PEMType type, const Data& key, const Data& certDER, bo
             int ret = PEM_write_bio_X509(out, cert);
             assert(ret);
 
-            // get length of BIO buffer.
-            // TODO: make sure this is right.
-            size_t len = BIO_ctrl_pending(out);
-            assert(len > 0);
-
-            // copy content in BIO buffer to our buffer.
-            char* p = new char[len];
+            BIO_flush(out);
+            // get content in BIO buffer to our buffer.
+            char* p = 0;
+            size_t len = BIO_get_mem_data(out,&p);
+            assert(p);
+            assert(len);
             Data  buf(Data::Take, p, len);
 
             BIO_get_mem_data(out, &p);
@@ -581,7 +580,7 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 {
 }
 
-BaseSecurity::BaseSecurity () : 
+BaseSecurity::BaseSecurity () :
    mTlsCtx(0),
    mSslCtx(0),
    mRootCerts(0)
@@ -1409,12 +1408,12 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
          if (mUserPrivateKeys.count(decryptorAor) == 0)
          {
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
-            throw Exception("Missing private key", __FILE__, __LINE__);            
+            throw Exception("Missing private key", __FILE__, __LINE__);
          }
          else if (mUserCerts.count(decryptorAor) == 0)
          {
             InfoLog( << "Don't have a public cert for " << decryptorAor << " for  PKCS7_decrypt" );
-            throw Exception("Missing cert", __FILE__, __LINE__); 
+            throw Exception("Missing cert", __FILE__, __LINE__);
          }
 
          EVP_PKEY* privateKey = mUserPrivateKeys[decryptorAor];
