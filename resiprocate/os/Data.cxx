@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.35 2002/11/19 02:44:12 derekm Exp $";
+"$Id: Data.cxx,v 1.36 2002/11/23 22:06:27 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -8,7 +8,7 @@ static const char* const Data_cxx_Version =
 
 #include "sip2/util/Data.hxx"
 #include "sip2/util/vmd5.hxx"
-#include "sip2/util/RandomHex.hxx"
+
 
 using namespace Vocal2;
 using namespace std;
@@ -24,6 +24,16 @@ Data::Data()
 }
 
 Data::Data(const char* str, int length) 
+   : mSize(length),
+     mBuf(new char[mSize+1]),
+     mCapacity(mSize),
+     mMine(true)
+{
+   assert(str);
+   memcpy(mBuf, str, mSize);
+}
+
+Data::Data(const unsigned char* str, int length) 
    : mSize(length),
      mBuf(new char[mSize+1]),
      mCapacity(mSize),
@@ -600,6 +610,7 @@ Data::Data(int capacity, bool)
      mCapacity(capacity),
      mMine(true)
 {
+   assert( capacity > 0 );
    mBuf[0] = 0;
 }
 
@@ -629,9 +640,35 @@ Data::md5() const
    MD5Init(&context);
    MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
 
-   unsigned char digest[16];
-   MD5Final(digest, &context);
-   return RandomHex::convertToHex(digest, 16);
+   unsigned char digestBuf[16];
+   MD5Final(digestBuf, &context);
+   Data digest(digestBuf,16);
+   Data ret = digest.hex();
+   
+   return ret;
+}
+
+
+Data
+Data::hex() const
+{
+    Data ret( 2*size(), true );
+
+    static char map[] = "0123456789ABCDEF";
+    
+   char* p = mBuf;
+   for (size_type i=0; i < mSize; i++)
+   {
+	   unsigned char temp = *p++;
+	   
+	   int hi = (temp & 0xf0)>>4;
+	   int low = (temp & 0xf);
+	   
+	   ret += map[hi];
+	   ret += map[low];
+    }
+
+    return ret;
 }
 
 

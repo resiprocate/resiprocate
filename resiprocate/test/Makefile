@@ -1,4 +1,6 @@
-# $Id: Makefile,v 1.10 2002/11/15 03:56:32 derekm Exp $
+# $Id: Makefile,v 1.11 2002/11/23 22:06:26 fluffy Exp $
+
+USE_SSL = 1
 
 BUILD = ../../../build
 
