@@ -11,7 +11,7 @@ TARGET_LIBRARY = librepro
 
 TESTPROGRAMS = \
 	repro.cxx \
-	userAdmin.cxx 
+#	userAdmin.cxx 
 
 CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib 
