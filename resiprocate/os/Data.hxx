@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.73 2003/12/16 23:51:59 alan Exp $";
+   "$Id: Data.hxx,v 1.74 2004/02/10 17:16:48 fluffy Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -132,6 +132,8 @@ class Data
 
       static bool init();
 
+      Data base64decode() const;
+      
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 

@@ -693,7 +693,34 @@ class TestData
             Data d((unsigned long)235235);
             assert(d == "235235");
          }
+         
+         {
+            
+            Data d3("MTIz");
+            //cerr << "base64 test "<<d3<<" = "<<d3.base64decode().hex().c_str()<<endl;
+            assert( d3.base64decode() == Data("123" ) );
 
+            Data d1("MQ==");
+            //cerr << "base64 test "<<d1<<" = "<<d1.base64decode().hex().c_str()<<endl;
+            assert( d1.base64decode() == Data("1" ) );
+
+            Data d2("MTI=");
+            cerr << "base64 test "<<d2<<" = "<<d2.base64decode().hex().c_str()<<endl;
+            assert( d2.base64decode() == Data("12" ) );
+
+            Data d4("MTIzNA==");
+            assert( d4.base64decode() == Data("1234" ) );
+
+            Data d5("MTIzNDU=");
+            assert( d5.base64decode() == Data("12345" ) );
+
+            Data d6("MTIzNDU2");
+            assert( d6.base64decode() == Data("123456" ) );
+
+            Data d7("MTIzNDU2Nw==");
+            assert( d7.base64decode() == Data("1234567" ) );
+         }
+         
          {
              char *p = new  char[16];
              Data *d = new Data(Data::Take, p, 16);
