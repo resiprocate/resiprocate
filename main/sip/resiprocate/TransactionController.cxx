@@ -114,6 +114,8 @@ TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
 }
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

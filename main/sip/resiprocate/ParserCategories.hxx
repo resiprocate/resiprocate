@@ -436,7 +436,7 @@ class Via : public ParserCategory
          : ParserCategory(), 
            mProtocolName(Symbols::ProtocolName),
            mProtocolVersion(Symbols::ProtocolVersion),
-           mTransport(Symbols::UDP),
+           mTransport(),
            mSentHost(),
            mSentPort(0) 
       {
