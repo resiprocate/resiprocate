@@ -42,7 +42,8 @@ class Helper
                                     const NameAddr& contact,
                                     MethodTypes method);
            
-
+      static SipMessage* makeCancel(const SipMessage& request);
+      
       //creates to, from with tag, cseq method set, cseq sequence is 1
       static SipMessage* makeRegister(const NameAddr& proxy,
                                      const NameAddr& aor);
