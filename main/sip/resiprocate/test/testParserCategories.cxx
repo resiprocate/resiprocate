@@ -54,7 +54,54 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test remove parameters that appear multiple times");
+      Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
+      Uri uri2(uri1);
+
+      uri1.remove(p_maddr);
+      Data res1;
+      {
+         DataStream str(res1);
+         str << uri1;
+      }
+      assert(res1 == "sip:a@b;type=1;type=2;type=3");
+
+      UnknownParameterType p_type("type");
+      uri2.remove(p_type);
+      Data res2;
+      {
+         DataStream str(res2);
+         str << uri2;
+      }   
+      assert(res2 == "sip:a@b;maddr=local;maddr=remote;maddr=other");
+   }
+
+   {
+      TR _tr("Test remove parameters that appear multiple times; mixed predifed and extensions");
+      Uri uri1("sip:a@b;type=1;maddr=local;foo=bar;ttl=17;type=2;maddr=remote;foo=baz;ttl=42;type=3;maddr=other;foo=foo;ttl=111");
+      Uri uri2(uri1);
+
+      uri1.remove(p_maddr);
+      Data res1;
+      {
+         DataStream str(res1);
+         str << uri1;
+      }
+      assert(res1 == "sip:a@b;ttl=17;ttl=42;ttl=111;type=1;foo=bar;type=2;foo=baz;type=3;foo=foo");
+
+      UnknownParameterType p_type("type");
+      uri2.remove(p_type);
+      Data res2;
+      {
+         DataStream str(res2);
+         str << uri2;
+      }   
+      assert(res2 == "sip:a@b;maddr=local;ttl=17;maddr=remote;ttl=42;maddr=other;ttl=111;foo=bar;foo=baz;foo=foo");
+   }
+
+   {
       TR _tr("Test exists unknown parameter");
+
       Uri uri1("sip:a@b;audio");
       assert(uri1.exists(UnknownParameterType("audio")));
       assert(uri1.param(UnknownParameterType("audio")) == Data::Empty);
