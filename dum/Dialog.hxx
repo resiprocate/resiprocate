@@ -1,9 +1,16 @@
 #if !defined(RESIP_CLIENTDIALOG_HXX)
 #define RESIP_CLIENTDIALOG_HXX
 
+#include "resiprocate/sam/DialogId.hxx"
+
 namespace resip
 {
 
+
+    
+    class BaseUsage;
+    class UsageSet;
+    class SipMessage;
 
 class Dialog 
 {
@@ -29,7 +36,7 @@ class Dialog
       
    private:
       std::list<BaseUsage*> mUsages;
-      DialogId mid;  
+      DialogId mId;  
 };
  
 }

@@ -1,9 +1,15 @@
+#include "resiprocate/Contents.hxx"
+//#include "resiprocate/OctetContents.hxx"
+//#include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/sam/Dialog.hxx"
+#include "resiprocate/sam/ClientInviteSession.hxx"
 
 using namespace resip;
 using namespace std;
 
-DialogId Dialog;:getId() const
+class ServerInviteSession;
+
+DialogId Dialog::getId() const
 {
     return mId;
 }
@@ -15,9 +21,9 @@ Dialog::findInvSession()
     BaseUsage *usage;
     while (it != mUsages.end())
     {
-        usage = it.next();
-        if ((dynamic_cast<ClientInviteSession*>(usage) != null) ||
-            (dynamic_cast<ServerInviteSession*>(usage) != null))
+        usage = it->next();
+        if ((dynamic_cast<ClientInviteSession*>(usage) != NULL) ||
+            (dynamic_cast<ServerInviteSession*>(usage) != NULL))
         {
             return *usage;
         }
