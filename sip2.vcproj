@@ -109,9 +109,6 @@
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-			<File
-				RelativePath="sip2.rc">
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -211,9 +208,6 @@
 			</File>
 			<File
 				RelativePath="util\RandomHex.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\Resolver.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\SendingMessage.cxx">
