@@ -75,6 +75,7 @@ class Dialog
       friend class ClientSubscription;
       friend class InviteSession;
       friend class ClientInviteSession;      
+      friend class ServerInviteSession;      
       friend class ServerSubscription;
       friend class ClientRegistration;
       friend class ServerRegistration;

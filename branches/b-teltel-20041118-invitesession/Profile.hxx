@@ -26,15 +26,37 @@ class Profile
       virtual void setDefaultPublicationTime(int secs);
       virtual int getDefaultPublicationTime() const;
 
-      // Only used if timer option tag is set.
-      // Note:  Add timer to options tag and set DefaultSessionTime to 0 to show  
-      // support, but not request a session timer.
-      virtual void setDefaultSessionTime(int secs); 
-      virtual int getDefaultSessionTime() const;
-
       /// Call is stale if UAC gets no final response within the stale call timeout (default 3 minutes)
       virtual void setDefaultStaleCallTime(int secs);
       virtual int getDefaultStaleCallTime() const;
+
+      // Only used if timer option tag is set.
+      // Note:  Value must be higher than 90 (as specified in session-timer draft)
+      virtual void setDefaultSessionTime(int secs); 
+      virtual int getDefaultSessionTime() const;
+
+      // Only used if timer option tag is set.
+      // Set to PreferLocalRefreshes if you prefer that the local UA performs the refreshes.  
+      // Set to PreferRemoteRefreshes if you prefer that the remote UA peforms the refreshes.
+      // Set to PreferUACRefreshes if you prefer that the UAC performs the refreshes.
+      // Set to PreferUASRefreshes if you prefer that the UAS performs the refreshes.
+      // Note: determining the refresher is a negotiation, so despite this setting the remote 
+      // end may end up enforcing their preference.  Also if the remote end doesn't support 
+      // SessionTimers then the refresher will always be local.
+      // This implementation follows the RECOMMENDED practices from section 7.1 of the draft 
+      // and does not specify a refresher parameter as in UAC requests.
+      typedef enum
+      {
+         PreferLocalRefreshes,
+         PreferRemoteRefreshes,
+         PreferUACRefreshes,
+         PreferUASRefreshes
+      } SessionTimerMode;
+      virtual void setDefaultSessionTimerMode(Profile::SessionTimerMode mode);
+      virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const;
+
+      virtual void set1xxRetransmissionTime(int secs);
+      virtual int get1xxRetransmissionTime() const;
 
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
@@ -82,11 +104,17 @@ class Profile
       bool mHasDefaultPublicationExpires;
       int mDefaultPublicationExpires;
 
+      bool mHasDefaultStaleCallTime;
+      int mDefaultStaleCallTime;
+
       bool mHasDefaultSessionExpires;
       int mDefaultSessionExpires;
 
-      bool mHasDefaultStaleCallTime;
-      int mDefaultStaleCallTime;
+      bool mHasDefaultSessionTimerMode;
+      SessionTimerMode mDefaultSessionTimerMode;
+
+      bool mHas1xxRetransmissionTime;
+      int m1xxRetransmissionTime;
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
