@@ -457,13 +457,8 @@ main(int argc, char* argv[])
 static int
 myMain(int argc, char* argv[])
 {  
-#ifdef ERR // ncurses defines a macro called ERR 
-   Log::initialize(Log::Cerr, Log::SIP2_ERR, argv[0]);
-   Log::setLevel(Log::SIP2_ERR);
-#else
    Log::initialize(Log::Cerr, Log::Err, argv[0]);
-   Log::setLevel(Log::Err);
-#endif  
+   Log::setLevel(Log::Warning);
 
    InfoLog(<<"Test Driver for IM Starting");
     
