@@ -1,7 +1,14 @@
 #include <stdio.h>
 
+// It has obviously been a while since anyone even tried to make this work.
+// Maybe it isn't intended to anymore, but what do I know? If it is no longer
+// useful *maybe* it should be removed from the Makefile.
 
-#include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/config.hxx"
+#define RESIP_MSG_HEADER_SCANNER_DEBUG
+#define main NoMain
+#include "resiprocate/MsgHeaderScanner.cxx"
+#undef main
 
 using namespace resip;
 using namespace std;
@@ -11,7 +18,7 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   return MsgHeaderScanner::dumpStateMachine(STDOUT);
+   return MsgHeaderScanner::dumpStateMachine(fileno(stdout));
 }
 
 /* ====================================================================
