@@ -298,7 +298,7 @@ TcpTransport::process(FdSet& fdSet)
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);
-   DebugLog(<< "Finished TcpTransport::process");
+   //DebugLog(<< "Finished TcpTransport::process");
 }
 
 
