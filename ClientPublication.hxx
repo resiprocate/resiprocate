@@ -13,10 +13,12 @@ class ClientPublication : public NonDialogUsage
 
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
+      const Data& getEventType() { return mEventType; }
 
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
+      const Contents* getContents() const { return mContents; }
 
       virtual SipMessage& end();
 
