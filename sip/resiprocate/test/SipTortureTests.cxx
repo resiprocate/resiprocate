@@ -13,7 +13,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 #define BUGTRAILINGSPACE " "
 
@@ -30,6 +30,7 @@ test1()
                    "  tag = 98asjd8\r\n"
                    "Max-Forwards: 8\r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "Date: Mon, 02 Jun 1982 08:21:11 GMT\r\n"
                    "CSeq: 8\r\n"
                    "   INVITE\r\n"
                    "Via  : SIP  /   2.0\r\n" 
