@@ -318,6 +318,9 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          if (mBufferPos == contentLength)
          {
             mMessage->setBody(mBuffer, contentLength);
+            DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+
+            Transport::stampReceived(mMessage);
             fifo.add(mMessage);
          
             mState = NewMessage;
