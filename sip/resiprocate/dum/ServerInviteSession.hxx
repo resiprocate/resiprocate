@@ -63,7 +63,7 @@ class ServerInviteSession: public InviteSession
       ServerInviteSession::Handle getHandle() {return mHandle;}
 
       void dispatch(const SipMessage& msg);
-      void dispatch(const DumTimer& timer);
+      void dispatch(const DumTimeout& timer);
 
    private:
       friend class DialogUsageManager;
