@@ -205,9 +205,6 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
 
    SipMessage* response = Helper::makeResponse(request, responseCode, reason);
    response->header(h_Contacts).push_front(contact);
-
-   // !cj! - It seems like this should copy the record-route to the route too
-
    return response;
 }
 
