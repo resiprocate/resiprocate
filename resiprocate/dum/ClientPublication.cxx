@@ -1,7 +1,7 @@
 #include "ClientPublication.hxx"
 
 ClientPublication::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ClientPublication* 

@@ -2,7 +2,6 @@
 #define RESIP_CLIENTREGISTRATION_HXX
 
 #include "BaseUsage.hxx"
-#include "DialogUsageManager.hxx"
 
 namespace resip
 {
@@ -10,7 +9,7 @@ namespace resip
 class ClientRegistration: public BaseUsage
 {
    public:
-      class Handle : public DialogUsageManager::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 
