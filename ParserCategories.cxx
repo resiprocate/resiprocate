@@ -120,15 +120,15 @@ Mime::operator=(const Mime& rhs)
 bool
 Mime::operator<(const Mime& rhs) const
 {
-   if (type() < rhs.type())
+   if (isLessThanNoCase(type(), rhs.type()))
    {
       return true;
    }
-   else if (type() > rhs.type())
+   else if (isLessThanNoCase(rhs.type(), type()))
    {
       return false;
    }
-   return subType() < rhs.subType();
+   return isLessThanNoCase(subType(), rhs.subType());
 }
 
 void
@@ -146,9 +146,7 @@ Mime::parse(ParseBuffer& pb)
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
    pb.data(mSubType, anchor);
 
-   //   pb.skipWhitespace(); -- This is really a bad line - don't do it - it eat
-   //   the CRLF before the body of a message 
-
+   pb.skipWhitespace();
    parseParameters(pb);
 }
 
