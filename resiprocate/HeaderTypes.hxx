@@ -47,7 +47,7 @@ class Headers
          defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft"),
          defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft"),
          defineMultiHeader(Accept, "Accept", Mime, "RFC ????"),
-         defineMultiHeader(AcceptEncoding, "Accept-Encoding", AcceptEncoding, "RFC ????"),
+         defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC ????"),
          defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????"),
          defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????"),
          defineMultiHeader(Allow, "Allow", Token, "RFC ????"),
@@ -57,7 +57,7 @@ class Headers
          defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????"),
          defineHeader(ContentId, "Content-ID", Token, "RFC 2045"),
          defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????"),
-         defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", Token, "RFC ????"), // !dlb! defineMultiHeader
+         defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????"), // !dlb! defineMultiHeader
          defineHeader(ContentType, "Content-Type", Mime, "RFC ????"),
          defineHeader(Date, "Date", DateCategory, "RFC ????"),
          defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????"),
@@ -79,12 +79,12 @@ class Headers
          defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????"),
          defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????"),
          defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????"),
-         defineHeader(Warning, "Warning", WarningCategory, "RFC ????"),
+         defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????"),
          defineMultiHeader(WWWAuthenticate, "WWW-Authenticate", Auth, "RFC ????"),
-         defineMultiHeader(SubscriptionState, "Subscription-State", Token, "RFC ????"),
+         defineHeader(SubscriptionState, "Subscription-State", Token, "RFC ????"),
          defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????"),
          defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????"),
-         defineMultiHeader(Authorization, "Authorization", header, "RFC ????"),
+         defineMultiHeader(Authorization, "Authorization", Auth, "RFC ????"),
          defineHeader(Replaces, "Replaces", CallId, "RFC ????"),
          defineHeader(Event, "Event", Token, "RFC ????"),
          defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC ????"),
@@ -97,7 +97,7 @@ class Headers
          defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
          defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),
 
-         defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),
+         defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC ????"),
 
          MAX_HEADERS,
          NONE

@@ -17,7 +17,7 @@
 namespace resip
 {
 class UnknownParameter;
-class UnknownParameterType;
+class ExtensionParameter;
 class Parameter;
 class ParseBuffer;
 
@@ -46,11 +46,11 @@ class ParserCategory : public LazyParser
       void remove(const ParamBase& paramType);
 
       // !dlb! causes compiler error in windows -- change template to const T*
-      const Data& param(const UnknownParameterType& param) const;
-      Data& param(const UnknownParameterType& param);
+      const Data& param(const ExtensionParameter& param) const;
+      Data& param(const ExtensionParameter& param);
 
-      void remove(const UnknownParameterType& param); 
-      bool exists(const UnknownParameterType& param) const;
+      void remove(const ExtensionParameter& param); 
+      bool exists(const ExtensionParameter& param) const;
 
       typedef std::set<ParameterTypes::Type> ParameterTypeSet;      
       
