@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
+#include "resiprocate/os/AsyncProcessHandler.hxx"
 
 namespace resip
 {
@@ -11,12 +12,12 @@ template < class Msg >
 class Fifo : public AbstractFifo
 {
    public:
-      Fifo();
+      Fifo(AsyncProcessHandler* handler=0);
       virtual ~Fifo();
       
       // Add a message to the fifo.
       //virtual to allow the NotifierFifo subclass to cause execution to occur.
-      virtual void add(Msg* msg);
+      void add(Msg* msg);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
@@ -39,11 +40,14 @@ class Fifo : public AbstractFifo
    private:
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
+      AsyncProcessHandler* mAsyncProcessHandler;      
 };
 
 
 template <class Msg>
-Fifo<Msg>::Fifo() : AbstractFifo(0)
+Fifo<Msg>::Fifo(AsyncProcessHandler* handler) : 
+   AbstractFifo(0),
+   mAsyncProcessHandler(handler)
 {
 }
 
@@ -69,6 +73,10 @@ Fifo<Msg>::add(Msg* msg)
    mFifo.push_back(msg);
    mSize++;
    mCondition.signal();
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification(); 
+   }
 }
 
 

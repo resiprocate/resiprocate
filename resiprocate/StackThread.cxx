@@ -41,10 +41,12 @@ void
 StackThread::buildFdSet(FdSet& fdset)
 {}
 
-int
+unsigned int
 StackThread::getTimeTillNextProcessMS() const
 {
-   return INT_MAX;
+//   !dcm! moved the 25 ms min logic here
+//   return INT_MAX;
+   return 25;   
 }
 
 /* ====================================================================

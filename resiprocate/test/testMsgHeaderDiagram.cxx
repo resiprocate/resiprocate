@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 
-#include "resiprocate/config.hxx"
+//#include "resiprocate/config.hxx"
 #include "resiprocate/MsgHeaderScanner.cxx"
 
 using namespace resip;

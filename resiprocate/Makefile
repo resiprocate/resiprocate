@@ -68,6 +68,7 @@ SRC = \
 	ApplicationSip.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
+	ConnectionBase.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
 	CpimContents.cxx \
@@ -91,6 +92,7 @@ SRC = \
 	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
+	InternalTransport.cxx \
 	LazyParser.cxx \
 	LazyParser.cxx \
 	Message.cxx \
