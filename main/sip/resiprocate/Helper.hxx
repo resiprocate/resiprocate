@@ -7,9 +7,9 @@ namespace Vocal2
 {
 class Helper
 {
-      static Contact convertNameAddrToContact(const NameAddr& nameAddr);
+      static Contact convertNameAddrToContact(NameAddr& nameAddr);
       static SipMessage makeResponse(SipMessage& request, int responseCode);
-      
+      static void setNameAddr(RequestLineComponent& rLine, NameAddr& nameAddr);
 };
  
 }
