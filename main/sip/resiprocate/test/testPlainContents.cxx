@@ -1,11 +1,76 @@
 #include "resiprocate/PlainContents.hxx"
+
 #include <iostream>
+#include <fstream>
 
 using namespace resip;
 using namespace std;
 
+void
+setContentsHeaders(Contents& contents)
+{
+    contents.header(h_ContentDisposition).value() = "content-disposition-phrase";
+    contents.header(h_ContentDescription).value() = "content-description-phrase";
+    contents.header(h_ContentTransferEncoding).value() = "content-transfer-encoding-phrase";
+    const char *lang[] = { "en_CA","en_GB","en_US","fr_CA","fr_FR","es_ES.iso88591" };
+    for(size_t i = 0 ; i < sizeof(lang)/sizeof(*lang); ++i)
+        contents.header(h_ContentLanguages).push_back(Token(lang[i]));
+}
+
+void
+leakCheck(bool verbose)
+{
+
+    Data original;
+    Data alternate;
+
+    { // WIN32 workaround
+        for (int i = 0 ; i < 100 ; ++i)
+        {
+            original += "Original Body by Fischer. -- ";
+            alternate += "Alternate Body by CheapStandinCo. -- ";
+        }
+    }
+
+    ofstream devnull("/dev/null");
+
+    ostream& os(verbose?cout:devnull);
+
+    assert(os.good());
+
+    for(int i = 0 ; i < 100 ; ++i)
+    {
+          Mime type("text", "plain");
+
+          HeaderFieldValue ohfv(original.data(), original.size());
+          PlainContents originalContents(&ohfv, type);
+          setContentsHeaders(originalContents);
+
+          HeaderFieldValue ahfv(alternate.data(),alternate.size());
+          PlainContents alternateContents(&ahfv, type);
+          setContentsHeaders(alternateContents);
+
+#if 0          
+          originalContents.encodeHeaders(os);
+          originalContents.encode(os);
+          os << endl;
+          alternateContents.encodeHeaders(os);
+          alternateContents.encode(os);
+          os << endl;
+#endif
+          // clobber the content-disposition mDisposition variable
+          alternateContents = originalContents;
+
+#if 0
+          alternateContents.encodeHeaders(os);
+          alternateContents.encode(os);
+          os << endl;
+#endif
+    }
+}
+
 int
-main()
+main(int argc)
 {
    {
       const Data txt("some plain text");
@@ -18,6 +83,8 @@ main()
 
       assert(pc.text() == "some plain text");
    }
+
+   leakCheck(argc > 1);
 
    cerr << "All OK" << endl;
    return 0;
