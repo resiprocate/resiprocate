@@ -13,13 +13,13 @@ ServerSubscription::getHandle()
 ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
-   : BaseUsage(dum, dialog),
+   : BaseSubscription(dum, dialog, req),
      mLastRequest(req)
 {}
 
 ServerSubscription::~ServerSubscription()
 {
-   mDialog.mServerSubscription = 0;
+   mDialog.mServerSubscriptions.remove(this);
 }
 
 void 

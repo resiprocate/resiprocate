@@ -5,6 +5,7 @@
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
@@ -13,7 +14,9 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
+#include <sstream>
 #include <time.h>
+#include <windows.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -56,24 +59,47 @@ void generateSdpSession(SdpContents& mMySdpOffer)
 
 
 //default, Debug outputs
-class TestInviteSessionHandler : public InviteSessionHandler
+class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegistrationHandler
 {
    public:
       Data name;
+      bool registered;
+      ClientRegistrationHandle registerHandle;
       
-      TestInviteSessionHandler(const Data& n) : name(n) 
+      TestInviteSessionHandler(const Data& n) : name(n), registered(false) 
       {
          InfoLog(  << "TestInviteSessionHandler::TestInviteSessionHandler(" << name << ")");         
+      }
+
+      virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
+      {         
+         registerHandle = h;   
+         assert(registerHandle.isValid());         
+         {
+            stringstream s;
+            s << "Handle created: " << &h;
+            OutputDebugString(s.str().c_str());
+         }
+         InfoLog( << "###Register::onSuccess: ###" << name << endl);
+         registered = true;
+      }
+
+      virtual void onFailure(ClientRegistrationHandle, const SipMessage& msg)
+      {
+         InfoLog( << "###Register::onFailure: ###" << name << endl);
+         assert(0);
       }
       
       /// called when an initial INVITE arrives 
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
+         assert(0);         
          InfoLog(  << "TestInviteSessionHandler::onNewSession(" << name << ")  "  << msg.brief());
       }
       
-      virtual void onNewSession(ServerInviteSessionHandle, const SipMessage& msg)
+      virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
+         assert(0);         
          InfoLog(  << "TestInviteSessionHandler::onNewSession " << msg.brief());
       }
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)
@@ -108,21 +134,24 @@ class TestInviteSessionHandler : public InviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)
       {
+         assert(0);         
          InfoLog(  << "TestInviteSessionHandler::onTerminated " << msg.brief());
       }
 
-      virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg)
-      {
-         InfoLog(  << "TestInviteSessionHandler::onReadyToSend " << msg.brief());
-      }
+//       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg)
+//       {
+//          InfoLog(  << "TestInviteSessionHandler::onReadyToSend " << msg.brief());
+//       }
 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
       {
+         assert(0);
          InfoLog(  << "TestInviteSessionHandler::onAnswer" << msg.brief());
       }
 
       virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*)      
       {
+         assert(0);
          InfoLog(  << "TestInviteSessionHandler::onOffer " << msg.brief());
       }
       
@@ -152,11 +181,10 @@ class TestInviteSessionHandler : public InviteSessionHandler
       }
 };
 
-class TestUac : public TestInviteSessionHandler, public ClientRegistrationHandler
+class TestUac : public TestInviteSessionHandler
 {
    public:
       bool done;
-      bool registered; 
       SdpContents* sdp;     
       HeaderFieldValue* hfv;      
       Data* txt;      
@@ -164,7 +192,6 @@ class TestUac : public TestInviteSessionHandler, public ClientRegistrationHandle
       TestUac() 
          : TestInviteSessionHandler("UAC"), 
            done(false),
-           registered(false),
            sdp(0),
            hfv(0),
            txt(0)
@@ -192,6 +219,11 @@ class TestUac : public TestInviteSessionHandler, public ClientRegistrationHandle
          delete sdp;
       }
 
+      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
+      {
+         InfoLog(  << "TestUac::onNewSession(" << name << ")  "  << msg.brief());
+      }
+
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage& msg)
       {
          InfoLog ( << "TestUac::onProvisional" << msg.brief());
@@ -199,45 +231,38 @@ class TestUac : public TestInviteSessionHandler, public ClientRegistrationHandle
 
       virtual void onConnected(ClientInviteSessionHandle cis, const SipMessage& msg)
       {
-         InfoLog ( << "TestUac::onConnected" << msg.brief());
+         InfoLog ( << "###TestUac::onConnected###" << msg.brief());
          cis->send(cis->ackConnection());
       }
 
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
+      {
+         InfoLog(  << "###TestUac::onAnswer###" << msg);
+      }
+
+
       virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
       {
-         InfoLog ( << "TestUac::onTerminated" << msg.brief());
+         InfoLog ( << "###TestUac::onTerminated###" << msg.brief());
          done = true;
       }
-
-            virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
-      {
-          InfoLog( << "TestUac(Register)::onSuccess: " << endl << response );
-          registered = true;
-      }
-
-      virtual void onFailure(ClientRegistrationHandle, const SipMessage& msg)
-      {
-         InfoLog( << "TestUac(Register)::onFailure: " << endl << msg );
-         throw;
-      }
-
 };
 
-class TestUas : public TestInviteSessionHandler, public ClientRegistrationHandler
+class TestUas : public TestInviteSessionHandler
 {
 
    public:
       bool done;
       time_t* pHangupAt;
-      bool registered;
+
       SdpContents* sdp;
       HeaderFieldValue* hfv;
       Data* txt;      
 
-      TestUas(time_t* pHangupAt) 
+      TestUas(time_t* pH) 
          : TestInviteSessionHandler("UAS"), 
            done(false),
-           registered(false),
+           pHangupAt(pH),
            hfv(0)
       { 
          pHangupAt = pHangupAt;
@@ -268,15 +293,9 @@ class TestUas : public TestInviteSessionHandler, public ClientRegistrationHandle
       virtual void 
       onNewSession(ServerInviteSessionHandle sis, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
-         InfoLog(  << "TestUas::onNewSession " << msg.brief());
+         InfoLog(  << "###TestUas::onNewSession### " << msg.brief());
+         mSis = sis;         
          sis->send(sis->provisional(180));
-         sis->send(sis->accept());
-      }
-
-      virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
-      {
-          InfoLog( << "TestUas(Register)::onSuccess: " << endl << response );
-          registered = true;
       }
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& msg)
@@ -287,16 +306,15 @@ class TestUas : public TestInviteSessionHandler, public ClientRegistrationHandle
 
       virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
       {
-         InfoLog ( << "TestUas::onTerminated" << msg.brief());
+         InfoLog ( << "###TestUas::onTerminated###" << msg.brief());
          done = true;
       }
 
-      void
-      onOffer(ServerInviteSessionHandle sis, const SipMessage& msg )
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*)      
       {
-         InfoLog ( << "TestUas::onOffer" << msg.brief());
-         sis->setAnswer(sdp);
-         sis->send(sis->accept());
+         InfoLog ( << "###TestUas::onOffer###" << msg.brief());
+         is->setAnswer(sdp);
+         mSis->send(mSis->accept());
          *pHangupAt = time(NULL) + 5;
       }
 
@@ -314,11 +332,29 @@ class TestUas : public TestInviteSessionHandler, public ClientRegistrationHandle
       ServerInviteSessionHandle mSis;      
 };
 
+class TestShutdownHandler : public DumShutdownHandler
+{
+   public:
+      TestShutdownHandler()
+         : dumShutDown(false)
+      {
+      }
+      bool dumShutDown;
+      virtual void dumDestroyed() 
+      {
+         dumShutDown = true;
+      }
+};
 
-#define REMOTE 0
+
+#define REMOTE 1
 int 
 main (int argc, char** argv)
 {
+   int level=(int)Log::Info;
+   if (argc >1 ) level = atoi(argv[1]);
+   
+   Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
 
    //set up UAC
    SipStack stackUac;
@@ -334,21 +370,11 @@ main (int argc, char** argv)
    dumUac.setInviteSessionHandler(&uac);
    dumUac.setClientRegistrationHandler(&uac);
    
-#if REMOTE
-   //Vonage
-//   NameAddr uacAor("sip:13015604287@sphone.vopr.vonage.net");
-//   dumUac.getProfile()->addDigestCredential( "sphone.vopr.vonage.net", "13015604287", "jaRGRdkCQ9" );
-   //FWD
-//    NameAddr uacAor("sip:21186@fwd.pulver.com");
-//    dumUac.getProfile()->addDigestCredential( "fwd.pulver.com", "21186", "111111" );
-   //Purple
-      NameAddr uacAor("sip:101@xten.gloo.net");
-    dumUac.getProfile()->addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
-    dumUac.getProfile()->setOutboundProxy(Uri("sip:64.124.66.33:9090"));    
-#else
-   //Local
-   NameAddr uacAor("sip:101@internal.xten.net");
-#endif
+   //your aor, credentials, etc here
+   NameAddr uacAor("sip:foo@bar.com");
+   dumUac.getProfile()->addDigestCredential( "bar.com", "realm", "pwd" );
+   dumUac.getProfile()->setOutboundProxy(Uri(""));    
+
    dumUac.getProfile()->setDefaultAor(uacAor);
    dumUac.getProfile()->setDefaultRegistrationTime(70);
 
@@ -361,19 +387,12 @@ main (int argc, char** argv)
    ClientAuthManager uasAuth(uasProfile);
    dumUas.setProfile(&uasProfile);
    dumUas.setClientAuthManager(&uasAuth);
-   
-#if REMOTE
-//    Vonage
-//    NameAddr uasAor("sip:13015604286@sphone.vopr.vonage.net");
-//    dumUas.getProfile()->addDigestCredential( "sphone.vopr.vonage.net", "13015604286", "9E5aI9L9h9" );
-   //Purple
-      NameAddr uasAor("sip:105@xten.gloo.net");
-    dumUas.getProfile()->addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
-    dumUas.getProfile()->setOutboundProxy(Uri("sip:64.124.66.33:9090"));    
-#else
-   //Local
-   NameAddr uasAor("sip:105@internal.xten.net");
-#endif
+
+   //your aor, credentials, etc here
+   NameAddr uasAor("sip:bar@baz.com");
+   dumUas.getProfile()->addDigestCredential( "baz.com", "realm", "pwd" );
+   dumUas.getProfile()->setOutboundProxy(Uri(""));    
+
    dumUas.getProfile()->setDefaultRegistrationTime(70);
    dumUas.getProfile()->setDefaultAor(uasAor);
 
@@ -396,9 +415,15 @@ main (int argc, char** argv)
       InfoLog( << regMessage << "Generated register for Uac: " << endl << regMessage );
       dumUac.send(regMessage);
    }
-   bool startedCallFlow = false;
+   bool finishedTest = false;
    
-   while ( (!uas.done) || (!uac.done) )
+   bool startedCallFlow = false;
+   bool hungup = false;   
+   bool stoppedRegistering = false;
+   TestShutdownHandler uasShutdownHandler;   
+   TestShutdownHandler uacShutdownHandler;   
+
+   while (!finishedTest)
    {
      FdSet fdset;
      dumUac.buildFdSet(fdset);
@@ -407,21 +432,39 @@ main (int argc, char** argv)
      assert ( err != -1 );
      dumUac.process(fdset);
      dumUas.process(fdset);
-     if (uas.registered && uac.registered && !startedCallFlow)
-     if (!startedCallFlow)
-     {
-        startedCallFlow = true;
-        dumUac.send(dumUac.makeInviteSession(uasAor.uri(), uac.sdp));
-     }
 
-     if (bHangupAt!=0)
+     if (!(uas.done && uac.done))
      {
-       if (time(NULL)>bHangupAt)
-       {
-         uas.hangup();
-       }
+        if (uas.registered && uac.registered && !startedCallFlow)
+           if (!startedCallFlow)
+           {
+              startedCallFlow = true;
+              InfoLog( << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " );        
+              InfoLog( << "#### Sending Invite ####");
+              dumUac.send(dumUac.makeInviteSession(uasAor.uri(), uac.sdp));
+           }
+
+        if (bHangupAt!=0)
+        {
+           if (time(NULL)>bHangupAt && !hungup)
+           {
+              hungup = true;
+              uas.hangup();
+           }
+        }
      }
-   }   
+     else
+     {
+        if (!stoppedRegistering)
+        {
+           finishedTest = true;
+           stoppedRegistering = true;
+           uas.registerHandle->stopRegistering();
+           uac.registerHandle->stopRegistering();
+        }
+     }
+   }
+   InfoLog ( << "!!!!!!!!!!!!!!!!!! Somewhat successful !!!!!!!!!! " );
    // How do I turn these things off? For now, we just blow
    // out with all the wheels turning...try graceful shutdown in this test soon.
 }
