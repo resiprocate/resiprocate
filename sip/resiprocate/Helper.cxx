@@ -117,7 +117,14 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_CallId) = request.header(h_CallId);
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
-   response->copyRFC2543TransactionId(request);
+
+   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
+   if (!response->header(h_To).exists(p_tag))
+   {
+      response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   }
+
+   response->copyRFC2543TransactionId(request); // !jf! not right?
    //response->header(h_ContentLength).value() = 0;
    
    if (request.exists(h_RecordRoutes))
