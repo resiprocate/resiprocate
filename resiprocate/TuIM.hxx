@@ -11,22 +11,24 @@ class TuIM
       class PageCallback
       {
          public:
-            virtual void receivedPage( Data& msg, Uri& from ); 
+            virtual void receivedPage(const Data& msg, const Uri& from ); 
             virtual ~PageCallback();
       };
       
       class ErrCallback
       {
          public:
-            virtual void sendPageFailed( Uri& dest );
+            virtual void sendPageFailed(const Uri& dest );
             virtual ~ErrCallback();
       };
       
-      TuIM( SipStack* stack, 
-            Uri& aor, Uri& contact,
-            PageCallback* pageCallback, ErrCallback* errCallback );
+      TuIM(SipStack* stack, 
+           const Uri& aor, 
+           const Uri& contact,
+           PageCallback* pageCallback, 
+           ErrCallback* errCallback);
       
-      void sendPage( Data& text, Uri& dest );
+      void sendPage(const Data& text, const Uri& dest);
 
       void process();
       
