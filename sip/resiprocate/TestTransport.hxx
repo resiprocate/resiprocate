@@ -1,4 +1,4 @@
-#if !defined(TESTTRANSPORT_HXX)
+#if !defined(TESTTRANSPORT_HXX) && defined(USETESTTRANSPORT)
 #define TESTTRANSPORT_HXX
 
 #include "sip2/util/Data.hxx"
