@@ -15,6 +15,8 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
+#pragma warning( disable : 4355 )
+
 SipStack::SipStack(bool multiThreaded)
   : mExecutive(*this),
     mTransportSelector(*this),
@@ -25,6 +27,7 @@ SipStack::SipStack(bool multiThreaded)
    //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
 }
+
 
 void 
 SipStack::addTransport( Transport::Type protocol, 
