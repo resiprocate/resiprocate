@@ -1,68 +1,50 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
-
-#include <memory>
-
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/StackThread.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/Security.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-using namespace std;
 using namespace resip;
 
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           const Data& sipDomain, 
-                           const Data& interfaceObj, 
-                           int portNum, 
-                           const Data& keyDir, const Data& privateKeyPassPhrase,
-                           bool ipv4,
-                           SecurityTypes::SSLType sslType) : 
-   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
-   mDomain(sipDomain),
-   mSecurity(new Security(true, sslType))
+StackThread::StackThread(SipStack& stack)
+   : mStack(stack)
+{}
+
+void
+StackThread::thread()
 {
-   mTuple.setType(transport());
-
-   InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interfaceObj 
-            << " port=" << portNum);
-   
-   
-   bool ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) &&
-       mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) && 
-       mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem"));
-
-   (void)ok;
-
-   InfoLog( << "Listening for TLS connections on port " << portNum  << " ok=" << ok);
-
+   while (!isShutdown())
+   {
+      try
+      {
+         resip::FdSet fdset;
+         buildFdSet(fdset);
+         mStack.buildFdSet(fdset);
+         int ret = fdset.selectMilliSeconds(std::min(mStack.getTimeTillNextProcessMS(),
+                                                     getTimeTillNextProcessMS()));
+         if (ret >= 0)
+         {
+            // .dlb. use return value to peak at the message to see if it is a
+            // shutdown, and call shutdown if it is
+            mStack.process(fdset);
+         }
+      }
+      catch (BaseException& e)
+      {
+         InfoLog (<< "Unhandled exception: " << e);
+      }
+   }
 }
 
+void
+StackThread::buildFdSet(FdSet& fdset)
+{}
 
-TlsTransport::~TlsTransport()
+int
+StackThread::getTimeTillNextProcessMS() const
 {
+   return INT_MAX;
 }
-  
-
-Connection* 
-TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   who.transport = this;
-   assert(  who.transport );
-
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server);
-   assert( conn->transport() );
-   return conn;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

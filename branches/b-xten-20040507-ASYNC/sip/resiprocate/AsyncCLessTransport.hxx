@@ -14,7 +14,7 @@ class AsyncCLessTransport : public Transport, public ExternalAsyncCLessTransport
       enum { MaxBufferSize = 65535 };
      
 
-      AsyncCLessTransport(Fifo<Message>& rxFifo, ExternalAsyncCLessTransport* eaTransport, bool ownedByMe);
+      AsyncCLessTransport(Fifo<TransactionMessage>& rxFifo, ExternalAsyncCLessTransport* eaTransport, bool ownedByMe);
       virtual ~AsyncCLessTransport();
 
       //UDP send buffer overflows are not being captured

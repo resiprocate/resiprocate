@@ -21,9 +21,10 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Inserter.hxx"
-
+#include "resiprocate/StatisticsManager.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -48,8 +49,7 @@ SipStack::selectHander(bool async, ProcessNotifier::Handler* asyncHandler)
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool async, 
                    ProcessNotifier::Handler* asyncHandler, ExternalDns* dns) :
-   security( pSecurity ),
-   mTUTimerQueue(mTUFifo),
+   mSecurity( pSecurity ),
    mTransactionController(multiThreaded, mTUFifo, stateless, selectHander(async, asyncHandler), dns),
    mStrictRouting(false),
    mShuttingDown(false),
@@ -62,7 +62,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool
 #ifdef USE_SSL
    if ( !pSecurity )
    {
-      security = new Security( true, true );
+      mSecurity = new Security( true, true );
    }
 #endif
    assert(!mShuttingDown);
@@ -70,8 +70,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool
 
 SipStack::SipStack(ExternalSelector* tSelector, bool multiThreaded,  Security* pSecurity, 
                    bool async, bool stateless, ProcessNotifier::Handler* asyncHandler, ExternalDns* dns) :
-   security( pSecurity ),
-   mTUTimerQueue(mTUFifo),
+   mSecurity( pSecurity ),
    mTransactionController(multiThreaded, mTUFifo, tSelector, stateless, selectHander(async, asyncHandler), dns),
    mStrictRouting(false),
    mShuttingDown(false),
@@ -84,7 +83,7 @@ SipStack::SipStack(ExternalSelector* tSelector, bool multiThreaded,  Security* p
 #ifdef USE_SSL
    if ( !pSecurity )
    {
-      security = new Security( true, true );
+       mSecurity = new Security( true, true );
    }
 #endif
    assert(!mShuttingDown);
@@ -94,7 +93,7 @@ SipStack::SipStack(ExternalSelector* tSelector, bool multiThreaded,  Security* p
 SipStack::~SipStack()
 {
 #ifdef USE_SSL
-   delete security;
+   delete mSecurity;
 #endif
 }
 
@@ -113,7 +112,7 @@ SipStack::shutdown()
    mTransactionController.shutdown();
 }
 
-void 
+bool
 SipStack::addTransport( TransportType protocol, 
                         int port,
                         IpVersion version,
@@ -122,47 +121,32 @@ SipStack::addTransport( TransportType protocol,
    assert(!mShuttingDown);
    assert(protocol != TLS);
 
-   mTransactionController.transportSelector().addTransport(protocol, port, version, ipInterface);
-   if (!ipInterface.empty()) 
+   bool ret = mTransactionController.transportSelector().addTransport(protocol, port, version, ipInterface);
+   if (ret && !ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
    }
+   return ret;
 }
 
-void 
+bool
 SipStack::addTlsTransport( int port, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            const Data& domainname,
                            IpVersion version,
-                           const Data& ipInterface)
+                           const Data& ipInterface,
+                           SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
    
-   try
+   bool ret = mTransactionController.transportSelector().addTlsTransport(domainname, keyDir, privateKeyPassPhrase,
+                                                                         port , version, ipInterface, sslType);
+   if (ret && !ipInterface.empty()) 
    {
-      mTransactionController.transportSelector().addTlsTransport(domainname, keyDir, privateKeyPassPhrase, 
-								 port, version, ipInterface);
-      if (!ipInterface.empty()) 
-      {
-         addAlias(ipInterface, port);
-      }
+      addAlias(ipInterface, port);
    }
-   catch(BaseException& e)
-   {
-      InfoLog (<< "Caught: " << e);
-   }
-}
-
-void 
-SipStack::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, bool ownedByMe)
-{
-   Transport* transport = mTransactionController.transportSelector().addExternalTransport(externalTransport, 
-												    ownedByMe);
-   if (!transport->interfaceName().empty())
-   {
-      addAlias(transport->interfaceName(), transport->port());
-   }
+   return ret;
 }
 
 void
@@ -254,7 +238,7 @@ SipStack::send(const SipMessage& msg)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
-   assert(!mShuttingDown);
+   //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
@@ -293,26 +277,28 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
 }
 
 void
-SipStack::post(const Message& message,
-               unsigned int secondsLater)
+SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
-
-   Message* toPost = message.clone();
-   mTUTimerQueue.add(Timer(1000*secondsLater, toPost));
+   mTransactionController.post(message);
 }
 
 void
-SipStack::postMS(const Message& message,
+SipStack::post(const ApplicationMessage& message,
+               unsigned int secondsLater)
+{
+   assert(!mShuttingDown);
+   mTransactionController.post(message, secondsLater*1000);
+}
+
+void
+SipStack::postMS(const ApplicationMessage& message,
                  unsigned int ms)
 {
    assert(!mShuttingDown);
-
-   Message* toPost = message.clone();
-   mTUTimerQueue.add(Timer(ms, toPost));
+   mTransactionController.post(message, ms);
 }
 
-// !dlb! could get arbitrary messages via post!
 SipMessage* 
 SipStack::receive()
 {
@@ -349,8 +335,7 @@ SipStack::receiveAny()
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
-      // we should only ever have SIP messages on the TU Fifo
-      // unless we've registered for termination messages. 
+      // application messages can flow through
       Message* msg = mTUFifo.getNext();
       SipMessage* sip=dynamic_cast<SipMessage*>(msg);
       if (sip)
@@ -369,8 +354,7 @@ void
 SipStack::process(FdSet& fdset)
 {
    //   mExecutive.process(fdset);
-   mTransactionController.process(fdset); // same as above
-   mTUTimerQueue.process();
+   RESIP_STATISTICS(mTransactionController.getStatisticsManager().process());
 }
 
 void SipStack::handleProcessNotification()
@@ -390,8 +374,7 @@ void SipStack::handleProcessNotification()
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-   return resipMin(mTransactionController.getTimeTillNextProcessMS(), // mExecutive.getTimeTillNextProcessMS(),
-                   mTUTimerQueue.msTillNextTimer());
+   return mTransactionController.getTimeTillNextProcessMS();
 } 
 
 void

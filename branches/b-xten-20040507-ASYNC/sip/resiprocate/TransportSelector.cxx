@@ -18,6 +18,7 @@
 
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
@@ -35,13 +36,14 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
-TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo, 
+TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, 
                                      ExternalDns* dnsProvider, ExternalSelector* ets) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
-   mDns(dnsProvider ? dnsProvider : new AresDns())
+   mDns(dnsProvider ? dnsProvider : new AresDns()),
+   mWindowsVersion(WinCompat::getVersion())
 {
    memset(&mUnspecified, 0, sizeof(sockaddr_in));
    mUnspecified.sin_family = AF_UNSPEC;
@@ -147,7 +149,7 @@ TransportSelector::addExternalTransport(ExternalAsyncCLessTransport* externalTra
 }
 
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
-void 
+bool
 TransportSelector::addTransport(TransportType protocol, 
                                 int port,
                                 IpVersion version,
@@ -178,7 +180,7 @@ TransportSelector::addTransport(TransportType protocol,
              << (version == V4 ? "V4" : "V6") << " "
              << Tuple::toData(protocol) << " " << port << " on "  
              << (ipInterface.empty() ? "ANY" : ipInterface));
-      throw;
+      return false;
    }
 
    if (mMultiThreaded)
@@ -205,37 +207,58 @@ TransportSelector::addTransport(TransportType protocol,
       mExactTransports[key] = transport;
       mAnyPortTransports[key] = transport;
    }
+   return true;
 }
 
-void 
+bool
 TransportSelector::addTlsTransport(const Data& domainName, 
                                    const Data& keyDir,
                                    const Data& privateKeyPassPhrase,
                                    int port,
                                    IpVersion version,
-                                   const Data& ipInterface)
+                                   const Data& ipInterface,
+                                   SecurityTypes::SSLType sslType
+                                   )
 {
 #if defined( USE_SSL )
    assert( port >  0 );
    assert(mTlsTransports.count(domainName) == 0);
 
    assert (port != 0);
-   // if port == 0, do an SRV lookup and use the ports from there
-   TlsTransport* transport = new TlsTransport(mStateMacFifo, 
-                                              domainName, 
-                                              ipInterface, port, 
-                                              keyDir, privateKeyPassPhrase,
-                                              version == V4); 
+   TlsTransport* transport = 0;
+   try
+   {
+      // if port == 0, do an SRV lookup and use the ports from there
+      transport = new TlsTransport(mStateMacFifo, 
+                                   domainName, 
+                                   ipInterface,
+                                   port, 
+                                   keyDir,
+                                   privateKeyPassPhrase,
+                                   version == V4,
+                                   sslType);
+   }
+   catch (Transport::Exception& )
+   {
+      ErrLog(<< "Failed to create TLS transport: " 
+             << (version == V4 ? "V4" : "V6") << " port "
+             << port << " on "  
+             << (ipInterface.empty() ? "ANY" : ipInterface));
+      return false;
+   }
+
    if (mMultiThreaded)
    {
 //      transport->run();
    }
 
    mTlsTransports[domainName] = transport;
+   return true;
    
 #else
    CritLog (<< "TLS not supported in this stack. Maybe you don't have openssl");
    assert(0);
+   return false;
 #endif
 }
 
@@ -388,25 +411,40 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    }
    else
    {
-      // this process will determine which interface the kernel would use to
-      // send a packet to the target by making a connect call on a udp socket. 
-      Socket tmp = INVALID_SOCKET;
-      if (target.isV4())
+      Tuple source(target);
+      switch (mWindowsVersion)
       {
-         if (mSocket == INVALID_SOCKET)
-         {
-            mSocket = InternalTransport::socket(UDP, target.isV4()); // may throw
-         }
-         tmp = mSocket;
-      }
-      else
-      {
-         if (mSocket6 == INVALID_SOCKET)
-         {
-            mSocket6 = InternalTransport::socket(UDP, target.isV4()); // may throw
-         }
-         tmp = mSocket6;
-      }
+         case WinCompat::Windows98:
+         case WinCompat::Windows98SE:
+         case WinCompat::Windows95:
+         case WinCompat::WindowsME:
+         case WinCompat::WindowsUnknown:
+            // will not work on ipv6
+            source = WinCompat::determineSourceInterface(target);
+            break;
+            
+         default:
+            
+            // this process will determine which interface the kernel would use to
+            // send a packet to the target by making a connect call on a udp socket. 
+            Socket tmp = INVALID_SOCKET;
+            if (target.isV4())
+            {
+               if (mSocket == INVALID_SOCKET)
+               {
+                  mSocket = InternalTransport::socket(UDP, true); // may throw
+               }
+               tmp = mSocket;
+            }
+            else
+            {
+               if (mSocket6 == INVALID_SOCKET)
+               {
+                  mSocket6 = InternalTransport::socket(UDP, false); // may throw
+
+               }
+               tmp = mSocket6;
+            }
    
       int ret = connect(tmp,&target.getSockaddr(), target.length());
       if (ret < 0)
@@ -417,16 +455,47 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
    
-      Tuple source(target);
-      socklen_t len = source.length();  
-      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+            socklen_t len = source.length();  
+            ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+            if (ret < 0)
+            {
+               int e = getErrno();
+               Transport::error(e);
+               InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
+               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+            }
 
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+            // Unconnect. 
+            // !jf! This is necessary, but I am not sure what we can do if this
+            // fails. I'm not sure the stack can recover from this error condition. 
+            if (target.isV4())
+            {
+               ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+            }
+#ifdef USE_IPV6
+            else
+            {
+               ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+            }
+#else
+            else
+            {
+               assert(0);
+            }
+#endif
+   
+            if ( ret<0 )
+            {
+               int e =  getErrno();
+               if  ( e != EAFNOSUPPORT )
+               {
+                  ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+                  Transport::error(e);
+                  throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+               }
+            }
+
+            break;
       }
 
       // This is the port that the request will get sent out from. By default,
@@ -437,36 +506,12 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // available) 
       source.setPort(via.sentPort());
       
-      DebugLog (<< "Looked up source for " << target << " -> " << source << " sent-by=" << via.sentHost() << " sent-port=" << via.sentPort());
+     
+      DebugLog (<< "Looked up source for destination: " << target 
+                << " -> " << source 
+                << " sent-by=" << via.sentHost() 
+                << " sent-port=" << via.sentPort());
 
-      // Unconnect. 
-      // !jf! This is necessary, but I am not sure what we can do if this
-      // fails. I'm not sure the stack can recover from this error condition. 
-      if (target.isV4())
-      {
-         ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
-      }
-#ifdef USE_IPV6
-      else
-      {
-         ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
-      }
-#else
-      else
-      {
-         assert(0);
-      }
-#endif
-   
-      if ( ret<0 )
-      {
-         int e =  getErrno();
-         if  ( e != EAFNOSUPPORT )
-         {
-            ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
-            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
-         }
-      }
       return source;
    }
 }
@@ -485,10 +530,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
      // (imagine a synthetic message...)
 
       
-      Tuple tempTuple = mExternalSelector->determineSourceInterface(msg, target);
-      if (tempTuple.getType() == UNKNOWN_TRANSPORT)
+      Tuple source = mExternalSelector->determineSourceInterface(msg, target);
+      if (source.getType() == UNKNOWN_TRANSPORT)
       {
-         tempTuple = determineSourceInterface(msg, target);
+         source = determineSourceInterface(msg, target);
       }
 
       if (msg->isRequest())
@@ -503,7 +548,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             else
             {
-               target.transport = findTransport(tempTuple);
+               target.transport = findTransport(source);
             }
          }
          
@@ -519,7 +564,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = tempTuple.presentationFormat();
+               msg->header(h_Vias).front().sentHost() = source.presentationFormat();
             }
             if (!topVia.sentPort())
             {
@@ -532,6 +577,15 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // We assume that all stray responses have been discarded, so we always
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
+         assert(target.transport);
+         if (target.transport->getTuple().isAnyInterface())
+         {
+            source = determineSourceInterface(msg, target);
+         }
+         else
+         {
+            source = target.transport->getTuple();
+         }
       }
       else
       {
@@ -550,7 +604,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is. 
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = tempTuple.presentationFormat();
+                  contact.uri().host() = source.presentationFormat();
                   contact.uri().port() = target.transport->port();
                   if (target.transport->transport() != UDP)
                   {
@@ -569,7 +623,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-                   << " via " << tempTuple << endl << encoded.escaped());
+                   << " via " << source << endl << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
@@ -591,9 +645,15 @@ void
 TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 {
    assert(target.transport);
-   assert(!msg->getEncoded().empty());
-   //DebugLog(<<"!ah! retransmit to " << target);
-   target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+
+   // !jf! The previous call to transmit may have blocked or failed (It seems to
+   // block in windows when the network is disconnected - don't know why just
+   // yet.
+   if(!msg->getEncoded().empty())
+   {
+      //DebugLog(<<"!ah! retransmit to " << target);
+      target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+   }
 }
 
 void 
