@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.28 2002/11/08 17:45:13 jason Exp $";
+"$Id: Data.cxx,v 1.29 2002/11/08 17:53:49 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -314,7 +314,7 @@ Data::operator[](size_type p) const
 Data& 
 Data::operator=(const char* str)
 {
-   unsigned int l = strlen(str);
+   size_type l = strlen(str);
 
    if (!mMine)
    {
@@ -349,7 +349,7 @@ Data::operator+(const char* str) const
 }
 
 Data&
-Data::append(const char* str, unsigned int len)
+Data::append(const char* str, size_type len)
 {
    if (mCapacity < mSize + len)
    {
@@ -417,8 +417,7 @@ Data::Data(int capacity, bool)
 
 // generate additional capacity
 void
-Data::resize(unsigned int newCapacity, 
-             bool copy)
+Data::resize(size_type newCapacity, bool copy)
 {
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
@@ -452,7 +451,7 @@ Data&
 Data::lowercase()
 {
    char* p = mBuf;
-   for (unsigned int i=0; i < mSize; i++)
+   for (size_type i=0; i < mSize; i++)
    {
       *p = tolower(*p);
       p++;
@@ -464,7 +463,7 @@ Data&
 Data::uppercase()
 {
    char* p = mBuf;
-   for (unsigned int i=0; i < mSize; i++)
+   for (size_type i=0; i < mSize; i++)
    {
       *p = toupper(*p);
       p++;
