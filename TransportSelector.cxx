@@ -57,12 +57,20 @@ TransportSelector::addTransport( Transport::Type protocol,
    {
       char buf[1024];
       int e = gethostname(buf,sizeof(buf));
-      if ( e != 0 )
-      {
-         int err = errno;
-         InfoLog( << "could not find local hostname:" << strerror(err) );
-         throw Transport::Exception("could not find local hostname",__FILE__,__LINE__);
-      }
+	  if ( e != 0 )
+	  {
+		  int err = errno;
+		  switch (err)
+		  {
+		  case WSANOTINITIALISED:
+			  CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
+			  break;
+		  default:
+			  CritLog( << "could not find local hostname:" << strerror(err) );
+			  break;
+		  }
+		  throw Transport::Exception("could not find local hostname",__FILE__,__LINE__);
+	  }
       hostname = Data(buf);
    }
    assert( !hostname.empty() );
