@@ -418,10 +418,10 @@ ParseBuffer::skipN(int count)
    mPosition += count;
    if (mPosition > mEnd)
    {
-      mPosition = mEnd;
-      return Pointer(mPosition, true);
+      DebugLog(<< "skipped over eof");
+      fail(__FILE__, __LINE__);
    }
-   return Pointer(mPosition, false);
+   return Pointer(mPosition, eof());
 }
 
 ParseBuffer::Pointer 
@@ -440,6 +440,18 @@ ParseBuffer::skipBackChar()
       fail(__FILE__, __LINE__);
    }
    mPosition--;
+   return mPosition;
+}
+
+const char*
+ParseBuffer::skipBackN(int count)
+{
+   mPosition -= count;
+   if (bof())
+   {
+      DebugLog(<< "backed over beginning of buffer");
+      fail(__FILE__, __LINE__);
+   }
    return mPosition;
 }
 
@@ -513,12 +525,6 @@ ParseBuffer::data(const char* start) const
 int
 ParseBuffer::integer()
 {
-   if ( this->eof() )
-   {
-      DebugLog(<< "Expected a digit, got eof ");
-      fail(__FILE__, __LINE__);
-   }
-
    char c = *position();
 
    int signum = 1;

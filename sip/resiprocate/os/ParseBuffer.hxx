@@ -16,6 +16,12 @@ class ParseBuffer
            mEnd(buff+len)
       {}
 
+      explicit ParseBuffer(const Data& data)
+         : mBuff(data.data()),
+           mPosition(mBuff),
+           mEnd(mBuff + data.size())
+      {}
+
       ParseBuffer(const ParseBuffer& other);
 
       class Exception : public Vocal2::BaseException
@@ -95,6 +101,7 @@ class ParseBuffer
 
       // inverse of skipChar() -- end up at char not before it
       const char* skipBackChar();
+      const char* skipBackN(int count);
       const char* skipBackChar(char c);
       const char* skipBackToChar(char c);
 
