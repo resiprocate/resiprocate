@@ -65,6 +65,9 @@ class Symbols
       static const Data SrvSips;
       static const Data SrvUdp;
       static const Data SrvTcp;
+
+      static const Data audio;
+      static const Data RTP_AVP;
 };
 
 }
