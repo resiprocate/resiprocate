@@ -11,6 +11,7 @@
 #include <util/Data.hxx>
 #include <util/Fifo.hxx>
 #include <util/Socket.hxx>
+#include <util/VException.hxx>
 #include <sipstack/Message.hxx>
 
 namespace Vocal2
@@ -34,15 +35,13 @@ class SendData
 class Transport
 {
    public:
-      
-
-      class TransportException : public std::exception
+      class Exception : public VException
       {
          public:
-            TransportException(const Data& msg, const Data& file, const int line);
-            virtual const char* what() const throw();
+            Exception(const Data& msg, const Data& file, const int line);
+            const char* name() const { return "TransportException"; }
       };
-
+      
       Transport(int portNum, Fifo<Message>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
