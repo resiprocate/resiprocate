@@ -65,6 +65,8 @@ Token::operator=(const Token& rhs)
 bool
 Token::operator<(const Token& rhs) const
 {
+   rhs.checkParsed();
+   checkParsed(); 
    return (value() < rhs.value());
 }
 
@@ -122,6 +124,9 @@ Mime::operator=(const Mime& rhs)
 bool
 Mime::operator<(const Mime& rhs) const
 {
+   rhs.checkParsed();
+   checkParsed(); 
+
    if (isLessThanNoCase(type(), rhs.type()))
    {
       return true;
@@ -1199,6 +1204,8 @@ CallId::operator=(const CallId& rhs)
 bool
 CallId::operator==(const CallId& rhs) const
 {
+   checkParsed(); 
+   rhs.checkParsed(); 
    return value() == rhs.value();
 }
 
@@ -1275,6 +1282,8 @@ NameAddr::operator=(const NameAddr& rhs)
 bool
 NameAddr::operator<(const NameAddr& rhs) const
 {
+   rhs.checkParsed();
+   checkParsed(); 
    return mUri < rhs.mUri;
 }
 
