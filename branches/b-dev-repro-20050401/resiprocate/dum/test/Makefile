@@ -12,7 +12,7 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-#TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
 
 ifeq ($(USE_SSL),true)
 TESTPROGRAMS += certServer.cxx
