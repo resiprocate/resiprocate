@@ -26,8 +26,15 @@ ConstantLocationMonkey::handleRequest(RequestContext& context)
   DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << context);
 
-  context.addTarget(NameAddr("<sip:inner@72.29.230.124>"));
-
+  if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "inner")
+  {
+     context.addTarget(NameAddr("<sip:inner@72.29.230.162>"));
+  }
+  else if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "outer")
+  {
+     context.addTarget(NameAddr("<sip:101@sipedge.sipit.net>"));     
+  }
+  
   return RequestProcessor::Continue;
 }
 
