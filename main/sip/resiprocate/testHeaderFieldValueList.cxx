@@ -22,7 +22,51 @@ int main(int argc, char** argv)
   h->push_front(myHeader2);
    
   cout << "List with two elements: " << endl;
-  cout << *h << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  myHeader1 = new HeaderFieldValue("asdfgh", 6);
+  myHeader2 = new HeaderFieldValue("qwertyu", 7);
+
+  h->push_front(myHeader1);
+  h->push_front(myHeader2);
+
+  cout << "List with four elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  myHeader1 = new HeaderFieldValue("poifds", 6);
+  myHeader2 = new HeaderFieldValue("nmbhers", 7);
+
+  h->push_back(myHeader1);
+  h->push_back(myHeader2);
+
+  cout << "List with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  HeaderFieldValueList *i = new HeaderFieldValueList(*h);
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with six elements: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+
+
 
 
    /*

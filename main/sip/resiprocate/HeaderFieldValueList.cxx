@@ -13,16 +13,21 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& other)
 {
    if (other.first)
    {
-      first = other.first->clone();
+     cerr << "foo " << *(other.first) << endl;
+      first = (other.first)->clone();
+      cerr << "foo2 " << *first << endl;
       last = first;
       HeaderFieldValue* p = first;
+      cerr << *first << endl;
       while(p->next != 0)
       {
-         p->next = p->next->clone();
-	 last = p->next;
-         p = p->next;
+	cerr << "loop" << endl;
+	HeaderFieldValue* q = p->next->clone();
+	last = p->next = q;
+	p = p->next;
       }
    }
+   cerr << "exit" << endl;
 }
 
 HeaderFieldValueList::~HeaderFieldValueList()
