@@ -32,7 +32,7 @@ Data resip::MethodNames[MAX_METHODS] =
    defineMethod(INFO, "INFO", "RFC ????"),
    defineMethod(PRACK, "PRACK", "RFC ????"),
    defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
-
+   defineMethod(SERVICE, "SERVICE", "!RFC"),
    defineMethod(UNKNOWN, "UNKNOWN", ""),
 };
 
