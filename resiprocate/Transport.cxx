@@ -251,9 +251,10 @@ Transport::Tuple::Tuple(in_addr pipv4,
 
 bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
 {
-   return (memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4)) == 0 &&
-           port == rhs.port &&
-           transportType == rhs.transportType);
+   //DebugLog (<< "Compare: " << *this << " to " << rhs);
+   return ( (ipv4.s_addr == rhs.ipv4.s_addr) &&
+            (port == rhs.port) &&
+            (transportType == rhs.transportType));
    // !dlb! don't include connection 
 }
 
@@ -313,7 +314,9 @@ resip::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 size_t 
 __gnu_cxx::hash<resip::Transport::Tuple>::operator()(const resip::Transport::Tuple& tuple) const
 {
-   // !dlb! do not include the connection
+   return size_t(tuple.ipv4.s_addr + 5*tuple.port + 25*tuple.transportType);
+   
+   // !dlb! do not include the Connection* or the Transport*
    Transport::Tuple& tup(const_cast<Transport::Tuple&>(tuple));
    Connection* conn = 0;
    std::swap(conn, tup.connection);
