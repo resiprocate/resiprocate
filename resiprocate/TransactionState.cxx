@@ -23,7 +23,6 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-
 TransactionState::TransactionState(TransactionController& controller, Machine m, State s, const Data& id) : 
    mController(controller),
    mMachine(m), 
@@ -399,13 +398,17 @@ TransactionState::processClientNonInvite(  Message* msg )
          {
             sendToTU(msg); // don't delete
          }
-
+         else if (mState == Completed)
+         {
+            delete msg;
+         }
+         
          if (mIsReliable)
          {
             terminateClientTransaction(mId);
             delete this;
          }
-         else
+         else if (mState != Completed) // prevent TimerK reproduced
          {
             mState = Completed;
             mController.mTimers.add(Timer::TimerK, mId, Timer::T4 );            
