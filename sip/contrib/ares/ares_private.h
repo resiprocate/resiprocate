@@ -50,8 +50,14 @@ struct send_request {
   struct send_request *next;
 };
 
-
 struct server_state {
+#ifdef HAS_IPV6
+  // added by Rohan on 7-Sep-2004
+  // define address and family contructs for IPv6
+  u_int8_t family;
+  struct in6_addr addr6;
+  
+#endif
   struct in_addr addr;
   int udp_socket;
   int tcp_socket;

@@ -557,10 +557,57 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 static int open_udp_socket(ares_channel channel, struct server_state *server)
 {
   int s;
+
+#ifdef HAS_IPV6
+  // added by Rohan 7-Sept-2004
+  // should really replace sockaddr_in6 with sockaddr_storage
+  struct sockaddr_in6 sin6;
+  struct sockaddr_in sin;
+
+
+  /* Acquire a socket. */
+  s = socket(server->family, SOCK_DGRAM, 0);
+
+  if (s == -1)
+    return -1;
+
+  /* Connect to the server. */
+  if (server->family == AF_INET6)
+  {
+    memset(&sin6, 0, sizeof(sin6));
+    sin6.sin6_family = AF_INET6;
+    sin6.sin6_addr = server->addr6;
+    sin6.sin6_port = channel->udp_port;
+    sin6.sin6_flowinfo = 0;
+    sin6.sin6_scope_id = 0;
+    // do i need to explicitly set the length?
+
+    if (connect(s, (const struct sockaddr *) &sin6, sizeof(sin6)) == -1)
+    {
+      close(s);
+      return -1;
+    }
+  }
+  else // IPv4 DNS server
+  {
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr = server->addr;
+    sin.sin_port = channel->udp_port;
+
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
+    {
+      close(s);
+      return -1;
+    }
+  }
+
+#else
   struct sockaddr_in sin;
 
   /* Acquire a socket. */
   s = socket(AF_INET, SOCK_DGRAM, 0);
+
   if (s == -1)
     return -1;
 
@@ -569,11 +616,13 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
   sin.sin_family = AF_INET;
   sin.sin_addr = server->addr;
   sin.sin_port = channel->udp_port;
+
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
       close(s);
       return -1;
     }
+#endif
 
   server->udp_socket = s;
   return 0;
