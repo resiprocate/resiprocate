@@ -43,7 +43,7 @@ GagConduit::process()
 
 void 
 GagConduit::presenseUpdate(const Uri& dest, bool open,
-                    const Data& status )
+                           const Data& status )
 {
   GagPresenceMessage presenceMessage(dest, open, status);
   presenceMessage.serialize(cout);
@@ -51,9 +51,9 @@ GagConduit::presenseUpdate(const Uri& dest, bool open,
 
 void 
 GagConduit::receivedPage( const Data& msg, const Uri& from ,
-                   const Data& signedBy,
-                   Security::SignatureStatus sigStatus,
-                   bool wasEncryped)
+                          const Data& signedBy,
+                          Security::SignatureStatus sigStatus,
+                          bool wasEncryped)
 {
   Uri to("a@a"); // XXX
   GagImMessage imMessage(from, to, msg);
