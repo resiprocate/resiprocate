@@ -65,6 +65,8 @@ class Dialog
                                        const NameAddr& from);
       SipMessage* makeInitialInvite(const NameAddr& target,
                                     const NameAddr& from);
+      SipMessage* makeInitialMessage(const NameAddr& target,
+                                    const NameAddr& from);
       
       // For creating requests within a dialog
       SipMessage* makeInvite();
