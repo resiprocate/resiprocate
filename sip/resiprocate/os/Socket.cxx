@@ -14,8 +14,8 @@ void
 Vocal2::makeSocketNonBlocking(Socket fd)
 {
 #if WIN32
-   unsigned long block = 0;
-   int errNoBlock = ioctlsocket( fd, FIONBIO , &block );
+   unsigned long noBlock = 1;
+   int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
    assert( errNoBlock == 0 );
 #else
    int flags  = fcntl( fd, F_GETFL, 0);
