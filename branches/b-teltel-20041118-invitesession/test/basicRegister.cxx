@@ -15,6 +15,7 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
+using namespace std;
 
 class RegisterAppDialogSet : public AppDialogSet
 {
