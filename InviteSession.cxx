@@ -7,6 +7,13 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) // Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -81,6 +88,7 @@ InviteSession::setOffer(const SdpContents* sdp)
    {
       throw UsageUseException("Cannot set an offer with an oustanding remote offer", __FILE__, __LINE__);
    }
+   assert(mNextOfferOrAnswerSdp == 0);
    mNextOfferOrAnswerSdp = static_cast<SdpContents*>(sdp->clone());
 }
 
@@ -91,6 +99,7 @@ InviteSession::setAnswer(const SdpContents* sdp)
    {
       throw UsageUseException("Cannot set an answer with an oustanding offer", __FILE__, __LINE__);
    }
+   assert(mNextOfferOrAnswerSdp == 0);
    mNextOfferOrAnswerSdp = static_cast<SdpContents*>(sdp->clone());
 }
 
@@ -152,11 +161,11 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          break;
       case Connected:
-         // reINVITE
          if (msg.isRequest())
          {
             switch(msg.header(h_RequestLine).method())
             {
+		       // reINVITE
                case INVITE:
                   mState = ReInviting;
                   mDialog.update(msg);
@@ -242,6 +251,7 @@ InviteSession::dispatch(const SipMessage& msg)
             mState = Connected;            
             //this shouldn't happen, but it may be allowed(DUM API doesn't
             //support this for re-invite)
+            mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg); // !slg! call onConnected for now - maybe a new callback should be created (ie. onReConnected or onReInviteSuccess)
             if (offans.first != None)
             {
                InviteSession::incomingSdp(msg, offans.second);
@@ -307,14 +317,19 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
       case Nothing:
          assert(mCurrentLocalSdp == 0);
          assert(mCurrentRemoteSdp == 0);
+         assert(mProposedLocalSdp == 0);
+         assert(mProposedRemoteSdp == 0);
          mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
          mOfferState = Offerred;
          mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, sdp);
          break;
          
       case Offerred:
+         assert(mCurrentLocalSdp == 0);
+         assert(mCurrentRemoteSdp == 0);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+		 delete mProposedRemoteSdp;
          mProposedLocalSdp = 0;
          mProposedRemoteSdp = 0;
          mOfferState = Answered;
@@ -339,6 +354,7 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
             delete mCurrentRemoteSdp;
             mCurrentLocalSdp = mProposedLocalSdp;
             mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+			delete mProposedRemoteSdp;
             mProposedLocalSdp = 0;
             mProposedRemoteSdp = 0;
             mOfferState = Answered;
@@ -346,6 +362,8 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
          }
          else
          {
+			delete mProposedLocalSdp;
+			delete mProposedRemoteSdp;
             mProposedLocalSdp = 0;
             mProposedRemoteSdp = 0;
             // !jf! is this right? 
@@ -368,7 +386,7 @@ InviteSession::send(SipMessage& msg)
          case UPDATE:
             if (mNextOfferOrAnswerSdp)
             {
-               msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+               msg.setContents(mNextOfferOrAnswerSdp);
                sendSdp(mNextOfferOrAnswerSdp);
                mNextOfferOrAnswerSdp = 0;            
             }
@@ -410,7 +428,7 @@ InviteSession::send(SipMessage& msg)
          //case the user wants to be very strange
          if (mNextOfferOrAnswerSdp)
          {
-            msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+            msg.setContents(mNextOfferOrAnswerSdp);
             sendSdp(mNextOfferOrAnswerSdp);
             mNextOfferOrAnswerSdp = 0;            
          } 
@@ -437,8 +455,11 @@ InviteSession::sendSdp(SdpContents* sdp)
          break;
          
       case Offerred:
+         assert(mCurrentLocalSdp == 0);
+         assert(mCurrentRemoteSdp == 0);
          mCurrentLocalSdp = sdp;
          mCurrentRemoteSdp = mProposedRemoteSdp;
+		 delete mProposedLocalSdp;
          mProposedLocalSdp = 0;
          mProposedRemoteSdp = 0;
          mOfferState = Answered;
@@ -458,11 +479,19 @@ InviteSession::sendSdp(SdpContents* sdp)
          {
             delete mCurrentLocalSdp;
             delete mCurrentRemoteSdp;
-            mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
+            mCurrentLocalSdp = sdp;
             mCurrentRemoteSdp = mProposedRemoteSdp;
+			delete mProposedLocalSdp;
+			mProposedLocalSdp = 0;
+			mProposedRemoteSdp = 0;			 
          }
-         mProposedLocalSdp = 0;
-         mProposedRemoteSdp = 0;
+		 else
+		 {
+			delete mProposedLocalSdp;
+			delete mProposedRemoteSdp;
+			mProposedLocalSdp = 0;
+			mProposedRemoteSdp = 0;			 
+		 }
          mOfferState = Answered;
          break;
    }
@@ -561,7 +590,7 @@ InviteSession::makeAck()
    mDialog.makeRequest(mAck, ACK);
    if (mNextOfferOrAnswerSdp)
    {
-      mAck.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+      mAck.setContents(mNextOfferOrAnswerSdp);
       sendSdp(mNextOfferOrAnswerSdp);
       mNextOfferOrAnswerSdp = 0;
    }

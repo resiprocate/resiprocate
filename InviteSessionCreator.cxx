@@ -12,6 +12,11 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, const Uri& a
    getLastRequest().setContents(mInitialOffer);
 }
 
+InviteSessionCreator::~InviteSessionCreator()
+{
+	delete mInitialOffer;
+}
+
 void
 InviteSessionCreator::end()
 {
