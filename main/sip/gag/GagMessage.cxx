@@ -4,7 +4,7 @@
 // a good pattern for this off the top of my head.
 
 GagMessage *
-GagMessage::createMessage(istream &is)
+GagMessage::getMessage(istream &is)
 {
   char messageType;
   is.get(messageType);
