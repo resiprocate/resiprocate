@@ -27,6 +27,7 @@ class Token : public ParserCategory
       Token(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
       Token(const Token&);
       Token& operator=(const Token&);
+      bool operator<(const Token& rhs) const;
 
       Data& value() const {checkParsed(); return mValue;}
 
@@ -195,6 +196,7 @@ class NameAddr : public ParserCategory
       
       Uri& uri() const;
       Data& displayName() const {checkParsed(); return mDisplayName;}
+      bool isAllContacts() const {checkParsed(); return mAllContacts; }
       void setAllContacts() { mAllContacts = true;}
       
       virtual void parse(ParseBuffer& pb);
