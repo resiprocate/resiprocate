@@ -22,7 +22,7 @@ class MultipartSignedContents : public MultipartMixedContents
 
       virtual Contents* clone() const;
 
-      virtual const Mime& getStaticType() const;
+      static const Mime& getStaticType();
 
    private:
       static ContentsFactory<MultipartSignedContents> Factory;
