@@ -15,11 +15,18 @@ using namespace resip;
 
 Data Headers::HeaderNames[MAX_HEADERS+1];
 bool Headers::CommaTokenizing[] = {false};
+bool Headers::CommaEncoding[] = {false};
 
 bool 
 Headers::isCommaTokenizing(Type type)
 {
    return CommaTokenizing[type+1];
+}
+
+bool 
+Headers::isCommaEncoding(Type type)
+{
+   return CommaEncoding[type+1];
 }
 
 const Data&
@@ -28,38 +35,40 @@ Headers::getHeaderName(int type)
    return HeaderNames[type+1];
 }
 
-#define defineHeader(_enum, _name, _type)                                       \
-Headers::Type                                                                   \
-_enum##_Header::getTypeNum() const {return Headers::_enum;}                     \
-_enum##_Header::_enum##_Header()                                                \
-{                                                                               \
-   Headers::CommaTokenizing[Headers::_enum+1] = Type::isCommaTokenizing;        \
-   Headers::HeaderNames[Headers::_enum+1] = _name;                              \
-}                                                                               \
-                                                                                \
-_type&                                                                          \
-_enum##_Header::knownReturn(ParserContainerBase* container)                     \
-{                                                                               \
-   return dynamic_cast<ParserContainer<_type>*>(container)->front();            \
-}                                                                               \
-                                                                                \
+#define defineHeader(_enum, _name, _type)                                                       \
+Headers::Type                                                                                   \
+_enum##_Header::getTypeNum() const {return Headers::_enum;}                                     \
+_enum##_Header::_enum##_Header()                                                                \
+{                                                                                               \
+   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::In);     \
+   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & ParserCategory::InOut);    \
+   Headers::HeaderNames[Headers::_enum+1] = _name;                                              \
+}                                                                                               \
+                                                                                                \
+_type&                                                                                          \
+_enum##_Header::knownReturn(ParserContainerBase* container)                                     \
+{                                                                                               \
+   return dynamic_cast<ParserContainer<_type>*>(container)->front();                            \
+}                                                                                               \
+                                                                                                \
 _enum##_Header resip::h_##_enum
 
-#define defineMultiHeader(_enum, _name, _type)                                  \
-Headers::Type                                                                   \
-_enum##_MultiHeader::getTypeNum() const {return Headers::_enum;}                \
-_enum##_MultiHeader::_enum##_MultiHeader()                                      \
-{                                                                               \
-   Headers::CommaTokenizing[Headers::_enum+1] = Type::isCommaTokenizing;        \
-   Headers::HeaderNames[Headers::_enum+1] = _name;                              \
-}                                                                               \
-                                                                                \
-ParserContainer<_type>&                                                         \
-_enum##_MultiHeader::knownReturn(ParserContainerBase* container)                \
-{                                                                               \
-   return *dynamic_cast<ParserContainer<_type>*>(container);                    \
-}                                                                               \
-                                                                                \
+#define defineMultiHeader(_enum, _name, _type)                                                  \
+Headers::Type                                                                                   \
+_enum##_MultiHeader::getTypeNum() const {return Headers::_enum;}                                \
+_enum##_MultiHeader::_enum##_MultiHeader()                                                      \
+{                                                                                               \
+   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::In);     \
+   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & ParserCategory::InOut);    \
+   Headers::HeaderNames[Headers::_enum+1] = _name;                                              \
+}                                                                                               \
+                                                                                                \
+ParserContainer<_type>&                                                                         \
+_enum##_MultiHeader::knownReturn(ParserContainerBase* container)                                \
+{                                                                                               \
+   return *dynamic_cast<ParserContainer<_type>*>(container);                                    \
+}                                                                                               \
+                                                                                                \
 _enum##_MultiHeader resip::h_##_enum##s
 
 defineHeader(ContentDisposition, "Content-Disposition", Token);
