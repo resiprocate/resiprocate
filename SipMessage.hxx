@@ -223,11 +223,15 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
+      // Returns the source tuple that the message was received from
+      // only makes sense for messages received from the wire
       void setSource(const Transport::Tuple& tuple) { mSource = tuple; }
       const Transport::Tuple& getSource() const { return mSource; }
 
-      void setDestination(const Transport::Tuple& dest);
-      
+      // Used by the stateless interface to specify where to send a request/response
+      void setDestination(const Transport::Tuple& tuple) { mDestination = tuple; }
+      const Transport::Tuple& getDestination() const { return mDestination; }
+
       void addBuffer(char* buf);
 
       // returns the encoded buffer which was encoded by resolve()
@@ -259,7 +263,7 @@ class SipMessage : public Message
   
       Transport::Tuple mSource;
       Transport::Tuple mDestination;
-
+      
       std::vector<char*> mBufferList;
       mutable HeaderFieldValueList* mStartLine;
       mutable HeaderFieldValue* mContentsHfv;
