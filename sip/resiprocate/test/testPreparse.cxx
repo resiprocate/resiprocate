@@ -153,7 +153,9 @@ const char shortMessage[] =
                    "a=rtpmap:31 LPC \r\n");
 
 #if defined(PP_DEBUG_HELPERS)
-extern Data statusName(BufferAction s);
+extern Data ppStatusName(BufferAction s);
+#else
+#define ppStatusName(s) s
 #endif
 
 const int chPerRow = 20;
@@ -317,6 +319,9 @@ int fakeRead(char *p, int n)
 
 void doTest1()
 {
+    using namespace PreparseConst;
+    
+
     InfoLog(<<"doTest1");
     
     SipMessage* msg = new SipMessage();
@@ -324,7 +329,7 @@ void doTest1()
 
     size_t len = 1;
 
-    BufferAction status = ::NONE;
+    Preparse::Status  status = stNone;
 
     
     // Create a SipMessage
@@ -380,7 +385,7 @@ void doTest1()
 #endif
         DebugLog(<<"status :" << statusName(status));
 
-        if (status & ::preparseError)
+        if (status & stPreparseError)
         {
             if (chunkMine)
             {
@@ -390,12 +395,12 @@ void doTest1()
             chunk = 0;
             
             CritLog(<<"preparserError -- unexpected");
-            assert(~(status & ::preparseError));
+            assert(~(status & stPreparseError));
             assert(("whoops you goofed -- should never see this",0));
             
         }
         
-        if (status & ::dataAssigned)
+        if (status & stDataAssigned)
         {
             // something used ... need to add this to the message
             DebugLog(<<"dataAssigned");
@@ -413,7 +418,7 @@ void doTest1()
             }
         }
 
-        if (status & ::fragmented)
+        if (status & stFragmented)
         {
             // need to call again with more data,
             // there is an optimization here ...
@@ -427,7 +432,7 @@ void doTest1()
             char * newChunk = new char[chunkSize-discard + readQuant];
             memcpy(newChunk, chunk+discard, chunkSize-discard);
 
-            if (! ( status & ::dataAssigned))
+            if (! ( status & stDataAssigned))
             {
                 // we didn't use the last one ... 
                 DebugLog(<<"delete chunk (0x"<<hex<<(unsigned long)chunk<<dec<<")");
@@ -478,7 +483,7 @@ void doTest1()
         
         
     }
-    while (~ status & ::headersComplete);
+    while (~ status & stHeadersComplete);
 
     InfoLog(<< "Read in a message");
     InfoLog(<<*msg);
@@ -494,7 +499,8 @@ void doTest1()
     
     InfoLog(<<"status == fragment?");
     
-    assert ( status == ::fragment);
+    assert ( status == stFragmented);
+    
 
     InfoLog(<<"TEST1 -- Passed");
 #endif

@@ -37,31 +37,36 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 SipMessage*
 Helper::makeMessage(const Data& data, bool isExternal )
 {
+   using namespace PreparseConst;
+    
    SipMessage* msg = new SipMessage(isExternal);
-   int size = data.size();
+
+   size_t size = data.size();
    char *buffer = new char[size];
 
-#if 0 // !ah!
    memcpy(buffer,data.data(),size);
    
-   PreparseState::TransportAction status = PreparseState::NONE;
+   Preparse::Status status = stNone;
    
    Preparse pre;
 
-   int used = 0;
+   size_t used = 0;
+   size_t discard = 0;
    
-   pre.process(*msg, buffer, size, used, status);
-   if (status == PreparseState::preparseError ||
-       status == PreparseState::fragment)
+   
+   pre.process(*msg, buffer, size, 0, used, discard, status);
+   if (status == stPreparseError ||
+       status == stFragmented)
    {
       delete msg;
       msg = 0;
    }
    else
    {
-      // no pp error
-      if (status  PreparseState::headersComplete &&
-          used < size)
+       assert(used == discard);
+       // no pp error
+       if (status ==  stHeadersComplete &&
+           used < size)
       {
          // body is present .. add it up.
          // NB. The Sip Message uses an overlay (again)
@@ -73,7 +78,6 @@ Helper::makeMessage(const Data& data, bool isExternal )
          msg->setBody(buffer+used,size-used);
       }
    }
-#endif
    return msg;
 }
 
