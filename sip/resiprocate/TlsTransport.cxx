@@ -34,15 +34,11 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << portNum);
-   
-   InfoLog( << "Listening for TLS connections on port " << portNum  );
-
 }
 
 
 TlsTransport::~TlsTransport()
 {
-    // shouldn't this delete the Security object?
 }
   
 
@@ -53,7 +49,7 @@ TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
    who.transport = this;
    assert(  who.transport );
 
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server);
+   Connection* conn = new TlsConnection(who, fd, mSecurity, server, mSslType );
    assert( conn->transport() );
    return conn;
 }
