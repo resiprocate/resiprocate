@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Advapi32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -70,7 +70,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="c:\sip;C:\sip\contrib\ares"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -84,7 +84,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Release\sipstack.lib C:\sip\contrib\ares\Release\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Advapi32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -113,7 +113,7 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="testStack.cxx">
+				RelativePath="limpc.cxx">
 			</File>
 		</Filter>
 		<Filter
