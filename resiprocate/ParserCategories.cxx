@@ -86,6 +86,12 @@ Token::encode(std::ostream& str) const
 //====================
 // MIME
 //====================
+Mime::Mime(const Data& type, const Data& subType) 
+   : ParserCategory(), 
+     mType(type), 
+     mSubType(subType) 
+{}
+
 Mime::Mime(const Mime& rhs)
    : ParserCategory(rhs),
      mType(rhs.mType),
@@ -102,6 +108,20 @@ Mime::operator=(const Mime& rhs)
       mSubType = rhs.mSubType;
    }
    return *this;
+}
+
+bool
+Mime::operator<(const Mime& rhs) const
+{
+   if (mType < rhs.mType)
+   {
+      return true;
+   }
+   else if (mType > rhs.mType)
+   {
+      return false;
+   }
+   return mSubType < rhs.mSubType;
 }
 
 void

@@ -1,5 +1,7 @@
-#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/util/CountStream.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/compat.hxx"
 #include "sip2/util/vmd5.hxx"
@@ -15,7 +17,8 @@ SipMessage::SipMessage(bool fromWire)
      mHaveFixedDest(false),
      mFixedDest(),
      mStartLine(0),
-     mBody(0),
+     mContentsHfv(0),
+     mContents(0),
      mRequest(false),
      mResponse(false)
 {
@@ -29,7 +32,8 @@ SipMessage::SipMessage(bool fromWire)
 SipMessage::SipMessage(const SipMessage& from)
    : mIsExternal(from.mIsExternal),
      mStartLine(0),
-     mBody(0),
+     mContentsHfv(0),
+     mContents(0),
      mRequest(from.mRequest),
      mResponse(from.mResponse)
 {
@@ -64,9 +68,16 @@ SipMessage::SipMessage(const SipMessage& from)
       {
          mStartLine = new HeaderFieldValueList(*from.mStartLine); 
       }
-      if (from.mBody != 0)
+      if (from.mContents != 0 && from.mContents->isParsed())
       {
-         mBody = new HeaderFieldValueList(*from.mBody);
+         mContents = from.mContents->clone();
+      }
+      else
+      {
+         if (from.mContentsHfv != 0)
+         {
+            mContentsHfv = new HeaderFieldValue(*from.mContentsHfv);
+         }
       }
    }
 }
@@ -93,7 +104,8 @@ SipMessage::~SipMessage()
    }
    
    delete mStartLine;
-   delete mBody;
+   delete mContents;
+   delete mContentsHfv;
 }
 
 const Data& 
@@ -164,27 +176,48 @@ SipMessage::brief() const
    return result;
 }
 
+// dynamic_cast &str to DataStream* to avoid CountStream?
+
 std::ostream& 
 SipMessage::encode(std::ostream& str) const
 {
-   // !dlb! calculate content-length -- ask body
    if (mStartLine != 0)
    {
       mStartLine->encode(Headers::NONE, str);
    }
-   
+
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
-      if (mHeaders[i] !=0)
+      if (mHeaders[i] != 0)
       {
-         mHeaders[i]->encode((Headers::Type)i, str);
+         if (i != Headers::Content_Length) // !dlb! hack...
+         {
+            mHeaders[i]->encode(static_cast<Headers::Type>(i), str);
+         }
+         else
+         {
+            if (mContents != 0)
+            {
+               CountStream cs;
+               mContents->encode(cs);
+               cs.flush();
+               str << "Content-Length: " << cs.size() << "\r\n";
+            }
+            else
+            {
+               str << "Content-Length: 0\r\n";
+            }
+         }
       }
    }
+
+   // extension headers !dlb!
+
    str << Symbols::CRLF;
    
-   if (mBody != 0)
+   if (mContents != 0)
    {
-      mBody->encode(Headers::NONE, str);
+      mContents->encode(str);
    }
    
    return str;
@@ -228,8 +261,37 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-   mBody = new HeaderFieldValueList;
-   mBody->push_back(new HeaderFieldValue(start, len));
+   cerr << "PP is setting body, of length:" << len << "[";
+   cerr.write(start, len);
+   cerr << "]" << endl;
+   mContentsHfv = new HeaderFieldValue(start, len);
+}
+
+void 
+SipMessage::setContents(const Contents* body)
+{
+   delete mContents;
+   delete mContentsHfv;
+   mContentsHfv = 0;
+   
+   mContents = body->clone();
+   header(h_ContentType) = body->getType();
+}
+
+Contents*
+SipMessage::getContents() const
+{
+   if (mContents == 0)
+   {
+      if (!exists(h_ContentType) || mContentsHfv == 0)
+      {
+         return 0;
+      }
+      DebugLog(<< "Looking up factory for: " << header(h_ContentType));
+      assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
+      mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv);
+   }
+   return mContents;
 }
 
 // !rk! temporary hack until richer body support is added
@@ -241,19 +303,6 @@ SipMessage::getBody() const
 	return 0;
    }
    return mBody->front();
-}
-
-void
-SipMessage::updateContentLength()
-{
-   if (!mBody)
-   {
-      this->header(h_ContentLength).value() = 0;
-   }
-   else
-   {
-      this->header(h_ContentLength).value() = mBody->front()->mFieldLength;
-   }
 }
 
 // unknown header interface
