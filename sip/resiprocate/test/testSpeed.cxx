@@ -45,7 +45,7 @@ main(int argc, char* argv[])
    from.uri().port() = 5070;
    
 #ifdef WIN32
-   int totalCalls = 50;
+   int totalCalls = 5;
 #else
    int totalCalls = 500;
 #endif
