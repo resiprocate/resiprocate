@@ -40,8 +40,9 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
-   mCancelled(false),
+   mEnded(false),
    mReceivedProvisional(false),
+   mReceivedFinal(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -64,8 +65,9 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
-   mCancelled(false),
+   mEnded(false),
    mReceivedProvisional(false),
+   mReceivedFinal(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -228,7 +230,7 @@ DialogSet::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
 
-   if (msg.isResponse() && !mCancelled)
+   if (msg.isResponse() && !mEnded)
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -359,6 +361,12 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
          }
       }
+      else if (response.header(h_StatusLine).statusCode() >= 200 &&
+               response.header(h_StatusLine).statusCode() < 300)
+      {
+          mReceivedFinal = true;
+      }
+
 
       switch (response.header(h_CSeq).method())
       {
@@ -498,9 +506,9 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-      if (mCancelled && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
+      if (mEnded && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
       {
-         dialog->cancel();
+         end();
          return;
       }
       else
@@ -554,9 +562,50 @@ DialogSet::findDialog(const DialogId id)
 }
 
 void
-DialogSet::cancel()
+DialogSet::end()
 {
-   mCancelled = true;
+   mEnded = true;
+
+   if(getCreator()) // UAC
+   {
+      if (mReceivedProvisional || mReceivedFinal)
+      {
+         if(mReceivedFinal)
+         {
+            // !slg! Should we still send a cancel?  Or only if 64T1 hasn't expired?
+            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+            {
+               it->second->end();
+            }
+         }
+         else
+         {
+            // If no dialogs yet then send Cancel from here
+            InfoLog (<< "Canceling " << mId);
+            auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));
+            mDum.send(*cancel);
+
+            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+            {
+               it->second->cancel();
+            }
+         }
+
+         // so it won't call me again
+         mEnded = false;
+      }
+   }
+   else // UAS
+   {
+      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+      {
+         it->second->end();
+      }
+   }
+
+#ifdef OLD_CODE
+   mEnded = true;
+
    if (mReceivedProvisional && getCreator())
    {
       // !jf! What is this comment about?
@@ -575,8 +624,9 @@ DialogSet::cancel()
       }
 
       // so it won't call me again
-      mCancelled = false;
+      mEnded = false;
    }
+#endif
 }
 
 

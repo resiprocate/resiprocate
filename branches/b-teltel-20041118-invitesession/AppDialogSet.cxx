@@ -30,11 +30,11 @@ AppDialogSet::destroy()
 }
 
 void 
-AppDialogSet::cancel()
+AppDialogSet::end()
 {
    if(mDialogSet)
    {
-      mDialogSet->cancel();
+      mDialogSet->end();
    }
 }
 

@@ -59,6 +59,7 @@ class Dialog
       InviteSessionHandle getInviteSession();
       
       void cancel();
+      void end();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
       

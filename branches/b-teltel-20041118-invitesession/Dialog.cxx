@@ -238,6 +238,13 @@ Dialog::cancel()
 }
 
 void
+Dialog::end()
+{
+   assert(mType == Invitation);
+   mInviteSession->end();
+}
+
+void
 Dialog::dispatch(const SipMessage& msg)
 {
    // !jf! Should be checking for messages with out of order CSeq and rejecting

@@ -34,7 +34,7 @@ class DialogSet
       UserProfile* getUserProfile();
       void setUserProfile(UserProfile *userProfile);
 
-      void cancel();
+      void end();
       void dispatch(const SipMessage& msg);
       
       ClientRegistrationHandle getClientRegistration();
@@ -81,8 +81,9 @@ class DialogSet
       DialogSetId mId;
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
-      bool mCancelled;
-      bool mReceivedProvisional;      
+      bool mEnded;
+      bool mReceivedProvisional;  
+      bool mReceivedFinal;
 
       //inelegant, but destruction can happen both automatically and forced by
       //the user.  Extremely single threaded.
