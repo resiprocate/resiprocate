@@ -60,8 +60,8 @@
  */
 
 
-static const char* const posix_vthread_h_Version =
-    "$Id: vthread.hxx,v 1.2 2002/11/11 22:05:06 jason Exp $";
+static const char* const Vocal2_vthread_h_Version =
+    "$Id: vthread.hxx,v 1.3 2002/11/11 23:09:55 jason Exp $";
 
 
 #include <pthread.h>

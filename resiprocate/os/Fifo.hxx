@@ -52,8 +52,7 @@
  */
 
 
-static const char* const Fifo_h_Version =
-"$Id: Fifo.hxx,v 1.8 2002/11/11 22:05:06 jason Exp $";
+static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.9 2002/11/11 23:09:55 jason Exp $";
 
 #include "sip2/util/Mutex.hxx"
 #include "sip2/util/Condition.hxx"

@@ -1,7 +1,7 @@
 #ifndef CircularBuffer_hxx
 #define CircularBuffer_hxx
 
-static const char* const CircularBufferHeaderVersion = "$Id: CircularBuffer.hxx,v 1.1 2002/11/06 18:51:54 davidb Exp $";
+static const char* const Vocal2CircularBufferHeaderVersion = "$Id: CircularBuffer.hxx,v 1.2 2002/11/11 23:09:55 jason Exp $";
 
 #include <vector>
 
