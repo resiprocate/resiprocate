@@ -130,11 +130,18 @@ TransactionController::send(SipMessage* msg)
 }
 
 void
+TransactionController::post(Message* msg, 
+                            unsigned int msecondsLater)
+{
+   Timer t(msecondsLater, msg);
+   mTimers.add(t);
+}
+
+void
 TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

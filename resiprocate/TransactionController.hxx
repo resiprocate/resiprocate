@@ -36,6 +36,11 @@ class TransactionController
                             const Data& ipInterface);
       
       void send(SipMessage* msg);
+      void post(Message* msg, unsigned int msecondsLater);
+
+      // sends the message up to the TU later
+      void post(Message* message,
+                int secondsLater);
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
