@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.77 2003/10/09 19:58:15 davidb Exp $";
+// "$Id: Data.cxx,v 1.78 2003/10/13 00:02:00 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -807,24 +807,29 @@ static char hexmap[] = "0123456789abcdef";
 Data 
 Data::escaped() const
 { 
-   Data ret(2*size(), true );  
+   Data ret(3*size(), true );  
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
    {
       unsigned char c = *p++;
 
-      switch (c)
+      if ( c == 0x0d )
       {
-         case 0x0A: // LF
-         case 0x0D: // CR
+         if ( i+1 < size() )
          {
-            ret += c;
-            continue;
+            if ( *p == 0x0a )
+            {
+               // found a CRLF sequence
+               ret += c;
+               c = *p++; i++;
+               ret += c;
+               continue;
+            }
          }
       }
       
-      if ( iscntrl(c) || (c>=0x7F) )
+      if ( !isprint(c) )
       {
          ret +='%';
          
@@ -833,10 +838,11 @@ Data::escaped() const
 	   
          ret += hexmap[hi];
          ret += hexmap[low];
-         continue;
       }
-
-      ret += c;
+      else
+      {
+         ret += c;
+      }
    }
 
    return ret;
