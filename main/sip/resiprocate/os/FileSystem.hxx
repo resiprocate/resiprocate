@@ -38,7 +38,7 @@ class FileSystem
                   bool operator!=(const iterator& rhs) const;
                   bool operator==(const iterator& rhs) const;
                   const Data& operator*() const;
-                  const Data& operator->() const;
+                  const Data* operator->() const;
                private:
 #ifdef WIN32
                   WIN32_FIND_DATA mFileData;

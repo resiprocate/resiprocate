@@ -54,10 +54,10 @@ FileSystem::Directory::iterator::operator*() const
    return mFile;
 }
 
-const Data& 
+const Data*
 FileSystem::Directory::iterator::operator->() const
 {
-   return mFile;
+   return &mFile;
 }
 
 #else
@@ -138,10 +138,10 @@ FileSystem::Directory::iterator::operator*()
    return mFile;
 }
 
-const Data& 
+const Data* 
 FileSystem::Directory::iterator::operator->()
 {
-   return mFile;
+   return &mFile;
 }
 
 #endif
