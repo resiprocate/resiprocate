@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.8 2003/10/10 16:41:01 jason Exp $
+# $Id: Makefile.osarch,v 1.9 2003/10/19 17:52:20 jason Exp $
 
 ######################################################################
 
@@ -38,6 +38,7 @@ endif
 	CXXFLAGS += -D_REENTRANT -DHAVE_POPT_H
 	CFLAGS   += -D_REENTRANT -DHAVE_POPT_H
 	DISTCC   = distcc 
+	CCACHE   = ccache
 endif
 
 
