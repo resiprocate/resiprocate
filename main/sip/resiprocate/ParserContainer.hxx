@@ -70,7 +70,7 @@ class ParserContainer : public ParserContainerBase
       }
       
       bool empty() const { return mParsers.empty(); }
-      int size() const { return mParsers.size(); }
+      size_type size() const { return mParsers.size(); }
       void clear()
       {
          for (typename std::list<T*>::const_iterator i = mParsers.begin(); 

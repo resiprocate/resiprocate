@@ -93,6 +93,8 @@ Pidf::getStaticType() const
 std::ostream& 
 Pidf::encodeParsed(std::ostream& str) const
 {
+   encodeHeaders(str);
+
    //DebugLog(<< "Pidf::encodeParsed " << mText);
    //str << mText;
 
@@ -127,6 +129,8 @@ Pidf::encodeParsed(std::ostream& str) const
 void 
 Pidf::parse(ParseBuffer& pb)
 {
+   parseHeaders(pb);
+
    const char* anchor = pb.position();
 
    Tupple t;
