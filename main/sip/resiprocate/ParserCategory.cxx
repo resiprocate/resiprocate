@@ -432,7 +432,7 @@ ParserCategory::commutativeParameterHash() const
    }
 
    buffer.clear();
-   for (ParameterList::const_iterator i=mUnknownParameters.begin(); i!=mUnknownParameters.end(); i++)
+   for (ParameterList::iterator i=mUnknownParameters.begin(); i!=mUnknownParameters.end(); i++)
    {
       UnknownParameter* p = static_cast<UnknownParameter*>(*i);
       buffer = p->getName();
