@@ -1,18 +1,20 @@
-# VSM (Very Simplistic Makefile)
+# This should be the path to the build directory of resip (in the sip subdirectory)
+BUILD = ../build
 
-CC=g++
-RESIPHOME=..
-RESIPINC=$(RESIPHOME)
-RESIPLIB=$(RESIPHOME)/build/resiprocate
+# Includes macros
+include $(BUILD)/Makefile.pre
 
+# All of these packages are prerequisites for resiprocate
+PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 
-CXXFLAGS = -Wall -fPIC -Wno-deprecated -mcpu=i686 -march=i686 -D_REENTRANT -DUSE_PTHREADS -ggdb -DUSE_SSL -O0 -I.  -I$(RESIPINC)/contrib/ares -I$(RESIPINC)
+# Add an entry to TESTPROGRAMS for each target that has a main in it
+# On linux this will generate an executable in bin.debug.Linux.i686/main
+TESTPROGRAMS += presSvr.cpp
 
-LDFLAGS = -L$(RESIPHOME)/contrib/ares -L$(RESIPLIB)
+# Add each of the C++ or C files that other than the main
+# Each main target (from TESTPROGRAMS) will be linked with all of the files in SRC
+SRC = 		PresConfig.cpp TuPresSvr.cpp ResourceMgr.cpp SubDialogMgr.cpp SubDialog.cpp Resource.cpp DialogSetMgr.cpp DialogState.cpp
 
-LDLIBS = -lresiprocate -lssl -lcrypto -lares -lpthread 
+# Includes macros
+include $(BUILD)/Makefile.post
 
-presSvr: presSvr.o PresConfig.o TuPresSvr.o ResourceMgr.o SubDialogMgr.o SubDialog.o Resource.o DialogSetMgr.o DialogState.o
-
-clean:
-	rm *.o
