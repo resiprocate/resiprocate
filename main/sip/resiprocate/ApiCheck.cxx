@@ -28,8 +28,9 @@ ApiCheck::ApiCheck(ApiEntry* list)
                 bool oops = localList->sz != list->sz;
                 const char w = oops?'!':' ';
 
-                InfoLog(<< "application == " << list->sz << "\t" << w << w << w << " resip == " << localList->sz 
-                       <<"\t (resip::"<< n << ")");
+                InfoLog(<< "application == " << list->sz << "\t"
+                        << w << w << w << " resip == " << localList->sz 
+                        <<"\t (resip::"<< n << ")");
 
                 if (oops) ++bad;
 
@@ -43,9 +44,13 @@ ApiCheck::ApiCheck(ApiEntry* list)
         }
     }
 
-    if (sizeof(::resipApiSizeList)/sizeof(*::resipApiSizeList) != clientListLength)
+    int resipListLen = sizeof(::resipApiSizeList)/sizeof(*::resipApiSizeList)-1; // -1 for {0,0} @ end.
+
+    if ( resipListLen != clientListLength)
     {
-        CritLog(<<"Type verification lists are different lengths.");
+        CritLog(<<"Type verification lists are different lengths. resip == "
+                << resipListLen << ", client == " << clientListLength
+            );
         ++bad;
     }
 
