@@ -8,6 +8,7 @@
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -30,6 +31,7 @@ class DialogSet
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
+	  Data& getCreatingTransactionId();
 
       UserProfile* getUserProfile();
       void setUserProfile(UserProfile *userProfile);
@@ -79,6 +81,7 @@ class DialogSet
       DialogMap mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
+	  Data mCreatingTransactionId;  
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
       bool mEnded;
