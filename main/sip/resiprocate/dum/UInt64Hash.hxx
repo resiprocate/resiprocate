@@ -13,10 +13,13 @@ size_t hash_value(const UInt64 v);
 #elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 namespace HASH_MAP_NAMESPACE
 {
+
+template<>
 struct hash<UInt64>
 {
       size_t operator()(const UInt64& v) const;
 };
+
 }
 #endif
 
