@@ -4,8 +4,13 @@
 #include <sys/types.h>
 #include <limits.h>
 
+#include <sipstack/HeaderTypes.hxx>
+
+
 namespace Vocal2
 {
+   class SipMessage;            // fwd decl
+
    namespace PreparseStateTable
    {
       // Our actions
@@ -66,14 +71,16 @@ namespace Vocal2
    class Preparse
    {
       public:
-         Preparse(const char * buffer, size_t length);
-         Preparse();
+         Preparse(SipMessage& sipMsg, const char * buffer, size_t length);
+         Preparse(SipMessage& sipMsg);
         
          bool process();
 
          void addBuffer(const char * buffer, size_t length);
 
       private:
+         SipMessage& mSipMessage;
+                                // we are pre-parsing this message
 
          const char * mBuffer;	// the char buffer
          size_t mLength;		// 
@@ -89,7 +96,7 @@ namespace Vocal2
       
          const char * mHeader;	// the current Header string
          size_t mHeaderLength;  // length of header
-         int mHeaderType;       // the enum for the currently
+         Headers::Type mHeaderType; // the enum for the currently
                                 // active header
          
 

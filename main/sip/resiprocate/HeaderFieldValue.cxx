@@ -15,7 +15,7 @@ HeaderFieldValue::HeaderFieldValue()
      mMine(false)
 {}
 
-HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
+HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
   : next(0),
     mParserCategory(0),
     mField(field),
