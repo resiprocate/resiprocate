@@ -41,7 +41,7 @@ class SipStack
       // hostname parameter is used to specify the host portion of the uri that
       // describes this sip element (proxy or ua)
       // nic is used to specify an ethernet interface by name. e.g. eth0
-      void addTransport( Transport::Type protocol,
+      void addTransport( TransportType protocol,
                          int port, 
                          const Data& hostName = Data::Empty, 
                          const Data& nic = Data::Empty);
@@ -83,7 +83,7 @@ class SipStack
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
       void sendTo(const SipMessage& msg, const Uri& uri);
-      void sendTo(const SipMessage& msg, const Transport::Tuple& tuple);
+      void sendTo(const SipMessage& msg, const Tuple& tuple);
 
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 

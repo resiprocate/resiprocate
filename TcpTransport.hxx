@@ -13,13 +13,13 @@ class SipMessage;
 class TcpTransport : public Transport
 {
    public:
-      TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
+      TcpTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4);
       virtual  ~TcpTransport();
 
       void process(FdSet& fdset);
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
-      Transport::Type transport() const { return TCP; }
+      TransportType transport() const { return TCP; }
       
       static const size_t MaxWriteSize;
       static const size_t MaxReadSize;

@@ -442,7 +442,7 @@ TransactionState::processClientInvite(  Message* msg )
             }
             if (!mCancelStateMachine)
             {
-               if (mTarget.transportType == Transport::Unknown)
+               if (mTarget.transportType == UNKNOWN)
                {
                   InfoLog (<< "Cancelling INVITE before it is sent " << *this);
 
@@ -532,7 +532,7 @@ TransactionState::processClientInvite(  Message* msg )
                   delete invite;
                   
                   // want to use the same transport as was selected for Invite
-                  assert(mTarget.transportType != Transport::Unknown);
+                  assert(mTarget.transportType != UNKNOWN);
                   sendToWire(mMsgToRetransmit);
                   sendToTU(msg); // don't delete msg
                   terminateClientTransaction(mId);
@@ -1171,7 +1171,7 @@ TransactionState::handle(DnsResult* result)
    // got a DNS response, so send the current message
    DebugLog (<< *this << " got DNS result: " << *result);
 
-   if (mTarget.transportType == Transport::Unknown) 
+   if (mTarget.transportType == UNKNOWN) 
    {
       assert(mDnsResult);
       switch (mDnsResult->available())
@@ -1203,12 +1203,12 @@ TransactionState::handle(DnsResult* result)
 }
 
 void
-TransactionState::processReliability(Transport::Type type)
+TransactionState::processReliability(TransportType type)
 {
    switch (type)
    {
-      case Transport::UDP:
-      case Transport::DCCP:
+      case UDP:
+      case DCCP:
          if (mIsReliable)
          {
             mIsReliable = false;
@@ -1285,7 +1285,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
          assert (!sip->header(h_Vias).empty());
          Via& via = sip->header(h_Vias).front();
 
-         Transport::Tuple tuple;
+         Tuple tuple;
          if (via.exists(p_received))
          {
             inet_pton(AF_INET, via.param(p_received).c_str(), &tuple.ipv4);
@@ -1297,19 +1297,19 @@ TransactionState::sendToWire(Message* msg, bool resend)
          tuple.port = (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort();
          if (via.transport() == Symbols::TLS)
          {
-            tuple.transportType = Transport::TLS;
+            tuple.transportType = TLS;
          }
          else if (via.transport() == Symbols::TCP)
          {
-            tuple.transportType = Transport::TCP;
+            tuple.transportType = TCP;
          }
          else if (via.transport() == Symbols::UDP)
          {
-            tuple.transportType = Transport::UDP;
+            tuple.transportType = UDP;
          }
          else if (via.transport() == Symbols::SCTP)
          {
-            tuple.transportType = Transport::SCTP;
+            tuple.transportType = SCTP;
          }
          else
          {
@@ -1332,7 +1332,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    }
    else // reuse the last dns tuple
    {
-      assert(mTarget.transportType != Transport::Unknown);
+      assert(mTarget.transportType != UNKNOWN);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);

@@ -27,15 +27,15 @@ class ConnectionMap
       ConnectionMap();
       ~ConnectionMap();
 
-      Connection* add(Transport::Tuple& who, Socket s);
-      Connection* get(const Transport::Tuple& who);
-      void close(const Transport::Tuple& who);
+      Connection* add(Tuple& who, Socket s);
+      Connection* get(const Tuple& who);
+      void close(const Tuple& who);
 
       // release excessively old connections
       void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
 
       // !jf! should be a hash_map
-      typedef HashMap<Transport::Tuple, Connection*> Map;
+      typedef HashMap<Tuple, Connection*> Map;
       Map mConnections;
       
       // move to youngest

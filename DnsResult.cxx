@@ -6,6 +6,7 @@
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/compat.hxx"
 
 #include "resiprocate/DnsHandler.hxx"
@@ -66,7 +67,7 @@ DnsResult::DnsResult(DnsInterface& interface, DnsHandler* handler)
      mHandler(handler),
      mSRVCount(0),
      mSips(false),
-     mTransport(Transport::Unknown),
+     mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
      mType(Pending)
 {
@@ -99,11 +100,11 @@ DnsResult::available()
    }
 }
 
-Transport::Tuple
+Tuple
 DnsResult::next() 
 {
    assert(available() == Available);
-   Transport::Tuple next = mResults.front();
+   Tuple next = mResults.front();
    mResults.pop_front();
    DebugLog (<< "Returning next dns entry: " << next);
    return next;
@@ -137,11 +138,11 @@ DnsResult::lookup(const Uri& uri)
 
    if (uri.exists(p_transport))
    {
-      mTransport = Transport::toTransport(uri.param(p_transport));
+      mTransport = Tuple::toTransport(uri.param(p_transport));
 
       if (isNumeric) // IP address specified
       {
-         Transport::Tuple tuple;
+         Tuple tuple;
          tuple.transportType = mTransport;
          tuple.transport = 0;
          inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
@@ -165,16 +166,16 @@ DnsResult::lookup(const Uri& uri)
       {
          if (mSips)
          {
-            mTransport = Transport::TLS;
+            mTransport = TLS;
          }
          else 
          {
-            mTransport = Transport::UDP;
+            mTransport = UDP;
          }
 
          if (isNumeric) // IP address specified
          {
-            Transport::Tuple tuple;
+            Tuple tuple;
             tuple.transportType = mTransport;
             tuple.transport = 0;
             inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
@@ -200,15 +201,15 @@ DnsResult::lookup(const Uri& uri)
 }
 
 int
-DnsResult::getDefaultPort(Transport::Type transport, int port)
+DnsResult::getDefaultPort(TransportType transport, int port)
 {
    if (port == 0)
    {
       switch (transport)
       {
-         case Transport::UDP:
+         case UDP:
             return 5060;
-         case Transport::TCP:
+         case TCP:
             return mSips ? 5061 : 5060;
          default:
             assert(0);
@@ -485,15 +486,15 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
          {
             if (srv.key.find("_sip._udp") == 0)
             {
-               srv.transport = Transport::UDP;
+               srv.transport = UDP;
             }
             else if (srv.key.find("_sip._tcp") == 0)
             {
-               srv.transport = Transport::TCP;
+               srv.transport = TCP;
             }
             else if (srv.key.find("_sips._tcp") == 0)
             {
-               srv.transport = Transport::TLS;
+               srv.transport = TLS;
             }
             else
             {
@@ -538,12 +539,12 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       {
          if (mSips)
          {
-            mTransport = Transport::TCP;
+            mTransport = TCP;
             mPort = 5060;
          }
          else
          {
-            mTransport = Transport::UDP;
+            mTransport = UDP;
             mPort = 5060;
          }
          
@@ -574,7 +575,7 @@ DnsResult::processHost(int status, struct hostent* result)
    if (status == ARES_SUCCESS)
    {
       DebugLog (<< "DNS lookup canonical name: " << result->h_name);
-      Transport::Tuple tuple;
+      Tuple tuple;
       tuple.port = mPort;
       tuple.transportType = mTransport;
       tuple.transport = 0;
@@ -627,7 +628,7 @@ DnsResult::primeResults()
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Transport::Tuple tuple;
+            Tuple tuple;
             tuple.port = next.port;
             tuple.transportType = next.transport;
             tuple.transport = 0;
@@ -724,6 +725,10 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    int len=0;
    int status=0;
 
+#if !defined (USE_ARES)
+#error foo
+#endif
+
    // Parse the RR name. 
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
@@ -784,15 +789,15 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       {
          if (srv.key.find("_sip._udp") == 0)
          {
-            srv.transport = Transport::UDP;
+            srv.transport = UDP;
          }
          else if (srv.key.find("_sip._tcp") == 0)
          {
-            srv.transport = Transport::TCP;
+            srv.transport = TCP;
          }
          else if (srv.key.find("_sips._tcp") == 0)
          {
-            srv.transport = Transport::TLS;
+            srv.transport = TLS;
          }
          else
          {
@@ -818,7 +823,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
 
       struct in_addr addr;
       memcpy(&addr, aptr, sizeof(struct in_addr));
-      DebugLog (<< "From additional: " << key << ":" << DnsUtil::getIpAddress(addr));
+      DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
       mARecords[key].push_back(addr);
       return aptr + dlen;
    }
@@ -1132,7 +1137,7 @@ std::ostream&
 resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
 {
    strm << "key=" << srv.key
-        << " t=" << Transport::toData(srv.transport) 
+        << " t=" << Tuple::toData(srv.transport) 
         << " p=" << srv.priority
         << " w=" << srv.weight
         << " c=" << srv.cumulativeWeight

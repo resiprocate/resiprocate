@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 
+#include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/Transport.hxx"
 
 struct hostent;
@@ -35,7 +36,7 @@ class DnsResult
       
       // return the next tuple available for this query. The caller should have
       // checked available() before calling next()
-      Transport::Tuple next();
+      Tuple next();
 
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
@@ -68,7 +69,7 @@ class DnsResult
             
             Data key; // SRV record key
             
-            Transport::Type transport;
+            TransportType transport;
             int priority;
             int weight;
             int cumulativeWeight; // for picking 
@@ -83,7 +84,7 @@ class DnsResult
       void lookup(const Uri& uri);
 
       // Given a transport and port from uri, return the default port to use
-      int getDefaultPort(Transport::Type transport, int port);
+      int getDefaultPort(TransportType transport, int port);
       
       // performs an A record lookup on target. May be asynchronous if ares is
       // used. Otherwise, load the results into mResults
@@ -115,7 +116,7 @@ class DnsResult
       SRV retrieveSRV();
       
       // Will retrieve the next SRV record and compute the prime the mResults
-      // with the appropriate Transport::Tuples. 
+      // with the appropriate Tuples. 
       void primeResults();
       
       // this will parse any ADDITIONAL records from the dns result and stores
@@ -149,13 +150,13 @@ class DnsResult
       int mSRVCount;
       bool mSips;
       Data mTarget;
-      Transport::Type mTransport; // current
+      TransportType mTransport; // current
       int mPort; // current
       Type mType;
       
       // This is where the current pending (ordered) results are stored. As they
       // are retrieved by calling next(), they are popped from the front of the list
-      std::list<Transport::Tuple> mResults;
+      std::list<Tuple> mResults;
       
       // The best NAPTR record. Only one NAPTR record will be selected
       NAPTR mPreferredNAPTR;

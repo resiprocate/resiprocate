@@ -120,8 +120,8 @@ libSipImp_Init()
    
    if (port!=0)
    {
-      sipStack->addTransport(Transport::UDP, port);
-      sipStack->addTransport(Transport::TCP, port);
+      sipStack->addTransport(UDP, port);
+      sipStack->addTransport(TCP, port);
    }
    
 #if defined( USE_SSL )

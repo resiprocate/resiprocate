@@ -67,7 +67,7 @@ StatelessHandler::process()
             assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->header(h_Vias).front();
-            Transport::Tuple destination;
+            Tuple destination;
 #ifdef WIN32
 			assert(0); // !CJ! TODO 
 #else
@@ -81,7 +81,7 @@ StatelessHandler::process()
             {
                destination.port = via.sentPort();
             }
-            destination.transportType = Transport::toTransport(via.transport());
+            destination.transportType = Tuple::toTransport(via.transport());
             
             mController.mTransportSelector.transmit(sip, destination); // results not used
          }
@@ -112,7 +112,7 @@ StatelessMessage::handle(DnsResult* result)
 {
    if (result->available() == DnsResult::Available)
    {
-      Transport::Tuple next = result->next();
+      Tuple next = result->next();
       mSelector.transmit(mMsg, next);
    }
 
