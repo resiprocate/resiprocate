@@ -648,7 +648,9 @@ Security::pkcs7Sign( Contents* bodyIn )
    Data bodyData;
    oDataStream strm(bodyData);
 #if 1
-   strm << "Content-Type: " << bodyIn->getType() << Symbols::CRLF;
+   bodyIn->encodeHeaders(strm);
+#else
+   strm << "Content-Type: " << bodyIn->getStaticType() << Symbols::CRLF;
    strm << Symbols::CRLF;
 #endif
    bodyIn->encode( strm );
@@ -759,7 +761,9 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    Data bodyData;
    oDataStream strm(bodyData);
 #if 1
-   strm << "Content-Type: " << bodyIn->getType() << Symbols::CRLF;
+   bodyIn->encodeHeaders(strm);
+#else
+   strm << "Content-Type: " << bodyIn->getStaticType() << Symbols::CRLF;
    strm << Symbols::CRLF;
 #endif
    bodyIn->encode( strm );
@@ -857,47 +861,6 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
 
 
 Contents* 
-Security::uncode( Pkcs7Contents* sBody, Data* signedBy, SignatureStatus* sigStat, bool* encrypted )
-{
-   SignatureStatus localSigStat;
-   if (!sigStat) sigStat=&localSigStat;
-   bool localEncyped;
-   if (!encrypted) encrypted=&localEncyped;
-   Data localSignedby;
-   if (!signedBy) signedBy=&localSignedby;
-
-   *encrypted = false;
-   *sigStat = none;
-   *signedBy = Data::Empty;
-   
-   InfoLog( << "Calling first layer of Security:uncode");
-   Contents* outBody = uncodeSingle( sBody, true, signedBy, sigStat, encrypted );
-   if ( (!outBody) && (*sigStat==isBad ) )
-   {
-      InfoLog( << "Retry first layer of Security:uncode");
-      outBody = uncodeSingle( sBody, false, signedBy, sigStat, encrypted ); 
-   }
-   
-   Pkcs7Contents* recuriveBody = dynamic_cast<Pkcs7Contents*>( outBody );
-   if ( recuriveBody )
-   {
-      InfoLog( << "Calling Second layer of Security:uncode");
-
-      outBody = uncodeSingle( recuriveBody, true, signedBy, sigStat, encrypted );
-      if ( (!outBody) && (*sigStat==isBad ) )
-      {
-         InfoLog( << "Retry Second layer of Security:uncode");
-         outBody = uncodeSingle( recuriveBody, false, signedBy, sigStat, encrypted ); 
-      }
-      
-      delete recuriveBody;
-   }
-   
-   return outBody;
-}
-
-
-Contents* 
 Security::uncodeSigned( MultipartSignedContents* multi,       
                         Data* signedBy, 
                         SignatureStatus* sigStatus )
@@ -917,40 +880,32 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
    if ( !sig )
    {
-      InfoLog( << "Don't know how to deal with signature of type" << second->getType() );
+      ErrLog( << "Don't know how to deal with signature of type" << second->getStaticType() );
       return first;
    }
-
 
       int flags=0;
       flags |= PKCS7_BINARY;
    
-      // for now, assume that this is only a singed plain message
       assert( second );
- 
-     PlainContents* text = dynamic_cast<PlainContents*>( first );
+      assert( first );
       
-      if (!text)
-      {
-         InfoLog( << "Can only check signature of text/plain" << second->getType() );
-         return first;
-      }
+       Data textData = first->getBodyData();
+      Data sigData = sig->getBodyData();
       
-      const char* p = sig->text().c_str();
-      int   s = sig->text().size();
-      BIO* in;
-      in = BIO_new_mem_buf( (void*)p,s);
+      BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
       assert(in);
       InfoLog( << "ceated in BIO");
     
-      BIO* out;
-      out = BIO_new(BIO_s_mem());
+      BIO* out = BIO_new(BIO_s_mem());
       assert(out);
       InfoLog( << "created out BIO" );
 
-      DebugLog( << "verify <" << text->text() << ">" );
+      DebugLog( << "verify <"    << textData.escaped() << ">" );
+      DebugLog( << "signature <" << sigData.escaped() << ">" );
+      //DebugLog( << "signature text <" << sig->text().escaped() << ">" );
       
-      BIO* pkcs7Bio = BIO_new_mem_buf( (void*) text->text().c_str(),text->text().size());
+      BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
       assert(pkcs7Bio);
       InfoLog( << "ceated pkcs BIO");
     
@@ -958,7 +913,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       if ( !pkcs7 )
       {
          ErrLog( << "Problems doing decode of PKCS7 object <"
-                 << sig->text().escaped() << ">" );
+                 << sigData.escaped() << ">" );
 
          while (1)
          {
@@ -1029,7 +984,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       certs = sk_X509_new_null();
       assert( certs );
    
-//      if ( !verifySig )
+      //      if ( !verifySig )
       {
          flags |= PKCS7_NOVERIFY;
       }
@@ -1103,14 +1058,12 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       
       DebugLog( << "uncodec body is <" << outData << ">" );
       
-   
-   return first;
+      return first;
 }
 
 
 Contents* 
-Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,  
-                        Data* signedBy, SignatureStatus* sigStatus, bool* encrypted )
+Security::decrypt( Pkcs7Contents* sBody )
 {
    int flags=0;
    flags |= PKCS7_BINARY;
@@ -1118,14 +1071,10 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    // for now, assume that this is only a singed message
    assert( sBody );
    
-   //const char* p = sBody->text().data();
-   const char* p = sBody->text().c_str();
-   int   s = sBody->text().size();
-   //InfoLog( << "uncode body = " << sBody->text().escaped() );
-   InfoLog( << "uncode body size = " << s );
-   
-   BIO* in;
-   in = BIO_new_mem_buf( (void*)p,s);
+   Data text = sBody->getBodyData();
+   //DebugLog( << "uncode body = <" << text.escaped() << ">" );
+   //DebugLog( << "uncode body size = " << text.size() );
+   BIO* in = BIO_new_mem_buf( (void*)text.c_str(),text.size());
    assert(in);
    InfoLog( << "ceated in BIO");
     
@@ -1134,21 +1083,6 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    assert(out);
    InfoLog( << "created out BIO" );
 
-#if 0
-   BIO* pkcs7Bio=NULL;
-   PKCS7* pkcs7 = SMIME_read_PKCS7(in,&pkcs7Bio);
-   if ( !pkcs7 )
-   {
-      ErrLog( << "Problems doing SMIME_read_PKCS7" );
-      return NULL;
-   }
-   if ( pkcs7Bio )
-   {
-      ErrLog( << "Can not deal with mutlipart mime version stuff " );
-      return NULL;
-   }  
-#else
-   BIO* pkcs7Bio=NULL;
    PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
    if ( !pkcs7 )
    {
@@ -1174,7 +1108,6 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
       return NULL;
    }
    BIO_flush(in);
-#endif
    
    int type=OBJ_obj2nid(pkcs7->type);
    switch (type)
@@ -1202,29 +1135,11 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
          break;
    }
 
-   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, NULL/*certs*/, 0/*flags*/ );
-   for (int i=0; i<sk_X509_num(signers); i++)
-   {
-      X509* x = sk_X509_value(signers,i);
-
-      STACK* emails = X509_get1_email(x);
-
-      for ( int j=0; j<sk_num(emails); j++)
-      {
-         char* e = sk_value(emails,j);
-         InfoLog("email field of signing cert is <" << e << ">" );
-         if ( signedBy)
-         {
-            *signedBy = Data(e);
-         }
-      }
-   }
-
    STACK_OF(X509)* certs;
    certs = sk_X509_new_null();
    assert( certs );
    
-   if ( !verifySig )
+   //if ( !verifySig )
    {
       flags |= PKCS7_NOVERIFY;
    }
@@ -1269,61 +1184,6 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
            
             return NULL;
          }
-         if ( encrypted )
-         {
-            *encrypted = true;
-         }
-      }
-      break;
-      
-      case NID_pkcs7_signed:
-      {
-         if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
-         {
-            ErrLog( << "Problems doing PKCS7_verify" );
-
-            if ( sigStatus )
-            {
-               *sigStatus = isBad;
-            }
-
-            while (1)
-            {
-               const char* file;
-               int line;
-               
-               unsigned long code = ERR_get_error_line(&file,&line);
-               if ( code == 0 )
-               {
-                  break;
-               }
-               
-               char buf[256];
-               ERR_error_string_n(code,buf,sizeof(buf));
-               ErrLog( << buf  );
-               InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
-            }
-            
-            return NULL;
-         }
-         if ( sigStatus )
-         {
-            if ( flags & PKCS7_NOVERIFY )
-            {
-               *sigStatus = notTrusted;
-            }
-            else
-            {
-               if (false) // !jf! TODO look for this cert in store
-               {
-                  *sigStatus = trusted;
-               }
-               else
-               {
-                  *sigStatus = caTrusted;
-               }
-            }
-         }
       }
       break;
       
@@ -1339,49 +1199,52 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    
    Data outData(outBuf,size);
    
-   DebugLog( << "uncodec body is <" << outData << ">" );
+   DebugLog( << "uncoded body is <" << outData << ">" );
 
    // parse out the header information and form new body.
    // !jf! this is a really crappy parser - shoudl do proper mime stuff
    ParseBuffer pb( outData.data(), outData.size() );
 
-   //const char* start = pb.position();
-   
-   pb.skipToChar(Symbols::COLON[0]);
-   pb.skipChar();
-   
-   Mime mime;
-   mime.parse(pb);
+     const char* headerStart = pb.position();
 
-   //InfoLog( << "location after mime parese  <" << Data(start,pb.position()-start) << ">" );
+      // pull out contents type only
+      pb.skipToChars("Content-Type");
+      pb.assertNotEof();
 
-   const char* anchor = pb.skipToChars(Symbols::CRLFCRLF);
-   if ( anchor )
-   {
-      anchor += 4;
-   }
+      pb.skipToChar(Symbols::COLON[0]);
+      pb.skipChar();
+      pb.assertNotEof();
       
-   //InfoLog( << "location after CRLF parese  <" << Data(start,pb.position()-start) << ">" );
+      pb.skipWhitespace();
+      const char* typeStart = pb.position();
+      pb.assertNotEof();
+      
+      // determine contents-type header buffer
+      pb.skipToTermCRLF();
+      pb.assertNotEof();
 
-   if ( Contents::getFactoryMap().find(mime) == Contents::getFactoryMap().end())
-   {
-      ErrLog( << "Don't know how to deal with MIME type " << mime );
-      return NULL;
-   }
-   pb.skipToEnd();
+      ParseBuffer subPb(typeStart, pb.position() - typeStart);
+      Mime contentType;
+      contentType.parse(subPb);
+      
+      pb.assertNotEof();
 
-   // InfoLog( << "uncodec body is <" << outData << ">" );
-   //InfoLog( << "uncodec data is <" << Data(anchor,pb.position()-anchor) << ">" );
-   //InfoLog( << "uncodec data szie is <" << pb.position()-anchor << ">" );
+      // determine body start
+      pb.reset(typeStart);
+      const char* bodyStart = pb.skipToChars(Symbols::CRLFCRLF);
+      pb.assertNotEof();
+      bodyStart += 4;
 
-   Data tmp;
-   pb.data(tmp, anchor);
-   Contents* ret = Contents::createContents(mime, tmp);
-   assert( ret );
-   
-   //InfoLog( << "uncode return type is " << ret->getType() );
- 
- 
+      // determine contents body buffer
+      pb.skipToEnd();
+      Data tmp;
+      pb.data(tmp, bodyStart);
+      // create contents against body
+      Contents* ret = Contents::createContents(contentType, tmp);
+      // pre-parse headers
+      ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
+      ret->preParseHeaders(headersPb);
+
    return ret;
 }
 
