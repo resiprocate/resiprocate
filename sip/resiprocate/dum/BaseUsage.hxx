@@ -41,12 +41,13 @@ class BaseUsage
       void send(const SipMessage& request);
       
       DialogUsageManager& dum();
-      Dialog& dialog();
+      //Dialog& dialog();
       
-    virtual void end();
-
+      virtual void end()=0;
+      virtual void dispatch(const SipMessage& msg)=0;
+      
    private:
-      DialogUsageManager& mDUM;
+      DialogUsageManager& mDum;
       DialogImpl& mDialog;
 };
  

@@ -304,7 +304,9 @@ DialogUsageManager::processRequest(const SipMessage& request)
             DialogSetId id(request);
             assert(mDialogSetMap.count(id) == 0);
             mDialogSetMap[id] = DialogSet(request);
-            mDialogSetMap[id].addDialog(new Dialog(*this, request));
+            Dialog* dialog = new Dialog(*this, request);
+            mDialogSetMap[id].addDialog(dialog);
+            dialog->dispatch(request);
             break;
 
 /*
