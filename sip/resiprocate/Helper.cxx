@@ -236,9 +236,13 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
    SipMessage* ack = new SipMessage;
+
+   RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
+   rLine.uri() = request.header(h_RequestLine).uri();
+   ack->header(h_RequestLine) = rLine;
+
    ack->header(h_CallId) = request.header(h_CallId);
    ack->header(h_From) = request.header(h_From);
-   ack->header(h_RequestLine) = request.header(h_RequestLine);
    ack->header(h_To) = response.header(h_To); // to get to-tag
    ack->header(h_Vias).push_back(request.header(h_Vias).front());
    ack->header(h_CSeq) = request.header(h_CSeq);
