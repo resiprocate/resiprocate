@@ -1,9 +1,11 @@
 #ifndef MethodTypes_hxx
 #define MethodTypes_hxx
 
-
 namespace Vocal2
 {
+
+class Data;
+
 enum MethodTypes
 {
    ACK,
@@ -17,6 +19,9 @@ enum MethodTypes
    SUBSCRIBE,
    UNKNOWN
 };
+
+MethodTypes
+getMethodType(const Data& name);
 
 MethodTypes
 getMethodType(const char* name, int len);
