@@ -2,6 +2,24 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <arpa/nameser.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <resolv.h>
+#endif
+
+#if defined(USE_ARES)
+extern "C"
+{
+#include "ares.h"
+#include "ares_dns.h"
+}
+#endif
+
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -14,16 +32,6 @@
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Uri.hxx"
-
-#ifndef WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <arpa/nameser.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <resolv.h>
-#endif
 
 
 // This is here so we can use the same macros to parse a dns result using the
