@@ -372,8 +372,8 @@ SipMessage::brief() const
    static const Data tu(" from(tu)");
 
    // !dlb! should be checked earlier 
-   if (!exists(h_CSeq) ||
-       !exists(h_Vias))
+   if (!exists(h_CSeq))
+
    {
       result = "MALFORMED; missing CSeq";
       return result;
@@ -400,8 +400,14 @@ SipMessage::brief() const
       result += response;
       result += Data(header(h_StatusLine).responseCode());
    }
-   result += tid;
-   result += getTransactionId();
+   if (exists(h_Vias))
+   {
+     result += tid;
+     result += getTransactionId();
+   }
+   else
+     result += " MISSING-TID ";
+
    result += cseq;
    if (header(h_CSeq).method() != UNKNOWN)
    {

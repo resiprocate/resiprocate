@@ -66,7 +66,7 @@ class Tuple
             sockaddr mSockaddr;
             sockaddr_in m_anonv4;
 #ifdef USE_IPV6
-			sockaddr_in6 m_anonv6;
+            sockaddr_in6 m_anonv6;
 #endif
       };
       TransportType mTransportType;
