@@ -63,7 +63,7 @@ class Profile
       bool isSchemeSupported(const Data& scheme) const;
       void clearSupportedSchemes(void);
 
-      void addSupportedMethod(const MethodTypes& method);   // Defaults are: RESIP_INVITE, RESIP_ACK, CANCEL, RESIP_OPTIONS, RESIP_BYE
+      void addSupportedMethod(const MethodTypes& method);   // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
       bool isMethodSupported(MethodTypes method) const;
       Tokens getAllowedMethods() const;
       void clearSupportedMethods(void);
@@ -90,7 +90,7 @@ class Profile
       void clearSupportedLanguages(void);
       
 	  //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
-	  //on initial outbound requests (ie. Initial RESIP_INVITE, RESIP_REGISTER, etc.) and Invite 200 responses
+	  //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
 	  //Note:  Default is to advertise Headers::Allow and Headers::Supported, use clearAdvertisedCapabilities to remove these
 	  //       Currently implemented header values are: Headers::Allow, 
 	  //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
