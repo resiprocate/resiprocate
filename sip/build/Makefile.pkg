@@ -40,6 +40,11 @@ RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
 RESIPROCATE_LIBNAME := resiprocate
 RESIPROCATE_LDFLAGS :=
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.so
-
+else
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.a
+endif
+$(RESIPROCATE_DEPENDS): 
+	cd $(ROOT)/resiprocate; $(MAKE)
 
