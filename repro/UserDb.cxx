@@ -11,7 +11,7 @@
 #include "resiprocate/TransactionUser.hxx"
 
 #include "repro/UserDb.hxx"
-#include "repro/UserAuthInfo.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 
 using namespace resip;
 using namespace repro;
