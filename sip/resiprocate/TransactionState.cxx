@@ -649,7 +649,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          case Timer::TimerA:
             if (mState == Calling)
             {
-               unsigned long d = timer->getDuration();
+               //TimerA doubles with each retransmition RFC3261 17.1.1
+               unsigned long d = timer->getDuration()*2;
                if (d < Timer::T2) d *= 2;
 
                mController.mTimers.add(Timer::TimerA, mId, d);
@@ -1010,7 +1011,8 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             {
                StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
                sendToWire(mMsgToRetransmit, true);
-               mController.mTimers.add(Timer::TimerG, mId, timer->getDuration()*2 );
+               //TimerG is doubles - up until a max of T2 [17.2.1]
+               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );
             }
             else
             {
@@ -1184,7 +1186,15 @@ TransactionState::processNoDnsResults()
    assert(mDnsResult->available() == DnsResult::Finished);
    SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
    WarningCategory warning;
-   warning.hostname() = DnsUtil::getLocalHostName();
+   try
+   {
+	   warning.hostname() = DnsUtil::getLocalHostName();
+   }
+   catch(BaseException&)
+   {
+	   warning.hostname() = "getLocalHostName failed";
+   }
+
    warning.code() = 499;
    warning.text() = "No other DNS entries to try";
    response->header(h_Warnings).push_back(warning);
@@ -1211,7 +1221,15 @@ TransactionState::processTransportFailure()
       // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
       SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
       WarningCategory warning;
-      warning.hostname() = DnsUtil::getLocalHostName();
+	  try
+	  {
+		warning.hostname() = DnsUtil::getLocalHostName();
+	  }
+	  catch(BaseException&)
+	  {
+		  warning.hostname() = "getLocalHostName failed";
+	  }
+
       warning.code() = 499;
       warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
       response->header(h_Warnings).push_back(warning);
@@ -1417,14 +1435,19 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       StackLog (<< "sendToWire with no dns result: " << *this);
       assert(sip->isRequest());
       assert(!mIsCancel);
-      mDnsResult = mController.transportSelector().dnsResolve(sip, this);
-      assert(mDnsResult); // !ah! is this really an assertion or an error?
+      mDnsResult = mController.transportSelector().createDnsResult(this);
+      
+      //when the result is processed synchronously, 'this' can be deleted
+      mController.transportSelector().dnsResolve(mDnsResult, sip);
+      
+      
+//       assert(mDnsResult); // !ah! is this really an assertion or an error?
 
-      // do it now, if there is an immediate result
-      if (mDnsResult->available() == DnsResult::Available)
-      {
-         handle(mDnsResult);
-      }
+//       // do it now, if there is an immediate result
+//       if (mDnsResult->available() == DnsResult::Available)
+//       {
+//          handle(mDnsResult);
+//       }
    }
    else // reuse the last dns tuple
    {
