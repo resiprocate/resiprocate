@@ -42,8 +42,23 @@ class Handle
          }
          return static_cast<T*>(mHam->getHandled(mId));
       }
+
+      const T* get() const
+      {
+         if (!mHam)
+         {
+            //assert(0);
+            throw HandleException("Reference to unitialized handle.", __FILE__, __LINE__);
+         }
+         return static_cast<T*>(mHam->getHandled(mId));
+      }
       
       T* operator->()
+      {
+         return get();
+      }
+
+      const T* operator->() const
       {
          return get();
       }
