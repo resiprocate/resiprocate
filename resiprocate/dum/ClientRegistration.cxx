@@ -146,6 +146,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
    if (code < 200)
    {
       // throw it away
+      return;
    }
    else if (code < 300) // success
    {
