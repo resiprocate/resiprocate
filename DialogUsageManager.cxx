@@ -77,79 +77,69 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 }
 
 void
-DialogUsageManager::process()
+DialogUsageManager::process(FdSet fdset)
 {
-   while (1)
+   SipMessage* msg = mStack.receive();
+   if (msg)
    {
-      int seltime = 10;
-      
-      FdSet fdset; 
-      mStack.buildFdSet(fdset);
-      fdset.selectMilliSeconds(seltime); 
-      mStack.process(fdset);
-      
-      SipMessage* msg = mStack.receive();
-      if (msg)
+      if (msg->isRequest())
       {
-         if (msg->isRequest())
+         if (validateRequest(*msg) && 
+             validateTo(*msg) && 
+             !mergeRequest(*msg) &&
+             mServerAuthManager && mServerAuthManager->handle(*msg))
          {
-            if (validateRequest(*msg) && 
-                validateTo(*msg) && 
-                !mergeRequest(*msg) &&
-                mServerAuthManager && mServerAuthManager->handle(*msg))
-            {
-               processRequest(*msg);
-               processResponse(*msg);
-            
-               
-
-               DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
-               if (dialogs.empty())
-               {
-               }
-               
-
-               switch (msg->header(h_RequestLine).getMethod())
-               {
-                  case INVITE :   // reINVITE
-                  case INFO:
-                  case UPDATE :
-                  case PRACK :
-                  case ACK :
-                  case BYE :
-                  case CANCEL : 
-                     dialog.getSession().processSession(msg);
-                     break;
-                  case REGISTER :
-                     dialog.getRegistration().processRegistration(msg);
-                     break;
-                  case REFER :
-                  case SUBSCRIBE :
-                  case NOTIFY :
-                     break;
-
-                  case UNKNOWN:
-                  {
-                     InfoLog (<< "Received an unknown method: " << msg->brief());
-                     std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
-                     mStack.send(*failure);
-                     break;
-                  }
-               }
-            }
-         }
-         else if (msg->isResponse())
-         {
-            switch (msg->header(h_StatusLine).statusCode())
-            {
-               // !jf! handle retranmission of INV/200
-            }
-         }
+            processRequest(*msg);
+            processResponse(*msg);
          
-      }
+            
 
-      delete msg;
+            DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
+            if (dialogs.empty())
+            {
+            }
+            
+
+            switch (msg->header(h_RequestLine).getMethod())
+            {
+               case INVITE :   // reINVITE
+               case INFO:
+               case UPDATE :
+               case PRACK :
+               case ACK :
+               case BYE :
+               case CANCEL : 
+                  dialog.getSession().processSession(msg);
+                  break;
+               case REGISTER :
+                  dialog.getRegistration().processRegistration(msg);
+                  break;
+               case REFER :
+               case SUBSCRIBE :
+               case NOTIFY :
+                  break;
+
+               case UNKNOWN:
+               {
+                  InfoLog (<< "Received an unknown method: " << msg->brief());
+                  std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
+                  mStack.send(*failure);
+                  break;
+               }
+            }
+         }
+      }
+      else if (msg->isResponse())
+      {
+         switch (msg->header(h_StatusLine).statusCode())
+         {
+            // !jf! handle retranmission of INV/200
+         }
+      }
+      
    }
+
+   delete msg;
 }
 
 bool
