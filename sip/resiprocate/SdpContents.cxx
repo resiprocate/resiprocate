@@ -3,6 +3,8 @@
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/Logger.hxx"
 
+#ifndef WIN32
+
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SDP
 
 using namespace Vocal2;
@@ -1628,3 +1630,5 @@ const Codec Codec::ALaw_8000("PCMA", 8000);
 const Codec Codec::G729_8000("G729", 8000);
 const Codec Codec::TelephoneEvent("telephone-event", 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event", 8000);
+
+#endif // win32
