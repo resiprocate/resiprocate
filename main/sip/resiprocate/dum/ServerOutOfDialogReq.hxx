@@ -12,7 +12,7 @@ namespace resip
 
 class ServerOutOfDialogReq : public BaseUsage
 {
-  public:
+   public:
       class Handle : public BaseUsage::Handle
       {
          public:
@@ -22,11 +22,15 @@ class ServerOutOfDialogReq : public BaseUsage
             friend class DialogUsageManager;
             Handle(DialogUsageManager& dum);
       };
+      
+      // !rm! do we need this?:    void accept(void);
+      void accept(const SipMessage& ok);
+      void reject(int statusCode);
+      void reject(const SipMessage& response);
 
-    // !rm! do we need this?:    void accept(void);
-    void accept(const SipMessage& ok);
-    void reject(int statusCode);
-    void reject(const SipMessage& response);
+   private:
+      friend class DialogUsageManager;
+      ServerOutOfDialogReq::Handle mHandle;
 };
  
 }
