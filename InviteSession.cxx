@@ -673,7 +673,7 @@ InviteSession::sendSdp(SdpContents* sdp)
       case CounterOfferred:
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
-         if (sdp)  // !slg! There currenlty doesn't seem to be anyone calling this with sdp == 0
+         if (sdp)
          {
             delete mCurrentLocalSdp;
             delete mCurrentRemoteSdp;
@@ -748,8 +748,9 @@ InviteSession::rejectDialogModification(int statusCode)
    {
       throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
-   //sdp state change here--go to initial state?
    mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
+   mState = Connected;
+   sendSdp(0);   
    return mLastResponse;
 }
 
