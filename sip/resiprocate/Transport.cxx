@@ -96,13 +96,13 @@ Transport::bind()
       int e = getErrno();
       if ( e == EADDRINUSE )
       {
-         error(getErrno());
+         error(e);
          ErrLog (<< mTuple << " already in use ");
          throw Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
-         error(getErrno());
+         error(e);
          ErrLog (<< "Could not bind to " << mTuple);
          throw Exception("Could not use port", __FILE__,__LINE__);
       }
@@ -211,7 +211,8 @@ Transport::thread()
    int epollfd = ::open("/dev/epoll", O_RDWR);
    if (epollfd < 0)
    {
-      Transport::error(errno);
+      int e = getErrno();
+      Transport::error( e );
       ErrLog (<< "Can't find epoll on this system");
       assert(0);
    }
@@ -219,7 +220,8 @@ Transport::thread()
    int ret = ::ioctl(epollfd, EP_ALLOC, maxFileDescriptors());
    if (ret != 0)
    {
-      Transport::error(errno);
+      int e = getErrno();
+      Transport::error( e );
       ErrLog (<< "Failed to define for " << maxFileDescriptors() << " descriptors");
       assert(0);
    }
