@@ -22,6 +22,7 @@ class Subsystem
       static const Subsystem TEST;   
       static const Subsystem TRANSACTION;
       static const Subsystem TRANSPORT;
+      static const Subsystem STATS;
       
    protected:
       Subsystem(const char* rhs) : mSubsystem(rhs) {};

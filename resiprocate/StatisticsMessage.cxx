@@ -1,9 +1,12 @@
 #include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <string.h>
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::STATS
 
 StatisticsMessage::StatisticsMessage(const StatisticsMessage::AtomicPayload& payload)
    : ApplicationMessage(),
@@ -35,6 +38,58 @@ StatisticsMessage::encode(std::ostream& strm) const
 */
    return strm;
 }
+
+void 
+StatisticsMessage::logStats(const resip::Subsystem& subsystem, 
+                            const StatisticsMessage::Payload& stats)
+{
+   unsigned int retriesFinal = 0;
+   for (int c = 200; c < 300; ++c)
+   {
+      retriesFinal += stats.responsesRetransmittedByMethodByCode[INVITE][c];
+   }
+
+   unsigned int retriesNonFinal = 0;      
+   for (int c = 100; c < 200; ++c)
+   {
+      retriesNonFinal += stats.responsesRetransmittedByMethodByCode[INVITE][c];
+   }
+
+   WarningLog(<< subsystem
+              << " reqi " << stats.requestsReceived
+              << " reqo " << stats.requestsSent
+              << " rspi " << stats.responsesReceived
+              << " rspo " << stats.responsesSent
+              << " INVi " << stats.requestsReceivedByMethod[INVITE]
+              << " INVo " << stats.requestsSentByMethod[INVITE]-stats.requestsRetransmittedByMethod[INVITE]
+              << " ACKi " << stats.requestsReceivedByMethod[ACK]
+              << " ACKo " << stats.requestsSentByMethod[ACK]-stats.requestsRetransmittedByMethod[ACK]
+              << " BYEi " << stats.requestsReceivedByMethod[BYE]
+              << " BYEo " << stats.requestsSentByMethod[BYE]-stats.requestsRetransmittedByMethod[BYE]
+              << " CANi " << stats.requestsReceivedByMethod[CANCEL]
+              << " CANo " << stats.requestsSentByMethod[CANCEL]-stats.requestsRetransmittedByMethod[CANCEL]
+              << " OPTi " << stats.requestsReceivedByMethod[OPTIONS]
+              << " OPTo " << stats.requestsSentByMethod[OPTIONS]-stats.requestsRetransmittedByMethod[OPTIONS]
+              << " REGi " << stats.requestsReceivedByMethod[REGISTER]
+              << " REGo " << stats.requestsSentByMethod[REGISTER]-stats.requestsRetransmittedByMethod[REGISTER]
+              << " PUBi " << stats.requestsReceivedByMethod[PUBLISH]
+              << " PUBo " << stats.requestsSentByMethod[PUBLISH]
+              << " SUBi " << stats.requestsReceivedByMethod[SUBSCRIBE]
+              << " SUBo " << stats.requestsSentByMethod[SUBSCRIBE]
+              << " NOTi " << stats.requestsReceivedByMethod[NOTIFY]
+              << " NOTo " << stats.requestsSentByMethod[NOTIFY]
+              << " INVx " << stats.requestsRetransmittedByMethod[INVITE]
+              << " BYEx " << stats.requestsRetransmittedByMethod[BYE]
+              << " CANx " << stats.requestsRetransmittedByMethod[CANCEL]
+              << " OPTx " << stats.requestsRetransmittedByMethod[OPTIONS]
+              << " REGx " << stats.requestsRetransmittedByMethod[REGISTER]
+              << " finx " << retriesFinal
+              << " nonx " << retriesNonFinal
+              << " PUBx " << stats.requestsRetransmittedByMethod[PUBLISH]
+              << " SUBx " << stats.requestsRetransmittedByMethod[SUBSCRIBE]
+              << " NOTx " << stats.requestsRetransmittedByMethod[NOTIFY]);
+}
+
 
 Message*
 StatisticsMessage::clone() const
