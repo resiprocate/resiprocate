@@ -10,7 +10,8 @@ class RegistrationHandler
     *  response to that request will be handed to the ServerRegistration
     *  asynchronously.
     */
-   void onRegister(ServerRegistration& serverRegistration, SipMessage& msg);
+   void onRegister(ServerRegistration::Handle serverRegistration,
+                   SipMessage& msg);
 };
 
 }
