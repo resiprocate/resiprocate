@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.21 2002/11/01 22:01:07 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.22 2002/11/02 19:31:54 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -91,20 +91,11 @@ namespace __gnu_cxx
 
 struct hash<Vocal2::Data>
 {
-      size_t operator()(const Vocal2::Data& data) const
-      {
-         unsigned long __h = 0; 
-         const char* start = data.data(); // non-copying
-         const char* end = start + data.size();
-         for ( ; start != end; ++start)
-         {
-            __h = 5*__h + *start; // .dlb. weird hash
-         }
-         return size_t(__h);
-      }
+      size_t operator()(const Vocal2::Data& data) const;
 };
- 
+
 }
+
 
 #endif // gcc >= 3.1
 
