@@ -263,4 +263,5 @@ main(int argc, char* argv[])
       assert (sip1 == sip2);
    }
    cerr << endl << "All OK" << endl;
+   return 0;
 }

@@ -767,5 +767,6 @@ main(int argc, char* argv[])
        
       tuIM->process();       
    }
-}
 
+   return 0;
+}

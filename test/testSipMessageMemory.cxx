@@ -71,6 +71,7 @@ main()
    }
 
    cout << "All OK" << endl;
+   return 0;
 }
 
 
