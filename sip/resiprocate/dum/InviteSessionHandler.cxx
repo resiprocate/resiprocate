@@ -1,4 +1,7 @@
 #include "InviteSessionHandler.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -11,11 +14,15 @@ InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
 void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle, const SipMessage& msg)
 {
+   InfoLog(<< "InviteSessionHandler::onAckNotReceived: " << msg.brief());
+   DebugLog(<< "onAckNotReceived(full): " << msg);
    handle->send(handle->end());
 }
 
 void 
 InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const SipMessage& msg)
 {
+   InfoLog(<< "InviteSessionHandler::onIllegalNegotiation: " << msg.brief());
+   DebugLog(<< "onIllegalNegotiation(full): " << msg);
    handle->send(handle->end());
 }
