@@ -43,6 +43,7 @@ ParserCategory::operator=(const ParserCategory& rhs)
 {
    if (this != &rhs)
    {
+      clear();
       LazyParser::operator=(rhs);
       if (rhs.isParsed())
       {
