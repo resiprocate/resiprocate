@@ -92,10 +92,10 @@ class DialogUsageManager : public HandleManager
 
       /// If there is no ClientAuthManager, when the client receives a 401/407,
       /// pass it up through the normal BaseUsageHandler
-      void setClientAuthManager(ClientAuthManager* client);
+      void setClientAuthManager(std::auto_ptr<ClientAuthManager> client);
 
       /// If there is no ServerAuthManager, the server does not authenticate requests
-      void setServerAuthManager(ServerAuthManager* client);
+      void setServerAuthManager(std::auto_ptr<ServerAuthManager> server);
 
       /// If there is no such handler, calling makeInviteSession will throw and
       /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
@@ -250,8 +250,8 @@ class DialogUsageManager : public HandleManager
 
       Profile* mProfile;
       RedirectManager* mRedirectManager;
-      ClientAuthManager* mClientAuthManager;
-      ServerAuthManager* mServerAuthManager;  
+      std::auto_ptr<ClientAuthManager> mClientAuthManager;
+      std::auto_ptr<ServerAuthManager> mServerAuthManager;  
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
