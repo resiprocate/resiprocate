@@ -31,25 +31,6 @@ class Pkcs7Contents;
 class Security;
 class MultipartSignedContents;
 
-
-class TlsConnection
-{
-   public:
-      TlsConnection( Security* security, Socket fd, bool server=false );
-      
-      int read( const void* buf, const int count );
-      int write( const void* buf, const int count );
-      bool hasDataToRead(); // has data that can be read 
-      bool isGood(); // has valid connection
-      
-      Data peerName();
-      
-   private:
-      SSL* ssl;
-      BIO* bio;
-};
-
-
 class Security
 {
       friend class TlsConnection;

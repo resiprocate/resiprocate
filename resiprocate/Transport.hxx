@@ -31,9 +31,12 @@ class Transport : public ThreadIf
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
       Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
-      
       virtual ~Transport();
-      
+
+      // shared by UDP, TCP, and TLS
+      static Socket socket(TransportType type, bool ipv4);
+      static void bind(Socket fd, int portNum, const Data& netInterface, bool ipv4);
+
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;

@@ -10,6 +10,7 @@
 #include "Transceiver.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Timer.hxx"
 
 
@@ -22,7 +23,7 @@ using namespace Loadgen;
 Transceiver::Transceiver(int port)
    : mUdp(mReceived, port)
 {
-   mContactUri.host() = mUdp.hostName();
+   mContactUri.host() = DnsUtil::getLocalHostName();
    mContactUri.port() = mUdp.port();
    mContactUri.param(p_transport) = Transport::toData(mUdp.transport());
 }
@@ -85,7 +86,7 @@ Transceiver::send(const Resolver& target,
    {
       assert(!message.header(h_Vias).empty());
       message.header(h_Vias).front().transport() = Transport::toData(mUdp.transport()); 
-      message.header(h_Vias).front().sentHost() = mUdp.hostName();
+      message.header(h_Vias).front().sentHost() =  DnsUtil::getLocalHostName();
       message.header(h_Vias).front().sentPort() = mUdp.port();
    }
    

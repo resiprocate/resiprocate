@@ -21,34 +21,52 @@ class TlsConnection;
 
 class Connection
 {
+      friend class ConnectionManager;
+      friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
+
    public:
       Connection(const Tuple& who, Socket socket);
-      ~Connection();
-            
-      Socket getSocket() const {return mSocket;}
-            
-      bool process(size_t bytesRead, Fifo<Message>& fifo);
 
+      ConnectionId getId() const;
+      Socket getSocket() const {return mSocket;}
+
+      //bool hasDataToWrite() const;
+      void requestWrite(SendData* sendData);
+
+      void performRead(int bytesRead, Fifo<Message>& fifo);
+      void performWrite();
+
+      enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
+      
+      // pure virtual, but need concrete Connection
+      virtual int read(char* buffer, int count) { return 0; }
+      virtual int write(const char* buffer, int count) { return 0; }
+      
+   protected:
+      Connection();
+      virtual ~Connection();
+
+      Socket mSocket;
+
+   private:
+      ConnectionManager& getConnectionManager() const;
       std::pair<char*, size_t> getWriteBuffer();
-            
-      Connection* remove(); // return next youngest
+
+      void remove(); // called by ConnectionManager
+
+      // no value semantics
+      Connection(const Connection&);
+      Connection& operator=(const Connection&);
+
+      Tuple mWho;
+      // position in current message being sent
+      Data::size_type mSendPos;
+      std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
+
+      // least recenty used doubly linked list
       Connection* mYounger;
       Connection* mOlder;
 
-      Tuple mWho;
-
-      Data::size_type mSendPos;     //position in current message being sent
-      std::list<SendData*> mOutstandingSends;
-      SendData* mCurrent;
-
-      TlsConnection* mTlsConnection;
-      
-      enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
-   private:
-      Connection();
-      Connection(const Connection&);
-      Connection& operator=(const Connection&);
-      
       SipMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
@@ -64,7 +82,6 @@ class Connection
 
       static char connectionStates[MAX][32];
 
-      Socket mSocket;
       UInt64 mLastUsed;
             
       State mState;
@@ -73,7 +90,8 @@ class Connection
 #else
       MsgHeaderScanner mMsgHeaderScanner;
 #endif
-      
+
+      friend class TcpBaseTransport;
       friend class ConnectionMap;
 };
 

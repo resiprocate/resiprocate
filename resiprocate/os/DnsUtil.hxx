@@ -33,6 +33,7 @@ class DnsUtil
       // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
       static Data inet_ntop(const struct in_addr& addr);
       static Data inet_ntop(const struct in6_addr& addr);
+      static Data inet_ntop(const struct sockaddr& addr);
       static Data inet_ntop(const Tuple& tuple);
 
       static int inet_pton(const Data& printableIp, struct in_addr& dst);

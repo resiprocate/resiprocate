@@ -69,16 +69,16 @@ SipStack::shutdown()
 void 
 SipStack::addTransport( TransportType protocol, 
                         int port,
-                        const Data& hostName,
-                        const Data& nic) 
+                        bool ipv6,
+                        const Data& ipInterface)
 {
    assert(!mShuttingDown);
    assert(protocol != TLS);
 
-   mTransactionController.addTransport(protocol, port, hostName, nic);
-   if (!hostName.empty()) 
+   mTransactionController.addTransport(protocol, port, ipv6, ipInterface);
+   if (!ipInterface.empty()) 
    {
-      addAlias(hostName, port);
+      addAlias(ipInterface, port);
    }
 }
 
@@ -87,14 +87,18 @@ SipStack::addTlsTransport( int port,
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            const Data& domainname,
-                           const Data& hostName,
-                           const Data& nic) 
+                           bool ipv6,
+                           const Data& ipInterface)
 {
    assert(!mShuttingDown);
    
    try
    {
-      mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, hostName, nic);
+      mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, ipv6, ipInterface);
+      if (!ipInterface.empty()) 
+      {
+         addAlias(ipInterface, port);
+      }
    }
    catch(BaseException& e)
    {

@@ -928,7 +928,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       }
       struct in6_addr addr;
       memcpy(&addr, aptr, sizeof(struct in6_addr));
-      // Log something nice here?
+      DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
       mAAAARecords[key].push_back(addr);
       return aptr + dlen;
    }
