@@ -44,6 +44,21 @@ BaseUsage::getBaseHandle()
    return mHandle;
 }
 
+std::ostream& 
+BaseUsage::dump(std::ostream& strm) const
+{
+   strm << "Usage: " << mId;
+   return strm;
+}
+
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const BaseUsage& usage)
+{
+   return usage.dump(strm);
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
