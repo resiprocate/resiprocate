@@ -45,7 +45,7 @@ main(int argc, char** argv)
       Pidf pc(&hfv, type);
 
       cerr << "!! " << pc.getEntity() << endl;
-      assert(pc.getEntity() == "pres:someone@example.com");
+      assert(pc.getEntity() == Uri("pres:someone@example.com"));
 
       assert(pc.getNumTuples() == 2);
       assert(pc.getTuples()[0].id == "mobile-im");
@@ -58,6 +58,100 @@ main(int argc, char** argv)
 
       pc.encodeParsed(cerr);
    }
+
+   {
+      cerr << "Test merge" << endl;
+      
+      const Data txt1("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                      "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf:\"" CRLF
+                      "xmlns:im=\"urn:ietf:params:xml:ns:cpim-pidf:im\"" CRLF
+                      "xmlns:myex=\"http://id.mycompany.com/cpim-presence/\" " CRLF
+                      "entity=\"pres:someone@example.com\">" CRLF
+                      "    <tuple id=\"mobile-im1\" display=\"displayed\">" CRLF
+                      "        <status>" CRLF
+                      "            <basic>open</basic>" CRLF
+                      "            <im:im>busy</im:im>" CRLF
+                      "            <myex:location>home</myex:location>" CRLF
+                      "        </status>" CRLF
+                      "        <contact priority=\"2\">im:someone@mobilecarrier.net</contact>" CRLF
+                      "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
+                      "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
+                      "        <timestamp>2001-10-27T16:49:29Z</timestamp>" CRLF
+                      "    </tuple>" CRLF
+                      "    <tuple id=\"email1\">" CRLF
+                      "        <status>" CRLF
+                      "            <basic>open</basic>" CRLF
+                      "        </status>" CRLF
+                      "        <contact priority=\"1\">mailto:someone@exapmle.com</contact>" CRLF
+                      "    </tuple>" CRLF
+                      "    <note xml:lang=\"en\">I'll be in Tokyo next week</note>" CRLF
+                      "</presence>");
+
+      Mime type("application", "pidf+xml");
+
+      HeaderFieldValue hfv1(txt1.data(), txt1.size());
+      Pidf pc1(&hfv1, type);
+
+      const Data txt2("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                      "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf:\"" CRLF
+                      "xmlns:im=\"urn:ietf:params:xml:ns:cpim-pidf:im\"" CRLF
+                      "xmlns:myex=\"http://id.mycompany.com/cpim-presence/\" " CRLF
+                      "entity=\"pres:someone@example.com\">" CRLF
+                      "    <tuple id=\"mobile-im2\" display=\"displayed\">" CRLF
+                      "        <status>" CRLF
+                      "            <basic>open</basic>" CRLF
+                      "            <im:im>busy</im:im>" CRLF
+                      "            <myex:location>home</myex:location>" CRLF
+                      "        </status>" CRLF
+                      "        <contact priority=\"4\">im:someone@mobilecarrier.net</contact>" CRLF
+                      "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
+                      "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
+                      "        <timestamp>2002-10-27T16:49:29Z</timestamp>" CRLF
+                      "    </tuple>" CRLF
+                      "    <tuple id=\"email2\">" CRLF
+                      "        <status>" CRLF
+                      "            <basic>open</basic>" CRLF
+                      "        </status>" CRLF
+                      "        <contact priority=\"1\">mailto:someone@exapmle.com</contact>" CRLF
+                      "    </tuple>" CRLF
+                      "    <note xml:lang=\"en\">I'll be in Tokyo next week</note>" CRLF
+                      "</presence>");
+
+      HeaderFieldValue hfv2(txt2.data(), txt2.size());
+      Pidf pc2(&hfv2, type);
+
+      Pidf* n = new Pidf;
+
+      n->merge(pc1);
+
+      cerr << "!! " << n->getEntity() << endl;
+      assert(n->getEntity() == Uri("pres:someone@example.com"));
+
+      assert(n->getNumTuples() == 2);
+      assert(n->getTuples()[0].id == "mobile-im1");
+      assert(n->getTuples()[0].attributes["display"] == "displayed");
+      assert(n->getTuples()[0].status);
+      assert(n->getTuples()[0].contact == "im:someone@mobilecarrier.net");
+      assert(n->getTuples()[0].contactPriority == 2);
+      assert(n->getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
+      assert(n->getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
+
+      n->encodeParsed(cerr);
+
+      n->merge(pc2);
+
+      assert(n->getNumTuples() == 4);
+      assert(n->getTuples()[2].id == "mobile-im2");
+      assert(n->getTuples()[2].attributes["display"] == "displayed");
+      assert(n->getTuples()[2].status);
+      assert(n->getTuples()[2].contact == "im:someone@mobilecarrier.net");
+      assert(n->getTuples()[2].contactPriority == 4);
+      assert(n->getTuples()[2].note == "Ne dérangez pas, s'il vous plait");
+      assert(n->getTuples()[2].timeStamp == "2002-10-27T16:49:29Z");
+
+      n->encodeParsed(cerr);
+   }
+
 
    cerr << "All OK" << endl;
    return 0;
