@@ -55,10 +55,10 @@ main(int argc, char* argv[])
    
    cout << "Performing " << runs << " runs." << endl;
    
-   Fifo<Message> txFifo;
+   Fifo<TransactionMessage> txFifo;
    TcpTransport* sender = new TcpTransport(txFifo, 5070, Data::Empty);
 
-   Fifo<Message> rxFifo;
+   Fifo<TransactionMessage> rxFifo;
    TcpTransport* receiver = new TcpTransport(rxFifo, 5080, Data::Empty);
    
    NameAddr target;
