@@ -30,10 +30,12 @@
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -942,7 +944,13 @@ void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
-   
+
+   if (request.header(h_RequestLine).method() == PUBLISH)
+   {
+      processPublish(request);
+      return;
+   }
+      
    assert(mAppDialogSetFactory.get());
    //!dcm! -- fix to use findDialog
    if (!request.header(h_To).exists(p_tag))
@@ -991,15 +999,15 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             break;
          }
-
-         case SUBSCRIBE:
          case PUBLISH:
+            assert(false);
+         case SUBSCRIBE:
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
             if (!checkEventPackage(request))
             {
                InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
-         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
          case INFO :    // handle non-dialog (illegal) INFOs
@@ -1118,6 +1126,43 @@ DialogUsageManager::processResponse(const SipMessage& response)
    }   
 }
 
+void
+DialogUsageManager::processPublish(const SipMessage& request)
+{
+   if (!checkEventPackage(request))
+   {
+      InfoLog(<< "Rejecting request (unsupported package) " << request.brief());
+      return;
+   }
+
+   if (request.exists(h_SIPIfMatch))
+   {
+      ServerPublications::iterator i = mServerPublications.find(request.header(h_SIPIfMatch).value());
+      if (i != mServerPublications.end())
+      {
+         i->second->dispatch(request);
+      }
+      else
+      {
+         SipMessage response;
+         makeResponse(response, request, 412);
+         send(response);
+      }
+   }
+   else
+   {
+      Data etag = Random::getCryptoRandom(8);
+      while (mServerPublications.find(etag) != mServerPublications.end())
+      {
+         etag = Random::getCryptoRandom(8);
+      }
+
+      ServerPublication* sp = new ServerPublication(*this, etag, request);
+      mServerPublications[etag] = sp;
+      sp->dispatch(request);
+   }
+}
+
 bool 
 DialogUsageManager::checkEventPackage(const SipMessage& request)
 {
@@ -1147,7 +1192,10 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             }
             break;
          case PUBLISH:
-            assert(0);
+            if (!getServerPublicationHandler(request.header(h_Event).value()))
+            {
+               failureCode = 489;
+            }
          default:
             assert(0);
       }

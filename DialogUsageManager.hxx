@@ -257,6 +257,8 @@ class DialogUsageManager : public HandleManager
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
 
+      void processPublish(const SipMessage& publish);
+
       void removeDialogSet(const DialogSetId& );      
 
       bool checkEventPackage(const SipMessage& request);
@@ -305,6 +307,10 @@ class DialogUsageManager : public HandleManager
          Destroying
       } ShutdownState;
       ShutdownState mShutdownState;
+
+      typedef std::map<Data, ServerPublication*> ServerPublications;
+      ServerPublications mServerPublications;
+
 };
 
 }

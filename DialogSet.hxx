@@ -37,7 +37,6 @@ class DialogSet
       ClientRegistrationHandle getClientRegistration();
       ServerRegistrationHandle getServerRegistration();
       ClientPublicationHandle getClientPublication();
-      ServerPublicationHandle getServerPublication();
       ClientOutOfDialogReqHandle getClientOutOfDialog();
       ServerOutOfDialogReqHandle getServerOutOfDialog();
 
@@ -52,7 +51,6 @@ class DialogSet
       friend class ClientOutOfDialogReq;
       friend class ServerOutOfDialogReq;
       friend class ClientPublication;
-      friend class ServerPublication;
       friend class RedirectManager;
       friend class ClientPagerMessage;
       friend class ServerPagerMessage;
@@ -69,7 +67,6 @@ class DialogSet
       ClientOutOfDialogReq* makeClientOutOfDialogReq(const SipMessage& msg);
 
       ServerRegistration* makeServerRegistration(const SipMessage& msg);
-      ServerPublication* makeServerPublication(const SipMessage& msg);
       ServerOutOfDialogReq* makeServerOutOfDialog(const SipMessage& msg);
       
       ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
@@ -91,7 +88,6 @@ class DialogSet
       ClientRegistration* mClientRegistration;
       ServerRegistration* mServerRegistration;
       ClientPublication* mClientPublication;
-      ServerPublication* mServerPublication;
       std::list<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
       ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
