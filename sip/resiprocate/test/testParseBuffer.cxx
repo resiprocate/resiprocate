@@ -13,6 +13,22 @@ main(int argc, char** argv)
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
 
    {
+      const char buf[] = "  \r\t\r\n\t  !";
+      ParseBuffer pb(buf, strlen(buf));
+      
+      pb.skipWhitespace();
+      assert(*pb.position() == '!');
+   }
+
+   {
+      const char buf[] = "asdfa1234123edfdf213ref@!\t  \r\t\r\n\t ";
+      ParseBuffer pb(buf, strlen(buf));
+      
+      pb.skipNonWhitespace();
+      assert(*pb.position() == '\t');
+   }
+
+   {
       std::cerr << "!! Test position" << std::endl;
       char buf[] = "Here is a buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
@@ -262,12 +278,29 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "jhsj:!hskd;|.";
+      ParseBuffer pb(buf, strlen(buf));   
+
+      pb.skipToOneOf(":@");
+      assert(*pb.position() == ':');
+   }
+
+   {
+      char buf[] = "user@host:port";
+      ParseBuffer pb(buf, strlen(buf));   
+
+      pb.skipToOneOf(":@");
+      assert(*pb.position() == '@');
+   }
+
+   {
       char buf[] = "jhsjfhskd;|.";
       ParseBuffer pb(buf, strlen(buf));   
 
       pb.skipToOneOf(".|;");
       assert(*pb.position() == ';');
    }
+
    {
       char buf[] = "\"  \\\"Q \t buffer with some stuff.\"Z";
       ParseBuffer pb(buf, strlen(buf));   
