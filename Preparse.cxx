@@ -8,7 +8,7 @@
 #include "sip2/util/Socket.hxx"
 
 
-#define PP_DEBUG
+// #define PP_DEBUG
 // #define PP_SUPER_DEBUG
 
 
