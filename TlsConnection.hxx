@@ -32,9 +32,10 @@ class TlsConnection : public Connection
     State checkState();
 
 
+#ifdef USE_SSL
      SSL* mSsl;
      BIO* mBio;
-
+#endif
 };
  
 }
