@@ -23,7 +23,7 @@ Executive::process(FdSet& fdset)
  
 
 /// returns time in milliseconds when process next needs to be called 
-int 
+unsigned int 
 Executive::getTimeTillNextProcessMS()
 {
    return mStack.mTransactionController.getTimeTillNextProcessMS();
