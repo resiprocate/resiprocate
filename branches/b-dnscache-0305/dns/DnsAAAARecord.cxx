@@ -1,4 +1,4 @@
-#include "resiprocate/os/socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "RROverlay.hxx"
