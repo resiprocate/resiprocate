@@ -241,10 +241,10 @@ UdpTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
     
-   if (mTxFifo.messageAvailable())
-   {
-      fdset.setWrite(mFd);
-   }
+   //if (mTxFifo.messageAvailable())
+   //{
+   //  fdset.setWrite(mFd);
+   //}
 }
 
 /* ====================================================================
