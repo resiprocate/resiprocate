@@ -119,12 +119,14 @@ class Dialog
       NameAddr mLocalContact;
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
+      unsigned long mAckId;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
-
+      
       // store until we get a response (non-401/407)
+      // !jf! this shouldn't be necessary
       typedef std::map<int,SipMessage> RequestMap;
       RequestMap mRequests;
 
