@@ -87,7 +87,7 @@ Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
 }
 
 Data
-Transport::toData(TransportType type)
+Transport::toData(Transport::Type type)
 {
    switch (type)
    {
@@ -108,7 +108,7 @@ Transport::toData(TransportType type)
    }
 }
 
-Transport::TransportType
+Transport::Type
 Transport::toTransport(const Data& type)
 {
    if (type == "UDP")

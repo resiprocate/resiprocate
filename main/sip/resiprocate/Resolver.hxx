@@ -1,48 +1,57 @@
-#if !defined(TRANSPORTSELECTOR_HXX)
-#define TRANSPORTSELECTOR_HXX
+#ifndef Resolver_hxx
+#define Resolver_hxx
 
-#ifndef WIN32
-#include <sys/select.h>
-#endif
-
-#include <vector>
-
+#include <list>
 #include <util/Data.hxx>
-#include <util/Fifo.hxx>
-
-#include <sipstack/SipMessage.hxx>
 #include <sipstack/Transport.hxx>
-
 
 namespace Vocal2
 {
 
-class SipMessage;
-class UdpTransport;
-class SipStack;
+class Uri;
 
-class TransportSelector
+class Resolver
 {
    public:
-      TransportSelector(SipStack& stack);
-      ~TransportSelector();
+      // specified like sip.vovida.org:5060
+      Resolver(const Data& hostPort);
+
+      // separated into host and port
+      Resolver(const Data& host, int port, Transport::Type protocol);
+
+      // 
+      Resolver(const Uri& url);
       
-      void process(fd_set* fdSet);
+      struct Tuple
+      {
+            struct sockaddr_in ipv4;
+            int port;
+            Data transport;
+      };
+      // this will convert the host specification into a list of Tuples using
+      // the rules in section 4 of rfc3263
+      // !jf! need to deal with ipv6 in here somewhere
+      //list<Tuple> getNextHop();
 
-      void send( SipMessage* msg );
-      // I don't think we really need this at this level, handled one level up.
-      //   void send(SipMessage* msg, const Data& dest="default" );
+      // return true if data of the form a.b.c.d
+      static bool isIpAddress(const Data& data);
 
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& interface="");
-	
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );
-	
+      // return the localhostname (posix: gethostname())
+      static Data getHostName();
+      
+      std::list<Tuple>::const_iterator mCurrent;
+
    private:
+      void lookupARecords();
 
-      SipStack& mStack;
-      std::vector<Transport*> mTransports;
+      Data mHost;
+      int mPort;
+      Data mTransport;
+
+      std::list<Tuple> mNextHops;
 };
 
+ 
 }
 
 #endif
