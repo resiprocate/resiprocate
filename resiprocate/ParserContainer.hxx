@@ -122,6 +122,7 @@ class ParserContainer : public ParserContainerBase
          private:
             typename std::list<T*>::iterator mIt;
             friend class const_iterator;
+            friend class ParserContainer;
       };
 
       class const_iterator
@@ -149,6 +150,11 @@ class ParserContainer : public ParserContainerBase
       
       iterator begin() { return iterator(mParsers.begin()); }
       iterator end() { return iterator(mParsers.end()); }
+
+      iterator erase(iterator i)
+      {
+         return iterator(mParsers.erase(i.mIt));
+      }
 
       const_iterator begin() const { return const_iterator(mParsers.begin()); }
       const_iterator end() const { return const_iterator(mParsers.end()); }
