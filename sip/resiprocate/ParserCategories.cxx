@@ -1105,7 +1105,9 @@ StringCategory::clone() const
 void 
 StringCategory::parse(ParseBuffer& pb)
 {
-   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
+   const char* anchor = pb.position();
+   pb.skipToEnd();
+   pb.data(mValue, anchor);
 }
 
 std::ostream& 
