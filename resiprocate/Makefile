@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.72 2002/11/06 05:16:32 jason Exp $
+# $Id: Makefile,v 1.73 2002/11/06 18:23:46 kdc Exp $
 
 BUILD = ../../build
 
@@ -23,7 +23,7 @@ endif
 
 SRC = \
 	BranchParameter.cxx \
-	TestTransport.cxx \
+	Circular.cxx \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
@@ -50,6 +50,7 @@ SRC = \
 	DnsMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
+	TestTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TransactionMap.cxx \
