@@ -17,11 +17,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-const SipMessage::FromWireType* SipMessage::FromWire = new SipMessage::FromWireType();
-const SipMessage::FromWireType* SipMessage::NotFromWire = new SipMessage::FromWireType();
-
-SipMessage::SipMessage(const FromWireType* fromWire)
-   : mIsExternal(fromWire == SipMessage::FromWire),
+SipMessage::SipMessage(const Transport* fromWire)
+   : mIsExternal(fromWire != 0),
+     mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
@@ -29,7 +27,8 @@ SipMessage::SipMessage(const FromWireType* fromWire)
      mRequest(false),
      mResponse(false),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mTarget(0)
+     mTarget(0),
+     mTlsDomain(Data::Empty)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -39,6 +38,7 @@ SipMessage::SipMessage(const FromWireType* fromWire)
 
 SipMessage::SipMessage(const SipMessage& from)
    : mIsExternal(from.mIsExternal),
+     mTransport(from.mTransport),
      mSource(from.mSource),
      mDestination(from.mDestination),
      mStartLine(0),
@@ -48,7 +48,8 @@ SipMessage::SipMessage(const SipMessage& from)
      mRequest(from.mRequest),
      mResponse(from.mResponse),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mTarget(0)
+     mTarget(0),
+     mTlsDomain(from.mTlsDomain)
 {
    if (this != &from)
    {

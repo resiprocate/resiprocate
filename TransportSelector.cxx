@@ -17,6 +17,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 #include <sys/types.h>
 
@@ -58,25 +59,8 @@ TransportSelector::addTransport( Transport::Type protocol,
    Data hostname = hostName;
    if ( hostname.empty() )
    {
-       char buf[1024];
-       int e = gethostname(buf,sizeof(buf));
-       if ( e != 0 )
-       {
-           int err = errno;
-           switch (err)
-           {
-               case WSANOTINITIALISED:
-                   CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
-                   break;
-               default:
-                   CritLog( << "could not find local hostname:" << strerror(err) );
-                   break;
-           }
-           throw Transport::Exception("could not find local hostname",__FILE__,__LINE__);
-       }
-       hostname = Data(buf);
+      hostname = DnsUtil::getLocalHostName();
    }
-   assert( !hostname.empty() );
    
    Transport* transport=0;
    switch ( protocol )
@@ -87,11 +71,6 @@ TransportSelector::addTransport( Transport::Type protocol,
       case Transport::TCP:
          transport = new TcpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
-#if defined( USE_SSL )
-      case Transport::TLS:
-         transport = new TlsTransport(hostname, port, nic, mStack.mStateMacFifo, mStack.security);
-         break;
-#endif
       default:
          assert(0);
          break;
@@ -100,6 +79,52 @@ TransportSelector::addTransport( Transport::Type protocol,
    mTransports.push_back(transport);
 }
 
+void 
+TransportSelector::addTlsTransport(const Data& domainName, 
+                                   const Data& keyDir, const Data& privateKeyPassPhrase,
+                                   int port,
+                                   const Data& hostName,
+                                   const Data& nic) 
+{
+#if defined( USE_SSL )
+   assert( port >  0 );
+   assert(mTlsTransports.count(domainName) == 0);
+
+   Data hostname = hostName;
+   if ( hostname.empty() )
+   {
+      hostname = DnsUtil::getLocalHostName();
+   }
+   if (port == 0)
+   {
+      list<DnsUtil::Srv> records = DnsUtil::lookupSRVRecords(domainName);
+      for (list<DnsUtil::Srv>::iterator i=records.begin(); i!=records.end(); i++)
+      {
+         if (i->transport == DnsUtil::TLS)
+         {
+            TlsTransport* transport = new TlsTransport(domainName, 
+                                                       hostname, i->port, 
+                                                       keyDir, privateKeyPassPhrase,
+                                                       nic, mStack.mStateMacFifo);
+            mTlsTransports[domainName] = transport;
+            break;
+         }
+      }
+   }
+   else
+   {
+      TlsTransport* transport = new TlsTransport(domainName, 
+                                                 hostname, port, 
+                                                 keyDir, privateKeyPassPhrase,
+                                                 nic, mStack.mStateMacFifo);      
+      mTlsTransports[domainName] = transport;
+   }
+   
+#else
+   CritLog (<< "TLS not supported in this stack. Maybe you don't have openssl");
+   assert(0);
+#endif
+}
 
 void 
 TransportSelector::process(FdSet& fdset)
@@ -187,7 +212,14 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
 
    if (destination.transport == 0)
    {
-      destination.transport = findTransport(destination);
+      if (destination.transportType == Transport::TLS)
+      {
+         destination.transport = findTlsTransport(msg->getTlsDomain());
+      }
+      else
+      {
+         destination.transport = findTransport(destination);
+      }
    }
 
    if (destination.transport)
@@ -277,6 +309,20 @@ TransportSelector::findTransport(const Transport::Type type) const
    }
    ErrLog( << "Couldn't find a transport for " << " type=" <<  type );
    return 0;
+}
+
+Transport*
+TransportSelector::findTlsTransport(const Data& domainname) const
+{
+   HashMap<Data, TlsTransport*>::const_iterator i = mTlsTransports.find(domainname);
+   if (i != mTlsTransports.end())
+   {
+      return i->second;
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 

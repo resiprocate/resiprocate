@@ -64,6 +64,13 @@ class SipStack
       // nic is used to specify an ethernet interface by name. e.g. eth0
       void addTransport( Transport::Type, int port, const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
 
+      // If port = 0, use DNS to lookup the port number for the specified
+      // domain. Only allow messages to be sent as the specified domain
+      void addTlsTransport( const Data& domainname, 
+                            const Data& keyDir, const Data& privateKeyPassPhrase,
+                            int port = 5061,
+                            const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
+
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
       void addAlias(const Data& domain, int port);

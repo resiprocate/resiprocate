@@ -15,11 +15,13 @@ class Security;
 class TlsTransport : public Transport
 {
    public:
-      TlsTransport(const Data& sendhost, 
+      TlsTransport(const Data& domain, 
+                   const Data& sendhost, 
                    int portNum, 
+                   const Data& keyDir, 
+                   const Data& privateKeyPassPhrase,
                    const Data& nic, 
-                   Fifo<Message>& fifo,
-                   Security* security);
+                   Fifo<Message>& fifo);
       virtual  ~TlsTransport();
 
       void process(FdSet& fdset);
@@ -41,6 +43,7 @@ class TlsTransport : public Transport
       void processListen(FdSet& fdSet);
 
       static const int MaxBufferSize;
+      Data mDomain;
       ConnectionMap mConnectionMap;
       typedef std::list<Connection*> ConnectionList;
       ConnectionList mSendRoundRobin;
