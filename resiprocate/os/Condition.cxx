@@ -52,9 +52,14 @@
 
 #include "sip2/util/Condition.hxx"
 #include "sip2/util/Mutex.hxx"
+#include <sys/time.h>
 
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
+
+
+#define VOCAL_SUBSYSTEM Subsystem::TEST
 
 
 Condition::Condition() : mId()
@@ -89,6 +94,7 @@ Condition::~Condition ()
 void
 Condition::wait (Mutex* mutex)
 {
+//   DebugLog("In conditions infinite wait.");
 #ifdef WIN32 
 	WaitForSingleObject(mId,INFINITE);
 #else
@@ -97,6 +103,43 @@ Condition::wait (Mutex* mutex)
 #endif
 }
 
+bool
+Condition::wait (Mutex* mutex, int ms)
+{
+#ifdef WIN32 
+   WaitForSingleObject(mId,INFINITE, ms);
+#else
+//   DebugLog("In conditions timed wait.");
+   timeval waitTime;
+   gettimeofday( &waitTime, NULL );
+
+   waitTime.tv_sec += ms / 1000;
+   waitTime.tv_usec += (ms % 1000) * 1000;
+   
+   timespec expiresTS;
+   
+   expiresTS.tv_sec = waitTime.tv_sec;
+   expiresTS.tv_nsec = waitTime.tv_usec * 1000;
+   
+   assert( waitTime.tv_usec < 1000000000L );
+
+//   DebugLog("Waiting on condition for " << ms << " ms");
+
+   int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
+   
+//   DebugLog(<< "Error was: " << strerror(ret));
+
+   if (ret == EINTR || ret == ETIMEDOUT)
+   {
+      return false;
+   }
+   else
+   {
+      assert( ret == 0 );
+      return true;
+   }
+#endif
+}
 
 void
 Condition::signal ()
