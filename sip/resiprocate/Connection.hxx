@@ -18,11 +18,7 @@ public read accessor in Connection. read should be protected.
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/Transport.hxx"
-#ifndef NEW_MSG_HEADER_SCANNER
-#include "resiprocate/Preparse.hxx"
-#else
 #include "resiprocate/MsgHeaderScanner.hxx"
-#endif
 #include "resiprocate/os/IntrusiveListElement.hxx"
 
 namespace resip
@@ -99,16 +95,9 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       };
 
       static char connectionStates[MAX][32];
-
       UInt64 mLastUsed;
-            
       State mState;
-#ifndef NEW_MSG_HEADER_SCANNER
-      Preparse mPreparse;
-#else
       MsgHeaderScanner mMsgHeaderScanner;
-#endif
-
       friend class TcpBaseTransport;
 };
 

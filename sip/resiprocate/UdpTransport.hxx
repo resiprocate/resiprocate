@@ -3,12 +3,7 @@
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Message.hxx"
-
-#ifndef NEW_MSG_HEADER_SCANNER
-#include "resiprocate/Preparse.hxx"
-#else
-#include <resiprocate/MsgHeaderScanner.hxx>
-#endif
+#include "resiprocate/MsgHeaderScanner.hxx"
 
 namespace resip
 {
@@ -34,11 +29,7 @@ class UdpTransport : public Transport
       virtual int maxFileDescriptors() const { return 1; }
 
    private:
-#ifndef NEW_MSG_HEADER_SCANNER
-      Preparse mPreparse;
-#else
       MsgHeaderScanner mMsgHeaderScanner;
-#endif
       static const int MaxBufferSize;
 };
 
