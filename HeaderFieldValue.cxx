@@ -25,8 +25,8 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
      mFieldLength(hfv.mFieldLength),
      mMine(true)
 {
-   InfoLog (<< "Making a copy of a HFV" << hex << this);
-   const_cast<char*&>(mField) = new char[mFieldLength];
+   //InfoLog (<< "Making a copy of a HFV" << hex << this);
+   mField = new char[mFieldLength];
    memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
 }
 
@@ -34,8 +34,7 @@ HeaderFieldValue::~HeaderFieldValue()
 {
   if (mMine)
   {
-     HeaderFieldValue* ncThis = const_cast<HeaderFieldValue*>(this);      
-     delete [] ncThis->mField;
+     delete[] mField;
   }
 }
 
