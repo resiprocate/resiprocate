@@ -229,7 +229,7 @@ SipMessage::remove(const Data& headerName)
 
 void
 SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
-                         const char* start, int len)
+                      const char* start, int len)
 {
    HeaderFieldValue* newHeader = new HeaderFieldValue(start, len);
 
@@ -247,7 +247,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    }
    else
    {
-      for(UnknownHeaders::iterator i = mUnknownHeaders.begin();
+      for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
           i != mUnknownHeaders.end(); i++)
       {
          if (strncasecmp(i->first.c_str(), headerName, headerLen) == 0)
