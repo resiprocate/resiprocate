@@ -7,6 +7,7 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Data.hxx"
 
 #if !defined(WIN32)
 #include <netinet/in.h>
@@ -15,7 +16,6 @@
 namespace resip
 {
 
-class Data;
 class Transport;
 
 // WARNING!!
@@ -31,12 +31,12 @@ class Tuple
    public:
       RESIP_HeapCount(Tuple);
       Tuple();
-      Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT);
-      Tuple(const Data& printableAddress, int port, TransportType type);
-      Tuple(const in_addr& pipv4, int pport, TransportType ptype);
-      Tuple(const sockaddr& addr, TransportType ptype);
+      Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT, const Data& targetDomain = Data::Empty);
+      Tuple(const Data& printableAddress, int port, TransportType type, const Data& targetDomain = Data::Empty);
+      Tuple(const in_addr& pipv4, int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
+      Tuple(const sockaddr& addr, TransportType ptype, const Data& targetDomain = Data::Empty);
 #ifdef USE_IPV6
-      Tuple(const in6_addr& pipv6,  int pport, TransportType ptype);
+      Tuple(const in6_addr& pipv6,  int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
 #endif
       
       // convert from a tuple to a sockaddr structure
@@ -84,6 +84,11 @@ class Tuple
                             const Tuple& y) const;
       };
       friend class AnyPortAnyInterfaceCompare;
+
+      const Data& getTargetDomain() const
+      {
+         return mTargetDomain;
+      }
       
    private:
       // !ah! needs to big enough for the IPv6 address.
@@ -95,8 +100,10 @@ class Tuple
 #endif
       };
       TransportType mTransportType;
+      Data mTargetDomain; 
 
       friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
+      friend class DnsResult;
 };
 
 }
