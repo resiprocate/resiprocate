@@ -12,7 +12,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user ):
+UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user, const Data& transactionId ):
+   mTransactionId(transactionId),
    mA1(a1),
    mRealm(realm),
    mUser(user)
@@ -25,26 +26,31 @@ UserAuthInfo::~UserAuthInfo()
 }
 
 
-const Data 
+const Data&
 UserAuthInfo::getA1() const
 {
    return mA1;
 }
 
 
-const Data 
+const Data& 
 UserAuthInfo::getRealm() const
 {
    return mRealm;
 }
 
 
-const Data 
+const Data&
 UserAuthInfo::getUser() const
 {
    return mUser;
 }
 
+const Data&
+UserAuthInfo::getTransactionId() const
+{
+   return mTransactionId;
+}
 
 Data 
 UserAuthInfo::brief() const

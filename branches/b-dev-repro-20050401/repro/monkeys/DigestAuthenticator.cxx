@@ -132,13 +132,13 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
 
   if (!user.empty())
   {
-    database.requestUserAuthInfo(user, realm, rc.getProxy());
-    return WaitingForEvent;
+     database.requestUserAuthInfo(user, realm, rc.getTransactionId(), rc.getProxy());
+     return WaitingForEvent;
   }
   else
   {
-    challengeRequest(rc, false);
-    return SkipAllChains;
+     challengeRequest(rc, false);
+     return SkipAllChains;
   }
 }
 

@@ -26,6 +26,7 @@ class UserAbstractDb
       
       void requestUserAuthInfo( const resip::Data& user, 
                                 const resip::Data& realm,
+                                const resip::Data& transactionId,
                                 resip::TransactionUser& transactionUser) const;
 
       resip::Data getUserAuthInfo( const resip::Data& key ) const;
