@@ -113,6 +113,21 @@ DnsUtil::inet_ntop(const struct in6_addr& addr)
 	   return Data(str);
 }
 
+Data
+DnsUtil::inet_ntop(const struct sockaddr& addr)
+{
+   if (addr.sa_family == AF_INET6)
+   {
+      const struct sockaddr_in6* addr6 = reinterpret_cast<const sockaddr_in6*>(&addr);
+      return DnsUtil::inet_ntop(addr6->sin6_addr);
+   }
+   else
+   {
+      const struct sockaddr_in* addr4 = reinterpret_cast<const sockaddr_in*>(&addr);
+      return DnsUtil::inet_ntop(addr4->sin_addr);
+   }
+}
+
 int
 DnsUtil::inet_pton(const Data& printableIp, struct in_addr& dst)
 {
