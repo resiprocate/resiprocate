@@ -119,12 +119,10 @@ CSeqCategory::sequence() const
 void
 CSeqCategory::parse(ParseBuffer& pb)
 {
-   const char* anchorPtr;
    pb.skipWhitespace();
    mSequence = pb.integer();
 
-   pb.skipNonWhitespace();
-   anchorPtr = pb.skipWhitespace();
+   const char* anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
                            // don't move
    mMethod = getMethodType(anchorPtr, pb.position() - anchorPtr);

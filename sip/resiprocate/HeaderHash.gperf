@@ -87,5 +87,7 @@ rseq, Headers::UNKNOWN
 security-client, Headers::SecurityClient
 security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
+RSeq, Headers::RSeq
+RAck, Header::RAck
 %%
 }
