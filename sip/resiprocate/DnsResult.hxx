@@ -3,8 +3,8 @@
 
 #include <iosfwd>
 #include <set>
-#include <list>
 #include <vector>
+#include <deque>
 #include <map>
 
 #include "resiprocate/os/Tuple.hxx"
@@ -191,7 +191,7 @@ class DnsResult
       
       // This is where the current pending (ordered) results are stored. As they
       // are retrieved by calling next(), they are popped from the front of the list
-      std::list<Tuple> mResults;
+      std::deque<Tuple> mResults;
       
       // The best NAPTR record. Only one NAPTR record will be selected
       NAPTR mPreferredNAPTR;
@@ -203,12 +203,12 @@ class DnsResult
       std::vector<SRV> mSRVResults;
       
       // All cached A records associated with this query/queries
-	  typedef std::list<struct in_addr> InAddrList;
+	  typedef std::vector<struct in_addr> InAddrList;
       std::map<Data,InAddrList > mARecords;
 
 #ifdef USE_IPV6
       // All cached AAAA records associated with this query/queries
-	  typedef std::list<struct in6_addr> InAddr6List;
+	  typedef std::vector<struct in6_addr> InAddr6List;
       std::map<Data,InAddr6List> mAAAARecords;
 #endif
 

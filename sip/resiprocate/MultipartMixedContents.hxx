@@ -1,7 +1,7 @@
 #if !defined(RESIP_MULTIPARTMIXEDCONTENTS_HXX)
 #define RESIP_MULTIPARTMIXEDCONTENTS_HXX 
 
-#include <list>
+#include <vector>
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -28,7 +28,7 @@ class MultipartMixedContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      typedef std::list<Contents*> Parts;
+      typedef std::vector<Contents*> Parts;
       Parts& parts() {checkParsed(); return mContents;}
       const Parts& parts() const {checkParsed(); return mContents;}
 
@@ -48,7 +48,7 @@ class MultipartMixedContents : public Contents
       
    private:
       void setBoundary();
-      std::list<Contents*> mContents;
+      std::vector<Contents*> mContents;
 };
 
 static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
