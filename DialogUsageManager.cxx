@@ -599,10 +599,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case INVITE:  // new INVITE
          case SUBSCRIBE:
          case REFER: // out-of-dialog REFER
-         case REGISTER:
          case PUBLISH:
-         case MESSAGE :
-         case OPTIONS :
          case INFO :   // handle non-dialog (illegal) INFOs
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          {
@@ -636,6 +633,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
             
             break;
          }
+         case REGISTER:
+         case MESSAGE :
+         case OPTIONS :
+         {
+               SipMessage failure;
+               makeResponse(failure, request, 405);
+               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+               sendResponse(failure);
+         }
+         break;         
          case RESPONSE:
          case SERVICE:
             assert(false);
