@@ -46,7 +46,7 @@ main(int argc, char* argv[])
    from.uri().port() = 5070;
    
    
-   for (int i=0; i<1; i++)
+   for (int i=0; i<10000; i++)
    {
       {
          auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
