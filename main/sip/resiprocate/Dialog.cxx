@@ -10,8 +10,7 @@ using namespace Vocal2;
 
 
 Dialog::Dialog(const NameAddr& localContact) 
-   : mVia(),
-     mContact(localContact),
+   : mContact(localContact),
      mCreated(false),
      mRouteSet(),
      mRemoteTarget(),
@@ -26,12 +25,6 @@ Dialog::Dialog(const NameAddr& localContact)
      mLocalUri()
 {
    //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
-   mVia.sentHost() = mContact.uri().host();
-   mVia.sentPort() = mContact.uri().port();
-   if (mContact.uri().exists(p_transport))
-   {
-      mVia.transport() = mContact.uri().param(p_transport);
-   }
 }
 
 SipMessage*
@@ -378,8 +371,6 @@ Dialog::makeReplaces()
 void
 Dialog::clear()
 {
-   Via v; 
-   mVia = v;
 //   mContact.clear(); // !cj! - likely need this 
    mCreated = false;
    mRouteSet.clear();
