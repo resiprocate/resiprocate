@@ -47,10 +47,12 @@ Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type)
 
       if (printableAddr.empty())
       {
+      	DebugLog(<<"!sipit! tuple w/o printableAddr");
          m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY); 
       }
       else
       {
+      	DebugLog(<<"!sipit! tuple calling pton()");
          DnsUtil::inet_pton( printableAddr, m_anonv4.sin_addr);
       }
    }
