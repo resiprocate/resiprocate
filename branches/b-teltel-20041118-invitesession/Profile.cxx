@@ -19,10 +19,10 @@ Profile::Profile(Profile *baseProfile) :
       mDefaultSubscriptionExpires = 3600; // 1 hour
 
       mHasDefaultPublicationExpires = true;
-      mDefaultPublicationExpires = 3600; // 1 hour
+      mDefaultPublicationExpires = 3600;  // 1 hour
 
       mHasDefaultStaleCallTime = true;
-      mDefaultStaleCallTime = 3600;       // 1 hour
+      mDefaultStaleCallTime = 180;        // 3 minutes
 
       mHasDefaultSessionExpires = true;
       mDefaultSessionExpires = 1800;      // 30 minutes
