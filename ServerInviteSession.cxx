@@ -289,7 +289,7 @@ ServerInviteSession::end()
 }
 
 void 
-ServerInviteSession::reject(int code)
+ServerInviteSession::reject(int code, WarningCategory *warning)
 {
    InfoLog (<< toData(mState) << ": reject(" << code << ")");
 
@@ -320,6 +320,10 @@ ServerInviteSession::reject(int code)
 
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
+         if(warning)
+         {
+            response.header(h_Warnings).push_back(*warning);
+         }
          mDialog.send(response);
          mDum.destroy(this);
          break;
