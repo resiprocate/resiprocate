@@ -5,9 +5,8 @@
 using namespace Vocal2;
 using namespace std;
 
-SipMessage::SipMessage(char* buff)
-   : mBuff(buff),
-     nIsExternal(true),
+SipMessage::SipMessage()
+   : nIsExternal(true),
      mFixedDest(false)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -31,7 +30,7 @@ SipMessage*
 SipMessage::clone() const
 {
    // no message buffer
-   SipMessage* newMessage = new SipMessage(0);
+   SipMessage* newMessage = new SipMessage();
    newMessage->copyFrom(*this);
    return newMessage;
 }
@@ -42,10 +41,14 @@ SipMessage::~SipMessage()
 }
 
 void
+SipMessage::addBuffer(char* buf)
+{
+   mBufferList.push_back(buf);
+}
+
+void
 SipMessage::cleanUp()
 {
-   delete [] mBuff;
-   
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
@@ -55,6 +58,12 @@ SipMessage::cleanUp()
         i != mUnknownHeaders.end(); i++)
    {
       delete i->second;
+   }
+
+   for (vector<char*>::iterator i = mBufferList.begin();
+        i != mBufferList.end(); i++)
+   {
+      delete [] *i;
    }
 }
 
