@@ -61,6 +61,8 @@ class Dialog
                                       const NameAddr& aor);
       SipMessage* makeInitialSubscribe(const NameAddr& target, 
                                        const NameAddr& from);
+      SipMessage* makeInitialPublish(const NameAddr& target, 
+                                       const NameAddr& from);
       SipMessage* makeInitialInvite(const NameAddr& target,
                                     const NameAddr& from);
       

@@ -462,6 +462,8 @@ main(int argc, char* argv[])
    
    int numAdd=0;
    Data addList[100];
+   int numPub=0;
+   Data pubList[100];
    bool encryp=false;
    bool sign=false;
    Data key("password");
@@ -546,6 +548,13 @@ main(int argc, char* argv[])
          addList[numAdd++] = Data(argv[i]);
          assert( numAdd < 100 );
       } 
+      else if (!strcmp(argv[i],"-pub"))
+      {
+         i++;
+         assert( i<argc );
+         pubList[numPub++] = Data(argv[i]);
+         assert( numPub < 100 );
+      } 
       else if (!strcmp(argv[i],"-aorPassword"))
       {
          i++;
@@ -574,7 +583,8 @@ main(int argc, char* argv[])
               << "\t [-sign] [-encrypt] [-key secret]" << endl
               << "\t [-contact sip:me@example.com] " << endl
               << "\t [-outbound \"sip:example.com;lr\"] " << endl
-              << "\t [-noRegister] " << endl;
+              << "\t [-noRegister] " << endl
+              << "\t [-pub sip:foo.com] " << endl; 
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
@@ -590,6 +600,7 @@ main(int argc, char* argv[])
               << " -to sets initial location to send messages to" << endl
               << " -outbound sets the outbound proxy" << endl
               << " -add adds a budy who's presence will be monitored" << endl
+              << " -pub adds a State Agent to send publishes too" << endl
               << " -sign signs message you send and -encryp encrypt them " << endl
               << "\t(You need PKI certs for this to work)" << endl
               << " -key allows you to enter a secret used to load your private key."<< endl
@@ -742,7 +753,13 @@ main(int argc, char* argv[])
       tuIM->addBuddy( uri, Data::Empty );
    }
 
-   displayPres();
+   for ( int i=0; i<numPub; i++ )
+   { 
+      Uri uri(pubList[i]);
+      tuIM->addStateAgent( uri );
+   }
+
+  displayPres();
  
    waddstr(textWin,"Use -help on the command line to view options\n");
    waddstr(textWin,"To set where your messages will get sent type\n");
