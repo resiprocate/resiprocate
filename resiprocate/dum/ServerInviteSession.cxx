@@ -130,6 +130,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             // !jf! consider UPDATE method
             if (msg.header(h_RequestLine).method() == CANCEL)
             {
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);               
                mDialog.makeResponse(mLastResponse, msg, 200);
                mDum.send(mLastResponse);
                mDialog.makeResponse(mLastResponse, msg, 487);         
