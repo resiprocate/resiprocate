@@ -35,6 +35,7 @@
 #include "ares.h"
 #include "ares_dns.h"
 #include "ares_private.h"
+#include "ares_local.h"
 
 static void write_tcp_data(ares_channel channel, fd_set *write_fds,
 			   time_t now);
@@ -65,6 +66,10 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
   read_tcp_data(channel, read_fds, now);
   read_udp_packets(channel, read_fds, now);
   process_timeouts(channel, now);
+
+  /* See if our local pseudo-domain has any results. */
+  /* Querying this only on timeouts is OK (is not high-performance) */
+  ares_local_process_requests();
 }
 
 /* If any TCP sockets select true for writing, write out queued data
