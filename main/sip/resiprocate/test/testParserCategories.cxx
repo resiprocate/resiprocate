@@ -874,6 +874,15 @@ main(int arc, char** argv)
       cerr << s.str() << endl;
 
       assert(s.str() == dateString);
+      
+      // copy ctor  not working in v1.94 ParserCategories.cxx
+      
+      stringstream s2;
+      DateCategory otherDate(date);
+      otherDate.encode(s2);
+      cerr << "!! new date : " <<  s2.str() << endl;
+      assert (s2.str() == dateString);
+
    }
 
    {
