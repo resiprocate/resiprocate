@@ -283,8 +283,24 @@ ServerInviteSession::end()
          break;
 
       case UAS_Accepted:
-         transition(UAS_WaitingToHangup);
+         if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
+         {
+            transition(UAS_WaitingToHangup);
+         }
+         else
+         {
+             // ACK has likely timedout - hangup immediately
+             transition(Terminated);
+
+             SipMessage bye;
+             mDialog.makeRequest(bye, BYE);
+             InfoLog (<< "Sending " << bye.brief());
+             mDialog.send(bye);
+         }
          break;
+
+      case UAS_WaitingToHangup:     // This can happen if we are waiting for an ACK to hangup and the ACK timesout
+          break;
          
       default:
          InviteSession::end();
