@@ -49,6 +49,44 @@ Vocal2::Timer::TS = 32000;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
+Data
+Timer::toData(Type timer)
+{
+   switch (timer)
+   {
+      case TimerA: // doubling
+         return "Timer A";
+      case TimerB:
+         return "Timer B";
+      case TimerC:
+         return "Timer C";
+      case TimerD:
+         return "Timer D";
+      case TimerE1:
+         return "Timer E1";
+      case TimerE2:
+         return "Timer E2";
+      case TimerF:
+         return "Timer F";
+      case TimerG: 
+         return "TimerG :";
+      case TimerH:
+         return "Timer H";
+      case TimerI:
+         return "Timer I";
+      case TimerJ:
+         return "Timer J";
+      case TimerK:
+         return "Timer K";
+      case TimerTrying:
+         return "Timer Trying";
+      case TimerStale:
+         return "Timer Stale";
+      default:
+         assert(0);
+   }
+}
+
 Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
    mWhen(tms + getTimeMs()),
    mId(++mTimerCount),
