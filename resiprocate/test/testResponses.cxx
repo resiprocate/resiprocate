@@ -1,5 +1,12 @@
 #include <iostream>
+
+#if defined (HAVE_POPT_H) 
 #include <popt.h>
+#else
+#ifndef WIN32
+#warning "will not work very well without libpopt"
+#endif
+#endif
 
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
@@ -28,6 +35,7 @@ main(int argc, char* argv[])
    char *optBindTcpAddr = 0;
    char *optBindUdpAddr = 0;
 
+#if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0,
        "where to send logging messages", "syslog|cerr|cout"},
@@ -46,7 +54,9 @@ main(int argc, char* argv[])
    
    poptContext context = poptGetContext(0, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
-   Log::initialize(logType, logLevel, argv[0]);
+#endif
+
+  Log::initialize(logType, logLevel, argv[0]);
 
    optUdp = !optUdp;
    optTcp = !optTcp;
