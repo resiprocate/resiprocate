@@ -1,4 +1,4 @@
-# $Id: Makefile.post,v 1.2 2003/03/25 04:48:48 jason Exp $
+# $Id: Makefile.post,v 1.3 2004/02/07 20:52:29 jason Exp $
 
 # The license applies to all software incorporated in the "Vovida
 # Open Communication Application Library" except for those portions
@@ -58,22 +58,7 @@
 # legends also need to be complied with as well.
 # 
 
-
-ifdef USE_DMALLOC
-
-  LDLIBS   += -L/usr/local/lib -ldmallocth
-
-endif
-
 -include $(BUILD)/Makefile.pkg
-
-
-ifeq ($(HAS_REPO),true)
-ifeq ($(USE_REPO),true)
-	CFLAGS += $(REPO_FLAG)
-	CXXFLAGS += $(REPO_FLAG)
-endif
-endif
 
 PURIFY = purify
 PURIFY5 = /usr/pure/purify-5.3-solaris2/purify
@@ -91,15 +76,8 @@ LDLIBS_LAST += $(foreach package,$(PACKAGES), $($(package)_LDLIBS_LAST))
 LDLIBS	 += $(foreach libs,$(LIBDIRS), -L$(libs)) $(foreach libs,$(LIBNAMES), -l$(libs))
 DEFINES += $(foreach package,$(PACKAGES), $($(package)_DEFINES) )
 
-LDLIBS_PURE = $(LDLIBS)
 # because order is important
 LDLIBS   += $(LDLIBS_LAST)
-
-ifndef LDLIBS_LAST_PURE
-LDLIBS_LAST_PURE = $(LDLIBS_LAST)
-endif
-
-LDLIBS_PURE   +=  $(LDLIBS_LAST_PURE)
 
 DEPEND_FILES += $(foreach pkg,$(PACKAGES), $($(pkg)_DEPENDS))
 DEPEND_TARGETS += $(foreach pkg,$(PACKAGES), $($(pkg)_TARGETS))
@@ -111,23 +89,16 @@ else
 endif
 	touch .dependlibs
 
-LEAKTRACE = $(patsubst %/build,%/contrib/andreasen/LeakTracer/LeakTracer.o, $(BUILD))
-LTNEW = $(patsubst %/build,%/contrib/andreasen/newLT/LeakTracer.o, $(BUILD))
-LTHEAP = $(patsubst %/build,%/contrib/andreasen/Heap/Heap.o, $(BUILD))
-
 RELEASE = $(patsubst %/build,%/release, $(BUILD))
-
 INCLUDE_LIST = $(foreach dir,$(INCDIRS),-I$(dir))
-
 DEFINE_LIST = $(foreach dir,$(DEFINES),-D$(dir))
-
 CXXFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 CFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 
 OBJ = obj.$(TARGET_NAME)
 BIN = bin.$(TARGET_NAME)
 
-.PHONY : all code clean default $(BIN) $(OBJ) prefs full headercheck verify fakepre
+.PHONY : all code clean default $(BIN) $(OBJ) prefs full verify fakepre
 
 SRC += $(SRC_$(OSCLASS))
 
@@ -135,11 +106,10 @@ TESTPROGRAMS += $(VERIFY_TESTCASES)
 
 ALLSRC += $(TESTPROGRAMS) $(SRC)
 
-OBJS = $(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(SRC))) $(EXTRA_OBJS)
-TESTPROGRAM_OBJS = $(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(TESTPROGRAMS))) $(EXTRA_OBJS)
-HWOBJS = $(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(HWSRC)))
-
-DEPENDENCIES = $(patsubst %.c,$(OBJ)/%.d,$(patsubst %.cxx,$(OBJ)/%.d,$(ALLSRC)))
+OBJS = $(patsubst %.cpp,$(OBJ)/%.o,$(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(SRC)))) $(EXTRA_OBJS)
+TESTPROGRAM_OBJS = $(patsubst %.cpp,$(OBJ)/%.o,$(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(TESTPROGRAMS)))) $(EXTRA_OBJS)
+HWOBJS = $(patsubst %.cpp,$(OBJ)/%.o,$(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(HWSRC))))
+DEPENDENCIES = $(patsubst %.cpp,$(OBJ)/%.d,$(patsubst %.c,$(OBJ)/%.d,$(patsubst %.cxx,$(OBJ)/%.d,$(ALLSRC))))
 
 SHARED_LIB = $(patsubst %,$(OBJ)/%.so,$(strip $(TARGET_LIBRARY)))
 STATIC_LIB = $(patsubst %,$(OBJ)/%.a,$(strip $(TARGET_LIBRARY)))
@@ -150,28 +120,14 @@ else
 LIBTARGETS += $(STATIC_LIB)
 endif
 
-LIBTARGETS_PURE5 = $(patsubst %.a,$(OBJ)/%_pure_p9_c0_103222355_32.a,$(filter %.a,$(TARGET_LIBRARY)))
-
 EXTRAS = $(HWOBJS)
 
 HEADERS =  $(wildcard *.h)  $(wildcard *.hxx)
 
-HEADERCHECKDIR = headercheck.$(TARGET_NAME)
-
-HEADERCHECK = $(patsubst %.hxx, $(HEADERCHECKDIR)/%.oxx, $(patsubst %.h, $(HEADERCHECKDIR)/%.o, $(HEADERS)))
-
-HEADERCHECKOBJS = $(patsubst %.cxx, %.o, $(HEADERCHECK))
-
-
-CODETARGETS = $(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(TESTPROGRAMS)))
+CODETARGETS = $(patsubst %.cpp,$(BIN)/%,$(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(TESTPROGRAMS))))
 
 TESTCASE_PROGRAMS = $(patsubst %,$(BIN)/%,$(TESTCASES))
-
 VERIFY_TESTCASE_PROGRAMS = $(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(VERIFY_TESTCASES)))
-
-CODETARGETS_PURE = $(patsubst %,%.pure,$(strip $(CODETARGETS)))
-CODETARGETS_PURE5 = $(patsubst %,%.pure5,$(strip $(CODETARGETS)))
-CODETARGETS_QUANTIFY = $(patsubst %,%.quantify,$(strip $(CODETARGETS)))
 
 ifdef CROSS_COMPILE
 	CROSS_FLAG = -c
@@ -220,15 +176,6 @@ clean:
 cleanall: clean
 	-rm -rf bin.* obj.*
 
-pure: $(CODETARGETS_PURE)
-
-pure5: $(CODETARGETS_PURE5)
-
-pure5_lib: $(LIBTARGETS_PURE5)
-
-quantify: $(CODETARGETS_QUANTIFY)
-
-
 $(BIN):
 	-@ $(TOOLS)/mkbuildlinks $(BIN) $(ROOT)/.make_prefs
 ifdef CODE_SUBDIRS
@@ -237,20 +184,6 @@ endif
 
 $(OBJ):
 	-@ $(TOOLS)/mkbuildlinks $(OBJ) $(ROOT)/.make_prefs
-
-$(HEADERCHECKDIR)/%.o: %.h
-	$(CXX) -x c++ $(CXXFLAGS) -c -o $@ $<
-
-$(HEADERCHECKDIR)/%.oxx: %.hxx
-	$(CXX) -x c++ $(CXXFLAGS) -c -o $@ $<
-
-$(HEADERCHECKDIR):
-	-@ $(TOOLS)/mkbuildlinks $(HEADERCHECKDIR) $(ROOT)/.make_prefs
-ifdef CODE_SUBDIRS
-	-@ for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(HEADERCHECKDIR)/$$subdir ) ; done
-endif
-
-headercheck: $(HEADERCHECKDIR) $(HEADERCHECKOBJS)
 
 
 ifeq ($(CXXFLAGS),$(shell cat $(OBJ)/cxxflags))
@@ -266,15 +199,6 @@ $(OBJ)/cflags:
 $(OBJ)/cxxflags:
 	echo '$(CXXFLAGS)' > $@
 
-ifeq ($(USE_VARARG_HACK),1)
-
-%.i: %.cxx $(OBJ)/%.d $(OBJ)/cxxflags
-	if [ "z$<" != "zcpLog.cxx"  ] ; then $(FILEPP) -p -lrn -V -u -k '-DcpLog(priority__,fmt__)=do {if (priority__ <= cpLogGetPriority()) cpLog_impl_ (priority__, __FILE__, __LINE__, fmt__);}while (0)' -lcn $< > $@ ; else cp $< $@ ; fi
-
-$(OBJ)/%.o: %.i $(OBJ)/%.d $(OBJ)/cflags
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-endif
-
 ifeq ($(OSTYPE),cygwin)
 OUTPUT_FLAG=-Fo
 else
@@ -289,24 +213,15 @@ else
 # compile c++ code
 $(OBJ)/%.o: %.cxx $(OBJ)/%.d $(OBJ)/cxxflags
 	$(CXX) $(CXXFLAGS) -c $(OUTPUT_FLAG)$@ $<
+$(OBJ)/%.o: %.cpp $(OBJ)/%.d $(OBJ)/cxxflags
+	$(CXX) $(CXXFLAGS) -c $(OUTPUT_FLAG)$@ $<
 endif
 
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-
-
-# build purified version of executable
-$(BIN)/%.pure: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(PURIFY) $(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS_PURE)
-
-# build purified version of executable
-$(BIN)/%.pure5: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(PURIFY5) $(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS_PURE)
-
-# build quantify version of executable
-$(BIN)/%.quantify: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(QUANTIFY) $(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS_PURE)
+	-@ /bin/rm -f $(patsubst $(BIN)/%,%,$@)
+	-@ ln -s $@ $(patsubst $(BIN)/%,%,$@)
 
 # these rules build dependency files in the cases that need them.
 
@@ -314,6 +229,8 @@ ifeq ($(OSTYPE),cygwin)
 $(OBJ)/%.d: %.c $(OBJ)
 	echo > $@
 $(OBJ)/%.d: %.cxx $(OBJ)
+	echo > $@
+$(OBJ)/%.d: %.cpp $(OBJ)
 	echo > $@
 else
 $(OBJ)/%.d: %.c $(NOCOMPILE_SRC) $(ROOT)/.make_prefs
@@ -335,6 +252,17 @@ endif
 	@$(SHELL) -ec '$(DEP) $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(DFLAGS) $< \
 		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
 		> $@; [ -s $@ ] || rm -f $@'
+
+$(OBJ)/%.d: %.cpp $(NOCOMPILE_SRC) $(ROOT)/.make_prefs
+	-@ $(TOOLS)/mkbuildlinks $(OBJ) $(ROOT)/.make_prefs
+ifdef CODE_SUBDIRS
+	-@for subdir in $(CODE_SUBDIRS) ; do ( mkdir -p $(OBJ)/$$subdir ) ; done
+endif
+	@echo "Making $@"
+	@$(SHELL) -ec '$(DEP) $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(DFLAGS) $< \
+		$(DMANGLE) | sed -e "s#^$(*F).o[ :]*#$(@D)\/$(*F).o $@ : #" \
+		> $@; [ -s $@ ] || rm -f $@'
+
 endif
 
 .SECONDARY: $(DEPENDENCIES) $(OBJS)
@@ -345,26 +273,14 @@ endif
 ifdef TARGET_LIBRARY
 $(OBJ)/$(strip $(TARGET_LIBRARY)).a: $(OBJS) $(OTHERLIBS)
 	-@ /bin/rm $@
-ifeq ($(USE_REPO),true)
-	-@echo 'int main(){return 0;}' > $(OBJ)/closure.cxx
-	$(LINKER) $(LDFLAGS) -o $(OBJ)/closure $(OBJ)/closure.cxx $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-endif
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
 $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
 	-@ /bin/rm $@
-ifeq ($(USE_REPO),true)
-	-@echo 'int main(){return 0;}' > $(OBJ)/closure.cxx
-	$(LINKER) $(LDFLAGS) -o $(OBJ)/closure $(OBJ)/closure.cxx $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-endif
 	$(MKSHLIB) -o $@ $^
 	-@ mkdir -p $(ROOT)/lib.$(TARGET_NAME)
 	-@ ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
-
-$(OBJ)/%_pure_p9_c0_103222355_32.a:
-	$(PURIFY5) -force-rebuild -nolink ld ./obj.debug.sun4u/*.o
-	$(AR) -$(ARFLAGS) $@ $(OBJ)/*_pure_p9_c0_103222355_32.o
 endif
 
 -include $(DEPENDENCIES)
