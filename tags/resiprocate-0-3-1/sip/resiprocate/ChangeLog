@@ -1,0 +1,104 @@
+2003-08-19  Wensong Zhang  <wensong@purplecomm.com>
+
+	* TcpTransport.cxx (processAllWrites): fixed the wrong parameter
+	order in the memset() call.
+
+	* TlsTransport.cxx (processAllWrites): fixed the wrong parameter
+	order in the memset() call.
+
+2003-08-10  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (libresiprocate_la_LDFLAGS): added to set the shared
+	library with the right resip version.
+
+2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
+
+	* config.hxx.in: added the macros RESIP_MAJOR_VERSION,
+	RESIP_MINOR_VERSION and RESIP_MICRO_VERSION, so that applications
+	know which specific versions they build on.
+
+2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (libresiprocate_la_SOURCES): added the
+	StatelessHandler.cxx.
+
+	* Makefile.am (resiprocate_include_HEADERS): added the
+	StatelessHandler.hxx.
+
+	* Makefile.am (resiprocate_includedir): added so that all the
+	header files can be installed into right places, such as
+	/usr/local/include/resiprocate/* or /usr/include/resiprocate/*.
+
+2003-08-07  Wensong Zhang  <wensong@purplecomm.com>
+
+	* TcpTransport.cxx (processWrite): fixed to use send() instead of
+	write() on the WIN32 platform.
+
+	* TcpTransport.cxx (processRead): fixed to use recv() instead of
+	read() on the WIN32 platform.
+
+2003-08-01  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (libresiprocate_la_SOURCES): added the new
+	GenericContents.cxx.
+
+2003-07-28  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Security.cxx: re-ordered the header files.
+
+	* Security.hxx: tidy up openssl header files.
+
+2002-11-11    <alan@jasomi.com>
+
+	* tassert.h : Added useful macros for test drivers.
+		(See SipTortureTests.cxx for examples)
+
+	* test/testSipStack1.cxx (main): Added arguments for controlling
+	log level.
+
+	*  test/testPreparse.cxx(doTest1):  Added test cases for fragmentation.
+
+	* test/SipTortureTests.cxx (main):  Removed generic SipMessage
+	test cases and added lots of stuff to the Torture test.
+
+2002-10-25    <alan@jasomi.com>
+
+	* SipMessage.hxx (class SipMessage): Moved preparser client declaration.
+
+	* ParserCategory.cxx (ParserCategory): Re-ordered initialisers.
+
+	* ParserCategories.cxx (parse): renamed a few confusing variables.
+
+	* HostSpecification.cxx: Added includes for gcc 2.9X
+
+2002-10-04  Alan Hawrylyshen  <alan@jasomi.com>
+
+	* Preparse.cxx (process): Added setStartLine  call.
+
+	* SipMessage.hxx (class SipMessage): Const fixups.
+
+	*  SipMessage.cxx (setBody): Const fixups.
+
+	* Preparse.cxx (InitStatePreparseStateTable): Migrated to Symbols
+	constants and added asserts for unexpected char* cases.
+
+
+2002-09-26  Alan Hawrylyshen  <alan@jasomi.com>
+
+	* headers.gperf (Repository):
+		Downcased everything. Fixed up some missing / mis-spelled
+		Header::Type entries.
+
+	* Symbols.cxx (Repository):
+		Fixed up Litteral text (STRING) for:
+			Subscription_State
+			Refer_To
+			Referred_By
+
+
+	* Makefile (Repository): Added rule for headers-hash.c.
+		Builds hash function from headers.gperf.
+		NOTE: Needs manual downcasing.
+
+	* HeaderTypes.hxx (Repository): Fixed up Timestamp and
+		Call-Info fields to return correct STRING represenatation.
