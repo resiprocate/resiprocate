@@ -23,6 +23,8 @@ class Parameter
 
       Parameter* next;
       
+      
+
    private:
       static std::string  ParamString[];
       ParamType mType;
