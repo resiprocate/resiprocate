@@ -141,8 +141,8 @@ class DialogUsageManager
       ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
       ClientRegistration* makeClientRegistration(Dialog& dialog,const SipMessage& msg);
       ClientPublication* makeClientPublication(Dialog& dialog, const SipMessage& msg);
-      ClientOutOfDialogReq* makeClientOutOfDialog(Dialog& dialog,const SipMessage& msg);
-
+      ClientOutOfDialogReq* makeClientOutOfDialogReq(Dialog& dialog,const SipMessage& msg);
+      
       ServerInviteSession* makeServerInviteSession(Dialog& dialog,const SipMessage& msg);
       ServerSubscription* makeServerSubscription(Dialog& dialog,const SipMessage& msg);
       ServerRegistration* makeServerRegistration(Dialog& dialog,const SipMessage& msg);

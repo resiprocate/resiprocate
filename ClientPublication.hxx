@@ -25,7 +25,10 @@ class ClientPublication : public BaseUsage
       
       void refresh(int expiration=0);
       void update(const Contents* body);
-      void end();
+
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientPublication::Handle getHandle() {return mHandle;}

@@ -23,19 +23,21 @@ class ClientSubscription: public BaseUsage
             friend class ClientSubscription;
       };
       
-      void end();
       void requestRefresh();
 
       bool matches(const SipMessage& subOrNotify);
       void process(const SipMessage& subOrNotify);
+
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientSubscription::Handle getHandle() {return mHandle;}
       
    private:
       friend class DialogUsageManager;
-      ClientSubscription(DialogUsageManager& dum,
-                         Dialog& dialog);
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
       
       Data mEventType;
       Data mSubscriptionId;
@@ -43,6 +45,7 @@ class ClientSubscription: public BaseUsage
       const Contents* mCurrentEventDocument;
       UInt64 mExpirationTime;
       ClientSubscription::Handle mHandle;
+      SipMessage& mLastRequest;
 
       // disabled
       ClientSubscription(const ClientSubscription&);
