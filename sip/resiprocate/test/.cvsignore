@@ -13,6 +13,5 @@ obj.debug.QNX.x86pc
 obj.opt.Linux.i686
 obj.opt.QNX.x86pc
 spam.ps
-tassert.h
 testPP.cxx
 testSipMessage.cxx.flc
