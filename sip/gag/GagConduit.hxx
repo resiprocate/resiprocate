@@ -10,7 +10,7 @@
 class GagConduit: public TuIM::Callback
 {
   public:
-    GagConduit(SipStack &stack);
+    GagConduit(SipStack &stack, int udpPort);
 
     void handleMessage(GagMessage *);
     void process();
@@ -37,11 +37,12 @@ class GagConduit: public TuIM::Callback
     virtual void receivePageFailed(const Uri& sender);
 
   private:
-    map<Uri,TuIM>::iterator getTu(Uri &aor);
+    map<Uri,TuIM *>::iterator getTu(Uri &aor);
 
   private:
     // Here are all of our TUs
-    map<Uri,TuIM> tuIM;
+    map<Uri,TuIM *> tuIM;
     SipStack *sipStack;
+    int udpPort;
 };
 #endif
