@@ -1,14 +1,18 @@
 
 #include <cassert>
 
+#include "resiprocate/Symbols.hxx"
+
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+
+//#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
@@ -22,9 +26,13 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-WebAdmin::WebAdmin(  UserAbstractDb& db, int port, IpVersion version):
+WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
+                     RegistrationPersistenceManager& regDb,
+                     int port, 
+                     IpVersion version):
    HttpBase( port, version ),
-   mDb(db)
+   mUserDb(userDb),
+   mRegDb(regDb)
 {
 }
 
@@ -99,7 +107,7 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
 
       if ( !user.empty() )
       {
-         mDb.addUser(user,realm,password,name,email);
+         mUserDb.addUser(user,realm,password,name,email);
       }
    }
    
@@ -166,104 +174,6 @@ WebAdmin::buildAddRoutePage()
    return ret;
 }
 
-
-#if 0
-
-Data
-WebAdmin::buildAddUserPage()
-{
-   Data ret;
-   {
-      DataStream s(ret);
-
-      s << "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"	<head>"
-"		<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"		<title>Repo Proxy</title>"
-"	</head>"
-""
-"	<body bgcolor=\"#ffffff\">"
-"		<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"			<tr>"
-"				<td>"
-"					<h1>Repro Proxy</h1>"
-"				</td>"
-"			</tr>"
-"			<tr>"
-"				<td>"
-"					<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"						<tr>"
-"							<td>"
-"								<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"									<tr>"
-"										<td>"
-"											<h3>Add User</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Users</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Config</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Stats</h3>"
-"										</td>"
-"									</tr>"
-"								</table>"
-"							</td>"
-"							<td align=\"left\" valign=\"top\" width=\"85%\">"
-"								<form id=\"addUserForm\" action=\"input\" method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
-"									<table width=\"90%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">User Name:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Realm:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Password:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Full Name:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Email:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
-"										</tr>"
-"									</table>"
-"									<input type=\"reset\" value=\"Reset\"/>"
-"								<input type=\"submit\" name=\"submit\" value=\"Add\"/>"
-"								</form>"
-"								</td>"
-"						</tr>"
-"					</table>"
-"				</td>"
-"			</tr>"
-"		</table>"
-"	</body>"
-""
-"</html>";
-      
-      s.flush();
-   }
-   return ret;
-}
-
-#else
 
 Data 
 WebAdmin::buildAddUserPage()
@@ -384,8 +294,6 @@ WebAdmin::buildAddUserPage()
    return ret;
 }
 
-#endif
-
 
 Data 
 WebAdmin::buildShowRegsPage()
@@ -447,27 +355,28 @@ WebAdmin::buildShowUsersPage()
       DataStream s(ret);
       
       s << 
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"<title>Repro Proxy Users</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<h1>Users</h1>"
-"<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
-"<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td>User</td>"
-"<td>Realm</td>"
-"<td>Name</td>"
-"<td>Email</td>"
-"<td><button name=\"buttonName\" type=\"button\">Remove</button></td>"
-"</tr>"
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy Users</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>Users</h1>"
+         "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
+         "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>User</td>"
+         "<td>Realm</td>"
+         "<td>Name</td>"
+         "<td>Email</td>"
+         "<td><button name=\"buttonName\" type=\"button\">Remove</button></td>"
+         "</tr>" ;
+      
 /*
 "<tr>"
 "<td>fluffy</td>"
@@ -477,13 +386,32 @@ WebAdmin::buildShowUsersPage()
 "<td><input type=\"checkbox\" name=\"removeUser\" value=\"removeUser\"/></td>"
 "</tr>"
 */
-"</table>"
-"</form>"
-"</body>"
-""
-"</html>"
-         " ";
+      s << endl;
       
+      Data key = mUserDb.getFirstKey();
+      while ( !key.empty() )
+      {
+         s << "<tr>"
+           << "<td>" << key << "</td>"
+           << "<td> </td>"
+           << "<td> </td>"
+           << "<td> </td>"
+           << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+           << key
+           << "\"/></td>"
+           << "</tr>"
+           << endl;
+         
+         key = mUserDb.getNextKey();
+      }
+      
+      s << 
+         "</table>"
+         "</form>"
+         "</body>"
+         ""
+         "</html>";
+            
       s.flush();
    }
    return ret;
