@@ -23,7 +23,6 @@ class Dialog
    private:
       std::list<BaseUsage*> mUsages;
       DialogId mid;  
-
 };
  
 }

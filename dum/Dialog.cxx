@@ -97,6 +97,60 @@ Dialog::findOutOfDialogs()
 }
 
 void
+Dialog::process(const SipMessage& msg)
+{
+   switch (request.header(h_RequestLine).getMethod())
+   {
+      // a NOTIFY is the only request that can
+      // create a full dialog (when the 2xx from the
+      // SUBSCRIBE arrives *after* the NOTIFY
+      case NOTIFY : 
+         processNotify(msg);
+         break;
+
+      case REFER: 
+         // !jf! wierdo
+         // affects an InvSession and a ServerSubscription 
+         break;
+
+      case SUBSCRIBE:
+         processSubscribe(msg);
+         break;
+
+      case CANCEL: 
+         // should only occur when canceling a re-INVITE
+      case INVITE:  
+         // should only occur for a re-INVITE
+      case ACK:
+      case PRACK:
+      case BYE:
+      case UPDATE:
+      case INFO: 
+         processInviteRelated(msg);
+         break;
+         
+      case REGISTER:
+      {
+         assert(0); // already handled
+         break;
+      }
+      
+      case PUBLISH:
+         assert(0);
+         break;                       
+
+      case MESSAGE:
+      case OPTIONS:
+         assert(0);
+         break;
+         
+      default:
+         assert(0);
+         break;
+      }
+}
+
+void
 Dialog::processNotify(const SipMessage& notify)
 {
    if (notify.isRequest())
@@ -120,6 +174,43 @@ Dialog::processNotify(const SipMessage& notify)
                break;
             }
          }
+      }
+   }
+}
+
+void
+Dialog::processSubscribe(const SipMessage& subscribe)
+{
+   for (std::list<BaseUsage*>::iterator i=mUsages.begin(); i!=mUsages.end(); i++)
+   {
+      ServerSubscription* sub = dynamic_cast<ServerSubscription*>(*i);
+      if (sub && sub->matches(subscribe))
+      {
+         sub->process(subscribe); // a resubscribe or unsubscribe
+         return;
+      }
+   }
+   
+   // a subscribe on an existing dialog with a different BaseUsage
+   ServerSubscription* sub = new ServerSubscription(mDum, subscribe);
+}
+
+void
+Dialog::processInviteRelated(const SipMessage& msg)
+{
+   for (std::list<BaseUsage*>::iterator i=mUsages.begin(); i!=mUsages.end(); i++)
+   {
+      ServerInvSession* server = dynamic_cast<ServerInvSession*>(*i);
+      ClientInvSession* client = dynamic_cast<ClientInvSession*>(*i);
+      if (server) 
+      {
+         server->process(msg);
+         break;
+      }
+      else if (client)
+      {
+         client->process(msg);
+         break;
       }
    }
 }
