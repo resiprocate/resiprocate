@@ -27,8 +27,49 @@ Vocal2::TransactionState::process(SipStack& stack)
    
 }
 
+
 void
 TransactionState::process( Message* msg )
+{
+   switch (mMachine)
+   {
+      case ClientNonInvite: processClientNonInvite( msg ); break;
+      case ClientInvite:    processClientInvite( msg ); break;
+      case ServerNonInvite: processServerNonInvite( msg ); break;
+      case ServerInvite:    processServerInvite( msg ); break;
+      case Stale: processStale( msg ); break;
+      default:
+         assert(0);
+   }
+}
+
+
+void
+TransactionState::processClientNonInvite(  Message* msg )
+{
+}
+
+
+void
+TransactionState::processClientInvite(  Message* msg )
+{
+}
+
+
+void
+TransactionState::processServerNonInvite(  Message* msg )
+{
+}
+
+
+void
+TransactionState::processServerInvite(  Message* msg )
+{
+}
+
+
+void
+TransactionState::processStale(  Message* msg )
 {
 }
 
