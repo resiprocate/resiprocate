@@ -73,8 +73,12 @@ const char * const Symbols::purpose = "purpose";
 const char * const Symbols::expires = "expires";
 const char * const Symbols::handling = "handling";
 const char * const Symbols::tag = "tag";
+const char * const Symbols::toTag = "to-tag";
+const char * const Symbols::fromTag = "from-tag";
 const char * const Symbols::duration = "duration";
 const char * const Symbols::branch = "branch";
 const char * const Symbols::received = "received";
 const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
+
+const int Symbols::DefaultSipPort = 5060;

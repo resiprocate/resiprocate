@@ -1,7 +1,9 @@
 #ifndef Helper_hxx
 #define Helper_hxx
 
+
 #include <sipstack/SipMessage.hxx>
+#include <sipstack/Symbols.hxx>
 
 namespace Vocal2
 {
@@ -9,13 +11,19 @@ namespace Vocal2
 class Helper
 {
    public:
+
+      //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       static SipMessage makeInvite(Url& target);
 
       static SipMessage makeResponse(SipMessage& request, int responseCode);
       static SipMessage makeResponse(SipMessage& request, int responseCode, Url& myContact);
 
-      //to, requestLine& cseq method set
+      //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       static SipMessage makeRequest(Url& target, MethodTypes method);
+
+      //should default proto-version, anything else defaulted/passed in?
+      static Via makeVia(Url& source);
+      
 
       // copy the values from Url into rline (with sip-uri parameters?)
       static void setUri(RequestLine& rLine, Url& url);
@@ -25,6 +33,8 @@ class Helper
 
       static Data computeUniqueBranch();
       static Data computeProxyBranch();
+
+      static Data computeCallId();
 };
  
 }
