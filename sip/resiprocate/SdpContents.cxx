@@ -267,7 +267,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    pb.data(mUser, anchor);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mSessionId = pb.unsignedInteger();
+   mSessionId = pb.unsignedLongLong();
    
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mVersion = pb.unsignedLongLong();
