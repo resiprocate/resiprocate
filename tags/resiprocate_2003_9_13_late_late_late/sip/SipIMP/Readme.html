@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+		<meta name="generator" content="Adobe GoLive 4">
+		<title></title>
+	</head>
+
+	<body>
+		I've been working on an SIMPLE client - it is really basic and still does many things wrong but is something people could start playing with It is still alpha quality and most likely won't work.
+		<p>Right now it is just on windows - there is a curses based version that runs on Unix but that hardly counts. The SMIME stuff still needs work for key ring management stuff and the TLS has not really been tested with</p>
+		<p>You can download the windows install program at</p>
+		<p><a href="http://www.employees.org/~fluffy/sipimp/SipIMPSetup.msi" target="_blank">http://www.employees.org/~fluffy/sipimp/SipIMPSetup.msi</a></p>
+		<p>If this does not work for you and claims you need a more recent installer then download all the files in</p>
+		<p><a href="http://www.employees.org/~fluffy/sipimp/SipImpSetup.zip" target="_blank">http://www.employees.org/~fluffy/sipimp/SipImpSetup.zip</a> unzip and run setup</p>
+		<p>My configuration looks like</p>
+		<p><img src="ConfigImage.gif" align="baseline" border="0"></p>
+		<p>12.234.50.3 is the public address of my NAT and I have forwarded port 5002 on it to the private address of my computer I run this on. I also needed to set my local port to be 5002. If I was not behind a NAT I would leave the contact blank.</p>
+		<p>The source code is all open source it is checked into the CVS at <a href="http://www.vovida.org">www.vovida.org</a> under the project vocal/sip2. Set your CVSROOT to :pserver:anonymous@cvs.vovida.org:/cvsroot - the password is anonymous. There is an (old by the time you read this) zip file of the source at <a href="http://www.employees.org/~fluffy/sipimp/SipImpSrc.zip">http://www.employees.org/~fluffy/sipimp/SipImpSrc.zip</a></p>
+		<p>If you want to try the TLS or S/MIME stuff - it is currently complicated and I don't really recommend it unless you like playing with sort of stuff. You need to download the file at <a href="http://www.employees.org/~fluffy/sipimp/Sec/SipIMPSetup.msi" target="_blank">http://www.employees.org/~fluffy/sipimp/Sec/SipIMP.exe</a> and replace your normal exe with it. You then need to get the openssl DLLs. You can compile version 0.9.7 from <a href="http://www.openssl.org/">http://www.openssl.org </a>or you can try and find a copy of the 0.9.7 versions of libeay32.dll and ssleay32.lib somewhere on the web. I have not had much luck finding them. You need to copy the dlls to the same directory where the program is installed. I'm still discussing with lawyers how to avoid this lameness. Next you need to install your certificates - this is lame - a better way is needed. Create a base directory to put them in - the default is C:\certs. Put your public cert in id.pem, your private key in id_key.pem. Put a root certificates you use for checking things in root.pem. Now it gets worse. Create sub directory called public_keys and in this directory store the public certificates of others. If the others AOR was sip:fluffy@iptel.org, put their public certificate, in PEM format, in a file called fluffy@iptel.org. These are only laded when the program starts. If you receive a new certificate from someone else, it is NOT written into this directory. Don't forget to set the password to decrypt your private key in the configuration dialog.</p>
+		<p>There are many known bugs. 
+	</body>
+
+</html>
