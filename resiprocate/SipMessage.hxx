@@ -22,6 +22,11 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/Contents.hxx"
+
+#if !defined(WIN32)
+#include <pthread.h>
+#endif 
 
 namespace resip
 {
@@ -205,7 +210,11 @@ class SipMessage : public Message
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
 
       Contents* getContents() const;
+      // removes the contents from the message
+      std::auto_ptr<Contents> releaseContents();
+
       void setContents(const Contents* contents);
+      void setContents(std::auto_ptr<Contents> contents);
 
       // transport interface
       void setStartLine(const char* start, int len); 
