@@ -1,19 +1,24 @@
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Security.hxx"
+
 #include "repro/Proxy.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-using repro;
-using resip;
-using std;
+using namespace repro;
+using namespace resip;
+using namespace std;
 
 int
 main(int argc, char** argv)
 {
 
 /* Initialize a stack */
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
    Security security;
    SipStack stack(&security);
    stack.addTransport(UDP,5060);
