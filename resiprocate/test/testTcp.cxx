@@ -1,4 +1,12 @@
 
+#if defined (HAVE_POPT_H) 
+#include <popt.h>
+#else
+#ifndef WIN32
+#warning "will not work very well without libpopt"
+#endif
+#endif
+
 #include <iostream>
 
 #include "resiprocate/TcpTransport.hxx"
@@ -9,14 +17,6 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/DataStream.hxx"
-
-#if defined (HAVE_POPT_H) 
-#include <popt.h>
-#else
-#ifndef WIN32
-#warning "will not work very well without libpopt"
-#endif
-#endif
 
 using namespace resip;
 using namespace std;

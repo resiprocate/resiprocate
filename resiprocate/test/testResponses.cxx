@@ -1,4 +1,3 @@
-#include <iostream>
 
 #if defined (HAVE_POPT_H) 
 #include <popt.h>
@@ -7,6 +6,8 @@
 #warning "will not work very well without libpopt"
 #endif
 #endif
+
+#include <iostream>
 
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"

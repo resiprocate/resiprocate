@@ -7,11 +7,16 @@
 #endif
 #endif
 
+#include <iostream>
+
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/SipStack.hxx"
+
+using namespace std;
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
