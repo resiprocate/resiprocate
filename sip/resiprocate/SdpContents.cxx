@@ -1561,35 +1561,34 @@ SdpContents::Session::Medium::codecs()
                mRtpMap.erase(format);
             }
          }
+	  }
 
-         for (vector<Data>::const_iterator i = mFormats.begin();
-              i != mFormats.end(); ++i)
+      for (vector<Data>::const_iterator i = mFormats.begin();
+           i != mFormats.end(); ++i)
+      {
+         int mapKey = i->convertInt();
+         RtpMap::const_iterator ri = mRtpMap.find(mapKey);
+         if (ri != mRtpMap.end())
          {
-            int mapKey = i->convertInt();
-            RtpMap::const_iterator ri = mRtpMap.find(mapKey);
-            if (ri != mRtpMap.end())
-            {
-               //DebugLog(<< "SdpContents::Session::Medium::getCodec[](" << ri->second << ")");
-               mCodecs.push_back(ri->second);
-            }
-            else
-            {
-                // !kk! Is it a static format?
-                Codec::CodecMap& staticCodecs = Codec::getStaticCodecs();
-                Codec::CodecMap::const_iterator ri = staticCodecs.find(mapKey);
-                if (ri != staticCodecs.end())
-                {
-                   //DebugLog(<< "Found static codec for format: " << mapKey);
-                   mCodecs.push_back(ri->second);
-                }
-
-            }
+            //DebugLog(<< "SdpContents::Session::Medium::getCodec[](" << ri->second << ")");
+            mCodecs.push_back(ri->second);
          }
+         else
+         {
+             // !kk! Is it a static format?
+             Codec::CodecMap& staticCodecs = Codec::getStaticCodecs();
+             Codec::CodecMap::const_iterator ri = staticCodecs.find(mapKey);
+             if (ri != staticCodecs.end())
+             {
+                //DebugLog(<< "Found static codec for format: " << mapKey);
+                mCodecs.push_back(ri->second);
+             }
+         }
+	  }
 
-         // don't store twice
-         mFormats.clear();
-         mAttributeHelper.clearAttribute(rtpmap);
-      }
+      // don't store twice
+      mFormats.clear();
+      mAttributeHelper.clearAttribute(rtpmap);
    }
 
    return mCodecs;
