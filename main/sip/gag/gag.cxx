@@ -4,12 +4,12 @@
 
 #include <list>
 #include <errno.h>
-#include <sys/fcntl.h>
 #include <sstream>
 
 #ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/fcntl.h>
 #endif
 
 #include "resiprocate/os/Socket.hxx"
@@ -90,9 +90,9 @@ void init_loopback()
   // Hijack stdin and stdout  
   close (0);
   close (1);
-  status = dup2( reinterpret_cast<int>(s), 0);
+  status = dup2( static_cast<int>(s), 0);
   assert(status >= 0);
-  status = dup2( reinterpret_cast<int>(s), 1);
+  status = dup2( static_cast<int>(s), 1);
   assert(status >= 0);
 }
 
@@ -168,8 +168,14 @@ main (int argc, char **argv)
   int time;
   int err;
 
+#ifndef WIN32
   // Make stdin nonblocking
   fcntl(0, F_SETFL, O_NONBLOCK);
+#else
+    unsigned long noBlock = 1;
+	int errNoBlock = ioctlsocket( 0, FIONBIO , &noBlock );
+	assert( errNoBlock == 0 );
+#endif
 
   while (1)
   {
