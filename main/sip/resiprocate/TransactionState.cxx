@@ -960,7 +960,7 @@ TransactionState::processServerInvite(  Message* msg )
                   {
                      mToTag = sip->header(h_To).param(p_tag);
                   }
-                  mController.mTimers.add(Timer::TimerH, mId, 64*Timer::T1 );
+                  mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
                   if (!mIsReliable)
                   {
                      mController.mTimers.add(Timer::TimerG, mId, Timer::T1 );
@@ -1370,7 +1370,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
       }
       else
       {
-         StackLog(<<"sending to : " << target);
+         StackLog(<< "tid=" << sip->getTransactionId() << " sending to : " << target);
       }
 
       if (resend)
