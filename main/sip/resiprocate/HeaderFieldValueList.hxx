@@ -26,7 +26,7 @@ class HeaderFieldValueList
          mParserContainer = parser;
       }
       
-      ParserCategory&
+      ParserCategory*
       getParserCategory();
       
       // insert at begining

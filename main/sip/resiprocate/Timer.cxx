@@ -11,7 +11,7 @@
 #include <sipstack/Timer.hxx>
 #include <sipstack/Logger.hxx>
 
-static const char version[] = "$Id: Timer.cxx,v 1.2 2002/09/22 00:23:44 jason Exp $";
+static const char version[] = "$Id: Timer.cxx,v 1.3 2002/09/22 00:56:51 dabryan Exp $";
 
 using namespace Vocal2;
 
@@ -152,7 +152,6 @@ Timer::setupTimeOffsets()
    //cerr << "diff in count is " << count << endl;
     
    cpuSpeed = count / uSec;
-   clog << "Estimate cpu speed is " << cpuSpeed << " MHz " << endl;
     
    static int speeds[] = { 0,1,25,33,60,90,100,133,150,166,200,
                            266,300,400,450,
