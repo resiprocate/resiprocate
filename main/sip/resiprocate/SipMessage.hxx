@@ -14,7 +14,7 @@
 #include <vector>
 #include <utility>
 
-#include <sipstack/HeaderTypes.hxx>
+#include <sipstack/Headers.hxx>
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/ParserContainer.hxx>
