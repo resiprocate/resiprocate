@@ -1,6 +1,6 @@
 #include <cassert>
-#include <util/Logger.hxx>
-#include <util/ParseBuffer.hxx>
+#include "util/Logger.hxx"
+#include "util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 

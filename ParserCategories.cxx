@@ -2,12 +2,12 @@
 #include <cassert>
 #include <iostream>
 
-#include <util/Data.hxx>
-#include <util/Logger.hxx>
-#include <util/ParseBuffer.hxx>
-#include <sipstack/ParserCategories.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/UnknownParameter.hxx>
+#include "util/Data.hxx"
+#include "util/Logger.hxx"
+#include "util/ParseBuffer.hxx"
+#include "sipstack/ParserCategories.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/UnknownParameter.hxx"
 
 using namespace Vocal2;
 using namespace std;

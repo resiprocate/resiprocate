@@ -7,11 +7,11 @@
 #include <unistd.h>
 #endif
 
-#include <sipstack/SipStack.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/Helper.hxx>
-#include <sipstack/Transport.hxx>
-#include <util/Logger.hxx>
+#include "sipstack/SipStack.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/Helper.hxx"
+#include "sipstack/Transport.hxx"
+#include "util/Logger.hxx"
 
 
 using namespace Vocal2;

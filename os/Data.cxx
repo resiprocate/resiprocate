@@ -1,13 +1,13 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.24 2002/11/05 02:56:36 derekm Exp $";
+"$Id: Data.cxx,v 1.25 2002/11/06 02:59:29 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
 
-#include <util/Data.hxx>
-#include <util/vmd5.hxx>
-#include <util/RandomHex.hxx>
+#include "util/Data.hxx"
+#include "util/vmd5.hxx"
+#include "util/RandomHex.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,8 +1,8 @@
 #ifndef HeaderFieldValue_hxx
 #define HeaderFieldValue_hxx
 
-#include <sipstack/ParseException.hxx>
-#include <sipstack/ParameterTypes.hxx>
+#include "sipstack/ParseException.hxx"
+#include "sipstack/ParameterTypes.hxx"
 
 #include <iostream>
 

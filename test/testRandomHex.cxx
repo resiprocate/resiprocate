@@ -2,8 +2,8 @@
 #include <iostream>
 #include <set>
 
-#include <util/Data.hxx>
-#include <util/RandomHex.hxx>
+#include "util/Data.hxx"
+#include "util/RandomHex.hxx"
 
 using namespace std;
 using namespace Vocal2;

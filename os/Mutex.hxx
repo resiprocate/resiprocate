@@ -8,7 +8,7 @@
 #include <pthread.h>
 #endif
 
-#include <util/Lockable.hxx>
+#include "util/Lockable.hxx"
 
 
 namespace Vocal2

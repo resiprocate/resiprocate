@@ -1,4 +1,4 @@
-#include <util/Subsystem.hxx>
+#include "util/Subsystem.hxx"
 
 using namespace Vocal2;
 

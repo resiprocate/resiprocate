@@ -1,7 +1,7 @@
 #ifndef THREADIF_HXX
 #define THREADIF_HXX
 
-#include <util/Socket.hxx>
+#include "util/Socket.hxx"
 
 #ifdef WIN32
 #  include <BaseTsd.h>
@@ -10,7 +10,7 @@
 #  include <pthread.h>
 #endif
 
-#include <util/Mutex.hxx>
+#include "util/Mutex.hxx"
 
 namespace Vocal2
 {
