@@ -1,5 +1,6 @@
 #include "resiprocate/StackThread.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -20,8 +21,13 @@ StackThread::thread()
          resip::FdSet fdset;
          buildFdSet(fdset);
          mStack.buildFdSet(fdset);
-         int ret = fdset.selectMilliSeconds(std::min(mStack.getTimeTillNextProcessMS(),
+#if defined(WIN32)  // std::min conflicts with microsoft defines for min and max
+		 int ret = fdset.selectMilliSeconds(min(mStack.getTimeTillNextProcessMS(),
                                                      getTimeTillNextProcessMS()));
+#else
+		 int ret = fdset.selectMilliSeconds(std::min(mStack.getTimeTillNextProcessMS(),
+                                                     getTimeTillNextProcessMS()));
+#endif
          if (ret >= 0)
          {
             // .dlb. use return value to peak at the message to see if it is a
