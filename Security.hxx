@@ -80,29 +80,29 @@ class BaseSecurity
       void addDomainCertPEM(const Data& domainName, const Data& certPEM);
       void addDomainCertDER(const Data& domainName, const Data& certDER);
       bool hasDomainCert(const Data& domainName) const;
-      bool removeDomainCert(const Data& domainName);
+      void removeDomainCert(const Data& domainName);
       Data getDomainCertDER(const Data& domainName) const;
 
       void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM);
       bool hasDomainPrivateKey(const Data& domainName) const;
-      bool removeDomainPrivateKey(const Data& domainName);
+      void removeDomainPrivateKey(const Data& domainName);
       Data getDomainPrivateKeyPEM(const Data& domainName) const;
 
       void addUserCertPEM(const Data& aor, const Data& certPEM);
       void addUserCertDER(const Data& aor, const Data& certDER);
       bool hasUserCert(const Data& aor) const;
-      bool removeUserCert(const Data& aor);
+      void removeUserCert(const Data& aor);
       Data getUserCertDER(const Data& aor) const;
 
       void setUserPassPhrase(const Data& aor, const Data& passPhrase);
       bool hasUserPassPhrase(const Data& aor) const;
-      bool removeUserPassPhrase(const Data& aor);
+      void removeUserPassPhrase(const Data& aor);
       Data getUserPassPhrase(const Data& aor) const;
 
       void addUserPrivateKeyPEM(const Data& aor, const Data& certPEM);
       void addUserPrivateKeyDER(const Data& aor, const Data& certDER);
       bool hasUserPrivateKey(const Data& aor) const;
-      bool removeUserPrivateKey(const Data& aor);
+      void removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyPEM(const Data& aor) const;
       Data getUserPrivateKeyDER(const Data& aor) const;
 
@@ -154,20 +154,20 @@ class BaseSecurity
       mutable PassPhraseMap  mUserPassPhrases;
       mutable PrivateKeyMap  mUserPrivateKeys;
 
-      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
-      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
-      bool hasCert (PEMType type, const Data& name, bool read) const;
-      bool removeCert (PEMType type, const Data& name, bool remove);
-      Data getCertDER (PEMType type, const Data& name, bool read) const;
-      void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
+      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write) const;
+      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write) const;
+      bool hasCert    (PEMType type, const Data& name) const;
+      void removeCert (PEMType type, const Data& name);
+      Data getCertDER (PEMType type, const Data& name) const;
+      void addCertX509(PEMType type, const Data& name, X509* cert, bool write) const;
 
-      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write);
-      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write);
-      bool hasPrivateKey (PEMType type, const Data& name, bool read) const;
-      bool removePrivateKey (PEMType type, const Data& name, bool remove);
-      Data getPrivateKeyPEM (PEMType type, const Data& name, bool read) const;
-      Data getPrivateKeyDER (PEMType type, const Data& name, bool read) const;
-      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write);
+      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write) const;
+      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write) const;
+      bool hasPrivateKey    (PEMType type, const Data& name) const;
+      void removePrivateKey (PEMType type, const Data& name);
+      Data getPrivateKeyPEM (PEMType type, const Data& name) const;
+      Data getPrivateKeyDER (PEMType type, const Data& name) const;
+      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
       
 };
 
