@@ -79,7 +79,6 @@ Helper::makeMessage(const Data& data, bool isExternal )
          // will be contiguous (of course).
          // it doesn't need a new buffer in UDP b/c there
          // will only be one datagram per buffer. (1:1 strict)
-         DebugLog(<< "setting body");
          msg->setBody(buffer+used,size-used);
       }
    }
