@@ -70,21 +70,21 @@ class Header<Headers::Content_Disposition>
          Headers::HeaderNames[Headers::Content_Disposition] = Symbols::Content_Disposition;
       }
 };
-extern Header<Headers::Content_Disposition> h_Content_Disposition;
+extern Header<Headers::Content_Disposition> h_ContentDisposition;
 
 class Header<Headers::Content_Encoding>
 {
    public:
       typedef Token Type;
 };
-extern Header<Headers::Content_Encoding> h_Content_Encoding;
+extern Header<Headers::Content_Encoding> h_ContentEncoding;
 
 class Header<Headers::MIME_Version>
 {
    public:
       typedef Token Type;
 };
-extern Header<Headers::MIME_Version> h_MIME_Version;
+extern Header<Headers::MIME_Version> h_MimeVersion;
 
 class Header<Headers::Priority>
 {
@@ -101,14 +101,14 @@ class MultiHeader<Headers::Accept_Encoding>
    public:
       typedef Token Type;
 };
-extern MultiHeader<Headers::Accept_Encoding> h_Accept_Encodings;
+extern MultiHeader<Headers::Accept_Encoding> h_AcceptEncodings;
 
 class MultiHeader<Headers::Accept_Language>
 {
    public:
       typedef Token Type;
 };
-extern MultiHeader<Headers::Accept_Language> h_Accept_Languages;
+extern MultiHeader<Headers::Accept_Language> h_AcceptLanguages;
 
 class Header<Headers::Allow>
 {
@@ -122,14 +122,14 @@ class MultiHeader<Headers::Content_Language>
    public:
       typedef Token Type;
 };
-extern MultiHeader<Headers::Content_Language> h_Content_Languages;
+extern MultiHeader<Headers::Content_Language> h_ContentLanguages;
 
 class MultiHeader<Headers::Proxy_Require>
 {
    public:
       typedef Token Type;
 };
-extern MultiHeader<Headers::Proxy_Require> h_Proxy_Requires;
+extern MultiHeader<Headers::Proxy_Require> h_ProxyRequires;
 
 class MultiHeader<Headers::Require>
 {
@@ -150,7 +150,7 @@ class MultiHeader<Headers::Subscription_State>
    public:
       typedef Token Type;
 };
-extern MultiHeader<Headers::Subscription_State> h_Subscription_States;
+extern MultiHeader<Headers::Subscription_State> h_SubscriptionStates;
 
 class MultiHeader<Headers::Unsupported>
 {
@@ -174,7 +174,7 @@ class Header<Headers::Content_Type>
    public:
       typedef Mime Type;
 };
-extern Header<Headers::Content_Type> h_Content_Type;
+extern Header<Headers::Content_Type> h_ContentType;
 
 //====================
 // GenericURIs:
@@ -184,14 +184,14 @@ class MultiHeader<Headers::Alert_Info>
    public:
       typedef GenericURI Type;
 };
-extern MultiHeader<Headers::Alert_Info> h_Alert_Infos;
+extern MultiHeader<Headers::Alert_Info> h_AlertInfos;
 
 class MultiHeader<Headers::Error_Info>
 {
    public:
       typedef GenericURI Type;
 };
-extern MultiHeader<Headers::Error_Info> h_Error_Infos;
+extern MultiHeader<Headers::Error_Info> h_ErrorInfos;
 
 //====================
 // NameAddrs:
@@ -201,7 +201,7 @@ class MultiHeader<Headers::Record_Route>
    public:
       typedef NameAddr Type;
 };
-extern MultiHeader<Headers::Record_Route> h_Record_Routes;
+extern MultiHeader<Headers::Record_Route> h_RecordRoutes;
 
 class MultiHeader<Headers::Route>
 {
@@ -242,21 +242,21 @@ class Header<Headers::Reply_To>
    public:
       typedef NameAddrOrAddrSpec Type;
 };
-extern Header<Headers::Reply_To> h_Reply_To;
+extern Header<Headers::Reply_To> h_ReplyTo;
 
 class Header<Headers::Refer_To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
 };
-extern Header<Headers::Refer_To> h_Refer_To;
+extern Header<Headers::Refer_To> h_ReferTo;
 
 class Header<Headers::Referred_By>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
 };
-extern Header<Headers::Referred_By> h_Referred_By;
+extern Header<Headers::Referred_By> h_ReferredBy;
 
 //====================
 //String:
@@ -287,7 +287,7 @@ class Header<Headers::User_Agent>
    public:
       typedef StringComponent Type;
 };
-extern Header<Headers::User_Agent> h_User_Agent;
+extern Header<Headers::User_Agent> h_UserAgent;
 
 //====================
 // Integer:
@@ -297,7 +297,7 @@ class Header<Headers::Content_Length>
    public:
       typedef IntegerComponent Type;
 };
-extern Header<Headers::Content_Length> h_Content_Length;
+extern Header<Headers::Content_Length> h_ContentLength;
 
 class Header<Headers::Expires>
 {
@@ -311,14 +311,14 @@ class Header<Headers::Max_Forwards>
    public:
       typedef IntegerComponent Type;
 };
-extern Header<Headers::Max_Forwards> h_Max_Forwards;
+extern Header<Headers::Max_Forwards> h_MaxForwards;
 
 class Header<Headers::Min_Expires>
 {
    public:
       typedef IntegerComponent Type;
 };
-extern Header<Headers::Min_Expires> h_Min_Expires;
+extern Header<Headers::Min_Expires> h_MinExpires;
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 class Header<Headers::Retry_After>
@@ -326,7 +326,7 @@ class Header<Headers::Retry_After>
    public:
       typedef IntegerComponent Type;
 };
-extern Header<Headers::Retry_After> h_Retry_After;
+extern Header<Headers::Retry_After> h_RetryAfter;
 
 //====================
 // CallId:
@@ -336,7 +336,7 @@ class Header<Headers::Call_ID>
    public:
       typedef CallId Type;
 };
-extern Header<Headers::Call_ID> h_Call_ID;
+extern Header<Headers::Call_ID> h_CallId;
 
 //====================
 // CallIds:
@@ -346,7 +346,7 @@ class Header<Headers::In_Reply_To>
    public:
       typedef CallIds Type;
 };
-extern Header<Headers::In_Reply_To> h_In_Reply_To;
+extern Header<Headers::In_Reply_To> h_InReplyTo;
 
 //====================
 // Auth:
@@ -356,7 +356,7 @@ class Header<Headers::Authentication_Info>
    public:
       typedef Auth Type;
 };
-extern Header<Headers::Authentication_Info> h_Authentication_Info;
+extern Header<Headers::Authentication_Info> h_AuthenticationInfo;
 
 class Header<Headers::Authorization>
 {
@@ -370,21 +370,21 @@ class Header<Headers::Proxy_Authenticate>
    public:
       typedef Auth Type;
 };
-extern Header<Headers::Proxy_Authenticate> h_Proxy_Authenticate;
+extern Header<Headers::Proxy_Authenticate> h_ProxyAuthenticate;
 
 class Header<Headers::Proxy_Authorization>
 {
    public:
       typedef Auth Type;
 };
-extern Header<Headers::Proxy_Authorization> h_Proxy_Authorization;
+extern Header<Headers::Proxy_Authorization> h_ProxyAuthorization;
 
 class Header<Headers::WWW_Authenticate>
 {
    public:
       typedef Auth Type;
 };
-extern Header<Headers::WWW_Authenticate> h_WWW_Authenticate;
+extern Header<Headers::WWW_Authenticate> h_WWWAuthenticate;
 
 //====================
 // CSeqComponent:
@@ -427,10 +427,10 @@ class MultiHeader<Headers::Via>
 extern MultiHeader<Headers::Via> h_Vias;
 
 class RequestLineType {};
-extern RequestLineType h_Request_Line;
+extern RequestLineType h_RequestLine;
 
 class StatusLineType {};
-extern StatusLineType h_Status_Line;
+extern StatusLineType h_StatusLine;
  
 }
 
