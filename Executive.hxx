@@ -4,29 +4,29 @@
 namespace Vocal2
 {
 
-  class SipStack;
+class SipStack;
 
 class Executive
 {
-public:
-  Executive( SipStack& stack );
+   public:
+      Executive( SipStack& stack );
 
-  void process();
+      void process();
 
-private:
-  SipStack& mStack;
+   private:
+      SipStack& mStack;
 
-  //bool haveUdpThread;
-  bool processTransports(); // return true if more work to do
+      //bool haveUdpThread;
+      bool processTransports(); // return true if more work to do
 
-  //bool haveTCPThread;
-  //void processTCP();
+      //bool haveTCPThread;
+      //void processTCP();
 
-  ///bool haveStateMachineThread;
-  bool processStateMachine();// return true if more work to do
+      ///bool haveStateMachineThread;
+      bool processStateMachine();// return true if more work to do
 
-  //bool haveTimerThread;
-  bool processTimer();// return true if more work to do
+      //bool haveTimerThread;
+      bool processTimer();// return true if more work to do
 
 
 };

@@ -22,7 +22,8 @@ TransportSelector::process()
 void 
 TransportSelector::send( SipMessage* msg )
 {
-   mUdp->send(msg);
+   //mUdp->send(msg);
+   assert(0);
 }
 
 
