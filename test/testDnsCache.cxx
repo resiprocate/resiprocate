@@ -20,11 +20,11 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/QueryTypes.hxx"
-#include "resiprocate/RROverlay.hxx"
-#include "resiprocate/RRList.hxx"
-#include "resiprocate/RRCache.hxx"
-#include "resiprocate/DnsStub.hxx"
+#include "resiprocate/dns/QueryTypes.hxx"
+#include "resiprocate/dns/RROverlay.hxx"
+#include "resiprocate/dns/RRList.hxx"
+#include "resiprocate/dns/RRCache.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 
 using namespace resip;
 using namespace std;
@@ -32,7 +32,9 @@ using namespace std;
 class MyDnsSink : public DnsResultSink
 {
    void onDnsResult(const DNSResult<DnsHostRecord>&);
+#ifdef USE_IPV6
    void onDnsResult(const DNSResult<DnsAAAARecord>&); 
+#endif
    void onDnsResult(const DNSResult<DnsSrvRecord>&);
    void onDnsResult(const DNSResult<DnsNaptrRecord>&) {}
    void onDnsResult(const DNSResult<DnsCnameRecord>&);
@@ -198,6 +200,7 @@ MyInet_ntop6(const u_char *src, char *dst, size_t size)
    return (dst);
 }
 
+#ifdef USE_IPV6
 void MyDnsSink::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
    cout << "AAAA records" << endl;
@@ -213,6 +216,7 @@ void MyDnsSink::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    }
    cout << endl;
 }
+#endif
 
 
 // NOTE: In order to run this test, you need to uncomment out the USE_LOCAL_DNS define in
@@ -237,12 +241,14 @@ main(int argc, char* argv[])
    }
 
    {
+#ifdef USE_IPV6
       const char* const key = "quartz";
       MyDnsSink sink;
       DnsInterface dns;
       DnsStub stub(&dns);
       stub.lookup<RR_AAAA, DnsResultSink>(key, &sink);
       stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+#endif
    }
 
    {
