@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.106 2003/01/25 18:32:28 jason Exp $
+# $Id: Makefile,v 1.107 2003/02/04 03:34:29 fluffy Exp $
 
 BUILD = ../../build
 
@@ -26,7 +26,14 @@ TESTPROGRAMS =
 parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories
 
+#	TuShim.cxx \
+
 SRC = \
+	SipSession.cxx	\
+	Registration.cxx \
+	Subscription.cxx \
+	DialogSet.cxx \
+	Dialog2.cxx \
 	XMLCursor.cxx \
 	UnknownHeaderType.cxx \
 	UnknownParameterType.cxx \
