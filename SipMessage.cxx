@@ -153,7 +153,7 @@ SipMessage::make(const Data& data,
 
    if (pre.process(*msg, buffer, len) || pre.isFragmented())
    {
-      cerr << "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer;
+      InfoLog(<< "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer);
       
       delete msg;
       msg = 0;
