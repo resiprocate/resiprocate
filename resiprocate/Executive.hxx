@@ -1,10 +1,17 @@
+#if !defined(EXECUTIVE_HXX)
+#define EXECUTIVE_HXX
+
+namespace Vocal2
+{
+
+  class SipStack;
 
 class Executive
 {
 public:
   Executive( SipStack& stack );
 
-  process();
+  void process();
 
 private:
   SipStack& mStack;
@@ -23,3 +30,7 @@ private:
 
 
 };
+
+}
+
+#endif

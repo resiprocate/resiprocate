@@ -1,8 +1,19 @@
+#if !defined(TRANSACTIONMAP_HXX)
+#define TRANSACTIONMAP_HXX
 
-class TransactionMap 
+namespace Vocal2
 {
-public:
-  State* find( Data TransactionId );
-  void add( Data TransactionId, State*  );
-  void delete( Data TransactionId );
-};
+
+  class State;
+
+  class TransactionMap 
+  {
+  public:
+    State* find( Data& transactionId ) const;
+    void add( Data& transactionId, State* state  );
+    void remove( Data& transactionId );
+  };
+  
+}
+
+#endif
