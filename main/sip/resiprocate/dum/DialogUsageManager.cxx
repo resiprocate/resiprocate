@@ -564,11 +564,8 @@ DialogUsageManager::isValid(const BaseUsage::Handle& handle)
 void
 DialogUsageManager::addUsage(BaseUsage* usage)
 {
-   DebugLog (<< "DialogUsageManager::addUsage " <<  usage->getBaseHandle().mId << " -> " << usage);
-   
    assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
    mUsageMap[usage->getBaseHandle().mId] = usage;
-   assert(mUsageMap.find(usage->getBaseHandle().mId) != mUsageMap.end());
 }
 
 BaseUsage* 
