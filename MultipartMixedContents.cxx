@@ -7,7 +7,7 @@
 #include "resiprocate/os/Logger.hxx"
 //#include "resiprocate/EncodingContext.hxx"
 #include "resiprocate/os/Random.hxx"
-
+#include "resiprocate/os/BaseException.hxx"
 using namespace resip;
 using namespace std;
 
@@ -158,9 +158,15 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    {
       // skip over boudary
  
-      assert( !pb.eof() && *pb.position() == Symbols::CR[0] );
+      if( pb.eof() || *pb.position() != Symbols::CR[0] )
+      {
+        throw Exception("Invalid line ending, missing CR",__FILE__,__LINE__);
+      }
       pb.skipChar();
-      assert( !pb.eof() && *pb.position() == Symbols::LF[0] );
+      if( pb.eof() || *pb.position() != Symbols::LF[0] )
+      {
+        throw Exception("Invalid line ending, missing LF",__FILE__,__LINE__);
+      }
       pb.skipChar();
       
       pb.assertNotEof();

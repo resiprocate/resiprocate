@@ -2,7 +2,7 @@
 #define RESIP_UNKNOWNHEADERTYPE_HXX 
 
 #include "resiprocate/os/Data.hxx"
-
+#include "resiprocate/os/BaseException.hxx"
 namespace resip
 {
 
@@ -13,6 +13,15 @@ class UnknownHeaderType
       explicit UnknownHeaderType(const Data& unknownHeaderName);
 
       const Data& getName() const {return mName;}
+
+      class Exception : public BaseException
+      {
+        public:
+         Exception(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line) {}
+
+         const char* name() const { return "UnknownHeaderType::Exception"; }
+      };
 
    private:
       Data mName;

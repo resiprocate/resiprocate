@@ -85,8 +85,8 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         int sessionId,
-                         int version,
+                         const int& sessionId,
+                         const int& version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
@@ -306,7 +306,11 @@ class SdpContents : public Contents
                   std::ostream& encode(std::ostream&) const;
 
                   const KeyType& getMethod() const {return mMethod;}
+                  const KeyType& method() const {return mMethod;}
+                  KeyType& method() {return mMethod;}
                   const Data& getKey() const {return mKey;}
+                  const Data& key() const {return mKey;}
+                  Data& key() {return mKey;}
 
                   Encryption();
                private:
@@ -362,6 +366,8 @@ class SdpContents : public Contents
 		  // does not include session connections
 	          std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
+                  const Encryption& encryption() const {return mEncryption;}
+                  Encryption& encryption() {return mEncryption;}
                   bool exists(const Data& key) const;
                   const list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
@@ -415,11 +421,14 @@ class SdpContents : public Contents
             const std::list<Phone>& getPhones() const {return mPhones;}
             const Connection& connection() const {return mConnection;}
             Connection& connection() {return mConnection;} // !dlb! optional?
+            bool isConnection() { return mConnection.mAddress != Data::Empty; }
             const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
             std::list<Bandwidth>& bandwidths() {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
+            const Encryption& encryption() const {return mEncryption;}
+           Encryption& encryption() {return mEncryption;}
             const std::list<Medium>& media() const {return mMedia;}
             std::list<Medium>& media() {return mMedia;}
             
@@ -455,7 +464,6 @@ class SdpContents : public Contents
       };
 
       SdpContents();
-      SdpContents(const Data& data, const Mime& contentTypes);
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       SdpContents(const SdpContents& rhs);
       SdpContents& operator=(const SdpContents& rhs);
@@ -469,6 +477,7 @@ class SdpContents : public Contents
       virtual void parse(ParseBuffer& pb);
       static const Mime& getStaticType() ;
    private:
+      SdpContents(const Data& data, const Mime& contentTypes);
       
       Session mSession;
       static ContentsFactory<SdpContents> Factory;
