@@ -10,6 +10,10 @@ namespace resip
 
 class ServerInvSession: public BaseUsage
 {
+  public:
+    class Handle
+    {
+    };
 };
 
  
