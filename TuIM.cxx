@@ -32,9 +32,11 @@
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Pidf.hxx"
+#include "resiprocate/SipFrag.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -226,10 +228,108 @@ TuIM::processRequest(SipMessage* msg)
 
 
 void 
+TuIM::processSipFrag(SipMessage* msg)
+{
+   Contents* contents = msg->getContents();
+   if ( !contents )
+   {
+      InfoLog(<< "Received message with no contents" );
+      return;
+   }
+
+   InfoLog(<< "Received message with body contents" );
+
+   assert( contents );
+   Mime mime = contents->getType();
+   DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
+
+   Data signedBy;
+   Security::SignatureStatus sigStat = Security::none;
+
+#if defined( USE_SSL )
+   MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
+   if ( mBody )
+   {
+      Security* sec = mStack->security;
+      assert(sec);
+      
+      contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
+      
+      InfoLog( << "Signed by " << signedBy << " stat = " << sigStat );
+      
+      if ( !contents )
+      { 
+         InfoLog( << "Some problem decoding multipart/signed message");
+         
+         return;
+      } 
+   }
+#endif
+
+   if ( contents )
+   {
+      MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(contents);
+      if ( mixed )
+      {
+         InfoLog( << "Got a multipart mixed" );
+
+         contents = NULL;
+         
+         MultipartMixedContents::Parts& parts = mixed->parts();
+         for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
+              i != parts.end();  
+              ++i)
+         {
+            Contents* c = *i;  
+            assert( c );
+            InfoLog ( << "mixed has a " << c->getType() );
+
+            if ( c->getType() == Mime("application","sipfrag") )
+            {
+               InfoLog ( << "mixed has sipfrag " << c->getType() );
+           
+               SipFrag* frag = dynamic_cast<SipFrag*>(c);
+               if ( frag )
+               {
+                  InfoLog( << "Got a sipFrag inside mixed" );
+                  
+                  SipMessage& m = frag->message();
+                  
+                  InfoLog( <<"Frag is " << m );
+               }
+             }
+         }
+      }
+   }
+
+   if ( contents )
+   {
+      SipFrag* frag = dynamic_cast<SipFrag*>(contents);
+      if ( frag )
+      {
+         InfoLog( << "Got a sipFrag" );
+
+         SipMessage& m = frag->message();
+         
+         InfoLog( <<"Frag is " << m );
+      }
+      else
+      {
+         InfoLog ( << "Can not handle type " << contents->getType() );
+
+         return;
+      }
+   }
+}
+
+
+void 
 TuIM::processSubscribeRequest(SipMessage* msg)
 {
    assert( msg->header(h_RequestLine).getMethod() == SUBSCRIBE );
    CallId id = msg->header(h_CallId);
+   
+   processSipFrag( msg );
    
    int expires=mSubscriptionTimeSeconds;
    if ( msg->exists(h_Expires) )
@@ -369,6 +469,8 @@ TuIM::processNotifyRequest(SipMessage* msg)
 {
    assert( mCallback );
    assert( msg->header(h_RequestLine).getMethod() == NOTIFY ); 
+
+   processSipFrag( msg );
 
    auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
    mStack->send( *response );
@@ -516,8 +618,51 @@ TuIM::processMessageRequest(SipMessage* msg)
                   
          assert( mCallback );
          mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+         return;
       }
-      else
+ 
+      MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(contents);
+      if ( mixed )
+      {
+         InfoLog( << "Got a multipart mixed" );
+       
+         contents = NULL;
+         
+         MultipartMixedContents::Parts& parts = mixed->parts();
+         for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
+              i != parts.end();  
+              ++i)
+         {
+            Contents* c = *i;  
+            assert( c );
+            InfoLog ( << "mixed has a " << c->getType() );
+
+            if ( c->getType() == Mime("text","plain") )
+            {
+               InfoLog ( << "mixed has sipfrag " << c->getType() );
+      
+               PlainContents* plainBody = dynamic_cast<PlainContents*>(c);
+               if ( plainBody )
+               {
+                  assert( plainBody );
+                  const Data& text = plainBody->text();
+                  DebugLog ( << "got message from with text of <" << text << ">" );
+                  
+                  Uri from = msg->header(h_From).uri();
+                  DebugLog ( << "got message from " << from );
+                  
+                  assert( mCallback );
+                  mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+                  return;
+               }
+            }
+            
+         }
+         
+         return;
+      }
+      
+      // deal with it if no one else has 
       {
          InfoLog ( << "Can not handle type " << contents->getType() );
          Uri from = msg->header(h_From).uri();
@@ -535,6 +680,8 @@ TuIM::processResponse(SipMessage* msg)
    CallId id = msg->header(h_CallId);
    assert( id.value() != Data::Empty );
 
+   processSipFrag( msg );
+   
    // see if it is a registraition response 
    CallId regId = mRegistrationDialog.getCallId(); 
 
