@@ -32,6 +32,7 @@
 
 #include "ares.h"
 #include "ares_private.h"
+#include "ares_local.h"
 
 struct host_query {
   /* Arguments passed to ares_gethostbyname() */
@@ -60,6 +61,12 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
 			ares_host_callback callback, void *arg)
 {
   struct host_query *hquery;
+
+  /* See if request can be handled by local pseudo-domain DNS */
+  if (ares_local_gethostbyname(channel, name, family, callback, arg))
+  {
+      return;
+  }
 
   /* Right now we only know how to look up Internet addresses. */
   if (family != AF_INET)
