@@ -128,12 +128,17 @@ DialogSet::findDialog(const DialogId id)
    assert(0);
    for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end() ; i++)
    {
-      //if (i->getId() == id)
+      if ((*i)->getId() == id)
       {
          return *i;
       }
    }
    return 0;
+}
+
+void 
+DialogSet::cancel(const SipMessage& cancelMsg)
+{
 }
 
 /* ====================================================================
