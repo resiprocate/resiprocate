@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <algorithm>
+
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -479,7 +481,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
          DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
 #endif
-         sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
+         std::sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
          primeResults();
       }
    }
@@ -659,8 +661,6 @@ DnsResult::retrieveSRV()
 {
    assert(!mSRVResults.empty());
 
-   DebugLog (<< "mSRVResults = " << Inserter(mSRVResults));
-   
    const SRV& srv = *mSRVResults.begin();
    if (srv.cumulativeWeight == 0)
    {
