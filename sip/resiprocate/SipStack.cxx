@@ -211,7 +211,7 @@ SipStack::send(const SipMessage& msg)
 void 
 SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 {
-   assert(!mShuttingDown);
+   //assert(!mShuttingDown);
 
    SipMessage* toSend = new SipMessage(msg);
    toSend->setForceTarget(uri);
