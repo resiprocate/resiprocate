@@ -24,7 +24,7 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog
    : InviteSession(dum, dialog, Initial)
 {
    assert(request.isRequest());
-   mLastRequest = request;   
+   mLastIncomingRequest = request;   
 }
 
 ServerInviteSessionHandle 
@@ -103,14 +103,14 @@ ServerInviteSession::send(SipMessage& msg)
 SipMessage& 
 ServerInviteSession::provisional(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
    return mLastResponse;
 }
 
 SipMessage& 
 ServerInviteSession::reject(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
    return mLastResponse;
 }
 
@@ -143,7 +143,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            mLastRequest.releaseContents();  //!dcm! -- not sure, but seems right
+            mLastIncomingRequest.releaseContents();  //!dcm! -- not sure, but seems right
             break;            
          case Proceeding:
             // !jf! consider UPDATE method
@@ -152,7 +152,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);               
                mDialog.makeResponse(mLastResponse, msg, 200);
                mDum.send(mLastResponse);
-               mDialog.makeResponse(mLastResponse, mLastRequest, 487);         
+               mDialog.makeResponse(mLastResponse, mLastIncomingRequest, 487);         
                mDum.send(mLastResponse);
                guard.destroy();
             }

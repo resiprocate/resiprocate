@@ -1,5 +1,6 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
@@ -70,7 +71,28 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          if (msg.header(h_Event).value() == "refer")
          {
-            handler->onUpdateExtension(getHandle(), msg);
+            SipFrag* frag  = dynamic_cast<SipFrag*>(msg.getContents());
+            if (frag)
+            {
+               if (frag->message().isResponse())
+               {
+                  int code = frag->message().header(h_StatusLine).statusCode();
+                  if (code < 200)
+                  {
+                     handler->onUpdateExtension(getHandle(), msg);
+                  }
+                  else
+                  {
+                     handler->onTerminated(getHandle(), msg);
+                     delete this;
+                  }
+               }
+            }
+            else
+            {
+               handler->onTerminated(getHandle(), msg);
+               delete this;
+            }
          }
          else
          {
