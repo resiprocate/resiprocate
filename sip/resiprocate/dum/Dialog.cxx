@@ -25,8 +25,7 @@ using namespace resip;
 using namespace std;
 
 Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds) 
-   : mId(msg),
-     mDum(dum),
+   : mDum(dum),
      mDialogSet(ds),
      mClientSubscriptions(),
      mServerSubscription(0),
@@ -38,12 +37,15 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mClientOutOfDialogRequests(),
      mServerOutOfDialogRequest(0),
      mType(Fake),
-     mCallId(msg.header(h_CallID)),
      mRouteSet(),
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
+     mId("INVALID", "INVALID", "INVALID"),
      mRemoteTarget(),
+     mLocalNameAddr(),
+     mRemoteNameAddr(),
+     mCallId(msg.header(h_CallID)),
      mDestroying(false)
 {
    assert(msg.isExternal());
@@ -76,6 +78,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case INVITE:
          case SUBSCRIBE:
          case REFER:
+            InfoLog ( << "UAS dialog ID creation, DS: " << ds.getId());            
+            mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
+            mRemoteNameAddr = request.header(h_From);
+            mLocalNameAddr = request.header(h_To);
+            mLocalNameAddr.param(p_tag) = mId.getLocalTag();
             if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
             {
                const NameAddr& contact = request.header(h_Contacts).front();
@@ -105,11 +112,19 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       
       mRemoteCSeq = request.header(h_CSeq).sequence();
       mLocalCSeq = 1;
-      
+
+      InfoLog ( << "************** Created Dialog as UAS **************" );      
+      InfoLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
+      InfoLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
+      InfoLog ( << "mLocalContact: " << mLocalContact );
+      InfoLog ( << "mRemoteTarget: " << mRemoteTarget );
    }
    else if (msg.isResponse())
    {
+      mId = DialogId(msg);      
       const SipMessage& response = msg;
+      mRemoteNameAddr = response.header(h_To);
+      mLocalNameAddr = response.header(h_From);
 
       switch (msg.header(h_CSeq).method())
       {
@@ -173,6 +188,12 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       
       mLocalCSeq = response.header(h_CSeq).sequence();
       mRemoteCSeq = 0;
+      InfoLog ( << "************** Created Dialog as UAC **************" );      
+      InfoLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
+      InfoLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
+      InfoLog ( << "mLocalContact: " << mLocalContact );
+      InfoLog ( << "mRemoteTarget: " << mRemoteTarget );
+
       
    }
    mDialogSet.addDialog(this);
@@ -646,14 +667,15 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    rLine.uri() = mRemoteTarget.uri();
    
    request.header(h_RequestLine) = rLine;
-   request.header(h_To) = mRemoteTarget;
-   request.header(h_To).param(p_tag) = mId.getRemoteTag();
-   request.header(h_From) = mLocalContact;
-   request.header(h_From).param(p_tag) = mId.getLocalTag(); 
+   request.header(h_To) = mRemoteNameAddr;   
+//   request.header(h_To).param(p_tag) = mId.getRemoteTag();
+   request.header(h_From) = mLocalNameAddr;   
+//   request.header(h_From).param(p_tag) = mId.getLocalTag(); 
 
    request.header(h_CallId) = mCallId;
    request.header(h_Routes) = mRouteSet;
-   request.header(h_Contacts) = mLocalContact;   
+   request.remove(h_Contacts);   
+   request.header(h_Contacts).push_front(mLocalContact);   
    request.header(h_CSeq).method() = method;
    request.header(h_MaxForwards).value() = 70;
 
@@ -674,6 +696,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
+   InfoLog ( << "Dialog::makeRequest: " << request );
 }
 
 void 
