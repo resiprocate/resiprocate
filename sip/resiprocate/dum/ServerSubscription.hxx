@@ -2,5 +2,6 @@
  *   @todo This file is empty
  */
 
-class ServerSubscrition: public BaseSession {
+class ServerSubscription: public BaseUsage 
+{
 };

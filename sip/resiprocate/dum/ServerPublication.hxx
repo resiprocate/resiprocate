@@ -2,5 +2,5 @@
  *   @todo This file is empty
  */
 
-class ServerPublication : public BaseSession {
+class ServerPublication : public BaseUsage {
 };

@@ -2,6 +2,6 @@
  *   @todo This file is empty
  */
 
-class ServerInvSession: public BaseSession
+class ServerInvSession: public BaseUsage
 {
 };
