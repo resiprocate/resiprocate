@@ -387,7 +387,7 @@ Condition::wait (Mutex& mutex, unsigned int ms)
     assert( expiresTS.tv_nsec < 1000000000L );
 
     //std::cerr << "Condition::wait " << mutex << "ms=" << ms << " expire=" << expiresTS.tv_sec << " " << expiresTS.tv_nsec << std::endl;
-    int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
+    int ret = pthread_cond_timedwait(&mId, mutex.getId(), &expiresTS);
 
     if (ret == EINTR || ret == ETIMEDOUT)
     {
