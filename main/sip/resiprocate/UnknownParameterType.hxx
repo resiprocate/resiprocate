@@ -1,22 +1,13 @@
 #if !defined(RESIP_UNKNOWNPARAMETERTYPE_HXX)
 #define RESIP_UNKNOWNPARAMETERTYPE_HXX 
 
-#include "resiprocate/os/Data.hxx"
+// !dlb! deprecated
+
+#include "resiprocate/ExtensionParameter.hxx"
 
 namespace resip
 {
-
-class UnknownParameterType
-{
-   public:
-      explicit UnknownParameterType(const Data& unknownParameterName);
-
-      const Data& getName() const {return mName;}
-
-   private:
-      const Data mName;
-};
-
+typedef ExtensionParameter UnknownParameterType;
 }
 
 #endif

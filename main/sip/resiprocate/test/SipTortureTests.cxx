@@ -5,7 +5,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/UnknownHeaderType.hxx"
+#include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "tassert.h"
@@ -101,10 +101,10 @@ test1()
       {
          CritLog(<<"TODO: Compact headers .. doing by unknown interface!!");
          tassert(message->exists(h_Contacts) == false);
-         tassert(message->exists(UnknownHeaderType("m")) == true);
-         tassert(message->header(UnknownHeaderType("m")).empty() == false);
+         tassert(message->exists(ExtensionHeader("m")) == true);
+         tassert(message->header(ExtensionHeader("m")).empty() == false);
          //!ah! temporary until compact headers fixed.
-         tassert(message->header(UnknownHeaderType("m")).front().value() == 
+         tassert(message->header(ExtensionHeader("m")).front().value() == 
                  "\"Quoted string\\\"\\\"\"<sip:caller@caller-company.com>;"
                  " newparam =   newvalue ;    secondparam = secondvalue  ; q"
                  " = 0.33,   tel:4443322 ");
@@ -130,8 +130,8 @@ test1()
       tassert(message->exists(h_Subject));
       tassert(message->header(h_Subject).value().empty());
 
-      tassert(message->exists(UnknownHeaderType("NewFangledHeader")));
-      tassert(message->header(UnknownHeaderType("NewFangledHeader")).front().value() == "newfangled value   more newfangled value"BUGTRAILINGSPACE);
+      tassert(message->exists(ExtensionHeader("NewFangledHeader")));
+      tassert(message->header(ExtensionHeader("NewFangledHeader")).front().value() == "newfangled value   more newfangled value"BUGTRAILINGSPACE);
       //TODO: Need to check the ContentType header value
       tassert(message->exists(h_ContentType));
       CritLog(<<"TODO:Check content type"); // << *message);
