@@ -1,29 +1,52 @@
+#include <iostream>
+
+#include <sip2/sipstack/HeaderFieldValue.hxx>
+#include <sip2/sipstack/ParserCategory.hxx>
+#include <sip2/sipstack/UnknownSubComponent.hxx>
+
+using namespace std;
+using namespace Vocal2;
+
 HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
   : mField(field),
     mFieldLength(fieldLength),
-    mParserCategory(0)
+    mParserCategory(0),
+    mMine(false)
 {}
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   : mField(0),
     mFieldLength(0),
     mSubComponentList(hfv.mSubComponentList),
-    mUnkownSubComponentList(hfv.UnknownSubComponentList),
-    mParserCategory(hfv.mParserCategory->clone(this))
+    mUnknownSubComponentList(hfv.mUnknownSubComponentList),
+    mParserCategory(hfv.mParserCategory->clone(this)),
+    mMine(true)
 {
 
   // if this isn't parsed, chunk and copy the block of memory
   // the copy for the param lists will end up with empty lists
-  if (!(isParsed()))
-    {
-      mFieldLength = hfv.mFieldLength;
-      memcpy(mField, hfv.mField, mFieldLength);
-    }
+   if (!(isParsed()))
+   {
+      const_cast<unsigned int&>(mFieldLength) = hfv.mFieldLength;
+      const_cast<char*&>(mField) = new char[mFieldLength];
+      memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
+   }
   
   // if it is, the above will end up with null unparsed fields and valid 
   // param lists
   
 }
+
+HeaderFieldValue::~HeaderFieldValue()
+{
+   if (mMine)
+   {
+      HeaderFieldValue* ncThis = const_cast<HeaderFieldValue*>(this);      
+      delete [] ncThis->mField;
+   }
+}
+
+// make destructor
 
 HeaderFieldValue* HeaderFieldValue::clone() const
 {
@@ -42,27 +65,24 @@ SubComponentList& HeaderFieldValue::getUnknownSubComponents()
 
 bool HeaderFieldValue::isParsed() const
 {
-  return mComponent != 0;
+  return mParserCategory != 0;
 }
 
 
 bool HeaderFieldValue::exists(const std::string& subcomponent)
-  throw (ParseException&)
 {
-  
-  int exists = mUnknownSubComponentList.find(subcomponent);
+
+  SubComponent* exists = mUnknownSubComponentList.find(subcomponent);
   if (!exists)
-    {
-      exists = mSubComponentList.find(subcomponent);
-      if (exists)
-	{
-	  ParseException except("Asked for a known subcomponent by string",
-				__FILE__, __LINE__);
-	  throw except;
-	}
-    }
+  {
+     exists = mSubComponentList.find(subcomponent);
+     if (exists)
+     {
+        ParseException except();
+        throw except;
+     }
+  }
   return exists;
-  
 }
 
 
@@ -73,26 +93,22 @@ bool HeaderFieldValue::exists(const SubComponent::Type type)
 
 }
 
-
-
-SubComponent* HeaderFieldValue::get(const std::string& type) const
+UnknownSubComponent* 
+HeaderFieldValue::get(const std::string& type) const
 {
-
-  return mUnknownSubComponentList.get(type);
-
+   return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
 
-
-ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
+ostream& operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
-  if (!isParsed())
-    {
-      stream << mSubComponentList << " : " << mUnknownSubComponentList;
-    }
+  if (!hfv.isParsed())
+  {
+     stream << mSubComponentList() << " : " << mUnknownSubComponentList;
+  }
   else
-    {
-      stream << string(mField, mFieldLength);
-    }
+  {
+     stream << string(mField, mFieldLength);
+  }
 }
 
 
