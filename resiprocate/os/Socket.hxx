@@ -102,24 +102,24 @@ class FdSet
       
       bool readyToRead(Socket fd)
       {
-         return FD_ISSET(fd, &read);
+         return ( FD_ISSET(fd, &read) != 0);
       }
       
       bool readyToWrite(Socket fd)
       {
-         return FD_ISSET(fd, &write);
+         return ( FD_ISSET(fd, &write) != 0);
       }
 
       void setRead(Socket fd)
       {
          FD_SET(fd, &read);
-         size = std::max(fd+1, size);
+		 size = ( int(fd+1) > size) ? fd+1 : size;
       }
 
       void setWrite(Socket fd)
       {
          FD_SET(fd, &read);
-         size = std::max(fd+1, size);
+         size = ( int(fd+1) > size) ? fd+1 : size;
       }
       
       void reset()
