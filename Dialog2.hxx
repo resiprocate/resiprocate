@@ -3,6 +3,7 @@
 
 #include <list>
 
+#include "resiprocate/Headers.hxx"
 #include "resiprocate/os/Data.hxx"
 
 namespace resip
