@@ -959,6 +959,15 @@ SdpContents::Session::parse(ParseBuffer& pb)
    pb.data(mName, anchor);
    skipEol(pb);
 
+   if (!pb.eof() && *pb.position() == 'i')
+   {
+      pb.skipChar('i');
+      const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipToOneOf(Symbols::CRLF);
+      pb.data(mInformation, anchor);
+      skipEol(pb);
+   }
+
    if (!pb.eof() && *pb.position() == 'u')
    {
       mUri.parse(pb);
