@@ -114,6 +114,25 @@ SipStack::addTlsTransport( int port,
    return ret;
 }
 
+bool 
+SipStack::addTlsTransport(  int port,
+                             const Data& sipDomainname, 
+                             Security& security,
+                             IpVersion version,
+                             const Data& ipInterface
+                             )
+{
+   assert(!mShuttingDown);
+   
+   bool ret = mTransactionController.addTlsTransport(port, sipDomainname, security, 
+						     version, ipInterface);
+   if (ret && !ipInterface.empty()) 
+   {
+      addAlias(ipInterface, port);
+   }
+   return ret;
+}
+
 void
 SipStack::addAlias(const Data& domain, int port)
 {

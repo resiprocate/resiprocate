@@ -74,6 +74,13 @@ class SipStack
                              SecurityTypes::SSLType  sslType = SecurityTypes::TLSv1
                              );
 
+      bool addTlsTransport(  int port,
+                             const Data& sipDomainname, 
+                             Security& security,
+                             IpVersion version = V4,
+                             const Data& ipInterface = Data::Empty
+                             );
+
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
       // not threadsafe
