@@ -4,10 +4,13 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <time.h>
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerSubscriptionHandle 
 ServerSubscription::getHandle()
@@ -30,6 +33,8 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
 
 ServerSubscription::~ServerSubscription()
 {
+   DebugLog(<< "ServerSubscription::ServerSubscription");
+   
    Data key = getEventType() + getDocumentKey();
 
    std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
@@ -186,6 +191,8 @@ ServerSubscription::setSubscriptionState(SubscriptionState state)
 void 
 ServerSubscription::dispatch(const SipMessage& msg)
 {
+   DebugLog( << "ServerSubscriptionHandler::dispatch: " << msg.brief());
+
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);
 
@@ -249,16 +256,16 @@ ServerSubscription::dispatch(const SipMessage& msg)
       {
          switch(Helper::determineFailureMessageEffect(msg))
          {
-            case Helper::DialogTermination:
-               assert(0);
-               break;
             case Helper::TransactionTermination:
+               DebugLog( << "ServerSubscriptionHandler::TransactionTermination: " << msg.brief());
                handler->onNotifyRejected(getHandle(), msg);
                break;
             case Helper::UsageTermination:
             case Helper::RetryAfter:
             case Helper::OptionalRetryAfter:
             case Helper::ApplicationDependant: 
+            case Helper::DialogTermination:
+               DebugLog( << "ServerSubscriptionHandler::UsageTermination: " << msg.brief());
                handler->onError(getHandle(), msg);
                handler->onTerminated(getHandle());
                delete this;
