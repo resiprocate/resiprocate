@@ -128,7 +128,6 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-
       void setSource(const sockaddr_in& addr);
 
       bool hasFixedDest() const;
