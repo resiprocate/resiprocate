@@ -440,7 +440,7 @@ DialogSet::dispatch(const SipMessage& msg)
             it++;
             d->dispatch(msg);
          }
-         return;         
+         return;
       }
 
       if (msg.isResponse())
@@ -462,12 +462,17 @@ DialogSet::dispatch(const SipMessage& msg)
          {
             InfoLog (<< "No matching dialog: " << msg.brief());
 
+#if(0)
+            // !kh!
+            // Bad attempt to aborb problematic error responses,
+            // breaks protocol, thx to sg for pointing this out.
             if(code >= 400)
             {
                 // !kh!
                 // don't need to try resuming on an error response.
                 return;
             }
+#endif
          }
       }
 
