@@ -96,6 +96,7 @@ void
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
    SendData* data = new SendData(dest, d, tid);
+   assert(dest.port != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest << " " << d.escaped());
    mTxFifo.add(data); // !jf!
 }
@@ -117,8 +118,7 @@ Transport::toData(Transport::Type type)
          return "DCCP";
       case Unknown:
       default:
-         assert(0);
-         return "Unknown";
+         return "Unknown/Undefined";
    }
 }
 
