@@ -63,6 +63,7 @@ DataParameter::encode(ostream& stream) const
    }
    else
    {
+      assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;
    }
 }
