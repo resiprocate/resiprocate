@@ -43,7 +43,6 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents)
    mRequest.setContents(contents);
    DebugLog(<< "ClientPagerMessage::page: " << mRequest);
    mDum.send(mRequest);
-   mRequest.releaseContents();
 }
 
 
