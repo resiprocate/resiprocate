@@ -23,6 +23,15 @@ typedef unsigned int u_int32_t;
 
 #endif
 
+#if defined(__sparc)
+#include <inttypes.h>
+/* typedef unsigned char u_int8_t; */
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+#endif
+
+
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
