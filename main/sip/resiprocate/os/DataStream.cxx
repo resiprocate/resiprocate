@@ -64,8 +64,8 @@ DataBuffer::overflow(int c)
 }
 
 iDataStream::iDataStream(Data& str)
-   : std::istream(&mStreambuf),
-     mStreambuf(str)
+   : DataBuffer(str), std::istream(this)
+//     mStreambuf(str)
 {
 //   init(&mStreambuf);
 }
@@ -75,8 +75,8 @@ iDataStream::~iDataStream()
 }
 
 oDataStream::oDataStream(Data& str)
-   : std::ostream(&mStreambuf),
-     mStreambuf(str)
+   : DataBuffer(str), std::ostream(this)
+//     mStreambuf(str)
 {
 //   init(&mStreambuf);
 }
@@ -87,15 +87,19 @@ oDataStream::~oDataStream()
 }
 
 DataStream::DataStream(Data& str)
-   : std::iostream(&mStreambuf),
-     mStreambuf(str)
+//   : std::iostream((new (reinterpret_cast<DataBuffer*>(m_tmp)) DataBuffer(str), reinterpret_cast<DataBuffer*>(m_tmp)))
+   : DataBuffer(str), std::iostream(this)
+//   : std::iostream(&mStreambuf),
+//     mStreambuf(str)
 {
-//   init(&mStreambuf);
+   //init(&mStreambuf);
 }
 
 DataStream::~DataStream()
 {
    flush();
+   //DataBuffer* p = reinterpret_cast<DataBuffer*>(m_tmp);
+   //p->~DataBuffer();
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
