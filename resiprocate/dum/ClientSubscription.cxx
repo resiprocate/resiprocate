@@ -52,6 +52,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       if (!mOnNewSubscriptionCalled)
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
+         mDialog.mRemoteTarget = msg.header(h_Contacts).front();
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
@@ -227,9 +228,19 @@ ClientSubscription::dispatch(const DumTimeout& timer)
    {
       if (timer.type() == DumTimeout::SubscriptionRetry)
       {
-         SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-         delete this;
-         mDum.send(sub);
+         // this indicates that the ClientSubscription was created by a 408
+         if (mOnNewSubscriptionCalled)
+         {
+            InfoLog(<< "ClientSubscription: application retry refresh");
+            requestRefresh();
+         }
+         else
+         {
+            InfoLog(<< "ClientSubscription: application retry new request");
+            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            mDum.send(sub);
+            delete this;
+         }
       }
       else
       {
