@@ -1,6 +1,6 @@
 
 #include <fcntl.h>
-#include <db.h>
+#include <db4/db_185.h>
 #include <cassert>
 
 #include "repro/UserDb.hxx"
