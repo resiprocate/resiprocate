@@ -1,6 +1,40 @@
 #ifndef VEXCEPTION_HXX
 #define VEXCEPTION_HXX
 
+static const char* const VExceptionHeaderVersion =
+    "$Id: VException.hxx,v 1.2 2002/10/06 18:31:33 jason Exp $";
+
+#include <exception>
+#include <iostream>
+
+#include <util/Data.hxx>
+
+namespace Vocal2
+{
+
+class VException : public std::exception
+{
+   public:
+      virtual const char* name() const=0;
+      
+   protected:
+      VException( const Vocal2::Data& msg,
+                  const Vocal2::Data& file,
+                  const int line);
+      ~VException() throw();
+      
+      Vocal2::Data message;
+      Vocal2::Data fileName;
+      int lineNumber;
+
+      friend std::ostream& operator<<(std::ostream& strm, const VException& e);
+};
+ 
+}
+
+// VEXCEPTION_HXX
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -51,100 +85,3 @@
  *
  */
 
-static const char* const VExceptionHeaderVersion =
-    "$Id: VException.hxx,v 1.1 2002/09/26 21:58:40 jason Exp $";
-
-#include <exception>
-#include <iostream>
-
-
-#include <util/Data.hxx>
-
-
-namespace Vocal2
-{
-
-
-/** Vocal specific exception.
- */
-class VException : public std::exception
-{
-    protected:
-
-        /** Creates an exception object, should be called with a
-         ** descriptive msg, the filename and line number where the
-         ** exception occured, and optionally an error code asscociated
-         ** with the exception
-         ** Note, the log() method handles the logging format, so
-         ** blank spaces, newlines, etc. should NOT be included in the
-         ** parameters to the constructor.
-         */
-        VException( const Vocal2::Data& msg,
-                    const Vocal2::Data& file,
-                    const int line,
-                    const int error = 0);
-
-        /** destroys the exception object
-         */
-        ~VException() throw();
-
-        /** Returns the predefined name of the exception
-         */
-        virtual Vocal2::Data getName() const = 0;
-
-        /** Logs the exception including the error code (if any) as well
-         ** as the filename and line number where the exception
-         ** occurred.
-         **
-         ** The logging is formatted as follows:
-         ** <msg> [:<error>] at <file>:<line> 
-         */
-        void log() const;
-
-    public:
-
-        /** Returns the predefined name and user supplied msg
-         */
-        Vocal2::Data getDescription() const;
-
-        /** Returns the error code supplied with the exception.
-         */
-        int getError() const;
-
-    protected:
-        /// user supplied msg
-        Vocal2::Data message;
-
-        /// file in which exception occurred
-        Vocal2::Data fileName;
-
-        /// line number at which exception occurred
-        int lineNumber;
-
-        /// user supplied error code (optional)
-        int errorCode;
-};
-
-std::ostream& operator<<(std::ostream& strm, const VException& e);
-
-/** Generic exception classes
- *  Note, class specific exception classes should be defined in
- *  separate <ClassName>Exception.[ch]xx files
- */
-class VExceptionMemory: protected VException
-{
-    public:
-        VExceptionMemory( const Vocal2::Data& msg,
-                          const Vocal2::Data& file,
-                          const int line,
-                          const int error = 0 );
-
-        Vocal2::Data getName( void ) const;
-};
- 
- 
-}
-
-
-// VEXCEPTION_HXX
-#endif
