@@ -3,6 +3,7 @@
 #endif
 
 #include "repro/Registrar.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -16,7 +17,7 @@ Registrar::Registrar(SipStack& stack, InMemoryRegistrationDatabase& db) :
    mProfile.addSupportedMethod(resip::REGISTER);
 
    mDum.setServerRegistrationHandler(this);
-   mDum.setRegistrationPersistenceManager(mDb);
+   mDum.setRegistrationPersistenceManager(&mDb);
    mDum.setMasterProfile(&mProfile);
 }
 
@@ -26,7 +27,7 @@ Registrar::thread()
    // !jf! should really block on condition in the fifo
    while(!waitForShutdown(10))
    {
-      process();
+      //process();
    }
 }
 
@@ -34,7 +35,7 @@ void
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
 {
-  sr->accept();
+   sr->accept();
 }
 
 void 

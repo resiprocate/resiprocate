@@ -142,6 +142,7 @@ SRC = \
 	TlsTransport.cxx \
 	TransactionController.cxx \
 	TransactionUser.cxx \
+	TransactionUserMessage.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
