@@ -1176,7 +1176,14 @@ TransactionState::processNoDnsResults()
 {
    InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
    assert(mDnsResult->available() == DnsResult::Finished);
-   sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "No DNS entries left")); // !jf! should be 480? 
+   SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+   WarningCategory warning;
+   warning.hostname() = DnsUtil::getLocalHostName();
+   warning.code() = 499;
+   warning.text() = "No other DNS entries to try";
+   response->header(h_Warnings).push_back(warning);
+
+   sendToTU(response); // !jf! should be 480? 
    terminateClientTransaction(mId);
    delete this; 
 }
@@ -1196,6 +1203,13 @@ TransactionState::processTransportFailure()
       // In the case of a client-initiated CANCEL, we don't want to
       // try other transports in the case of transport error as the
       // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+      SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+      WarningCategory warning;
+      warning.hostname() = DnsUtil::getLocalHostName();
+      warning.code() = 499;
+      warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
+      response->header(h_Warnings).push_back(warning);
+      
       sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
       return;
    }
