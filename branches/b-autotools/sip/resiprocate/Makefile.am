@@ -161,7 +161,6 @@ resiprocate_include_HEADERS = \
 	QopParameter.hxx \
 	QuotedDataParameter.hxx \
 	Registration.hxx \
-	ReliabilityMessage.hxx \
 	Rlmi.hxx \
 	RportParameter.hxx \
 	SdpContents.hxx \
