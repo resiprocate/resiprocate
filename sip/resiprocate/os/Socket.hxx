@@ -1,24 +1,10 @@
 #if !defined(Vocal2_Socket_hxx)
 #define Vocal2_Socket_hxx
 
-#ifdef WIN32
-#include <errno.h>
-#include <winsock2.h>
-#include <io.h>
-#endif
-
-#ifndef WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#endif
-
-#include <algorithm>
+#include "compat.hxx"
 
 namespace Vocal2
 {
-
 
 #ifdef WIN32
 typedef int socklen_t;

@@ -61,7 +61,7 @@ class Connection
          MAX
       };
 
-      static char* connectionStates[MAX];
+      static char connectionStates[MAX][32];
 
       Socket mSocket;
       UInt64 mLastUsed;

@@ -1,7 +1,6 @@
 #include "sip2/util/Data.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "assert.h"
-#include <string>
 #include <iostream>
 
 using namespace Vocal2;
@@ -215,18 +214,6 @@ class TestData
          }
 
          {
-            string f("asdasd");
-            Data d = Data(f);
-            assert(d == "asdasd");
-         }
-
-         {
-            string f("asdasd");
-            Data d = Data(f);
-            assert(d.c_str() == f);
-         }
-   
-         {
             const char* f = "asdasd";
             Data d = Data(f);
             assert(!(d < f));
@@ -246,11 +233,6 @@ class TestData
             assert(!(d < f));
          }
 
-         {
-            string f("asdasd");
-            Data d = Data(f);
-            assert(!(d.c_str() < f));
-         }
          
          {
             Data a("qwerty");
