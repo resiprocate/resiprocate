@@ -35,19 +35,20 @@ class Log
 #ifdef WIN32 
       typedef enum 
       {
-		 NONE = -1,
+         NONE = -1,
          CRIT = 2,
          ERR = 3,
          WARNING = 4,
          INFO = 6,
          DEBUG = 7,
-         DEBUG_STACK = 8,
+         STACK = 8,
+         OUT = 9,
          BOGUS = 666
       } Level;
 #else
       typedef enum 
       {
-	     NONE = -1,
+         NONE = -1,
          CRIT = LOG_CRIT,
 #ifdef ERR // ncurses defines a macro called ERR 
          SIP2_ERR = LOG_ERR,
@@ -57,7 +58,8 @@ class Log
          WARNING = LOG_WARNING,
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
-         DEBUG_STACK = 8,
+         STACK = 8,
+         OUT = 9,
          BOGUS = 666
       } Level;
 #endif
