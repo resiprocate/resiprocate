@@ -8,6 +8,13 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -76,6 +83,7 @@ ServerInviteSession::send(SipMessage& msg)
       else 
       {
          mDum.send(msg);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
          guard.destroy();
       }
    }
