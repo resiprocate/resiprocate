@@ -94,7 +94,8 @@ LazyParser::encode(std::ostream& str) const
    else
    {
       assert(mHeaderField);
-      return mHeaderField->encode(str);
+      mHeaderField->encode(str);
+      return str;
    }
 }
 
