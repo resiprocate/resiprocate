@@ -1,0 +1,145 @@
+# $Id: Makefile.pre,v 1.1 2003/03/24 22:09:53 jason Exp $
+
+# The license applies to all software incorporated in the "Vovida
+# Open Communication Application Library" except for those portions
+# incorporating third party software specifically identified as being
+# licensed under separate license.
+# 
+# 
+# 
+# The Vovida Software License, Version 1.0 
+# Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 
+# 3. The names "VOCAL", "Vovida Open Communication Application Library",
+#    and "Vovida Open Communication Application Library (VOCAL)" must
+#    not be used to endorse or promote products derived from this
+#    software without prior written permission. For written
+#    permission, please contact vocal@vovida.org.
+# 
+# 4. Products derived from this software may not be called "VOCAL", nor
+#    may "VOCAL" appear in their name, without prior written
+#    permission of Vovida Networks, Inc.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+# NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+# IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+# 
+# ====================================================================
+# 
+# This software consists of voluntary contributions made by Vovida
+# Networks, Inc. and many individuals on behalf of Vovida Networks,
+# Inc.  For more information on Vovida Networks, Inc., please see
+# <http://www.vovida.org/>.
+# 
+# 
+# All third party licenses and copyright notices and other required
+# legends also need to be complied with as well.
+# 
+
+include $(BUILD)/Makefile.all
+
+# This is the section where default tool names and macros are set
+
+######################################################################
+#                     Default tool names/locations
+######################################################################
+
+# the OSCLASS defines the general likeness of the target OS.  
+# right now OSCLASS can equal UNIX for Unix type systems or VXWORKS for
+# vxworks.
+
+OSCLASS = UNIX
+
+######################################################################
+#                     Default Options
+######################################################################
+
+# the following options are defaults.  The purpose of this file is to
+# allow you to do various things.  There are ways to override these
+# defaults should you want to, so please do not change these values.
+
+# please see Makefile.tools for more information.
+
+VOCAL_TOOLCHAIN_TYPE		:= gnu
+VOCAL_COMPILE_TYPE 		:= debug
+
+
+######################################################################
+#		      System Dependent Options
+######################################################################
+
+# the following options are defaults for particular tool chains.  In
+# you may override them by using the Makefile.opt file.
+
+############################## Solaris ##############################
+
+
+ifeq ($(OSTYPE),SunOS)
+VOCAL_TOOLCHAIN_TYPE=sunpro
+endif
+
+
+######################################################################
+# the following line includes options you can control by hand, should
+# you choose to override any of the above options
+######################################################################
+
+USE_SSL=1
+
+#include $(BUILD)/Makefile.opt
+
+# the following line includes options manageable by configure
+-include $(BUILD)/Makefile.conf
+
+######################################################################
+# the following are the guts of this makefile.  they are controlled 
+# by Makefile.opt
+######################################################################
+
+include $(BUILD)/Makefile.tools
+include $(BUILD)/Makefile.osarch
+
+######################################################################
+# set defaults if the none of the above has overridden them.
+######################################################################
+
+ifndef INSTALL_PATH
+INSTALL_PATH = $(INSTALL_PATH_DEFAULT)
+endif
+
+ifeq ($(INSTALL_PATH),default)
+INSTALL_PATH = $(INSTALL_PATH_DEFAULT)
+endif
+
+######################################################################
+# pre tools
+######################################################################
+
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+CONFIGURE_ARGS += --disable-shared
+endif
+CONFIGURE = ./configure $(CONFIGURE_ARGS)
+
+default: code
