@@ -6,8 +6,13 @@
 using namespace resip;
 
 bool 
-ClientAuthManager::handle(const SipMessage& response)
+ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 {
-   assert(0);
+   // is this a 401 or 407 
+
+   // do we have credentials for it  - get realm and user 
+
+   
+
    return true;
 }

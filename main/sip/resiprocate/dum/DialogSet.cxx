@@ -1,6 +1,8 @@
 #include "BaseCreator.hxx"
 #include "DialogSet.hxx"
 #include "Dialog.hxx"
+#include "DialogUsageManager.hxx"
+#include "ClientAuthManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -111,7 +113,28 @@ DialogSet::dispatch(const SipMessage& msg)
    if (dialog == 0)
    {
       dialog = new Dialog(mDum, msg, *this);
+   }     
+
+   if (mDum.mClientAuthManager)
+   {
+      if (getCreator())
+      {
+         if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg ) )
+         {
+            InfoLog( << "about to retransmit request with digest credentials" );
+            
+            mDum.send(getCreator()->getLastRequest());
+            
+            return;
+         }
+      }
+      else
+      {
+         assert(0);
+         // need to get the last message from the usage some how 
+      }
    }
+
    dialog->dispatch(msg);
 }
 
