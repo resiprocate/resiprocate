@@ -32,13 +32,13 @@ static const unsigned int IntVal_REG = 4670802;
 static const unsigned int IntVal_SUB = 4347219;
 
 MethodTypes
-getMethodType(const Data& name)
+Vocal2::getMethodType(const Data& name)
 {
    return getMethodType(name.c_str(), name.size());
 }
 
 MethodTypes
-getMethodType(const char* name, int len)
+Vocal2::getMethodType(const char* name, int len)
 {
    switch (hash(name))
    {
