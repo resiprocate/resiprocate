@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "resiprocate/sam/DialogIdSet.hxx"
+#include "resiprocate/sam/DialogSet.hxx"
 
 namespace resip 
 {
@@ -15,12 +15,14 @@ class ClientAuthManager;
 class ServerAuthManager;
 class ClientRegistrationHandler;
 class ServerRegistrationHandler;
-class InvSessionHandler;
+class InviteSessionHandler;
 class ClientSubscriptionHandler;
 class ServerSubscriptionHandler;
 class ClientPublicationHandler;
 class ServerPublicationHandler;
 class OutOfDialogHandler;
+
+
 
 class DialogUsageManager
 {
@@ -41,7 +43,7 @@ class DialogUsageManager
       void setHandler(ClientRegistrationHandler*);
       void setHandler(ServerRegistrationHandler*);
       
-      void setHandler(InvSessionHandler*);
+      void setHandler(InviteSessionHandler*);
       
       void addHandler(const Data& eventType, ClientSubscriptionHandler*);
       void addHandler(const Data& eventType, ServerSubscriptionHandler*);
