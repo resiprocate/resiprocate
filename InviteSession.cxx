@@ -81,7 +81,7 @@ InviteSession::dispatch(const SipMessage& msg)
    switch(mState)
    {
       case Terminated:
-         //!dcm! -- 481 behaviour here
+         //!dcm! -- 481 behaviour here, should pretty much die on anything
          if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
          {
             delete this;
@@ -104,7 +104,10 @@ InviteSession::dispatch(const SipMessage& msg)
                   break;
 
                case BYE:
-                  end();
+                  mState = Terminated;
+                  mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+                  mDialog.makeResponse(mLastResponse, msg, 200);
+                  send(mLastResponse);
                   break;
 
                case UPDATE:
@@ -257,19 +260,24 @@ InviteSession::send(SipMessage& msg)
          mDum.send(msg);
          delete this;
       }
-      else if (code >= 200 && code < 300)
+      else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
       {
-         assert(&msg == &mLastResponse);
+         assert(&msg == &mFinalResponse);
          //!dcm! -- start timer...this should be mFinalResponse...maybe assign here in
          //case the user wants to be very strange
          if (mNextOfferOrAnswerSdp)
          {
             msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
             sendSdp(mNextOfferOrAnswerSdp);
-         }   
-      } 
+         } 
+         mDum.send(msg);
+      }
+      else
+      {
+         mDum.send(msg);
+         msg.releaseContents();
+      }
    }      
-   mDum.send(msg);
 }
 
 void
