@@ -260,12 +260,12 @@ DnsResolver::isIpAddress(const Data& data)
 {
    // ok, this is fairly monstrous but it works. 
    unsigned int p1,p2,p3,p4;
-   int count;
+   int count=0;
    int result = sscanf( data.c_str(), 
                         "%u.%u.%u.%u%n",
                         &p1, &p2, &p3, &p4, &count );
 
-   if ( (result == 4) && (p1 <= 255) && (p2 <= 255) && (p3 <= 255) && (p4 <= 255) && (count == data.size()) )
+   if ( (result == 4) && (p1 <= 255) && (p2 <= 255) && (p3 <= 255) && (p4 <= 255) && (count == int(data.size())) )
    {
       return true;
    }
