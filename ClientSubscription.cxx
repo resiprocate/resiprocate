@@ -34,21 +34,58 @@ ClientSubscription::Handle::operator->()
 void 
 ClientSubscription::dispatch(const SipMessage& msg)
 {
+   //std::vector<ClientSubscriptionHandler*>& handler = mDum.mClientSubscriptionHandler;
+   
+   // toss out requests we don't care about 
+   if (msg.isRequest() )
+   {
+      assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
+   }
+   else
+   {
+      assert( msg.isResponse());
+      assert( (msg.header(h_CSeq).method() == SUBSCRIBE) ||  (msg.header(h_CSeq).method() == CANCEL) );
+   }
+   
+   // deal with NOTIFY we receive 
+   if ( msg.isRequest() && msg.header(h_RequestLine).getMethod() == NOTIFY )
+   {
+      assert(0);
+   }
+   
+   // deal with responses to SUBSCRIBE
+   if (msg.isResponse() &&  msg.header(h_CSeq).method() == SUBSCRIBE )
+   {
+      //  int code = msg.header(h_StatusLine).statusCode();
+
+   }
+   
+   // deal with responses to CANCEL
+   if (msg.isResponse() &&  msg.header(h_CSeq).method() == CANCEL )
+   {  
+      assert(0);
+   }
 }
 
 void 
 ClientSubscription::dispatch(const DumTimeout& timer)
 {
+   // chekc this timer is the current one ...
+   requestRefresh();
 }
 
 void  
 ClientSubscription::requestRefresh()
 {
+   // send subscribe - set time to default time 
+
+   // set timer to new value 
 }
 
 void  
 ClientSubscription::end()
 {
+   // send unsubscribe - set time to zero 
 }
 
 
