@@ -94,7 +94,7 @@ DtlsTransport::~DtlsTransport()
 {
    DebugLog (<< "Shutting down " << mTuple);
    BIO_free( mDummyBio) ;
-   shutdown();
+   ThreadIf::shutdown();
    join();
 }
 
