@@ -26,186 +26,23 @@ ServerInviteSession::getHandle()
 }
 
 void 
-ServerInviteSession::dispatch(const SipMessage& msg)
-{
-   switch (mState)
-   {
-      case UAS_Early:
-         dispatchEarly(msg);
-         break;
-      case UAS_EarlyNoOffer:
-         dispatchEarlyNoOffer(msg);
-         break;
-      case UAS_EarlyReliable:
-         dispatchEarlyReliable(msg);
-         break;
-      case UAS_FirstEarlyReliable:
-         dispatchFirstEarlyReliable(msg);
-         break;
-      case UAS_FirstSentOfferReliable:
-         dispatchFirstSentOfferReliable(msg);
-         break;
-      case UAS_NoOffer:
-         dispatchNoOffer(msg);
-         break;
-      case UAS_NoOfferReliable:
-         dispatchNoOfferReliable(msg);
-         break;
-      case UAS_Offer:
-         dispatchOffer(msg);
-         break;
-      case UAS_OfferReliable:
-         dispatchOfferReliable(msg);
-         break;
-      case UAS_ReceivedUpdate:
-         dispatchReceivedUpdate(msg);
-         break;
-      case UAS_ReceivedUpdateWaitingAnswer:
-         dispatchReceivedUpdateWaitingAnswer(msg);
-         break;
-      case UAS_SentUpdate:
-         dispatchSentUpdate(msg);
-         break;
-      case UAS_Accepted:
-         dispatchAccepted(msg);
-         break;
-      case UAS_WaitingToHangup:
-         dispatchWaitingToHangup(msg);
-         break;
-      case UAS_WaitingToTerminate:
-         dispatchWaitingToTerminate(msg);
-         break;
-      case UAS_SentUpdateAccepted:
-         dispatchSentUpdateAccepted(msg);
-         break;
-      case UAS_Start:
-         dispatchStart(msg);
-         break;
-      default:
-         InviteSession::dispatch(msg);
-         break;
-   }
-}
-
-void 
-ServerInviteSession::dispatch(const DumTimeout& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchStart(const SipMessage& msg)
-{
-   assert(msg.isRequest());
-   assert(msg.header(h_CSeq).method() == INVITE);
-
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
-
-//   switch (toEvent(msg, sdp))
-   {
-   }
-}
-
-void
-ServerInviteSession::dispatchOffer(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchEarly(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchAccepted(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchNoOffer(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchEarlyNoOffer(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchNoOfferReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchFirstEarlyReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
-{
-}
-
-void
-ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
-{
-}
-
-
-void 
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
    switch (mState)
    {
-      case UAS_Early:
       case UAS_EarlyNoOffer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyProvidedOffer:
       case UAS_EarlyReliable:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
       case UAS_Offer:
+      case UAS_OfferProvidedAnswer:
       case UAS_OfferReliable: 
+      case UAS_ProvidedOffer:
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
@@ -243,12 +80,13 @@ ServerInviteSession::provisional(int code)
    switch (mState)
    {
       case UAS_Offer:
-         transition(UAS_Early);
+         transition(UAS_EarlyOffer);
+         // start 1xx timer
          sendProvisional(code);
          break;
          
-      case UAS_Early:
-         transition(UAS_Early);
+      case UAS_EarlyOffer:
+         transition(UAS_EarlyOffer);
          sendProvisional(code);
          break;
          
@@ -283,13 +121,6 @@ ServerInviteSession::provisional(int code)
          assert(0);
          break;
    }
-}
-
-void
-ServerInviteSession::provideEarly(const SdpContents& early)
-{
-   // queue early media
-   mEarlyMedia = InviteSession::makeSdp(early);
 }
 
 void 
@@ -336,7 +167,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    switch (mState)
    {
       case UAS_Offer:
-      case UAS_Early:
+      case UAS_EarlyOffer:
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          break;
@@ -357,14 +188,18 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          transition(Connected);
          break;
 
-      case UAS_Start:
+      case UAS_EarlyProvidedOffer:
       case UAS_Accepted:
+      case UAS_EarlyProvidedAnswer:
       case UAS_EarlyReliable:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
+      case UAS_OfferProvidedAnswer:
+      case UAS_ProvidedOffer:
       case UAS_SentUpdate:
       case UAS_SentUpdateAccepted:
+      case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
          assert(0);
@@ -456,7 +291,7 @@ ServerInviteSession::accept(int code)
 {
    switch (mState)
    {
-      case UAS_Early:
+      case UAS_EarlyOffer:
          // send::2xx-answer
          // timer::2xx
          // timer::NoAck
@@ -511,6 +346,330 @@ ServerInviteSession::accept(int code)
    }
 }
 
+void 
+ServerInviteSession::dispatch(const SipMessage& msg)
+{
+   switch (mState)
+   {
+      case UAS_Start:
+         dispatchStart(msg);
+         break;
+
+      case UAS_Offer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_NoOffer:
+      case UAS_ProvidedOffer:
+      case UAS_EarlyNoOffer:
+      case UAS_EarlyProvidedOffer:
+         dispatchOfferOrEarly(msg);
+         break;
+         
+      case UAS_Accepted:
+         dispatchAccepted(msg);
+         break;
+         
+      case UAS_EarlyReliable:
+         dispatchEarlyReliable(msg);
+         break;
+      case UAS_FirstEarlyReliable:
+         dispatchFirstEarlyReliable(msg);
+         break;
+      case UAS_FirstSentOfferReliable:
+         dispatchFirstSentOfferReliable(msg);
+         break;
+      case UAS_NoOfferReliable:
+         dispatchNoOfferReliable(msg);
+         break;
+      case UAS_OfferReliable:
+         dispatchOfferReliable(msg);
+         break;
+      case UAS_ReceivedUpdate:
+         dispatchReceivedUpdate(msg);
+         break;
+      case UAS_ReceivedUpdateWaitingAnswer:
+         dispatchReceivedUpdateWaitingAnswer(msg);
+         break;
+      case UAS_SentUpdate:
+         dispatchSentUpdate(msg);
+         break;
+      case UAS_WaitingToHangup:
+         dispatchWaitingToHangup(msg);
+         break;
+      case UAS_WaitingToTerminate:
+         dispatchWaitingToTerminate(msg);
+         break;
+      case UAS_SentUpdateAccepted:
+         dispatchSentUpdateAccepted(msg);
+         break;
+      default:
+         InviteSession::dispatch(msg);
+         break;
+   }
+}
+
+void 
+ServerInviteSession::dispatch(const DumTimeout& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchStart(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+   assert(msg.header(h_CSeq).method() == INVITE);
+
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case OnInviteOffer:
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         transition(UAS_Offer);
+         break;
+      case OnInvite:
+         handler->onNewSession(getHandle(), None, msg);
+         transition(UAS_NoOffer);
+         break;
+      case OnInviteReliableOffer:
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         transition(UAS_OfferReliable);
+         break;
+      case OnInviteReliable:
+         handler->onNewSession(getHandle(), None, msg);
+         transition(UAS_NoOfferReliable);
+         break;
+      default:
+         assert(0);
+         break;
+   }
+}
+
+// Offer, Early, EarlyNoOffer, NoOffer
+void
+ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
+{
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+   switch (toEvent(msg, sdp))
+   {
+      case OnCancel:
+         dispatchCancel(msg);
+         break;
+      case OnBye:
+         dispatchBye(msg);
+         break;
+      default:
+         assert(msg.isRequest());
+         dispatchUnknown(msg);
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchAccepted(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case OnAckAnswer:
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+         transition(Connected);
+         break;
+
+      case OnCancel:
+      {
+         SipMessage c200;
+         mDialog.makeResponse(c200, msg, 200);
+         mDum.send(c200);
+         break;
+      }
+
+      case OnBye:
+      {
+         SipMessage b200;
+         mDialog.makeResponse(b200, msg, 200);
+         mDum.send(b200);
+         break;
+      }
+         
+      case OnAck:
+      {
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         transition(Terminated);
+         mDum.send(bye);
+         break;
+      }
+      
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case OnAckAnswer:
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+         transition(Connected);
+         break;
+         
+      case OnCancel:
+      {
+         SipMessage c200;
+         mDialog.makeResponse(c200, msg, 200);
+         mDum.send(c200);
+         // no transition
+         break;
+      }
+
+      case OnPrack: // broken
+      {
+         SipMessage p200;
+         mDialog.makeResponse(p200, msg, 200);
+         mDum.send(p200);
+         
+         mDum.makeResponse(mInvite200, msg, 200);
+         startRetransmitTimer(); // make 2xx timer
+         mDum.send(mInvite200);  
+         
+         // no transition
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchNoOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchFirstEarlyReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchCancel(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
+   SipMessage c200;
+   mDialog.makeResponse(c200, msg, 200);
+   mDum.send(c200);
+
+   SipMessage i487;
+   mDialog.makeResponse(i487, msg, 487);
+   mDum.send(i487);
+
+   handler->onTerminated(getSessionHandle());
+   transition(Terminated);
+}
+
+void
+ServerInviteSession::dispatchBye(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
+   SipMessage b200;
+   mDialog.makeResponse(b200, msg, 200);
+   mDum.send(b200);
+
+   SipMessage i487;
+   mDialog.makeResponse(i487, msg, 487);
+   mDum.send(i487);
+
+   handler->onTerminated(getSessionHandle());
+   transition(Terminated);
+}
+
+void
+ServerInviteSession::dispatchUnknown(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
+   SipMessage r481; // !jf! what should we send here? 
+   mDialog.makeResponse(r481, msg, 481);
+   mDum.send(r481);
+   
+   SipMessage i400;
+   mDialog.makeResponse(i400, msg, 400);
+   mDum.send(i400);
+
+   handler->onTerminated(getSessionHandle());
+   transition(Terminated);
+}
+
 void
 ServerInviteSession::targetRefresh (const NameAddr& localUri)
 {
@@ -547,9 +706,9 @@ void
 ServerInviteSession::sendProvisional(int code)
 {
    mDialog.makeResponse(mFirstRequest, m1xx, code);
-   if (mEarlyMedia.get())
+   if (mProposedLocalSdp.get()) // early media
    {
-      setSdp(m1xx, *mEarlyMedia);
+      setSdp(m1xx, *mProposedLocalSdp);
    }
    mDum.send(m1xx);
 }
