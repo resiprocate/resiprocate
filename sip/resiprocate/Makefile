@@ -13,6 +13,9 @@ CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib
 
 SRC = \
+	\
+	os/HeapInstanceCounter.cxx \
+	\
 	os/AbstractFifo.cxx \
 	os/BaseException.cxx \
 	os/Coders.cxx \

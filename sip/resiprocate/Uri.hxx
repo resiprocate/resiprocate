@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "resiprocate/ParserCategory.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -12,6 +13,7 @@ class SipMessage;
 class Uri : public ParserCategory
 {
    public:
+      RESIP_HeapCount(Uri);
       Uri();
       Uri(const Uri&);
       explicit Uri(const Data& data);
