@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2002/11/23 22:06:27 fluffy Exp $
+# $Id: Makefile,v 1.21 2002/11/25 19:30:20 davidb Exp $
 
 BUILD = ../../build
 
@@ -19,6 +19,7 @@ TARGET_LIBRARY = libutil2
 TESTPROGRAMS =	testParseBuffer.cxx \
 	        testData.cxx \
 	        testDataStream.cxx \
+		testCountStream.cxx \
 	        testDataPerformance.cxx \
 	        testRandomHex.cxx \
 	        testCoders.cxx
@@ -46,6 +47,7 @@ SRC = \
 	BaseException.cxx \
 	vmd5.cxx \
 	DataStream.cxx \
+	CountStream.cxx \
 
 include $(BUILD)/Makefile.post
 

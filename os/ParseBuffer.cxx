@@ -39,10 +39,27 @@ ParseBuffer::skipChar(char c)
 {
    if (*position() != c)
    {
-      DebugLog (<< "Expected " << c );
+      DebugLog (<< "Expected '" << c << "'");
       throw Exception("parse error", __FILE__, __LINE__);
    }
    return ++mTraversalPtr;
+}
+
+const char* 
+ParseBuffer::skipChars(const char* cs)
+{
+   const char* match = cs;
+   while (*match != 0)
+   {
+      if (eof() || (*match != *mTraversalPtr))
+      {
+         DebugLog (<< "Expected \"" << cs << "\"");
+         throw Exception("parse error", __FILE__, __LINE__);
+      }
+      match++;
+      mTraversalPtr++;
+   }
+   return mTraversalPtr;
 }
 
 const char* 
@@ -287,6 +304,12 @@ ParseBuffer::assertNotEof()
    {
       throw Exception("Expected not eof", __FILE__, __LINE__);
    }      
+}
+
+void
+ParseBuffer::fail(const Data& message)
+{
+   throw Exception(message, __FILE__, __LINE__);
 }
 
 /* ====================================================================
