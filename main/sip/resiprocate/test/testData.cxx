@@ -237,7 +237,16 @@ class TestData
             cerr << "one + two = " << (d + "two") << endl;
             assert((d + "two") == "onetwo");
          }
-
+         {
+            Data mixed("MiXed");
+            mixed.lowercase();
+            assert(mixed == "mixed");
+         }
+         {
+            Data mixed("miXed");
+            mixed.uppercase();
+            assert(mixed == "MIXED");
+         }
       }
 };
 
