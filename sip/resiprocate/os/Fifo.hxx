@@ -2,14 +2,16 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.16 2003/08/27 00:48:28 jason Exp $";
+   "$Id: Fifo.hxx,v 1.17 2003/09/06 04:38:15 fluffy Exp $";
+
+#include <list>
+#include <errno.h>
+#include <cassert>
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Lock.hxx"
-#include <list>
-
-#include <errno.h>
+#include "resiprocate/os/Inserter.hxx"
 
 
 /** Infrastructure common to VOCAL.
@@ -72,7 +74,7 @@ Fifo<Msg>::~Fifo()
       delete mFifo.front();
       mFifo.pop_front();
    }
-   mSize = -1UL;
+   mSize = 0UL -1;
 }
 
 template <class Msg>
@@ -103,8 +105,8 @@ Fifo<Msg> ::getNext()
    //
    Msg* firstMessage = mFifo.front();
    mFifo.pop_front();
+   assert( mSize != 0 );
    mSize--;
-   assert (mSize != -1UL);
    return ( firstMessage );
 }
 
@@ -123,7 +125,7 @@ bool
 Fifo<Msg>::messageAvailable() const
 {
    Lock lock(mMutex); (void)lock;
-   assert (mSize != -1UL);
+   assert (mSize != 0UL-1 );
    return ( !mFifo.empty() );
 }
 
