@@ -13,25 +13,26 @@ class Headers
       // put headers that you want to appear early in the message early in
       // this set
       enum Type
-      {// RequestLine, lives in RequestMessage?
-       //StatusLine, lives in StatusMessage?
-       Body,
+      {
+         Body,
 
-       CSeq, Call_ID, Contact, Content_Length, Expires, 
-       From, Max_Forwards, Route, Subject, To, Via, 
+         CSeq, Call_ID, Contact, Content_Length, Expires, 
+         From, Max_Forwards, Route, Subject, To, Via, 
 
-       Accept, Accept_Encoding, Accept_Language, Alert_Info, 
-       Allow, Authentication_Info, Authorization, Call_Info, 
-       Content_Disposition, Content_Encoding, Content_Language, 
-       Content_Type, Date, Error_Info, In_Reply_To, Min_Expires, 
-       MIME_Version, Organization, Priority, Proxy_Authenticate, 
-       Proxy_Authorization, Proxy_Require, Record_Route, Reply_To, 
-       Require, Retry_After, Server, Supported, Timestamp, 
-       Unsupported, User_Agent, Warning, WWW_Authenticate,
+         Accept, Accept_Encoding, Accept_Language, Alert_Info, 
+         Allow, Authentication_Info, Authorization, Call_Info, 
+         Content_Disposition, Content_Encoding, Content_Language, 
+         Content_Type, Date, Error_Info, In_Reply_To, Min_Expires, 
+         MIME_Version, Organization, Priority, Proxy_Authenticate, 
+         Proxy_Authorization, Proxy_Require, Record_Route, Reply_To, 
+         Require, Retry_After, Server, Supported, Timestamp, 
+         Unsupported, User_Agent, Warning, WWW_Authenticate,
 
-       MAX_HEADERS,
-       UNKNOWN
+         UNKNOWN,
+         MAX_HEADERS
       };
+
+      static bool CommaTokenizing[MAX_HEADERS];
 
       // get enum from header name
       static Type getHeaderType(const char* name, int len);
@@ -365,7 +366,7 @@ class Header<Headers::Call_ID>
 Header<Headers::Call_ID> Call_ID;
 
 //====================
-// CallId:
+// CallIds:
 //====================
 class Header<Headers::In_Reply_To>
 {
@@ -462,7 +463,12 @@ class Header<Headers::Via>
 };
 Header<Headers::Via> Via;
 
+class RequestLineType {};
+RequestLineType RequestLine;
+
+class StatusLineType {};
+StatusLineType StatusLine;
+
+
 }
-
-
 #endif
