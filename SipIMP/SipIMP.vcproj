@@ -26,6 +26,7 @@
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				BufferSecurityCheck="TRUE"
 				TreatWChar_tAsBuiltInType="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
