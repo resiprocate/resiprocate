@@ -81,11 +81,22 @@ ServerInviteSession::provisional(int code)
    {
       case UAS_Offer:
          transition(UAS_EarlyOffer);
-         // start 1xx timer
+         sendProvisional(code);
+         break;
+
+      case UAS_OfferProvidedAnswer:
+         transition(UAS_EarlyProvidedAnswer);
+         sendProvisional(code);
+         break;
+
+      case UAS_ProvidedOffer:
+         transition(UAS_EarlyProvidedOffer);
          sendProvisional(code);
          break;
          
       case UAS_EarlyOffer:
+      case UAS_EarlyNoOffer:
+      case UAS_EarlyProvidedOffer:
          transition(UAS_EarlyOffer);
          sendProvisional(code);
          break;
@@ -95,10 +106,6 @@ ServerInviteSession::provisional(int code)
          sendProvisional(code);
          break;
          
-      case UAS_EarlyNoOffer:
-         transition(UAS_EarlyNoOffer);
-         sendProvisional(code);
-         break;         
 
       case UAS_NoOfferReliable:
       case UAS_EarlyReliable:
@@ -106,6 +113,7 @@ ServerInviteSession::provisional(int code)
          assert(0);
          break;
          
+      case UAS_EarlyProvidedAnswer:
       case UAS_Accepted:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
@@ -129,10 +137,18 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
    switch (mState)
    {
       case UAS_NoOffer:
-      case UAS_EarlyNoOffer:
-      case UAS_NoOfferReliable:
-         // queue offer
          mProposedLocalSdp = InviteSession::makeSdp(offer);
+         transition(UAS_ProvidedOffer);
+         break;
+
+      case UAS_EarlyNoOffer:
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         transition(UAS_EarlyProvidedOffer);
+         break;
+         
+      case UAS_NoOfferReliable:
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         // !jf! transition ? 
          break;
 
       case UAS_EarlyReliable:
@@ -143,9 +159,13 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          break;
          
       case UAS_Accepted:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_OfferReliable: 
+      case UAS_OfferProvidedAnswer:
+      case UAS_ProvidedOffer:
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
@@ -167,9 +187,15 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    switch (mState)
    {
       case UAS_Offer:
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         transition(UAS_OfferProvidedAnswer);
+         break;
+         
       case UAS_EarlyOffer:
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         transition(UAS_EarlyProvidedAnswer);
          break;
          
       case UAS_OfferReliable: 
@@ -188,12 +214,14 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          transition(Connected);
          break;
 
-      case UAS_EarlyProvidedOffer:
       case UAS_Accepted:
+      case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyProvidedOffer:
       case UAS_EarlyReliable:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
+      case UAS_NoOffer:
       case UAS_NoOfferReliable:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
@@ -215,32 +243,36 @@ ServerInviteSession::end()
 {
    switch (mState)
    {
-      case UAS_Start:
-         break;
+      case UAS_EarlyNoOffer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyProvidedOffer:
+      case UAS_NoOffer:
+      case UAS_Offer:
+      case UAS_OfferProvidedAnswer:
+      case UAS_ProvidedOffer:
+         reject(480);
+         break;         
+         
       case UAS_OfferReliable: 
-         break;
       case UAS_ReceivedUpdate:
-         break;
-      case UAS_Accepted:
-         break;
       case UAS_EarlyReliable:
-         break;
       case UAS_FirstEarlyReliable:
-         break;
       case UAS_FirstSentOfferReliable:
-         break;
       case UAS_NoOfferReliable:
-         break;
       case UAS_ReceivedUpdateWaitingAnswer:
-         break;
       case UAS_SentUpdate:
-         break;
       case UAS_SentUpdateAccepted:
-         break;
       case UAS_WaitingToHangup:
-         break;
       case UAS_WaitingToTerminate:
+         reject(480);
          break;
+         
+      case UAS_Start:
+         assert(0);
+         break;
+
+      case UAS_Accepted:
       default:
          InviteSession::end();
          break;
@@ -252,6 +284,15 @@ ServerInviteSession::reject(int code)
 {
    switch (mState)
    {
+      case UAS_EarlyNoOffer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyProvidedOffer:
+      case UAS_NoOffer:
+      case UAS_Offer:
+      case UAS_OfferProvidedAnswer:
+      case UAS_ProvidedOffer:
+
       case UAS_EarlyReliable:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
@@ -291,18 +332,29 @@ ServerInviteSession::accept(int code)
 {
    switch (mState)
    {
+      case UAS_Offer:
       case UAS_EarlyOffer:
-         // send::2xx-answer
-         // timer::2xx
-         // timer::NoAck
-         transition(UAS_Accepted);
+         assert(0);
          break;
 
+      case UAS_OfferProvidedAnswer:
+      case UAS_EarlyProvidedAnswer:
+         transition(Connected);
+         sendAccept(code, mCurrentLocalSdp);
+         break;
+         
+      case UAS_NoOffer:
       case UAS_EarlyNoOffer:
-         // send::2xx-offer
-         // timer::2xx
-         // timer::NoAck
+         assert(0);
+
+      case UAS_ProvidedOffer:
+      case UAS_EarlyProvidedOffer:
          transition(UAS_Accepted);
+         sendAccept(code, mProposedLocalSdp);
+         break;
+         
+      case UAS_Accepted:
+         assert(0);
          break;
          
       case UAS_FirstEarlyReliable:
@@ -334,7 +386,6 @@ ServerInviteSession::accept(int code)
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
       case UAS_OfferReliable: 
-      case UAS_Accepted:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -710,7 +761,21 @@ ServerInviteSession::sendProvisional(int code)
    {
       setSdp(m1xx, *mProposedLocalSdp);
    }
+   // !jf! start 1xx timer
    mDum.send(m1xx);
+}
+
+void
+ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
+{
+   mDialog.makeResponse(mFirstRequest, mInvite200, code);
+   if (sdp.get())
+   {
+      setSdp(mInvite200, *sdp);
+   }
+   // make timer::2xx
+   // make timer::NoAck
+   mDum.send(mInvite200);
 }
 
 void
