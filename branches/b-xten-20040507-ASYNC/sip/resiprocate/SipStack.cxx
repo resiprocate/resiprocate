@@ -149,6 +149,17 @@ SipStack::addTlsTransport( int port,
    return ret;
 }
 
+void   
+SipStack::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, bool ownedByMe)   
+{   
+   Transport* transport = mTransactionController.transportSelector().addExternalTransport(externalTransport,   
+                                                                                          ownedByMe);   
+   if (!transport->interfaceName().empty())   
+   {   
+      addAlias(transport->interfaceName(), transport->port());   
+   }   
+} 
+
 void
 SipStack::addAlias(const Data& domain, int port)
 {
@@ -354,6 +365,7 @@ void
 SipStack::process(FdSet& fdset)
 {
    //   mExecutive.process(fdset);
+   mTransactionController.process(fdset);   
    RESIP_STATISTICS(mTransactionController.getStatisticsManager().process());
 }
 
