@@ -127,10 +127,8 @@ Log::toLevel(const Data& l)
 ostream&
 Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
 {
-#ifdef WIN32
-	strm << _descriptions[level] << DELIM
-        << timestamp() << DELIM
-        << subsystem << DELIM ;
+#if defined( WIN32 ) || defined( __APPLE__ )
+   strm << _descriptions[level] << "\t" << DELIM;
 #else   
      strm << _descriptions[level] << DELIM
         << timestamp() << DELIM  

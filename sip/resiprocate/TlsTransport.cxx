@@ -28,7 +28,7 @@ TlsTransport::TlsTransport(const Data& sendhost, int portNum,
    
    if ( mFd == INVALID_SOCKET )
    {
-      InfoLog (<< "Failed to open socket: " << portNum);
+      ErrLog (<< "Failed to open socket for use with TLS on port: " << portNum);
    }
    
 #ifndef WIN32
@@ -78,6 +78,8 @@ TlsTransport::TlsTransport(const Data& sendhost, int portNum,
       // !cj! deal with errors
       assert(0);
    }
+
+   InfoLog( << "Listening for TLS connections on port " << portNum );
 }
 
 
@@ -110,7 +112,7 @@ void
 TlsTransport::processListen(FdSet& fdset)
 {
 #ifdef USE_SSL
-	if (fdset.readyToRead(mFd))
+   if (fdset.readyToRead(mFd))
    {
       struct sockaddr_in peer;
 		
@@ -123,7 +125,24 @@ TlsTransport::processListen(FdSet& fdset)
          return;
       }
 
-      TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ true );
+      InfoLog( << "Trying to form new TLS server connection" );
+      
+      TlsConnection* tls = 0;
+      
+      try 
+      {
+         tls = new TlsConnection( mSecurity, sock, /*server*/ true );
+      }
+      catch ( Transport::Exception& e)
+      {
+          InfoLog( << "Failed to form new TLS server connection" );
+          if (tls)
+          {
+             delete tls; tls=0;
+          }
+          return;
+      }
+
       assert(tls);
       
       makeSocketNonBlocking(sock);
@@ -138,7 +157,7 @@ TlsTransport::processListen(FdSet& fdset)
       assert( con );
       con->mTlsConnection = tls;
 
-      DebugLog( << "Added server connection " << int(con) );
+      DebugLog( << "Added TLS connection " << int(con) );
    }
 #endif
 }
@@ -212,7 +231,7 @@ TlsTransport::processAllReads(FdSet& fdset)
 void
 TlsTransport::processAllWrites( FdSet& fdset )
 {
-	#ifdef USE_SSL	
+#ifdef USE_SSL	
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
@@ -220,7 +239,8 @@ TlsTransport::processAllWrites( FdSet& fdset )
         
       if (conn == 0)
       { 
-         // attempt to open
+         // attempt to open 
+         DebugLog( << "TLS getting a new socket to use" );
          Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
 
          if ( sock == -1 ) // no socket found - try to free one up and try again
@@ -232,7 +252,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
          
          if ( sock == -1 )
          { 
-            DebugLog( << "Error in TLS finding free socket to use" );
+            ErrLog( << "Error in TLS finding free socket to use" );
          } 
          else
          {
@@ -251,26 +271,43 @@ TlsTransport::processAllWrites( FdSet& fdset )
             else
             {
                // succeeded, add the connection
-               TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ false );
-               assert(tls);
-
-               mConnectionMap.add( data->destination, sock);
-
-               conn = mConnectionMap.get(data->destination);
-               assert( conn );
-
-               conn->mTlsConnection = tls;   
-
-               makeSocketNonBlocking(sock);
-
-               DebugLog( << "Added TLS client connection " << int(conn) );
+               DebugLog( << "Trying to from new client TLS connection" );
+               TlsConnection* tls;
+               try 
+               {
+                  tls = new TlsConnection( mSecurity, sock, /*server*/ false );
+               }
+               catch ( Transport::Exception& e )
+               {
+                  InfoLog( << "Failed to form new TLS client connection" );
+                  if (tls)
+                  {
+                     delete tls; tls=0;
+                  }
+               }
+               
+               if ( tls )
+               {
+                  
+                  mConnectionMap.add( data->destination, sock);
+                  
+                  conn = mConnectionMap.get(data->destination);
+                  assert( conn );
+                  
+                  conn->mTlsConnection = tls;   
+                  
+                  makeSocketNonBlocking(sock);
+                  
+                  InfoLog( << "Added TLS client connection " << int(conn) );
+               }
+               
             }
          }
       }
         
       if (conn == 0)
       {
-         DebugLog (<< "Failed to create/get connection: " << data->destination);
+         ErrLog (<< "Failed to create/get connection: " << data->destination);
          fail(data->transactionId);
          delete data;
          return;
@@ -389,7 +426,7 @@ TlsTransport::processWrite(Connection* c)
 void 
 TlsTransport::process(FdSet& fdSet)
 {
- #ifdef USE_SSL
+#ifdef USE_SSL
 	if ( mTxFifo.messageAvailable() ) 
    {
       DebugLog(<<"TLSTransport mTxFifo:size: " << mTxFifo.size());
