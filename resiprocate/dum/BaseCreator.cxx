@@ -1,4 +1,9 @@
+#include "DialogUsageManager.hxx"
+#include "Profile.hxx"
 #include "BaseCreator.hxx"
+#include "resiprocate/Helper.hxx"
+
+using namespace resip;
 
 BaseCreator::BaseCreator(DialogUsageManager& dum) : mDum(dum)
 {

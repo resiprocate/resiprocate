@@ -1,8 +1,12 @@
 #if !defined(RESIP_BASECREATOR_HXX)
 #define RESIP_BASECREATOR_HXX
 
+#include "resiprocate/SipMessage.hxx"
+
 namespace resip
 {
+
+class DialogUsageManager;
 
 class BaseCreator
 {

@@ -15,7 +15,7 @@ class Uri;
 class PublicationCreator: public BaseCreator
 {
    public:
-      PublicationCreator(Uri& aor);
+      PublicationCreator(DialogUsageManager& dum, const Uri& aor);
 
       virtual void dispatch(SipMessage& msg);
 };
