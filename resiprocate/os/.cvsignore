@@ -4,6 +4,7 @@ Assert.cxx
 Assert.hxx
 Debug
 Release
+bar
 bin.debug.Darwin.Power_Macintosh
 bin.debug.Linux.i686
 bin.debug.QNX.x86pc
