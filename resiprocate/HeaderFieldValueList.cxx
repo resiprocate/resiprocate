@@ -89,8 +89,17 @@ void HeaderFieldValueList::deleteFirst()
 
 ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
 {
-  stream << "Header "; 
-  return stream;
+
+   if (first)
+     {
+       HeaderFieldValue* current = first;
+       do
+	 {
+	   stream << current << endl;
+	   current = current->next;
+	 } while (current != 0);
+   }
+
 }
 
 
