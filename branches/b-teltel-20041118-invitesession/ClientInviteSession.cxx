@@ -360,6 +360,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 void
 ClientInviteSession::dispatch(const DumTimeout& timer)
 {
+    InviteSession::dispatch(timer);
 }
 
 void
@@ -539,6 +540,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxOffer:
          transition(UAC_Answered);
+         handleSessionTimerResponse(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
@@ -548,6 +550,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
+         handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
@@ -622,6 +625,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxOffer:
          transition(UAC_Answered);
+         handleSessionTimerResponse(msg);
 
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -632,6 +636,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
+         handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
@@ -775,6 +780,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          
       case On2xx:
          transition(Connected);
+         handleSessionTimerResponse(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -845,6 +851,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          
       case On2xx:
          transition(SentUpdate);
+         handleSessionTimerResponse(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -913,6 +920,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
+         handleSessionTimerResponse(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
