@@ -266,12 +266,24 @@ SipMessage::compute2543TransactionHash() const
 }
 
 void
-SipMessage::copyRFC2543TransactionId(const SipMessage& request)
+SipMessage::copyRFC2543TransactionId(const SipMessage& msg)
 {
-   assert(isResponse());
-   DebugLog (<< "Copy tid=" << request.mRFC2543TransactionId << " into " << brief());
-   mRFC2543TransactionId = request.mRFC2543TransactionId;
+   if (msg.isResponse())
+   {
+      DebugLog (<< "Copy server tid=" << msg.getServerTransactionId() << " into " << brief());
+      mRFC2543TransactionId = msg.getServerTransactionId();      
+   }
+   else if (msg.isRequest())
+   {
+      DebugLog (<< "Copy tid=" << msg.mRFC2543TransactionId << " into " << brief());
+      mRFC2543TransactionId = msg.mRFC2543TransactionId;
+   }
+   else
+   {
+      assert(0);
+   }
 }
+
 
 bool
 SipMessage::isRequest() const
