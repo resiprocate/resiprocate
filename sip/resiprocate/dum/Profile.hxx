@@ -1,13 +1,12 @@
 #if !defined(RESIP_PROFILE_HXX)
 #define RESIP_PROFILE_HXX
 
+#include "resiprocate/Headers.hxx"
+
 namespace resip
 {
 
 class Data;
-class Mime;
-class Token;
-
 
 class Profile
 {
@@ -19,7 +18,7 @@ class Profile
       bool isLanguageSupported(const Tokens& lang);
       
       // return the list of unsupported tokens from set of requires tokens
-      Tokens isSupported(Token& requires);
+      Tokens isSupported(const Tokens& requires);
       Tokens getSupportedOptionTags();
       Tokens getAllowedMethods();
       Mimes getSupportedMimeTypes();
