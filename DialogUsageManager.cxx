@@ -393,9 +393,10 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
    //19.1.5
    NameAddr target = refer.header(h_ReferTo);
-   target.uri().embedded() = SipMessage();   
+   target.uri().removeEmbedded();
    target.uri().remove(p_method);
       
+   // !jf! this code assumes you have a UserProfile
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, 
                                                              target,  
                                                              *serverSub->mDialog.mDialogSet.getUserProfile(),
@@ -403,10 +404,6 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
-   NameAddr from = serverSub->mDialog.mLocalNameAddr;
-   from.param(p_tag) = inv.header(h_From).param(p_tag);  // Maintain From Tag generated in BaseCreator
-   inv.header(h_From) = from;
-
    if (refer.exists(h_ReferredBy))
    {
       inv.header(h_ReferredBy) = refer.header(h_ReferredBy);
@@ -561,7 +558,7 @@ DialogUsageManager::send(SipMessage& msg)
    DebugLog (<< "SEND: " << msg);
    if (msg.isRequest())
    {         
-      //this is all very scary and error-prone, as the TU has some retramissions
+      // We may not need to call reset() if makeRequest is always used. 
       if (msg.header(h_RequestLine).method() != CANCEL &&
           msg.header(h_RequestLine).method() != ACK && 
           msg.exists(h_Vias))
@@ -1148,8 +1145,48 @@ DialogUsageManager::processRequest(const SipMessage& request)
    }
       
    assert(mAppDialogSetFactory.get());
-   //!dcm! -- fix to use findDialog
-   if (!request.header(h_To).exists(p_tag))
+   // !jf! note, the logic was reversed during ye great merge of March of Ought 5
+   if (request.header(h_To).exists(p_tag) || 
+       findDialogSet(DialogSetId(request)))
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         case REGISTER:
+         {
+            SipMessage failure;
+            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
+            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+            sendResponse(failure);
+            break;
+         }
+         
+         default:
+         {
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
+            {
+               if (request.header(h_RequestLine).method() != ACK)
+               {
+                  SipMessage failure;
+                  makeResponse(failure, request, 481);
+                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
+                  sendResponse(failure);
+               }
+               else
+               {
+                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());                  
+               }
+            }
+            else
+            {
+               InfoLog (<< "Handling in-dialog request: " << request.brief());
+               ds->dispatch(request);
+            }
+         }
+      }
+   }
+   else 
    {
       switch (request.header(h_RequestLine).getMethod())
       {
@@ -1160,8 +1197,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case PRACK:
          case BYE:
          case UPDATE:
-            //case INFO: // !rm! in an ideal world
-            //case NOTIFY: // !rm! in an ideal world
+         case INFO: // !rm! in an ideal world
          {
             SipMessage failure;
             makeResponse(failure, request, 481);
@@ -1172,28 +1208,17 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case CANCEL:
          {
             // find the appropropriate ServerInvSession
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
+            CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+            if (i != mCancelMap.end())
             {
-               // !dlb! leaving this in for now -- but seems like 'protocol
-               // repair' for non-conformant UA?
-               //!dcm! -- temporary hack...do a map by TID?
-               for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
-               {
-                  if (it->second->getId().getCallId() == request.header(h_CallID).value())
-                  {
-                     it->second->dispatch(request);
-                     return;
-                  }
-               }
+               i->second->dispatch(request);
+            }
+            else
+            {
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
                SipMessage failure;
                makeResponse(failure, request, 481);
                sendResponse(failure);
-            }
-            else
-            {
-               ds->dispatch(request);
             }
             break;
          }
@@ -1206,9 +1231,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
                InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
+            // no break
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
-         case INFO :    // handle non-dialog (illegal) INFOs
+            //case INFO :    // handle non-dialog (illegal) INFOs
          case OPTIONS : // handle non-dialog OPTIONS
          case MESSAGE :
          case REGISTER:
@@ -1263,45 +1289,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
       }
    }
-   else // in a specific dialog
-   {
-      switch (request.header(h_RequestLine).getMethod())
-      {
-         case REGISTER:
-         {
-            SipMessage failure;
-            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
-            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-            sendResponse(failure);
-            break;
-         }
-         
-         default:
-         {
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
-            {
-               if (request.header(h_RequestLine).method() != ACK)
-               {
-                  SipMessage failure;
-                  makeResponse(failure, request, 481);
-                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
-                  sendResponse(failure);
-               }
-               else
-               {
-                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());                  
-               }
-            }
-            else
-            {
-               InfoLog (<< "Handling in-dialog request: " << request.brief());
-               ds->dispatch(request);
-            }
-         }
-      }
-   }
 }
 
 void
@@ -1316,7 +1303,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
    //   return;
    //}
 
-   if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
+   if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   

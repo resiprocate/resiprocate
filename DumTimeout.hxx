@@ -28,7 +28,8 @@ class DumTimeout : public ApplicationMessage
          Subscription,
          StaleReInvite,
          Glare,
-         Cancelled
+         Cancelled,
+         WaitingForForked2xx
       } Type;
       static const unsigned long StaleCallTimeout;
 

@@ -33,6 +33,7 @@ using namespace std;
 #pragma warning( disable : 4355 ) // using this in base member initializer list
 #endif
 
+// UAC 
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mMergeKey(),
    mDialogs(),
@@ -40,10 +41,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
-   mEnded(false),
-   mReceivedProvisional(false),
-   mReceivedFinal(false),
-   mDestroying(false),
+   mState(Initial),
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
@@ -58,6 +56,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
+// UAS 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mMergeKey(request),
    mDialogs(),
@@ -65,10 +64,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
-   mEnded(false),
-   mReceivedProvisional(false),
-   mReceivedFinal(false),
-   mDestroying(false),
+   mState(Established),
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
@@ -81,13 +77,17 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    assert(request.isRequest());
    assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
+   assert(mDum.mCancelMap.count(request.getTransactionId()) == 0);
+   if (request.header(h_RequestLine).method() == INVITE)
+   {
+      mCancelKey = request.getTransactionId();
+      mDum.mCancelMap[mCancelKey] = this;
+   }
    DebugLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
 }
 
 DialogSet::~DialogSet()
 {
-   mDestroying = true;
-
    if (mDum.mClientAuthManager.get())
    {
       mDum.mClientAuthManager->dialogSetDestroyed(getId());
@@ -96,6 +96,11 @@ DialogSet::~DialogSet()
    if (mMergeKey != MergedRequestKey::Empty)
    {
       mDum.mMergedRequests.erase(mMergeKey);
+   }
+
+   if (!mCancelKey.empty())
+   {
+      mDum.mCancelMap.erase(mCancelKey);
    }
 
    delete mCreator;
@@ -125,19 +130,17 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   if (!mDestroying)
+   if(mState != Initial &&  // !jf! may not be correct
+      mDialogs.empty() &&
+      mClientOutOfDialogRequests.empty() &&
+      !(mClientPublication ||
+        mServerOutOfDialogRequest ||
+        mClientPagerMessage ||
+        mServerPagerMessage ||
+        mClientRegistration ||
+        mServerRegistration))
    {
-      if(mDialogs.empty() &&
-         mClientOutOfDialogRequests.empty() &&
-         !(mClientPublication ||
-           mServerOutOfDialogRequest ||
-           mClientPagerMessage ||
-           mServerPagerMessage ||
-           mClientRegistration ||
-           mServerRegistration))
-      {
-         mDum.destroy(this);
-      }
+      mDum.destroy(this);
    }
 }
 
@@ -159,30 +162,15 @@ DialogSet::getCreator()
    return mCreator;
 }
 
-UserProfile*
-DialogSet::getUserProfile()
-{
-   if(mUserProfile)
-   {
-      return mUserProfile;
-   }
-   else
-   {
-      // If no UserProfile set then use UserProfile of the MasterProfile
-      return mDum.getMasterProfile();
-   }
-}
-
-void
-DialogSet::setUserProfile(UserProfile *userProfile)
-{
-   assert(!mUserProfile);
-   mUserProfile = userProfile;
-}
-
 Dialog*
 DialogSet::findDialog(const SipMessage& msg)
 {
+   if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 100)
+   {
+      return 0;
+   }
+   return findDialog(DialogId(msg));
+#if 0   
    DialogId id(msg);
    Dialog* dlog = findDialog(id);
    //vonage/2543 matching here
@@ -190,12 +178,24 @@ DialogSet::findDialog(const SipMessage& msg)
    {
       return dlog;
    }
-   else if (msg.exists(h_Contacts) &&
-            msg.header(h_Contacts).size() == 1
-            && msg.isResponse()
-            && getUserProfile()->getLooseToTagMatching()
-            && msg.header(h_To).exists(p_tag))
+   //match off transaction ID
+   else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
    {
+   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+      {
+         if (it->second->matches(msg))
+         {
+            return it->second;            
+         }
+      }
+   }
+   else if (msg.exists(h_Contacts) && !msg.header(h_Contacts).empty()
+            && msg.isResponse() 
+            && mDum.getProfile()->looseToTagMatching()
+            && msg.header(h_To).exists(p_tag))     
+   {
+      const Uri& contact = msg.header(h_Contacts).front().uri();
+      
       //match by contact
       for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
@@ -217,6 +217,7 @@ DialogSet::findDialog(const SipMessage& msg)
       }
    }
    return 0;
+#endif
 }
 
 bool
@@ -225,12 +226,10 @@ DialogSet::empty() const
    return mDialogs.empty();
 }
 
-void
-DialogSet::dispatch(const SipMessage& msg)
+bool
+DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   assert(msg.isRequest() || msg.isResponse());
-
-   if (msg.isResponse() && !mEnded)
+   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -238,13 +237,13 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle( *getUserProfile(), getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle(*getUserProfile(), getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
-
+               
                mDum.send(getCreator()->getLastRequest());
-               return;
+               return true;                     
             }
          }
          //!dcm! -- need to protect against 3xx highjacking a dialogset which
@@ -255,50 +254,121 @@ DialogSet::dispatch(const SipMessage& msg)
             if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
             {
                //terminating existing dialogs(branches) as this is a final
-               //response--?dcm?--merge w/ forking logic somehow?
+               //response--?dcm?--merge w/ forking logic somehow?                              
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
-               mDestroying = true;
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
+               mState = Initial;               
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
                {
-                  Dialog* d = it->second;
-                  it++;
-                  d->redirected(msg);
+                  it->second->redirected(msg);         
                }
-               mDestroying = false;
-
+               
                if (!mDialogs.empty())
                {
                   //a dialog is refusing this 3xx(only implemented for INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
-                  return; //(toss 3xx)
+                  return true; //(toss 3xx) !dcm! -- might leak dialog
                }
 
                InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
-
+               
                mDum.send(getCreator()->getLastRequest());
-               return;
+               return true;                     
             }
          }
       }
    }
+   return false;
+}
+
+
+void
+DialogSet::dispatch(const SipMessage& msg)
+{
+   assert(msg.isRequest() || msg.isResponse());
+   if (handledByAuthOrRedirect(msg))
+   {
+      return;
+   }
+
+   if (mState == WaitingToEnd)
+   {
+      assert(mDialogs.empty());
+      if (msg.isResponse())         
+      {
+         int code = msg.header(h_StatusLine).statusCode();
+         switch(mCreator->getLastRequest().header(h_CSeq).method())               
+         {
+            case INVITE:
+               if (code / 100 == 1)
+               {
+                  mState = ReceivedProvisional;
+                  end();
+               }
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SipMessage ack;
+                  dialog.makeRequest(ack, ACK);
+                  dialog.send(ack);
+                  
+                  SipMessage bye;
+                  dialog.makeRequest(bye, BYE);
+                  dialog.send(bye);
+               }
+               break;
+            case SUBSCRIBE:
+               assert(0);
+               break;
+            default:
+               break;
+         }
+      }
+      else
+      {
+         SipMessage response;         
+         mDum.makeResponse(response, msg, 481);
+         mDum.send(response);
+      }
+      return;
+   }
 
    Dialog* dialog = findDialog(msg);
+   assert(!dialog || msg.header(h_CSeq).method() != MESSAGE);
+
+   if (dialog)
+   {
+      InfoLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+   }
+   else
+   {
+      InfoLog (<< "No matching dialog for " << endl << msg);
+   }
+   
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
       {
          case INVITE:
-         case BYE:
-         case ACK:
          case CANCEL:  //cancel needs work
          case SUBSCRIBE:
          case REFER: //need to add out-of-dialog refer logic
-         case UPDATE:
             break; //dialog creating/handled by dialog
+
+         case BYE:
+         case INFO:
+         case ACK:
+         case UPDATE:
+            assert(dialog);
+            break;
+            
          case NOTIFY:
+            // !jf! This should really not use to tag since 2543 endpoints won't
+            // have a to tag. 
+            // !jf! there shouldn't be a dialogset for ServerOutOfDialogReq
             if (request.header(h_To).exists(p_tag))
             {
                break; //dialog creating/handled by dialog
@@ -313,81 +383,119 @@ DialogSet::dispatch(const SipMessage& msg)
                return;
             }
             break;
+
          case PUBLISH:
-            assert(false);
+            assert(false); // handled in DialogUsageManager
             return;
-         case INFO:
-            if (dialog)
-            {
-               break;
-            }
-            else
-            {
-               return;
-            }
+            
          case REGISTER:
+            // !jf! move this to DialogUsageManager
             if (mServerRegistration == 0)
             {
                mServerRegistration = makeServerRegistration(request);
             }
             mServerRegistration->dispatch(request);
             return;
+
          case MESSAGE:
+            // !jf! move this to DialogUsageManager
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
             return;
+
          default:
+            // !jf! move this to DialogUsageManager
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
    			return;
-            break;
       }
    }
-   else
+   else // the message is a response
    {
       const SipMessage& response = msg;
-      if (response.header(h_StatusLine).statusCode() < 200)
+
+      int code = msg.header(h_StatusLine).statusCode();
+      switch(mState)
       {
-         mReceivedProvisional = true;
-         if (response.header(h_StatusLine).statusCode() == 100)
-         {
-            if (mDum.mDialogSetHandler)
+         case Initial:
+            if (code < 200)
             {
-               mDum.mDialogSetHandler->onTrying(mAppDialogSet->getHandle(), msg);
+               mState = ReceivedProvisional;
             }
-            return;
-         }
+            else if(code < 300)
+            {
+               mState = Established;
+            }
+            else
+            {
+               if (mDialogs.empty())
+               {
+                  mState = Established;
+               }
+               else
+               {
+                  dispatchToAllDialogs(msg);
+                  return;
+               }
+            }
+            break;
+         case ReceivedProvisional:
+            if (code < 200)
+            {
+               // fall through
+            }
+            else if (code < 300)
+            {
+               mState = Established;
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+               {
+                  if (it->second != dialog) // this is dialog that accepted
+                  {
+                     it->second->onForkAccepted();
+                  }
+               }
+            }
+            else // failure response
+            {
+               if (mDialogs.empty())
+               {
+                  mState = Established;
+               }
+               else
+               {
+                  dispatchToAllDialogs(msg);
+                  return;
+               }
+            }
+            break;
+         default:
+            // !jf!
+            break;
+            
       }
-      else if (response.header(h_StatusLine).statusCode() >= 200 &&
-               response.header(h_StatusLine).statusCode() < 300)
+
+      if (response.header(h_StatusLine).statusCode() == 100)
       {
-          mReceivedFinal = true;
+         if (mDum.mDialogSetHandler)
+         {
+            mDum.mDialogSetHandler->onTrying(mAppDialogSet->getHandle(), msg);
+         }
+         return;
       }
-
-
+      
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
          case SUBSCRIBE:
          case BYE:
          case ACK:
-         case UPDATE:
-            break; //dialog creating/handled by dialog(2543 & illegal 3261 responses)
-//             if(response.header(h_To).exists(p_tag))
-//             {
-//                break;  //dialog creating/handled by dialog
-//             }
-//             else
-//             {
-//                //throw away, informational status message eventually
-//                return;
-//             }
          case CANCEL:
-         case REFER:  //need to add out-of-dialog refer logic
-            break; //dialog creating/handled by dialog
+         case REFER:  
+            break; 
+
          case PUBLISH:
             if (mClientPublication == 0)
             {
@@ -395,6 +503,7 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             mClientPublication->dispatch(response);
             return;
+
          case REGISTER:
             if (mClientRegistration == 0)
             {
@@ -402,26 +511,30 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             mClientRegistration->dispatch(response);
             return;
+
          case MESSAGE:
             if (mClientPagerMessage)
             {
                mClientPagerMessage->dispatch(response);
             }
-            return;
-         case INFO:
+            return;            
+
+         case INFO:   
             if (dialog)
             {
                break;
             }
-            else
+            else // not allowed
             {
                return;
             }
+            
          case NOTIFY:
             if (dialog)
             {
                break;
             }
+            
          default:
          {
             ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
@@ -436,100 +549,82 @@ DialogSet::dispatch(const SipMessage& msg)
       }
    }
 
-   //!dcm! -- even if this matches, if a final reponses matches the inital request all
-   //usages should be cancelled?
    if (dialog == 0)
    {
       if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
       {
-         for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-         {
-            Dialog* d = it->second;
-            it++;
-            d->dispatch(msg);
-         }
+         dispatchToAllDialogs(msg);
          return;
       }
 
       if (msg.isResponse())
       {
          int code = msg.header(h_StatusLine).statusCode();
-
-         if (code > 100 && code < 200 && !msg.exists(h_Contacts))
+         
+         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
          {
             InfoLog ( << "Cannot create a dialog, no Contact in 180." );
             if (mDum.mDialogSetHandler)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
             }
-
-            //call OnProgress in proposed DialogSetHandler here
+            return;         
+         }
+         // If failure response and no dialogs, create a dialog, otherwise
+         else if (code >= 300 && !mDialogs.empty())
+         {
+            dispatchToAllDialogs(msg);
             return;
          }
-         else
-         {
-            InfoLog (<< "No matching dialog: " << msg.brief());
-
-#if(0)
-            // !kh!
-            // Bad attempt to aborb problematic error responses,
-            // breaks protocol, thx to sg for pointing this out.
-            if(code >= 400)
-            {
-                // !kh!
-                // don't need to try resuming on an error response.
-                return;
-            }
-#endif
-         }
       }
-
+      
       DebugLog ( << "Creating a new Dialog from msg: " << msg);
-
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
-         // !jf! if this threw, should we check to delete the DialogSet?
-         // !dcm! -- check to delete for now, but we will need to keep the
-         // Dialoset around in case something forked.
          dialog = new Dialog(mDum, msg, *this);
       }
       catch(BaseException& e)
       {
          InfoLog( << "Unable to create dialog: " << e.getMessage());
-         //don't delete on provisional responses, as FWD will eventually send a
-         //valid 200
-         if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
+         if (msg.isResponse())
          {
-            mDum.destroy(this);
-            return;
+            //don't delete on provisional responses, as FWD will eventually send a
+            //valid 200
+            if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
+            {
+               // really we should wait around 32s before deleting this
+               mDum.destroy(this);
+            }
          }
-      }
-
-      if (mEnded && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
-      {
-         end();
+         else
+         {
+            // !jf! derek thinks we should destroy only on invalid CANCEL or
+            // BYE, hmmphh. see draft-sparks-sipping-dialogusage-01.txt
+            SipMessage response;
+            mDum.makeResponse(response, msg, 400);
+            mDum.send(response);
+            if(mDialogs.empty())
+            {
+               mDum.destroy(this);
+            }
+         }
          return;
       }
-      else
-      {
-         DebugLog ( << "### Calling CreateAppDialog ### " << msg);
-         AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
-         dialog->mAppDialog = appDialog;
-         appDialog->mDialog = dialog;
-      }
-   }
-   if (dialog)
-   {
+
+      assert(mState != WaitingToEnd);
+      DebugLog ( << "### Calling CreateAppDialog ### " << msg);
+      AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
+      dialog->mAppDialog = appDialog;
+      appDialog->mDialog = dialog;
       dialog->dispatch(msg);
    }
-   else if (msg.isRequest())
-   {
-      SipMessage response;
-      mDum.makeResponse(response, msg, 481);
-      mDum.send(response);
+   else
+   {     
+      dialog->dispatch(msg);
    }
 }
+
 
 ClientOutOfDialogReq*
 DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
@@ -564,69 +659,66 @@ DialogSet::findDialog(const DialogId id)
 void
 DialogSet::end()
 {
-   mEnded = true;
-
-   if(getCreator()) // UAC
+   switch(mState)
    {
-      if (mReceivedProvisional || mReceivedFinal)
+      case Initial:
+         mState = WaitingToEnd;
+         break;
+      case WaitingToEnd:
+         break;         
+      case ReceivedProvisional:
       {
-         if(mReceivedFinal)
+         assert (mCreator->getLastRequest().header(h_CSeq).method() == INVITE);
+         mState = Terminating;
+         // !jf! this should be made exception safe
+         auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
+         mDum.send(*cancel);
+
+         if (mDialogs.empty())
          {
-            // !slg! Should we still send a cancel?  Or only if 64T1 hasn't expired?
-            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
-            {
-               it->second->end();
-            }
+            // !jf! if 200/INV crosses a CANCEL that was sent after receiving
+            // non-dialog creating provisional (e.g. 100), then we need to:
+            // Add a new state, if we receive a 200/INV in this state, ACK and
+            // then send a BYE and destroy the dialogset. 
+            mDum.destroy(this);
          }
          else
          {
-            // If no dialogs yet then send Cancel from here
-            InfoLog (<< "Canceling " << mId);
-            auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));
-            mDum.send(*cancel);
-
-            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+            //need to lag and do last element ouside of look as this DialogSet will be
+            //deleted if all dialogs are destroyed
+            for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
             {
-               it->second->cancel();
+               try
+               {
+                  it->second->cancel();
+               }
+               catch(UsageUseException& e)
+               {
+                  InfoLog (<< "Caught: " << e);
+               }
             }
          }
-
-         // so it won't call me again
-         mEnded = false;
-      }
-   }
-   else // UAS
-   {
-      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+      }            
+      break;         
+      case Established:
       {
-         it->second->end();
+         for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+         {
+            try
+            {
+               it->second->end();
+            }
+            catch(UsageUseException& e)
+            {
+               InfoLog (<< "Caught: " << e);
+            }
+         }            
+         mState = Terminating;
+         break;
       }
+      case Terminating:
+         assert(0);
    }
-
-#ifdef OLD_CODE
-   mEnded = true;
-
-   if (mReceivedProvisional && getCreator())
-   {
-      // !jf! What is this comment about?
-      //unify makeCancel w/ Dialog makeCancel, verify both
-      //exception to cancel UAS DialogSet?
-
-      InfoLog (<< "Canceling " << mId);
-      auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));
-      mDum.send(*cancel);
-
-      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
-      {
-         // let the early dialogs know they are being canceled in case they get
-         // a 200 to the INVITE which crossed the CANCEL so they will BYE them.
-         it->second->cancel();
-      }
-
-      // so it won't call me again
-      mEnded = false;
-   }
-#endif
 }
 
 
@@ -711,22 +803,6 @@ DialogSet::makeServerPagerMessage(const SipMessage& request)
    return new ServerPagerMessage(mDum, *this, request);
 }
 
-#if 0
-ClientOutOfDialogReqHandle
-DialogSet::findClientOutOfDialog()
-{
-   if (mClientOutOfDialogRequests)
-   {
-      return mClientOutOfDialogReq->getHandle();
-   }
-   else
-   {
-      throw BaseUsage::Exception("no such client out of dialog",
-                                 __FILE__, __LINE__);
-   }
-}
-#endif
-
 ServerOutOfDialogReqHandle
 DialogSet::getServerOutOfDialog()
 {
@@ -738,6 +814,38 @@ DialogSet::getServerOutOfDialog()
    {
       return ServerOutOfDialogReqHandle::NotValid();
    }
+}
+
+void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
+{
+   if (!mDialogs.empty())
+   {
+      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+      {
+         it->second->dispatch(msg);         
+      }
+   }
+}
+
+UserProfile*
+DialogSet::getUserProfile()
+{
+   if(mUserProfile)
+   {
+      return mUserProfile;
+   }
+   else
+   {
+      // If no UserProfile set then use UserProfile of the MasterProfile
+      return mDum.getMasterProfile();
+   }
+}
+
+void
+DialogSet::setUserProfile(UserProfile *userProfile)
+{
+   assert(!mUserProfile);
+   mUserProfile = userProfile;
 }
 
 
