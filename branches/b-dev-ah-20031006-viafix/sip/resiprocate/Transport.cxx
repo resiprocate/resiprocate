@@ -246,19 +246,31 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
                                         int responseCode,
                                         const char * warning)
 {
-
-  if (msg.isRequest()) return 0;
+  if (msg.isResponse()) return 0;
 
   const Tuple& dest = msg.getSource();
-  SipMessage * errMsg = Helper::makeResponse(msg, responseCode);
 
+
+  std::auto_ptr<SipMessage> errMsg(new SipMessage);
+
+  errMsg->header(h_StatusLine).responseCode() = responseCode;
+  errMsg->header(h_From) = msg.header(h_From);
+  errMsg->header(h_To) = msg.header(h_To);
+  errMsg->header(h_CallId) = msg.header(h_CallId);
+  errMsg->header(h_CSeq) = msg.header(h_CSeq);
+  errMsg->header(h_StatusLine).reason() = "Bad Request";
+  errMsg->header(h_Warning).code() = responseCode;
+  errMsg->header(h_Warning).hostname() = DnsUtil::getLocalHostName(); 
+                                // !ah! hostname should be from transport.
+  errMsg->header(h_Warning).text() = Data(warning ?
+                                          warning :
+                                          "Original request had no Vias.");
   Via v;
   v.sentPort() = dest.getPort();
   v.sentHost() = DnsUtil::inet_ntop(dest);
   errMsg->header(h_Vias).push_front(v);
-  errMsg->header(h_Warning).text() = warning ?
-    warning :
-    "Original request had no Vias.";
+  // synthetic Via:
+
 
   // make send data here w/ blank tid and blast it out.
   // encode message
@@ -271,14 +283,14 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
   if (encoded.empty()) 
   {
     ErrLog(<<"Unable to encode failed response." << errMsg->brief());
+    assert(0);
     return 0;
   }
 
   // !ah! YUCK! SendData ctor copies the data! Ugh.
+  InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
   SendData * sd = new SendData( dest, encoded, Data::Empty );
   
-  delete errMsg;
-
   return sd;
 }
 
@@ -307,12 +319,22 @@ Transport::basicCheck(const SipMessage& msg)
   {
     if (!msg.exists(h_Vias))
     {
+      InfoLog(<<"Message Failed basicCheck :" << msg.brief());
       if (msg.isRequest())
       {
         // this is VERY low-level b/c we don't have a transaction...
         // here we make a response to warn the offending party.
-         mTxFifo.add(makeFailedBasicCheckResponse(msg));
-     }
+        SendData * sd = makeFailedBasicCheckResponse(msg);
+
+        if (sd)
+        {
+          mTxFifo.add(sd);
+        }
+        else
+        {
+          ErrLog(<<"Unable to make SendData for bad message response.");
+        }
+      }
       return false;
     }
   }
