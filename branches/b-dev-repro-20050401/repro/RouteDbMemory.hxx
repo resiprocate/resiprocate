@@ -28,16 +28,22 @@ class RouteDbMemory : public RouteAbstractDb
                          const resip::Data& event,
                          const resip::Data& matchingPattern );
       
-      virtual resip::Uri process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event );
+      virtual UriList process(const resip::Uri& ruri, 
+                              const resip::Data& method, 
+                              const resip::Data& event );
+
    private:
       DB* mDb;
       
       class RouteOperator : public Route 
       {
          public:
-            bool matches(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event);
+            bool matches(const resip::Uri& ruri,
+                         const resip::Data& method, 
+                         const resip::Data& event);
             resip::Uri transform(const resip::Uri& ruri);
       };
+
       typedef std::vector<RouteOperator> RouteOperatorList;
       RouteOperatorList mRouteOperators;
 };
