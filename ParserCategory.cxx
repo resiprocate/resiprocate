@@ -1,9 +1,10 @@
-#include "sip2/sipstack/ParserCategory.hxx"
 #include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "sip2/sipstack/ParserCategory.hxx"
 #include "sip2/sipstack/UnknownParameter.hxx"
-#include "sip2/util/compat.hxx"
-#include "sip2/util/ParseBuffer.hxx"
+#include "sip2/sipstack/UnknownParameterType.hxx"
 #include "sip2/util/DataStream.hxx"
+#include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/compat.hxx"
 
 #include <iostream>
 #include <cassert>
@@ -90,15 +91,14 @@ ParserCategory::~ParserCategory()
 {
 }
 
-// !dlb! need to convert existing parameter by enum to UnknownParameter for backward compatibility
 Data&
-ParserCategory::param(const Data& param) const
+ParserCategory::param(const UnknownParameterType& param) const
 {
    checkParsed();
-   Parameter* p = getParameterByData(param);
+   Parameter* p = getParameterByData(param.getName());
    if(!p)
    {
-      p = new UnknownParameter(param);
+      p = new UnknownParameter(param.getName());
       mUnknownParameters.push_back(p);
    }
    return dynamic_cast<UnknownParameter*>(p)->value();
@@ -121,18 +121,17 @@ ParserCategory::remove(const ParamBase& paramType)
 }
 
 void 
-ParserCategory::remove(const Data& param)
+ParserCategory::remove(const UnknownParameterType& param)
 {
    checkParsed();
-   removeParameterByData(param);   
+   removeParameterByData(param.getName());
 }
 
 bool 
-ParserCategory::exists(const Data& param) const
+ParserCategory::exists(const UnknownParameterType& param) const
 {
    checkParsed();
-   bool ret = ( getParameterByData(param) != NULL );
-   return ret;
+   return getParameterByData(param.getName()) != NULL;
 }
 
 void

@@ -14,7 +14,7 @@ QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
 {
    if (!mQuoted)
    {
-      pb.fail();
+      pb.fail(__FILE__, __LINE__);
    }
 }
 

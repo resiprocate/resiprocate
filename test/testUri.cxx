@@ -1,21 +1,17 @@
 #include <memory>
-
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/DataStream.hxx"
-
-#include "sip2/sipstack/Uri.hxx"
-
 #include <iostream>
 
 #include "TestSupport.hxx"
+#include "sip2/sipstack/UnknownParameterType.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/Logger.hxx"
 #include "tassert.h"
-
 
 using namespace Vocal2;
 using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::APP
-
 
 int
 main(int argc, char* argv[])
@@ -80,9 +76,9 @@ main(int argc, char* argv[])
    {
       tassert_reset();
       Uri uri( "sip:fluffy@iii.ca;x-fluffy=foo" );
-      tassert( uri.exists("x-fluffy") == true );
-      tassert( uri.exists("x-fufu") == false );
-      tassert( uri.param("x-fluffy") == "foo" );
+      tassert( uri.exists(UnknownParameterType("x-fluffy")) == true );
+      tassert( uri.exists(UnknownParameterType("x-fufu")) == false );
+      tassert( uri.param(UnknownParameterType("x-fluffy")) == "foo" );
       tassert_verify(7);
    }
  
