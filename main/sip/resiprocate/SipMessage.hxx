@@ -36,7 +36,8 @@ class SipMessage : public Message
       SipMessage(const SipMessage& message);
 
       virtual const Data& getTransactionId() const;
-         
+      void copyRFC2543TransactionId(const SipMessage& request);
+      
       virtual ~SipMessage();
 
       class Exception : public BaseException
