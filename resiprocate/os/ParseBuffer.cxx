@@ -12,6 +12,22 @@ const char* ParseBuffer::ParamTerm = ";?"; // maybe include "@>,"?
 const char* ParseBuffer::Whitespace = " \t\r\n";
 const Data ParseBuffer::Pointer::msg("dereferenced ParseBuffer eof");
 
+ParseBuffer::ParseBuffer(const char* buff, unsigned int len, 
+                         const Data& errorContext)
+   : mBuff(buff),
+     mPosition(buff),
+     mEnd(buff+len),
+     mErrorContext(errorContext)
+{}
+
+ParseBuffer::ParseBuffer(const Data& data,
+            const Data& errorContext)
+   : mBuff(data.data()),
+     mPosition(mBuff),
+     mEnd(mBuff + data.size()),
+     mErrorContext(errorContext)
+{}
+
 ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
    : mBuff(rhs.mBuff),
      mPosition(rhs.mPosition),
@@ -29,6 +45,12 @@ ParseBuffer::operator=(const ParseBuffer& rhs)
    return *this;
 }
 
+const Data& 
+ParseBuffer::getContext() const
+{
+   return mErrorContext;
+}
+
 void
 ParseBuffer::reset(const char* pos)
 {
@@ -44,7 +66,7 @@ ParseBuffer::skipChar()
    {
       fail(__FILE__, __LINE__,"skipped over eof");
    }
-   return Pointer(++mPosition, eof());
+   return Pointer(*this, ++mPosition, eof());
 }
 
 ParseBuffer::Pointer
@@ -61,7 +83,7 @@ ParseBuffer::skipChar(char c)
       msg += "'";
       fail(__FILE__, __LINE__,msg);
    }
-   return Pointer(++mPosition, eof());
+   return Pointer(*this, ++mPosition, eof());
 }
 
 ParseBuffer::Pointer 
@@ -80,7 +102,7 @@ ParseBuffer::skipChars(const char* cs)
       match++;
       mPosition++;
    }
-   return Pointer(mPosition, eof());
+   return Pointer(*this, mPosition, eof());
 }
 
 ParseBuffer::Pointer 
@@ -99,7 +121,7 @@ ParseBuffer::skipChars(const Data& cs)
       match++;
       mPosition++;
    }
-   return Pointer(mPosition, eof());
+   return Pointer(*this, mPosition, eof());
 }
 
 ParseBuffer::Pointer 
@@ -113,12 +135,12 @@ ParseBuffer::skipNonWhitespace()
          case '\t' : 
          case '\r' : 
          case '\n' : 
-            return Pointer(mPosition, false);
+            return Pointer(*this, mPosition, false);
          default : 
             mPosition++;
       }
    }
-   return Pointer(mPosition, eof());
+   return Pointer(*this, mPosition, eof());
 }
 
 ParseBuffer::Pointer 
@@ -137,10 +159,10 @@ ParseBuffer::skipWhitespace()
             break;
          }
          default : 
-            return Pointer(mPosition, false);
+            return Pointer(*this, mPosition, false);
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 // "SIP header field values can be folded onto multiple lines if the
@@ -200,11 +222,11 @@ ParseBuffer::skipLWS()
             {
                mPosition--;
             }
-            return Pointer(mPosition, false);
+            return Pointer(*this, mPosition, false);
          }
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer
@@ -223,10 +245,10 @@ ParseBuffer::skipToTermCRLF()
             (mPosition-4 > mBuff && *(mPosition-4) == '\\'))))
       {
          mPosition -= 2;
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer 
@@ -236,14 +258,14 @@ ParseBuffer::skipToChar(char c)
    {
       if (*mPosition == c)
       {
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(mEnd, true);
+   return Pointer(*this, mEnd, true);
 }
 
 ParseBuffer::Pointer
@@ -266,10 +288,10 @@ ParseBuffer::skipToChars(const char* cs)
             goto skip;
          }
       }
-      return Pointer(mPosition, false);
+      return Pointer(*this, mPosition, false);
      skip: ;
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer
@@ -291,10 +313,10 @@ ParseBuffer::skipToChars(const Data& cs)
             goto skip;
          }
       }
-      return Pointer(mPosition, false);
+      return Pointer(*this, mPosition, false);
      skip: ;
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 bool oneOf(char c, const char* cs)
@@ -328,14 +350,14 @@ ParseBuffer::skipToOneOf(const char* cs)
    {
       if (oneOf(*mPosition, cs))
       {
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer 
@@ -347,14 +369,14 @@ ParseBuffer::skipToOneOf(const char* cs1,
       if (oneOf(*mPosition, cs1) ||
           oneOf(*mPosition, cs2))
       {
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer 
@@ -364,14 +386,14 @@ ParseBuffer::skipToOneOf(const Data& cs)
    {
       if (oneOf(*mPosition, cs))
       {
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 ParseBuffer::Pointer 
@@ -383,14 +405,14 @@ ParseBuffer::skipToOneOf(const Data& cs1,
       if (oneOf(*mPosition, cs1) ||
           oneOf(*mPosition, cs2))
       {
-         return Pointer(mPosition, false);
+         return Pointer(*this, mPosition, false);
       }
       else
       {
          mPosition++;
       }
    }
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 const char*
@@ -431,14 +453,14 @@ ParseBuffer::skipN(int count)
 
       fail(__FILE__, __LINE__, "skipped eof");
    }
-   return Pointer(mPosition, eof());
+   return Pointer(*this, mPosition, eof());
 }
 
 ParseBuffer::Pointer 
 ParseBuffer::skipToEnd()
 {
    mPosition = mEnd;
-   return Pointer(mPosition, true);
+   return Pointer(*this, mPosition, true);
 }
 
 const char*
@@ -773,8 +795,35 @@ ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
        << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
     ds.flush();
 
-   throw Exception(errmsg, file, line);
+   throw Exception(errmsg, mErrorContext, file, line);
 }
+
+ParseBuffer::Exception::Exception(const Data& msg, const Data& context, const Data& file, const int line)
+   : resip::BaseException(msg, file, line) 
+{}
+
+ParseBuffer::Exception::~Exception() throw() 
+{}
+
+const char* 
+ParseBuffer::Exception::name() const 
+{ 
+   return "ParseBuffer::Exception"; 
+}
+
+const Data& 
+ParseBuffer::Exception::getContext() const
+{
+   return mContext;
+}
+
+ParseBuffer::Pointer::Pointer(const ParseBuffer& pb,
+                              const char* position,
+                              bool atEof)
+   : mPb(pb),
+     mPosition(position),
+     mIsValid(!atEof)
+{}
 
 const char& 
 ParseBuffer::Pointer::operator*() const
@@ -785,7 +834,7 @@ ParseBuffer::Pointer::operator*() const
    }
    else
    {
-      throw ParseBuffer::Exception(msg, __FILE__, __LINE__);
+      throw ParseBuffer::Exception(msg, mPb.getContext(), __FILE__, __LINE__);
    }
 }
 
