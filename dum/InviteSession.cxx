@@ -14,6 +14,7 @@
 #define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
 #endif // defined(WIN32) && defined(_DEBUG)
 
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -251,7 +252,6 @@ InviteSession::dispatch(const SipMessage& msg)
             mState = Connected;            
             //this shouldn't happen, but it may be allowed(DUM API doesn't
             //support this for re-invite)
-            mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg); // !slg! call onConnected for now - maybe a new callback should be created (ie. onReConnected or onReInviteSuccess)
             if (offans.first != None)
             {
                InviteSession::incomingSdp(msg, offans.second);
