@@ -23,7 +23,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    assert(request.isRequest());
    if (initialOffer)
    {
-      sendSdp(initialOffer);
+      sendSdp(static_cast<SdpContents*>(initialOffer->clone()));
    }
    mLastRequest = request;
 }
@@ -84,7 +84,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            sendAck(msg);
+//            sendAck(msg); !dcm! -- doesn't allow user to set answer, adorn message
          }
          else if (code >= 300)
          {
@@ -130,7 +130,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            sendAck(msg);
+//            sendAck(msg); !dcm! -- doesn't allow user to set answer, adorn message
          }
          else if (code >= 300)
          {
@@ -155,7 +155,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
          }
          break;
-       }
+      }
+      case Connected:
+      case Terminated:
+         InviteSession::dispatch(msg);
+         break;
+      default:
+         assert(0); //states should be exhausted
    }
 }
 
@@ -169,20 +175,31 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
    }
    else
    {
-      assert(0); //!dcm! -- will there ever a different timer from StaleCall?
+      assert(0); //
+                 //
+                 //!dcm! -- will there ever a different timer from StaleCall? -- yes, retrans.
    }
 }
 
 void
-ClientInviteSession::send(const SipMessage& msg)
+ClientInviteSession::send(SipMessage& msg)
 {
-   if (msg.header(h_CSeq).method() == BYE && 
-       msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200)       
+   //last ack logic lives in InviteSession(to be re-used for reinvite
+   if (mState == Connected || mState == Terminated)
    {
-      mState = Terminated;
-      delete this;
+      InviteSession::send(msg);
+      return;
    }
-   InviteSession::send(msg);
+   
+   //!dcm! -- strawman, no knowledge of prack, so just ack(handled in
+   //InviteSession) and Invite(already done) for now complain bitterly
+   if (mNextOfferOrAnswerSdp)
+   {
+      assert(0);
+   }
+   assert(msg.isRequest());    //!dcm! -- is this correct?   
+   mLastRequest = msg;
+   mDum.send(msg);
 }
 
 SipMessage&
@@ -211,23 +228,18 @@ ClientInviteSession::end()
    }
 }
 
-SipMessage&
-ClientInviteSession::rejectOffer(int statusCode)
-{
-   return mLastRequest;
-}
-
-void
-ClientInviteSession::sendAck(const SipMessage& ok)
-{
-   makeAck(ok);
-   if (mProposedLocalSdp)
-   {
-      // !jf! ?
-      //mDialog.setContents(mProposedLocalSdp);
-   }
-   mDum.send(mAck);
-}
+//!dcm! -- probably kill
+// void
+// ClientInviteSession::sendAck(const SipMessage& ok)
+// {
+//    makeAck(ok);
+//    if (mProposedLocalSdp)
+//    {
+//       // !jf! ?
+//       //mDialog.setContents(mProposedLocalSdp);
+//    }
+//    mDum.send(mAck);
+// }
 
 //below here be the prack
 void
