@@ -1,5 +1,9 @@
-#ifndef DnsResolver_hxx
-#define DnsResolver_hxx
+#if !defined(RESIP_DNSRESOLVER_HXX)
+#define RESIP_DNSRESOLVER_HXX 
+
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
 #if defined(__linux__) && !defined(USE_ARES)
 #define USE_ARES
