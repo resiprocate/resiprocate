@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.34 2002/09/22 18:08:36 dabryan Exp $
+# $Id: Makefile,v 1.35 2002/09/23 00:24:42 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -96,15 +96,6 @@ html/HIER.html: *hxx
 
 html/sipStack.html: *.cxx *.hxx 
 	cvs2html -a -k -o html
-
-fsm.dot: Preparse.cxx dot.awk
-	awk -f dot.awk Preparse.cxx > fsm.dot
-
-%.pdf: %.ps
-	ps2pdf13 $<
-
-%.ps: %.dot
-	dot -Tps -o$@ $<
 
 $(OBJ)/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
