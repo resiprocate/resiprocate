@@ -19,9 +19,11 @@ class IntSubComponent : public SubComponent
       std::string mData;
 };
  
+std::ostream& Vocal2::operator<<(std::ostream& stream, Vocal2::IntSubComponent& comp);
+
 }
 
-std::ostream& operator<<(std::ostream& stream, Vocal2::IntSubComponent& comp);
+
 
 
 #endif
