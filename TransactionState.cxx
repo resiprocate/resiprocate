@@ -592,7 +592,14 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
-            mCancelStateMachine->processClientNonInvite(msg);
+            if (mCancelStateMachine)
+            {
+               mCancelStateMachine->processClientNonInvite(msg);
+            }
+            else
+            {
+               delete msg;
+            }
             // !jf! memory mgmt? 
             break;
             
@@ -707,8 +714,14 @@ TransactionState::processClientInvite(  Message* msg )
             /*
               Let processClientNonInvite Handle the CANCEL
             */
-            mCancelStateMachine->processClientNonInvite(msg);
-            // !jf! memory mgmt? 
+            if (mCancelStateMachine)
+            {
+               mCancelStateMachine->processClientNonInvite(msg);
+            }
+            else
+            {
+               delete msg;
+            }
             break;
 
          default:
