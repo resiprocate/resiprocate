@@ -373,9 +373,13 @@ SipMessage::brief() const
 
    // !dlb! should be checked earlier 
    if (!exists(h_CSeq))
-
    {
       result = "MALFORMED; missing CSeq";
+      return result;
+   }
+   if (!exists(h_CallId))
+   {
+      result = "MALFORMED; missing Call-Id";
       return result;
    }
    
