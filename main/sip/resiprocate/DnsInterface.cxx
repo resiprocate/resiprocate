@@ -12,9 +12,30 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+const Data DnsInterface::UdpOnly[] =
+{
+   Data("SIP+D2U"),
+   Data::Empty
+};
+
+const Data DnsInterface::TcpAndUdp[] =
+{
+   Data("SIP+D2T"),
+   Data("SIP+D2U"),
+   Data::Empty
+};
+
+const Data DnsInterface::AllTransports[] =
+{
+   Data("SIPS+D2T"),
+   Data("SIP+D2T"),
+   Data("SIP+D2U"),
+   Data::Empty
+};
+
 DnsInterface::DnsInterface() 
    : mHandler(0),
-     mSupportTLS(true)
+     mSupportedTransports(&TcpAndUdp)
 {
 #if defined(USE_ARES)
    int status=0;
@@ -27,14 +48,11 @@ DnsInterface::DnsInterface()
       throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
 #endif
-
-   mSupportedTransports.insert(Transport::UDP);
-   mSupportedTransports.insert(Transport::TCP);
 }
 
 DnsInterface::DnsInterface(DnsInterface::Handler* handler)
    : mHandler(handler),
-     mSupportTLS(true)
+     mSupportedTransports(&TcpAndUdp)
 {
 #if defined(USE_ARES)
    int status=0;
@@ -47,13 +65,29 @@ DnsInterface::DnsInterface(DnsInterface::Handler* handler)
       throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
 #endif
-
-   mSupportedTransports.insert(Transport::UDP);
-   mSupportedTransports.insert(Transport::TCP);
 }
 
 DnsInterface::~DnsInterface()
 {
+}
+
+void 
+DnsInterface::setSupportedTransports(TransportArray& transports)
+{
+   mSupportedTransports = &transports;
+}
+
+bool
+DnsInterface::isSupported(const Data& service)
+{
+   for (int i=0; !mSupportedTransports[i]->empty(); i++)
+   {
+      if (service == (*mSupportedTransports)[i]) 
+      {
+         return true;
+      }
+   }
+   return false;
 }
 
 void 

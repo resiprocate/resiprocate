@@ -21,15 +21,13 @@ class DnsResult
       {
          Available, // A result is returned
          Pending,   // More results may be pending 
+         Finished,  // No more results available
          Destroyed  // the associated transaction has been deleted
       } Type;
 
-      // There are tuples available now
-      bool available() const;
-
-      // Check if there are any more tuples for this target. May move to the
-      // Pending state if additional async dns queries are required
-      bool finished();
+      // Check if there are tuples available now. Will load new tuples in if
+      // necessary at a lower priority. 
+      bool available();
       
       // return the next tuple available for this query. 
       Transport::Tuple next();
@@ -41,7 +39,10 @@ class DnsResult
       class NAPTR
       {
          public:
+            NAPTR();
             bool operator<(const NAPTR& rhs) const;
+
+            Data key; // NAPTR record key
             
             int order;
             int pref;
@@ -54,11 +55,15 @@ class DnsResult
       class SRV
       {
          public:
+            SRV();
             bool operator<(const SRV& rhs) const;
+            
+            Data key; // SRV record key
             
             Transport::Type transport;
             int priority;
             int weight;
+            int cumulativeWeight; // for picking 
             int port;
             Data target;
       };
@@ -68,6 +73,29 @@ class DnsResult
       void lookupARecords(const Data& target);
       void lookupNAPTR();
       void lookupSRV(const Data& target);
+    
+      void processNAPTR(int status, unsigned char* abuf, int alen);
+      void processSRV(int status, unsigned char* abuf, int alen);
+      void processHost(int status, struct hostent* result);
+      
+      // compute the cumulative weights for the SRV entries with the lowest
+      // priority, then randomly pick according to RFC2782 from the entries with
+      // the lowest priority based on weights. When all entries at the lowest
+      // priority are chosen, pick the next lowest priority and repeat. After an
+      // SRV entry is selected, remove it from mSRVResults
+      SRV retrieveSRV();
+      
+      // Will retrieve the next SRV record and compute the prime the mResults
+      // with the appropriate Transport::Tuples. 
+      void primeResults();
+      
+      // this will parse any ADDITIONAL records from the dns result and stores
+      // them in the DnsResult. Only keep additional SRV records where
+      // mNAPTRResults contains a record with replacement is that SRV
+      // Store all A records for convenience in mARecords 
+      const unsigned char* parseAdditional(const unsigned char* aptr, 
+                                           const unsigned char* abuf,
+                                           int alen);
 
       static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
       static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
@@ -85,9 +113,7 @@ class DnsResult
                                              int alen,
                                              NAPTR& naptr);
 
-      void processHost(int status, struct hostent* result);
-      void processNAPTR(int status, unsigned char* abuf, int alen);
-      void processSRV(int status, unsigned char* abuf, int alen);
+
       
    private:
       DnsInterface& mInterface;
@@ -100,9 +126,12 @@ class DnsResult
       Type mType;
       
       std::list<Transport::Tuple> mResults;
-      std::set<NAPTR> mNAPTRResults;
+      
+      NAPTR mPreferredNAPTR;
+      int mCumulativeWeight; // for current priority
       std::set<SRV> mSRVResults;
-
+      std::map<Data,std::list<struct in_addr> > mARecords;
+      
       friend class DnsInterface;
 };
 
