@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.124 2003/08/07 20:50:19 jason Exp $
+# $Id: Makefile,v 1.125 2003/08/15 23:28:26 davidb Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -9,6 +9,7 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =  
 
+DEFINES += xNEW_MSG_HEADER_SCANNER
 CXXFLAGS += -I/usr/local/ssl/include
 LDFLAGS  += -L/usr/local/ssl/lib
 
@@ -80,6 +81,7 @@ SRC = \
 	Pkcs7Contents.cxx \
 	PlainContents.cxx \
 	Preparse.cxx \
+	MsgHeaderScanner.cxx \
 	QopParameter.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \

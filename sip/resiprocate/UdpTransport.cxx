@@ -1,4 +1,3 @@
-
 #include <memory>
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -6,7 +5,6 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Preparse.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -198,11 +196,12 @@ UdpTransport::process(FdSet& fdset)
    tuple.port = ntohs(from.sin_port);
    tuple.transport = this;
    tuple.transportType = transport();
-   
    message->setSource(tuple);
 
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
+
+#ifndef NEW_MSG_HEADER_SCANNER // {
 
    // This is UDP, so, initialise the preparser with this
    // buffer.
@@ -233,6 +232,28 @@ UdpTransport::process(FdSet& fdset)
 
    // no pp error
    int used = mPreparse.nBytesUsed();
+
+#else //defined (NEW_MSG_HEADER_SCANNER) } {
+
+   mMsgHeaderScanner.prepareForMessage(message);
+
+   char *unprocessedCharPtr;
+   if (mMsgHeaderScanner.scanChunk(buffer,
+                                   len,
+                                   &unprocessedCharPtr) !=
+                                                      MsgHeaderScanner::scrEnd)
+   {
+      InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented.");
+      DebugLog(<< Data(buffer, len));
+      delete message; 
+      message=0; 
+      return;
+   }
+
+   // no pp error
+   int used = unprocessedCharPtr - buffer;
+
+#endif //defined (NEW_MSG_HEADER_SCANNER) }
 
    if (used < len)
    {
