@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #include <cassert>
 #include <iostream>
 #include <string.h>
