@@ -19,7 +19,8 @@ class Uri : public ParserCategory
       ~Uri();
       
       // convert from a tel scheme to sip scheme, adds user=phone param
-      static Uri fromTel(const Uri&, const Data& host);
+      //static Uri fromTel(const Uri&, const Data& host);  // deprecate...
+      static Uri fromTel(const Uri&, const Uri& hostUri);
 
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
