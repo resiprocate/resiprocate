@@ -9,8 +9,6 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Preparse.hxx"
 #include "resiprocate/Security.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
