@@ -16,5 +16,6 @@ from-tag, ParameterTypes::fromTag
 duration, ParameterTypes::duration
 branch, ParameterTypes::branch
 received, ParameterTypes::received
+mobility, ParameterTypes::mobility
 comp, ParameterTypes::comp
 rport, ParameterTypes::rport
