@@ -64,7 +64,7 @@ bool
 HandleManager::isValidHandle(Handled::Id id) const
 {
    //!dcm! -- fix; use find
-   return mHandleMap.count(id);
+   return mHandleMap.count(id) != 0;
 }
 
 Handled*
