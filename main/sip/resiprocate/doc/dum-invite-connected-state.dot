@@ -5,14 +5,17 @@ digraph UAC {
         Connected -> Updating [ label = "sendOffer/UPDATE" ];
         Updating -> Connected [ label = "200U/onAnswer" ];
         Updating -> Connected [ label = "FailureU/onOfferRejected" ];
+        Updating -> Terminated [ label = "GeneralFailure/Terminated" ];
 
         Connected -> Reinviting [ label = "sendOfferNoUpdate/reINVITE" ];
         Reinviting -> Connected [ label = "200I/onAnswer,ACK" ];
         Reinviting -> Connected [ label = "FailureI/onOfferRejected" ];
+        Reinviting -> Terminated [ label = "GeneralFailure/Terminated" ];
 
         Connected -> ReinvitingNoOffer [ label = "reINVITE/reINVITE" ];
         ReinvitingNoOffer -> Connected [ label = "200I/onDialogModified,ACK" ];
         ReinvitingNoOffer -> Connected [ label = "FailureI/onReinviteFailure" ];
+        ReinvitingNoOffer -> Terminated [ label = "GeneralFailure/Terminated" ];
 
         Connected -> UpdatePending [ label = "UPDATE/onOffer" ];
         UpdatePending -> Connected [ label = "sendAnswer/200U" ];
@@ -26,4 +29,6 @@ digraph UAC {
         ReinvitePendingNoOffer -> Connected [ label = "accept/200I" ];
         ReinvitePendingNoOffer -> Connected [ label = "reject/488I" ];
 
+        Connected -> Terminated [ label = "end/BYE" ];
+        Connected -> Terminated [ label = "BYE/200B,delete" ];
 }
