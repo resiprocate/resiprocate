@@ -213,35 +213,42 @@ TuIM::process()
 void 
 TuIM::registerAor( const Uri& uri, const Data& password )
 {
-	assert(0);
+	ErrLog( "Need to implement TuIM::registerAor" );
 }
 
 
 const int 
 TuIM::getNumBudies()
 {
-	assert(0);
-	return 0;
+	return int(mBuddy.size());
 }
 
 const Uri 
 TuIM::getBuddyUri(const int index)
 {
-	assert(0);
-	return Uri("bad:bad@bad");
+	assert( index >= 0 );
+	assert( index < getNumBudies() );
+
+	return mBuddy[index].uri;
 }
 
 const Data 
 TuIM::getBuddyGroup(const int index)
 {
-	assert(0);
-	return Data::Empty;
+	assert( index >= 0 );
+	assert( index < getNumBudies() );
+
+	return mBuddy[index].group;
 }
 
 void 
 TuIM::addBuddy( const Uri& uri, const Data& group )
 {
-	assert(0);
+	Buddy b;
+	b.uri = uri;
+	b.group = group;
+
+	mBuddy.push_back( b );
 }
 
 void 
