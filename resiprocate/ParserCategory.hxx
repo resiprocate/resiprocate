@@ -62,11 +62,13 @@ class ParserCategory : public LazyParser
       // used to compare 2 parameter lists for equality in an order independent way
       Data commutativeParameterHash() const;
       
+      // typeless parameter interface
+      Parameter* getParameterByEnum(ParameterTypes::Type type) const;
+      void removeParameterByEnum(ParameterTypes::Type type);
+      void setParameter(const Parameter* parameter);
+
    protected:
       ParserCategory();
-
-      Parameter* getParameterByEnum(int type) const;
-      void removeParameterByEnum(int type);
 
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
