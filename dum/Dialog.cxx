@@ -1,4 +1,4 @@
-#include "resiprocate/sam/nnDialog.hxx"
+#include "resiprocate/sam/Dialog.hxx"
 
 using namespace resip;
 using namespace std;
