@@ -10,7 +10,7 @@ GagMessage *
 GagMessage::getMessage(istream &is)
 {
   int type;
-  is.get((char *)type, sizeof(type));
+  is.read((char *)type, sizeof(type));
 
   DebugLog ( << "Reading message of type " << type);
 
@@ -94,10 +94,10 @@ GagMessage::parse(istream &is, Data &data)
   int size;
   char *temp;
 
-  is.get((char *)size, sizeof(size));
+  is.read((char *)size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.get(temp, size);
+  is.read(temp, size);
   data = Data(temp);
   free(temp);
   return true;
@@ -109,10 +109,10 @@ GagMessage::parse(istream &is, Uri &uri)
   int size;
   char *temp;
 
-  is.get((char *)size, sizeof(size));
+  is.read((char *)size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.get(temp, size);
+  is.read(temp, size);
   uri = Uri(temp);
   free(temp);
   return true;
@@ -124,10 +124,10 @@ GagMessage::parse(istream &is, bool &flag)
   int size;
   char *temp;
 
-  is.get((char *)size, sizeof(size));
+  is.read((char *)size, sizeof(size));
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.get(temp, size);
+  is.read(temp, size);
   flag = (temp[0]?true:false);
   free(temp);
   return true;
