@@ -31,8 +31,9 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum,
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
    {
 	   int e = getErrno();
-      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
-      throw Exception("Failed setsockopt", __FILE__,__LINE__);
+       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+       error(e);
+       throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
 #endif
 
@@ -46,11 +47,11 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum,
 
    if (e != 0 )
    {
-		int e = getErrno();
+      int e = getErrno();
       InfoLog (<< "Failed listen " << strerror(e));
-
+      error(e);
       // !cj! deal with errors
-	  throw Exception("Address already in use", __FILE__,__LINE__);
+      throw Exception("Address already in use", __FILE__,__LINE__);
    }
 }
 
@@ -187,15 +188,17 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
          {
-				int e = getErrno();
+            int e = getErrno();
             InfoLog (<< "Failed to create a socket " << strerror(e));
+            error(e);
             mConnectionManager.gc(ConnectionManager::MinLastUsed); // free one up
 
             sock = Transport::socket( TCP, isV4());
             if ( sock == INVALID_SOCKET )
             {
-					int e = getErrno();
+               int e = getErrno();
                WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
+               error(e);
                fail(data->transactionId);
                delete data;
                return;
@@ -223,6 +226,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                {
                   // !jf! this has failed
                   InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+                  error(e);
                   fdset.clear(sock);
                   close(sock);
                   fail(data->transactionId);
