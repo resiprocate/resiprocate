@@ -9,6 +9,52 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+RequestContext::RequestContext(std::auto_ptr<resip::SipMessage> sipMsg, 
+                               RequestProcessorChain& chain) : 
+   mOriginalRequest(sipMsg),
+   mRequestProcessorChain(chain),
+   mTransactionCount(1)
+{
+}
+
+void
+RequestContext::process(resip::TransactionTerminated& msg)
+{
+   mTransactionCount--;
+   if (mTransactionCount == 0)
+   {
+      delete this;
+   }
+}
+
+void
+RequestContext::process(resip::Message& msg)
+{
+}
+
+resip::SipMessage& 
+RequestContext::getOriginalRequest()
+{
+   return *mOriginalRequest;
+}
+
+const resip::SipMessage& 
+RequestContext::getOriginalRequest() const
+{
+   return *mOriginalRequest;
+}
+
+void 
+RequestContext::setDigestIdentity (const resip::Data& data)
+{
+   mDigestIdentity = data;
+}
+
+const resip::Data& 
+RequestContext::getDigestIdentity() const
+{
+   return mDigestIdentity;
+}
 
 
 /* ====================================================================
