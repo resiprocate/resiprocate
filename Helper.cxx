@@ -1089,10 +1089,9 @@ extractFromPkcs7Recurse(Contents* tree,
    {
       Data signer;
       Security::SignatureStatus sigStatus;
-      Contents* b = extractFromPkcs7Recurse(security.checkSignature(signerAor,
-                                                                    mps, 
-                                                                    signer,
-                                                                    sigStatus),
+      Contents* b = extractFromPkcs7Recurse(security.checkSignature(mps, 
+                                                                    &signer,
+                                                                    &sigStatus),
                                             signerAor, 
                                             receiverAor, attributes, security);
       attributes->setSigner(signer);
