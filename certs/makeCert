@@ -36,7 +36,6 @@ rm -f demoCA/newcerts/*
 ALTNAME="$TYPE:${ADDR}"
 export ALTNAME
 
-
 openssl genrsa  -out ${ADDR}_key.pem 1024 
 openssl req -new -sha1 -key ${ADDR}_key.pem \
         -out ${ADDR}_req.pem -days ${DAYS} <<EOF
