@@ -160,7 +160,7 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
       // recurse
 #ifndef WIN32
 	  insert(s, i->first);
-	  String arrow(" -> ");
+	  static Data arrow(" -> ");
       s << arrow;
       insert(s, i->second);  
 #endif
