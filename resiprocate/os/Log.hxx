@@ -93,6 +93,7 @@ class Log
       static void setLevel(Level level);
       static Level level() { return _level; }
       static Level toLevel(const Data& l);
+      static Type toType(const Data& t);
       static Data toString(Level l);
       static Mutex _mutex;
 
