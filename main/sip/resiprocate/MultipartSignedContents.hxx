@@ -1,5 +1,5 @@
-#ifndef MultipartSignedContents_hxx
-#define MultipartSignedContents_hxx
+#if !defined(RESIP_MULTIPARTSIGNEDCONTENTS_HXX)
+#define RESIP_MULTIPARTSIGNEDCONTENTS_HXX 
 
 
 #include "resiprocate/MultipartMixedContents.hxx"

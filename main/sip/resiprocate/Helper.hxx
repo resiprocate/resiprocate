@@ -1,5 +1,5 @@
-#ifndef Helper_hxx
-#define Helper_hxx
+#if !defined(RESIP_HELPER_HXX)
+#define RESIP_HELPER_HXX 
 
 
 #include "resiprocate/SipMessage.hxx"
@@ -114,8 +114,6 @@ class Helper
 }
 
 #endif
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
-#ifndef FloatParameter_hxx
-#define FloatParameter_hxx
+#if !defined(RESIP_FLOATPARAMETER_HXX)
+#define RESIP_FLOATPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
@@ -35,7 +35,6 @@ class FloatParameter : public Parameter
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

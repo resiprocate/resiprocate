@@ -1,5 +1,5 @@
-#ifndef ApplicationSip_hxx
-#define ApplicationSip_hxx
+#if !defined(RESIP_APPLICATIONSIP_HXX)
+#define RESIP_APPLICATIONSIP_HXX 
 
 #include "resiprocate/SipFrag.hxx"
 
