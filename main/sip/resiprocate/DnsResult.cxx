@@ -430,7 +430,24 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
          
          if (aptr)
          {
-            srv.transport = mTransport;
+            if (srv.key.find("_sip._udp") == 0)
+            {
+               srv.transport = Transport::UDP;
+            }
+            else if (srv.key.find("_sip._tcp") == 0)
+            {
+               srv.transport = Transport::TCP;
+            }
+            else if (srv.key.find("_sips._tcp") == 0)
+            {
+               srv.transport = Transport::TLS;
+            }
+            else
+            {
+               InfoLog (<< "Skipping SRV " << srv.key);
+               continue;
+            }
+
             DebugLog (<< "Adding SRV record (no NAPTR): " << srv);
             mSRVResults.insert(srv);
          }
@@ -462,6 +479,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    // no outstanding queries 
    if (mSRVCount == 0) 
    {
+      DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
       primeResults();
    }
 }
@@ -507,6 +525,7 @@ void
 DnsResult::primeResults()
 {
    DebugLog (<< "primeResults() " << mType);
+   DebugLog (<< "SRV: " << Inserter(mSRVResults));
    
    //assert(mType != Pending);
    //assert(mType != Finished);
@@ -984,9 +1003,16 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
       }
       else if (weight == rhs.weight)
       {
-         if (key < rhs.key)
+         if (transport < rhs.transport)
          {
             return true;
+         }
+         else if (transport == rhs.transport)
+         {
+            if (target < rhs.target)
+            {
+               return true;
+            }
          }
       }
    }
