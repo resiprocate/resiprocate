@@ -32,7 +32,7 @@ insert(std::ostream& s, const T& t)
    return s;
 }
 
-#if 0 
+#ifndef WIN32
 // !cj! help - can someone look at this - do we really need it 
 // it does not compile under windows 
 
@@ -55,7 +55,7 @@ insert(std::ostream& s, const C<T>& c)
    s << "]";
    return s;
 }
-#endif
+#endif // WIN32
 
 template <class K, class C>
 std::ostream&
