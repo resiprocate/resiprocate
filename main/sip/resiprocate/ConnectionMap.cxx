@@ -74,13 +74,13 @@ ConnectionMap::get(Transport::Tuple who, int attempt)
    memset( &servaddr, sizeof(servaddr), 0 );
    servaddr.sin_family = AF_INET;
    servaddr.sin_port = who.port;
-   servaddr.sin_addr = who.ipv4.sin_addr;
+   servaddr.sin_addr = who.ipv4;
    
    Socket e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
    if ( e == -1 ) 
    {
       // !cj! do error printouets 
-      int err = errno;
+      //int err = errno;
       return 0;
    }
    
