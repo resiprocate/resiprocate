@@ -7,6 +7,7 @@ using namespace resip;
 
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
+   mState(Initial),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
