@@ -32,8 +32,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(bool multiThreaded, Security* security, bool stateless) : 
-   security( security ),
+SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
+   security( pSecurity ),
    mExecutive(*this),
    mTransactionController(multiThreaded, mTUFifo, stateless),
    mStrictRouting(false),
@@ -43,7 +43,7 @@ SipStack::SipStack(bool multiThreaded, Security* security, bool stateless) :
    initNetwork();
 
 #ifdef USE_SSL
-   if ( !security )
+   if ( !pSecurity )
    {
       security = new Security( true, true );
    }
