@@ -21,7 +21,7 @@ class BranchParameter : public Parameter
 
       bool hasMagicCookie();
       Data& transactionId();
-      unsigned long& counter();
+      void incrementCounter();
       Data& clientData();
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
@@ -45,6 +45,7 @@ class BranchParameter : public Parameter
          
    private:
       bool mHasMagicCookie;
+      bool mIsMyBranch;
       Data mTransactionId;
       unsigned long mCounter;
       Data mClientData;
