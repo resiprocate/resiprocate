@@ -12,9 +12,19 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<Pidf> Pidf::Factory;
+bool
+Pidf::init()
+{
+   static ContentsFactory<Pidf> factory;
+   (void)factory;
+   return true;
+}
 
 Pidf::Pidf()
+   : Contents(getStaticType())
+{}
+
+Pidf::Pidf(const Mime& contentType)
    : Contents(getStaticType())
 {}
 
@@ -192,7 +202,7 @@ Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
 
 
 bool 
-Pidf::getSimpleStatus( Data* note )
+Pidf::getSimpleStatus(Data* note)
 {
    checkParsed();
 
