@@ -25,7 +25,8 @@ class UnknownParameter : public Parameter
       std::ostream& UnknownParameter::encode(std::ostream& stream) const;
 
       Data& value() {return mValue;}
-      bool hasValue() {return !mValue.empty() || mIsQuoted;}
+      const Data& value() const {return mValue;}
+      bool hasValue() const {return !mValue.empty() || mIsQuoted;}
       bool isQuoted() const { return mIsQuoted; }
       void setQuoted(bool b) { mIsQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
          
