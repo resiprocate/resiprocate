@@ -151,7 +151,7 @@ SipMessage::brief() const
    else if (isResponse())
    {
       result += "Response: ";
-      result += header(h_StatusLine).responseCode();
+      result += Data(header(h_StatusLine).responseCode());
    }
 
    return result;
