@@ -2,6 +2,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdio.h>
+#include <errno.h>
 
 #include <sipstack/Symbols.hxx>
 #include <sipstack/HostSpecification.hxx>
