@@ -11,14 +11,14 @@ using namespace std;
 
 ParserCategory::ParserCategory()
    : mHeaderField(0),
-     mIsParsed(true),
-     mMine(true)
+     mMine(true),
+     mIsParsed(false) // !rk! changed from true
 {}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
    : mHeaderField(0),
-     mIsParsed(rhs.mIsParsed),
-     mMine(true)
+     mMine(true),
+     mIsParsed(rhs.mIsParsed)
 {
    if (rhs.mHeaderField && !mIsParsed)
    {

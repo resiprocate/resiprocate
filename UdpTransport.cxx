@@ -214,7 +214,7 @@ UdpTransport::process(fd_set* fdSet)
       }
       DebugLog( << "UDP Rcv : " << len << " b" );
       
-      SipMessage* message = new SipMessage;
+      SipMessage* message = new SipMessage(true);
       
       // set the received from information into the received= parameter in the
       // via
