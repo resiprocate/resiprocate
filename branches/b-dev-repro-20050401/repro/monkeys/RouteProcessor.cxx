@@ -21,40 +21,39 @@ RouteProcessor::~RouteProcessor()
 {}
 
 /** @brief This monkey looks to see if the request has
-  *        a Route header (the RequestContext has already
-  *        done preprocessing, and has removed any topmost
-  *        route that was self). If there is, the previous
-  *		   hop was a strict routing proxy and the candidate
-  *        set is exactly the RURI of the received request
-  *        (after the above preprocessing).
-  */
+ *        a Route header (the RequestContext has already
+ *        done preprocessing, and has removed any topmost
+ *        route that was self). If there is, the previous
+ *		   hop was a strict routing proxy and the candidate
+ *        set is exactly the RURI of the received request
+ *        (after the above preprocessing).
+ */
 RequestProcessor::processor_action_t
 RouteProcessor::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << *this 
-           << "; reqcontext = " << context);
+   DebugLog(<< "Monkey handling request: " << *this 
+            << "; reqcontext = " << context);
 
-  resip::SipMessage& request = context.getOriginalRequest();
+   resip::SipMessage& request = context.getOriginalRequest();
 
-  if (request.exists(h_Routes) &&
-      !request.header(h_Routes).empty())
-  {
-    // remove all the candidate targets we may have and 
-	// just use the Request URI in the message as the only
-	// candidate
-    assert(context.getCandidates().empty());
-    context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-    return RequestProcessor::SkipThisChain;
-  }
+   if (request.exists(h_Routes) &&
+       !request.header(h_Routes).empty())
+   {
+      // remove all the candidate targets we may have and 
+      // just use the Request URI in the message as the only
+      // candidate
+      assert(context.getCandidates().empty());
+      context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+      return RequestProcessor::SkipThisChain;
+   }
   
-  return RequestProcessor::Continue;
- 
+   return RequestProcessor::Continue;
 }
 
 void
 RouteProcessor::dump(std::ostream &os) const
 {
-  os << "RouteProcessor monkey" << std::endl;
+   os << "RouteProcessor monkey" << std::endl;
 }
 
 
