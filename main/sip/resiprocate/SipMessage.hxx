@@ -50,6 +50,11 @@ class SipMessage : public Message
       {
          mIsExternal = false;
       }
+
+      void setFromExternal()
+      {
+         mIsExternal = true;
+      }
       
       bool isExternal() const
       {
