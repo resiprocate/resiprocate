@@ -46,15 +46,16 @@ class ClientInviteSession : public InviteSession
       void dispatchSentUpdateEarly (const SipMessage& msg);
       void dispatchSentUpdateConnected (const SipMessage& msg);
       void dispatchReceivedUpdateEarly (const SipMessage& msg);
-      void dispatchPrackAnswerWait (const SipMessage& msg);
+      void dispatchSentAnswer (const SipMessage& msg);
+      void dispatchQueuedUpdate (const SipMessage& msg);
       void dispatchCanceled (const SipMessage& msg);
 
       void handleRedirect (const SipMessage& msg);
       void handleProvisional (const SipMessage& msg);
       void handleOffer (const SipMessage& msg, const SdpContents* sdp);
       void handleAnswer (const SipMessage& msg, const SdpContents* sdp);
-      void sendPrack(const SipMessage& msg);
-      bool isRetransmission(const SipMessage& msg);
+      void sendPrackIfNeeded(const SipMessage& msg);
+      void sendPrack(const SdpContents& sdp);
       
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
@@ -63,6 +64,7 @@ class ClientInviteSession : public InviteSession
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
 
+      SipMessage mInvite; // the original INVITE request received
       int mLastReceivedRSeq;
       //int lastExpectedRSeq; // !jf! why do I care? 
       int mStaleCallTimerSeq;

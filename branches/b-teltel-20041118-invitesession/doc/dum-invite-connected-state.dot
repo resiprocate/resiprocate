@@ -13,6 +13,7 @@ digraph UAC {
   Connected -> SentReinvite               [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
   Connected -> ReceivedUpdate             [ label = "onUPDATE|INVITE-offer/app::onOffer" ];
   Connected -> ReceivedReinviteNoOffer    [ label = "onINVITE/app::onDialogModified" ];
+  Connected -> Connected                  [ label = "on200P" ]; 
   Connected -> Connected                  [ label = "on200I/resend::ACK" ]; 
   Connected -> Connected                  [ label = "onCANCEL/send::200C" ]; // is this right?
   Connected -> Terminated                 [ label = "dum::end/send::BYE" ];
