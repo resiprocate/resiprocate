@@ -23,6 +23,15 @@ class BaseSubscription: public DialogUsage
    protected:
       friend class Dialog;
 
+      typedef enum
+      {
+         Initial,
+         Established,    
+         Terminating
+      } State;
+      
+      State mState;
+
       BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       SubscriptionState getSubscriptionState();      

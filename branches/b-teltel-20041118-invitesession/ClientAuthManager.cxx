@@ -77,6 +77,10 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
 //         mAttemptedAuths.erase(it);
             return false;
          }
+         else
+         {
+            it->second.clear();
+         }
       }
       else if (it->second.state == Failed)
       {
@@ -86,7 +90,6 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       }
       else
       {
-         //not sure about this clear
          it->second.clear();
       }
    }
@@ -185,6 +188,8 @@ void ClientAuthManager::addAuthentication(SipMessage& request)
       
       request.remove(h_ProxyAuthorizations);
       request.remove(h_Authorizations);  
+
+      authState.cnonce = Random::getCryptoRandomHex(8); //!dcm! -- inefficient
       
       for (AuthState::CredentialMap::iterator it = authState.wwwCredentials.begin(); 
            it != authState.wwwCredentials.end(); it++)
@@ -241,6 +246,13 @@ ClientAuthManager::CompareAuth::operator()(const Auth& lhs, const Auth& rhs) con
 
 ClientAuthManager::AuthState::AuthState() :
    state(Invalid),
-   cnonceCount(0),
-   cnonce(Random::getCryptoRandomHex(8)) //weak, should have ntp or something
+   cnonceCount(0)
 {}            
+
+void 
+ClientAuthManager::AuthState::clear()
+{
+   proxyCredentials.clear();
+   wwwCredentials.clear();
+   cnonceCount = 0;   
+}

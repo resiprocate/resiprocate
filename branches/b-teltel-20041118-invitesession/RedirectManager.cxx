@@ -99,12 +99,21 @@ RedirectManager::TargetSet::makeNextRequest(SipMessage& request)
       {
          request.mergeUri(mTargetQueue.top().uri());
          mTargetQueue.pop();
-         if (request.isRequest() && request.header(h_RequestLine).method() == INVITE)
+         if (request.isRequest())
          {
-            DebugLog(<< "RedirectManager::TargetSet::makeNextRequest: " << request);
-            request.header(h_CSeq).sequence()++;
-            return true;
-         }
+            switch(request.header(h_RequestLine).method())
+            {
+               case ACK:
+               case BYE:
+               case CANCEL:
+               case PRACK:
+                  break;
+               default:
+                  DebugLog(<< "RedirectManager::TargetSet::makeNextRequest: " << request);
+                  request.header(h_CSeq).sequence()++;
+                  return true;
+            }
+		 }
       }
       catch(BaseException&)
       {
