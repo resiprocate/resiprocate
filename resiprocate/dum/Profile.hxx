@@ -59,7 +59,7 @@ class Profile
       /// The following functions deal with getting digest credentals 
       //@{ 
 
-      void addDigestCredential( const Data& realm, const Data& users, const Data& password);
+      void addDigestCredential( const Data& realm, const Data& user, const Data& password);
       
       /** This class is used as a callback to get digest crednetials. The
        * derived class must define one of computeA1 or getPaswword. computeA1 is
@@ -75,6 +75,9 @@ class Profile
       void setDigestHandler( DigestCredentialHandler* handler );
       //@}
       
+      DigestCredentialHandler* getDigestHandler();
+      const Data& getDigestPassword( const Data& realm, const Data& user );
+      
    private:
       NameAddr mAor;
       int mDefaultRegistrationExpires;
@@ -86,6 +89,19 @@ class Profile
       Mimes mSupportedMimeTypes;
       Tokens mSupportedEncodings;
       Tokens mSupportedLanguages;
+
+      DigestCredentialHandler* mDigestCredentialHandler;
+      
+      struct DigestCredential
+      {
+            Data realm;
+            Data user;
+            Data password;
+
+            bool operator<(const DigestCredential& rhs) const;
+      };
+      typedef std::set<DigestCredential> DigestCredentials;
+      DigestCredentials mDigestCredentials;
 };
    
 
