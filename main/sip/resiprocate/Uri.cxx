@@ -10,9 +10,9 @@
 #include "resiprocate/Embedded.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 Uri::Uri() 
    : ParserCategory(),

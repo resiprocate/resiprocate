@@ -1,5 +1,5 @@
-#if !defined(Vocal2_Fifobase_hxx)
-#define Vocal2_Fifobase_hxx
+#if !defined(resip_Fifobase_hxx)
+#define resip_Fifobase_hxx
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -52,7 +52,7 @@
  */
 
 
-static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.12 2003/03/24 23:25:36 jason Exp $";
+static const char* const resipFifo_h_Version = "$Id: Fifo.hxx,v 1.13 2003/03/25 06:33:48 jason Exp $";
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
@@ -64,7 +64,7 @@ static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.12 2003/03/24
 
 /** Infrastructure common to VOCAL.
  */
-namespace Vocal2
+namespace resip
 {
 
 /** First in first out list interface, with the added functionality of 
@@ -177,7 +177,7 @@ Fifo<Msg>::messageAvailable() const
    return ( !mFifo.empty() );
 }
 
-} // namespace Vocal2
+} // namespace resip
 
 
 #endif // !defined(VOCAL_FIFOBASE_H)

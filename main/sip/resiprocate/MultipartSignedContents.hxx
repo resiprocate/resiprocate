@@ -5,7 +5,7 @@
 #include "resiprocate/MultipartMixedContents.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 class Mime;

@@ -10,9 +10,9 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 const int Helper::tagSize = 4;
 

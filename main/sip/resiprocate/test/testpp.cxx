@@ -7,7 +7,7 @@
 
 main()
 {
-  using namespace Vocal2;
+  using namespace resip;
 
   const char testmsg[] = 
     "INVITE sip:vivekg@chair.dnrc.bell-labs.com:5060 SIP/2.0" CRLF

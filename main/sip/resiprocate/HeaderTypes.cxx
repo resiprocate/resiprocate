@@ -4,7 +4,7 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Symbols.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

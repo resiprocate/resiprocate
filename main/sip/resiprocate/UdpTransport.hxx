@@ -5,7 +5,7 @@
 #include "resiprocate/Message.hxx"
 #include "resiprocate/Preparse.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class SipMessage;

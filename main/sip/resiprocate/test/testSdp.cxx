@@ -7,10 +7,10 @@
 #include "TestSupport.hxx"
 #include "tassert.h"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 int
 main(int argc, char* argv[])

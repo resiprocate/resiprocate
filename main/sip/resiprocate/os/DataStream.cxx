@@ -1,7 +1,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 DataBuffer::DataBuffer(Data& str)
    : mStr(str)

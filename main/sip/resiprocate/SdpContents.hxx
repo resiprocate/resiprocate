@@ -9,7 +9,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class SdpContents;

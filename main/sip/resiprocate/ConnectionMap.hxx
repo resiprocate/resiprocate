@@ -11,7 +11,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Connection.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Preparse;

@@ -32,7 +32,7 @@
 /* Add _BIG_ENDIAN for Solaris    -ctam */
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN)
 void
-Vocal2::byteSwap(u_int32_t *buf, unsigned words)
+resip::byteSwap(u_int32_t *buf, unsigned words)
 {
    md5byte *p = (md5byte *)buf;
 
@@ -54,7 +54,7 @@ Vocal2::byteSwap(u_int32_t *buf, unsigned words)
  * initialization constants.
  */
 void
-Vocal2::MD5Init(struct MD5Context *ctx)
+resip::MD5Init(struct MD5Context *ctx)
 {
    ctx->buf[0] = 0x67452301;
    ctx->buf[1] = 0xefcdab89;
@@ -70,7 +70,7 @@ Vocal2::MD5Init(struct MD5Context *ctx)
  * of bytes.
  */
 void
-Vocal2::MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len)
+resip::MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len)
 {
    u_int32_t t;
 
@@ -112,7 +112,7 @@ Vocal2::MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len)
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void
-Vocal2::MD5Final(md5byte digest[16], struct MD5Context *ctx)
+resip::MD5Final(md5byte digest[16], struct MD5Context *ctx)
 {
    int count = ctx->bytes[0] & 0x3f; 	/* Number of bytes in ctx->in */
    md5byte *p = (md5byte *)ctx->in + count;
@@ -164,7 +164,7 @@ Vocal2::MD5Final(md5byte digest[16], struct MD5Context *ctx)
  * the data and converts bytes into longwords for this routine.
  */
 void
-Vocal2::MD5Transform(u_int32_t buf[4], u_int32_t const in[16])
+resip::MD5Transform(u_int32_t buf[4], u_int32_t const in[16])
 {
    register u_int32_t a, b, c, d;
 

@@ -20,9 +20,9 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Pidf.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-using namespace Vocal2;
+using namespace resip;
 
 static int IMMethodList[] = { (int) REGISTER, (int) MESSAGE, 
 	                      (int) SUBSCRIBE, (int) NOTIFY };
@@ -501,7 +501,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
       }
       
       // loop throught the contacts, find me, and extract expire time
-      Vocal2::ParserContainer<Vocal2::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
+      resip::ParserContainer<resip::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
       while ( i != msg->header(h_Contacts).end() )
       {
          try

@@ -9,10 +9,10 @@
 #include "resiprocate/os/Logger.hxx"
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
    : mField(field),
@@ -45,7 +45,7 @@ HeaderFieldValue::encode(ostream& str) const
    return str;
 }
 
-ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
+ostream& resip::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
    hfv.encode(stream);
    return stream;

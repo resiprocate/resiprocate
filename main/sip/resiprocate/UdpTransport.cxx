@@ -9,10 +9,10 @@
 #include "resiprocate/Preparse.hxx"
 
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 const int UdpTransport::MaxBufferSize = 8192;
 

@@ -6,7 +6,7 @@
 #include "resiprocate/os/Random.hxx"
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 int main(int argc, char** argv)
 {

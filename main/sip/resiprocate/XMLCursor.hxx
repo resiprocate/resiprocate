@@ -5,7 +5,7 @@
 #include <list>
 #include <map>
 
-namespace Vocal2
+namespace resip
 {
 
 /*

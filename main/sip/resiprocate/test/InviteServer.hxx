@@ -17,13 +17,13 @@ class InviteServer
       InviteServer(Transceiver& tranceiver);
       void go();
 
-      class Exception : public Vocal2::BaseException
+      class Exception : public resip::BaseException
       {
          public:
-            Exception(const Vocal2::Data& msg,
-                      const Vocal2::Data& file,
+            Exception(const resip::Data& msg,
+                      const resip::Data& file,
                       const int line) 
-               : Vocal2::BaseException(msg, file, line) 
+               : resip::BaseException(msg, file, line) 
             {}
 
             ~Exception() throw() {}
@@ -34,10 +34,10 @@ class InviteServer
             }
       };
    private:
-      Vocal2::SipMessage* waitForResponse(int responseCode,
+      resip::SipMessage* waitForResponse(int responseCode,
                                           int waitMs);
       
-      Vocal2::SipMessage* waitForRequest(Vocal2::MethodTypes method,
+      resip::SipMessage* waitForRequest(resip::MethodTypes method,
                                          int waitMs);
       Transceiver& mTransceiver;
 };

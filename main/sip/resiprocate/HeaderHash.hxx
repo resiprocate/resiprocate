@@ -1,6 +1,6 @@
 #if !defined(HEADERHASH_HXX)
 #define HEADERHASH_HXX
-namespace Vocal2 
+namespace resip 
 {
 
 struct headers { char *name; Headers::Type type; };
