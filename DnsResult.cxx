@@ -118,6 +118,7 @@ DnsResult::lookup(const Uri& uri)
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    mSips = (uri.scheme() == Symbols::Sips);
+   mSrvKey = Symbols::UNDERSCORE + uri.scheme().substr(0, uri.scheme().size()) + Symbols::DOT;
    bool isNumeric = DnsUtil::isIpAddress(mTarget);
 
    if (uri.exists(p_transport))
@@ -382,14 +383,12 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // queries for each supported protocol
      NAPTRFail:
       {
-         lookupSRV("_sips._tcp." + mTarget);
+         lookupSRV(mSrvKey + Symbols::SRVTCP + mTarget);
          mSRVCount++;
          if (!mSips) 
          {
-             lookupSRV("_sip._tcp." + mTarget);
-             mSRVCount++;
-             lookupSRV("_sip._udp." + mTarget);
-             mSRVCount++;
+            lookupSRV(mSrvKey + Symbols::SRVUDP + mTarget);
+            mSRVCount++;
          }
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
@@ -429,15 +428,15 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
          
          if (aptr)
          {
-            if (srv.key.find("_sip._udp") == 0)
+            if (srv.key.find("_udp") != Data::npos)
             {
                srv.transport = UDP;
             }
-            else if (srv.key.find("_sip._tcp") == 0)
+            else if (srv.key.find("_tcp") != Data::npos)
             {
                srv.transport = TCP;
             }
-            else if (srv.key.find("_sips._tcp") == 0)
+            else if (srv.key.find("_sips._tcp") != Data::npos)
             {
                srv.transport = TLS;
             }
@@ -798,15 +797,15 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       assert(!mPreferredNAPTR.key.empty());
       if (srv.key == mPreferredNAPTR.replacement && srv.target != Symbols::DOT)
       {
-         if (srv.key.find("_sip._udp") == 0)
+         if (srv.key.find("_udp") != Data::npos)
          {
             srv.transport = UDP;
          }
-         else if (srv.key.find("_sip._tcp") == 0)
+         else if (srv.key.find("_tcp") != Data::npos)
          {
             srv.transport = TCP;
          }
-         else if (srv.key.find("_sips._tcp") == 0)
+         else if (srv.key.find("_sips._tcp") != Data::npos)
          {
             srv.transport = TLS;
          }
