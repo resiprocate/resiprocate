@@ -79,28 +79,22 @@ ServerOutOfDialogReq::answerOptions(bool fIncludeAllows)
 	Profile *pProfile = mDum.getProfile();
 
 	// Add Allows (if required)
-
 	mResponse.header(h_Allows).clear();
-
 	if(fIncludeAllows)
 	{
 		mResponse.header(h_Allows) = pProfile->getAllowedMethods();
 	}
 
 	// Add Accept Header
-	mResponse.header(h_Accepts).clear();
 	mResponse.header(h_Accepts) = pProfile->getSupportedMimeTypes();
 
 	// Add Accept-Encoding Header
-	mResponse.header(h_AcceptEncodings).clear();
 	mResponse.header(h_AcceptEncodings) = pProfile->getSupportedEncodings();
 
 	// Add Accept-Language Header
-	mResponse.header(h_AcceptLanguages).clear();
 	mResponse.header(h_AcceptLanguages) = pProfile->getSupportedLanguages();
 
 	// Add Supported Header
-	mResponse.header(h_Supporteds).clear();
 	mResponse.header(h_Supporteds) = pProfile->getSupportedOptionTags();
 
 	return mResponse;
