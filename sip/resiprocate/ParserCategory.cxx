@@ -43,9 +43,13 @@ ParserCategory::operator[](const Data& param)
 }
 
 void
-ParserCategory::parseParameters(const char* start)
+ParserCategory::parseParameters(unsigned int start)
 {
-   mHeaderField->parseParameters(start);
+   // don't bother parsing past the end
+   if (start != Data::npos)
+   {
+      mHeaderField->parseParameters(start);
+   }
 }
 
 std::ostream&
