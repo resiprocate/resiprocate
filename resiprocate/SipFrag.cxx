@@ -87,7 +87,7 @@ SipFrag::encodeParsed(std::ostream& str) const
 void 
 SipFrag::parse(ParseBuffer& pb)
 {
-   DebugLog(<< "SipFrag::parse: " << pb.position());
+//   DebugLog(<< "SipFrag::parse: " << pb.position());
 
    mMessage = new SipMessage();
 
