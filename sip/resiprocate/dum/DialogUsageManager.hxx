@@ -100,14 +100,14 @@ class DialogUsageManager
       SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer);
       SipMessage& makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType);
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublication(const Uri& aor, const NameAddr& target, const Data& eventType);
+      SipMessage& makePublication(const Uri& targetDocument, const Contents& body, const Data& eventType, unsigned expiresSeconds );
       SipMessage& makeRegistration(const NameAddr& aor);
       SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
       // all can be done inside of INVITE or SUBSCRIBE only
       SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
       SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublish(DialogId, const Uri& aor, const Data& eventType); 
+      SipMessage& makePublish(DialogId, const Uri& targetDocument, const Data& eventType, unsigned expireSeconds); 
       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
       void cancel(DialogSetId invSessionId);
@@ -137,6 +137,7 @@ class DialogUsageManager
       friend class ClientInviteSession;
       friend class ServerInviteSession;
       friend class InviteSession;
+      friend class ClientPublication;
       friend class BaseUsage::Handle;
       
       SipMessage& makeNewSession(BaseCreator* creator);

@@ -158,6 +158,16 @@ DialogUsageManager::makeRegistration(const NameAddr& aor)
    return makeNewSession(new RegistrationCreator(*this, aor)); 
 }
 
+SipMessage& 
+DialogUsageManager::makePublication(const Uri& targetDocument,  
+                                    const Contents& body, 
+                                    const Data& eventType, 
+                                    unsigned expiresSeconds )
+{ 
+   return makeNewSession(new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds)); 
+}
+
+
 void
 DialogUsageManager::send(const SipMessage& request)
 {
