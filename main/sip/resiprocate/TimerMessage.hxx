@@ -18,6 +18,8 @@ class TimerMessage : public Message
 
       virtual Data& getTransactionId() const;
 
+      Timer::Type getType();
+      
    private:
       Data mTransactionId;
       Timer::Type mType;
