@@ -236,6 +236,7 @@ TransactionState::processDns(Message* message)
       }
 
       delete message;
+      return;
    }
    
    DnsMessage* dns = dynamic_cast<DnsMessage*>(message);
