@@ -176,6 +176,8 @@ SipMessage::brief() const
       result += "SipResponse: ";
       result += Data(header(h_StatusLine).responseCode());
    }
+   result += " cseq=";
+   result += Data(header(h_CSeq).sequence());
 
    return result;
 }

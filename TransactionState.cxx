@@ -15,7 +15,7 @@
 
 using namespace Vocal2;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
 
 TransactionState::TransactionState(SipStack& stack, Machine m, State s) : 
    mStack(stack),
@@ -71,8 +71,8 @@ TransactionState::process(SipStack& stack)
       tid += "ACK"; // to make it unique from the invite transaction
    }
 
-   DebugLog (<< "got message out of state machine fifo: tid=" << tid << std::endl << *message);
-
+   DebugLog (<< "got message out of state machine fifo: tid=" << tid << message->brief());
+   
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
    {
@@ -182,12 +182,12 @@ TransactionState::process(SipStack& stack)
 void
 TransactionState::processAck(Message* message)
 {
-   DebugLog (<< "TransactionState::processAck: " << message->brief());
-
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    TransportMessage* result = dynamic_cast<TransportMessage*>(message);
+   DebugLog (<< "TransactionState::processAck: " << message->brief());
+
 
    if (sip)
    {
@@ -218,11 +218,10 @@ TransactionState::processAck(Message* message)
 void
 TransactionState::processDns(Message* message)
 {
-   DebugLog (<< "TransactionState::processDns: " << message->brief());
-   
    // handle Sending::Failed messages here
    if (isTransportError(message))
    {
+      DebugLog (<< "TransactionState::processDns: " << message->brief());
       assert (mDnsState != DnsResolver::NotStarted);
 
       DnsResolver::TupleIterator next = mDnsListCurrent;
