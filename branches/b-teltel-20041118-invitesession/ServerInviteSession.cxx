@@ -1,4 +1,3 @@
-#include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
@@ -6,26 +5,19 @@
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
-
-
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif // defined(WIN32) && defined(_DEBUG)
+#include "resiprocate/os/compat.hxx"
 
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
-   : InviteSession(dum, dialog, Initial)
+   : InviteSession(dum, dialog)
 {
    assert(request.isRequest());
-   mLastIncomingRequest = request;   
+   mFirstRequest = request;   
+   mState = UAS_Start;
 }
 
 ServerInviteSessionHandle 
@@ -34,6 +26,237 @@ ServerInviteSession::getHandle()
    return ServerInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
+void 
+ServerInviteSession::redirect(const NameAddrs& contacts, int code)
+{
+   Destroyer::Guard guard(mDestroyer);
+
+   // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
+   // an offer/answer exchange with PRACK. 
+   // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
+   // we should send 200PRACK
+   SipMessage response;
+   mDialog.makeResponse(mFirstRequest, response, code);
+   response.header(h_Contacts) = contacts;
+   mDum.send(response);
+   transition(Terminated);
+
+   guard.destroy();
+}
+
+void 
+ServerInviteSession::provideOffer(const SdpContents& offer)
+{
+   switch (mState)
+   {
+      case UAS_NoOfferReliable:
+         break;
+      case UAS_EarlyReliable:
+         break;
+         
+      case UAS_Accepted:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_OfferReliable: 
+      case UAS_ReceivedUpdate:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdate:
+      case UAS_SentUpdateAccepted:
+      case UAS_Start:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+         assert(0);
+         break;
+      default:
+         InviteSession::provideOffer(offer);
+         break;
+   }
+}
+
+void 
+ServerInviteSession::provideAnswer(const SdpContents& answer)
+{
+   switch (mState)
+   {
+      case UAS_Start:
+         break;
+      case UAS_OfferReliable: 
+         break;
+      case UAS_ReceivedUpdate:
+         break;
+
+      case UAS_Accepted:
+      case UAS_EarlyReliable:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_NoOfferReliable:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdate:
+      case UAS_SentUpdateAccepted:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+         assert(0);
+         break;
+      default:
+         InviteSession::provideAnswer(answer);
+         break;
+   }
+}
+
+void 
+ServerInviteSession::end()
+{
+   switch (mState)
+   {
+      case UAS_Start:
+         break;
+      case UAS_OfferReliable: 
+         break;
+      case UAS_ReceivedUpdate:
+         break;
+      case UAS_Accepted:
+         break;
+      case UAS_EarlyReliable:
+         break;
+      case UAS_FirstEarlyReliable:
+         break;
+      case UAS_FirstSentOfferReliable:
+         break;
+      case UAS_NoOfferReliable:
+         break;
+      case UAS_ReceivedUpdateWaitingAnswer:
+         break;
+      case UAS_SentUpdate:
+         break;
+      case UAS_SentUpdateAccepted:
+         break;
+      case UAS_WaitingToHangup:
+         break;
+      case UAS_WaitingToTerminate:
+         break;
+      default:
+         InviteSession::end();
+         break;
+   }
+}
+
+void 
+ServerInviteSession::reject(int code)
+{
+   switch (mState)
+   {
+      case UAS_EarlyReliable:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_NoOfferReliable:
+      case UAS_OfferReliable: 
+      case UAS_ReceivedUpdate:
+      case UAS_SentUpdate:
+      {
+         Destroyer::Guard guard(mDestroyer);
+         
+         // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
+         // an offer/answer exchange with PRACK. 
+         // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
+         // we should send 200PRACK
+         SipMessage response;
+         mDialog.makeResponse(mFirstRequest, response, code);
+         mDum.send(response);
+         transition(Terminated);
+         guard.destroy();
+         break;
+      }
+
+      case UAS_Accepted:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdateAccepted:
+      case UAS_Start:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+      default:
+         assert(0);
+         break;
+   }
+}
+
+void 
+ServerInviteSession::accept(int code)
+{
+   switch (mState)
+   {
+      case UAS_FirstEarlyReliable:
+         // queue 2xx
+         transition(UAS_Accepted);
+         break;
+         
+      case UAS_EarlyReliable:
+         // send 2xx
+         // 2xx timer
+         transition(Connected);
+         break;
+
+      case UAS_SentUpdate:
+         // send 2xxI
+         transition(UAS_SentUpdateAccepted);
+         break;
+
+      case UAS_ReceivedUpdate:
+         transition(UAS_ReceivedUpdateWaitingAnswer);
+         break;
+         
+      case UAS_FirstSentOfferReliable:
+      case UAS_NoOfferReliable:
+      case UAS_OfferReliable: 
+      case UAS_Accepted:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdateAccepted:
+      case UAS_Start:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+      default:
+         assert(0);
+         break;
+   }
+}
+
+void 
+ServerInviteSession::refer(const NameAddr& referTo)
+{
+   WarningLog (<< "Can't refer before Connected");
+   assert(0);
+   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+}
+
+void 
+ServerInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+{
+   WarningLog (<< "Can't refer before Connected");
+   assert(0);
+   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+}
+
+void 
+ServerInviteSession::info(const Contents& contents)
+{
+   WarningLog (<< "Can't send INFO before Connected");
+   assert(0);
+   throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
+}
+
+void 
+ServerInviteSession::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ServerInviteSession::dispatch(const DumTimeout& msg)
+{
+}
+
+//////////////////////////////////////////
+// OLD code follows
+//////////////////////////////////////////
+#if 0
 void
 ServerInviteSession::end()
 {
@@ -184,7 +407,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       InviteSession::dispatch(msg);
    }
 }
-
+#endif
 
 
 /* ====================================================================
