@@ -104,7 +104,7 @@ ParserCategory::param(const UnknownParameterType& param) const
       p = new UnknownParameter(param.getName());
       mUnknownParameters.push_back(p);
    }
-   return dynamic_cast<UnknownParameter*>(p)->value();
+   return static_cast<UnknownParameter*>(p)->value();
 }
 #endif
 
@@ -273,12 +273,12 @@ ParserCategory::removeParameterByData(const Data& data)
    }
 }
 
-#ifdef NO_TEMPLATE_METHODS
+#ifndef TEMPLATE_METHODS
 Transport_Param::DType& 
 ParserCategory::param(const Transport_Param& paramType) const
 {
    checkParsed();
-   Transport_Param::Type* p = dynamic_cast<Transport_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Transport_Param::Type* p = static_cast<Transport_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Transport_Param::Type(paramType.getTypeNum());
@@ -287,11 +287,25 @@ ParserCategory::param(const Transport_Param& paramType) const
    return p->value();
 }
 
+Boundary_Param::DType& 
+ParserCategory::param(const Boundary_Param& paramType) const
+{
+   checkParsed();
+   Boundary_Param::Type* p = static_cast<Boundary_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Boundary_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+
 User_Param::DType& 
 ParserCategory::param(const User_Param& paramType) const
 {
    checkParsed();
-   User_Param::Type* p = dynamic_cast<User_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   User_Param::Type* p = static_cast<User_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new User_Param::Type(paramType.getTypeNum());
@@ -304,7 +318,7 @@ Method_Param::DType&
 ParserCategory::param(const Method_Param& paramType) const
 {
    checkParsed();
-   Method_Param::Type* p = dynamic_cast<Method_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Method_Param::Type* p = static_cast<Method_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Method_Param::Type(paramType.getTypeNum());
@@ -317,7 +331,7 @@ Ttl_Param::DType&
 ParserCategory::param(const Ttl_Param& paramType) const
 {
    checkParsed();
-   Ttl_Param::Type* p = dynamic_cast<Ttl_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Ttl_Param::Type* p = static_cast<Ttl_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Ttl_Param::Type(paramType.getTypeNum());
@@ -330,7 +344,7 @@ Maddr_Param::DType&
 ParserCategory::param(const Maddr_Param& paramType) const
 {
    checkParsed();
-   Maddr_Param::Type* p = dynamic_cast<Maddr_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Maddr_Param::Type* p = static_cast<Maddr_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Maddr_Param::Type(paramType.getTypeNum());
@@ -343,7 +357,7 @@ Lr_Param::DType&
 ParserCategory::param(const Lr_Param& paramType) const
 {
    checkParsed();
-   Lr_Param::Type* p = dynamic_cast<Lr_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Lr_Param::Type* p = static_cast<Lr_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Lr_Param::Type(paramType.getTypeNum());
@@ -356,7 +370,7 @@ Q_Param::DType&
 ParserCategory::param(const Q_Param& paramType) const
 {
    checkParsed();
-   Q_Param::Type* p = dynamic_cast<Q_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Q_Param::Type* p = static_cast<Q_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Q_Param::Type(paramType.getTypeNum());
@@ -369,7 +383,7 @@ Purpose_Param::DType&
 ParserCategory::param(const Purpose_Param& paramType) const
 {
    checkParsed();
-   Purpose_Param::Type* p = dynamic_cast<Purpose_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Purpose_Param::Type* p = static_cast<Purpose_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Purpose_Param::Type(paramType.getTypeNum());
@@ -382,7 +396,7 @@ Expires_Param::DType&
 ParserCategory::param(const Expires_Param& paramType) const
 {
    checkParsed();
-   Expires_Param::Type* p = dynamic_cast<Expires_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Expires_Param::Type* p = static_cast<Expires_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Expires_Param::Type(paramType.getTypeNum());
@@ -395,7 +409,7 @@ Handling_Param::DType&
 ParserCategory::param(const Handling_Param& paramType) const
 {
    checkParsed();
-   Handling_Param::Type* p = dynamic_cast<Handling_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Handling_Param::Type* p = static_cast<Handling_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Handling_Param::Type(paramType.getTypeNum());
@@ -408,7 +422,7 @@ Tag_Param::DType&
 ParserCategory::param(const Tag_Param& paramType) const
 {
    checkParsed();
-   Tag_Param::Type* p = dynamic_cast<Tag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Tag_Param::Type* p = static_cast<Tag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Tag_Param::Type(paramType.getTypeNum());
@@ -421,7 +435,7 @@ ToTag_Param::DType&
 ParserCategory::param(const ToTag_Param& paramType) const
 {
    checkParsed();
-   ToTag_Param::Type* p = dynamic_cast<ToTag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   ToTag_Param::Type* p = static_cast<ToTag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new ToTag_Param::Type(paramType.getTypeNum());
@@ -434,7 +448,7 @@ FromTag_Param::DType&
 ParserCategory::param(const FromTag_Param& paramType) const
 {
    checkParsed();
-   FromTag_Param::Type* p = dynamic_cast<FromTag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   FromTag_Param::Type* p = static_cast<FromTag_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new FromTag_Param::Type(paramType.getTypeNum());
@@ -447,7 +461,7 @@ Duration_Param::DType&
 ParserCategory::param(const Duration_Param& paramType) const
 {
    checkParsed();
-   Duration_Param::Type* p = dynamic_cast<Duration_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Duration_Param::Type* p = static_cast<Duration_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Duration_Param::Type(paramType.getTypeNum());
@@ -460,7 +474,7 @@ Branch_Param::DType&
 ParserCategory::param(const Branch_Param& paramType) const
 {
    checkParsed();
-   Branch_Param::Type* p = dynamic_cast<Branch_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Branch_Param::Type* p = static_cast<Branch_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Branch_Param::Type(paramType.getTypeNum());
@@ -473,7 +487,7 @@ Received_Param::DType&
 ParserCategory::param(const Received_Param& paramType) const
 {
    checkParsed();
-   Received_Param::Type* p = dynamic_cast<Received_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Received_Param::Type* p = static_cast<Received_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Received_Param::Type(paramType.getTypeNum());
@@ -486,7 +500,7 @@ Mobility_Param::DType&
 ParserCategory::param(const Mobility_Param& paramType) const
 {
    checkParsed();
-   Mobility_Param::Type* p = dynamic_cast<Mobility_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Mobility_Param::Type* p = static_cast<Mobility_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Mobility_Param::Type(paramType.getTypeNum());
@@ -499,7 +513,7 @@ Comp_Param::DType&
 ParserCategory::param(const Comp_Param& paramType) const
 {
    checkParsed();
-   Comp_Param::Type* p = dynamic_cast<Comp_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Comp_Param::Type* p = static_cast<Comp_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Comp_Param::Type(paramType.getTypeNum());
@@ -512,7 +526,7 @@ Rport_Param::DType&
 ParserCategory::param(const Rport_Param& paramType) const
 {
    checkParsed();
-   Rport_Param::Type* p = dynamic_cast<Rport_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Rport_Param::Type* p = static_cast<Rport_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Rport_Param::Type(paramType.getTypeNum());
@@ -526,7 +540,7 @@ Digest_Algorithm_Param::DType&
 ParserCategory::param(const Digest_Algorithm_Param& paramType) const
 {
    checkParsed();
-   Digest_Algorithm_Param::Type* p = dynamic_cast<Digest_Algorithm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Digest_Algorithm_Param::Type* p = static_cast<Digest_Algorithm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Digest_Algorithm_Param::Type(paramType.getTypeNum());
@@ -539,7 +553,7 @@ Digest_Qop_Param::DType&
 ParserCategory::param(const Digest_Qop_Param& paramType) const
 {
    checkParsed();
-   Digest_Qop_Param::Type* p = dynamic_cast<Digest_Qop_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Digest_Qop_Param::Type* p = static_cast<Digest_Qop_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Digest_Qop_Param::Type(paramType.getTypeNum());
@@ -552,7 +566,7 @@ Digest_Verify_Param::DType&
 ParserCategory::param(const Digest_Verify_Param& paramType) const
 {
    checkParsed();
-   Digest_Verify_Param::Type* p = dynamic_cast<Digest_Verify_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Digest_Verify_Param::Type* p = static_cast<Digest_Verify_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Digest_Verify_Param::Type(paramType.getTypeNum());

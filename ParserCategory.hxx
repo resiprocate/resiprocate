@@ -30,7 +30,11 @@ class ParserCategory : public LazyParser
       bool exists(const ParamBase& paramType) const;
       void remove(const ParamBase& paramType);
 
-#define TEMPLATE_METHODS
+	  Data& param(const UnknownParameterType& param) const;
+      void remove(const UnknownParameterType& param); 
+      bool exists(const UnknownParameterType& param) const;
+
+//#define TEMPLATE_METHODS
 #ifdef TEMPLATE_METHODS
       template <class T> 
       typename T::DType& param(const T& paramType) const
@@ -65,16 +69,13 @@ class ParserCategory : public LazyParser
       Mobility_Param::DType& param(const Mobility_Param& paramType) const;
       Comp_Param::DType& param(const Comp_Param& paramType) const;
       Rport_Param::DType& param(const Rport_Param& paramType) const;
+   
+	  Boundary_Param::DType& param(const Boundary_Param& paramType) const;
 
       Digest_Algorithm_Param::DType& param(const Digest_Algorithm_Param& paramType) const;
       Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
       Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
 #endif
-#ifndef WIN32
-      Data& param(const UnknownParameterType& param) const;
-#endif
-      void remove(const UnknownParameterType& param); 
-      bool exists(const UnknownParameterType& param) const;
       
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;
