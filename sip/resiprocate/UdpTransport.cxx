@@ -134,7 +134,7 @@ void UdpTransport::process()
    }
    else if (len > 0)
    {
-      cerr << "Received : " << len << " bytes" << endl;
+      //cerr << "Received : " << len << " bytes" << endl;
       
       SipMessage* message = new SipMessage;
       
