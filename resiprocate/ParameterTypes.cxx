@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/ParameterTypes.hxx"
 #include "resiprocate/os/compat.hxx"
 #include <iostream>
