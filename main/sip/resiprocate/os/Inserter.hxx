@@ -111,7 +111,9 @@ insert(std::ostream& s, const std::set <K, C>& c)
          s << ", ";
       }
       // recurse
+#ifndef WIN32
       insert(s, *i);
+#endif
    }
    s << "]";
    return s;
@@ -156,9 +158,12 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
          s << ", ";
       }
       // recurse
-      insert(s, i->first);
-      s << " -> ";
-      insert(s, i->second);      
+#ifndef WIN32
+	  insert(s, i->first);
+	  String arrow(" -> ");
+      s << arrow;
+      insert(s, i->second);  
+#endif
    }
    s << "]";
    return s;
