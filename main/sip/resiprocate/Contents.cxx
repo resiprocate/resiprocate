@@ -333,6 +333,9 @@ Contents::preParseHeaders(ParseBuffer& pb)
 
    Data headerName;
 
+   try
+   {
+      
    while (!pb.eof())
    {
       const char* anchor = pb.skipWhitespace();
@@ -440,6 +443,12 @@ Contents::preParseHeaders(ParseBuffer& pb)
             }
          }
       }
+   }
+   }
+   catch (ParseBuffer::Exception & /* e */)
+   {
+      ErrLog( << "Some problem parsing contents" );
+      throw;
    }
 }
 

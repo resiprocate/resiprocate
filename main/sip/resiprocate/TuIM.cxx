@@ -182,11 +182,11 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
       }
    }
 #endif
-
    msg->setContents(body);
 
+   msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
+   
    setOutbound( *msg );
-
    //ErrLog( "About to send " << *msg );
 
    mStack->send( *msg );
