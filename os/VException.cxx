@@ -1,3 +1,37 @@
+static const char* const VException_cxx_Version =
+    "$Id: VException.cxx,v 1.4 2002/10/06 18:31:33 jason Exp $";
+
+
+#include <util/VException.hxx>
+#include <util/Logger.hxx>
+
+using namespace Vocal2;
+using namespace std;
+
+#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
+
+VException::VException( const Data& msg,
+                        const Data& file,
+                        const int line) : 
+        message( msg ),
+        fileName( file ),
+        lineNumber( line )
+{
+   DebugLog(<< "Exception at " << file << ":" << line << " " << message);
+}
+
+VException::~VException()
+    throw()
+{
+}
+
+ostream& Vocal2::operator<<(ostream& strm, const VException& e)
+{
+   strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
+   return strm;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -49,81 +83,3 @@
  *
  */
 
-
-static const char* const VException_cxx_Version =
-    "$Id: VException.cxx,v 1.3 2002/10/02 23:08:16 jason Exp $";
-
-
-//#include "global.h"
-#include <util/VException.hxx>
-#include <util/Logger.hxx>
-
-using namespace Vocal2;
-using namespace std;
-
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
-
-VException::VException( const Data& msg,
-                        const Data& file,
-                        const int line,
-                        const int error /*Default Argument*/):
-        message( msg ),
-        fileName( file ),
-        lineNumber( line ),
-        errorCode( error )
-{
-   DebugLog(<< "Exception at " << file << ":" << line << " " << message);
-}
-
-VException::~VException()
-    throw()
-{
-}
-
-Data
-VException::getDescription( void ) const
-{
-    return ( getName() + ": " + message );
-}
-
-int
-VException::getError() const
-{
-    return ( errorCode );
-}
-
-void
-VException::log( void ) const
-{
-    if ( errorCode )
-    {
-       DebugLog(<< getDescription() << ": " << errorCode
-                << " at " << fileName << ":" << lineNumber);
-    }
-    else
-    {
-       DebugLog(<< getDescription() << " at " << fileName << ":" << lineNumber);
-    }
-}
-
-ostream& Vocal2::operator<<(ostream& strm, const VException& e)
-{
-   strm << e.getDescription();
-   return strm;
-}
-
-VExceptionMemory::VExceptionMemory(
-    const Data& msg,
-    const Data& file,
-    const int line,
-    const int error /*Default Argument*/)
-        : VException( msg, file, line, error )
-{
-    log();
-}
-
-Data
-VExceptionMemory::getName( void ) const
-{
-    return "VExceptionMemory";
-}
