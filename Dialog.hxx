@@ -85,6 +85,10 @@ class Dialog
       // a UAC receives a response that creates a dialog
       void createDialogAsUAC(const SipMessage& response);
 
+	  // This happens when a dialog gets created on a UAC when 
+      // a UAC receives a response that creates a dialog
+      void createRegistrationAsUAC(const SipMessage& response);
+
       // Called when a 2xx response is received in an existing dialog
       // Replace the _remoteTarget with uri from Contact header in response
       void targetRefreshResponse(const SipMessage& response);
