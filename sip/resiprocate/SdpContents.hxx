@@ -86,8 +86,8 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const int& sessionId,
-                         const int& version,
+                         const unsigned long& sessionId,
+                         const unsigned long long& version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
@@ -99,8 +99,8 @@ class SdpContents : public Contents
                   const unsigned long& getSessionId() const {return mSessionId;}
                   unsigned long& getSessionId() { return mSessionId; }
 
-                  const unsigned long& getVersion() const {return mVersion;}
-                  unsigned long& getVersion() { return mVersion; }
+                  const unsigned long long& getVersion() const {return mVersion;}
+                  unsigned long long& getVersion() { return mVersion; }
                   const Data& user() const {return mUser;}
                   Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
@@ -112,7 +112,7 @@ class SdpContents : public Contents
 
                   Data mUser;
                   unsigned long mSessionId;
-                  unsigned long mVersion;
+                  unsigned long long mVersion;
                   AddrType mAddrType;
                   Data mAddress;
 

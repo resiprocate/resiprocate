@@ -227,8 +227,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const int& sessionId,
-                                     const int& version,
+                                     const unsigned long& sessionId,
+                                     const unsigned long long& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),
@@ -271,7 +271,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    mSessionId = pb.unsignedInteger();
    
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.unsignedInteger();
+   mVersion = pb.unsignedLongLong();
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
