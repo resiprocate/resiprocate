@@ -99,6 +99,10 @@ main(int argc, char* argv[])
    target.uri().port() = 5080;
    target.uri().param(p_transport) = proto;
   
+   NameAddr contact;
+   contact.uri().scheme() = "sip";
+   contact.uri().user() = "fluffy";
+
 #ifdef WIN32
      target.uri().host() = Data("10.0.1.110");
      //target.uri().host() = Data("cj30.libvoip.com");
@@ -121,7 +125,7 @@ main(int argc, char* argv[])
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
          target.uri().port() = 5080; // +(sent%window);
-         SipMessage* next = Helper::makeRegister( target, from, from);
+         SipMessage* next = Helper::makeRegister( target, from, contact);
          next->header(h_Vias).front().sentPort() = 5070;
          sender.send(*next);
          outstanding++;
