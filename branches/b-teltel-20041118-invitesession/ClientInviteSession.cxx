@@ -1019,7 +1019,9 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xx:
       case On2xxOffer:
       case On2xxAnswer:
-         mCancelledTimerSeq++;         
+         // this is the 2xx crossing the CANCEL case
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);         
+         mCancelledTimerSeq++;
          end();
          break;
 
