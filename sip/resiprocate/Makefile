@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.40 2002/09/25 19:42:23 jason Exp $
+# $Id: Makefile,v 1.41 2002/09/25 22:02:46 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -16,6 +16,7 @@ SRC =	\
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	HeaderTypes.cxx \
+	Helper.cxx \
 	IntegerParameter.cxx \
 	Lock.cxx \
 	Log.cxx \
@@ -26,6 +27,7 @@ SRC =	\
 	Parameter.cxx \
 	ParameterList.cxx \
 	ParameterTypes.cxx \
+	ParserCategory.cxx \
 	ParserCategories.cxx \
 	Preparse.cxx \
 	SipMessage.cxx \
@@ -55,7 +57,7 @@ CXXFLAGS += -O -g
 #CXXFLAGS += -g
 LDFLAGS  += 
 CXXFLAGS += -I. -I../. -MD -Wall $(CXXDEBUG)
-LDLIBS   += 
+LDLIBS   += -lpthread
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
@@ -115,22 +117,22 @@ $(BIN)/libSipStack.a: $(OBJS)
 
 
 
-testParameterList:  $(OBJS) $(OBJ)/testParameter.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+testParameterList:  $(OBJS) $(OBJ)/testParameter.o 
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testUdp:  $(OBJS) $(OBJ)/testUdp.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testPreparse: $(OBJ)/Preparse.o $(OBJ)/testPreparse.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 -include $(OBJ)/*.d
