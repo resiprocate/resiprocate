@@ -2,6 +2,7 @@
 #define RESIP_SERVERINVITESESSION_HXX
 
 #include "resiprocate/dum/InviteSession.hxx"
+
 #include "resiprocate/SipMessage.hxx"
 
 #include <deque>

@@ -1,9 +1,10 @@
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -37,8 +38,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mProposedLocalSdp(0),
      mProposedRemoteSdp(0),
      mNextOfferOrAnswerSdp(0),
-     mCurrentRetransmit200(0)      
-
+     mCurrentRetransmit200(0),
+     mDestroyer(this)
 {
    InfoLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
@@ -126,6 +127,7 @@ InviteSession::getSessionHandle()
 void
 InviteSession::dispatch(const DumTimeout& timeout)
 {
+   Destroyer::Guard guard(mDestroyer);
    if (timeout.type() == DumTimeout::Retransmit200 && (mState == Accepting || mState == AcceptingReInvite ))
    {
       mDum.send(mFinalResponse);      
@@ -135,13 +137,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       mDialog.makeResponse(mLastResponse, mLastRequest, 408);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), mLastResponse);      
-      delete this;      
+      guard.destroy();      
    }
 }
 
 void
 InviteSession::dispatch(const SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
 
@@ -156,9 +159,17 @@ InviteSession::dispatch(const SipMessage& msg)
             if ((code  == 200 && msg.header(h_CSeq).method() == BYE) || code > 399)
             {
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
-               delete this;
+               guard.destroy();
                return;
             }
+         }
+         else
+         {
+            //make a function to do this & the occurences of this in DialogUsageManager
+            SipMessage failure;
+            mDum.makeResponse(failure, msg, 481);
+            failure.header(h_AcceptLanguages) = mDum.mProfile->getSupportedLanguages();
+            mDum.sendResponse(failure);
          }
          break;
       case Connected:
@@ -396,6 +407,7 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
 void 
 InviteSession::send(SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    if (msg.isRequest())
    {
       //unless the message is an ACK(in which case it is mAck)
@@ -435,7 +447,7 @@ InviteSession::send(SipMessage& msg)
       {
          mState = Terminated;
          mDum.send(msg);
-         delete this;
+         guard.destroy();
       }
       else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
       {

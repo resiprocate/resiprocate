@@ -1,5 +1,5 @@
-#if !defined(RESIP_REGISTRATIONHANDLER_HXX)
-#define RESIP_REGISTRATIONHANDLER_HXX
+#if !defined(RESIP_PUBLICATIONHANDLER_HXX)
+#define RESIP_PUBLICATIONHANDLER_HXX
 
 #include "resiprocate/dum/Handles.hxx"
 
