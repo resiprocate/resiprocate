@@ -19,11 +19,8 @@ class Token : public ParserCategory
    public:
       Token(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
+      Data& value();
 };
 typedef ParserContainer<Token> Tokens;
 
@@ -36,11 +33,6 @@ class Mime : public ParserCategory
       Mime(HeaderFieldValueList& hfvs) {}
       Mime(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
 };
 typedef ParserContainer<Mime> Mimes;
 
@@ -110,11 +102,7 @@ class GenericURI : public ParserCategory
       GenericURI(HeaderFieldValueList& hfvs) {}
       GenericURI(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
 };
 typedef ParserContainer<GenericURI> GenericURIs;
 
@@ -127,11 +115,7 @@ class NameAddr : public ParserCategory
       NameAddr(HeaderFieldValueList& hfvs) {}
       NameAddr(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
 };
 typedef ParserContainer<NameAddr> NameAddrs;
 
@@ -144,11 +128,6 @@ class NameAddrOrAddrSpec : public ParserCategory
       NameAddrOrAddrSpec(HeaderFieldValueList& hfvs) {}
       NameAddrOrAddrSpec(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
       virtual void parse() {assert(0);}
 };
 
@@ -161,11 +140,7 @@ class Contact : public ParserCategory
       Contact(HeaderFieldValueList& hfvs) {}
       Contact(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
 };
 typedef ParserContainer<Contact> Contacts;
 
@@ -178,11 +153,7 @@ class CallId : public ParserCategory
       CallId(HeaderFieldValueList& hfvs) {}
       CallId(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
 };
 typedef ParserContainer<CallId> CallIds;
 
@@ -242,12 +213,9 @@ class Via : public ParserCategory
       Via(HeaderFieldValueList& hfvs) {}
       Via(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
+      virtual void parse();
 };
+
 typedef ParserContainer<Via> Vias;
  
 //====================
@@ -258,11 +226,12 @@ class RequestLineComponent : public ParserCategory
    public:
       RequestLineComponent(HeaderFieldValueList& hfvs) {}
       RequestLineComponent(HeaderFieldValue& hfv) {}
-  virtual ~RequestLineComponent();
+      virtual ~RequestLineComponent();
       ParserCategory* clone(HeaderFieldValue*) const;
       MethodTypes getMethod() const;
-  // MOVE TO .CXX WHEN IMPLEMENTING
-  virtual void parse() { assert(0); }
+
+      // MOVE TO .CXX WHEN IMPLEMENTING
+      virtual void parse() { assert(0); }
 };
 
 //====================
@@ -273,11 +242,11 @@ class StatusLineComponent : public ParserCategory
    public:
       StatusLineComponent(HeaderFieldValueList& hfvs) {}
       StatusLineComponent(HeaderFieldValue& hfv) {}
-  virtual ~StatusLineComponent();
+      virtual ~StatusLineComponent();
       ParserCategory* clone(HeaderFieldValue*) const;
       int getResponseCode() const;
-  // MOVE TO .CXX WHEN IMPLEMENTING
-virtual void parse() { assert(0); }
+      // MOVE TO .CXX WHEN IMPLEMENTING
+      virtual void parse() { assert(0); }
 };
 
 }
