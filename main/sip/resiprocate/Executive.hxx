@@ -1,5 +1,5 @@
-#if !defined(EXECUTIVE_HXX)
-#define EXECUTIVE_HXX
+#if !defined(RESIP_EXECUTIVE_HXX)
+#define RESIP_EXECUTIVE_HXX
 
 #include "resiprocate/os/Socket.hxx"
 #include <sys/types.h>
@@ -39,7 +39,6 @@ class Executive
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

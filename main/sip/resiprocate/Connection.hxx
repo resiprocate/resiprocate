@@ -1,5 +1,5 @@
-#if !defined(resipConnection_hxx)
-#define resipConnection_hxx
+#if !defined(RESIP_CONNECTION_HXX)
+#define RESIP_CONNECTION_HXX 
 
 #include <list>
 

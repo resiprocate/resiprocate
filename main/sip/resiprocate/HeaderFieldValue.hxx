@@ -1,5 +1,5 @@
-#ifndef HeaderFieldValue_hxx
-#define HeaderFieldValue_hxx
+#if !defined(RESIP_HEADERFIELDVALUE_HXX)
+#define RESIP_HEADERFIELDVALUE_HXX 
 
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/ParameterTypes.hxx"
@@ -46,7 +46,6 @@ std::ostream& operator<<(std::ostream& stream,
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
