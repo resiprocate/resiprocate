@@ -26,7 +26,7 @@ const int Helper::tagSize = 4;
 int 
 Helper::aBitSmallerThan(unsigned long value)
 {
-   return std::max(Timer::TS, std::min(value - Timer::TS, 9*value/10));
+   return resipMax(Timer::TS, resipMin(value - Timer::TS, 9*value/10));
 }
 
 
