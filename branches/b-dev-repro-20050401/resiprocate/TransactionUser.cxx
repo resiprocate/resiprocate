@@ -104,7 +104,13 @@ void TransactionUser::addDomain(const Data& domain, int port)
    u.host() = domain;
    u.port() = port;
    mDomainList.push_back(u);
-}      
+} 
+
+void
+TransactionUser::setMessageFilterRuleList(MessageFilterRuleList &rules)
+{
+   mRuleList = rules;
+}
 
 
 /* ====================================================================
