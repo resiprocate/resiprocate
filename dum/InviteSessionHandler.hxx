@@ -37,6 +37,8 @@ class InviteSessionHandler
       // expect an onTerminated after this
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 
+      virtual void onForkDestroyed(ClientInviteSessionHandle)=0;
+
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;

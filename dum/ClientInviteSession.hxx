@@ -44,6 +44,9 @@ class ClientInviteSession : public InviteSession
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
+
+      void forked();      
+      void cancel();
 };
  
 }
