@@ -1,6 +1,8 @@
 #if !defined (TASSERT_HXX)
 #define TASSERT_HXX
 
+#include <list>
+
 #if 0 // If you are having bib memory problems with your compiler - try putting this to 1
 #define tassert assert
 #else
@@ -12,6 +14,7 @@ if ( tassert_enabled )                          \
         CritLog(<<"TESTASSERT: "#expr);         \
         tassert_enabled = 0;                    \
         tassert_failure = 1;                    \
+        tassert_location.push_back(__LINE__);   \
     }                                           \
 }                                               \
 else                                            \
@@ -37,6 +40,7 @@ const int tassert_nstack = sizeof(tassert_stack)/sizeof(*tassert_stack);
 static int tassert_stack_ptr = 0;
 const int tassert_max_cases = 100;
 static int tassert_ncases = 0;
+list<int> tassert_location;
 
 struct {
       bool ran;
@@ -72,6 +76,11 @@ struct {
 #define tassert_report()                                                \
 {                                                                       \
    bool overall = true;                                                 \
+   while (!tassert_location.empty()) {                                  \
+     int line = tassert_location.front();                               \
+     tassert_location.pop_front();                                      \
+     CritLog(<<__FILE__<<", line " << line <<": test failed.");         \
+   }                                                                    \
    for(int i = 0; i < tassert_ncases ; i++)                             \
    {                                                                    \
       if (!tassert_results[i].ran)                                      \
@@ -88,5 +97,6 @@ struct {
    }                                                                    \
    CritLog(<<"OVERALL RESULTS: " << (overall?"PASSED":"FAILED ***"));   \
 }
+
 #endif
 
