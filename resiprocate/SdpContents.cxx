@@ -55,7 +55,7 @@ AttributeHelper::parse(ParseBuffer& pb)
       const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
       pb.skipToOneOf(Symbols::COLON, Symbols::CR);
       pb.data(key, anchor);
-      if (*pb.position() == Symbols::COLON[0])
+      if (!pb.eof() && *pb.position() == Symbols::COLON[0])
       {
          anchor = pb.skipChar(Symbols::COLON[0]);
          pb.skipToChar(Symbols::CR[0]);
@@ -356,14 +356,14 @@ SdpContents::Session::Connection::parse(ParseBuffer& pb)
    pb.data(mAddress, anchor);
 
    mTTL = 0;
-   if (*pb.position() == Symbols::SLASH[0])
+   if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
    {
       pb.skipChar();
       mTTL = pb.integer();
    }
 
    // multicast dealt with above this parser
-   if (*pb.position() != Symbols::SLASH[0])
+   if (!pb.eof() && *pb.position() != Symbols::SLASH[0])
    {
       pb.skipChar(Symbols::CR[0]);
       pb.skipChar(Symbols::LF[0]);
@@ -477,23 +477,25 @@ int
 parseTypedTime(ParseBuffer& pb)
 {
    int v = pb.integer();
-   switch (*pb.position())
+   if (!pb.eof())
    {
-      case 's' :
-         pb.skipChar();
-         break;
-      case 'm' :
-         v *= 60;
-         pb.skipChar();
-         break;
-      case 'h' :
-         v *= 3600;
-         pb.skipChar();
-      case 'd' :
-         v *= 3600*24;
-         pb.skipChar();
+      switch (*pb.position())
+      {
+	 case 's' :
+	    pb.skipChar();
+	    break;
+	 case 'm' :
+	    v *= 60;
+	    pb.skipChar();
+	    break;
+	 case 'h' :
+	    v *= 3600;
+	    pb.skipChar();
+	 case 'd' :
+	    v *= 3600*24;
+	    pb.skipChar();
+      }
    }
-   
    return v;
 }
    
@@ -508,7 +510,7 @@ SdpContents::Session::Time::Repeat::parse(ParseBuffer& pb)
 
    mDuration = parseTypedTime(pb);
 
-   while (*pb.position() != Symbols::CR[0])
+   while (!pb.eof() && *pb.position() != Symbols::CR[0])
    {
       pb.skipChar(Symbols::SPACE[0]);
       
@@ -561,7 +563,7 @@ SdpContents::Session::Timezones::parse(ParseBuffer& pb)
    pb.skipChar('z');
    pb.skipChar(Symbols::EQUALS[0]);
 
-   while (*pb.position() != Symbols::CR[0])
+   while (!pb.eof() && *pb.position() != Symbols::CR[0])
    {
       Adjustment adj(0, 0);
       adj.time = pb.integer();
@@ -569,7 +571,7 @@ SdpContents::Session::Timezones::parse(ParseBuffer& pb)
       adj.offset = parseTypedTime(pb);
       addAdjustment(adj);
 
-      if (*pb.position() == Symbols::SPACE[0])
+      if (!pb.eof() && *pb.position() == Symbols::SPACE[0])
       {
          pb.skipChar();
       }
@@ -683,31 +685,31 @@ SdpContents::Session::parse(ParseBuffer& pb)
    pb.skipChar(Symbols::CR[0]);
    pb.skipChar(Symbols::LF[0]);
 
-   if (*pb.position() == 'u')
+   if (!pb.eof() && *pb.position() == 'u')
    {
       mUri.parse(pb);
       pb.skipChar(Symbols::CR[0]);
       pb.skipChar(Symbols::LF[0]);
    }
 
-   while (*pb.position() == 'e')
+   while (!pb.eof() && *pb.position() == 'e')
    {
       addEmail(Email());
       mEmails.back().parse(pb);
    }
 
-   while (*pb.position() == 'p')
+   while (!pb.eof() && *pb.position() == 'p')
    {
       addPhone(Phone());
       mPhones.back().parse(pb);
    }
 
-   if (*pb.position() == 'c')
+   if (!pb.eof() && *pb.position() == 'c')
    {
       mConnection.parse(pb);
    }
 
-   while (*pb.position() == 'b')
+   while (!pb.eof() && *pb.position() == 'b')
    {
       addBandwidth(Bandwidth());
       mBandwidths.back().parse(pb);
