@@ -1,8 +1,9 @@
+#include "resiprocate/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
 
-GagConduit::GagConduit(SipStack &stack)
-  : sipStack(&stack)
+GagConduit::GagConduit(SipStack &stack, int _udpPort)
+  : sipStack(&stack), udpPort(_udpPort)
 {
   // Nothing interesting to do here
 }
@@ -39,11 +40,13 @@ GagConduit::handleMessage(GagMessage *message)
   }
 }
 
+// XXX ADD A DESTRUCTOR to clean up TUs!!!
 
-map<Uri,TuIM>::iterator
+
+map<Uri,TuIM *>::iterator
 GagConduit::getTu(Uri &aor)
 {
-  map<Uri,TuIM>::iterator tu = tuIM.find(aor);
+  map<Uri,TuIM *>::iterator tu = tuIM.find(aor);
   if (tu == tuIM.end())
   {
     Data error;
@@ -62,10 +65,10 @@ GagConduit::gaimIm(GagImMessage *msg)
   Uri *to = msg->getToPtr();
   Data *im = msg->getImPtr();
 
-  map<Uri,TuIM>::iterator tu = getTu(*from);
+  map<Uri,TuIM *>::iterator tu = getTu(*from);
   if (tu == tuIM.end()) return;
 
-  tu->second.sendPage(*im, *to, false, to->getAor());
+  tu->second->sendPage(*im, *to, false, to->getAor());
 }
 
 void
@@ -75,46 +78,90 @@ GagConduit::gaimPresence(GagPresenceMessage *msg)
   bool online = msg->getAvailable();
   Data *status = msg->getStatusPtr();
 
-  map<Uri,TuIM>::iterator tu = getTu(*aor);
+  map<Uri,TuIM *>::iterator tu = getTu(*aor);
   if (tu == tuIM.end()) return;
   
-  tu->second.setMyPresence(online, *status);
+  tu->second->setMyPresence(online, *status);
 }
 
 void
 GagConduit::gaimLogin(GagLoginMessage *msg)
 {
+  Uri *aor = msg->getAorPtr();
+  Data *userid = msg->getUseridPtr();
+  Data *password = msg->getPasswordPtr();
+  TuIM *newTu;
+
+
+  map<Uri,TuIM *>::iterator tu = tuIM.find(*aor);
+  if (tu != tuIM.end())
+  {
+    Data error;
+    error = "You are already logged in as ";
+    error += aor->getAor();
+    GagErrorMessage errorMessage(error);
+    errorMessage.serialize(cout);
+  }
+
+  // Figure out what out contact is
+  Uri contact;
+  contact.port() = udpPort;
+  contact.host() = sipStack->getHostname();
+  contact.user() = aor->user();
+
+  newTu = new TuIM(sipStack, *aor, contact, this);
+  // XXX Check for null here
+  newTu->setUAName(Data("gag/0.0.0 (gaim)"));
+  newTu->registerAor(*aor, *password);
+
+  tuIM[*aor] = newTu;
 }
 
 void
 GagConduit::gaimLogout(GagLogoutMessage *msg)
 {
+  Uri *aor = msg->getAorPtr();
+  // XXX
 }
 
 void
 GagConduit::gaimAddBuddy(GagAddBuddyMessage *msg)
 {
+  Uri *us = msg->getUsPtr();
+  Uri *them = msg->getThemPtr();
+
+  map<Uri,TuIM *>::iterator tu = getTu(*us);
+  if (tu == tuIM.end()) return;
+
+  tu->second->addBuddy(*them, Data::Empty);
 }
 
 void
 GagConduit::gaimRemoveBuddy(GagRemoveBuddyMessage *msg)
 {
+  Uri *us = msg->getUsPtr();
+  Uri *them = msg->getThemPtr();
+
+  map<Uri,TuIM *>::iterator tu = getTu(*us);
+  if (tu == tuIM.end()) return;
+
+  tu->second->removeBuddy(*them);
 }
 
 void
 GagConduit::gaimError(GagErrorMessage *msg)
 {
+  // XXX This should *never* be called..
 }
-
 
 void
 GagConduit::process()
 {
-  map<Uri,TuIM>::iterator tu;
+  map<Uri,TuIM *>::iterator tu;
   tu = tuIM.begin();
   while (tu != tuIM.end())
   {
-    (tu->second).process();
+    (tu->second)->process();
     tu++;
   }
 }
