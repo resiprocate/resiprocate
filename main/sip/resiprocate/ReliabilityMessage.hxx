@@ -25,14 +25,12 @@ class ReliabilityMessage : public Message
 
       bool isReliable() const { return mReliable; }
       
-      virtual Data brief() const { return Data(mReliable); }
+      virtual Data brief() const { return "ReliabilityMessage, isReliable: " + Data(mReliable); }
       virtual std::ostream& encode(std::ostream& strm) const
       {
          strm << mTransactionId << " : " << mReliable;
          return strm;
       }
-      
-      
    private:
       Data mTransactionId;
       bool mReliable;

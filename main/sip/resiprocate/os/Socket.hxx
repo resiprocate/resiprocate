@@ -78,6 +78,8 @@ int closesocket( Socket fd );
 void
 initNetwork();
 
+void makeSocketNonBlocking(Socket fd);
+
 
 class FdSet
 {
