@@ -22,7 +22,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
@@ -184,6 +184,9 @@
 			</File>
 			<File
 				RelativePath=".\HandleManager.cxx">
+			</File>
+			<File
+				RelativePath=".\InMemoryRegistrationDatabase.cxx">
 			</File>
 			<File
 				RelativePath=".\InviteSession.cxx">
@@ -353,6 +356,9 @@
 				RelativePath=".\Handles.hxx">
 			</File>
 			<File
+				RelativePath=".\InMemoryRegistrationDatabase.hxx">
+			</File>
+			<File
 				RelativePath=".\InviteSession.hxx">
 			</File>
 			<File
@@ -444,9 +450,6 @@
 			</File>
 			<File
 				RelativePath=".\UInt64Hash.hxx">
-			</File>
-			<File
-				RelativePath=".\UsageSet.hxx">
 			</File>
 			<File
 				RelativePath=".\UsageUseException.hxx">
