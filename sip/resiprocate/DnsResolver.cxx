@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <arpa/nameser.h>
 #include <netdb.h>
 #endif
 
@@ -16,6 +17,7 @@
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/SipStack.hxx"
+#include "sip2/sipstack/TransactionState.hxx"
 
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::TRANSACTION
@@ -38,12 +40,14 @@ DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 #endif
 }
 
+
 DnsResolver::~DnsResolver()
 {
 #if defined(USE_ARES)
    ares_destroy(mChannel);
 #endif
 }
+
 
 void
 DnsResolver::buildFdSet(FdSet& fdset)
@@ -66,7 +70,7 @@ DnsResolver::process(FdSet& fdset)
 }
 
 
-int 
+static int 
 determinePort(const Data& scheme, Transport::Type transport)
 {
    if ( isEqualNoCase(scheme, Symbols::Sips) || (transport == Transport::TLS) )
@@ -77,6 +81,32 @@ determinePort(const Data& scheme, Transport::Type transport)
    return Symbols::DefaultSipPort;
 }
 
+
+static Data
+determineSrvPrefix(const Data& scheme, Transport::Type transport)
+{
+   Data prefix;
+
+   if ( isEqualNoCase(scheme, Symbols::Sips) )
+   {
+      prefix = Symbols::SrvSips;
+   }
+   else
+   {
+      prefix = Symbols::SrvSip;
+   }
+
+   if ( (transport == Transport::TLS) || (transport == Transport::TCP) )
+   {
+      prefix += "." + Symbols::SrvTcp;
+   }
+   else
+   {
+      prefix += "." + Symbols::SrvUdp;
+   }
+
+   return prefix;
+}
 
 void
 DnsResolver::lookup(const Data& transactionId, const Via& via)
@@ -189,9 +219,22 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             return;
 #else
             DebugLog(<<"Should be doing NAPTR+SRV per RFC 3263 s4.1, 4.2");
+
+#if defined(USE_ARES)
             transport = Transport::UDP;
+            DebugLog(<<"For now assuming UDP and just doing SRV");
+            port = determinePort(uri.scheme(), transport);
+            Request* request = new Request(mStack, transactionId,
+               target, port, transport);
+            Data srvTarget =
+               determineSrvPrefix(uri.scheme(), transport)
+               + "." + target;
+            ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
+               DnsResolver::aresCallbackSrv, request);
+            return;
 #endif
-	 }
+#endif
+         }
       }
    }
 
@@ -209,13 +252,20 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
  
 
 void
-DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int port,  Transport::Type transport)
+DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int port, Transport::Type transport)
 
 {
+   TransactionState* txn = mStack.mTransactionMap.find(transactionId);
+   if (!txn)
+   {
+      DebugLog(<< "DNS lookup for non-existent transaction");
+      return;
+   }
+   txn->registerDnsLookup();
+
 #if defined(USE_ARES)
-   //ares_query(mChannel, host.c_str(), C_IN, T_A, DnsResolver::aresCallback, transactionId.data());
    Request* request = new Request(mStack, transactionId, host, port, transport);
-   ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallback2, request);
+   ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallbackHost, request);
 #else   
    struct hostent* result=0;
    int ret=0;
@@ -307,7 +357,7 @@ DnsResolver::isIpAddress(const Data& data)
 } 
 
 void 
-DnsResolver::aresCallback2(void *arg, int status, struct hostent* result)
+DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
 {
 #if defined(USE_ARES)
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
@@ -339,47 +389,104 @@ DnsResolver::aresCallback2(void *arg, int status, struct hostent* result)
 }
 
 
-void 
-DnsResolver::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+void
+DnsResolver::aresCallbackSrv(void *arg, int pstatus,
+   unsigned char *abuf, int alen)
 {
 #if defined(USE_ARES)
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
-#if 0
-   DebugLog (<< "Received dns update: " << request->tid << " for " << request->host);
-   DnsMessage* dns = new DnsMessage(request->tid);
-   
-   if (status != ARES_SUCCESS)
+   int status, len;
+   char *name, *errmem;
+   const unsigned char *aptr = abuf + HFIXEDSZ;
+   DnsMessage *dns = new DnsMessage(request->tid);
+
+   DebugLog (<< "Received SRV result for: " << request->tid << " for "
+             << request->host);
+
+   if (pstatus != ARES_SUCCESS)
    {
-      char* errmem=0;
-      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      errmem = 0;
+      InfoLog (<< "SRV lookup failed: " << ares_strerror(pstatus, &errmem));
       ares_free_errmem(errmem);
+      goto SrvParseDone;
    }
-   assert(alen < HFIXEDSZ);
 
-   /* Parse the answer header. */
-   int id = DNS_HEADER_QID(abuf); // query identification number
-   int qr = DNS_HEADER_QR(abuf);  // query response
-   int opcode = DNS_HEADER_OPCODE(abuf); // opcode
-   int aa = DNS_HEADER_AA(abuf); // authoritative answer
-   int tc = DNS_HEADER_TC(abuf); // truncation
-   int rd = DNS_HEADER_RD(abuf); // recursion desired
-   int ra = DNS_HEADER_RA(abuf); // recursion available
-   int rcode = DNS_HEADER_RCODE(abuf); // response code
-   unsigned int qdcount = DNS_HEADER_QDCOUNT(abuf); // question count
-   unsigned int ancount = DNS_HEADER_ANCOUNT(abuf); // answer record count
-   unsigned int nscount = DNS_HEADER_NSCOUNT(abuf); // name server record count
-   unsigned int arcount = DNS_HEADER_ARCOUNT(abuf); // additional record count
+   // !rk!  Throw away all of the "questions" in the DNS packet.  Is there
+   // not just a way to skip right over these without iterating like this?
+   for (int i = 0; i < DNS_HEADER_QDCOUNT(abuf); i++)
+   {
+      status = ares_expand_name(aptr, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS question: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto SrvParseDone;
+      }
+      free(name);
+      aptr += len + QFIXEDSZ;
+   }
 
-   DebugLog (<< "id: " << id);
-   DebugLog (<< "flags: " 
-             << qr ? "qr " : ""
-             << aa ? "aa " : "" 
-             << tc ? "tc " : ""
-             << rd ? "rd " : ""
-             << ra ? "ra " : "");
+   for (int i = 0; i < DNS_HEADER_ANCOUNT(abuf); i++)
+   {
+      Srv srv;
+
+      status = ares_expand_name(aptr, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS RR: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto SrvParseDone;
+      }
+
+      aptr += len;
+      int dlen = DNS_RR_LEN(aptr);
+      aptr += RRFIXEDSZ;
+
+      srv.priority = DNS__16BIT(aptr);
+      srv.weight = DNS__16BIT(aptr+2);
+      srv.port = DNS__16BIT(aptr+4);
+
+      status = ares_expand_name(aptr+6, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS answer: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto SrvParseDone;
+      }
+      srv.host = name;
+      srv.transport = request->transport;
+      dns->mSrvs.insert(srv);
+
+      free(name);
+      aptr += dlen;
+   }
+
+SrvParseDone:
+   if (!dns->mSrvs.size())
+   {
+      // Add the request target as the only result
+      InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
+      Srv srv;
+      srv.priority = 65535;
+      srv.weight = 0;
+      srv.port = request->port;
+      srv.host = request->host;
+      srv.transport = request->transport;
+      dns->mSrvs.insert(srv);
+   }
+
+   for (SrvIterator s = dns->mSrvs.begin(); s != dns->mSrvs.end(); s++)
+   {
+      DebugLog(<< "SRV entry " << s->host << " with priority " << s->priority);
+   }
+
+   request->stack.mStateMacFifo.add(dns);
 #endif
-#endif // _linux_
 }
+
 
 Data 
 DnsResolver::DnsMessage::brief() const 

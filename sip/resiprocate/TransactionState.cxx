@@ -29,6 +29,7 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mMsgToRetransmit(0),
    mDnsState(NotStarted),
    mCurrent(mTuples.end()),
+   mDnsOutstandingQueries(0),
    mId()
 {
    if (m == ServerNonInvite || m == ServerInvite)
@@ -303,12 +304,42 @@ TransactionState::processDns(Message* message)
    DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
-      // If dns query failed, the DnsResolver will return an empty list of tuples
-      mDnsState = Complete;
-      mTuples = dns->mTuples;
-      mCurrent = mTuples.begin();
-      sendToWire(mMsgToRetransmit);
-      delete dns;
+      if (dns->mSrvs.size())
+      {
+         // We have to do more work: recurse on SRV results.
+         for (DnsResolver::SrvIterator s = dns->mSrvs.begin();
+              s != dns->mSrvs.end();
+              s++)
+         {
+            mStack.mDnsResolver.lookupARecords(dns->mTransactionId,
+               s->host, s->port, s->transport);
+         }
+      }
+      else
+      {
+         assert(mDnsOutstandingQueries > 0);
+         if(--mDnsOutstandingQueries == 0)
+         {
+            DebugLog (<< "Setting DNS complete for tid=" <<
+              mMsgToRetransmit->getTransactionId() << " outstanding: "
+              << mDnsOutstandingQueries);
+            mDnsState = Complete;
+         }
+         else
+         {
+	    DebugLog (<< "Setting DNS the same for tid=" <<
+              mMsgToRetransmit->getTransactionId() << " outstanding: "
+              << mDnsOutstandingQueries);
+         }
+
+         if (dns->mTuples.size())
+         {
+	    // Don't overwrite mTuples - we may still be using them.
+            mTuples.splice(mTuples.end(), dns->mTuples,
+               dns->mTuples.begin(), dns->mTuples.end());
+            sendToWire(mMsgToRetransmit);
+         }
+      }
    }
 }
 
@@ -1247,6 +1278,10 @@ TransactionState::sendToWire(Message* msg)
       assert(sip->isResponse());
       mStack.mTransportSelector.send(sip, mSource, tid(sip));
    }
+   else if (mDnsState == Waiting && mCurrent != mTuples.end())
+   {
+      mStack.mTransportSelector.send(sip, *mCurrent, tid(sip));
+   }
    else if (mDnsState == Complete)
    {
       assert (mCurrent != mTuples.end());
@@ -1365,6 +1400,15 @@ Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
 
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    return strm;
+}
+
+
+void
+TransactionState::registerDnsLookup()
+{
+   mDnsOutstandingQueries++;
+   DebugLog(<< "registerDnsLookup outstanding: " << mDnsOutstandingQueries
+      << " for tid " << tid(mMsgToRetransmit));
 }
 
 /* Local Variables: */
