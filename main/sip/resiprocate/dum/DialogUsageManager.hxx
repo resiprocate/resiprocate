@@ -73,6 +73,7 @@ class DialogUsageManager : public HandleManager
                          int port, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty);
+      Data getHostAddress();
 
       void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
 
