@@ -375,7 +375,8 @@ Preparse::process(SipMessage& msg,
      
      // set return values so they are sensible
      used = -1;
-     status = fragmented;
+     status = fragment;
+     
     
      while ( (static_cast<size_t>(traversalPtr - buffer)) < length 
              && mState != EndMsg )
@@ -500,8 +501,7 @@ Preparse::process(SipMessage& msg,
 
      // Check our status here ... 
 
-     if ( mState != EndHdrs )
-         used = traversalPtr - buffer; // !ah! temporarily disable FRAG support
+     used = traversalPtr - buffer; // !ah! temporarily disable FRAG support
 
 #if defined(PP_DEBUG)
      DebugLog(<<"nBytes examined " << traversalPtr - buffer  );
