@@ -43,22 +43,22 @@ class TransactionState
          Terminated
       } State;
 
-      TransactionState(Machine m, State s) : mMachine(m), mState(s){}
+      TransactionState(SipStack& stack, Machine m, State s) : mStack(stack), mMachine(m), mState(s){}
       
-      static void process(SipStack& stack); 
-
-      void process( Message* msg );
-     
    private:
-
+      bool isFinalResponse(Message* msg) const;
+      bool isProvisionalResponse(Message* msg) const;
+      bool isFailureResponse(Message* msg) const;
+      bool isSuccessResponse(Message* msg) const;
+      bool isFromTU(Message* msg) const;
+      
+      const SipStack& mStack;
       Machine mMachine;
       State mState;
             
       TransactionState* cancelStateMachine;
 
-      SipMessage* msgToRetransmit;
-      
-      const SipStack& mStack;
+      SipMessage* mMsgToRetransmit;
 };
 
 }
