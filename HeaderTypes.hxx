@@ -50,34 +50,6 @@ class MultiHeader
 {
 };
 
-#if 0
-// .dlb. something like this....
-template <class T>
-class CommaTokenizer
-{
-};
-      
-template <int T>
-class CommaTokenizer< Header<T> >
-{
-   public:
-      CommaTokenizer()
-      {
-         CommaTokenizing[T] = typename Header<T>::Type::isCommaTokenizing;
-      }
-};
-
-// e.g.
-class Header<Headers::Content_Disposition>
-{
-   public:
-      typedef Token Type;
-      enum {isMulti = false};
-      CommaTokenizer<Header> ct;
-};
-extern Header<Headers::Content_Disposition> Content_Disposition;
-#endif
-
 //====================
 // Token:
 //====================
@@ -85,6 +57,11 @@ class Header<Headers::Content_Disposition>
 {
    public:
       typedef Token Type;
+      Header()
+      {
+         CommaTokenizing[Headers::Content_Disposition] = Header::Type::isCommaTokenizing;
+         //HeaderStrings[Headers::Content_Disposition] = Symbols::Content_Disposition;
+      }
 };
 extern Header<Headers::Content_Disposition> Content_Disposition;
 
