@@ -221,7 +221,6 @@ int dtls1_connect(SSL *s)
 			if ( ret <= 0)
 				goto end;
 			if ( s->d1->send_cookie) /* start again, with a cookie */
-				/* XDTLS:  need to reset hashes */
 				s->state=SSL3_ST_CW_CLNT_HELLO_A;
 			else
 				s->state = SSL3_ST_CR_CERT_A;

@@ -1005,6 +1005,9 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 		else
 			/* want to do MTU discovery */
 			BIO_ctrl(sbio, BIO_CTRL_DGRAM_MTU_DISCOVER, 0, NULL);
+
+        /* turn on cookie exchange */
+        SSL_set_options(con, SSL_OP_COOKIE_EXCHANGE);
 		}
 	else
 		sbio=BIO_new_socket(s,BIO_NOCLOSE);
@@ -1114,7 +1117,8 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 				if ((i <= 0) || (buf[0] == 'q'))
 					{
 					BIO_printf(bio_s_out,"DONE\n");
-					SHUTDOWN(s);
+					if (SSL_version(con) != DTLS1_VERSION)
+                        SHUTDOWN(s);
 	/*				close_accept_socket();
 					ret= -11;*/
 					goto err;

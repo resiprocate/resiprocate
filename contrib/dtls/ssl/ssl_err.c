@@ -442,6 +442,7 @@ static ERR_STRING_DATA SSL_str_reasons[]=
 {SSL_R_X509_LIB                          ,"x509 lib"},
 {SSL_R_X509_VERIFICATION_SETUP_PROBLEMS  ,"x509 verification setup problems"},
 {SSL_R_READ_TIMEOUT_EXPIRED              ,"read timeout expired"},
+{SSL_R_COOKIE_MISMATCH                   ,"cookie mismatch"},
 {0,NULL}
 	};
 

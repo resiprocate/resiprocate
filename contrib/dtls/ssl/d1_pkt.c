@@ -150,9 +150,6 @@ dtls1_copy_record(SSL *s, pitem *item)
     memcpy(&(s->s3->rbuf), &(rdata->rbuf), sizeof(SSL3_BUFFER));
     memcpy(&(s->s3->rrec), &(rdata->rrec), sizeof(SSL3_RECORD));
     
-    OPENSSL_free(item->data);
-    pitem_free(item);
-    
     return(1);
     }
 
@@ -178,6 +175,8 @@ dtls1_buffer_record(SSL *s, record_pqueue *queue, unsigned long long priority)
 	rdata->packet_length = s->packet_length;
 	memcpy(&(rdata->rbuf), &(s->s3->rbuf), sizeof(SSL3_BUFFER));
 	memcpy(&(rdata->rrec), &(s->s3->rrec), sizeof(SSL3_RECORD));
+
+	item->data = rdata;
 
 	/* insert should not fail, since duplicates are dropped */
 	if (pqueue_insert(queue->q, item) == NULL)
@@ -258,7 +257,7 @@ dtls1_process_buffered_records(SSL *s)
     /* sync epoch numbers once all the unprocessed records 
      * have been processed */
     s->d1->processed_rcds.epoch = s->d1->r_epoch;
-    s->d1->processed_rcds.epoch = s->d1->r_epoch + 1;
+    s->d1->unprocessed_rcds.epoch = s->d1->r_epoch + 1;
 
     return(1);
     }
@@ -322,6 +321,7 @@ dtls1_process_record(SSL *s)
 
 
 	rr= &(s->s3->rrec);
+    sess = s->session;
 
 	/* At this point, s->packet_length == SSL3_RT_HEADER_LNGTH + rr->length,
 	 * and we have that many bytes in s->packet
@@ -771,7 +771,7 @@ start:
 		{
 		unsigned int i, dest_maxlen = 0;
 		unsigned char *dest = NULL;
-		unsigned int *dest_len;
+		unsigned int *dest_len = NULL;
 
 		if (rr->type == SSL3_RT_HANDSHAKE)
 			{
@@ -791,9 +791,9 @@ start:
 
 		if (dest_maxlen > 0)
 			{
-            /* XXX: this looks questionable */
-			if ( rr->length < dest_maxlen) /* this is a bad fragment,
-                                            *  reset things */
+            /* XDTLS:  In a pathalogical case, the Client Hello
+             *  may be fragmented--don't always expect dest_maxlen bytes */
+			if ( rr->length < dest_maxlen)
 				{
 				s->rstate=SSL_ST_READ_HEADER;
 				rr->length = 0;
