@@ -33,6 +33,8 @@ ServerInviteSession::sendAnswerInAnyMessage()
 SipMessage&
 ServerInviteSession::end()
 {
+   assert(0);
+   return mLastRequest;
 }
 
 void 
