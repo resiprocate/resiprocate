@@ -10,7 +10,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<ApplicationSip> ApplicationSip::Factory;
+bool
+ApplicationSip::init()
+{
+   static ContentsFactory<ApplicationSip> factory;
+   (void)factory;
+   return true;
+}
 
 ApplicationSip::ApplicationSip(const Mime& contentsType)
    : SipFrag(contentsType)
@@ -45,6 +51,7 @@ ApplicationSip::getStaticType()
    static Mime type("application", "sip");
    return type;
 }
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
