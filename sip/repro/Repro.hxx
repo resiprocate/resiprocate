@@ -1,7 +1,7 @@
 #if !defined(RESIP_REPRO_HXX)
 #define RESIP_REPRO_HXX 
 
-namespace resip
+namespace repro
 {
   class Repro
   {
