@@ -33,9 +33,7 @@ using namespace resip;
 
 SipStack::SipStack(bool multiThreaded, Security* security)
    : 
-#ifdef USE_SSL
    security( security ),
-#endif
    mExecutive(*this),
    mTransportSelector(*this),
    mTimers(mStateMacFifo),
