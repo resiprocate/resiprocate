@@ -11,7 +11,6 @@ using namespace std;
 int
 main()
 {
-   if (0)
    {
       cerr << "test header copying between unparsed messages" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
@@ -194,8 +193,6 @@ main()
       assert(message1.header(h_ContentLength).value() == 0);
       assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
    }
-
-   return 0;
 
    {
       cerr << "test unparsed message copy" << endl;
