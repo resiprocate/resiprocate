@@ -261,6 +261,7 @@ Connection::performWrite()
    if (nBytes < 0)
    {
       //fail(data.transactionId);
+      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
       delete this;
    }
    else
