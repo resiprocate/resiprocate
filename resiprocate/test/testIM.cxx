@@ -26,7 +26,9 @@ using namespace std;
 class TestPageCallback: public TuIM::PageCallback
 {
    public:
-      virtual void receivedPage( const Data& msg, const Uri& from );
+      virtual void receivedPage( const Data& msg, const Uri& from ,
+                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                 bool wasEncryped  );
 
       Uri* mDest;
 };
@@ -39,12 +41,15 @@ class TestErrCallback: public  TuIM::ErrCallback
 
 
 void 
-TestPageCallback::receivedPage( const Data& msg, const Uri& from )
+TestPageCallback::receivedPage( const Data& msg, const Uri& from,
+                                const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                bool wasEncryped  )
 {  
    InfoLog(<< "In TestPageCallback");
 
    if ( mDest && ( *mDest != from) )
    {
+#if 0
       // ?dlb? would this work: *mDest = from; mDest->scheme() = SIP;
       Data f("sip:");
       f += from.getAor();
@@ -52,11 +57,38 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from )
       f += Data( from.port() );
       
       *mDest = Uri(f);
+#else
+      *mDest = from;
+#endif
       cerr << "Set destination to <" << *mDest << ">" << endl;
    }
    
-   cerr << from << " says:\n";
-   cerr << msg.escaped() << endl;
+   cout << from;
+   if ( !wasEncryped )
+   {
+      cout << " -NOT SECURE- ";
+   }
+   switch ( sigStatus )
+   {
+      case  Security::isBad:
+         cout << " -bad signature- ";
+         break;
+      case  Security::none:
+         cout << " -no signature- ";
+         break;
+      case  Security::trusted:
+         cout << " <signed  " << signedBy << " > ";
+         break;
+      case  Security::caTrusted:
+         cout << " <ca signed  " << signedBy << " > ";
+         break;
+      case  Security::notTrusted:
+         cout << " <signed  " << signedBy << " NOT TRUSTED > ";
+         break;
+   }
+   
+   cout << " says:" << endl;
+   cout << msg.escaped() << endl;
 }
 
 
@@ -99,7 +131,7 @@ processStdin(  TuIM& tuIM, Uri* dest )
          
          InfoLog( << "Send to <" << *dest << ">" );
          
-         tuIM.sendPage( text , *dest );
+         tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*dest->getAor()*/ /*encryptFor*/ );
       }
    }
 
