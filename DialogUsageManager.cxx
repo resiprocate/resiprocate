@@ -26,6 +26,7 @@
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
+#include "resiprocate/dum/OutOfDialogReqCreator.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
@@ -373,6 +374,11 @@ DialogUsageManager::makePublication(const Uri& targetDocument,
    return makeNewSession(new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds), appDs); 
 }
 
+SipMessage& 
+DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes meth, AppDialogSet* appDs)
+{
+	return makeNewSession(new OutOfDialogReqCreator(*this, meth, aor), appDs);
+}
 
 void
 DialogUsageManager::send(SipMessage& msg)
@@ -568,7 +574,7 @@ DialogUsageManager::process(FdSet& fdset)
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
-      ErrLog(<<"Illegal message rejected." );
+	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
 }
 
