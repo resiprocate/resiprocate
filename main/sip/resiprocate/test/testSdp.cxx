@@ -25,7 +25,7 @@ main(int argc, char* argv[])
                 break;
             case 'i': l = Log::INFO;
                 break;
-            case 's': l = Log::DEBUG_STACK;
+            case 's': l = Log::STACK;
                 break;
             case 'c': l = Log::CRIT;
                 break;
