@@ -2,7 +2,7 @@
 #define RESIP_HEADERFIELDVALUELIST_HXX 
 
 #include <iosfwd>
-#include <list>
+#include <vector>
 
 namespace resip
 {
@@ -30,9 +30,9 @@ class HeaderFieldValueList
 
       bool empty() const {return mHeaders.empty();}
       size_t size() const {return mHeaders.size();}
-      void push_front(HeaderFieldValue* header) {mHeaders.push_front(header);}
+      //void push_front(HeaderFieldValue* header) {mHeaders.push_front(header);}
       void push_back(HeaderFieldValue* header) {mHeaders.push_back(header);}
-      void pop_front() {mHeaders.pop_front();}
+      //void pop_front() {mHeaders.pop_front();}
       void pop_back() {mHeaders.pop_back();};
       HeaderFieldValue* front() {return mHeaders.front();}
       HeaderFieldValue* back() {return mHeaders.back();}
@@ -41,7 +41,7 @@ class HeaderFieldValueList
 
       bool parsedEmpty() const;
    private:
-      typedef std::list<HeaderFieldValue*> ListImpl;
+      typedef std::vector<HeaderFieldValue*> ListImpl;
    public:
       typedef ListImpl::iterator iterator;
       typedef ListImpl::const_iterator const_iterator;
@@ -52,7 +52,7 @@ class HeaderFieldValueList
       const_iterator end() const {return mHeaders.end();}
 
    private:
-      std::list<HeaderFieldValue*> mHeaders;
+      std::vector<HeaderFieldValue*> mHeaders;
       ParserContainerBase* mParserContainer;
 };
 
