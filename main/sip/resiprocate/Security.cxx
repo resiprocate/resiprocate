@@ -99,7 +99,7 @@ Security::initialize( bool tlsServer, SecurityTypes::SSLType mode )
    certAuthorities = 0;
    ctxTls = 0;
 
-   // check-lock-check
+   // check-lock-check TODO - this code is broken - use pthreadOnce 
    static bool initDone = false;
    if (!initDone)
    {
@@ -774,7 +774,6 @@ Security::computeIdentityHash( const Data& in )
 
    ret = Data(result,resultSize);
    
-   assert(0);
    return ret;
 }
 
@@ -819,8 +818,9 @@ Security::multipartSign( Contents* bodyIn )
 
    Data bodyData;
    DataStream strm( bodyData );
-   body->encodeHeaders( strm );
-   body->encode( strm );
+   strm << *body;
+   //body->encodeHeaders( strm );
+   //body->encode( strm );
    strm.flush();
 
    DebugLog( << "sign the data <" << bodyData << ">" );
@@ -900,9 +900,10 @@ Security::pkcs7Sign( Contents* bodyIn )
 #endif
   
    Data bodyData;
-   oDataStream strm(bodyData);
-   bodyIn->encodeHeaders(strm);
-   bodyIn->encode( strm );
+   DataStream strm(bodyData);
+   strm << *bodyIn;
+   //bodyIn->encodeHeaders(strm);
+   //bodyIn->encode( strm );
    strm.flush();
    
    DebugLog( << "body data to sign is <" << bodyData << ">" );
@@ -1004,9 +1005,10 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
 #endif
    
    Data bodyData;
-   oDataStream strm(bodyData);
-   bodyIn->encodeHeaders(strm);
-   bodyIn->encode( strm );
+   DataStream strm(bodyData);
+   strm << *bodyIn;
+   //bodyIn->encodeHeaders(strm);
+   //bodyIn->encode( strm );
    strm.flush();
    
    InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
@@ -1130,17 +1132,11 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    //CerrLog( << "first is of type" << typename(*first) );
    
    Data bodyData;
-   {
-      DataStream strm( bodyData );
-#if 0
-      strm << *first;
-#else      
-      // TODO - CJ 
-      first->encodeHeaders( strm );
-      first->encode( strm );
-      strm.flush();
-#endif
-   }
+   DataStream strm( bodyData );
+   strm << *first;
+   //first->encodeHeaders( strm );
+   //first->encode( strm );
+   strm.flush();
    CerrLog( << "encoded version to sign is " << bodyData );
    
    // Data textData = first->getBodyData();
