@@ -56,6 +56,7 @@ ServerRegistration::accept(SipMessage& ok)
   }
 
   mDum.send(ok);
+  delete(this);
 }
 
 void
@@ -80,6 +81,7 @@ ServerRegistration::reject(int statusCode)
   mDum.makeResponse(failure, mRequest, statusCode);
   failure.remove(h_Contacts);
   mDum.send(failure);
+  delete(this);
 }
 
 void 
@@ -96,6 +98,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
        SipMessage failure;
        mDum.makeResponse(failure, msg, 405);
        mDum.send(failure);
+       delete(this);
        return;
     }
 
@@ -103,7 +106,12 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     database->lockRecord(mAor);
 
-    int globalExpires = msg.header(h_Expires).value();
+    int globalExpires = 0;
+
+    if (msg.exists(h_Expires))
+    {
+      globalExpires = msg.header(h_Expires).value();
+    }
 
     if (globalExpires == 0)
     {
@@ -144,6 +152,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
           SipMessage failure;
           mDum.makeResponse(failure, msg, 400, "Invalid use of 'Contact: *'");
           mDum.send(failure);
+          database->unlockRecord(mAor);
+          delete(this);
           return;
         }
 
