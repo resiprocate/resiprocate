@@ -33,13 +33,13 @@ DialogUsageManager::setManager(ServerAuthManager* manager)
 }
 
 void 
-DialogUsageManager::setHandler(ClientRegistrationHandler* handler)
+DialogUsageManager::setClientRegistrationHandler(ClientRegistrationHandler* handler)
 {
    mClientRegistrationHandler = handler;
 }
 
 void 
-DialogUsageManager::setHandler(ServerRegistrationHandler* handler)
+DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* handler)
 {
    mServerRegistrationHandler = handler;
 }
@@ -49,7 +49,6 @@ DialogUsageManager::setHandler(InvSessionHandler* handler)
 {
    mInviteSessionHandler = handler;
 }
-
 
 void 
 DialogUsageManager::addHandler(const Data& eventType, ClientSubscriptionHandler*)
@@ -153,53 +152,15 @@ DialogUsageManager::process(FdSet& fdset)
              mServerAuthManager && mServerAuthManager->handle(*msg))
          {
             processRequest(*msg);
-            processResponse(*msg);
-         
-            
-
-            DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
-            if (dialogs.empty())
-            {
-            }
-            
-
-            switch (msg->header(h_RequestLine).getMethod())
-            {
-               case INVITE :   // reINVITE
-               case INFO:
-               case UPDATE :
-               case PRACK :
-               case ACK :
-               case BYE :
-               case CANCEL : 
-                  dialog.getSession().processSession(msg);
-                  break;
-               case REGISTER :
-                  dialog.getRegistration().processRegistration(msg);
-                  break;
-               case REFER :
-               case SUBSCRIBE :
-               case NOTIFY :
-                  break;
-
-               case UNKNOWN:
-               {
-                  InfoLog (<< "Received an unknown method: " << msg->brief());
-                  std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
-                  mStack.send(*failure);
-                  break;
-               }
-            }
          }
       }
       else if (msg->isResponse())
       {
-         switch (msg->header(h_StatusLine).statusCode())
+         if (mClientAuthManager && mClientAuthManager->handle(*msg))
          {
-            // !jf! handle retranmission of INV/200
+            processResponse(*msg);
          }
       }
-      
    }
 
    delete msg;
@@ -300,6 +261,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
    }
    return false;
 }
+
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
@@ -321,17 +283,34 @@ DialogUsageManager::processRequest(const SipMessage& request)
             mStack.send(*failure);
             break;
          }
-
-         case INVITE:  // new INVITE
-         {
-            ServerInvSession* session = new ServerInvSession(*this, request);
-            break;
-         }
          case CANCEL:
          {
             // find the appropropriate ServerInvSession
             DialogSet& dialogs = findDialogSet(DialogSetId(request));
             dialogs.cancel(request);
+            break;
+         }
+
+         case INVITE:  // new INVITE
+         case SUBSCRIBE:
+         case REFER: // out-of-dialog REFER
+         case REGISTER:
+         case PUBLISH:
+         case MESSAGE :
+         case OPTIONS :
+         case INFO :   // handle non-dialog (illegal) INFOs
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
+         {
+            DialogSetId id(request);
+            assert(mDialogSetMap.count(id) == 0);
+            mDialogSetMap[id] = DialogSet(request);
+            mDialogSetMap[id].addDialog(new Dialog(*this, request));
+            break;
+
+/*
+         case INVITE:  // new INVITE
+         {
+            ServerInvSession* session = new ServerInvSession(*this, request);
             break;
          }
          case SUBSCRIBE:
@@ -362,6 +341,8 @@ DialogUsageManager::processRequest(const SipMessage& request)
          default:
             assert(0);
             break;
+*/
+
       }
    }
    else // in a specific dialog
@@ -383,6 +364,21 @@ DialogUsageManager::processRequest(const SipMessage& request)
       }
    }
 }
+
+void
+DialogUsageManager::processResponse(const SipMessage& response)
+{
+   DialogSet& dialogs = findDialogSet(DialogSetId(response));
+   if (dialogs != DialogSet::Empty)
+   {
+      dialogs.dispatch(response);
+   }
+   else
+   {
+      DebugLog (<< "Throwing away stray response: " << response);
+   }
+}
+
 
 Dialog&  
 DialogUsageManager::findDialog(DialogId id)

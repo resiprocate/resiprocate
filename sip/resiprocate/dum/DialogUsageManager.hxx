@@ -42,11 +42,11 @@ class DialogUsageManager
       ~DialogUsageManager();
       
       void setProfile(Profile* profile);
-
+      
       void setManager(RedirectManager* redirect);
       void setManager(ClientAuthManager* client);
       void setManager(ServerAuthManager* client);
-
+      
       void setClientRegistrationHandler(ClientRegistrationHandler*);
       void setServerRegistrationHandler(ServerRegistrationHandler*);
       void setInviteSessionHandler(InviteSessionHandler*);
