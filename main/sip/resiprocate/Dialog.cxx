@@ -275,6 +275,25 @@ Dialog::makeInitialSubscribe(const NameAddr& target,
 
 
 SipMessage* 
+Dialog::makeInitialPublish(const NameAddr& target, 
+                             const NameAddr& from)
+{
+   SipMessage* msg = Helper::makePublish( target, from, mContact );
+   assert( msg );
+
+   mLocalEmpty = false;
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
+   
+   return msg;
+}
+
+
+SipMessage* 
 Dialog::makeInitialInvite(const NameAddr& target,
                           const NameAddr& from)
 {
