@@ -474,7 +474,7 @@ Preparse::process(SipMessage& msg,
        StateEnum fragState = mState;
        int mask = 0;
 
-       for(int i = 0 ; i < sizeof(fakeEol)/sizeof(*fakeEol); i++)
+       for( unsigned int i = 0 ; i < sizeof(fakeEol)/sizeof(*fakeEol); i++)
        {
          Edge& e(mTransitionTable[fragState][mDisposition][fakeEol[i]]);
          fragState = e.nextState;
