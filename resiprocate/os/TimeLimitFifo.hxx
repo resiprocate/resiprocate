@@ -57,7 +57,8 @@ class TimeLimitFifo : public AbstractFifo
        *  prior to calling getNext.
        */
       Msg* getNext();
-
+      Msg* getNext(int ms);
+      
       /** Return the time depth of the queue. Zero if no depth. */
       time_t timeDepth() const;
 
@@ -132,6 +133,14 @@ Msg*
 TimeLimitFifo<Msg>::getNext()
 {
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext()));
+   return tm->mMsg;
+}
+
+template <class Msg>
+Msg*
+TimeLimitFifo<Msg>::getNext(int ms)
+{
+   std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext(ms)));
    return tm->mMsg;
 }
 
