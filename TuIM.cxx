@@ -455,6 +455,8 @@ TuIM::processRegisterResponse(SipMessage* msg)
       
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
       
+	     mCallback->registrationWorked( to );
+
       return;
    }
 }
@@ -686,7 +688,24 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
 void 
 TuIM::removeBuddy( const Uri& name)
 {
-   assert(0);
+	TuIM::BuddyIterator i;
+	
+	i = mBuddy.begin();	
+	while ( i != mBuddy.end() )
+	{
+		Uri u = i->uri;
+
+		if ( u.getAor() == name.getAor() )
+		{
+			// remove this buddy 
+			// !cj! - should unsubscribe 
+			i = mBuddy.erase(i);
+		}
+		else
+		{
+			i++;
+		}
+	}
 }
 
 
