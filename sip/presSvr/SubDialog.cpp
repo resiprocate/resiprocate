@@ -1,6 +1,7 @@
 #include "SubDialog.h"
 #include "ResourceMgr.h"
 #include "resiprocate/os/MD5Stream.hxx"
+#include "resiprocate/Helper.hxx"
 
 SubDialog::SubDialog(Data key, SipStack* stack, DialogState *dlgState)
  : mKey(key)
@@ -32,6 +33,7 @@ SubDialog::processSubscribe(SipMessage* msg)
     }
     else
     {
+       // ?dlb? maximum/minimum expire?
       mSubState->expires() = (time(NULL)+msg->header(h_Expires).value());
     }
 
@@ -49,6 +51,7 @@ SubDialog::processSubscribe(SipMessage* msg)
     assert(mSubState);
     assert(mDlgState);
     // verify remote CSeq is sane
+    // ?dlb? expires not present?
     mSubState->expires() = (time(NULL)+msg->header(h_Expires).value());
 
   }
@@ -88,7 +91,7 @@ SubDialog::sendNotify(const Contents* document)
     notify->header(h_CSeq).method() = NOTIFY;
     notify->header(h_CSeq).sequence() = (++(mDlgState->localCSeq()));
     notify->header(h_Event).value() = mSubState->event();
-    if (mSubState->eventId()!=Data("")) 
+    if (!mSubState->eventId().empty())
     {
       notify->header(h_Event).param(p_id) = mSubState->eventId();
     }
