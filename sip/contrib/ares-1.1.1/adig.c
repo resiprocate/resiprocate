@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: adig.c,v 1.1 2002/12/24 00:01:38 jason Exp $";
+static const char rcsid[] = "$Id: adig.c,v 1.2 2003/02/05 00:48:32 ryker Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -95,6 +95,7 @@ static const struct nv types[] = {
   { "AXFR",	T_AXFR },
   { "MAILB",	T_MAILB },
   { "MAILA",	T_MAILA },
+  { "NAPTR",	T_NAPTR },
   { "ANY",	T_ANY }
 };
 static const int ntypes = sizeof(types) / sizeof(types[0]);
@@ -565,6 +566,38 @@ static const unsigned char *display_rr(const unsigned char *aptr,
       free(name);
       break;
       
+    case T_NAPTR:
+      /* The RR data is two two-byte numbers representing the
+       * order and preference, followed by three character strings
+       * representing flags, services, a regex, and a domain name.
+       */
+
+      printf("\t%d", DNS__16BIT(aptr));
+      printf(" %d", DNS__16BIT(aptr + 2));
+
+      p = aptr + 4;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      status = ares_expand_name(p, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+        return NULL;
+      printf("\t%s.", name);
+      free(name);
+      break;
+
     default:
       printf("\t[Unknown RR; cannot parse]");
     }
