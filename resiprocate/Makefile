@@ -37,6 +37,7 @@ SRC = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
+	os/WinCompat.cxx \
 	\
 	\
 	Auth.cxx \
