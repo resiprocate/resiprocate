@@ -30,7 +30,7 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse);
 int
 main(int argc, char *argv[])
 {
-    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
     InfoLog( << "Starting up, making stack");
 
