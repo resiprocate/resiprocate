@@ -8,8 +8,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 HandleManager::HandleManager() : 
-   mLastId(0),
-   mShuttingDown(false)
+   mShuttingDown(false),
+   mLastId(0)
 {
 }
 

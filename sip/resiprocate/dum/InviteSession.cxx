@@ -38,8 +38,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mProposedLocalSdp(0),
      mProposedRemoteSdp(0),
      mNextOfferOrAnswerSdp(0),
-     mCurrentRetransmit200(0),
-     mDestroyer(this)
+     mDestroyer(this),
+     mCurrentRetransmit200(0)
 {
    InfoLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
