@@ -20,6 +20,9 @@ You should run autogen.sh in it's own sub-shell:
 
 % bash autotools.sh
 
+Once this step is complete, you no longer need to mess around with
+autogen.sh. A simple autoreconf will do in case you add files to the
+Makefile.am's.
 
 Any questions, please mail the devel list
 
