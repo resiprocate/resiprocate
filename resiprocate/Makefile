@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.142 2004/04/14 16:27:07 jason Exp $
+# $Id: Makefile,v 1.143 2004/05/16 18:47:35 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -31,6 +31,8 @@ SRC = \
 	os/Random.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
+	os/SysLogBuf.cxx \
+	os/SysLogStream.cxx \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
 	os/Tuple.cxx \
