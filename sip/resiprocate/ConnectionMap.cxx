@@ -249,7 +249,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             mBufferPos += bytesRead;
             if (mBufferPos == mBufferSize)
             {
-               size_t newBufferSize = size_t(mBufferSize*1.5);
+               size_t newBufferSize = size_t(mBufferSize*3/2);
                char* largerBuffer = new char[newBufferSize];
                memcpy(largerBuffer, mBuffer, mBufferSize);
                delete[] mBuffer;
@@ -262,7 +262,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          {
             mMessage->addBuffer(mBuffer);
             int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
-            size_t size = max((size_t)(overHang*1.5), (size_t)Connection::ChunkSize);
+            size_t size = max((size_t)(overHang*3/2), (size_t)Connection::ChunkSize);
             char* newBuffer = new char[size];
          
             memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
@@ -282,7 +282,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                fifo.add(mMessage);
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
-               size_t size = max((size_t)(overHang*1.5), (size_t)Connection::ChunkSize);
+               size_t size = max((size_t)(overHang*3/2), (size_t)Connection::ChunkSize);
                char* newBuffer = new char[size];
                memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
                mBuffer = newBuffer;
