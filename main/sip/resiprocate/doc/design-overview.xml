@@ -12,8 +12,7 @@
 <!ENTITY R3263 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3263">RFC 3263</ulink>'>
 <!ENTITY R3264 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3264">RFC 3264</ulink>'>
 <!ENTITY R3265 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3265">RFC 3265</ulink>'>
-<!ENTITY R2543 '<ulink url="http://www.ietf.org/rfc/rfc2543.txt?number=2543">RFC
-2543</ulink>'>
+<!ENTITY R2543 '<ulink url="http://www.ietf.org/rfc/rfc2543.txt?number=2543">RFC 2543</ulink>'>
 <!ENTITY stack-name "VOCAL SIP2 stack">
 <!ENTITY stack-list '<email>vocal2@cathaynetworks.com</email>'>
 ]>
@@ -173,7 +172,7 @@
         to coalesce the buffer into a single buffer after all fragments are
         received) 
       </para>
-      
+
     </section>
   </section>
 </article>
