@@ -187,7 +187,10 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  controller.mTUFifo.add(Helper::makeResponse(*sip, 481));
+                  TransactionState* state = new TransactionState(controller, Stateless, Completed, tid);
+                  state->add(state->mId);
+                  state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
+                  state->sendToWire(Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
@@ -259,8 +262,7 @@ TransactionState::process(TransactionController& controller)
                else if (matchingInvite->mState == Completed)
                {
                   // A final response was already seen for this INVITE transaction
-                  SipMessage* response200 = Helper::makeResponse(*sip, 200);
-                  matchingInvite->sendToTU(response200);
+                  matchingInvite->sendToTU(Helper::makeResponse(*sip, 200));
                   delete sip;
                }
                else
@@ -1415,10 +1417,8 @@ TransactionState::sendToTU(Message* msg) const
 SipMessage*
 TransactionState::make100(SipMessage* request) const
 {
-   SipMessage* sip=Helper::makeResponse(*request, 100);
-   return sip;
+   return (Helper::makeResponse(*request, 100));
 }
-
 
 void
 TransactionState::add(const Data& tid)
