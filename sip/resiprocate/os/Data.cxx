@@ -100,33 +100,34 @@ Data::Data(const char* str, int length, bool)
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const char* buffer, int length)
+Data::Data(ShareEnum se, const char* buffer, int length)
    : mSize(length),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(false)
+     mMine(se == Take)
 {
    assert(buffer);
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const char* buffer)
+Data::Data(ShareEnum se, const char* buffer)
    : mSize(strlen(buffer)),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(false)
+     mMine(se == Take)
 {
    assert(buffer);
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const Data& staticData)
+Data::Data(ShareEnum se, const Data& staticData)
    : mSize(staticData.mSize),
      mBuf(staticData.mBuf),
      mCapacity(mSize),
      mMine(false)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   assert(se == Share); // makes no sense to call this with 'Take'.
 }
 //=============================================================================
 
