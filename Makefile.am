@@ -91,7 +91,9 @@ libresiprocate_la_SOURCES = \
 	UnknownParameterType.cxx \
 	Uri.cxx \
 	XMLCursor.cxx
-nobase_include_HEADERS = \
+
+resiprocate_includedir=$(includedir)/resiprocate
+resiprocate_include_HEADERS = \
 	os/BaseException.hxx \
 	os/CircularBuffer.hxx \
 	os/Coders.hxx \
@@ -205,4 +207,4 @@ GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 .gperf.cxx:
 	gperf $(GPERFFLAGS) -Z `echo $* | sed -e 's/.*\///'` $< | \
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
-	sed -e 's/^\([ 	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
+	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
