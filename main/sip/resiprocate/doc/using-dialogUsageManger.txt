@@ -1,0 +1,41 @@
+
+Concepts
+
+
+Major Components
+
+The DialogUsamgeManger (or DUM) is the unit that keeps track of all the data
+sturcutres and sits on top of the transaction layer of the stack. It keeps track
+of multiple DialogSet which contains Dialogs. Each DialogSet contains all the
+Dialog that were created by a common initial request. They all share the same
+SIP Call-Id and from tag from the orginal request. Inside a specific dialogSet
+there can be some type of BaseCreator that represnets the intial request that
+generated the dialog. This will only exist onthe UAC side. The DialogSet also
+contains serveral objects dereived from BaseUsage that are using this
+particular dialog. 
+
+Handling Invite Sessions - Client
+
+
+Handling Invite Sessions - Server
+
+
+Handling Registration - Client
+
+Handling Registrations - Server
+
+
+Handling Subscriptions - Client
+
+
+Handling Subscritpions - Server 
+
+
+Handling Publictionas - client 
+
+Handling Publications - Server 
+
+
+Dealing with Refer 
+
+
