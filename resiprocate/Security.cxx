@@ -347,14 +347,15 @@ TlsConnection::peerName()
 }
 
 
-Security::Security( bool tlsServer )
+Security::Security( bool tlsServer, bool useTls )
 {
    privateKey = NULL;
    publicCert = NULL;
    certAuthorities = NULL;
    ctxTls = NULL;
    mTlsServer = tlsServer;
-   
+   mUseTls = useTls;
+      
    static bool initDone=false;
    if ( !initDone )
    {
@@ -383,9 +384,15 @@ Security::getTlsCtx(bool isServer)
       return ctxTls;
    }
    
-   //ctxTls=SSL_CTX_new( TLSv1_method() );
-   ctxTls=SSL_CTX_new(  SSLv23_method() );
-   assert( ctxTls );
+   if ( mUseTls )
+   {
+      ctxTls=SSL_CTX_new( TLSv1_method() );
+   }
+   else
+   {
+      ctxTls=SSL_CTX_new(  SSLv23_method() );
+   }
+  assert( ctxTls );
    
    if ( isServer )
    {
