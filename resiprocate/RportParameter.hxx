@@ -1,7 +1,7 @@
 #if !defined(RESIP_RPORTPARAMETER_HXX)
 #define RESIP_RPORTPARAMETER_HXX 
 
-#include <iostream>
+#include <iosfwd>
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <set>
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Fifo.hxx"
 
