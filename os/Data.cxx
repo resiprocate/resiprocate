@@ -1,10 +1,12 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.10 2002/10/19 17:11:29 jason Exp $";
+"$Id: Data.cxx,v 1.11 2002/10/21 22:50:17 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
 
 #include <util/Data.hxx>
+#include <util/vmd5.hxx>
+#include <util/RandomHex.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -361,6 +363,17 @@ Data::resize(unsigned int newCapacity,
    }
    mMine = true;
    mCapacity = newCapacity;
+}
+
+Data
+Data::md5() const
+{
+   MD5Context context;
+   unsigned char digest[16];
+   
+   MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
+   MD5Final(digest, &context);
+   return RandomHex::convertToHex(digest, 16);
 }
 
 bool
