@@ -18,7 +18,7 @@ main(int argc, char** argv)
       ParseBuffer pb(buf, strlen(buf));
       
       pb.skipToChars("buff");
-      const char p = *pb.position();
+      *pb.position();
 
       pb.skipToEnd();
 
@@ -26,7 +26,7 @@ main(int argc, char** argv)
       {
          try
          {
-            const char p = *pb.position();
+            *pb.position();
             assert(false);
          }
          catch (BaseException& e)
@@ -77,7 +77,6 @@ main(int argc, char** argv)
          assert(0);
       } while (false);
    }
-   return 0;
 
    {
       char buf[] = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
@@ -266,9 +265,15 @@ main(int argc, char** argv)
    }
    
    {
-      char buf[] = "17";
+      char buf[] = "-17";
       ParseBuffer pb(buf, strlen(buf));   
-      assert(pb.integer() == 17);
+      assert(pb.integer() == -17);
+   }
+
+   {
+      char buf[] = "2890844526";
+      ParseBuffer pb(buf, strlen(buf));   
+      assert(pb.unsignedInteger() == 2890844526UL);
    }
 
    {

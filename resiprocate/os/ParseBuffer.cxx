@@ -519,6 +519,46 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__);
    }
 
+   char c = *position();
+
+   int signum = 1;
+   if (c == '-')
+   {
+      signum = -1;
+      skipChar();
+      c = *position();
+   }
+   else if (c == '+')
+   {
+      skipChar();
+      c = *position();
+   }
+
+   if (!isdigit(c))
+   {
+      DebugLog(<< "Expected a digit, got: " << Data(mPosition, (mEnd - mPosition)));
+      fail(__FILE__, __LINE__);
+   }
+   
+   int num = 0;
+   while (!eof() && isdigit(*mPosition))
+   {
+      num = num*10 + (*mPosition-'0');
+      skipChar();
+   }
+   
+   return signum*num;
+}
+
+unsigned long
+ParseBuffer::unsignedInteger()
+{
+   if ( this->eof() )
+   {
+      DebugLog(<< "Expected a digit, got eof ");
+      fail(__FILE__, __LINE__);
+   }
+
    const char* p = mPosition;
    assert( p );
    char c = *p;
@@ -529,7 +569,7 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__);
    }
    
-   int num = 0;
+   unsigned int num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');
