@@ -72,6 +72,10 @@ main (int argc, char** argv)
    clientDum.getProfile()->setDefaultRegistrationTime(70);
    clientDum.getProfile()->setDefaultAor(aor);
 
+#if 0
+   p->addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
+#endif
+
    SipMessage & regMessage = clientDum.makeRegistration(aor);
 
    cerr << regMessage << "Generated register: " << endl << regMessage << endl;
