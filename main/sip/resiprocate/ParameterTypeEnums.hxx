@@ -10,6 +10,9 @@ class ParameterTypes
 {
   
    public:
+      // When you add something to this enum Type, you must add an entry to
+      // Parameter::make
+      
       enum Type
       {
          transport,
@@ -35,6 +38,9 @@ class ParameterTypes
          MAX_PARAMETER
       };
 
+      // convert to enum from two pointers into the HFV raw buffer
+      static Type getType(const char* start, unsigned int length);
+      
       static Data ParameterNames[MAX_PARAMETER];
 };
  
