@@ -344,8 +344,8 @@ SipStack::receiveAny()
 void 
 SipStack::process(FdSet& fdset)
 {
-   mExecutive.process(fdset);
    RESIP_STATISTICS(mTransactionController.getStatisticsManager().process());
+   mExecutive.process(fdset);
 }
 
 /// returns time in milliseconds when process next needs to be called 
@@ -371,6 +371,12 @@ Security*
 SipStack::getSecurity() const 
 {
     return mSecurity;
+}
+
+void
+SipStack::setStatisticsInterval(unsigned long seconds) const
+{
+   mTransactionController.setStatisticsInterval(seconds);
 }
 
 std::ostream& 
