@@ -35,7 +35,11 @@ public:
             virtual void receivePageFailed(const Uri& sender) =0;
             virtual void registrationFailed(const Uri& dest, int respNumber ) =0;
             virtual void registrationWorked(const Uri& dest ) =0;
-            virtual void presenceUpdate(const Uri& dest, bool open, const Data& status ) =0;
+            virtual void presenceUpdate(const Uri& user, bool open, const Data& status ) =0;
+            virtual bool authorizeSubscription( const Uri& user ); // return
+                                                                   // true if
+                                                                   // sub is ok
+            
             virtual ~Callback();
       };
       
@@ -125,8 +129,15 @@ public:
       typedef std::list<StateAgent>::iterator StateAgentIterator;
 
       // people who subscribe to me 
-      std::list<Dialog*> mSubscribers;
-      typedef std::list<Dialog*>::iterator SubscriberIterator;
+      class Subscriber
+      {
+         public:
+            Data aor;
+            bool authorized;
+            Dialog* dialog;
+      };
+      std::list<Subscriber> mSubscribers;
+      typedef std::list<Subscriber>::iterator SubscriberIterator;
 
       class Page
       {
