@@ -52,6 +52,12 @@ SipStack::SipStack(bool multiThreaded)
    //addTransport(Transport::TCP, 5060); // !jf!
 }
 
+SipStack::~SipStack()
+{
+#ifdef USE_SSL
+   delete security;
+#endif
+}
 
 void 
 SipStack::addTransport( Transport::Type protocol, 

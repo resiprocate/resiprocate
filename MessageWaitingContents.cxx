@@ -61,7 +61,9 @@ MessageWaitingContents::MessageWaitingContents(const MessageWaitingContents& rhs
 }   
 
 MessageWaitingContents::~MessageWaitingContents()
-{}
+{
+   clear();
+}
 
 void
 MessageWaitingContents::clear()
@@ -78,6 +80,7 @@ MessageWaitingContents::operator=(const MessageWaitingContents& rhs)
 {
    if (this != &rhs)
    {
+      Contents::operator=(rhs);
       clear();
 
       mHasMessages = rhs.mHasMessages;
