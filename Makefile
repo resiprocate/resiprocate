@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2002/09/22 00:24:33 dabryan Exp $
+# $Id: Makefile,v 1.17 2002/09/22 00:34:42 dabryan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -15,11 +15,13 @@ SRC =	Condition.cxx \
 	Lock.cxx \
 	Log.cxx \
 	Mutex.cxx \
+	ParserCategories.cxx \
 	SipMessage.cxx \
 	StringSubComponent.cxx \
 	SubComponent.cxx \
 	SubComponentList.cxx \
 	Subsystem.cxx \
+	Symbols.cxx \
 	Transport.cxx \
 	UdpTransport.cxx \
 	UnknownSubComponent.cxx \
