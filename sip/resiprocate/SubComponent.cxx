@@ -32,7 +32,7 @@ SubComponent::clone() const
    return new SubComponent(*this);
 }
 
-ostream& operator<<(ostream& stream, const SubComponent& comp)
+ostream& Vocal2::operator<<(ostream& stream, const SubComponent& comp)
 {
    return stream << comp.getName();
 }

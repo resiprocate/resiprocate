@@ -33,8 +33,10 @@ class SubComponentList
 
 };
 
+std::ostream& operator<<(std::ostream& stream, SubComponentList& pList);
+
 }
 
-std::ostream& operator<<(std::ostream& stream, Vocal2::SubComponentList& pList);
+
 
 #endif

@@ -43,10 +43,12 @@ class HeaderFieldValue
 };
 
 
+std::ostream& operator<<(std::ostream& stream, 
+			 HeaderFieldValue& hList);
+
+
 }
 
-std::ostream& operator<<(std::ostream& stream, 
-			 Vocal2::HeaderFieldValue& hList);
 
 
 #endif

@@ -21,9 +21,9 @@ class StringSubComponent : public SubComponent
    private:
       std::string mData;
 };
+
+std::ostream& Vocal2::operator<<(std::ostream& stream, StringSubComponent& comp);
  
 }
-
-std::ostream& operator<<(std::ostream& stream, Vocal2::StringSubComponent& comp);
 
 #endif

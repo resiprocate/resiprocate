@@ -43,9 +43,9 @@ void HeaderFieldValueList::push_front(HeaderFieldValue* header)
 {
   // if either is zero, then we don't have an element, this is first
   if (last == 0)
-     {
-       last == header;
-     }
+  {
+     last = header;
+  }
   // if last is zero, then first is zero, so this will be null
    header->next = first;
    first = header;
@@ -89,17 +89,16 @@ void HeaderFieldValueList::pop_front()
 
 ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
 {
-
-   if (first)
-     {
-       HeaderFieldValue* current = first;
-       do
-	 {
-	   stream << current << endl;
-	   current = current->next;
-	 } while (current != 0);
+   if (hList.first)
+   {
+      HeaderFieldValue* current = hList.first;
+      do
+      {
+	 stream << current << endl;
+	 current = current->next;
+      } while (current != 0);
    }
-
+   return stream;
 }
 
 
