@@ -169,6 +169,7 @@ namespace PreparseConst
   const Preparse::Action actDiscard      = (1 << 8);
   const Preparse::Action actDiscardKnown = (1 << 9);
   const Preparse::Action actFlat         = (1 << 10);
+  const Preparse::Action actEmptyHdr     = (1 << 11);
 // --
 }
 #if defined(PP_DO_INLINES)
