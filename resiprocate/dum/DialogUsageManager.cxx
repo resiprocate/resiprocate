@@ -1,13 +1,15 @@
-#include "resiprocate/SipStack.hxx"
-#include "DialogUsageManager.hxx"
-#include "resiprocate/Helper.hxx"
-#include "Profile.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "InviteSessionCreator.hxx"
-#include "SubscriptionCreator.hxx"
-#include "PublicationCreator.hxx"
 #include "ClientAuthManager.hxx"
+#include "DialogUsageManager.hxx"
+#include "InviteSessionCreator.hxx"
+#include "Profile.hxx"
+#include "PublicationCreator.hxx"
+#include "RegistrationCreator.hxx"
 #include "ServerAuthManager.hxx"
+#include "SubscriptionCreator.hxx"
+
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -90,8 +92,8 @@ SipMessage&
 DialogUsageManager::makeNewSession(BaseCreator* creator)
 {
    prepareInitialRequest(creator->getLastRequest());
-   DialogSet* inv = new DialogSet(creator);
-   mDialogSetMap[inv->getId()] = inv;
+   DialogSet* ds = new DialogSet(creator);
+   mDialogSetMap[ds->getId()] = ds;
    return creator->getLastRequest();
 }
 
@@ -107,6 +109,12 @@ DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
    return makeNewSession(new SubscriptionCreator(*this, eventType));
 }
 
+SipMessage& 
+DialogUsageManager::makeRegistration(const NameAddr& aor)
+{
+   return makeNewSession(new RegistrationCreator(*this, aor)); 
+}
+
 #if 0
 SipMessage&
 DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
@@ -120,11 +128,6 @@ DialogUsageManager::makePublication(const Uri& aor, const Data& eventType)
    return makeNewSession(new PublicationCreator()); // !jf!
 }
 
-SipMessage& 
-DialogUsageManager::makeRegistration(const Uri& aor)
-{
-   //return makeNewSession(new RegistrationCreator(???)); // !jf!
-}
 
 SipMessage& 
 DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
@@ -176,11 +179,26 @@ DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& me
 #endif
 
 void
+DialogUsageManager::send(const SipMessage& request)
+{
+   mStack.send(request);
+}
+
+void
+DialogUsageManager::cancel(DialogSetId setid)
+{
+   // !jf!
+}
+
+
+// !jf! maybe this should just be a handler that the application can provide
+// (one or more of) to futz with the request before it goes out
+void
 DialogUsageManager::prepareInitialRequest(SipMessage& request)
 {
    // !jf! 
-   request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
-   request.header(h_Allows) = mProfile->getAllowedMethods();
+   //request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
+   //request.header(h_Allows) = mProfile->getAllowedMethods();
 }
 
 void
@@ -341,7 +359,18 @@ DialogUsageManager::processRequest(const SipMessage& request)
          {
             DialogSetId id(request);
             assert(mDialogSetMap.find(id) == mDialogSetMap.end());
-            mDialogSetMap[id] = new DialogSet(request);
+            try
+            {
+               DialogSet* dset =  new DialogSet(request);
+               mDialogSetMap[id] = dset;
+               dset->dispatch(request);
+            }
+            catch (BaseException& e)
+            {
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 400, e.getMessage()));
+               mStack.send(*failure);
+            }
+            
             break;
          }
          case RESPONSE:
@@ -364,11 +393,19 @@ DialogUsageManager::processRequest(const SipMessage& request)
             mStack.send(*failure);
             break;
          }
-         
+
          default:
          {
             DialogSet& dialogs = findDialogSet(DialogSetId(request));
-            dialogs.dispatch(request);
+            if (dialogs.empty())
+            {
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
+               mStack.send(*failure);
+            }
+            else
+            {
+               dialogs.dispatch(request);
+            }
          }
       }
    }
