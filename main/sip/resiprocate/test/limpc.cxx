@@ -731,7 +731,7 @@ myMain(int argc, char* argv[])
    Security* security=NULL;
    try
    {
-      security = new Security( tlsServer, useTls );
+      security = new Security;
    }
    catch( ... )
    {
@@ -757,11 +757,7 @@ myMain(int argc, char* argv[])
    {
       Security* security = sipStack.getSecurity();
       assert(security != 0);
-      bool ok = security->loadAllCerts( key , Data::Empty );
-      if ( !ok )
-      {
-         InfoLog( << "Could not load the certificates" );
-      } 
+      security->preload();
    }
    catch( ... )
    {
