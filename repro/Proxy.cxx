@@ -4,6 +4,7 @@
 
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 
@@ -89,6 +90,11 @@ Proxy::thread()
    }
 }
 
+bool
+Proxy::isMyDomain(resip::Uri &uri)
+{
+   return mStack.isMyDomain(uri.host(),uri.port());
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
