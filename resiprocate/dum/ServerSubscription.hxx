@@ -18,7 +18,7 @@ class ServerSubscription : public BaseSubscription
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
       SipMessage& accept(int statusCode = 200);
-      void reject(int responseCode);
+      SipMessage& reject(int responseCode);
 
       void setSubscriptionState(SubscriptionState state);
 
