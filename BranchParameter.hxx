@@ -1,29 +1,58 @@
-#include <sipstack/SendingMessage.hxx>
+#ifndef BranchParameter_hxx
+#define BranchParameter_hxx
 
-using namespace Vocal2;
+#include <sipstack/Parameter.hxx>
+#include <sipstack/ParameterTypeEnums.hxx>
+#include <util/Data.hxx>
+#include <iostream>
 
-Data 
-SendingMessage::brief() const
+namespace Vocal2
 {
-   switch (mType)
-   {
-      case Failed:
-         return "TransportFailed";
-      case Reliable:
-         return "TransportReliable";
-      case Unreliable:
-         return "TransportUnreliable";
-      default:
-         assert(0);
-   }
+
+class ParseBuffer;
+
+class BranchParameter : public Parameter
+{
+   public:
+      typedef BranchParameter Type;
+      
+      BranchParameter(ParameterTypes::Type, ParseBuffer& pb);
+      BranchParameter(ParameterTypes::Type);
+
+      bool hasMagicCookie();
+      Data& transactionId();
+      unsigned long& counter();
+      Data& clientData();
+
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      {
+         return new BranchParameter(type, pb);
+      }
+      
+      virtual Parameter* clone() const;
+      virtual std::ostream& encode(std::ostream& stream) const;
+
+      BranchParameter(const BranchParameter& other) 
+         : Parameter(other), 
+           mHasMagicCookie(other.mHasMagicCookie),
+           mTransactionId(other.mTransactionId),
+           mCounter(other.mCounter),
+           mClientData(other.mClientData)
+      {
+      }
+
+      BranchParameter& operator=(const BranchParameter& other);
+         
+   private:
+      bool mHasMagicCookie;
+      Data mTransactionId;
+      unsigned long mCounter;
+      Data mClientData;
+};
+ 
 }
 
-std::ostream& SendingMessage::encode(std::ostream& strm) const
-{
-   return strm << "SendingMessage TransactionId[" << mTransactionId << "] " << " " << brief();
-}
-
-
+#endif
 
 
 /* ====================================================================
