@@ -1,0 +1,6 @@
+DO NOT ADD CRLFS TO THESE FILES.
+USE the crlfit.sh script in ../RSP-2 like so:
+
+../RSP-2/crlfit.sh data1.msg | nc -w 2 localhost 5060
+
+This would send the message (w/ CRLF endings) to localhost:5060 over TCP.
