@@ -522,6 +522,15 @@ main(int arc, char** argv)
       checkParameterName(server);
       checkParameterName(charset);
       checkParameterName(accessType);
+      checkParameterName(profileType);
+      checkParameterName(vendor);
+      checkParameterName(model);
+      checkParameterName(version);
+      checkParameterName(effectiveBy);
+      checkParameterName(document);
+      checkParameterName(appId);
+      checkParameterName(networkUser);
+
 
       // test parameter hash
       for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)
@@ -580,6 +589,7 @@ main(int arc, char** argv)
       assert(via.param(p_maddr) == "1.2.3.4");
    }
 
+#ifdef USE_IPV6
    {
       TR _tr( "full on via parse, IPV6");
       // !dlb! deal with maddr=[5f1b:df00:ce3e:e200:20:800:2b37:6426]
@@ -591,7 +601,7 @@ main(int arc, char** argv)
       assert(via.sentHost() == "5f1b:df00:ce3e:e200:20:800:2b37:6426");
       assert(via.param(p_maddr) == "1.2.3.4");
    }
-
+#endif
    {
       TR _tr( "URI parse");
       Data uriString = "sip:bob@foo.com";

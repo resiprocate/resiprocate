@@ -100,6 +100,7 @@ class Symbols
 
       static const char* Certificate; // from draft-ietf-certs
       static const char* Credential; // from draft-ietf-certs
+      static const char* SipProfile; //from draft-ietf-sipping-config-framework
 
       static const char* pathSep;
 };
