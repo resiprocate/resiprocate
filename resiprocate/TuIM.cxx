@@ -72,6 +72,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
    PlainContents plainBody(text);
    Contents* body = &plainBody;
    
+#if USE_SSL
    if ( sign )
    {
       Security* sec = mStack->security;
@@ -91,7 +92,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
       body = sec->encrypt( body, encryptFor );
       if (old!=&plainBody) delete old;
    }
-   
+#endif
+
    msg->setContents(body);
    mStack->send( *msg );
 
@@ -143,9 +145,10 @@ TuIM::process()
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
             Data signedBy;
-            Security::SignatureStatus sigStat;
-            bool encrypted;
-            
+			Security::SignatureStatus sigStat = Security::none;
+            bool encrypted=false;
+
+#ifdef USE_SSL
             Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
             if ( sBody )
             {
@@ -159,7 +162,7 @@ TuIM::process()
                   ErrLog( << "Some problem decoding SMIME message");
                }
             }
-            
+#endif
             if ( contents )
             {
                PlainContents* body = dynamic_cast<PlainContents*>(contents);
