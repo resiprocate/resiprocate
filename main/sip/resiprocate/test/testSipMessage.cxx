@@ -322,39 +322,7 @@ main(int argc, char** argv)
    }
    
    {
-      // Proxy-Authorization does not allow comma joined headers
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
-                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
-                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-12344-1--c87542-;stid=489573115\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
-                   "Call-ID: 643f2f06\r\n"
-                   "CSeq: 1 INVITE\r\n"
-                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\", Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
-                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
-                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
-                   "Max-Forwards: 69\r\n"
-                   "Content-Length: 0\r\n"
-                   "\r\n");
-
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << *message << endl;
-
-      try
-      {
-         int s = message->header(h_ProxyAuthorizations).size();
-         cerr << "!! " << s << endl;
-         cerr << "!! " << message->header(h_ProxyAuthorizations).front().exists(p_realm) << endl;
-         cerr << *message << endl;
-         assert(false);
-      }
-      catch (ParseBuffer::Exception& e)
-      {
-         assert(e.getMessage() == "Proxy-Authorization");
-      }
-   }
-
-   {
+      cerr << "!Proxy-Authorization params" << endl;
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
@@ -362,7 +330,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
-                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\",realm=\"atlanta.com\",nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
                    "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
                    "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
@@ -371,9 +339,12 @@ main(int argc, char** argv)
                    "\r\n");
 
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << *message << endl;
 
       assert(message->header(h_ProxyAuthorizations).size() == 2);
+      assert(message->header(h_ProxyAuthorizations).front().param(p_realm) == "atlanta.com");
+      assert(message->header(h_ProxyAuthorizations).front().param(p_response) == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
+
+      cerr << *message << endl;
    }
 
    {
