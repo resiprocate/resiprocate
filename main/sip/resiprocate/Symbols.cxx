@@ -5,11 +5,15 @@ using namespace Vocal2;
 const char * const Symbols::DefaultSipVersion = "SIP/2.0";
 
 const char * const Symbols::CRLF = "\r\n";
+
 const char * const Symbols::SPACE = " ";
 const char * const Symbols::COLON = ":";
 const char * const Symbols::EQUALS = "=";
 const char * const Symbols::SEMI_COLON = ";";
 const char * const Symbols::SLASH = "/";
+const char * const Symbols::DOUBLE_QUOTE = "\"";
+const char * const Symbols::SEMI_OR_EQUAL = ";=";
+const char * const Symbols::COMMA_OR_EQUAL = ",=";
 
 const char * const Symbols::Accept = "Accept";
 const char * const Symbols::Accept_Encoding = "Accept-Encoding";

@@ -57,7 +57,7 @@ class ParserCategory
          hHeaderField->remove(parameterType);
       }
       
-      void parseParameters(const char* start);
+      void parseParameters(const char* start, unsigned int length);
 
       bool isParsed() const
       {

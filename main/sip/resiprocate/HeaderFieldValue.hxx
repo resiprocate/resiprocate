@@ -41,7 +41,7 @@ class HeaderFieldValue
 
       ParameterList& getUnknownParameters();
 
-      void parseParameters(const char* startPos);
+      void parseParameters(const char* startPos, unsigned int length);
 
 
       UnknownParameter* get(const Data& type);
