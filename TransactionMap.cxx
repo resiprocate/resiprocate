@@ -1,4 +1,3 @@
-#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransactionState.hxx"
