@@ -36,6 +36,9 @@ class ParserCategory
       }
       
       virtual void parse() = 0;
+
+      UnknownSubComponent& operator[](const Data& param);
+
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
       ParserCategory() 

@@ -4,6 +4,52 @@
 
 using namespace Vocal2;
 
+#if 0
+
+// in HeaderTypes.hxx
+template <class Header<T> >
+class CommaTokenizer
+{
+   public:
+      CommaTokenizer()
+      {
+         CommaTokenizing[T] = typename Header<T>::Type::isCommaTokenizing;
+      }
+};
+
+// e.g.
+class Header<Headers::Content_Disposition>
+{
+   public:
+      typedef Token Type;
+      enum {isMulti = false};
+      CommaTokenizer<Header> ct;
+};
+extern Header<Headers::Content_Disposition> Content_Disposition;
+
+// in ParserCategories.hxx
+class Token : public ParserCategory
+{
+   public:
+      Token(HeaderFieldValue& hfv) 
+         : ParserCategory(hfv) 
+      {}
+
+      enum (isCommaTokenizing = true};
+      virtual ParserCategory* clone(HeaderFieldValue*) const;
+      virtual void parse();
+      
+      // category specific accessors...
+};
+typedef ParserContainer<Token> Tokens;
+
+bool
+Headers::isCommaTokenizing(Type type)
+{
+   return CommaTokenizing[type];
+}
+#endif
+
 bool
 Headers::isCommaTokenizing(Type type)
 {
@@ -56,7 +102,6 @@ Headers::isCommaTokenizing(Type type)
       Headers::CommaTokenizing[Headers::UNKNOWN] = false;
    }
    
-      
    return CommaTokenizing[type];
 }
 
