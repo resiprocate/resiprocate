@@ -644,10 +644,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                target.transport = findTlsTransport(msg->getTlsDomain());
             }
+#if defined( USE_DTLS )
             else if (target.getType() == DTLS)
             {
                 target.transport = findDtlsTransport(msg->getTlsDomain());
             }
+#endif
             else
             {
                target.transport = findTransport(source);
@@ -946,6 +948,7 @@ TransportSelector::findTlsTransport(const Data& domainname)
    }
 }
 
+#if defined( USE_DTLS )
 Transport*
 TransportSelector::findDtlsTransport(const Data& domainname)
 
@@ -968,6 +971,7 @@ TransportSelector::findDtlsTransport(const Data& domainname)
       return 0;
    }
 }
+#endif
 
 
 /* ====================================================================
