@@ -280,7 +280,7 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
                connect(mSocket, 
                        (const sockaddr *)&servaddr,
                        sizeof(servaddr));
-               int len = sizeof(cliaddr);
+               socklen_t len = sizeof(cliaddr);
                getsockname(mSocket,(sockaddr*)&cliaddr, &len);
                
                      
