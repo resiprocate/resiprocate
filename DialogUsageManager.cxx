@@ -430,7 +430,7 @@ void
 DialogUsageManager::send(SipMessage& msg)
 {
    DebugLog (<< "SEND: " << msg);
-   if (msg.isRequest()) //!dcm! -- invariant?
+   if (msg.isRequest())
    {
       //this is all very scary and error-prone, as the TU has some retramissions
       if (msg.header(h_RequestLine).method() != CANCEL &&
@@ -439,7 +439,12 @@ DialogUsageManager::send(SipMessage& msg)
       {
          msg.header(h_Vias).front().param(p_branch).reset();
       }
-
+      
+      if (mClientAuthManager && msg.header(h_RequestLine).method() != ACK)
+      {
+         mClientAuthManager->addAuthentication(msg);
+      }
+      
       //copy message if processStrictRoute will modify it
       if (msg.exists(h_Routes) && 
           !msg.header(h_Routes).empty() &&
