@@ -19,7 +19,7 @@
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/ParserContainer.hxx"
 #include "sip2/sipstack/Transport.hxx"
-#include "sip2/util/VException.hxx"
+#include "sip2/util/BaseException.hxx"
 
 namespace Vocal2
 {
@@ -37,11 +37,11 @@ class SipMessage : public Message
          
       virtual ~SipMessage();
 
-      class Exception : public VException
+      class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line)
-               : VException(msg, file, line) {}
+               : BaseException(msg, file, line) {}
 
             const char* name() const { return "SipMessage::Exception"; }
       };
