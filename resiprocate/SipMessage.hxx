@@ -44,6 +44,8 @@ class SipMessage : public Message
 
       std::ostream& encode(std::ostream& str) const;
 
+      Data brief() const;
+
       // known header interface
       template <int T>
       typename Header<T>::Type& 
