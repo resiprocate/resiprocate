@@ -58,6 +58,7 @@ class Timer
       /// returns an absolut time in ms that is between 50% and 90% of
       /// passed in ms from now 
       static UInt64 getRandomFutureTimeMs( UInt64 futureMs ); // in ms
+      static UInt64 getForever(); //infinit time in future
 
       static int getCpuSpeedMhz() { return mCpuSpeedMHz; }
             
