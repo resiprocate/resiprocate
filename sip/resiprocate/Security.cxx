@@ -19,7 +19,9 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <pthread.h>
 #endif 
+
 #include <sys/types.h>
 
 #include <openssl/e_os2.h>
@@ -424,25 +426,30 @@ Security::Security( bool tlsServer, bool useTls )
    mTlsServer = tlsServer;
    mUseTls = useTls;
       
+#ifdef WIN32
+   // !jf! not threadsafe
    static bool initDone=false;
-   if ( !initDone )
+   if (!initDone)
    {
-      DebugLog( << "Setting up SSL library" );
-      
+      initialize();
       initDone = true;
-      
-      SSL_library_init();
-
-//      ERR_load_crypto_strings();
-      SSL_load_error_strings();
-      
-//      OpenSSL_add_all_algorithms();
-      OpenSSL_add_ssl_algorithms();
-//      OpenSSL_add_all_ciphers();
-//      OpenSSL_add_all_digests();
-
-      Random::initialize();
    }
+#else
+   // for thread safety
+   pthread_once_t once_control = PTHREAD_ONCE_INIT;
+   pthread_once(&once_control, Security::initialize);
+#endif
+}
+
+void
+Security::initialize()
+{
+   DebugLog( << "Setting up SSL library" );
+      
+   SSL_library_init();
+   SSL_load_error_strings();
+   OpenSSL_add_ssl_algorithms();
+   Random::initialize();
 }
 
 
