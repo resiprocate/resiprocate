@@ -26,124 +26,8 @@ Data Vocal2::MethodNames[MAX_METHODS] =
 };
 
 // !dlb! should the hash/comparison be case insensitive?
-/* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '*' methods.gperf  */
-struct methods { char *name; MethodTypes type; };
 
-#define TOTAL_KEYWORDS 12
-#define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 9
-#define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 18
-/* maximum key range = 16, duplicates = 0 */
-
-#ifdef __GNUC__
-__inline
-#else
-#ifdef __cplusplus
-inline
-#endif
-#endif
-static unsigned int
-m_hash (register const char *str, register unsigned int len)
-{
-  static unsigned char asso_values[] =
-    {
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19,  0,  0,  0, 19,  0,
-       0, 10, 19,  0, 19, 10,  5,  0,  0,  0,
-       0, 19,  0,  0,  0,  0, 10, 19, 19,  0,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19
-    };
-  register int hval = len;
-
-  switch (hval)
-    {
-      default:
-      case 9:
-        hval += asso_values[(unsigned char)str[8]];
-      case 8:
-        hval += asso_values[(unsigned char)str[7]];
-      case 7:
-        hval += asso_values[(unsigned char)str[6]];
-      case 6:
-        hval += asso_values[(unsigned char)str[5]];
-      case 5:
-        hval += asso_values[(unsigned char)str[4]];
-      case 4:
-        hval += asso_values[(unsigned char)str[3]];
-      case 3:
-        hval += asso_values[(unsigned char)str[2]];
-      case 2:
-        hval += asso_values[(unsigned char)str[1]];
-      case 1:
-        hval += asso_values[(unsigned char)str[0]];
-        break;
-    }
-  return hval;
-}
-
-#ifdef __GNUC__
-__inline
-#endif
-struct methods *
-m_in_word_set (register const char *str, register unsigned int len)
-{
-   static struct methods wordlist[] =
-      {
-         {""}, {""}, {""},
-         {"BYE", BYE},
-         {"INFO", INFO},
-         {"REFER", REFER},
-         {"NOTIFY", NOTIFY},
-         {"OPTIONS", OPTIONS},
-         {"RESPONSE", RESPONSE},
-         {"SUBSCRIBE", SUBSCRIBE},
-         {""},
-         {"CANCEL", CANCEL},
-         {""},
-         {"ACK", ACK},
-         {""}, {""},
-         {"INVITE", INVITE},
-         {"MESSAGE", MESSAGE},
-         {"REGISTER", REGISTER}
-      };
-
-   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
-   {
-      register int key = m_hash (str, len);
-
-      if (key <= MAX_HASH_VALUE && key >= 0)
-      {
-         register const char *s = wordlist[key].name;
-
-         if (*str == *s && !strncmp (str + 1, s + 1, len-1))
-            return &wordlist[key];
-      }
-   }
-   return 0;
-}
+#include "MethodHash.hxx"
 
 MethodTypes
 Vocal2::getMethodType(const Data& name)
@@ -155,19 +39,19 @@ Vocal2::getMethodType(const Data& name)
 MethodTypes
 Vocal2::getMethodType(const char* name, int len)
 {
-   struct methods* m = m_in_word_set(name, len);
+   struct methods* m = MethodHash::in_word_set(name, len);
    return m ? m->type : UNKNOWN;
 }
 
 int strncasecmp(const char* a, const char* b, int len)
 {
+    //!ah! whoever implemented this should be shot.
+    //!ah! should use library based strncasecmp() !
+    //!ah! have fixed it up a bit.
    for (int i = 0; i < len; i++)
    {
-      int c = (a[i] | 0x20) - (b[i] | 0x20);
-      if (c != 0)
-      {
-         return c;
-      }
+      int c = tolower(a[i]) - tolower(b[i]);
+      if (c) return c;
    }
    return 0;
 }

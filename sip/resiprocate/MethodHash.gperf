@@ -1,0 +1,24 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "sip2/sipstack/MethodTypes.hxx"
+namespace Vocal2 {
+using namespace std;
+using namespace Vocal2;
+%}
+struct methods { char *name; MethodTypes type; };
+%%
+ACK, ACK
+BYE, BYE
+CANCEL, CANCEL
+INVITE, INVITE
+NOTIFY, NOTIFY
+OPTIONS, OPTIONS
+REFER, REFER
+REGISTER, REGISTER
+SUBSCRIBE, SUBSCRIBE
+RESPONSE, RESPONSE
+MESSAGE, MESSAGE
+INFO, INFO
+%%
+}

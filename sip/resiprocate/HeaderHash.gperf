@@ -1,6 +1,14 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "sip2/sipstack/HeaderTypes.hxx"
+namespace Vocal2 {
+using namespace std;
+using namespace Vocal2;
+%}
 struct headers { char *name; Headers::Type type; };
 %%
-i, Headers::Headers::CallId
+i, Headers::CallId
 m, Headers::Contact
 e, Headers::ContentEncoding
 l, Headers::ContentLength
@@ -10,7 +18,7 @@ s, Headers::Subject
 t, Headers::To
 v, Headers::Via
 cseq, Headers::CSeq
-call-id, Headers::CallID
+call-id, Headers::CallId
 contact, Headers::Contact
 content-length, Headers::ContentLength
 expires, Headers::Expires
@@ -74,3 +82,6 @@ rseq, Headers::UNKNOWN
 security-client, Headers::SecurityClient
 security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
+%%
+}
+
