@@ -1,5 +1,5 @@
 CXX = ${DISTCC} @CXX@
-LDFLAGS += -lpopt
+AM_LDFLAGS = -lpopt
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 noinst_LIBRARIES = libtestsupport.a
 libtestsupport_a_SOURCES = \
