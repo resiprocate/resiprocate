@@ -1,5 +1,5 @@
-#if !defined(SOCKET_HXX)
-#define SOCKET_HXX
+#if !defined(Vocal2_Socket_hxx)
+#define Vocal2_Socket_hxx
 
 #ifdef WIN32
 #include <errno.h>

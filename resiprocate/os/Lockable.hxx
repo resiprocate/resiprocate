@@ -1,8 +1,8 @@
-#if !defined(VOCAL_LOCKABLE_HXX)
-#define VOCAL_LOCKABLE_HXX
+#if !defined(Vocal2_Lockable_hxx)
+#define Vocal2_Lockable_hxx
 
 static const char* const Lockable_hxx_Version =
-    "$Id: Lockable.hxx,v 1.3 2002/11/07 03:07:27 jason Exp $";
+    "$Id: Lockable.hxx,v 1.4 2002/11/11 22:05:06 jason Exp $";
 
 /** Infrastructure common to VOCAL.<br><br>
  */

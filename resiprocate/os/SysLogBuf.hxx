@@ -1,12 +1,15 @@
-#ifndef SysLogBuf_hxx
-#define SysLogBuf_hxx
+#ifndef Vocal2_SysLogBuf_hxx
+#define Vocal2_SysLogBuf_hxx
 
 #include <iostream>
 #include <cassert>
 
+
+
 #ifndef WIN32
 #include <syslog.h>
 #endif
+
 
 namespace Vocal2
 {

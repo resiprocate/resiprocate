@@ -1,5 +1,5 @@
-#ifndef ParseBuffer_hxx
-#define ParseBuffer_hxx
+#ifndef Vocal2_ParseBuffer_hxx
+#define Vocal2_ParseBuffer_hxx
 #include "sip2/util/Data.hxx"
 #include "sip2/util/BaseException.hxx"
 
