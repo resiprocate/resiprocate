@@ -214,6 +214,8 @@ UdpTransport::process(FdSet& fdset)
       DebugLog(<< Data(buffer, len));
       delete message; 
       message=0; 
+      // Reset the preparse machine if we're not saving the fragment
+      mPreparse.reset();
       return;
    }
 
@@ -223,6 +225,8 @@ UdpTransport::process(FdSet& fdset)
       DebugLog(<< Data(buffer, len));
       delete message; 
       message=0;
+      // Reset the preparse machine if we're not saving the fragment
+      mPreparse.reset();
       return;
    }
 
