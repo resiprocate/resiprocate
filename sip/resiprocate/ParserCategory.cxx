@@ -55,12 +55,14 @@ ParserCategory::clear()
 {
    //DebugLog(<<"ParserCategory::clear");
    LazyParser::clear();
+
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       delete *it;
    }
    mParameters.clear();
+
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
@@ -192,7 +194,7 @@ Vocal2::operator<<(ostream& stream, const ParserCategory& category)
 }
 
 Parameter* 
-ParserCategory::getParameterByEnum(int type) const
+ParserCategory::getParameterByEnum(ParameterTypes::Type type) const
 {
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
@@ -205,8 +207,27 @@ ParserCategory::getParameterByEnum(int type) const
    return 0;
 }
 
+void
+ParserCategory::setParameter(const Parameter* parameter)
+{
+   if (parameter != 0)
+   {
+      for (ParameterList::iterator it = mParameters.begin();
+           it != mParameters.end(); it++)
+      {
+         if ((*it)->getType() == parameter->getType())
+         {
+            delete *it;
+            mParameters.erase(it);
+            break;
+         }
+      }
+      mParameters.push_back(parameter->clone());
+   }
+}
+
 void 
-ParserCategory::removeParameterByEnum(int type)
+ParserCategory::removeParameterByEnum(ParameterTypes::Type type)
 {
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
