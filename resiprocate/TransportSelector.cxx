@@ -183,7 +183,7 @@ TransportSelector::addTransport( TransportType protocol,
          assert(mExactTransports.find(key) == mExactTransports.end() &&
                 mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-         InfoLog (<< "Adding transport: " << key);
+         //DebugLog (<< "Adding transport: " << key);
 
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
@@ -553,9 +553,10 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                   // !kh! this is compiled out on windows,
                   // for some reason VC dosen't recognize INADDR6_ANY,
                   // and I don't have time yet to find out why.
-                  const void * src = (&reinterpret_cast<const sockaddr_in6*>(&source.getSockaddr())->sin6_addr);
-                  if(memcmp(src, INADDR6_ANY, sizeof(INADDR6_ANY)) == 0)
+                  if (source.isAnyInterface())
+                  {
                      source = getFirstInterface(false, target.getType());
+                  }
 #  endif
 #else
                assert(0);
