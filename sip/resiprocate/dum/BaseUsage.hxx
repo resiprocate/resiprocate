@@ -28,7 +28,7 @@ class BaseUsage
             static UInt64 getNext();
       };
 
-      BaseUsage(DialogUsageManager& dum);
+      BaseUsage(DialogUsageManager& dum, Dialog& dialog);
 
       SipMessage* makeInviteSession();
       SipMessage* makeSubscription();
@@ -41,14 +41,14 @@ class BaseUsage
       void send(const SipMessage& request);
       
       DialogUsageManager& dum();
-      //Dialog& dialog();
+      Dialog& dialog();
       
       virtual void end()=0;
       virtual void dispatch(const SipMessage& msg)=0;
       
    private:
       DialogUsageManager& mDum;
-      DialogImpl& mDialog;
+      Dialog& mDialog;
 };
  
 }
