@@ -6,31 +6,31 @@ using namespace Vocal2;
 
 const int Helper::tagSize = 4;
 
-SipMessage 
+SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
-   SipMessage request;
+   SipMessage* request = new SipMessage;
    RequestLine rLine(method);
    rLine.uri() = target.uri();
-   request.header(h_To) = target;
-   request.header(h_RequestLine) = rLine;
-   request.header(h_MaxForwards).value() = 70;
-   request.header(h_CSeq).method() = method;
-   request.header(h_CSeq).sequence() = 1;
-   request.header(h_From) = from;
-   request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request.header(h_Contacts).push_front(contact);
-   request.header(h_CallId).value() = Helper::computeCallId();
-   request.header(h_ContentLength).value() = 0;
+   request->header(h_To) = target;
+   request->header(h_RequestLine) = rLine;
+   request->header(h_MaxForwards).value() = 70;
+   request->header(h_CSeq).method() = method;
+   request->header(h_CSeq).sequence() = 1;
+   request->header(h_From) = from;
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_Contacts).push_front(contact);
+   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_ContentLength).value() = 0;
    
    Via via;
    via.param(p_branch) = computeUniqueBranch();
-   request.header(h_Vias).push_front(via);
+   request->header(h_Vias).push_front(via);
    
    return request;
 }
 
-SipMessage 
+SipMessage*
 Helper::makeRegister(const NameAddr& registrar,
                      const NameAddr& aor)
 {
@@ -38,66 +38,66 @@ Helper::makeRegister(const NameAddr& registrar,
    SipMessage request;
    RequestLine rLine(REGISTER);
    rLine.uri() = registrar.uri();
-   request.header(h_To) = aor;
-   request.header(h_RequestLine) = rLine;
-   request.header(h_MaxForwards).value() = 70;
-   request.header(h_CSeq).method() = REGISTER;
-   request.header(h_CSeq).sequence() = 1;
-   request.header(h_From) = aor;
-   request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request.header(h_CallId).value() = Helper::computeCallId();
-   request.header(h_ContentLength).value() = 0;
+   request->header(h_To) = aor;
+   request->header(h_RequestLine) = rLine;
+   request->header(h_MaxForwards).value() = 70;
+   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).sequence() = 1;
+   request->header(h_From) = aor;
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_CallId).value() = Helper::computeCallId();
+   request->header(h_ContentLength).value() = 0;
 
    Via via;
    via.param(p_branch) = computeUniqueBranch();
-   request.header(h_Vias).push_front(via);
+   request->header(h_Vias).push_front(via);
    
    return request;
 }
 
-SipMessage 
+SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    return Helper::makeRequest(target, from, contact, INVITE);
 }
 
-SipMessage 
+SipMessage*
 Helper::makeResponse(const SipMessage& request, int responseCode)
 {
-   SipMessage response;
-   response.header(h_StatusLine).responseCode() = responseCode;
-   response.header(h_From) = request.header(h_From);
-   response.header(h_To) = request.header(h_To);
-   response.header(h_CallId) = request.header(h_CallId);
-   response.header(h_CSeq) = request.header(h_CSeq);
-   response.header(h_Vias) = request.header(h_Vias);
-   response.header(h_ContentLength).value() = 0;
+   SipMessage* response = new SipMessage;
+   response->header(h_StatusLine).responseCode() = responseCode;
+   response->header(h_From) = request.header(h_From);
+   response->header(h_To) = request.header(h_To);
+   response->header(h_CallId) = request.header(h_CallId);
+   response->header(h_CSeq) = request.header(h_CSeq);
+   response->header(h_Vias) = request.header(h_Vias);
+   response->header(h_ContentLength).value() = 0;
 
    if (responseCode > 100 && responseCode < 500)
    {
-      if (!response.header(h_To).exists(p_tag))
+      if (!response->header(h_To).exists(p_tag))
       {
-         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+         response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
       }
    }
    return response;
 }
 
-SipMessage 
+SipMessage*
 Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact)
 {
-   SipMessage response = Helper::makeResponse(request, responseCode);
-   response.header(h_Contacts).push_front(contact);
+   SipMessage* response = Helper::makeResponse(request, responseCode);
+   response->header(h_Contacts).push_front(contact);
    return response;
 }
 
 
 //to, requestLine& cseq method set
-SipMessage 
+SipMessage*
 Helper::makeRequest(const NameAddr& target, MethodTypes method)
 {
    assert(0);
-   SipMessage junk;
+   SipMessage* junk=0;
    return junk;
 }
 
@@ -132,7 +132,7 @@ Data
 Helper::computeUniqueBranch()
 {
    Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
-   result += RandomHex::get(4);
+   result += RandomHex::get(8);
    return result;
 }
 
