@@ -536,14 +536,14 @@ ParseBuffer::data(Data& data, const char* start) const
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
-   if (data.mMine)
+   if (data.mMine == Data::Take)
    {
       delete[] data.mBuf;
    }
    data.mSize = (unsigned int)(mPosition - start);
    data.mBuf = const_cast<char*>(start);
    data.mCapacity = data.mSize;
-   data.mMine = false;
+   data.mMine = Data::Share;
 }
 
 Data
