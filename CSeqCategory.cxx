@@ -149,7 +149,9 @@ CSeqCategory::parse(ParseBuffer& pb)
 std::ostream& 
 CSeqCategory::encodeParsed(std::ostream& str) const
 {
-   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
+   str << mSequence 
+       << Symbols::SPACE 
+       << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 
