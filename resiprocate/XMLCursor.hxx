@@ -2,6 +2,7 @@
 #define RESIP_XMLCURSOR_HXX 
 
 #include "resiprocate/os/ParseBuffer.hxx"
+#include <iostream>
 #include <list>
 #include <map>
 
@@ -73,7 +74,8 @@ class XMLCursor
       bool atLeaf() const;
 
       const Data& getTag() const;
-      const std::map<Data, Data>& getAttributes() const;
+      typedef std::map<Data, Data> AttributeMap;
+      const AttributeMap& getAttributes() const;
       const Data& getValue() const;
 
    private:
@@ -99,7 +101,7 @@ class XMLCursor
       // store date for decoding
       mutable Data mValue;
       // store attributes for reference
-      mutable std::map<Data, Data> mAttributes;
+      mutable AttributeMap mAttributes;
 
       class Node
       {
@@ -126,11 +128,20 @@ class XMLCursor
             Node& operator=(const Node&);
       };
 
+      friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
+      friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
+
       // no value semantics
       XMLCursor(const XMLCursor&);
       XMLCursor& operator=(const XMLCursor&);
       friend class Node;
 };
+
+std::ostream&
+operator<<(std::ostream& str, const XMLCursor& cursor);
+
+std::ostream&
+operator<<(std::ostream& str, const XMLCursor::Node& cursor);
 
 }
 
