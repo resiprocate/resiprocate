@@ -809,9 +809,9 @@ TransactionState::processServerInvite(  Message* msg )
          case INVITE:
             if (code == 100)
             {
-               if (mState == Trying)               
+               if (mState == Trying || mState == Proceeding)
                {
-                  DebugLog (<< "Received 100 in Trying State. Send over wire");
+                  DebugLog (<< "Received 100 in Trying or Proceeding. Send over wire");
                   delete mMsgToRetransmit; // may be replacing the 100
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
@@ -819,7 +819,7 @@ TransactionState::processServerInvite(  Message* msg )
                }
                else
                {
-                  DebugLog (<< "Received 100 when not in Trying State. Ignoring");
+                  DebugLog (<< "Ignoring 100 - not in Trying or Proceeding.");
                   delete msg;
                }
             }
@@ -827,7 +827,7 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mState == Trying || mState == Proceeding)
                {
-                  DebugLog (<< "Received 100 in Trying or Proceeding. Send over wire");
+                  DebugLog (<< "Received 1xx in Trying or Proceeding. Send over wire");
                   delete mMsgToRetransmit; // may be replacing the 100
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
