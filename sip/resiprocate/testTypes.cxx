@@ -2,8 +2,8 @@
 #ifndef WIN32
 #include <unistd.h>
 #endif
-#include <util/Logger.hxx>
-#include <sipstack/HeaderTypes.hxx>
+#include "util/Logger.hxx"
+#include "sipstack/HeaderTypes.hxx"
 using namespace Vocal2;
 using namespace std;
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP

@@ -1,4 +1,4 @@
-#include <util/DataStream.hxx>
+#include "util/DataStream.hxx"
 
 using namespace Vocal2;
 

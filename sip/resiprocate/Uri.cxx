@@ -1,7 +1,7 @@
-#include <sipstack/Uri.hxx>
-#include <util/ParseBuffer.hxx>
-#include <sipstack/Symbols.hxx>
-#include <sipstack/UnknownParameter.hxx>
+#include "sipstack/Uri.hxx"
+#include "util/ParseBuffer.hxx"
+#include "sipstack/Symbols.hxx"
+#include "sipstack/UnknownParameter.hxx"
 
 using namespace Vocal2;
 

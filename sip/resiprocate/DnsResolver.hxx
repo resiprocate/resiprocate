@@ -3,8 +3,8 @@
 
 #include <list>
 
-#include <sipstack/Transport.hxx>
-#include <util/HashMap.hxx>
+#include "sipstack/Transport.hxx"
+#include "util/HashMap.hxx"
 
 namespace Vocal2
 {

@@ -1,8 +1,8 @@
 #include <iostream>
-#include <sipstack/Dialog.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/Helper.hxx>
-#include <util/Logger.hxx>
+#include "sipstack/Dialog.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/Helper.hxx"
+#include "util/Logger.hxx"
 
 using namespace Vocal2;
 

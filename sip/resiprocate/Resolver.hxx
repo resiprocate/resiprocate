@@ -2,8 +2,8 @@
 #define Resolver_hxx
 
 #include <list>
-#include <util/Data.hxx>
-#include <sipstack/Transport.hxx>
+#include "util/Data.hxx"
+#include "sipstack/Transport.hxx"
 
 namespace Vocal2
 {

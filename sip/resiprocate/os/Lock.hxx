@@ -3,10 +3,10 @@
 
 
 static const char* const Lock_hxx_Version =
-    "$Id: Lock.hxx,v 1.2 2002/10/15 15:46:24 alan Exp $";
+    "$Id: Lock.hxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
 
 
-#include <util/Lockable.hxx>
+#include "util/Lockable.hxx"
 
 namespace Vocal2
 {

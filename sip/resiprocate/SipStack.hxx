@@ -1,14 +1,14 @@
 #if !defined(SIPSTACK_HXX)
 #define SIPSTACK_HXX
 
-#include <util/Fifo.hxx>
-#include <util/Socket.hxx>
+#include "util/Fifo.hxx"
+#include "util/Socket.hxx"
 
-#include <sipstack/Executive.hxx>
-#include <sipstack/TransportSelector.hxx>
-#include <sipstack/TransactionMap.hxx>
-#include <sipstack/TimerQueue.hxx>
-#include <sipstack/DnsResolver.hxx>
+#include "sipstack/Executive.hxx"
+#include "sipstack/TransportSelector.hxx"
+#include "sipstack/TransactionMap.hxx"
+#include "sipstack/TimerQueue.hxx"
+#include "sipstack/DnsResolver.hxx"
 
 
 
