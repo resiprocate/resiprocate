@@ -78,7 +78,7 @@ class InviteSession : public DialogUsage
          UAC_Early,
          UAC_EarlyWithOffer,
          UAC_EarlyWithAnswer,
-         UAC_WaitingForAnswerFromApp,
+         UAC_Answered,
          UAC_Terminated,
          UAC_SentUpdateEarly,
          UAC_SentUpdateConnected,

@@ -40,7 +40,7 @@ class ClientInviteSession : public InviteSession
       void dispatchEarly (const SipMessage& msg);
       void dispatchEarlyWithOffer (const SipMessage& msg);
       void dispatchEarlyWithAnswer (const SipMessage& msg);
-      void dispatchWaitingForAnswerFromApp (const SipMessage& msg);
+      void dispatchAnswered (const SipMessage& msg);
       void dispatchConnected (const SipMessage& msg);
       void dispatchTerminated (const SipMessage& msg);
       void dispatchSentUpdateEarly (const SipMessage& msg);
