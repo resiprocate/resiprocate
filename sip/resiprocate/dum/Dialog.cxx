@@ -428,6 +428,15 @@ Dialog::dispatch(const SipMessage& msg)
       }
       
       const SipMessage& response = msg;
+      int code = response.header(h_StatusLine).statusCode();
+      if (code >=200 && code < 300)
+      {
+         if (response.exists(h_RecordRoutes))
+         {
+            mRouteSet = response.header(h_RecordRoutes).reverse();
+         }
+      }
+      
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
       // answer !dcm! what is he on?
       switch (response.header(h_CSeq).method())

@@ -190,6 +190,8 @@ class DialogUsageManager : public HandleManager
       // May call a callback to let the app adorn
       void sendResponse(SipMessage& response);
 
+      void sendUsingOutboundIfAppropriate(SipMessage& msg);      
+
       void addTimer(DumTimeout::Type type,
                     unsigned long duration,
                     BaseUsageHandle target, 
