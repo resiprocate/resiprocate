@@ -385,7 +385,8 @@ ParseBuffer::skipToEnd()
 void
 ParseBuffer::data(Data& data, const char* start) const
 {
-   assert(mBuff <= start && start <= mTraversalPtr);
+   assert( mBuff <= start );
+   assert( start <= mTraversalPtr);
 
    if (data.mMine)
    {
