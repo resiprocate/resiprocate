@@ -51,15 +51,19 @@
  *
  */
 
-static const char* const Condition_hxx_version =
-    "$Id: Condition.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
+#if defined(WIN32) 
+#  include <windows.h>
+#  include <winbase.h>
+#else
+#  include <pthread.h>
+#endif
 
-
-#include <util/Mutex.hxx>
 
 namespace Vocal2
 {
 
+	class Mutex;
+	
 class Condition
 {
    public:
@@ -85,14 +89,16 @@ class Condition
       int broadcast();
          
 
+#if 0
       /** Returns the operating system dependent unique id of the condition.
        */
       const vcondition_t*
       getId() const;
+#endif
 
    private:
 
-      mutable vcondition_t myId;
+      mutable  pthread_cond_t mId;
 };
 
 } // namespace Vocal2

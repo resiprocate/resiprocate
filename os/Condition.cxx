@@ -48,30 +48,25 @@
  *
  */
 
-
-static const char* const Condition_cxx_Version =
-    "$Id: Condition.cxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
-
-
 #include <cassert>
 
 #include <util/Condition.hxx>
 #include <util/Mutex.hxx>
-#include <util/vthread.hxx>
 
-using Vocal2::Condition;
-using Vocal2::Mutex;
+
+using namespace Vocal2;
+
 
 Condition::Condition()
 {
-    int  rc = vcond_init(&myId);
+    int  rc =  pthread_cond_init(&mId,0);
     assert( rc == 0 );
 }
 
 
 Condition::~Condition ()
 {
-    int  rc = vcond_destroy(&myId);
+    int  rc = pthread_cond_destroy(&mId);
     assert( rc == 0 );
 }
 
@@ -79,25 +74,26 @@ Condition::~Condition ()
 int
 Condition::wait (Mutex* mutex)
 {
-   return ( vcond_wait(&myId, mutex->getId()) );
+   return ( pthread_cond_wait(&mId, mutex->getId()) );
 }
 
 int
 Condition::signal ()
 {
-    return ( vcond_signal(&myId) );
+    return ( pthread_cond_signal(&mId) );
 }
 
 int
 Condition::broadcast()
 {
-    return ( vcond_broadcast(&myId) );
+    return ( pthread_cond_broadcast(&mId) );
 }
 
-
+#if 0
 const vcondition_t*
 Condition::getId () const
 {
     return ( &myId );
 }
+#endif
 
