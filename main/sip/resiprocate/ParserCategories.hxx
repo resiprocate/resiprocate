@@ -229,7 +229,8 @@ class NameAddr : public ParserCategory
 
       virtual ~NameAddr();
       
-      Uri& uri() const;
+      Uri& uri();
+      const Uri& uri() const;
       Data& displayName() const {checkParsed(); return mDisplayName;}
       bool isAllContacts() const {checkParsed(); return mAllContacts; }
       void setAllContacts() { mAllContacts = true;}
@@ -307,6 +308,8 @@ class CSeqCategory : public ParserCategory
       MethodTypes& method() const {checkParsed(); return mMethod;}
       Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
       int& sequence() const {checkParsed(); return mSequence;}
+
+      bool operator==(const CSeqCategory& rhs) const;
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
