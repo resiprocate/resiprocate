@@ -122,7 +122,7 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
       (*i)->encode(str);
    }
 
-   str << boundary << Symbols::DASHDASH;
+   str << Symbols::CRLF << boundary << Symbols::DASHDASH;
    return str;
 }
 
