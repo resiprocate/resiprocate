@@ -4,6 +4,7 @@
 #include "compat.hxx"
 
 #include <cassert>
+#include <errno.h>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -69,8 +70,6 @@ typedef int socklen_t;
 namespace resip
 {
 
-	int closeSocket( Socket fd );
-
 /// set up network - does nothing in unix but needed for windows
 void
 initNetwork();
@@ -79,14 +78,12 @@ initNetwork();
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
-inline int getErrno() { return WSAGetLastError(); }
+inline int getErrno() { return errno; }
 #endif
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
-
-
-
+int closeSocket( Socket fd );
 
 class FdSet
 {
