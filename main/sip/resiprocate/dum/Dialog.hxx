@@ -57,7 +57,7 @@ class Dialog
       ServerOutOfDialogReq::Handle findServerOutOfDialog();
       
       void dispatch(const SipMessage& msg);
-      bool shouldMerge(const SipMessage& request);
+      bool shouldMerge(const SipMessage& request) const;
       void processNotify(const SipMessage& notify);
       
    private:
