@@ -36,6 +36,38 @@ SipMessage::clone() const
    return newMessage;
 }
 
+ostream& 
+SipMessage::encode(ostream& str) const
+{
+   if (mStartLine != 0)
+   {
+      mStartLine->encode(str);
+   }
+   
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   {
+      if (mHeaders[i] !=0)
+      {
+         ParserCategory* parser = mHeaders[i]->getParserCategory();
+         if (parser != 0)
+         {
+            parser->encode(str);
+         }
+         else
+         {
+            mHeaders[i]->encode(str);
+         }
+      }
+   }
+
+   if (mBody != 0)
+   {
+      mBody->encode(str);
+   }
+   
+   return str;
+}
+
 SipMessage::~SipMessage()
 {
    cleanUp();
@@ -51,6 +83,12 @@ void
 SipMessage::setStartLine(char* start, int len)
 {
    mStartLine = new HeaderFieldValue(start, len);
+}
+
+void 
+SipMessage::setBody(char* start, int len)
+{
+   mBody = new HeaderFieldValue(start, len);
 }
 
 void
@@ -132,7 +170,7 @@ SipMessage::operator[](const Data& headerName)
             
             hfvs->setParserContainer(new Unknowns(*hfvs));
          }
-         return (Unknowns&)hfvs->getParserCategory();
+         return (Unknowns&)*hfvs->getParserCategory();
       }
    }
    
@@ -143,7 +181,7 @@ SipMessage::operator[](const Data& headerName)
    hfvs->push_back(hfv);
    hfvs->setParserContainer(new Unknowns(*hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
-   return (Unknowns&)hfvs->getParserCategory();
+   return (Unknowns&)*hfvs->getParserCategory();
 }
 
 void
