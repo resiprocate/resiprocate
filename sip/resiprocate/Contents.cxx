@@ -430,13 +430,18 @@ Contents::encodeHeaders(ostream& str) const
 
    if (exists(h_ContentDisposition))
    {
+      str <<  "Content-Disposition" << Symbols::COLON[0] << Symbols::SPACE[0];
+
       header(h_ContentDisposition).encode(str);
       str << Symbols::CRLF;
    }
 
    if (exists(h_ContentLanguages))
    {
-      for (ParserContainer<Content_Language_MultiHeader::Type>::iterator i = header(h_ContentLanguages).begin();
+      str <<  "Content-Languages" << Symbols::COLON[0] << Symbols::SPACE[0];
+      
+      for (ParserContainer<Content_Language_MultiHeader::Type>::iterator 
+              i = header(h_ContentLanguages).begin();
            i != header(h_ContentLanguages).end(); i++)
       {
          i->encode(str);
