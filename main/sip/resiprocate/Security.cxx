@@ -102,6 +102,7 @@ Security::Security(const Data& directory) : mPath(directory)
 void
 Security::preload()
 {
+#if 0
    FileSystem::Directory dir(mPath);
    char buffer[8192];
    Data fileT(Data::Borrow, buffer, sizeof(buffer));
@@ -132,6 +133,53 @@ Security::preload()
          }
       }
    }
+#else
+   DIR* dir = opendir( mPath.c_str() );
+
+   if (!dir )
+   {
+      ErrLog( << "Error reading public key directory  " << mPath );
+      return;      
+   }
+
+   struct dirent * d = 0;
+   while (1)
+   {
+      d = readdir(dir);
+      if ( !d )
+      {
+         break;
+      }
+
+      Data name( d->d_name );
+
+      if (name.postfix(pem))
+      {
+         if (name.prefix(userCert))
+         {
+            addUserCertPEM(getAor(name, userCert), readIntoData(name));
+         }
+         else if (name.prefix(userKey))
+         {
+            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(name));
+         }
+         else if (name.prefix(domainCert))
+         {
+            addDomainPrivateKeyPEM(getAor(name, domainCert), readIntoData(name));
+         }
+         else if (name.prefix(domainKey))
+         {
+            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(name));
+         }
+         else if (name.prefix(rootCert))
+         {
+            addRootCertPEM(readIntoData(name));
+         }
+      }
+   }
+   closedir( dir );
+#endif
+
 }
 
 void
