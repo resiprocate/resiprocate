@@ -52,7 +52,7 @@ class Security
             const char* name() const { return "SecurityException"; }
       };
 
-      Security( );
+      Security( bool tlsServer );
       ~Security();
       
       /* The security stuff is for managing certificates that are used by the
@@ -163,7 +163,9 @@ class Security
       EVP_PKEY* privateKey;
 
       // SSL Context 
-      SSL_CTX* ctx;
+      SSL_CTX* ctxTls;
+
+      bool mTlsServer;
 #endif	
 };
  

@@ -437,6 +437,7 @@ main(int argc, char* argv[])
    bool haveContact=false;
    Uri outbound;
    bool noRegister = false;
+   bool tlsServer=false;
    
    int numAdd=0;
    Data addList[100];
@@ -465,7 +466,10 @@ main(int argc, char* argv[])
       else if (!strcmp(argv[i],"-sign"))
       {
          sign = true;
-         
+      }
+      else if (!strcmp(argv[i],"-tlsServer"))
+      {
+         tlsServer = true;
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -541,6 +545,7 @@ main(int argc, char* argv[])
               << " -vv is very verbose" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
+              << " -tlsServer - sets to act as tls server instead of  client" << endl
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPassword sets the password to use for registration" << endl
               << " -noRegister causes it not to register - by default the AOR is registered" << endl
@@ -571,7 +576,8 @@ main(int argc, char* argv[])
    
    //InfoLog( << "Using port " << port );
    
-   SipStack sipStack;  
+   Security security( tlsServer );
+   SipStack sipStack( false /*multihtread*/, &security );  
 
    if ( key == Data("-") )
    {
