@@ -19,6 +19,10 @@ GagMessage::getMessage(istream &is)
         return new GagPresenceMessage(is);
       break;
 
+    case HELLO:
+        return new GagHelloMessage(is);
+      break;
+
     case LOGIN:
         return new GagLoginMessage(is);
       break;
@@ -139,6 +143,23 @@ GagImMessage::serialize(ostream &os) const
   GagMessage::serialize(os, to);
   GagMessage::serialize(os, from);
   GagMessage::serialize(os, im);
+
+  return os;
+}
+
+void
+GagHelloMessage::parse(istream &is)
+{
+  valid = false;
+  if (!GagMessage::parse(is, ok)) return;
+  valid = true;
+}
+
+ostream &
+GagHelloMessage::serialize(ostream &os) const
+{
+  GagMessage::serialize(os);
+  GagMessage::serialize(os, ok);
 
   return os;
 }
