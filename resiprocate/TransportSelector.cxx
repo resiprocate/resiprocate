@@ -3,6 +3,7 @@
 #include <sipstack/SipStack.hxx>
 #include <sipstack/TransportSelector.hxx>
 #include <sipstack/UdpTransport.hxx>
+#include <sipstack/TestTransport.hxx>
 #include <sipstack/Uri.hxx>
 #include <sipstack/SendingMessage.hxx>
 
@@ -64,6 +65,12 @@ TransportSelector::addTransport( Transport::Type protocol,
    {
       case Transport::UDP:
          transport = new UdpTransport(hostname, port, nic, mStack.mStateMacFifo);
+         break;
+      case Transport::TestReliable:
+         transport = new TestReliableTransport(hostname, port, nic, mStack.mStateMacFifo);
+         break;
+      case Transport::TestUnreliable:
+         transport = new TestReliableTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
       default:
          assert(0);
