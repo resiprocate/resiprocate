@@ -4,12 +4,16 @@
 namespace resip
 {
 
-/** @file SubscriptionCreator.hxx
- *   @todo This file is empty
- */
-
 class SubscriptionCreator : public BaseCreator 
 {
+  public:
+   
+    //probably want to have things like the Accept list here too
+    SubscriptionCreator(const Data& event);
+
+  private:
+    Data mEvent; 
+
 };
  
 }
