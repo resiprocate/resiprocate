@@ -194,8 +194,8 @@ InviteSession::dispatch(const SipMessage& msg)
                   break;
                   
                case REFER:
-                  assert(0); // !jf! 
-                  mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
+                  //handled in Dialog
+                  assert(0);                  
                   break;
                   
                default:
@@ -557,6 +557,10 @@ InviteSession::copyAuthorizations(SipMessage& request)
 SipMessage& 
 InviteSession::rejectOffer(int statusCode)
 {
+   if (statusCode < 400)
+   {
+      throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+   }
    //sdp state change here--go to initial state?
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
    return mLastResponse;

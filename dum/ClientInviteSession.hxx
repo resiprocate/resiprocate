@@ -2,6 +2,7 @@
 #define RESIP_CLIENTINVITESESSION_HXX
 
 #include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
@@ -14,7 +15,8 @@ class ClientInviteSession : public InviteSession
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
-                          const SdpContents* initialOffer);
+                          const SdpContents* initialOffer,
+                          ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
       ClientInviteSessionHandle getHandle();
 
@@ -22,9 +24,11 @@ class ClientInviteSession : public InviteSession
       virtual void send(SipMessage& msg);
       
    private:
+      friend class Dialog;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      void sendSipFrag(const SipMessage& response);      
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
 //      void sendAck(const SipMessage& ok);
@@ -32,12 +36,12 @@ class ClientInviteSession : public InviteSession
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;
+
+      ServerSubscriptionHandle mServerSub;      
       
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
-
-      friend class Dialog;
 };
  
 }
