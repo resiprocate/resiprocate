@@ -1,39 +1,35 @@
-#if !defined(RESIP_REGISTRAR_HXX)
-#define RESIP_REGISTRAR_HXX 
-
-#include "resiprocate/dum/RegistrationHandler.hxx"
+#include "resiprocate/dum/DumThread.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-namespace repro
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+using namespace resip;
+
+DumThread::DumThread(DialogUsageManager& dum)
+   : mDum(dum)
 {
-
-class Registrar: public resip::ServerRegistrationHandler
-{
-   public:
-      Registrar();
-      virtual ~Registrar();
-      
-      virtual void onRefresh(resip::ServerRegistrationHandle,
-                             const resip::SipMessage& reg);
-
-      virtual void onRemove(resip::ServerRegistrationHandle,
-                            const resip::SipMessage& reg);
-      
-      virtual void onRemoveAll(resip::ServerRegistrationHandle,
-                               const resip::SipMessage& reg);
-      
-      virtual void onAdd(resip::ServerRegistrationHandle,
-                         const resip::SipMessage& reg);
-      
-      virtual void onQuery(resip::ServerRegistrationHandle,
-                           const resip::SipMessage& reg);
-
-   private:
-};
 }
-#endif
+
+void
+DumThread::thread()
+{
+   while (!isShutdown())
+   {
+      try
+      {
+         std::auto_ptr<Message> msg(mDum.mFifo.getNext(100));
+         if (msg.get())
+         {
+            mDum.internalProcess(msg);
+         }
+      }
+      catch (BaseException& e)
+      {
+         WarningLog (<< "Unhandled exception: " << e);
+      }
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
