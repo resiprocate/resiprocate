@@ -21,6 +21,8 @@ class Helper
                                    const NameAddr& from,
                                    const NameAddr& contact);
 
+      static SipMessage* makeMessage(const Data& msg);
+      // WARNING: For testing only.
 
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
       
