@@ -115,13 +115,16 @@ class DialogUsageManager : public HandleManager
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(AppDialogSet*, const Uri& target, const SdpContents* initialOffer);
-      SipMessage& makeSubscription(AppDialogSet*, const Uri& aor, const NameAddr& target, const Data& eventType);
+      SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
       //unsolicited refer
-      SipMessage& makeRefer(AppDialogSet*, const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublication(AppDialogSet*, const Uri& targetDocument, const Contents& body, const Data& eventType, unsigned expiresSeconds );
-      SipMessage& makeRegistration(AppDialogSet*, const NameAddr& aor);
-      SipMessage& makeOutOfDialogRequest(AppDialogSet*, const Uri& aor, const MethodTypes& meth);
+      SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+
+      SipMessage& makePublication(const Uri& targetDocument, const Contents& body, 
+                                  const Data& eventType, unsigned expiresSeconds, AppDialogSet* = 0);
+
+      SipMessage& makeRegistration(const NameAddr& aor, AppDialogSet* = 0);
+      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth, AppDialogSet* = 0);
 
       // all can be done inside of INVITE or SUBSCRIBE only; !dcm! -- now live
       // in INVITE or SUBSCRIBE only
@@ -165,7 +168,7 @@ class DialogUsageManager : public HandleManager
       friend class BaseUsage;
 
       
-      SipMessage& makeNewSession(AppDialogSet* appDs, BaseCreator* creator);
+      SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
       
       // makes a proto response to a request
       void makeResponse(SipMessage& response, 
