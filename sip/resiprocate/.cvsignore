@@ -1,8 +1,6 @@
 *.d
 .dependlibs
 ExpandedSipMessage
-MarshalOpInvite.cxx
-MassagedSipMessage
 a.out
 backup
 bak
