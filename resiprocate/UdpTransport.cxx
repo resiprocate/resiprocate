@@ -29,7 +29,7 @@ using namespace Vocal2;
 const unsigned long
 UdpTransport::MaxBufferSize = 64000;
 
-UdpTransport::UdpTransport(int portNum, Fifo<SipMessage>& fifo) : 
+UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) : 
    Transport(portNum, fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -111,7 +111,6 @@ void UdpTransport::process()
 
       assert (count == data->length || count < 0);
    }
-   
    
    // !jf! this may have to change - when we read a message that is too big
    char* buffer = new char[MaxBufferSize];

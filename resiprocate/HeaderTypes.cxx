@@ -41,7 +41,7 @@ static const unsigned int IntVal_User = 1919251285;
 static const unsigned int IntVal_Warn = 1852989783;
 static const unsigned int IntVal_WWW_ = 760698711;
 
-int
+Headers::Type
 Headers::getHeaderType(const char* name, int len)
 {
    if (len == 1)

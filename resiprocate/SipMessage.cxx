@@ -146,8 +146,8 @@ SipMessage::remove(const Data& headerName)
 }
 
 void
-SipMessage::addHeader(int header, char* headerName, int headerLen, 
-                         char* start, int len)
+SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
+                         const char* start, int len)
 {
    HeaderFieldValue* newHeader = new HeaderFieldValue(start, len);
 

@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 
 #include <sipstack/Fifo.hxx>
+#include <sipstack/Message.hxx>
 
 namespace Vocal2
 {
@@ -30,7 +31,7 @@ class Transport
             virtual const char* what() const throw();
       };
 
-      Transport(int portNum, Fifo<SipMessage>& rxFifo);
+      Transport(int portNum, Fifo<Message>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
