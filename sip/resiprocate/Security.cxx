@@ -917,6 +917,12 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
      
       case NID_pkcs7_enveloped:
       {
+         if ( (!privateKey) || (!publicCert) )
+         { 
+            InfoLog( << "Don't have a private certifact to user for  PKCS7_decrypt" );
+            return NULL;
+         }
+         
          if ( PKCS7_decrypt(pkcs7, privateKey, publicCert, out, flags ) != 1 )
          {
             ErrLog( << "Problems doing PKCS7_decrypt" );
