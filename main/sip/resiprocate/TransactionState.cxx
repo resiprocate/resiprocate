@@ -756,6 +756,9 @@ TransactionState::processServerNonInvite(  Message* msg )
       }
       else
       {
+         InfoLog (<< "Fatal error in TransactionState::processServerNonInvite " 
+                  << msg->brief()
+                  << " state=" << *this);
          assert(0);
       }
    }
@@ -803,6 +806,9 @@ TransactionState::processServerNonInvite(  Message* msg )
             }
             else
             {
+               InfoLog (<< "Fatal error in TransactionState::processServerNonInvite " 
+                        << msg->brief()
+                        << " state=" << *this);
                assert(0);
             }
          }
