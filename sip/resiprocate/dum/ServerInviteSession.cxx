@@ -3,8 +3,7 @@
 using namespace resip;
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
-   : InviteSession(dum, dialog),
-     mHandle(dum)
+   : InviteSession(dum, dialog)
 {
 }
 
