@@ -5,6 +5,7 @@
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/TransportSelector.hxx"
 #include "sip2/sipstack/UdpTransport.hxx"
+#include "sip2/sipstack/TcpTransport.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/TransportMessage.hxx"
 #include "sip2/sipstack/ReliabilityMessage.hxx"
@@ -80,6 +81,9 @@ TransportSelector::addTransport( Transport::Type protocol,
    {
       case Transport::UDP:
          transport = new UdpTransport(hostname, port, nic, mStack.mStateMacFifo);
+         break;
+      case Transport::TCP:
+         transport = new TcpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
       default:
          assert(0);
