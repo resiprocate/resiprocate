@@ -39,6 +39,7 @@ class Symbols
       static const Data QUESTION;
       static const Data AMPERSAND;
       static const Data PERCENT;
+      static const Data STAR;
 
       static const Data ProtocolName;
       static const Data ProtocolVersion;
