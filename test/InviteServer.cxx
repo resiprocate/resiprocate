@@ -5,11 +5,9 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
-#include "Resolver.hxx"
-#include "resiprocate/Dialog.hxx"
-
 #include "InviteServer.hxx"
 #include "Transceiver.hxx"
+#include "Resolver.hxx"
 
 using namespace resip;
 using namespace Loadgen;

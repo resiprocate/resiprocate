@@ -14,7 +14,6 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/Dialog.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 
