@@ -468,9 +468,15 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
       else
       {
          //.dcm. assumes udp is supported
+         if (mInterface.isSupported(TLS))
+         {
+            mSRVCount += 1;
+            lookupSRV("_sips._tcp." + mTarget);
+         }
+         
          if (mInterface.isSupported(TCP))
          {
-            mSRVCount+=2;         
+            mSRVCount += 2;
             lookupSRV("_sip._tcp." + mTarget);
             lookupSRV("_sip._udp." + mTarget);
          }
