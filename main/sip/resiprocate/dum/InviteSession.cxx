@@ -281,6 +281,26 @@ InviteSession::makeRefer(const NameAddr& referTo)
    return mLastRequest;   
 }
 
+SipMessage& 
+InviteSession::makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+{
+   if (!sessionToReplace.isValid())
+   {
+      throw new UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
+   }
+   
+   mDialog.makeRequest(mLastRequest, REFER);
+   mLastRequest.header(h_ReferTo) = referTo;
+   CallId replaces;
+   DialogId id = sessionToReplace->mDialog.getId();   
+   replaces.value() = id.getCallId();
+   replaces.param(p_toTag) = id.getRemoteTag();
+   replaces.param(p_fromTag) = id.getLocalTag();
+
+   mLastRequest.header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
+   return mLastRequest;
+}
+
 SipMessage&
 InviteSession::end()
 {
