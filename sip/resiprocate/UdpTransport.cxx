@@ -203,8 +203,8 @@ UdpTransport::process(FdSet& fdset)
             DebugLog (<< " UdpTransport recvfrom got error 0 ");
             break;
 
-         //case 9:
-            DebugLog (<< " UdpTransport recvfrom got error 9 ");
+         case 2:
+            DebugLog (<< " UdpTransport recvfrom got error 2 ");
             break;
 
          default:
