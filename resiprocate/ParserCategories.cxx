@@ -384,6 +384,7 @@ ostream&
 Via::encode(ostream& str) const
 {
    assert(0);
+   return str;
 }
 
 
@@ -441,6 +442,7 @@ ostream&
 NameAddr::encode(ostream& str) const
 {
    assert(0);
+   return str;
 }
 
 //====================

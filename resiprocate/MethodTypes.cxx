@@ -1,5 +1,6 @@
 #include <string.h>
 #include <cstdio>
+#include <cassert>
 
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>
@@ -46,10 +47,18 @@ static const unsigned int IntVal_REF = 4605266;
 static const unsigned int IntVal_REG = 4670802;
 static const unsigned int IntVal_SUB = 4347219;
 
+#ifdef WIN32
+int strncasecmp(const char* a, const char* b, int len)
+{
+		assert(0);
+		return 0;
+}
+#endif
+
 MethodTypes
 Vocal2::getMethodType(const Data& name)
 {
-   return getMethodType(name.c_str(), name.size());
+   return getMethodType(name.c_str(), int(name.size()) );
 }
 
 MethodTypes
