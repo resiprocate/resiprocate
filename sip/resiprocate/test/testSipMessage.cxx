@@ -38,6 +38,7 @@ main()
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
+      assert(msg->exists(h_ContentType));
       Contents* body = msg->getContents();
 
       assert(body != 0);
