@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "resiprocate/Message.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 
 namespace resip
 {
@@ -21,13 +22,15 @@ class DumTimer : public Message
          Retransmit200
       } Type;
 
-      DumTimer(Type type, unsigned long duration, int cseq, int rseq=-1);
+      DumTimer(Type type, unsigned long duration, resip::BaseUsage::Handle& target,  int seq, int aseq = -1);
       ~DumTimer();
       
       Type type() const;
-      int cseq() const;
-      int rseq() const;
-      
+      int seq() const;
+      int secondarySeq() const;
+
+      BaseUsage::Handle& baseUsage();
+
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
       
@@ -37,8 +40,10 @@ class DumTimer : public Message
    private:
       Type mType;
       unsigned long mDuration;
-      int mCseq;
-      int mRseq;
+      BaseUsage::Handle mUsageHandle;
+      int mSeq;
+      int mSecondarySeq;
+
 };
 
 }
