@@ -221,16 +221,16 @@ Preparse::InitStatePreparseStateTable()
     //    (Analyse the impact on the Preparse FSM).
     //
 
-    assert(Symbols::CR.size() == 1);
-    assert(Symbols::LF.size() == 1);
-    assert(Symbols::LA_QUOTE.size() == 1);
-    assert(Symbols::RA_QUOTE.size() == 1);
-    assert(Symbols::DOUBLE_QUOTE.size() == 1);
-    assert(Symbols::COLON.size() == 1);
-    assert(Symbols::B_SLASH.size() == 1);
-    assert(Symbols::COMMA.size() == 1);
-    assert(Symbols::SPACE.size() == 1);
-    assert(Symbols::TAB.size() == 1);
+    assert( Data(Symbols::CR).size() == 1);
+    assert( Data(Symbols::LF).size() == 1);
+    assert( Data(Symbols::LA_QUOTE).size() == 1);
+    assert( Data(Symbols::RA_QUOTE).size() == 1);
+    assert( Data(Symbols::DOUBLE_QUOTE).size() == 1);
+    assert( Data(Symbols::COLON).size() == 1);
+    assert( Data(Symbols::B_SLASH).size() == 1);
+    assert( Data(Symbols::COMMA).size() == 1);
+    assert( Data(Symbols::SPACE).size() == 1);
+    assert( Data(Symbols::TAB).size() == 1);
 
     // Setup the table with useful transitions.
     // NOTE: This is done to (1) make them ints (2) make the automatic diagram
