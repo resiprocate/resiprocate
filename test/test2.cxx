@@ -63,7 +63,7 @@ main(int argc, char* argv[])
          SipMessage* received = (stack1.receive());
          if (received)
          {
-            InfoLog (<< "got: " << received->brief());
+            InfoLog (<< "stack1 got: " << received->brief());
             assert (received->header(h_RequestLine).uri().host() == "localhost");
             assert (received->header(h_To).uri().host() == "localhost");
             assert (received->header(h_From).uri().host() == "localhost");
@@ -87,7 +87,7 @@ main(int argc, char* argv[])
          SipMessage* received = (stack2.receive());
          if (received)
          {
-            InfoLog (<< "got: " << received->brief());
+            InfoLog (<< "stack2 got: " << received->brief());
             assert (received->header(h_RequestLine).uri().host() == "localhost");
             assert (received->header(h_To).uri().host() == "localhost");
             assert (received->header(h_From).uri().host() == "localhost");
