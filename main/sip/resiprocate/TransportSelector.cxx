@@ -244,6 +244,14 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
       }
    }
 
+   // !jf!
+   // This can be problematic if the far side closed the TcpTransport after the
+   // SipMessage was handed to the TU. The TU can then process the request and
+   // send a response to the transaction. In the meantime, the Transport has
+   // been deleted. So when the response gets here it references a transport
+   // that has already been deleted. 
+   // To solve the problem, a transport handle should be used instead of a
+   // pointer. A smart pointer would also work. 
    if (destination.transport)
    {
       // insert the via
