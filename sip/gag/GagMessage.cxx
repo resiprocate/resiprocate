@@ -59,7 +59,9 @@ GagMessage::getMessage(istream &is)
       break;
 
     default:
-      // XXX Something is HORRIBLY WRONG
+        // Something is HORRIBLY WRONG.
+        // This will be logged in the main loop; we just
+        // return NULL here to let him know something is awry.
         return 0;
       break;
   }
