@@ -22,3 +22,6 @@ testSipStack1
 testSipStack1
 testUdp
 tmp
+Debug
+Release
+*~
