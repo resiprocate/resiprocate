@@ -31,6 +31,7 @@ class UdpTransport : public Transport
       bool isReliable() const { return false; }
       TransportType transport() const { return UDP; }
       virtual void buildFdSet( FdSet& fdset);
+      virtual int maxFileDescriptors() const { return 1; }
 
    private:
 #ifndef NEW_MSG_HEADER_SCANNER
