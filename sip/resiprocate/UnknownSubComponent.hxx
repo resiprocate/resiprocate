@@ -1,5 +1,5 @@
-#ifndef UNKONWNPARAM_HXX
-#define UNKNONWPARAM_HXX
+#ifndef UnknownSubComponent_hxx
+#define UnknownSubComponent_hxx
 
 #include <sip2/sipstack/StringSubComponent.hxx>
 #include <string>
