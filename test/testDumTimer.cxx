@@ -32,11 +32,9 @@ main (int argc, char** argv)
     {
        FdSet fdset;
        // Should these be buildFdSet on the DUM?
-       stack.buildFdSet(fdset);
        int err = fdset.selectMilliSeconds(100);
        assert ( err != -1 );
-       stack.process(fdset);
-
+       dum.process(fdset);
     }   
 
    // How do I turn these things off? For now, we just blow
