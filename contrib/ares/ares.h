@@ -30,8 +30,11 @@
 #endif
 
 #include <sys/types.h>
-#include <netinet/in.h>  
-/* why was this commented out?! */
+#ifndef WIN32
+/* why was this commented out?! ah, it was a 'fix for windows' */
+#include <netinet/in.h>
+#endif
+
 
 
 #define ARES_SUCCESS		0
