@@ -4,8 +4,6 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TcpTransport.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Preparse.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
