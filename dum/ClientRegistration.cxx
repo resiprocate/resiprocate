@@ -154,10 +154,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
       // !jf! consider what to do if no contacts
        // !ah! take list of ctcs and push into mMy or mOther as required.
 
-      mAllContacts = msg.header(h_Contacts);
-      // goes away -- updateMyContacts(mOtherContacts);
-      if (!mMyContacts.empty())
+      if (msg.exists(h_Contacts))
       {
+         mMyContacts = msg.header(h_Contacts);
+         // goes away -- updateMyContacts(mOtherContacts);
          // make timers to re-register
          mDum.addTimer(DumTimeout::Registration, 
                        Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
