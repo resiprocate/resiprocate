@@ -27,6 +27,8 @@ TlsTransport::TlsTransport(Fifo<Message>& fifo,
    mDomain(sipDomain),
    mSecurity(new Security(true, true))
 {
+   mTuple.setType(transport());
+
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << portNum);
