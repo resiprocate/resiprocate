@@ -4,12 +4,16 @@ This will only work with the Visual C++ .net version of the compiler
 
 There are various project tiles such as ./resiiprocate/resiprocate.vcproj
 
+Try loading ./ReSIProcate.sln and building it.
+
+
 Few hints 
 
 
-Form a new project that creates a console application.  Add in all the
+Form a new project that creates a console application.  Add in most of the
 .cxx and .hxx fields in resiprocate/ and resiprocate/os and one of the
-test programs from resiprocate/test.
+test programs from resiprocate/test. Look at the Makefile to figure out 
+which files are needed. You don't need all of them.
 
 You will have to remove some of the files that don't compile and aren't
 used.
