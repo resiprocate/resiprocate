@@ -528,13 +528,13 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 	  int flags;
   if (fcntl(s, F_GETFL, &flags) == -1)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
   flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
   if (fcntl(s, F_SETFL, flags) == -1)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
 }
@@ -561,7 +561,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     if (connect(s, (const struct sockaddr *) &sin6 , sizeof(sin6)) == -1
            && errno != PORTABLE_INPROGRESS_ERR)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
   }
@@ -575,7 +575,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
            && errno != PORTABLE_INPROGRESS_ERR)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
   }
@@ -588,7 +588,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
          && errno != PORTABLE_INPROGRESS_ERR)
   {
-    close(s);
+    ares__kill_socket(s);
     return -1;
   }
 #endif
@@ -627,7 +627,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
     if (connect(s, (const struct sockaddr *) &sin6, sizeof(sin6)) == -1)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
   }
@@ -640,7 +640,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
   }
@@ -662,7 +662,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
-      close(s);
+      ares__kill_socket(s);
       return -1;
     }
 #endif
@@ -776,3 +776,13 @@ static void end_query(ares_channel channel, struct query *query, int status,
 	ares__close_sockets(&channel->servers[i]);
     }
 }
+
+void ares__kill_socket(int s)
+{
+#ifdef WIN32
+   closesocket(s);
+#else
+   close(s);
+#endif
+}
+
