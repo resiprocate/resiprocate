@@ -557,6 +557,17 @@ NameAddr::clone() const
    return new NameAddr(*this);
 }
 
+Uri&
+NameAddr::uri() const 
+{
+   checkParsed(); 
+   if (mUri == 0)
+   {
+      mUri = new Uri();
+   }
+   return *mUri;
+}
+
 void
 NameAddr::parse(ParseBuffer& pb)
 {
@@ -690,6 +701,17 @@ ParserCategory *
 RequestLine::clone() const
 {
    return new RequestLine(*this);
+}
+
+Uri&
+RequestLine::uri() const 
+{
+   checkParsed(); 
+   if (mUri == 0)
+   {
+      mUri = new Uri();
+   }
+   return *mUri;
 }
 
 void 
