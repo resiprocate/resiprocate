@@ -239,7 +239,7 @@ NameAddr::encodeParsed(ostream& str) const
   }
   else
   {
-     str << mDisplayName << Symbols::LA_QUOTE;
+     str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
   }
