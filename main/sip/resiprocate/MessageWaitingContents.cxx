@@ -14,7 +14,7 @@ const char* MessageHeaders[MW_MAX] = {"voice-message",
                                       "none"};
 
 MessageWaitingContents::MessageWaitingContents()
-   : Contents()
+   : Contents(getStaticType())
 {
    for(int i = 0; i < (int)MW_MAX; i++)
    {
@@ -42,7 +42,8 @@ MessageWaitingContents::MessageWaitingContents(const Data& data, const Mime& con
 }
 
 MessageWaitingContents::MessageWaitingContents(const MessageWaitingContents& rhs)
-   : mHasMessages(rhs.mHasMessages),
+   : Contents(getStaticType()),
+     mHasMessages(rhs.mHasMessages),
      mAccountUri(rhs.mAccountUri ? new Uri(*rhs.mAccountUri) : 0),
      mExtensions(rhs.mExtensions)
 {

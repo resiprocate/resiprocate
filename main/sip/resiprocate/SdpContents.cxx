@@ -13,7 +13,7 @@ ContentsFactory<SdpContents> SdpContents::Factory;
 const char* NetworkType[] = {"???", "IP4", "IP6"};
 
 SdpContents::SdpContents()
-   : Contents()
+   : Contents(getStaticType())
 {}
 
 SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
