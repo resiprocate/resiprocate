@@ -60,6 +60,5 @@ yes
 http://www.ietf.org/internet-drafts/draft-ietf-sip-callerprefs-07.txt
 hmm
 
-
-
-
+draft-message-waiting
+yes

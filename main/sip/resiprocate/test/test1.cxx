@@ -57,7 +57,7 @@ main(int argc, char* argv[])
       Transport::Type t = udp->transport();
       Data foo = Transport::toData(t); 
       message->header(h_Vias).front().transport() = foo;
-      message->header(h_Vias).front().sentHost() = udp->hostname();
+      message->header(h_Vias).front().sentHost() = udp->hostName();
       message->header(h_Vias).front().sentPort() = udp->port();
 
       Data encoded(2048, true);
