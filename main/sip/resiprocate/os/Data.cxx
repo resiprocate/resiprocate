@@ -650,28 +650,35 @@ Data::operator^=(const Data& rhs)
 Data&
 Data::operator+=(char c)
 {
-    return append(&c, 1);
+   return append(&c, 1);
 }
 
 char& 
 Data::operator[](size_type p)
 {
-    assert(p < mSize);
-    own();
-    return mBuf[p];
+   assert(p < mSize);
+   own();
+   return mBuf[p];
 }
 
 
 char& 
 Data::at(size_type p)
 {
-    if (p >= mCapacity)
-	resize(p+1, true);
-    else
-	own();
-    if (p > mSize)
-	mSize = p + 1;
-    return mBuf[p];
+   if (p >= mCapacity)
+   {
+      resize(p+1, true);
+   }
+   else
+   {
+      own();
+      if (p > mSize)
+      {
+         mSize = p + 1;
+         mBuf[mSize] = 0;
+      }
+   }
+   return mBuf[p];
 }
 
 char 
@@ -974,6 +981,19 @@ Data::charUnencoded() const
 }
 
 Data
+Data::trunc(size_t s) const
+{
+   if (size() <= s)
+   {
+      return *this;
+   }
+   else
+   {
+      return Data(data(), s) + "..";
+   }
+}
+
+Data
 Data::hex() const
 {
    Data ret( 2*mSize, true );
@@ -1064,6 +1084,37 @@ Data::convertInt() const
    }
 
    return s*val;
+}
+
+size_t
+Data::convertSize() const
+{
+   size_t val = 0;
+   char* p = mBuf;
+   int l = mSize;
+
+   while (isspace(*p++))
+   {
+      l--;
+   }
+   p--;
+   
+   while (l--)
+   {
+      char c = *p++;
+      if (!isdigit(c)) break;
+      if ((c >= '0') && (c <= '9'))
+      {
+         val *= 10;
+         val += c - '0';
+      }
+      else
+      {
+         return val;
+      }
+   }
+
+   return val;
 }
 
 double 
@@ -1171,7 +1222,6 @@ Data::find(const char* match, size_type start) const
       }
    }
 }
-
 
 bool
 resip::operator==(const char* s, const Data& d)
