@@ -770,7 +770,7 @@ TuIM::setOutboundProxy( const Uri& uri )
 
   
 void 
-TuIM::setUANameProxy( const Data& name )
+TuIM::setUAName( const Data& name )
 {
    DebugLog( << "Set User Agent Name to " << name );
    mUAName = name;
