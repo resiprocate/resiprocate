@@ -4,9 +4,11 @@
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
 
+//using namespace std;
+
 namespace resip
 {
-using namespace std;
+
 using namespace resip;
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 18, duplicates = 0 */
