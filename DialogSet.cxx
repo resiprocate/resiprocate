@@ -257,7 +257,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                //response--?dcm?--merge w/ forking logic somehow?                              
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
-               //mState = Initial;               
+               mState = Initial;               
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
                {
                   it->second->redirected(msg);         
