@@ -377,6 +377,15 @@ CSeqCategory::operator=(const CSeqCategory& rhs)
    }
    return *this;
 }
+
+bool
+CSeqCategory::operator==(const CSeqCategory& rhs) const
+{
+   return (mMethod == rhs.mMethod &&
+           (mMethod != UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
+           mSequence == rhs.mSequence);
+}
+
 ParserCategory* 
 CSeqCategory::clone() const
 {
@@ -1341,8 +1350,15 @@ NameAddr::clone() const
    return new NameAddr(*this);
 }
 
-Uri&
+const Uri&
 NameAddr::uri() const 
+{
+   checkParsed(); 
+   return mUri;
+}
+
+Uri&
+NameAddr::uri()
 {
    checkParsed(); 
    return mUri;
