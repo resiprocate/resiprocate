@@ -37,6 +37,7 @@ class Dialog
       
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
+      void makeCancel(SipMessage& request);
 
       void update(const SipMessage& msg);
       //void setLocalContact(const NameAddr& localContact);
@@ -55,7 +56,7 @@ class Dialog
       void cancel();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
-      
+
    private:
       virtual ~Dialog();
       friend class BaseUsage;
@@ -88,6 +89,7 @@ class Dialog
       ServerRegistration* makeServerRegistration(const SipMessage& msg);
       ServerPublication* makeServerPublication(const SipMessage& msg);
       ServerOutOfDialogReq* makeServerOutOfDialog(const SipMessage& msg);
+
 
       DialogId mId;  
       DialogUsageManager& mDum;

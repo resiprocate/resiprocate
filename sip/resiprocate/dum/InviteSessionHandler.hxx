@@ -45,8 +45,7 @@ class InviteSessionHandler
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;
 
       /// called when an SDP offer is received - must send an answer soon after this
-      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;
-      
+      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;      
       
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
       /// useful 
