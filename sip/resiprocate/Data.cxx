@@ -1,10 +1,11 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.2 2002/09/22 01:16:35 fluffy Exp $";
+"$Id: Data.cxx,v 1.3 2002/09/25 04:29:28 fluffy Exp $";
 
 #include <cstdio>
 #include <ctype.h>
 #include <cctype>
 #include <algorithm>
+#include <cassert>
 
 #include <sipstack/Data.hxx>
 
