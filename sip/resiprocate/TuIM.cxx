@@ -214,6 +214,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
       
       Data token = msg->getCanonicalIdentityString();
       Data res = sec->computeIdentity( token );
+
       msg->header(h_Identity).value() = res;
    }
 #endif
