@@ -70,7 +70,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
    }
    else
    {
-      SipMessage* response = Helper::makeResponse(request, code);
+      SipMessage* response = Helper::makeResponse(request, code, mContact);
       if (mCreated)
       {
          assert (!response->header(h_To).uri().exists(p_tag));
