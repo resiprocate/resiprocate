@@ -27,6 +27,7 @@ class ClientSubscription: public BaseSubscription
       virtual ~ClientSubscription();
    private:
       friend class Dialog;
+      friend class InviteSession;      
 
       bool mOnNewSubscriptionCalled;      
       virtual void dispatch(const SipMessage& msg);
