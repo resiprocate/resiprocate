@@ -31,6 +31,14 @@ class DnsResolver
             TupleList tupleList;
       };
       
+      typedef enum
+      {
+         NotStarted,
+         Waiting,
+         PartiallyComplete,
+         Complete
+      } State;
+      
       typedef Entry* Id;
 
       DnsResolver(SipStack& stack) 
@@ -39,8 +47,8 @@ class DnsResolver
 
       ~DnsResolver();
 
-      Id lookup(const Data& transactionId, const Uri& url);
-      Id lookup(const Data& transactionId, const Via& via);
+      void lookup(const Data& transactionId, const Uri& url);
+      void lookup(const Data& transactionId, const Via& via);
 
       Id lookupARecords(const Data& transactionId, const Data& host, int port, 
                         Transport::Type transport, bool complete,
