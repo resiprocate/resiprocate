@@ -90,6 +90,14 @@ GagMessage::serialize(ostream &os, const bool& flag)
   os.put(flag?1:0);
 }
 
+void
+GagMessage::serialize(ostream &os, const int& value)
+{
+  int size = sizeof(int);
+  os.write((char *)&size, sizeof(int));
+  os.write((char *)&value, sizeof(int));
+}
+
 bool
 GagMessage::parse(istream &is, Data &data)
 {
@@ -131,6 +139,21 @@ GagMessage::parse(istream &is, bool &flag)
   if (!temp) return (false);
   is.read(temp, size);
   flag = (temp[0]?true:false);
+  free(temp);
+  return true;
+}
+
+bool
+GagMessage::parse(istream &is, int &value)
+{
+  int size;
+  char *temp;
+
+  is.read((char *)&size, sizeof(size));
+  temp=(char *)malloc(size);
+  if (!temp) return (false);
+  is.read(temp, size);
+  value = *((int *)temp);
   free(temp);
   return true;
 }
@@ -275,7 +298,6 @@ GagRemoveBuddyMessage::serialize(ostream &os) const
   return os;
 }
 
-
 void
 GagErrorMessage::parse(istream &is)
 {
@@ -288,6 +310,27 @@ ostream &
 GagErrorMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
+  GagMessage::serialize(os, message);
+  os.flush();
+  return os;
+}
+
+void
+GagLoginStatusMessage::parse(istream &is)
+{
+  valid = false;
+  if (!GagMessage::parse(is, success)) return;
+  if (!GagMessage::parse(is, sipCode)) return;
+  if (!GagMessage::parse(is, message)) return;
+  valid = true;
+}
+
+ostream &
+GagLoginStatusMessage::serialize(ostream &os) const
+{
+  GagMessage::serialize(os);
+  GagMessage::serialize(os, success);
+  GagMessage::serialize(os, sipCode);
   GagMessage::serialize(os, message);
   os.flush();
   return os;
