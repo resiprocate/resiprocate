@@ -3,6 +3,7 @@
 *.la
 *.lo
 *~
+dox
 .DS_Store
 .dependlibs
 .deps
