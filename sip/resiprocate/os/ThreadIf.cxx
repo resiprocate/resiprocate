@@ -33,6 +33,8 @@ ThreadIf::ThreadIf() : mId(0), mShutdown(false), mShutdownMutex()
 
 ThreadIf::~ThreadIf()
 {
+   shutdown();
+   join();
 }
 
 void
@@ -62,7 +64,10 @@ ThreadIf::run()
 void
 ThreadIf::join()
 {
-   assert (mId != 0);
+   if (mId == 0)
+   {
+      return;
+   }
 
 #if defined(WIN32)
    DWORD exitCode;
@@ -109,10 +114,17 @@ void
 ThreadIf::shutdown()
 {
    Lock lock(mShutdownMutex);
-   (void)lock;
    mShutdown = true;
+   mShutdownCondition.signal();
 }
 
+bool 
+ThreadIf::waitForShutdown(int ms) const
+{
+   Lock lock(mShutdownMutex);
+   mShutdownCondition.wait(&mShutdownMutex, ms);
+   return mShutdown;
+}
 
 bool
 ThreadIf::isShutdown() const
