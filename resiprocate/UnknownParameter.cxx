@@ -1,19 +1,49 @@
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/Symbols.hxx"
 
 using namespace resip;
 using namespace std;
 
 UnknownParameter::UnknownParameter(const char* startName, 
-				   unsigned int nameSize,
+                                   unsigned int nameSize,
                                    ParseBuffer& pb, 
-				   const char* terminators)
-   : DataParameter(ParameterTypes::UNKNOWN, pb, terminators),
-     mName(startName, nameSize)
-{}
+                                   const char* terminators)
+   : Parameter(ParameterTypes::UNKNOWN),
+     mName(startName, nameSize),
+     mValue(),
+     mIsQuoted(false)
+{
+   pb.skipWhitespace();
+   if (!pb.eof() && *pb.position() == Symbols::EQUALS[0])
+   {
+      pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipWhitespace();
+      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+      {
+         setQuoted(true);
+         pb.skipChar();
+         const char* pos = pb.position();
+         pb.skipToEndQuote();
+         pb.data(mValue, pos);
+         pb.skipChar();
+      }
+      else
+      {
+         const char* pos = pb.position();
+         pb.skipToOneOf(terminators);
+         pb.data(mValue, pos);
+      }
+      
+   }
+   else
+   {
+      // must be a terminator -- exists style
+   }
+}
 
 UnknownParameter::UnknownParameter(const Data& name)
-   : DataParameter(ParameterTypes::UNKNOWN),
+   : Parameter(ParameterTypes::UNKNOWN),
      mName(name)
 {
 }
@@ -29,6 +59,24 @@ Parameter*
 UnknownParameter::clone() const
 {
    return new UnknownParameter(*this);
+}
+
+ostream&
+UnknownParameter::encode(ostream& stream) const
+{
+   if (mIsQuoted)
+   {
+      return stream << getName() << Symbols::EQUALS 
+                    << Symbols::DOUBLE_QUOTE << mValue << Symbols::DOUBLE_QUOTE;
+   }
+   else if (!mValue.empty())
+   {
+      return stream << getName() << Symbols::EQUALS << mValue;
+   }
+   else
+   {
+      return stream << getName();
+   }
 }
 
 ostream& operator<<(ostream& stream, UnknownParameter& comp)
