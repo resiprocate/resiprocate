@@ -427,7 +427,8 @@ static const Data transportNames[MAX_TRANSPORT] =
    Data("TCP"),
    Data("TLS"),
    Data("SCTP"),
-   Data("DCCP")
+   Data("DCCP"),
+   Data("DTLS")
 };
 
 TransportType
