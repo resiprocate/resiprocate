@@ -1,9 +1,11 @@
 #if !defined(RESIP_DIALOG_HXX)
 #define RESIP_DIALOG_HXX
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/NameAddr.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/CallId.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Timer.hxx"
 

@@ -1,7 +1,7 @@
 #if !defined(RESIP_TIMERMESSAGE_HXX)
 #define RESIP_TIMERMESSAGE_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"

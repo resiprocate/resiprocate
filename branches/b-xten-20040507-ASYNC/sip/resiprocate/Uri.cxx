@@ -4,17 +4,17 @@
 
 #include <set>
 
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/ParserCategories.hxx" // !dlb! just NameAddr
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Embedded.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/NameAddr.hxx" 
 #include "resiprocate/ParseUtil.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/UnknownParameter.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
 

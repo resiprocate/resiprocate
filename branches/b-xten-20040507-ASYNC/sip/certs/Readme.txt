@@ -58,7 +58,4 @@ openssl req -in server.csr -text -noout
 Convert certificate in DER to PRM 
 openssl x509 -in root_der.crt -inform DER -out root.pem
 
-
-
-
-
+----

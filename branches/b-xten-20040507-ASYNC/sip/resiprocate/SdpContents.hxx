@@ -3,7 +3,7 @@
 
 #include <list>
 #include <map>
-#include <iostream>
+#include <iosfwd>
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Uri.hxx"

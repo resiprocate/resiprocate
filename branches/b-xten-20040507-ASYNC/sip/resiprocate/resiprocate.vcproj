@@ -1,7 +1,7 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding = "UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="7.00"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 	Keyword="Win32Proj">
@@ -50,12 +50,6 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -100,12 +94,6 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Debug|Win32"
@@ -146,12 +134,6 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Release|Win32"
@@ -194,31 +176,14 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
-	<References>
-	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
 				RelativePath=".\ApiCheck.cxx">
-			</File>
-			<File
-				RelativePath=".\ApplicationSip.cxx">
-			</File>
-			<File
-				RelativePath=".\AresDns.cxx">
-			</File>
-			<File
-				RelativePath=".\AsyncCLessTransport.cxx">
 			</File>
 			<File
 				RelativePath="os\BaseException.cxx">
@@ -234,9 +199,6 @@
 			</File>
 			<File
 				RelativePath="Connection.cxx">
-			</File>
-			<File
-				RelativePath=".\ConnectionBase.cxx">
 			</File>
 			<File
 				RelativePath="ConnectionManager.cxx">
@@ -263,6 +225,15 @@
 				RelativePath="os\DataStream.cxx">
 			</File>
 			<File
+				RelativePath="Dialog.cxx">
+			</File>
+			<File
+				RelativePath="Dialog2.cxx">
+			</File>
+			<File
+				RelativePath="DialogSet.cxx">
+			</File>
+			<File
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
@@ -272,10 +243,10 @@
 				RelativePath="Embedded.cxx">
 			</File>
 			<File
-				RelativePath="ExistsParameter.cxx">
+				RelativePath="Executive.cxx">
 			</File>
 			<File
-				RelativePath=".\external\ExternalDns.hxx">
+				RelativePath="ExistsParameter.cxx">
 			</File>
 			<File
 				RelativePath="FloatParameter.cxx">
@@ -293,19 +264,16 @@
 				RelativePath="HeaderHash.cxx">
 			</File>
 			<File
-				RelativePath="Headers.cxx">
+				RelativePath="HeaderTypes.cxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.cxx">
+				RelativePath="Headers.cxx">
 			</File>
 			<File
 				RelativePath="Helper.cxx">
 			</File>
 			<File
 				RelativePath="IntegerParameter.cxx">
-			</File>
-			<File
-				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
@@ -335,9 +303,6 @@
 				RelativePath="MethodTypes.cxx">
 			</File>
 			<File
-				RelativePath=".\MsgHeaderScanner.cxx">
-			</File>
-			<File
 				RelativePath="MultipartMixedContents.cxx">
 			</File>
 			<File
@@ -362,16 +327,16 @@
 				RelativePath="os\ParseBuffer.cxx">
 			</File>
 			<File
-				RelativePath="ParserCategories.cxx">
-			</File>
-			<File
-				RelativePath="ParserCategory.cxx">
-			</File>
-			<File
 				RelativePath="ParseUtil.cxx">
 			</File>
 			<File
 				RelativePath="ParseUtil.hxx">
+			</File>
+			<File
+				RelativePath="ParserCategories.cxx">
+			</File>
+			<File
+				RelativePath="ParserCategory.cxx">
 			</File>
 			<File
 				RelativePath="Pidf.cxx">
@@ -389,19 +354,19 @@
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
+				RelativePath="os\RWMutex.cxx">
+			</File>
+			<File
 				RelativePath="os\Random.cxx">
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.cxx">
 			</File>
 			<File
-				RelativePath=".\Rlmi.cxx">
+				RelativePath="Registration.cxx">
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
-			</File>
-			<File
-				RelativePath="os\RWMutex.cxx">
 			</File>
 			<File
 				RelativePath="SdpContents.cxx">
@@ -416,6 +381,9 @@
 				RelativePath="SipMessage.cxx">
 			</File>
 			<File
+				RelativePath="SipSession.cxx">
+			</File>
+			<File
 				RelativePath="SipStack.cxx">
 			</File>
 			<File
@@ -426,6 +394,9 @@
 			</File>
 			<File
 				RelativePath="StatelessHandler.hxx">
+			</File>
+			<File
+				RelativePath="Subscription.cxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.cxx">
@@ -479,6 +450,12 @@
 				RelativePath="TransportSelector.cxx">
 			</File>
 			<File
+				RelativePath="TuIM.cxx">
+			</File>
+			<File
+				RelativePath="TuShim.cxx">
+			</File>
+			<File
 				RelativePath="os\Tuple.cxx">
 			</File>
 			<File
@@ -500,18 +477,15 @@
 				RelativePath="Uri.cxx">
 			</File>
 			<File
-				RelativePath="os\vmd5.cxx">
+				RelativePath="XMLCursor.cxx">
 			</File>
 			<File
-				RelativePath="XMLCursor.cxx">
+				RelativePath="os\vmd5.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
-			<File
-				RelativePath=".\AresDns.hxx">
-			</File>
 			<File
 				RelativePath="os\BaseException.hxx">
 			</File>
@@ -523,9 +497,6 @@
 			</File>
 			<File
 				RelativePath="os\Coders.hxx">
-			</File>
-			<File
-				RelativePath="os\compat.hxx">
 			</File>
 			<File
 				RelativePath="os\Condition.hxx">
@@ -579,6 +550,9 @@
 				RelativePath="Embedded.hxx">
 			</File>
 			<File
+				RelativePath="Executive.hxx">
+			</File>
+			<File
 				RelativePath="ExistsParameter.hxx">
 			</File>
 			<File
@@ -589,9 +563,6 @@
 			</File>
 			<File
 				RelativePath="GenericContents.hxx">
-			</File>
-			<File
-				RelativePath=".\GenericIPAddress.hxx">
 			</File>
 			<File
 				RelativePath="os\HashMap.hxx">
@@ -606,10 +577,10 @@
 				RelativePath="HeaderHash.hxx">
 			</File>
 			<File
-				RelativePath="Headers.hxx">
+				RelativePath="HeaderTypes.hxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.hxx">
+				RelativePath="Headers.hxx">
 			</File>
 			<File
 				RelativePath="Helper.hxx">
@@ -619,9 +590,6 @@
 			</File>
 			<File
 				RelativePath="IntegerParameter.hxx">
-			</File>
-			<File
-				RelativePath=".\InternalTransport.hxx">
 			</File>
 			<File
 				RelativePath="os\IntrusiveListElement.hxx">
@@ -711,6 +679,9 @@
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
+				RelativePath="os\RWMutex.hxx">
+			</File>
+			<File
 				RelativePath="os\Random.hxx">
 			</File>
 			<File
@@ -720,16 +691,13 @@
 				RelativePath="os\RecursiveMutex.hxx">
 			</File>
 			<File
+				RelativePath="Registration.hxx">
+			</File>
+			<File
 				RelativePath="ReliabilityMessage.hxx">
 			</File>
 			<File
-				RelativePath="resource.h">
-			</File>
-			<File
 				RelativePath="RportParameter.hxx">
-			</File>
-			<File
-				RelativePath="os\RWMutex.hxx">
 			</File>
 			<File
 				RelativePath="SdpContents.hxx">
@@ -744,16 +712,22 @@
 				RelativePath="SipMessage.hxx">
 			</File>
 			<File
+				RelativePath="SipMessageExplicit.hxx">
+			</File>
+			<File
+				RelativePath="SipSession.hxx">
+			</File>
+			<File
 				RelativePath="SipStack.hxx">
 			</File>
 			<File
 				RelativePath="os\Socket.hxx">
 			</File>
 			<File
-				RelativePath="os\Subsystem.hxx">
+				RelativePath="Subscription.hxx">
 			</File>
 			<File
-				RelativePath="supported.hxx">
+				RelativePath="os\Subsystem.hxx">
 			</File>
 			<File
 				RelativePath="Symbols.hxx">
@@ -828,13 +802,22 @@
 				RelativePath="Uri.hxx">
 			</File>
 			<File
+				RelativePath="XMLCursor.hxx">
+			</File>
+			<File
+				RelativePath="os\compat.hxx">
+			</File>
+			<File
+				RelativePath="resource.h">
+			</File>
+			<File
+				RelativePath="supported.hxx">
+			</File>
+			<File
 				RelativePath="os\vmd5.hxx">
 			</File>
 			<File
 				RelativePath="os\vthread.hxx">
-			</File>
-			<File
-				RelativePath="XMLCursor.hxx">
 			</File>
 		</Filter>
 		<File
