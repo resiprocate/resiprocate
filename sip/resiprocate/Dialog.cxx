@@ -199,10 +199,19 @@ Dialog::targetRefreshRequest(const SipMessage& request)
 
 SipMessage* 
 Dialog::makeInitialRegister(const NameAddr& registrar,
-                                        const NameAddr& aor)
+                            const NameAddr& aor)
 {
-   assert(0);
-   return NULL;
+   SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
+   assert( msg );
+
+   mLocalEmpty = false;
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
+   
+   return msg;
 }
 
 
@@ -210,8 +219,17 @@ SipMessage*
 Dialog::makeInitialSubscribe(const NameAddr& target, 
                              const NameAddr& from)
 {
-   assert(0);
-   return NULL;
+   SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
+   assert( msg );
+
+   mLocalEmpty = false;
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
+   
+   return msg;
 }
 
 
@@ -219,8 +237,17 @@ SipMessage*
 Dialog::makeInitialInvite(const NameAddr& target,
                           const NameAddr& from)
 {
-   assert(0);
-   return NULL;
+   SipMessage* msg = Helper::makeInvite( target, from, mContact );
+   assert( msg );
+
+   mLocalEmpty = false;
+   mLocalSequence = msg->header(h_CSeq).sequence();
+   mCallId = msg->header(h_CallId);
+   mLocalTag = msg->header(h_From).param(p_tag);  
+   mRemoteUri = msg->header(h_To);
+   mLocalUri = msg->header(h_From);
+   
+   return msg;
 }
 
 
