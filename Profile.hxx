@@ -36,8 +36,8 @@ class Profile
       void setDefaultSubscriptionTime(int secs);
 
       NameAddr& getDefaultFrom();
-      int getDefaultRegistrationTime();
-      int getDefaultSubscriptionTime();
+      int getDefaultRegistrationTime() const;
+      int getDefaultSubscriptionTime() const;
 
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
@@ -49,32 +49,33 @@ class Profile
       const Uri& getOverideHostAndPort() const;      
 
       void addSupportedScheme(const Data& scheme);          // Default is "sip"
-      bool isSchemeSupported(const Data& scheme);
+      bool isSchemeSupported(const Data& scheme) const;
       void clearSupportedSchemes(void);
 
       void addSupportedMethod(const MethodTypes& method);   // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
-      bool isMethodSupported(MethodTypes method);
-      Tokens getAllowedMethods();
+      bool isMethodSupported(MethodTypes method) const;
+      Tokens getAllowedMethods() const;
       void clearSupportedMethods(void);
 
       void addSupportedOptionTag(const Token& tag);        // Default is none
       Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
-      Tokens getSupportedOptionTags();
+      Tokens getSupportedOptionTags() const;
       void clearSupportedOptionTags(void);
 
       void addSupportedMimeType(const Mime& mimeType);      // Default is application/sdp
-      bool isMimeTypeSupported(const Mime& mimeType);
-      Mimes getSupportedMimeTypes();
+      bool isMimeTypeSupported(const Mime& mimeType) const;
+      Mimes getSupportedMimeTypes() const;
       void clearSupportedMimeTypes(void);
 
       void addSupportedEncoding(const Token& encoding);     // Default is no encoding
-      bool isContentEncodingSupported(const Token& contentEncoding);
-      Tokens getSupportedEncodings();
+      bool isContentEncodingSupported(const Token& contentEncoding) const;
+      Tokens getSupportedEncodings() const;
       void clearSupportedEncodings(void);
 
       void addSupportedLanguage(const Token& lang);         // Default is all - if nothing is set, then all are allowed
-      bool isLanguageSupported(const Tokens& lang);
-      Tokens getSupportedLanguages();
+      bool isLanguageSupported(const Tokens& lang) const;
+      Tokens getSupportedLanguages() const;
+
       void clearSupportedLanguages(void);
       
 	  //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
@@ -83,20 +84,22 @@ class Profile
 	  //       Currently implemented header values are: Headers::Allow, 
 	  //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
 	  void addAdvertisedCapability(const Headers::Type header);
-      bool isAdvertisedCapability(const Headers::Type header);
+      bool isAdvertisedCapability(const Headers::Type header) const;
 	  void clearAdvertisedCapabilities();
 
       void addGruu(const Data& aor, const NameAddr& contact);
-      bool hasGruu(const Data& aor);
-      bool hasGruu(const Data& aor, const Data& instance);
+      bool hasGruu(const Data& aor) const;
+      bool hasGruu(const Data& aor, const Data& instance) const;
       NameAddr& getGruu(const Data& aor);
       NameAddr& getGruu(const Data& aor, const NameAddr& contact);
+      void disableGruu();
       
       void setOutboundProxy( const Uri& uri );
       const NameAddr& getOutboundProxy() const;
       bool hasOutboundProxy() const;
       
-      void disableGruu();
+      void setUAName(const Data& name);
+      const Data& getUAName() const;
 
       /// The following functions deal with getting digest credentals 
       //@{ 
@@ -152,6 +155,8 @@ class Profile
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
+
+      Data mUAName;
       
       std::set<Data> mSupportedSchemes;
       std::set<MethodTypes> mSupportedMethodTypes;
