@@ -47,13 +47,23 @@ BaseUsage::makeOutOfDialogRequest()
 
 #endif
 
-
-
-
+// connected to BaseUsage in DialogManager on make...
 BaseUsage::Handle::Handle(DialogUsageManager& dum)
    : mDum(&dum),
      mId(getNext())
 {}
+
+bool
+BaseUsage::Handle::isValid() const
+{
+   return mDum->isValid(*this);
+}
+
+BaseUsage*
+BaseUsage::Handle::get()
+{
+   return mDum->getUsage(*this);
+}
 
 BaseUsage::Handle::Id
 BaseUsage::Handle::getNext()
