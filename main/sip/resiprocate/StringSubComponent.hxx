@@ -1,24 +1,24 @@
 #ifndef STRINGPARAM_HXX
 #define STRINGPARAM_HXX
 
-#include <sip2/sipstack/Parameter.hxx>
+#include <sip2/sipstack/SubComponent.hxx>
 #include <string>
 
 namespace Vocal2
 {
 
-class StringParameter : public Parameter
+class StringSubComponent : public SubComponent
 {
 
    public:
 
-      StringParameter(ParamType type,
+      StringSubComponent(ParamType type,
                       const char* startData, uint dataSize);
       
-      StringParameter(ParamType type, const std::string& data);
+      StringSubComponent(ParamType type, const std::string& data);
       
       std::string& getData();
-      virtual Parameter* clone() const;
+      virtual SubComponent* clone() const;
    private:
 
       std::string mData;
