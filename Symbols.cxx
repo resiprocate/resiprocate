@@ -81,6 +81,7 @@ const char* Symbols::RTP_AVP = "RTP/AVP";
 
 const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
+const char* Symbols::C100rel = "100rel";
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
