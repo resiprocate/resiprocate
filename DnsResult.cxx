@@ -119,8 +119,8 @@ DnsResult::lookup(const Uri& uri)
    DebugLog (<< "DnsResult::lookup " << uri);
    
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
-   mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    mSips = (uri.scheme() == Symbols::Sips);
+   mTarget = (!mSips && uri.exists(p_maddr)) ? uri.param(p_maddr) : uri.host();
    mSrvKey = Symbols::UNDERSCORE + uri.scheme().substr(0, uri.scheme().size()) + Symbols::DOT;
    bool isNumeric = DnsUtil::isIpAddress(mTarget);
 
@@ -131,7 +131,7 @@ DnsResult::lookup(const Uri& uri)
       if (isNumeric) // IP address specified
       {
          mPort = getDefaultPort(mTransport, uri.port());
-         Tuple tuple(mTarget, mPort, mTransport);
+         Tuple tuple(mTarget, mPort, mTransport, mTarget);
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          mType = Available;
@@ -163,7 +163,7 @@ DnsResult::lookup(const Uri& uri)
          if (isNumeric) // IP address specified
          {
             mPort = getDefaultPort(mTransport, uri.port());
-            Tuple tuple(mTarget, mPort, mTransport);
+            Tuple tuple(mTarget, mPort, mTransport, mTarget);
             mResults.push_back(tuple);
             mType = Available;
             DebugLog (<< "Numeric result so return immediately: " << tuple);
@@ -560,7 +560,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
        aptr = parseAAAA(aptr,abuf,alen,&aaaa);
        if (aptr)
        {
-         Tuple tuple(aaaa,mPort,mTransport);
+         Tuple tuple(aaaa,mPort,mTransport, mTarget);
          StackLog (<< "Adding " << tuple << " to result set");
 
          // !jf! Should this be going directly into mResults or into mARecords
@@ -602,7 +602,7 @@ DnsResult::processHost(int status, struct hostent* result)
       {
          in_addr addr;
          addr.s_addr = *((u_int32_t*)(*pptr));
-         Tuple tuple(addr, mPort, mTransport);
+         Tuple tuple(addr, mPort, mTransport, mTarget);
          StackLog (<< "Adding " << tuple << " to result set");
          // !jf! Should this be going directly into mResults or into mARecords
          // !jf! Check for duplicates? 
@@ -651,7 +651,7 @@ DnsResult::processHost(int status, struct hostent* result)
                    for(DWORD i = 0; i < pQueryResult->dwNumberOfCsAddrs; i++)
                    {
      	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
-                      Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport);
+                      Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
                       StackLog (<< "Adding (WIN) " << tuple << " to result set");
                       mResults.push_back(tuple);
                       mType = Available;
@@ -700,7 +700,7 @@ DnsResult::primeResults()
          for (std::list<struct in6_addr>::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
          {
-            Tuple tuple(*i,next.port,next.transport);
+            Tuple tuple(*i, next.port,next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
@@ -708,7 +708,7 @@ DnsResult::primeResults()
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Tuple tuple(*i, next.port, next.transport);
+            Tuple tuple(*i, next.port, next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
