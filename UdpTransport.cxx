@@ -93,8 +93,9 @@ UdpTransport::send( const sockaddr_in& dest,
 
 
 void 
-UdpTransport::process()
+UdpTransport::process(fd_set* fdSet)
 {
+	
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
@@ -119,7 +120,7 @@ UdpTransport::process()
       assert ( (count == int(data->length) ) || (count == SOCKET_ERROR ) );
    }
 
-// #define UDP_SHORT   
+//#define UDP_SHORT   
 
    struct sockaddr_in from;
 
@@ -127,6 +128,11 @@ UdpTransport::process()
    // !ah! debug is just to always return a sample message
    // !jf! this may have to change - when we read a message that is too big
    
+   if ( !FD_ISSET(mFd, fdSet ) )
+   {
+	   return;
+   }
+
    char* buffer = new char[MaxBufferSize];
    int fromLen = sizeof(from);
    
@@ -170,8 +176,22 @@ UdpTransport::process()
 
    if ( len == SOCKET_ERROR )
    {
-      int err = errno;
-      ErrLog(<<"Error receiving, errno="<<err);
+	   int err = errno;
+	   //cerr << "Err=" << err << " " << strerror(err) << endl;
+	   
+	   switch (err)
+	   {
+		   case EWOULDBLOCK:
+		   {
+		   }
+		   break;
+		   default:
+		   {
+			   ErrLog(<<"Error receiving, errno="<<err);
+		   }
+		   break;
+	   }
+	   
    }
    else if (len > 0)
    {
