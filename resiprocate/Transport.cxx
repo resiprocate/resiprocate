@@ -13,6 +13,16 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
+const Data Transport::transportNames[Transport::MAX_TRANSPORT] =
+ {
+    Data("Unknown"),
+    Data("UDP"),
+    Data("TCP"),
+    Data("TLS"),
+    Data("SCTP"),
+    Data("DCCP")
+ };
+
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
 {
@@ -96,59 +106,27 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
    mTxFifo.add(data); // !jf!
 }
 
-Data
+const Data&
 Transport::toData(Transport::Type type)
 {
-   switch (type)
-   {
-      case UDP:
-         return "UDP";
-      case TCP:
-         return "TCP";
-      case TLS:
-         return "TLS";
-      case SCTP:
-         return"SCTP";
-      case DCCP:
-         return "DCCP";
-      case Unknown:
-      default:
-         return "Unknown/Undefined";
-   }
+   assert(type >= Transport::Unknown &&
+          type < Transport::MAX_TRANSPORT);
+   return Transport::transportNames[type];
 }
 
 Transport::Type
 Transport::toTransport(const Data& type)
 {
-   if (isEqualNoCase(type, "UDP"))
+   for (Transport::Type i = Transport::Unknown; i < Transport::MAX_TRANSPORT; 
+        i = static_cast<Transport::Type>(i + 1))
    {
-      return UDP;
+      if (isEqualNoCase(type, Transport::transportNames[i]))
+      {
+         return i;
+      }
    }
-   else if (isEqualNoCase(type, "TCP"))
-   {
-      return TCP;
-   }
-   else if (isEqualNoCase(type, "TLS"))
-   {
-      return TLS;
-   }
-   else if (isEqualNoCase(type, "SCTP"))
-   {
-      return SCTP;
-   }
-   else if (isEqualNoCase(type, "DCCP"))
-   {
-      return DCCP;
-   }
-   else if (isEqualNoCase(type, "Unknown"))
-   {
-      return Unknown;
-   }
-   else
-   {
-      assert(0);
-   }
-   return Unknown;
+   assert(0);
+   return Transport::Unknown;
 };
 
 void
