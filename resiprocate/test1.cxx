@@ -14,7 +14,7 @@
 #include <sipstack/Uri.hxx>
 #include <sipstack/Resolver.hxx>
 #include <util/Logger.hxx>
-
+#include <util/DataStream.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -40,23 +40,23 @@ main(int argc, char* argv[])
    NameAddr from = dest;
    from.uri().port() = 5070;
    
-   SipMessage message = Helper::makeInvite( dest, from, from);
-   Resolver resolver(dest.uri());
-
-   message.header(h_Vias).front().transport() = Transport::toData(udp->transport()); 
-   message.header(h_Vias).front().sentHost() = udp->hostname();
-   message.header(h_Vias).front().sentPort() = udp->port();
-   
-   Data encoded = message.encode();
-
-   udp->send(&resolver.mCurrent->ipv4, encoded.c_str(), encoded.size()); 
-   
    
    struct timeval tv;
    
-   for (int i=0; i<500000; i++)
+   for (int i=0; i<100000; i++)
    {
-      udp->send(&resolver.mCurrent->ipv4, encoded.c_str(), encoded.size()); 
+      SipMessage message = Helper::makeInvite( dest, from, from);
+      Resolver resolver(dest.uri());
+      
+      message.header(h_Vias).front().transport() = Transport::toData(udp->transport()); 
+      message.header(h_Vias).front().sentHost() = udp->hostname();
+      message.header(h_Vias).front().sentPort() = udp->port();
+
+      Data encoded(2048, true);
+      DataStream strm(encoded);
+      message.encode(strm);
+      strm.flush();
+      udp->send(&resolver.mCurrent->ipv4, encoded.data(), encoded.size()); 
       
       fd_set fdSet; 
       int fdSetSize=0;
