@@ -2,6 +2,8 @@
 
 using namespace Vocal2;
 
+const char * const Symbols::DefaultSipVersion = "SIP/2.0";
+
 const char * const Symbols::SPACE = " ";
 const char * const Symbols::COLON = ":";
 const char * const Symbols::EQUALS = "=";
