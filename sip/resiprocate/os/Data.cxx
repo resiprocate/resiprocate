@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.33 2002/11/15 06:01:37 fluffy Exp $";
+"$Id: Data.cxx,v 1.34 2002/11/16 02:53:54 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -202,7 +202,8 @@ Data::Data(double value, int precision)
 Data::Data(unsigned long value)
    : mSize(0), 
      mBuf(0),
-     mCapacity(0)
+     mCapacity(0),
+     mMine(true)
 {
    if (value == 0)
    {
