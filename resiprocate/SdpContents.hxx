@@ -350,7 +350,7 @@ class SdpContents : public Contents
                   int multicast() const {return mMulticast;}
                   unsigned long& multicast() {return mMulticast;}
                   const Data& protocol() const {return mProtocol;}
-                  Data protocol() {return mProtocol;}
+                  Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
                   const std::list<Codec>& codecs() const;
