@@ -473,12 +473,12 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
-   pb.skipToChar(Symbols::COLON[0]);
+   pb.skipToOneOf(":@"); // make sure the colon precedes @
 
    pb.assertNotEof();
 
    pb.data(mScheme, start);
-   pb.skipChar();   
+   pb.skipChar(Symbols::COLON[0]);
    mScheme.lowercase();
 
    if (isEqualNoCase(mScheme, Symbols::Tel))
