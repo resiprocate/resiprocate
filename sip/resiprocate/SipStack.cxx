@@ -117,7 +117,7 @@ SipStack::addTlsTransport( const Data& domainname,
 void
 SipStack::addAlias(const Data& domain, int port)
 {
-   InfoLog (<< "Adding domain alias: " << domain << ":" << port);
+   DebugLog (<< "Adding domain alias: " << domain << ":" << port);
    assert(!mShuttingDown);
    mDomains.insert(domain + Data(":") + Data(port));
 }
