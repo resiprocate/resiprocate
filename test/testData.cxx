@@ -15,6 +15,35 @@ class TestData
       {
 
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
+         {
+            char *txt = "here is some text";
+            Data notOwner(txt, strlen(txt), true);
+            assert(!notOwner.mMine);
+            
+            notOwner += " more text";
+            assert(notOwner.mMine);
+            assert(notOwner == "here is some text more text");
+         }
+
+         {
+            char *txt = "here is some text";
+            Data notOwner(txt, strlen(txt), true);
+            assert(!notOwner.mMine);
+            
+            notOwner += '!';
+            assert(notOwner.mMine);
+            assert(notOwner == "here is some text!");
+         }
+
+         {
+            char *txt = "here is some text";
+            Data notOwner(txt, strlen(txt), true);
+            assert(!notOwner.mMine);
+            
+            notOwner += Data(" more text");
+            assert(notOwner.mMine);
+            assert(notOwner == "here is some text more text");
+         }
 
          {
             Data v("some text");
@@ -317,6 +346,84 @@ class TestData
          }
 
          {
+            const char* f = "asdasd";
+            Data d("fsadf");
+
+            assert(!(d <= f));
+         }
+
+         {
+            const Data f = "asdasd";
+            Data d("fsadf");
+
+            assert(!(d <= f));
+         }
+
+         {
+            const char* f = "asdasd";
+            Data d = Data(f);
+            assert(d <= f);
+         }
+
+         {
+            Data d;
+            const char* f = "asdasd";
+            d = f;
+            assert(d <= f);
+         }
+
+         {
+            Data d("asdfasfdsadf");
+            const char* f = "asdasd";
+            d = f;
+            assert(d <= f);
+         }
+         
+         {
+            Data a("qwerty");
+            Data b("qwerty");
+            assert(a <= b);
+         }
+         {
+            Data a("qwert");
+            Data b("qwerty");
+            assert(a <= b);
+         }
+         {
+            Data a("qwert");
+            Data b("qwerty");
+            assert(a <= b);
+            assert(!(b <= a));
+         }
+
+         {
+            const char* f = "asdasda";
+            Data d("asdasd");
+            assert(d <= f);
+         }
+
+         {
+            const char * c("asdfasfdsadf");
+            Data d(c, 4, true); //share memory
+            assert(d <= c);
+         }
+
+         {
+            const char * c("asdfasfdsadf");
+            Data d(c, strlen(c), true); // share memory
+            assert(d <= c);
+         }
+
+         {
+            const char * c("asdfasfdsadf");
+            Data d(c, strlen(c), true); // share memory
+            assert(d <= c);
+            Data c1(d); // copy, null terminate
+            assert(d <= c1);
+            assert(c1 <= d);
+         }
+
+         {
             Data d("123");
             assert(d.size() == 3);
          }
@@ -328,6 +435,7 @@ class TestData
             assert(d == "onetwo");
 
             Data empt;
+            cerr << empt + d << endl;
             assert(empt + d == d);
             assert(empt + d == "onetwo");
             assert(empt + "three" == "three");

@@ -408,7 +408,7 @@ ParseBuffer::skipToEndQuote(char quote)
       }
    }
 
-   DebugLog (<< "Missing '" << quote);
+   DebugLog (<< "Missing '" << quote << "'");
    fail(__FILE__,__LINE__);
    return 0;
 }
@@ -501,8 +501,11 @@ ParseBuffer::skipBackToChar(char c)
 void
 ParseBuffer::data(Data& data, const char* start) const
 {
-   assert( mBuff <= start );
-   assert( start <= mPosition);
+   if (!(mBuff <= start && start <= mPosition))
+   {
+      DebugLog(<< "Bad anchor position");
+      fail(__FILE__, __LINE__);
+   }
 
    if (data.mMine)
    {
@@ -517,7 +520,11 @@ ParseBuffer::data(Data& data, const char* start) const
 Data
 ParseBuffer::data(const char* start) const
 {
-   assert(mBuff <= start && start <= mPosition);
+   if (!(mBuff <= start && start <= mPosition))
+   {
+      DebugLog(<< "Bad anchor position");
+      fail(__FILE__, __LINE__);
+   }
 
    Data data(start, mPosition - start);
    return data;
@@ -526,6 +533,12 @@ ParseBuffer::data(const char* start) const
 int
 ParseBuffer::integer()
 {
+   if (this->eof())
+   {
+      DebugLog(<< "Expected a digit, got eof ");
+      fail(__FILE__, __LINE__);
+   }
+
    char c = *position();
 
    int signum = 1;
@@ -560,14 +573,14 @@ ParseBuffer::integer()
 unsigned long
 ParseBuffer::unsignedInteger()
 {
-   if ( this->eof() )
+   if (this->eof())
    {
       DebugLog(<< "Expected a digit, got eof ");
       fail(__FILE__, __LINE__);
    }
 
    const char* p = mPosition;
-   assert( p );
+   assert(p);
    char c = *p;
 
    if (!isdigit(c))
@@ -597,7 +610,7 @@ ParseBuffer::floatVal()
 
       if (*mPosition == '.')
       {
-	  skipChar('.');
+	  skipChar();
 	  const char* pos = mPosition;
 	  mant = float(integer());
 	  int s = mPosition - pos;
