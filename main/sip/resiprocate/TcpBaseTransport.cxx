@@ -130,7 +130,8 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
    Connection* currConnection = mConnectionManager.getNextRead(); 
    if (currConnection)
    {
-      if ( fdset.readyToRead(currConnection->getSocket()) || currConnection->hasDataToRead() )
+      if ( fdset.readyToRead(currConnection->getSocket()) ||
+           currConnection->hasDataToRead() )
       {
          //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
          fdset.clear(currConnection->getSocket());
