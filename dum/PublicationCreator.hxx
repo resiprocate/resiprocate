@@ -6,14 +6,13 @@
 namespace resip
 {
 
-class Uri;
 class Contents;
 
 class PublicationCreator: public BaseCreator
 {
    public:
       PublicationCreator(DialogUsageManager& dum, 
-                         const Uri& targetDocument, 
+                         const NameAddr& targetDocument, 
                          const NameAddr& from,
                          const Contents& body, 
                          const Data& eventType, 
