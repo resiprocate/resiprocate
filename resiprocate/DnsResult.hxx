@@ -39,6 +39,9 @@ class DnsResult
       // checked available() before calling next()
       Tuple next();
 
+      // return the target of associated query
+      Data target() const { return mTarget; }
+      
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
       void destroy();
