@@ -17,7 +17,8 @@ LDLIBS += -lpopt
 TESTPROGRAMS +=
 endif
 
-TESTPROGRAMS += testPidf.cxx \
+TESTPROGRAMS += testRSP-2.cxx \
+		testPidf.cxx \
 		testPksc7.cxx \
 		limpc.cxx \
 		testCorruption.cxx \
