@@ -22,8 +22,11 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(bool multiThreaded)
-   : security( 0 ),
-     mExecutive(*this),
+   : 
+#ifdef USE_SSL
+	security( 0 ),
+#endif
+		mExecutive(*this),
      mTransportSelector(*this),
      mTimers(mStateMacFifo),
      mDnsResolver(*this)
