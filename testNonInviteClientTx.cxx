@@ -1,12 +1,11 @@
-#include <sipstack/SipStack.hxx>
-#include <sipstack/Transport.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/Helper.hxx>
-#include <sipstack/TestTransport.hxx>
-#include <sipstack/Preparse.hxx>
+#include "sipstack/SipStack.hxx"
+#include "sipstack/Transport.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/Helper.hxx"
+#include "sipstack/TestTransport.hxx"
 
-#include <util/Logger.hxx>
-#include <util/DataStream.hxx>
+#include "util/Logger.hxx"
+#include "util/DataStream.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -33,7 +32,7 @@ main(int argc, char *argv[])
     InfoLog( << "Starting up, making stack");
 
     client = new SipStack();
-    client->addTransport(Transport::TestReliable, 5060);
+    client->addTransport(Transport::TestUnreliable, 5060);
 
     // Test 1: 
     // client sends a reg, server does nothing, client should retransmit 10
@@ -87,28 +86,17 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
 
 
     // read the message off the stack
-    TestBufType& cbuf = TestOutBuffer::instance().getBuf();
-    int len = cbuf.size();
-    char *newbuf = new char(len);
-    TestBufType::const_iterator iter = cbuf.begin();
-    int i=0;
-    for (; iter != cbuf.end(); iter++, i++ )
-    {
-       newbuf[i] = *iter;
-    }
+    Data fromStack;
+    getFromWire(fromStack);
 
-    SipMessage* message = Helper::makeMessage(newbuf);
-    delete [] newbuf;
+    InfoLog(<< "Received from wire " << fromStack);
+
+    SipMessage* message = Helper::makeMessage(fromStack);
       
-    // set the received from information into the received= parameter in the
-    // via
-    // sockaddr_in from;
-    // message->setSource(from);
-
     // send the response message
 
-    SipMessage* response = Helper::makeResponse(*reg, 100);
-    DebugLog (<< "server sending response = " << endl << *response);
+    SipMessage* response = Helper::makeResponse(*message, 100);
+    InfoLog (<< "sending to wire = " << endl << *response);
             
     Data encodedResponse(2048, true);
 
@@ -116,14 +104,13 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
     response->encode(estrm);
     estrm.flush();
 
-    TestBufType& inbuf = TestInBuffer::instance().getBuf();
-    
-    for (int i=0; i < encodedResponse.size(); i++)
-      {
-	inbuf.push_back(encodedResponse.data()[i]);
-      }
+    //    sendToWire(encodedResponse);
 
-    client->process();
+    while (1)
+      {
+	client->process();
+	usleep(20);
+      }
 
 #if 0
     int count=0;
