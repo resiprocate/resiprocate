@@ -80,7 +80,6 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_Answered:
-      case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_Canceled:
@@ -131,7 +130,6 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithAnswer:
-      case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
@@ -154,7 +152,6 @@ ClientInviteSession::end()
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_Answered:
-      case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
@@ -199,7 +196,6 @@ ClientInviteSession::reject (int statusCode)
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
       case UAC_Answered:
-      case UAC_Terminated:
       case UAC_SentUpdateEarly:
          //case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
@@ -233,6 +229,13 @@ ClientInviteSession::cancel()
          break;
    }
 }
+
+void
+ClientInviteSession::startCancelTimer()
+{
+   // !jf! do something here
+}
+
 
 void
 ClientInviteSession::targetRefresh (const NameAddr& localUri)
@@ -286,9 +289,6 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          break;
       case UAC_Answered:
          dispatchAnswered(msg);
-         break;
-      case UAC_Terminated:
-         dispatchTerminated(msg);
          break;
       case UAC_SentUpdateEarly:
          dispatchSentUpdateEarly(msg);

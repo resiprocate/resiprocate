@@ -127,7 +127,6 @@ InviteSession::isTerminated() const
       case Terminated:
       case WaitingToTerminate:
       case UAC_Canceled:
-      case UAC_Terminated:
       case UAS_WaitingToTerminate:
       case UAS_WaitingToHangup:
          return true;
@@ -989,8 +988,6 @@ InviteSession::toData(State state)
          return "UAC_EarlyWithAnswer";
       case UAC_Answered:
          return "UAC_Answered";
-      case UAC_Terminated:
-         return "UAC_Terminated";
       case UAC_SentUpdateEarly:
          return "UAC_SentUpdateEarly";
       case UAC_SentUpdateConnected:
