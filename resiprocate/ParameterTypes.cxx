@@ -1,6 +1,9 @@
 #include <sipstack/ParameterTypes.hxx>
 
 #include <iostream>
+
+int strncasecmp(char*,char*,int);
+
 using namespace std;
 
 using namespace Vocal2;

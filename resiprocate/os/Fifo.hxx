@@ -53,7 +53,7 @@
 
 
 static const char* const Fifo_h_Version =
-    "$Id: Fifo.hxx,v 1.3 2002/09/28 17:30:44 fluffy Exp $";
+    "$Id: Fifo.hxx,v 1.4 2002/10/01 14:53:42 fluffy Exp $";
 
 #include <util/Mutex.hxx>
 #include <util/Condition.hxx>
@@ -156,7 +156,8 @@ Fifo<Msg> ::size() const
 {
     Lock lock(mMutex); (void)lock;
 
-    return mFifo.size(); 
+	unsigned int ret = mFifo.size();
+    return ret; 
 }
 
 
