@@ -24,6 +24,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    InviteSession(dum, dialog),
    mLastReceivedRSeq(-1),
    mStaleCallTimerSeq(1),
+   mCancelledTimerSeq(1),
    mServerSub(serverSub)
 {
    assert(request.isRequest());
@@ -84,7 +85,7 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
       case UAC_Answered:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
-      case UAC_Canceled:
+      case UAC_Cancelled:
          assert(0);
          break;
 
@@ -137,7 +138,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
-      case UAC_Canceled:
+      case UAC_Cancelled:
          assert(0);
          break;
 
@@ -161,7 +162,7 @@ ClientInviteSession::end()
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
-      case UAC_Canceled: // !jf! possibly incorrect to always BYE in UAC_Canceled
+      case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
          transition(Terminated);
          SipMessage bye;
@@ -213,7 +214,7 @@ ClientInviteSession::reject (int statusCode)
       case UAC_Answered:
       case UAC_SentUpdateEarly:
       case UAC_SentAnswer:
-      case UAC_Canceled:
+      case UAC_Cancelled:
          WarningLog (<< "Try to reject when in state=" << toData(mState));         
          assert(0);
          break;
@@ -237,10 +238,10 @@ ClientInviteSession::cancel()
       case UAC_SentAnswer:
          InfoLog (<< toData(mState) << ": cancel");
          startCancelTimer();
-         transition(UAC_Canceled);
+         transition(UAC_Cancelled);
          break;
          
-      case UAC_Canceled:
+      case UAC_Cancelled:
          // !jf!
          // assert(0);
          break;
@@ -255,12 +256,38 @@ void
 ClientInviteSession::startCancelTimer()
 {
    InfoLog (<< toData(mState) << ": startCancelTimer");
-   // !jf! do something here
+   mDum.addTimerMs(DumTimeout::Cancelled, Timer::TH, getBaseHandle(), ++mCancelledTimerSeq);
+}
+
+void 
+ClientInviteSession::sendSipFrag(const SipMessage& msg)
+{
+   if (mServerSub.isValid())
+   {
+      if (msg.isResponse() && mState >= UAC_Start && mState <= UAC_Cancelled)
+      {
+         int code = msg.header(h_StatusLine).statusCode();
+         if (code > 100)
+         {
+            SipFrag contents;
+            if (code < 200)
+            {
+               mServerSub->send(mServerSub->update(&contents));
+            }
+            else
+            {
+               contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
+               mServerSub->end(NoResource, &contents);
+            }
+         }
+      }
+   }
 }
 
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
+   sendSipFrag(msg);            
    switch(mState)
    {
       case UAC_Start:
@@ -293,19 +320,40 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       case UAC_QueuedUpdate:
          dispatchQueuedUpdate(msg);
          break;
-      case UAC_Canceled:
-         dispatchCanceled(msg);
+      case UAC_Cancelled:
+         dispatchCancelled(msg);
          break;
       default:
          InviteSession::dispatch(msg);
          break;
+
    }
 }
 
 void
 ClientInviteSession::dispatch(const DumTimeout& timer)
 {
-    InviteSession::dispatch(timer);
+   if (timer.type() == DumTimeout::Cancelled)
+   {
+      if(timer.seq() == mCancelledTimerSeq)
+      {
+         if (mServerSub.isValid())
+         {
+            SipMessage response;            
+            mDialog.makeResponse(response, mInvite, 487);
+            sendSipFrag(response);
+         }
+         InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled);
+         mDum.destroy(this);
+      }
+   }
+   else
+   {
+      InviteSession::dispatch(timer);
+   }
+   
+      
 }
 
 void
@@ -949,7 +997,7 @@ ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 }
 
 void
-ClientInviteSession::dispatchCanceled (const SipMessage& msg)
+ClientInviteSession::dispatchCancelled (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
@@ -960,13 +1008,14 @@ ClientInviteSession::dispatchCanceled (const SipMessage& msg)
       case OnCancelFailure:
       case On487Invite:
       case OnRedirect:
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mDum.destroy(this);
          break;
          
       case On2xx:
       case On2xxOffer:
       case On2xxAnswer:
+         mCancelledTimerSeq++;         
          end();
          break;
 
