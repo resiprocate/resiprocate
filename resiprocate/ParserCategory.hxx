@@ -23,6 +23,7 @@ class ParserCategory : public LazyParser
 {
     public:
       enum {UnknownParserCategory = -1};
+      enum {None = 0, In = 1, InOut = 3};
 
       ParserCategory(HeaderFieldValue* headerFieldValue, Headers::Type type);
       ParserCategory(const ParserCategory& rhs);
@@ -36,7 +37,8 @@ class ParserCategory : public LazyParser
       void remove(const ParamBase& paramType);
 
       // !dlb! causes compiler error in windows -- change template to const T*
-      Data& param(const UnknownParameterType& param) const;
+      const Data& param(const UnknownParameterType& param) const;
+      Data& param(const UnknownParameterType& param);
 
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
