@@ -9,8 +9,10 @@
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/TransportMessage.hxx"
@@ -76,10 +78,14 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
-   Message* message = controller.mStateMacFifo->getNext();
-   assert(message);
+   Message* msg = controller.mStateMacFifo->getNext();
+   assert(msg);
 
+   TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
+
+   RESIP_STATISTICS(sip && sip->isExternal() && controller.getStatisticsManager().received(sip));
+
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
    {
       InfoLog(<< "TransactionState::process dropping message with no Via: " << sip->brief());
@@ -311,7 +317,7 @@ TransactionState::process(TransactionController& controller)
 
 
 void
-TransactionState::processStateless(Message* message)
+TransactionState::processStateless(TransactionMessage* message)
 {
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
@@ -355,7 +361,7 @@ TransactionState::processStateless(Message* message)
 }
 
 void
-TransactionState::processClientNonInvite(  Message* msg )
+TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
    StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
@@ -366,7 +372,7 @@ TransactionState::processClientNonInvite(  Message* msg )
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       mMsgToRetransmit = sip;
-      mController.mTimers.add(Timer::TimerF, mId, 64*Timer::T1 );
+      mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
    }
    else if (isResponse(msg) && isFromWire(msg)) // from the wire
@@ -394,17 +400,25 @@ TransactionState::processClientNonInvite(  Message* msg )
       }
       else if (code >= 200)
       {
-         if (mIsReliable)
+         // don't notify the TU of retransmissions
+         if (mState == Trying || mState == Proceeding)
          {
             sendToTU(msg); // don't delete
+         }
+         else if (mState == Completed)
+         {
+            delete msg;
+         }
+         
+         if (mIsReliable)
+         {
             terminateClientTransaction(mId);
             delete this;
          }
-         else
+         else if (mState != Completed) // prevent TimerK reproduced
          {
             mState = Completed;
             mController.mTimers.add(Timer::TimerK, mId, Timer::T4 );            
-            sendToTU(msg); // don't delete            
          }
       }
    }
@@ -448,11 +462,14 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
 
          case Timer::TimerF:
-            // !jf! is this correct
-            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
-            terminateClientTransaction(mId);
+            if (mState == Trying || mState == Proceeding)
+            {
+               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               terminateClientTransaction(mId);
+               delete this;
+            }
+            
             delete msg;
-            delete this;
             break;
 
          case Timer::TimerK:
@@ -481,7 +498,7 @@ TransactionState::processClientNonInvite(  Message* msg )
 
 
 void
-TransactionState::processClientInvite(  Message* msg )
+TransactionState::processClientInvite(TransactionMessage* msg)
 {
    StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
    if (isRequest(msg) && isFromTU(msg))
@@ -494,7 +511,7 @@ TransactionState::processClientInvite(  Message* msg )
          case INVITE:
             delete mMsgToRetransmit; 
             mMsgToRetransmit = sip;
-            mController.mTimers.add(Timer::TimerB, mId, 64*Timer::T1 );
+            mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
             sendToWire(msg); // don't delete msg
             break;
             
@@ -691,7 +708,7 @@ TransactionState::processClientInvite(  Message* msg )
 
 
 void
-TransactionState::processServerNonInvite(  Message* msg )
+TransactionState::processServerNonInvite(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
 
@@ -799,7 +816,7 @@ TransactionState::processServerNonInvite(  Message* msg )
 
 
 void
-TransactionState::processServerInvite(  Message* msg )
+TransactionState::processServerInvite(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerInvite: " << msg->brief());
    if (isRequest(msg) && isFromWire(msg))
@@ -953,7 +970,7 @@ TransactionState::processServerInvite(  Message* msg )
                   {
                      mToTag = sip->header(h_To).param(p_tag);
                   }
-                  mController.mTimers.add(Timer::TimerH, mId, 64*Timer::T1 );
+                  mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
                   if (!mIsReliable)
                   {
                      mController.mTimers.add(Timer::TimerG, mId, Timer::T1 );
@@ -1059,11 +1076,10 @@ TransactionState::processServerInvite(  Message* msg )
 
 
 void
-TransactionState::processClientStale(  Message* msg )
+TransactionState::processClientStale(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processClientStale: " << msg->brief());
 
-   //SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
@@ -1103,7 +1119,7 @@ TransactionState::processClientStale(  Message* msg )
 }
 
 void
-TransactionState::processServerStale(  Message* msg )
+TransactionState::processServerStale(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerStale: " << msg->brief());
 
@@ -1113,8 +1129,8 @@ TransactionState::processServerStale(  Message* msg )
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       if (timer->getType() == Timer::TimerStaleServer)
       {
-         delete this;
          delete msg;
+         delete this;
       }
       else
       {
@@ -1147,12 +1163,15 @@ TransactionState::processServerStale(  Message* msg )
    else if (isResponse(msg) && isFromTU(msg))
    {
       sendToWire(msg); 
+      delete msg;
    }
    else
    {
       ErrLog(<<"ServerStale unexpected condition, dropping message.");
       if (sip)
+      {
          ErrLog(<<sip->brief());
+      }
       delete msg;
    }
 }
@@ -1163,7 +1182,14 @@ TransactionState::processNoDnsResults()
 {
    InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
    assert(mDnsResult->available() == DnsResult::Finished);
-   sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "No DNS entries left")); // !jf! should be 480? 
+   SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+   WarningCategory warning;
+   warning.hostname() = DnsUtil::getLocalHostName();
+   warning.code() = 499;
+   warning.text() = "No other DNS entries to try";
+   response->header(h_Warnings).push_back(warning);
+
+   sendToTU(response); // !jf! should be 480? 
    terminateClientTransaction(mId);
    delete this; 
 }
@@ -1183,6 +1209,13 @@ TransactionState::processTransportFailure()
       // In the case of a client-initiated CANCEL, we don't want to
       // try other transports in the case of transport error as the
       // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+      SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+      WarningCategory warning;
+      warning.hostname() = DnsUtil::getLocalHostName();
+      warning.code() = 499;
+      warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
+      response->header(h_Warnings).push_back(warning);
+      
       sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
       return;
    }
@@ -1331,7 +1364,7 @@ simpleTupleForUri(const Uri& uri)
 }
 
 void
-TransactionState::sendToWire(Message* msg, bool resend) 
+TransactionState::sendToWire(TransactionMessage* msg, bool resend) 
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
 
@@ -1363,7 +1396,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
       }
       else
       {
-         StackLog(<<"sending to : " << target);
+         StackLog(<< "tid=" << sip->getTransactionId() << " sending to : " << target);
       }
 
       if (resend)
@@ -1406,10 +1439,12 @@ TransactionState::sendToWire(Message* msg, bool resend)
          mController.transportSelector().transmit(sip, mTarget);
       }
    }
+
+   RESIP_STATISTICS(mController.getStatisticsManager().sent(sip, resend));
 }
 
 void
-TransactionState::sendToTU(Message* msg) const
+TransactionState::sendToTU(TransactionMessage* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    StackLog(<< "Send to TU: " << *msg);
@@ -1451,14 +1486,14 @@ TransactionState::erase(const Data& tid)
 
 
 bool
-TransactionState::isRequest(Message* msg) const
+TransactionState::isRequest(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);   
    return sip && sip->isRequest();
 }
 
 bool
-TransactionState::isInvite(Message* msg) const
+TransactionState::isInvite(TransactionMessage* msg) const
 {
    if (isRequest(msg))
    {
@@ -1469,7 +1504,7 @@ TransactionState::isInvite(Message* msg) const
 }
 
 bool
-TransactionState::isResponse(Message* msg, int lower, int upper) const
+TransactionState::isResponse(TransactionMessage* msg, int lower, int upper) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip && sip->isResponse())
@@ -1481,27 +1516,27 @@ TransactionState::isResponse(Message* msg, int lower, int upper) const
 }
 
 bool
-TransactionState::isTimer(Message* msg) const
+TransactionState::isTimer(TransactionMessage* msg) const
 {
    return dynamic_cast<TimerMessage*>(msg) != 0;
 }
 
 bool
-TransactionState::isFromTU(Message* msg) const
+TransactionState::isFromTU(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    return sip && !sip->isExternal();
 }
 
 bool
-TransactionState::isFromWire(Message* msg) const
+TransactionState::isFromWire(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    return sip && sip->isExternal();
 }
 
 bool
-TransactionState::isTransportError(Message* msg) const
+TransactionState::isTransportError(TransactionMessage* msg) const
 {
    TransportMessage* t = dynamic_cast<TransportMessage*>(msg);
    return (t && t->isFailed());

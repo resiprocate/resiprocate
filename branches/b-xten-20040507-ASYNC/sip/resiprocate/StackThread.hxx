@@ -1,67 +1,32 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
+#ifndef RESIP_StackThread__hxx
+#define RESIP_StackThread__hxx
 
-#include <memory>
-
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/Security.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           const Data& sipDomain, 
-                           const Data& interfaceObj, 
-                           int portNum, 
-                           const Data& keyDir, const Data& privateKeyPassPhrase,
-                           bool ipv4,
-                           SecurityTypes::SSLType sslType) : 
-   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
-   mDomain(sipDomain),
-   mSecurity(new Security(true, sslType))
+namespace resip
 {
-   mTuple.setType(transport());
 
-   InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interfaceObj 
-            << " port=" << portNum);
-   
-   
-   bool ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) &&
-       mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) && 
-       mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem"));
+class SipStack;
 
-   (void)ok;
+class StackThread : public ThreadIf
+{
+   public:
+      StackThread(SipStack& stack);
 
-   InfoLog( << "Listening for TLS connections on port " << portNum  << " ok=" << ok);
+      virtual void thread();
+
+   protected:
+      virtual void buildFdSet(FdSet& fdset);
+      virtual int getTimeTillNextProcessMS() const;
+
+   private:
+      SipStack& mStack;
+};
 
 }
 
-
-TlsTransport::~TlsTransport()
-{
-}
-  
-
-Connection* 
-TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   who.transport = this;
-   assert(  who.transport );
-
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server);
-   assert( conn->transport() );
-   return conn;
-}
+#endif
 
 
 /* ====================================================================

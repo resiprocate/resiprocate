@@ -1,73 +1,28 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#ifndef RESIP_ApplicationMessage_hxx
+#define RESIP_ApplicationMessage_hxx 
+
+#include "resiprocate/Message.hxx"
+
+namespace resip
+{
+
+class ApplicationMessage : public Message
+{
+   public:
+      ApplicationMessage() {};
+
+      virtual Data brief() const=0;
+      virtual Message* clone() const=0;
+      virtual std::ostream& encode(std::ostream& strm) const=0;
+};
+ 
+}
+
 #endif
-
-#include <memory>
-
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/Security.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           const Data& sipDomain, 
-                           const Data& interfaceObj, 
-                           int portNum, 
-                           const Data& keyDir, const Data& privateKeyPassPhrase,
-                           bool ipv4,
-                           SecurityTypes::SSLType sslType) : 
-   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
-   mDomain(sipDomain),
-   mSecurity(new Security(true, sslType))
-{
-   mTuple.setType(transport());
-
-   InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interfaceObj 
-            << " port=" << portNum);
-   
-   
-   bool ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) &&
-       mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) && 
-       mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem"));
-
-   (void)ok;
-
-   InfoLog( << "Listening for TLS connections on port " << portNum  << " ok=" << ok);
-
-}
-
-
-TlsTransport::~TlsTransport()
-{
-}
-  
-
-Connection* 
-TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   who.transport = this;
-   assert(  who.transport );
-
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server);
-   assert( conn->transport() );
-   return conn;
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

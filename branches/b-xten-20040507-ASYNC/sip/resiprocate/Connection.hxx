@@ -39,7 +39,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       void performWrite();
 
       // pure virtual, but need concrete Connection
-      virtual int read(Fifo< Message >& fifo);
+      virtual int read(Fifo<TransactionMessage>& fifo);
    protected:
 
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }

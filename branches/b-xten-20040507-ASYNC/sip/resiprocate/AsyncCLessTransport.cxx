@@ -19,7 +19,7 @@ using namespace std;
 using namespace resip;
 
 
-AsyncCLessTransport::AsyncCLessTransport(Fifo<Message>& rxFifo, ExternalAsyncCLessTransport* eaTransport, 
+AsyncCLessTransport::AsyncCLessTransport(Fifo<TransactionMessage>& rxFifo, ExternalAsyncCLessTransport* eaTransport, 
 					 bool ownedByMe)
 :  Transport(rxFifo, eaTransport->boundAddress()),
    mTransportType(eaTransport->transportType()),

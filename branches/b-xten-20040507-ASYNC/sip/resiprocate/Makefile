@@ -37,6 +37,7 @@ SRC = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
+	os/WinCompat.cxx \
 	\
 	\
 	Auth.cxx \
@@ -105,7 +106,10 @@ SRC = \
 	ApplicationSip.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
+	StackThread.cxx \
 	StatelessHandler.cxx \
+	StatisticsManager.cxx \
+	StatisticsMessage.cxx \
 	Symbols.cxx \
 	ConnectionManager.cxx \
 	TcpConnection.cxx \
@@ -120,8 +124,8 @@ SRC = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
+	TransportMessage.cxx \
 	TransportSelector.cxx \
-	TuIM.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \

@@ -27,7 +27,7 @@
 namespace resip
 {
 
-class Message;
+class TransactionMessage;
 class ConnectionManager;
 
 class ConnectionBase
@@ -55,7 +55,7 @@ class ConnectionBase
       };
 	
       State getCurrentState() const { return mState; }
-      void preparseNewBytes(int bytesRead, Fifo<Message>& fifo);
+      void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
 	 
       void setBuffer(char* bytes, int count);

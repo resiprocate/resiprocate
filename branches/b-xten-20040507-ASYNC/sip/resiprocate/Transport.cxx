@@ -28,7 +28,7 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(Fifo<Message>& rxFifo,
+Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const GenericIPAddress& address) :
    mTuple(address),
    mStateMachineFifo(rxFifo),
@@ -37,7 +37,7 @@ Transport::Transport(Fifo<Message>& rxFifo,
    mInterface = DnsUtil::inet_ntop(mTuple);
 }
 
-Transport::Transport(Fifo<Message>& rxFifo,
+Transport::Transport(Fifo<TransactionMessage>& rxFifo,
 				     int portNum,
 				     const Data& intfc,
 				     bool ipv4) :
