@@ -144,7 +144,9 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool is
  
    // If this is an ACK we need to fix the tid to reflect that
    Data tid = msg->getTransactionId();
-   if (msg->header(h_RequestLine).getMethod() == ACK)
+
+   if (msg->isRequest() &&
+       msg->header(h_RequestLine).getMethod() == ACK)
    {
       tid += "ACK";
    }
