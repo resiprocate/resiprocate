@@ -107,7 +107,7 @@ Registration::handleResponse(const SipMessage& response)
       {
          mState = Active;
          mContacts = response.header(h_Contacts);
-         mTimeTillExpiration = response.header(h_Expires).value() * 1000;
+         mTimeTillExpiration = response.header(h_Expires).value();
       }
    }
    else
@@ -129,7 +129,7 @@ Registration::isRegistered() const
    return mState == Active;
 }
 
-UInt64
+time_t
 Registration::getTimeToRefresh() const
 {
    return mTimeTillExpiration;
