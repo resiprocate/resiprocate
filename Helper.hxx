@@ -48,10 +48,6 @@ class Helper
       //should default proto-version, anything else defaulted/passed in?
       static Via makeVia(NameAddr& source);
 
-      // copy the values from Url into rline (with sip-uri parameters?)
-      static void setUri(RequestLine& rLine, const NameAddr& url);
-      static void setUri(StatusLine& rLine, const NameAddr& url);
-      
       static SipMessage makeAck(const SipMessage& request, const SipMessage& response);
 
       static Data computeUniqueBranch();
