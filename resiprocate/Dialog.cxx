@@ -522,7 +522,7 @@ Dialog::incrementCSeq(SipMessage& request)
 }
 
 std::ostream&
-resip::operator<<(std::ostream& strm, Dialog& d)
+resip::operator<<(std::ostream& strm, const Dialog& d)
 {
    strm << "Dialog: [" << d.dialogId() 
         << " created=" << d.mCreated 
