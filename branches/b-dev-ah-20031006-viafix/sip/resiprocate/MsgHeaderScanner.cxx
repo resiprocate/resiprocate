@@ -8,7 +8,7 @@
 
 
 #include <limits.h>
-#ifdef RESIP_MSG_HEADER_SCANNER_DEBUG
+#if defined( RESIP_MSG_HEADER_SCANNER_DEBUG ) 
 #include <stdio.h>
 #endif
 #include <resiprocate/HeaderTypes.hxx>
@@ -48,6 +48,11 @@ struct CharInfo {
 };
 
 static CharInfo charInfoArray[UCHAR_MAX];
+static
+inline int c2i(unsigned char c)
+{ 
+   return static_cast<int>(c); 
+}
 
 static
 void
@@ -61,35 +66,39 @@ initCharInfoArray()
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.!%*_+`'~";
       *charPtr;
       ++charPtr) {
-    charInfoArray[*charPtr].category = ccFieldName;
+    charInfoArray[c2i(*charPtr)].category = ccFieldName;
   }//for
-  charInfoArray[' '].category  = ccWhiteSpace;
-  charInfoArray['\t'].category = ccWhiteSpace;
-  charInfoArray[':'].category  = ccColon;
-  charInfoArray['"'].category  = ccDoubleQuotationMark;
-  charInfoArray['<'].category  = ccLeftAngleBracket;
-  charInfoArray['>'].category  = ccRightAngleBracket;
-  charInfoArray['\\'].category  = ccBackSlash;
-  charInfoArray[','].category  = ccComma;
-  charInfoArray['\r'].category = ccCarriageReturn;
-  charInfoArray['\n'].category = ccLineFeed;
+  charInfoArray[c2i(' ')].category  = ccWhiteSpace;
+  charInfoArray[c2i('\t')].category = ccWhiteSpace;
+  charInfoArray[c2i(':')].category  = ccColon;
+  charInfoArray[c2i('"')].category  = ccDoubleQuotationMark;
+  charInfoArray[c2i('<')].category  = ccLeftAngleBracket;
+  charInfoArray[c2i('>')].category  = ccRightAngleBracket;
+  charInfoArray[c2i('\\')].category  = ccBackSlash;
+  charInfoArray[c2i(',')].category  = ccComma;
+  charInfoArray[c2i('\r')].category = ccCarriageReturn;
+  charInfoArray[c2i('\n')].category = ccLineFeed;
   // Assert: "chunkTermSentinelChar"'s category is still the default "ccOther".
-  charInfoArray[chunkTermSentinelChar].category = ccChunkTermSentinel;
+  charInfoArray[c2i(chunkTermSentinelChar)].category = ccChunkTermSentinel;
   // Init text property bit masks.
-  charInfoArray['\r'].textPropBitMask =
+  charInfoArray[c2i('\r')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsLineBreak;
-  charInfoArray['\n'].textPropBitMask =
+  charInfoArray[c2i('\n')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsLineBreak;
-  charInfoArray[' '].textPropBitMask =
+  charInfoArray[c2i(' ')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsWhiteSpace;
-  charInfoArray['\t'].textPropBitMask =
+  charInfoArray[c2i('\t')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsWhiteSpace;
-  charInfoArray['\\'].textPropBitMask =
+  charInfoArray[c2i('\\')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsBackSlash;
-  charInfoArray['%'].textPropBitMask = MsgHeaderScanner::tpbmContainsPercent;
-  charInfoArray[';'].textPropBitMask = MsgHeaderScanner::tpbmContainsSemiColon;
-  charInfoArray['('].textPropBitMask = MsgHeaderScanner::tpbmContainsParen;
-  charInfoArray[')'].textPropBitMask = MsgHeaderScanner::tpbmContainsParen;
+  charInfoArray[c2i('%')].textPropBitMask =
+     MsgHeaderScanner::tpbmContainsPercent;
+  charInfoArray[c2i(';')].textPropBitMask =
+     MsgHeaderScanner::tpbmContainsSemiColon;
+  charInfoArray[c2i('(')].textPropBitMask =
+     MsgHeaderScanner::tpbmContainsParen;
+  charInfoArray[c2i(')')].textPropBitMask =
+     MsgHeaderScanner::tpbmContainsParen;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,8 +181,8 @@ specTransition(State             state,
                TransitionAction  action,
                State             nextState)
 {
-    stateMachine[state][charCategory].action = action;
-    stateMachine[state][charCategory].nextState = nextState;
+    stateMachine[c2i(state)][c2i(charCategory)].action = action;
+    stateMachine[c2i(state)][c2i(charCategory)].nextState = nextState;
 }
 
 static
@@ -403,7 +412,7 @@ initStateMachine()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef RESIP_MSG_HEADER_SCANNER_DEBUG // {
+#if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)  // {
 
 static
 void
@@ -429,11 +438,8 @@ printText(const char *  text,
   }//for
 }
 
-static
-void
-printStateTransition(State             state,
-                     char              character,
-                     TransitionAction  transitionAction)
+static const char * 
+stateName(State state)
 {
   const char *stateName;
   switch (state) {
@@ -524,7 +530,12 @@ printStateTransition(State             state,
     default:
       stateName = "<unknown>";
   }//switch
-  const char *transitionActionName;
+  return stateName;
+}
+
+static const char *
+trActionName(TransitionAction transitionAction)
+{  const char *transitionActionName;
   switch (transitionAction) {
     case taNone:
       transitionActionName = "taNone";
@@ -559,16 +570,63 @@ printStateTransition(State             state,
     default:
       transitionActionName = "<unknown>";
   }//switch
-  printf("                %s['", stateName);
+  return transitionActionName;
+}
+static
+void
+printStateTransition(State             state,
+                     char              character,
+                     TransitionAction  transitionAction)
+{
+  printf("                %s['", stateName(state));
   printText(&character, 1);
-  printf("']: %s\n", transitionActionName);
+  printf("']: %s\n", trActionName(transitionAction));
+}
+#if !defined(RESIP_MSG_HEADER_SCANNER_DEBUG)
+static const char* stateName(const char*)
+{ return "RECOMPILE_WITH_SCANNER_DEBUG"; }
+static const char* trActionName(const char*)
+{ return stateName(0); }
+#endif
+
+int
+MsgHeaderScanner::dumpStateMachine(int fd)
+{
+   FILE *fp = fdopen(fd,"w");
+   if (!fp) 
+   {
+      fprintf(stderr,"MsgHeaderScanner:: unable to open output file\n");
+      return -1;
+   }
+   MsgHeaderScanner scanner;
+   fprintf(fp,"digraph MsgHeaderScannerFSM {\n");
+   for(int state  = 0 ; state < numStates; ++state)
+   {
+      fprintf(fp,
+              "  S%d [ label = \"%s|%d\"; ]\n",
+              stateName(state),
+              state
+         );
+      for(int category = 0 ; category < numCharCategories; ++category)
+      {
+         fprintf(fp,
+                 "    %s -> %s [\n      label=\"%s\"\n    ]\n",
+                 stateName(state),
+                 stateName(stateMachine[state][category].nextState),
+                 trActionName(stateMachine[state][category].action));
+      }
+      fprintf(fp,"\n");
+   }
+   fprintf(fp,"}\n");
+
+   return 0;
 }
 
 #endif //defined(RESIP_MSG_HEADER_SCANNER_DEBUG) // }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef RESIP_MSG_HEADER_SCANNER_DEBUG // {
+#if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)   // {
 
 static const char *const multiValuedFieldNameArray[] = {
                                                          "allow-events",
@@ -774,7 +832,7 @@ determineTransitionFromCharCategory:
     TransitionInfo *transitionInfo =
         &(localStateMachine[localState][charCategory]);
     TransitionAction transitionAction = transitionInfo->action;
-#ifdef RESIP_MSG_HEADER_SCANNER_DEBUG
+#if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)  
     printStateTransition(localState, *charPtr, transitionAction);
 #endif
     localState = transitionInfo->nextState;
@@ -899,7 +957,7 @@ MsgHeaderScanner::init()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef RESIP_MSG_HEADER_SCANNER_DEBUG // {
+#if defined(RESIP_MSG_HEADER_SCANNER_DEBUG) && defined(MSG_SCANNER_STANDALONE)
 
 extern
 int
