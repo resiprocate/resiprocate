@@ -213,13 +213,13 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath=".\os\AbstractFifo.cxx">
+				RelativePath="os\AbstractFifo.cxx">
 			</File>
 			<File
-				RelativePath=".\ApiCheck.cxx">
+				RelativePath="ApiCheck.cxx">
 			</File>
 			<File
-				RelativePath=".\Auth.cxx">
+				RelativePath="Auth.cxx">
 			</File>
 			<File
 				RelativePath="os\BaseException.cxx">
@@ -228,7 +228,7 @@
 				RelativePath="BranchParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\CallId.cxx">
+				RelativePath="CallId.cxx">
 			</File>
 			<File
 				RelativePath="os\Coders.cxx">
@@ -252,7 +252,7 @@
 				RelativePath="CpimContents.cxx">
 			</File>
 			<File
-				RelativePath=".\CSeqCategory.cxx">
+				RelativePath="CSeqCategory.cxx">
 			</File>
 			<File
 				RelativePath="os\Data.cxx">
@@ -264,7 +264,7 @@
 				RelativePath="os\DataStream.cxx">
 			</File>
 			<File
-				RelativePath=".\DateCategory.cxx">
+				RelativePath="DateCategory.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
@@ -276,13 +276,10 @@
 				RelativePath="Embedded.cxx">
 			</File>
 			<File
-				RelativePath="Executive.cxx">
-			</File>
-			<File
 				RelativePath="ExistsParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.cxx">
+				RelativePath="ExpiresCategory.cxx">
 			</File>
 			<File
 				RelativePath="FloatParameter.cxx">
@@ -291,7 +288,7 @@
 				RelativePath="GenericContents.cxx">
 			</File>
 			<File
-				RelativePath=".\GenericUri.cxx">
+				RelativePath="GenericUri.cxx">
 			</File>
 			<File
 				RelativePath="HeaderFieldValue.cxx">
@@ -312,7 +309,7 @@
 				RelativePath="Helper.cxx">
 			</File>
 			<File
-				RelativePath=".\IntegerCategory.cxx">
+				RelativePath="IntegerCategory.cxx">
 			</File>
 			<File
 				RelativePath="IntegerParameter.cxx">
@@ -345,10 +342,10 @@
 				RelativePath="MethodTypes.cxx">
 			</File>
 			<File
-				RelativePath=".\Mime.cxx">
+				RelativePath="Mime.cxx">
 			</File>
 			<File
-				RelativePath=".\MsgHeaderScanner.cxx">
+				RelativePath="MsgHeaderScanner.cxx">
 			</File>
 			<File
 				RelativePath="MultipartMixedContents.cxx">
@@ -360,7 +357,7 @@
 				RelativePath="os\Mutex.cxx">
 			</File>
 			<File
-				RelativePath=".\NameAddr.cxx">
+				RelativePath="NameAddr.cxx">
 			</File>
 			<File
 				RelativePath="OctetContents.cxx">
@@ -402,7 +399,7 @@
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\RAckCategory.cxx">
+				RelativePath="RAckCategory.cxx">
 			</File>
 			<File
 				RelativePath="os\Random.cxx">
@@ -414,7 +411,7 @@
 				RelativePath="Registration.cxx">
 			</File>
 			<File
-				RelativePath=".\RequestLine.cxx">
+				RelativePath="RequestLine.cxx">
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
@@ -447,10 +444,10 @@
 				RelativePath="StatelessHandler.cxx">
 			</File>
 			<File
-				RelativePath=".\StatusLine.cxx">
+				RelativePath="StatusLine.cxx">
 			</File>
 			<File
-				RelativePath=".\StringCategory.cxx">
+				RelativePath="StringCategory.cxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.cxx">
@@ -459,10 +456,10 @@
 				RelativePath="Symbols.cxx">
 			</File>
 			<File
-				RelativePath=".\os\SysLogBuf.cxx">
+				RelativePath="os\SysLogBuf.cxx">
 			</File>
 			<File
-				RelativePath=".\os\SysLogStream.cxx">
+				RelativePath="os\SysLogStream.cxx">
 			</File>
 			<File
 				RelativePath="TcpBaseTransport.cxx">
@@ -489,7 +486,7 @@
 				RelativePath="TlsTransport.cxx">
 			</File>
 			<File
-				RelativePath=".\Token.cxx">
+				RelativePath="Token.cxx">
 			</File>
 			<File
 				RelativePath="TransactionController.cxx">
@@ -528,13 +525,13 @@
 				RelativePath="Uri.cxx">
 			</File>
 			<File
-				RelativePath=".\Via.cxx">
+				RelativePath="Via.cxx">
 			</File>
 			<File
 				RelativePath="os\vmd5.cxx">
 			</File>
 			<File
-				RelativePath=".\WarningCategory.cxx">
+				RelativePath="WarningCategory.cxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.cxx">
@@ -544,7 +541,7 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
-				RelativePath=".\Auth.hxx">
+				RelativePath="Auth.hxx">
 			</File>
 			<File
 				RelativePath="os\BaseException.hxx">
@@ -553,7 +550,7 @@
 				RelativePath="BranchParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\CallId.hxx">
+				RelativePath="CallId.hxx">
 			</File>
 			<File
 				RelativePath="os\CircularBuffer.hxx">
@@ -586,7 +583,7 @@
 				RelativePath="CpimContents.hxx">
 			</File>
 			<File
-				RelativePath=".\CSeqCategory.hxx">
+				RelativePath="CSeqCategory.hxx">
 			</File>
 			<File
 				RelativePath="os\Data.hxx">
@@ -598,7 +595,7 @@
 				RelativePath="os\DataStream.hxx">
 			</File>
 			<File
-				RelativePath=".\DateCategory.hxx">
+				RelativePath="DateCategory.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
@@ -616,13 +613,10 @@
 				RelativePath="Embedded.hxx">
 			</File>
 			<File
-				RelativePath="Executive.hxx">
-			</File>
-			<File
 				RelativePath="ExistsParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.hxx">
+				RelativePath="ExpiresCategory.hxx">
 			</File>
 			<File
 				RelativePath="os\Fifo.hxx">
@@ -634,7 +628,7 @@
 				RelativePath="GenericContents.hxx">
 			</File>
 			<File
-				RelativePath=".\GenericUri.hxx">
+				RelativePath="GenericUri.hxx">
 			</File>
 			<File
 				RelativePath="os\HashMap.hxx">
@@ -661,7 +655,7 @@
 				RelativePath="os\Inserter.hxx">
 			</File>
 			<File
-				RelativePath=".\IntegerCategory.hxx">
+				RelativePath="IntegerCategory.hxx">
 			</File>
 			<File
 				RelativePath="IntegerParameter.hxx">
@@ -700,7 +694,7 @@
 				RelativePath="MethodTypes.hxx">
 			</File>
 			<File
-				RelativePath=".\Mime.hxx">
+				RelativePath="Mime.hxx">
 			</File>
 			<File
 				RelativePath="MultipartMixedContents.hxx">
@@ -712,7 +706,7 @@
 				RelativePath="os\Mutex.hxx">
 			</File>
 			<File
-				RelativePath=".\NameAddr.hxx">
+				RelativePath="NameAddr.hxx">
 			</File>
 			<File
 				RelativePath="Parameter.hxx">
@@ -763,7 +757,7 @@
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\RAckCategory.hxx">
+				RelativePath="RAckCategory.hxx">
 			</File>
 			<File
 				RelativePath="os\Random.hxx">
@@ -781,7 +775,7 @@
 				RelativePath="ReliabilityMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\RequestLine.hxx">
+				RelativePath="RequestLine.hxx">
 			</File>
 			<File
 				RelativePath="resource.h">
@@ -820,10 +814,10 @@
 				RelativePath="StatelessHandler.hxx">
 			</File>
 			<File
-				RelativePath=".\StatusLine.hxx">
+				RelativePath="StatusLine.hxx">
 			</File>
 			<File
-				RelativePath=".\StringCategory.hxx">
+				RelativePath="StringCategory.hxx">
 			</File>
 			<File
 				RelativePath="Subscription.hxx">
@@ -868,7 +862,7 @@
 				RelativePath="TlsTransport.hxx">
 			</File>
 			<File
-				RelativePath=".\Token.hxx">
+				RelativePath="Token.hxx">
 			</File>
 			<File
 				RelativePath="TransactionController.hxx">
@@ -916,7 +910,7 @@
 				RelativePath="Uri.hxx">
 			</File>
 			<File
-				RelativePath=".\Via.hxx">
+				RelativePath="Via.hxx">
 			</File>
 			<File
 				RelativePath="os\vmd5.hxx">
@@ -925,7 +919,7 @@
 				RelativePath="os\vthread.hxx">
 			</File>
 			<File
-				RelativePath=".\WarningCategory.hxx">
+				RelativePath="WarningCategory.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
