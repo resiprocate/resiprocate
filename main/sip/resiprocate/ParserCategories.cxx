@@ -854,7 +854,7 @@ ParserCategory* ExpiresCategory::clone() const
 void
 ExpiresCategory::parse(ParseBuffer& pb)
 {
-   const char* start = pb.skipWhitespace();
+   pb.skipWhitespace();
    try
    {
       mValue = pb.integer();
@@ -862,8 +862,8 @@ ExpiresCategory::parse(ParseBuffer& pb)
    catch (ParseBuffer::Exception&)
    {
       mValue = 3600;
-      pb.skipToChar(Symbols::SEMI_COLON[0]);
    }
+   pb.skipToChar(Symbols::SEMI_COLON[0]);
    
    parseParameters(pb);
 }
