@@ -606,6 +606,9 @@ TransactionState::processClientInvite(  Message* msg )
             }
             // !jf! memory mgmt? 
             break;
+
+         default:
+            break;
       }
       mIsReliable = false;
       delete msg;
