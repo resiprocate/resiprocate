@@ -91,14 +91,14 @@ main()
       Via via;
       BranchParameter branch = via.param(p_branch);
 
-      branch.transactionId() = "fobbieBletch";
+      branch.reset("fobbieBletch");
       via.transport() = "TLS";
       via.sentHost() = "cathay.com";
       via.sentPort() = 5066;
       via.param(p_branch) = branch;
       foo.embedded().header(h_Vias).push_back(via);
 
-      branch.transactionId() = "bletchieFoo";
+      branch.reset("bletchieFoo");
       via.transport() = "TCP";
       via.sentHost() = "ixolib.com";
       via.sentPort() = 5067;

@@ -5,6 +5,7 @@ bin.debug.Darwin.Power_Macintosh
 bin.debug.Linux.i686
 bin.debug.Linux.i686
 bin.debug.QNX.x86pc
+bin.debug.SunOS.sun4u
 bin.nodebug.Linux.i686
 bin.opt.Linux.i686
 bin.opt.QNX.x86pc
@@ -15,6 +16,7 @@ obj.debug.Darwin.Power_Macintosh
 obj.debug.Linux.i686
 obj.debug.Linux.i686
 obj.debug.QNX.x86pc
+obj.debug.SunOS.sun4u
 obj.nodebug.Linux.i686
 obj.opt.Linux.i686
 obj.opt.QNX.x86pc
