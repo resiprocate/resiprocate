@@ -640,7 +640,7 @@ DateCategory::encode(std::ostream& str) const
    
    pad2(mDayOfMonth, str);  //  04
 
-   str << mDayOfMonth << Symbols::SPACE[0]
+   str << Symbols::SPACE[0]
        << MonthData[mMonth] << Symbols::SPACE[0] // Nov
        << mYear << Symbols::SPACE[0]; // 2002
 
