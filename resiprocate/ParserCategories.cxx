@@ -202,19 +202,19 @@ Url::encode(ostream& str) const
 // RequestLine:
 //====================
 ParserCategory *
-RequestLineComponent::clone(HeaderFieldValue*) const
+RequestLine::clone(HeaderFieldValue*) const
 {
   assert(0);
 }
 
 void 
-RequestLineComponent::parse()
+RequestLine::parse()
 {
    assert(0);
 }
 
 ostream&
-RequestLineComponent::encode(ostream& str) const
+RequestLine::encode(ostream& str) const
 {
    assert(0);
 }
@@ -225,19 +225,19 @@ RequestLineComponent::encode(ostream& str) const
 //====================
 
 ParserCategory *
-StatusLineComponent::clone(HeaderFieldValue*) const
+StatusLine::clone(HeaderFieldValue*) const
 {
   assert(0);
 }
 
 void
-StatusLineComponent::parse()
+StatusLine::parse()
 {
    assert(0);
 }
 
 ostream&
-StatusLineComponent::encode(ostream& str) const
+StatusLine::encode(ostream& str) const
 {
    assert(0);
 }
