@@ -45,10 +45,14 @@ Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE"
 
 Mutex Log::_mutex;
 
-void freeThreadSetting(void* setting)
+extern "C"
 {
-   delete static_cast<Log::ThreadSetting*>(setting);
+   void freeThreadSetting(void* setting)
+   {
+      delete static_cast<Log::ThreadSetting*>(setting);
+   }
 }
+
 
 void 
 Log::initialize(Type type, Level level, const Data& appName)
@@ -57,7 +61,8 @@ Log::initialize(Type type, Level level, const Data& appName)
    
    _type = type;
    _level = level;
-   _appName = Data(copy.substr(copy.find_last_of("/")+1));
+   string sub = copy.substr(copy.find_last_of("/"));
+   _appName = Data(sub.c_str()+1);
  
   char buffer[1024];  
   gethostname(buffer, sizeof(buffer));
