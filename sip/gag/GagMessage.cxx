@@ -80,7 +80,7 @@ GagMessage::serialize(ostream &os, const bool& flag)
 {
   int size = 1;
   os.write((char *)&size, sizeof(int));
-  os.put(flag?0:1);
+  os.put(flag?1:0);
 }
 
 bool
