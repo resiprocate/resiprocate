@@ -67,11 +67,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
       //mDialogId = mCallId;
       //mDialogId.param(p_toTag) = mLocalTag;
       //mDialogId.param(p_fromTag) = mRemoteTag;
-
-      BaseUsage* usage = mCreator->makeUsage(response);
-      assert(usage);
-      mUsages.push_back(usage);
-
    }
    else if (msg.isResponse())
    {
@@ -129,6 +124,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
       assert(usage);
       mUsages.push_back(usage);
    }
+}
+
+void
+Dialog::dispatch(const SipMessage& msg)
+{
+   BaseUsage* usage = mCreator->makeUsage(response);
+   assert(usage);
+   mUsages.push_back(usage);
 }
 
 DialogId Dialog::getId() const
