@@ -19,7 +19,7 @@
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
-#include "resiprocate/ApiCheckList.hxx"
+//#include "resiprocate/ApiCheckList.hxx"
 
 #include "contrib/getopt/getopt.h"
 
