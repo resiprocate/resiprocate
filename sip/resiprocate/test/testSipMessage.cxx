@@ -345,7 +345,8 @@ main(int argc, char** argv)
      assert(response->exists(h_AllowEvents));
      assert(response->header(h_AllowEvents).size() == 0);
 
-     assert(response->brief() == "SipResponse: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
+     cerr << response->brief() << endl;
+     assert(response->brief() == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
      char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
@@ -377,7 +378,7 @@ main(int argc, char** argv)
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
      cerr << r3->brief() << endl;
-     assert(r3->brief() == "SipResponse: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
+     assert(r3->brief() == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
      char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
@@ -441,7 +442,7 @@ main(int argc, char** argv)
       assert(message->header(h_To) < message->header(h_From));
 
       cerr << message->brief() << endl;
-      assert(message->brief() == "SipRequest: INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE / 1 from(tu)");
+      assert(message->brief() == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE / 1 from(tu)");
    }
    
    {
@@ -723,6 +724,8 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> msg11(TestSupport::makeMessage(txt11));
 
       assert(msg1->getTransactionId() == msg1->getTransactionId());
+      cerr << "msg2=" << msg2->getTransactionId() << endl;
+      cerr << "msg3=" << msg3->getTransactionId() << endl;
       assert(msg2->getTransactionId() != msg3->getTransactionId());
       assert(msg3->getTransactionId() == msg4->getTransactionId());
       assert(msg4->getTransactionId() != msg5->getTransactionId());
