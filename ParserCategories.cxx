@@ -425,9 +425,9 @@ NameAddr::parse(ParseBuffer& pb)
    bool laQuote = false;
    if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
    {
-      pb.skipChar();
+      pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
       pb.skipToEndQuote();
-      pb.skipChar();
+      pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
       mDisplayName = pb.data(start);
       laQuote = true;
       pb.skipToChar(Symbols::LA_QUOTE[0]);
@@ -437,12 +437,12 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
-         pb.skipChar();
+         pb.skipChar(Symbols::LA_QUOTE[0]);
       }
    }
    else if (*pb.position() == Symbols::LA_QUOTE[0])
    {
-      pb.skipChar();
+      pb.skipChar(Symbols::LA_QUOTE[0]);
       laQuote = true;
    }
    else
@@ -455,18 +455,39 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
+         laQuote = true;
          mDisplayName = pb.data(start);
-         pb.skipChar();
+         pb.skipChar(Symbols::LA_QUOTE[0]);
       }
    }
    pb.skipWhitespace();
    mUri = new Uri();
    mUri->parse(pb);
-   parseParameters(pb);
    if (laQuote)
    {
-      pb.skipChar();
-      parseParameters(pb);
+      mUri->parseParameters(pb);
+      pb.skipChar('>');
+      pb.skipWhitespace();
+   }
+   parseParameters(pb);
+   for (ParameterList::iterator it = mParameters.begin(); 
+        it != mParameters.end();)
+   {
+      switch ((*it)->getType())
+      {
+         case ParameterTypes::mobility:
+         case ParameterTypes::tag:
+         case ParameterTypes::q: 
+         {
+            mUri->mParameters.push_back(*it);
+            it = mParameters.erase(it);
+            break;
+         }
+         default:
+         {
+            it++;
+         }
+      }
    }
 }
 
@@ -520,7 +541,7 @@ RequestLine::parse(ParseBuffer& pb)
    pb.skipWhitespace();
    mUri = new Uri();
    mUri->parse(pb);
-   parseParameters(pb);
+   mUri->parseParameters(pb);
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    mSipVersion = pb.data(start);

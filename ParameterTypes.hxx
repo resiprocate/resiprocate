@@ -225,6 +225,19 @@ class Received_Param : public ParamBase
 };
 extern Received_Param p_received;
 
+class Mobility_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::mobility;}
+      Mobility_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::mobility] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::mobility] = Symbols::mobility;
+      }
+};
+extern Mobility_Param p_mobility;
+
 class Comp_Param : public ParamBase
 {
    public:

@@ -103,6 +103,7 @@ class Symbols
       static const char * const duration;
       static const char * const branch;
       static const char * const received;
+      static const char * const mobility;
       static const char * const comp;
       static const char * const rport;
 
