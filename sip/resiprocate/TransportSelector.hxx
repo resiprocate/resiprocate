@@ -30,6 +30,9 @@ class TransportSelector
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
+      void shutdown();
+      bool isFinished() const; // anything pending to send? 
+      
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
