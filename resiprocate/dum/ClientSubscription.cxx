@@ -48,7 +48,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
       if (!mOnNewSubscriptionCalled)
       {
-         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To)  << "Terminated");                   
+         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
