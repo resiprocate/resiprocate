@@ -2,6 +2,7 @@
 #define RESIP_CLIENTDIALOGSET_HXX
 
 #include "resiprocate/sam/Dialog.hxx"
+#include "resiprocate/sam/DialogSetId.hxx"
 
 namespace resip
 {
