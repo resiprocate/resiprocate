@@ -2,6 +2,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 #include <iostream>
 #include "TestSupport.hxx"
@@ -35,7 +36,26 @@ main(int argc, char* argv[])
     
     Log::initialize(Log::Cout, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-
+    
+    {
+       Data txt("v=0\r\n"
+                "o=CiscoSystemsSIP-GW-UserAgent 2087 3916 IN IP4 64.124.66.33\r\n"
+                "s=SIP Call\r\n"
+                "c=IN IP4 64.124.66.33\r\n"
+                "t=0 0\r\n"
+                "m=audio 12004 RTP/AVP 0 19\r\n"
+                "c=IN IP4 64.124.66.33\r\n"
+                "a=rtpmap:0 PCMU/8000\r\n"
+                "a=rtpmap:19 CN/8000\r\n");
+       
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+       assert(sdp.session().connection().getAddress() == "64.124.66.33");
+       assert(sdp.session().media().front().port() == 12004);
+    }
+    exit(0);
+    
     {
        Data txt("v=0\r\n"
                 "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
