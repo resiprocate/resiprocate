@@ -58,6 +58,7 @@ class BaseSecurity
       // filename by convention
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const =0;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const =0;
+      virtual void onRemovePEM(const Data& name, PEMType type) const =0;
 
       struct CertificateInfo
       {
@@ -147,12 +148,12 @@ class BaseSecurity
       void addCertPEM (PEMType type, const Data& key, const Data& certPEM, bool write);
       void addCertDER (PEMType type, const Data& key, const Data& certDER, bool write);
       bool hasCert (PEMType type, const Data& key, bool read) const;
-      bool removeCert (PEMType type, const Data& key);
+      bool removeCert (PEMType type, const Data& key, bool remove);
       Data getCertDER (PEMType type, const Data& key, bool read) const;
 
       void addPrivateKeyPEM (PEMType type, const Data& key, const Data& privateKeyPEM, bool write);
       bool hasPrivateKey (PEMType type, const Data& key, bool read) const;
-      bool removePrivateKey (PEMType type, const Data& key);
+      bool removePrivateKey (PEMType type, const Data& key, bool remove);
       Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
 
       //===========================
