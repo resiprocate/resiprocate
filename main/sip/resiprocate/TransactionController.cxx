@@ -19,9 +19,10 @@ using namespace resip;
 #endif
 
 unsigned int TransactionController::MaxTUFifoSize = 0;
+unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
 TransactionController::TransactionController(bool multi, 
-                                             Fifo<Message>& tufifo, 
+                                             TimeLimitFifo<Message>& tufifo, 
                                              bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
@@ -50,7 +51,7 @@ TransactionController::~TransactionController()
 bool 
 TransactionController::isTUOverloaded() const
 {
-   return (MaxTUFifoSize && mTUFifo.size() > MaxTUFifoSize);
+   return !mTUFifo.wouldAccept(TimeLimitFifo<Message>::EnforceTimeDepth);
 }
 
 void
@@ -69,7 +70,7 @@ TransactionController::process(FdSet& fdset)
        !mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
    {
-      mTUFifo.add(new ShutdownMessage);
+      mTUFifo.add(new ShutdownMessage, TimeLimitFifo<Message>::InternalElement);
    }
    else
    {
@@ -159,7 +160,7 @@ TransactionController::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
-   mTUFifo.add(toPost);
+   mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
 }
 
 void

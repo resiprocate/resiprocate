@@ -7,6 +7,12 @@
 
 ######################################################################
 
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+LIBSUFFIX := so
+else
+LIBSUFFIX := a
+endif
+
 ifneq ($(OSTYPE),FreeBSD)
 PTHREAD_LIBNAME := pthread
 else
@@ -49,21 +55,11 @@ CXXFLAGS += -DRESIP_DATA_LOCAL_SIZE=$(RESIP_DATA_LOCAL_SIZE)
 
 DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
 DUM_LIBNAME := dum
-
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
-DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.so
-else
-DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.a
-endif
+DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
 $(DUM_DEPENDS): 
 	cd $(ROOT)/resiprocate/dum; $(MAKE)
 
-
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
-RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.so
-else
-RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.a
-endif
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
 $(RESIPROCATE_DEPENDS): 
 	cd $(ROOT)/resiprocate; $(MAKE)
 

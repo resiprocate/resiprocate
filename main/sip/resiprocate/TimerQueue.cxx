@@ -17,7 +17,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 TimerQueue::TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
-                       Fifo<Message>& tuFifo)
+                       TimeLimitFifo<Message>& tuFifo)
    : mStateMachineFifo(stateMachineFifo),
      mTuFifo(tuFifo)
 {}
@@ -111,7 +111,10 @@ TimerQueue::process()
          //DebugLog(<< "ApplicationTimer " << *i->getMessage());
          // application timer -- queue the payload message
          assert(i->getMessage());
-         mTuFifo.add(i->getMessage());
+         if (!mTuFifo.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement))
+         {
+            CritLog(<< "Hard fifo limit exceeded -- probably doomed");
+         }
       }
       mTimers.erase(i++);
    }
