@@ -1,8 +1,6 @@
-#include "resiprocate/Contents.hxx"
-//#include "resiprocate/OctetContents.hxx"
-//#include "resiprocate/HeaderFieldValueList.hxx"
-#include "resiprocate/sam/Dialog.hxx"
-#include "resiprocate/sam/ClientInviteSession.hxx"
+ #include "resiprocate/Contents.hxx"
+#include "Dialog.hxx"
+#include "ClientInviteSession.hxx"
 
 using namespace resip;
 using namespace std;
