@@ -3,6 +3,7 @@
 
 namespace resip
 {
+class SipMessage;
 
 class ServerAuthManager
 {
@@ -10,7 +11,7 @@ class ServerAuthManager
       ServerAuthManager(Profile& profile);
 
       // return true if request is authorized
-      bool process(const SipMessage& request);
+      bool handle(const SipMessage& request);
       
    private:
       Profile& mProfile;
