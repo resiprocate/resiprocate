@@ -311,7 +311,7 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
       }
 
    }
-   catch (Transport::Exception& e)
+   catch (Transport::Exception& )
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to destination: " << destination);
       mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
