@@ -87,3 +87,9 @@ limp  -contact sip:bob@b.example.com:5060 -aor sip:bob@b.example.com -noRegister
 
 openssl base 64 -in foo -out bar -e ( or the -d to decode) 
 
+
+ openssl pkcs7 -inform DER -in resip-encrpt-out -text -noout -print_certs
+ openssl asn1parse -inform DER -in resip-encrpt-out -i
+
+
+ dumpasn1 -l -t resip-asn-decrypt 
