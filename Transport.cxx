@@ -54,11 +54,19 @@ Transport::socket(TransportType type, bool ipv4)
    switch (type)
    {
       case UDP:
+#ifdef USE_IPV6
          fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+#else
+         fd = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+#endif
          break;
       case TCP:
       case TLS:
+#ifdef USE_IPV6
          fd = ::socket(ipv4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
+#else
+         fd = ::socket(PF_INET, SOCK_STREAM, 0);
+#endif
          break;
       default:
          InfoLog (<< "Try to create an unsupported socket type: " << Tuple::toData(type));
