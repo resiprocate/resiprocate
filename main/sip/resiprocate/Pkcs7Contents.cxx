@@ -118,7 +118,6 @@ Pkcs7Contents::getStaticType()
    return type;
 }
 
-
 const Mime& 
 Pkcs7SignedContents::getStaticType() 
 {
