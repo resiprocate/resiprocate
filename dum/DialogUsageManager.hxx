@@ -1,18 +1,21 @@
+#if !defined(RESIP_DIALOAGUSAGEMANAGER_HXX)
+#define RESIP_DIALOAGUSAGEMANAGER_HXX
+
+namespace resip 
+{
+
+class SipStack;
 class Profile;
 class RedirectManager;
 
-namespace resip {
 
-class SipStack;
-
-
-class SAManager
+class DialogUsageManager
 {
    public:
-      SAManager(SipStack& stack);
-      ~SAManager();
+      DialogUsageManager(SipStack& stack);
+      ~DialogUsageManager();
       
-      void setProfile(const Profile& profile);
+      void setProfile(Profile* profile);
 
       void setManager(RedirectManager* redirect);
       void setManager(ClientAuthManager* client);
@@ -39,11 +42,11 @@ class SAManager
       RegistrationCreator makeRegistration(const Uri& aor);
       OutOfDialogRequestCreator makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      InvSessionCreator makeInvSession(BaseSession&, const Uri& aor);
-      SubscriptionCreator makeSubscription(BaseSession&, const Uri& aor, const Data& eventType);
-      SubscriptionCreator makeRefer(BaseSession&, const Uri& aor);
-      PublicationCreator makePublication(BaseSession&, const Uri& aor, const Data& eventType);
-      RegistrationCreator makeRegistration(BaseSession&, const Uri& aor);
+      InvSessionCreator makeInvSession(BaseUsage&, const Uri& aor);
+      SubscriptionCreator makeSubscription(BaseUsage&, const Uri& aor, const Data& eventType);
+      SubscriptionCreator makeRefer(BaseUsage&, const Uri& aor);
+      PublicationCreator makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
+      RegistrationCreator makeRegistration(BaseUsage&, const Uri& aor);
       
    private:
       DialogImpl& findOrCreateDialog(SipMessage* msg);
@@ -64,10 +67,12 @@ class SAManager
       OutOfDialogHandler* mOutOfDialogHandler;
       
       HashMap<CreatorId, BaseCreatorImpl*> mBaseCreatorMap; 
-      HashMap<CreatorId, std::list<BaseSessionImpl*> > mBaseCreatorMap;
-      HashMap<DialogId, std::list<BaseSessionImpl*> > mBaseCreatorMap;
+      HashMap<CreatorId, std::list<BaseUsageImpl*> > mBaseCreatorMap;
+      HashMap<DialogId, std::list<BaseUsageImpl*> > mBaseCreatorMap;
 
       SipStack& mStack;
 };
 
 }
+
+#endif
