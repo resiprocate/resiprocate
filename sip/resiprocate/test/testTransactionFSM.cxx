@@ -97,13 +97,14 @@ exitusage()
 void
 processTimeouts(int arg)
 {
+    client->process(clientFdSet);
+
     if (WaitQueue.empty())
     {
 	return;
     }
     SipMessage* message = 0;
 
-    client->process(clientFdSet);
 
 #if defined(UGLY) || 1
     // This should:
@@ -177,7 +178,7 @@ processTimeouts(int arg)
     }
 
     // Now go through the data at the TU.
-    while ((message = client->receive()))
+    while (0 != (message = client->receive()))
     {
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
@@ -233,6 +234,8 @@ processTimeouts(int arg)
 	}
     }
 
+    // Print the list of expected events that have failed to happen withing
+    // the specified timeout.
     for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	 i != WaitQueue.end();
 	 /* don't increment */)
@@ -256,9 +259,9 @@ processTimeouts(int arg)
 	    delete *i;
 	    WaitQueue.erase(i++);
 	}
-	/*
 	else
 	{
+	    /*
 	    cerr << "Still waiting for: ";
 	    if ((*i)->mIsRequest)
 	    {
@@ -268,9 +271,9 @@ processTimeouts(int arg)
 	    {
 		cerr << (*i)->mResponseCode << " status code" << endl;
 	    }
+	    */
 	    ++i;
 	}
-	*/
     }
 #endif
 
@@ -506,11 +509,12 @@ main(int argc, char *argv[])
     signal(SIGALRM, processTimeouts);
 
     // Cause a signal to be generated with setitimer for its resolution
-    struct itimerval timer, resetTimer;
+    struct itimerval timer;
     timer.it_value.tv_sec = 0;
     timer.it_value.tv_usec = 100000; // 100 ms resolution
-    resetTimer = timer;
-    setitimer(ITIMER_REAL, &timer, &resetTimer);
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 100000; // 100 ms resolution
+    setitimer(ITIMER_REAL, &timer, NULL);
 
     while (processClause())
     {
