@@ -53,16 +53,9 @@ main(int argc, char* argv[])
 
       while (1)
       {
-         struct timeval tv;
-         fd_set fdSet; int fdSetSize;
-         FD_ZERO(&fdSet); fdSetSize=0;
-       
-         sipStack.buildFdSet(&fdSet,&fdSetSize);
-	  
-         tv.tv_sec=0;
-         tv.tv_usec= 1000 * sipStack.getTimeTillNextProcess();
-	  
-		 int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
+         FdSet fdset; 
+         sipStack.buildFdSet(fdset);
+         int  err = fdset.select(1000 * sipStack.getTimeTillNextProcess());
          int e = errno;
          if ( err == -1 )
          {
@@ -71,7 +64,7 @@ main(int argc, char* argv[])
      
 
          //DebugLog ( << "Try TO PROCESS " );
-         sipStack.process(&fdSet);
+         sipStack.process(fdset);
 
          //DebugLog ( << "Try TO receive " );
          msg = sipStack.receive();
