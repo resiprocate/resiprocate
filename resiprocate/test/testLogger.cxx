@@ -49,7 +49,6 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::Syslog, Log::Info, argv[0]);
-   //Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");
@@ -100,7 +99,7 @@ main(int argc, char* argv[])
    service2a.join();
    service2b.join();
 
-   Log::setLevel(Log::Debug);
+   Log::setLevel(Log::Info);
 
    if (false)
    {
@@ -185,3 +184,4 @@ main(int argc, char* argv[])
  * <http://www.vovida.org/>.
  *
  */
+
