@@ -119,7 +119,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
       }
          
-      if (msg.header(h_SubscriptionState).value() == "active")
+      if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
          {
@@ -130,7 +130,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          
          handler->onUpdateActive(getHandle(), msg);
       }
-      else if (msg.header(h_SubscriptionState).value() == "pending")
+      else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
       {
          if (refreshInterval)
          {
@@ -148,7 +148,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
-      else
+      else if (!mEnded)
       {
          handler->onUpdateExtension(getHandle(), msg);         
       }
@@ -161,6 +161,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " 
                   << mDialog.mRemoteTarget);
+         handler->onTerminated(getHandle(), msg);
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
          mDum.send(sub);
          
@@ -188,22 +189,29 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 void  
 ClientSubscription::requestRefresh()
 {
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-   //!dcm! -- need a mechanism to retrieve this for the event package...part of
-   //the map that stores the handlers, or part of the handler API
-   //mLastRequest.header(h_Expires).value() = 300;   
-   InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
-   send(mLastRequest);
+   if (!mEnded)
+   {
+      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+      //!dcm! -- need a mechanism to retrieve this for the event package...part of
+      //the map that stores the handlers, or part of the handler API
+      //mLastRequest.header(h_Expires).value() = 300;   
+      InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
+      send(mLastRequest);
+   }
 }
 
 void  
 ClientSubscription::end()
 {
    InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
-   
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-   mLastRequest.header(h_Expires).value() = 0;   
-   send(mLastRequest);
+
+   if (!mEnded)
+   {
+      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+      mLastRequest.header(h_Expires).value() = 0;   
+      mEnded = true;
+      send(mLastRequest);
+   }
 }
 
 std::ostream& 
