@@ -759,7 +759,7 @@ bool
 DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 {   
    // RFC 2162 - 8.2.2
-   if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
+   if(request.exists(h_Requires) &&                 // Don't check requires if method is RESIP_ACK or CANCEL
       (request.header(h_RequestLine).getMethod() != RESIP_ACK ||
        request.header(h_RequestLine).getMethod() != RESIP_CANCEL))
    {
@@ -960,7 +960,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
-         case RESIP_INVITE:   // new INVITE
+         case RESIP_INVITE:   // new RESIP_INVITE
          case RESIP_REFER:    // out-of-dialog REFER
          case RESIP_INFO :    // handle non-dialog (illegal) INFOs
          case RESIP_OPTIONS : // handle non-dialog OPTIONS

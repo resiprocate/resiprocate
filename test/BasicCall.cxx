@@ -354,7 +354,7 @@ class TestUas : public TestInviteSessionHandler
       {
          if (mSis.isValid())
          {
-            cout << name << ": Sending BYE." << endl;
+            cout << name << ": Sending RESIP_BYE." << endl;
             mSis->send(mSis->end());
          }
       }
@@ -497,12 +497,12 @@ main (int argc, char** argv)
               cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
 #endif
 
-              // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
+              // Kick off call flow by sending an OPTIONS request then an RESIP_INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
 			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
-              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(RESIP_INVITE)")));
            }
         }
 
