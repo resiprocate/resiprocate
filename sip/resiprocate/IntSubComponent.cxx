@@ -20,7 +20,7 @@ IntSubComponent::clone() const
    return new IntSubComponent(*this);
 }
 
-ostream& operator<<(ostream& stream, IntSubComponent& comp)
+ostream& Vocal2::operator<<(ostream& stream, IntSubComponent& comp)
 {
    return stream << comp.getName() << "=" << comp.value();
 }

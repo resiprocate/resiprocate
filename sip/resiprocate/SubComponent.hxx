@@ -30,10 +30,11 @@ class SubComponent
 
 };
  
+std::ostream& operator<<(std::ostream& stream, const SubComponent& comp);
 
 }
 
-std::ostream& operator<<(std::ostream& stream, const Vocal2::SubComponent& comp);
+
 
 
 #endif
