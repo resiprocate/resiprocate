@@ -12,6 +12,7 @@
 namespace Vocal2
 {
 class UnknownParameter;
+class UnknownParameterType;
 class Parameter;
 
 class ParserCategory : public LazyParser
@@ -68,9 +69,9 @@ class ParserCategory : public LazyParser
       Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
       Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
 #endif
-      Data& param(const Data& param) const;
-      void remove(const Data& param); 
-      bool exists(const Data& param) const;
+      Data& param(const UnknownParameterType& param) const;
+      void remove(const UnknownParameterType& param); 
+      bool exists(const UnknownParameterType& param) const;
       
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;

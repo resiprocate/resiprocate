@@ -2,7 +2,7 @@
 #define BaseException_hxx
 
 static const char* const Vocal2BaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.3 2003/01/20 02:40:31 fluffy Exp $";
+    "$Id: BaseException.hxx,v 1.4 2003/01/22 00:55:42 davidb Exp $";
 
 #include <exception>
 #include <iostream>
@@ -18,9 +18,9 @@ class BaseException : public std::exception
       virtual const char* name() const;
       
    protected:
-      BaseException( const Vocal2::Data& msg,
-                  const Vocal2::Data& file,
-                  const int line);
+      BaseException(const Vocal2::Data& msg,
+                    const Vocal2::Data& file,
+                    const int line);
       ~BaseException() throw();
       
       Vocal2::Data message;

@@ -14,6 +14,11 @@ class TestData
       void main()
       {
          {
+            Data transport("transport");
+            assert(isEqualNoCase(transport, "transport"));
+         }
+
+         {
             Data d1("0");
             Data d2("0");
             d1 ^= d2;
