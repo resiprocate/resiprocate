@@ -14,7 +14,7 @@ void A()
        t < Headers::UNKNOWN;
        ++t)
    {
-      DebugLog(<< "A: "<< t << ":'"<<Headers::HeaderNames[t]<<"'");
+      DebugLog(<< "A: "<< t << ":'" << Headers::getHeaderName(t) << "'");
    }
 }
 
@@ -24,7 +24,7 @@ void B()
        t < Headers::UNKNOWN;
        ++t)
    {
-      DebugLog(<<"B: "<< t << ":'"<<Headers::HeaderNames[t]<<"'");
+      DebugLog(<<"B: "<< t << ":'" << Headers::getHeaderName(t) << "'");
    }
 }
 int

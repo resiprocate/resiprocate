@@ -4,16 +4,6 @@
 #include "sip2/sipstack/supported.hxx"
 #include "sip2/util/Data.hxx"
 
-// !dlb! could use the following hack:
-// requires ViaCategory etc.
-// requires using int instead of Headers::Type in some base classes
-// advantage -- won't compile if named parser doesn't exist
-#if 0
-#include "sip2/sipstack/ParserCategories.hxx"
-#define single(_enum, _type) _enum, _enum##_type = _type::UnknownParserCategory
-#define multi(_enum, _type) _enum, _enum##_type = _type::UnknownParserCategory
-#endif
-
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
 #define UNUSEDsingle(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
 #define UNUSEDmulti(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
@@ -93,18 +83,17 @@ class Headers
          NONE
       };
 
-      static bool CommaTokenizing[MAX_HEADERS];
-      static Data HeaderNames[MAX_HEADERS];
-
       // get enum from header name
       static Type getType(const char* name, int len);
       static bool isCommaTokenizing(Type type);
+      static const Data& getHeaderName(int);
+
+      // treat as private
+      static bool CommaTokenizing[MAX_HEADERS+1];
+      static Data HeaderNames[MAX_HEADERS+1];
 };
  
 }
-
-#endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -155,3 +144,5 @@ class Headers
  * <http://www.vovida.org/>.
  *
  */
+
+#endif
