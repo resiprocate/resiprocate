@@ -632,6 +632,14 @@ DnsResult::primeResults()
          bool changed = (mType == Pending);
          mType = Available;
          if (changed) mHandler->handle(this);
+
+         // recurse if there are no results. This could happen if the DNS SRV
+         // target record didn't have any A/AAAA records. This will terminate if we
+         // run out of SRV results. 
+         if (mResults.empty())
+         {
+            primeResults();
+         }
       }
       else
       {
@@ -643,16 +651,10 @@ DnsResult::primeResults()
          mType = Pending;
          mPort = next.port;
          mTransport = next.transport;
-         DebugLog (<< "No A or AAAA record for " << next.target);
+         DebugLog (<< "No A or AAAA record for " << next.target << " in additional records");
          lookupAAAARecords(next.target);
-      }
-
-      // recurse if there are no results. This could happen if the DNS SRV
-      // target record didn't have any A/AAAA records. This will terminate if we
-      // run out of SRV results. 
-      if (mResults.empty())
-      {
-         primeResults();
+         // don't call primeResults since we need to wait for the response to
+         // AAAA/A query first
       }
    }
    else
@@ -663,7 +665,9 @@ DnsResult::primeResults()
    }
 
    // Either we are finished or there are results primed
-   assert(mType == Finished || (mType == Available && !mResults.empty()));
+   assert(mType == Finished || 
+          mType == Pending || 
+          (mType == Available && !mResults.empty()));
 }
 
 // implement the selection algorithm from rfc2782 (SRV records)
