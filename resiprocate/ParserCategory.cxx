@@ -21,7 +21,6 @@ ParserCategory::ParserCategory(const ParserCategory& rhs)
    }
 }
 
-
 ParserCategory::~ParserCategory()
 {
    for (ParameterList::iterator it = mParameters.begin();
