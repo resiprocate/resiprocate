@@ -132,7 +132,8 @@ class BaseSecurity
    private:
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
-
+      static void dumpAsn(char*, Data);
+      
       // root cert list
       X509_STORE*    mRootCerts;
 
