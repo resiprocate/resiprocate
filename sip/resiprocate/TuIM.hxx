@@ -1,6 +1,8 @@
 #if !defined(UDPTRANSPORT_HXX)
 #define UDPTRANSPORT_HXX
 
+#include <vector>
+
 #include "sip2/sipstack/Security.hxx"
 
 namespace Vocal2
@@ -65,6 +67,15 @@ class TuIM
       Uri mAor;
       Uri mContact;
 	  Data mPassword;
+
+	  class Buddy
+	  {
+	  public:
+		  Uri uri;
+		  Data group;
+	  };
+
+	  vector<Buddy> mBuddy;
 };
 
 }
