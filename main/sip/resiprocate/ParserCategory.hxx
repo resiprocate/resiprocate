@@ -20,15 +20,15 @@ class ParserCategory
    public:
       ParserCategory(HeaderFieldValue* headerFieldValue)
          : mHeaderField(headerFieldValue),
-           mIsParsed(false)
+           mIsParsed(false),
+           mMine(false)
       {}
 
       ParserCategory(const ParserCategory& rhs);
+      ParserCategory& operator=(const ParserCategory& rhs);
 
       virtual ~ParserCategory();
 
-      // called by HeaderFieldValue::clone()
-      ParserCategory* clone(HeaderFieldValue*) const;
       virtual ParserCategory* clone() const = 0;
 
       virtual std::ostream& encode(std::ostream& str) const = 0;
@@ -83,17 +83,7 @@ class ParserCategory
       ParserCategory();
 
       // call before every access 
-      void checkParsed() const
-      {
-         // !dlb! thread safety?
-         if (!mIsParsed)
-         {
-            ParserCategory* ncThis = const_cast<ParserCategory*>(this);
-            ncThis->mIsParsed = true;
-            ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
-            ncThis->parse(pb);
-         }
-      }
+      void checkParsed() const;
 
       Parameter* getParameterByEnum(int type) const;
       void removeParameterByEnum(int type);
@@ -110,6 +100,7 @@ class ParserCategory
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;
       bool mIsParsed;
+      bool mMine;
 };
 
 std::ostream&
