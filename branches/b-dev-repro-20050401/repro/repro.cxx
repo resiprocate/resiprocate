@@ -72,11 +72,11 @@ main(int argc, char** argv)
      // Should log about it.
      RequestProcessorChain* locators = new RequestProcessorChain();
   
-     RouteProcessor* rp = new RouteProcessor();
+     RouteProcessor* rp = new RouteProcessor;
      locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
 	 
-	 AmIResponsible* isme = new AmIResponsible();
-	 locators->addProcessor(std::auto_ptr<AmIResponsible>(isme));
+	 AmIResponsible* isme = new AmIResponsible;
+	 locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
 	 
 	 // [TODO] !rwm! put Gruu monkey here
 	 
@@ -127,7 +127,7 @@ main(int argc, char** argv)
 
      auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
      dum->setServerAuthManager(uasAuth);
-     stack.registerTransactionUser(*dum);
+     //stack.registerTransactionUser(*dum);
 
      // Install rules so that the registrar only gets REGISTERs
      resip::MessageFilterRuleList ruleList;
