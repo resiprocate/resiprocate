@@ -41,13 +41,13 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mDestroyer(this),
      mCurrentRetransmit200(0)
 {
-   InfoLog ( << "^^^ InviteSession::InviteSession " << this);   
+   DebugLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
 }
 
 InviteSession::~InviteSession()
 {
-   InfoLog ( << "^^^ InviteSession::~InviteSession " << this);   
+   DebugLog ( << "^^^ InviteSession::~InviteSession " << this);   
    delete mCurrentLocalSdp;
    delete mCurrentRemoteSdp;
    delete mProposedLocalSdp;

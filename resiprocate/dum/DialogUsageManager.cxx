@@ -284,7 +284,7 @@ DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
       throw new DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
    }
       
-   InfoLog (<< "DialogUsageManager::makeNewSession" );   
+   DebugLog (<< "DialogUsageManager::makeNewSession" );   
    if (appDs == 0)
    {
       appDs = new AppDialogSet(*this);
@@ -295,10 +295,10 @@ DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
    appDs->mDialogSetId = ds->getId();
    ds->mAppDialogSet = appDs;
    
-   InfoLog ( << "************* Adding DialogSet ***************" ); 
-   InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
+   DebugLog ( << "************* Adding DialogSet ***************" ); 
+   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
-   InfoLog ( << "After: " << Inserter(mDialogSetMap) );
+   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
    
    
    DebugLog (<< "Creator: " << creator->getLastRequest());
@@ -408,7 +408,7 @@ DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const NameAdd
 void
 DialogUsageManager::send(SipMessage& msg)
 {
-   InfoLog (<< "SEND: " << msg);
+   DebugLog (<< "SEND: " << msg);
    if (msg.isRequest()) //!dcm! -- invariant?
    {
       //this is all very scary and error-prone, as the TU has some retramissions
@@ -542,18 +542,18 @@ DialogUsageManager::process(FdSet& fdset)
       if (!msg.get())  return;
       if (sipMsg)
       {
-         InfoLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
+         DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
          if (sipMsg->isRequest())
          {
 
 //          if( !validateRequest(*sipMsg) )
 //          {
-//             InfoLog (<< "Failed request validation " << *sipMsg);
+//             DebugLog (<< "Failed request validation " << *sipMsg);
 //             return;
 //          }
 //          if ( !validateTo(*sipMsg) )
 //          {
-//             InfoLog (<< "Failed to validation " << *sipMsg);
+//             DebugLog (<< "Failed to validation " << *sipMsg);
 //             return;
 //          }
             if (sipMsg->header(h_From).exists(p_tag))
@@ -712,7 +712,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
-   InfoLog ( << "DialogUsageManager::processRequest: " << request.brief());
+   DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
    
    assert(mAppDialogSetFactory);
    if (!request.header(h_To).exists(p_tag))
@@ -796,10 +796,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
                appDs->mDialogSetId = dset->getId();
                dset->mAppDialogSet = appDs;
 
-               InfoLog ( << "************* Adding DialogSet ***************" ); 
-               InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
+               DebugLog ( << "************* Adding DialogSet ***************" ); 
+               DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
                mDialogSetMap[dset->getId()] = dset;
-               InfoLog ( << "After: " << Inserter(mDialogSetMap) );
+               DebugLog ( << "After: " << Inserter(mDialogSetMap) );
                
                dset->dispatch(request);
             }
@@ -867,14 +867,14 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   InfoLog ( << "DialogUsageManager::processResponse: " << response);
+   DebugLog ( << "DialogUsageManager::processResponse: " << response);
    if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   
       if (ds)
       {
-         InfoLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
          ds->dispatch(response);
       }
       else
@@ -929,8 +929,8 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
-   InfoLog ( << "Looking for dialogSet: " << id << " in map:" );
-   InfoLog ( << Inserter(mDialogSetMap) );   
+   DebugLog ( << "Looking for dialogSet: " << id << " in map:" );
+   DebugLog ( << Inserter(mDialogSetMap) );   
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
    
     if (it == mDialogSetMap.end())
@@ -960,10 +960,10 @@ DialogUsageManager::findCreator(const DialogId& id)
 void 
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
-   InfoLog ( << "************* Removing DialogSet ***************" ); 
-   InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
+   DebugLog ( << "************* Removing DialogSet ***************" ); 
+   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
-   InfoLog ( << "After: " << Inserter(mDialogSetMap) );
+   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
 }
 
 ClientSubscriptionHandler* 

@@ -42,14 +42,14 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 	{
 		// Let handler deal with message
 		mRequest = msg; 
-	    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method.");   
+	    DebugLog ( << "ServerOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method.");   
 		pHandler->onReceivedRequest(getHandle(), msg);  // Wait for application to send response
 	}
 	else
 	{
 		if(msg.header(h_CSeq).method() == OPTIONS)
 		{
-		    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
+           DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
 			// If no handler exists for OPTIONS then handle internally
 			mRequest = msg; 
 			mDum.send(answerOptions());
@@ -57,7 +57,7 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 		}
 		else
 		{
-		    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method - sending 405.");   
+           DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method - sending 405.");   
 			// No handler found for out of dialog request - return a 405
 			mDum.makeResponse(mResponse, msg, 405);
 			mDum.send(mResponse);
@@ -80,27 +80,49 @@ ServerOutOfDialogReq::answerOptions(bool fIncludeAllows)
 	Profile *pProfile = mDum.getProfile();
 
 	// Add Allows (if required)
+
 	mResponse.header(h_Allows).clear();
+
 	if(fIncludeAllows)
+
 	{
+
 		mResponse.header(h_Allows) = pProfile->getAllowedMethods();
+
 	}
 
+
+
 	// Add Accept Header
+
 	mResponse.header(h_Accepts).clear();
+
 	mResponse.header(h_Accepts) = pProfile->getSupportedMimeTypes();
 
+
+
 	// Add Accept-Encoding Header
+
 	mResponse.header(h_AcceptEncodings).clear();
+
 	mResponse.header(h_AcceptEncodings) = pProfile->getSupportedEncodings();
 
+
+
 	// Add Accept-Language Header
+
 	mResponse.header(h_AcceptLanguages).clear();
+
 	mResponse.header(h_AcceptLanguages) = pProfile->getSupportedLanguages();
 
+
+
 	// Add Supported Header
+
 	mResponse.header(h_Supporteds).clear();
+
 	mResponse.header(h_Supporteds) = pProfile->getSupportedOptionTags();
+
 
 	return mResponse;
 }

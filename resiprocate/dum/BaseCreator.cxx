@@ -60,7 +60,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
    mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
    
-   InfoLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
 
 void

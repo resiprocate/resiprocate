@@ -79,7 +79,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case INVITE:
          case SUBSCRIBE:
          case REFER:
-            InfoLog ( << "UAS dialog ID creation, DS: " << ds.getId());            
+            DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());            
             mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
             mRemoteNameAddr = request.header(h_From);
             mLocalNameAddr = request.header(h_To);
@@ -114,11 +114,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       mRemoteCSeq = request.header(h_CSeq).sequence();
       mLocalCSeq = 1;
 
-      InfoLog ( << "************** Created Dialog as UAS **************" );      
-      InfoLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
-      InfoLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
-      InfoLog ( << "mLocalContact: " << mLocalContact );
-      InfoLog ( << "mRemoteTarget: " << mRemoteTarget );
+      DebugLog ( << "************** Created Dialog as UAS **************" );      
+      DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
+      DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
+      DebugLog ( << "mLocalContact: " << mLocalContact );
+      DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
    }
    else if (msg.isResponse())
    {
@@ -189,11 +189,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       
       mLocalCSeq = response.header(h_CSeq).sequence();
       mRemoteCSeq = 0;
-      InfoLog ( << "************** Created Dialog as UAC **************" );      
-      InfoLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
-      InfoLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
-      InfoLog ( << "mLocalContact: " << mLocalContact );
-      InfoLog ( << "mRemoteTarget: " << mRemoteTarget );
+      DebugLog ( << "************** Created Dialog as UAC **************" );      
+      DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr ); 
+      DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr ); 
+      DebugLog ( << "mLocalContact: " << mLocalContact );
+      DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
 
       
    }
@@ -263,7 +263,7 @@ Dialog::cancel()
 void
 Dialog::dispatch(const SipMessage& msg)
 {
-   InfoLog ( << "Dialog::dispatch: " << msg.brief());
+   DebugLog ( << "Dialog::dispatch: " << msg.brief());
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
@@ -272,7 +272,7 @@ Dialog::dispatch(const SipMessage& msg)
          case INVITE:  // new INVITE
             if (mInviteSession == 0)
             {
-               InfoLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
+               DebugLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
                mInviteSession = makeServerInviteSession(request);
             }
             mInviteSession->dispatch(request);
@@ -420,7 +420,7 @@ Dialog::dispatch(const SipMessage& msg)
          }
          if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
          {
-            InfoLog( << "about to retransmit request with digest credentials" );
+            InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << *lastRequest );
             
             mDum.send(*lastRequest);
@@ -450,7 +450,7 @@ Dialog::dispatch(const SipMessage& msg)
                //assert (creator); // stray responses have been rejected already 
                //creator->dispatch(response); 
                // #endif!jf! 
-               InfoLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
+               DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
 
                mInviteSession = makeClientInviteSession(response);
                mInviteSession->dispatch(response);
@@ -709,7 +709,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
-   InfoLog ( << "Dialog::makeRequest: " << request );
+   DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
 void 
@@ -760,7 +760,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
    }
-   InfoLog ( << "Dialog::makeResponse: " << response);   
+   DebugLog ( << "Dialog::makeResponse: " << response);   
 }
 
 
