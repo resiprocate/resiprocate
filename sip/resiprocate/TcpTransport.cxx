@@ -239,7 +239,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
 	       timeout.tv_sec = 16 * Timer::T1 / 1000; /* !rk! change? */
 	       timeout.tv_usec = 0;
 
-	       if (select(sock, &rset, &wset, NULL, &timeout) < 1)
+	       if (select(sock+1, &rset, &wset, NULL, &timeout) < 1)
 	       {
                   DebugLog( << "Timeout on TCP connect to " <<  data->destination); 
 		  close(sock);
