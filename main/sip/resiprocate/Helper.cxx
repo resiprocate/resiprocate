@@ -256,6 +256,9 @@ Helper::makeResponse(SipMessage& response,
                      const Data& warning)
 {
    makeResponse(response,request, responseCode, reason,hostname, warning);
+   // in general, this should not create a Contact header since only requests
+   // that create a dialog (or REGISTER requests) should produce a response with
+   // a contact(s). 
    response.header(h_Contacts).clear();
    response.header(h_Contacts).push_back(myContact);
 }
@@ -303,6 +306,10 @@ Helper::makeResponse(SipMessage& response,
 
    if (responseCode/100 == 2)
    {
+      // in general, this should not create a Contact header since only requests
+      // that create a dialog (or REGISTER requests) should produce a response with
+      // a contact(s). 
+      
       NameAddr contact;
       response.header(h_Contacts).push_back(contact);
    }
@@ -322,7 +329,7 @@ Helper::makeResponse(SipMessage& response,
    }
    else
    {
-      Data &reason(response.header(h_StatusLine).reason());
+      Data& reason(response.header(h_StatusLine).reason());
       switch (responseCode)
       {
          case 100: reason = "Trying"; break;
@@ -393,6 +400,10 @@ Helper::makeResponse(const SipMessage& request,
 {
    SipMessage* response = new SipMessage;
    makeResponse(*response, request, responseCode, reason, hostname, warning);
+
+   // in general, this should not create a Contact header since only requests
+   // that create a dialog (or REGISTER requests) should produce a response with
+   // a contact(s). 
    response->header(h_Contacts).clear();
    response->header(h_Contacts).push_back(myContact);
    return response;
