@@ -1,4 +1,3 @@
-
 *.d
 ExpandedSipMessage
 MarshalOpInvite.cxx
@@ -9,7 +8,7 @@ bin.*
 headers-hash.c
 html
 obj.*
-parameters.cxx
+testSipStack1
 testSipStack1
 testUdp
 tmp
