@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2002/09/22 02:37:17 jason Exp $
+# $Id: Makefile,v 1.22 2002/09/22 03:02:55 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -30,10 +30,11 @@ SRC =	Condition.cxx \
 	Timer.cxx \
 	TimerQueue.cxx \
 	TransactionMap.cxx \
+	TransactionState.cxx \
+	Executive.cxx \
+	Preparse.cxx \
+	SipStack.cxx \
 
-#	Executive.cxx \
-#	Preparse.cxx \
-#	SipStack.cxx \
 
 
 OSRC =   *.hxx Makefile
