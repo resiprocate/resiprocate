@@ -79,7 +79,6 @@ Uri::parse(ParseBuffer& pb)
       // generic URL
       assert(0);
    }
-   // parse some of the parameters? for now, let them fall into the header
 }
 
 ParserCategory*
@@ -91,7 +90,18 @@ Uri::clone() const
 std::ostream& 
 Uri::encode(std::ostream& str) const
 {
-   assert(0);
+   str << mScheme << Symbols::COLON;
+   if (!mUser.empty())
+   {
+      str << mUser;
+      if (!mPassword.empty())
+      {
+         str << Symbols::COLON << mPassword;
+      }
+      str << Symbols::AT_SIGN;
+   }
+   str << mHost << Symbols::COLON << mPort;
+   encodeParameters(str);
    return str;
 }
 

@@ -34,6 +34,7 @@ class ParameterTypes
          duration,
          branch,
          received,
+         mobility,
 
          comp,
          rport,

@@ -99,6 +99,7 @@ const char * const Symbols::fromTag = "from-tag";
 const char * const Symbols::duration = "duration";
 const char * const Symbols::branch = "branch";
 const char * const Symbols::received = "received";
+const char * const Symbols::mobility = "mobility";
 const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
 
