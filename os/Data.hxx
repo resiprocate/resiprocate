@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.18 2002/10/31 01:08:18 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.19 2002/10/31 01:13:25 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -67,6 +67,12 @@ class Data
       friend class ParseBuffer;
       friend class DataBuffer;
 };
+
+inline bool isEqualNoCase(const Data& left, const Data& right)
+{
+   return ( (left.size() == right.size()) &&
+            (strncasecmp(left.data(), right.data(), left.size()) == 0) );
+}
 
 bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
