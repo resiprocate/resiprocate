@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.118 2003/05/01 20:44:04 rohan Exp $
+# $Id: Makefile,v 1.119 2003/05/01 21:18:11 rohan Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -21,7 +21,6 @@ SRC = \
 	os/Logger.cxx \
 	os/MD5Stream.cxx \
 	os/Mutex.cxx \
-#	os/RecursiveMutex.cxx \
 	os/ParseBuffer.cxx \
 	os/RWMutex.cxx \
 	os/Random.cxx \
