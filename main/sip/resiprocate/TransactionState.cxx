@@ -4,6 +4,7 @@
 #include <sipstack/TimerMessage.hxx>
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Helper.hxx>
+#include <sipstack/SendingMessage.hxx>
 #include <util/Logger.hxx>
 
 using namespace Vocal2;
@@ -22,6 +23,9 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
 
 TransactionState::~TransactionState()
 {
+   const Data& tid = mMsgToRetransmit->getTransactionId();
+   mStack.mTransactionMap.remove(tid);
+
    delete mCancelStateMachine;
    mCancelStateMachine = 0;
    
@@ -85,9 +89,10 @@ TransactionState::process(SipStack& stack)
    }
    else // new transaction
    {
-      DebugLog (<< "Create new transaction for msg ");
       if (sip)
       {
+         DebugLog (<< "Create new transaction for sip msg ");
+
          if (sip->isRequest())
          {
             // create a new state object and insert in the TransactionMap
@@ -162,6 +167,7 @@ TransactionState::processClientNonInvite(  Message* msg )
 { 
    if (isRequest(msg) && !isInvite(msg) && isFromTU(msg))
    {
+      DebugLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       mMsgToRetransmit = sip;
       mStack.mTimers.add(Timer::TimerF, msg->getTransactionId(), 64*Timer::T1 );
@@ -169,11 +175,13 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else if (isSentReliable(msg))
    {
+      DebugLog (<< "received sent reliably message");
       // ignore
       delete msg;
    } 
    else if (isSentUnreliable(msg))
    {
+      DebugLog (<< "received sent unreliably message");
       // state might affect this !jf!
       // should we set mIsReliable = false here !jf!
       mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
@@ -181,6 +189,8 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else if (isResponse(msg) && !isFromTU(msg)) // from the wire
    {
+      DebugLog (<< "received response from wire");
+
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
@@ -217,6 +227,8 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else if (isTimer(msg))
    {
+      DebugLog (<< "received timer in client non-invite transaction");
+
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
       {
@@ -225,8 +237,8 @@ TransactionState::processClientNonInvite(  Message* msg )
             {
                unsigned long d = timer->getDuration();
                if (d < Timer::T2) d *= 2;
-               mStack.mTimers.add(Timer::TimerG, msg->getTransactionId(), d);
-               sendToWire(mMsgToRetransmit); 
+               mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), d);
+               mStack.mTransportSelector.retransmit(mMsgToRetransmit); 
                delete msg;
             }
             else
@@ -240,7 +252,7 @@ TransactionState::processClientNonInvite(  Message* msg )
             if (mState == Proceeding)
             {
                mStack.mTimers.add(Timer::TimerE2, msg->getTransactionId(), Timer::T2);
-               sendToWire(mMsgToRetransmit); 
+               mStack.mTransportSelector.retransmit(mMsgToRetransmit); 
                delete msg;
             }
             else 
@@ -256,7 +268,12 @@ TransactionState::processClientNonInvite(  Message* msg )
             delete this;
             break;
 
+         case Timer::TimerK:
+            delete this;
+            break;
+
          default:
+
             assert(0);
             break;
       }
@@ -354,7 +371,8 @@ TransactionState::processClientInvite(  Message* msg )
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
                   
-                  sendToWire(mMsgToRetransmit); 
+                  // want to use the same transport as was selected for Invite
+                  mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
                   sendToTU(msg); // don't delete msg
                   delete this;
                }
@@ -367,12 +385,12 @@ TransactionState::processClientInvite(  Message* msg )
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
                      mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                      delete invite;
-                     sendToWire(mMsgToRetransmit); 
+                     mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
                      sendToTU(msg); // don't delete msg
                   }
                   else if (mState == Completed)
                   {
-                     sendToWire(mMsgToRetransmit); 
+                     mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
                      sendToTU(msg); // don't delete msg
                   }
                   else
@@ -407,7 +425,7 @@ TransactionState::processClientInvite(  Message* msg )
                if (d < Timer::T2) d *= 2;
 
                mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), d);
-               sendToWire(mMsgToRetransmit); 
+               mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
             }
             delete msg;
             break;
@@ -452,7 +470,7 @@ TransactionState::processServerNonInvite(  Message* msg )
       }
       else if (mState == Proceeding || mState == Trying)
       {
-         sendToWire(mMsgToRetransmit); 
+         mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
          delete msg;
       }
       else
@@ -703,7 +721,7 @@ TransactionState::processServerInvite(  Message* msg )
             if (mState == Completed)
             {
                DebugLog (<< "TimerG fired. retransmit, and readd TimerG");
-               sendToWire(mMsgToRetransmit); // don't delete msg
+               mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
                mStack.mTimers.add(Timer::TimerG, msg->getTransactionId(), timer->getDuration()*2 );
             }
             else
@@ -817,21 +835,22 @@ TransactionState::isTranportError(Message* msg) const
 bool
 TransactionState::isSentIndication(Message* msg) const
 {
-   return false; // !jf!
+   return msg && dynamic_cast<SendingMessage*>(msg);
 }
 
 bool
 TransactionState::isSentReliable(Message* msg) const
 {
-   return false; // !jf!
+   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
+   return (sending && sending->isReliable());
 }
 
 bool
 TransactionState::isSentUnreliable(Message* msg) const
 {
-   return false; // !jf!
+   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
+   return (sending && !sending->isReliable());
 }
-
 
 
 void
