@@ -309,6 +309,8 @@ ClientInviteSession::end()
          InfoLog ( << "ClientInviteSession::end, Progammer error)" );        
          assert(false);//throw UsageUseException("Progammer error", __FILE__, __LINE__);
    }
+   SipMessage *temp = 0;
+   return *temp;
 }
 
 //!dcm! -- probably kill
