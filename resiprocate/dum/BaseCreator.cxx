@@ -50,6 +50,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
       contact = mDum.getProfile()->getGruu(target.uri().getAor());
       mLastRequest.header(h_Contacts).push_front(contact);
    }
+   else
+   {
+      contact.uri().user() = mDum.getProfile()->getDefaultAor().uri().user();      
+      mLastRequest.header(h_Contacts).push_front(contact);
+   }
+   
    
    Via via;
    mLastRequest.header(h_Vias).push_front(via);

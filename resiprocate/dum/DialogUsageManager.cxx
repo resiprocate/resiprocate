@@ -288,7 +288,9 @@ DialogUsageManager::sendResponse(const SipMessage& response)
 SipMessage&
 DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   return makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
+   inv.header(h_RequestLine).uri() = target;
+   return inv;   
 }
 
 SipMessage&
@@ -344,6 +346,12 @@ DialogUsageManager::prepareInitialRequest(SipMessage& request)
    // !jf! 
    //request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
    //request.header(h_Allows) = mProfile->getAllowedMethods();
+}
+
+void 
+DialogUsageManager::buildFdSet(FdSet& fdset)
+{
+   mStack.buildFdSet(fdset);   
 }
 
 void
