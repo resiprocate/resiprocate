@@ -116,7 +116,7 @@ class BaseSecurity
       };
 
       // returns NULL if fails. returns the data that was originally signed
-      Contents* checkSignature( const Data& signerAor, MultipartSignedContents*, Data& signedBy, SignatureStatus sigStat );
+      Contents* checkSignature( const Data& signerAor, MultipartSignedContents*, Data& signedBy, SignatureStatus& sigStat );
 
    private:
       friend class SecuredTransportCtx;
