@@ -19,6 +19,52 @@ main(int argc, char* argv[])
    Log::initialize(Log::COUT, l, argv[0]);
 
    {
+      Uri uri("sips:192.168.2.12");
+
+      assert(uri.scheme() == "sips");
+      assert(uri.password() == "");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "192.168.2.12");
+      assert(uri.port() == 0);
+   }
+
+   {
+      Uri uri("sips:host.foo.com");
+      assert(uri.scheme() == "sips");
+      assert(uri.password() == "");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "host.foo.com");
+      assert(uri.port() == 0);
+   }
+
+   {
+      Uri uri("sip:user;x-v17:password@host.com:5555");
+
+      cerr << "user!!" << uri.user() << endl;
+      cerr << "password!!" << uri.password() << endl;
+      cerr << "userParams!!" << uri.userParameters() << endl;
+
+      assert(uri.scheme() == "sip");
+      assert(uri.user() == "user;x-v17");
+      assert(uri.password() == "password");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "host.com");
+      assert(uri.port() == 5555);
+   }
+
+   {
+      // test bad parses
+      try
+      {
+         Uri("noscheme@foo.com:1202");
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+      }
+   }
+
+   {
       // test q comparison
       Uri w1("sip:wombat@192.168.2.221:5062;transport=Udp;q=1.0");
       Uri w2("sip:wombat@192.168.2.221:5063;transport=Udp;q=0.5");
