@@ -1,41 +1,26 @@
-#ifndef SipFrag_hxx
-#define SipFrag_hxx
+#ifndef ApplicationSip_hxx
+#define ApplicationSip_hxx
 
-#include <map>
-
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/util/Data.hxx"
+#include "sip2/sipstack/SipFrag.hxx"
 
 namespace Vocal2
 {
 
-class SipMessage;
-
-// Mostly works -- 
-// Preparse insists on a start line while SIP frag may not have one.
-class SipFrag : public Contents
+// map content-type application/sip to the same parser as message/sip
+// some Cisco gateways send NOTIFY with content-type application/sip
+class ApplicationSip : public SipFrag
 {
    public:
-      SipFrag(const Mime& contentsType = getStaticType());
-      SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
-      SipFrag(const Data& data, const Mime& contentsType);
-      SipFrag(const SipFrag& rhs);
-      ~SipFrag();
-      SipFrag& operator=(const SipFrag& rhs);
-
+      ApplicationSip(const Mime& contentsType = getStaticType());
+      ApplicationSip(HeaderFieldValue* hfv, const Mime& contentsType);
+      ApplicationSip(const Data& data, const Mime& contentsType);
+      ApplicationSip(const ApplicationSip& rhs);
+      ApplicationSip& operator=(const ApplicationSip& rhs);
       virtual Contents* clone() const;
-
       static const Mime& getStaticType() ;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      SipMessage& message() {checkParsed(); return *mMessage;}
-
    private:
-      SipMessage* mMessage;
-      static ContentsFactory<SipFrag> Factory;
+      static ContentsFactory<ApplicationSip> Factory;
 };
 
 }
