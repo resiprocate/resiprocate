@@ -1,4 +1,4 @@
-$Id: TODO,v 1.9 2003/01/07 06:28:00 davidb Exp $
+$Id: TODO,v 1.10 2003/01/08 20:44:38 davidb Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -53,3 +53,8 @@ handle the case where a request gets sent over the wire to the stack with no via
 
 - change StatusLine::responseCode() to StatusLine::statusCode()
 - change CSeqCategory to CSeq
+
+ParameterTypeEnums => ParametersEnum
+ParameterTypes => Parameters
+
+break up ParserCategories
