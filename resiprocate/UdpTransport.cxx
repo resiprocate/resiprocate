@@ -58,9 +58,9 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 
    // make non blocking 
-#if WIN32
-   unsigned long block = 0;
-   int errNoBlock = ioctlsocket( mFd, FIONBIO , &block );
+#ifdef WIN32
+   unsigned long noBlock = 1;
+   int errNoBlock = ioctlsocket( mFd, FIONBIO , &noBlock );
    assert( errNoBlock == 0 );
 #else
    int flags  = fcntl( mFd, F_GETFL, 0);
@@ -132,12 +132,14 @@ UdpTransport::process(FdSet& fdset)
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
 
+   //DebugLog( << "starting recvfrom" );
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
+ //DebugLog( << "completed recvfrom" );
 
    if ( len == SOCKET_ERROR )
    {
@@ -146,6 +148,7 @@ UdpTransport::process(FdSet& fdset)
       
       switch (err)
       {
+	  case 0:
          case EWOULDBLOCK:
          {
          }
