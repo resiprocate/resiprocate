@@ -11,7 +11,7 @@ class SubscriptionCreator : public BaseCreator
   public:
    
       //probably want to have things like the Accept list here too
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event);
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, int subscriptionTime);
   private:
     Data mEvent; 
 };

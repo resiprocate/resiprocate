@@ -11,6 +11,7 @@ using namespace resip;
 
 Profile::Profile() : 
    mDefaultRegistrationExpires(3600),
+   mDefaultSubscriptionExpires(3600),
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
@@ -43,6 +44,30 @@ void
 Profile::setDefaultRegistrationTime(int secs)
 {
    mDefaultRegistrationExpires = secs;
+}
+
+void
+Profile::setDefaultSubscriptionTime(int secs)
+{
+   mDefaultSubscriptionExpires = secs;
+}
+
+NameAddr& 
+Profile::getDefaultFrom()
+{
+   return mDefaultFrom;
+}
+
+int 
+Profile::getDefaultSubscriptionTime()
+{
+   return mDefaultSubscriptionExpires;
+}
+
+int 
+Profile::getDefaultRegistrationTime()
+{
+   return mDefaultRegistrationExpires;
 }
 
 void 
@@ -117,24 +142,6 @@ void
 Profile::clearSupportedLanguages()
 {
    mSupportedLanguages.clear();
-}
-
-NameAddr& 
-Profile::getDefaultFrom()
-{
-   return mDefaultFrom;
-}
-
-int 
-Profile::getDefaultSubscriptionTime()
-{
-   return 3600;
-}
-
-int 
-Profile::getDefaultRegistrationTime()
-{
-   return mDefaultRegistrationExpires;
 }
 
 bool 
