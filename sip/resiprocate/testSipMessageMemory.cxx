@@ -21,10 +21,12 @@ main()
       SipMessage message2;
       
       Preparse parse1(message1, txt1, strlen(txt1));
-      parse1.process();
+      while(parse1.process())
+         ;
 
       Preparse parse2(message2, txt2, strlen(txt2));
-      parse2.process();
+      while(parse2.process())
+         ;
 
       assert(message1.getRawHeader(Headers::CSeq)->getParserContainer() == 0);
       assert(message2.getRawHeader(Headers::CSeq)->getParserContainer() == 0);
@@ -45,10 +47,12 @@ main()
       SipMessage message2;
       
       Preparse parse1(message1, txt1, strlen(txt1));
-      parse1.process();
+      while(parse1.process())
+         ;
 
       Preparse parse2(message2, txt2, strlen(txt2));
-      parse2.process();
+      while(parse2.process())
+         ;
 
       assert(message1.getRawHeader(Headers::CSeq)->getParserContainer() == 0);
       assert(message2.getRawHeader(Headers::CSeq)->getParserContainer() == 0);
