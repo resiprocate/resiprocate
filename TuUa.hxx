@@ -48,7 +48,7 @@ class TuUA
                                       const Data& signedBy,  
                                       Security::SignatureStatus sigStatus,
                                       bool wasEncryped  ); 
-            virtual int receivePresenseUpdate(const SipMessage* msg, 
+            virtual int receivePresenceUpdate(const SipMessage* msg, 
                                               const Uri& dest, 
                                               bool open, 
                                               const Data& status );
@@ -88,8 +88,8 @@ class TuUA
       addSipSession();
       dropSipSesssion();
       
-      // presense related 
-      changePresense();
+      // presence related 
+      changePresence();
       changePolicy();
       
       // IM Related 
