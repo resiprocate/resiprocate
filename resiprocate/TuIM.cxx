@@ -38,7 +38,8 @@ TuIM::TuIM(SipStack* stack,
      mPidf( new Pidf ),
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
-     mRegistrationPassword( Data::Empty )
+     mRegistrationPassword( Data::Empty ),
+     mLastAuthCSeq(-1)
 {
    assert( mStack );
    assert(mCallback);
@@ -404,7 +405,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
-	int cSeq = msg->header(h_CSeq).sequence();
+   int cSeq = msg->header(h_CSeq).sequence();
 
    if ( number<200 )
    {
@@ -416,7 +417,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
       mRegistrationDialog.createDialogAsUAC( *msg );
    }
    
-   if ( ((number == 401) || (number == 407)) && (cSeq==1) )
+   if ( ((number == 401) || (number == 407)) && (cSeq != mLastAuthCSeq) )
    {
       SipMessage* reg = mRegistrationDialog.makeRegister();
       
@@ -425,16 +426,21 @@ TuIM::processRegisterResponse(SipMessage* msg)
        
       Helper::addAuthorization(*reg,*msg,mAor.user(),mRegistrationPassword,cnonce,nonceCount);
 
-      int expires = 2*60*60; // time in seconds 
-      reg->header(h_Expires).value() = expires;
-      mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
-      
+      mLastAuthCSeq = reg->header(h_CSeq).sequence();
+
+      reg->header(h_Expires).value() = mRegistrationTimeSeconds;
+      reg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
+   
+      mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
+
       InfoLog( << *reg );
       
       setOutbound( *msg );
 
       mStack->send( *reg );
 
+      delete reg; reg=NULL;
+      
       return;
    }
    
@@ -448,16 +454,42 @@ TuIM::processRegisterResponse(SipMessage* msg)
    if ( (number>=200) && (number<300) )
    {
       int expires = 3600;
+
       if ( msg->exists(h_Expires) )
       {
          expires = msg->header(h_Expires).value();
       }
+      
+      // loop throught the contacts, find me, and extract expire time
+      Vocal2::ParserContainer<Vocal2::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
+      while ( i != msg->header(h_Contacts).end() )
+      {
+         try
+         { 
+            Uri uri = i->uri();
+
+            if ( uri.getAor() == mContact.getAor() )
+            {
+               int e = i->param(p_expires);
+               DebugLog( "match " << uri.getAor() << " e=" << e );
+
+               expires = e;
+            }
+         }
+         catch ( exception* )
+         {
+            InfoLog( "Bad contact in 2xx to register - skipped" );
+         }
+         
+         i++;
+      }
+
       if ( expires < 5 )
       {
          InfoLog( << "Got very small expiers of " << expires );
          expires = 5;
       }
-      
+
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
       
 	     mCallback->registrationWorked( to );
@@ -602,9 +634,10 @@ TuIM::process()
 
 
 void 
-TuIM::registerAor( const Uri& uri, const Data& password )
+TuIM::registerAor( const Uri& uri, const Data& password, int registrationTimeSeconds )
 {  
    mRegistrationPassword = password;
+   mRegistrationTimeSeconds = registrationTimeSeconds;
    
    //const NameAddr aorName;
    //const NameAddr contactName;
@@ -614,10 +647,10 @@ TuIM::registerAor( const Uri& uri, const Data& password )
 
    auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
 
-   int expires = 11*60; // time in seconds 
-   msg->header(h_Expires).value() = expires;
+   msg->header(h_Expires).value() = mRegistrationTimeSeconds;
+   msg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
    
-   mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
+   mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
    
    setOutbound( *msg );
 
@@ -631,6 +664,7 @@ TuIM::getNumBuddies() const
    return int(mBuddy.size());
 }
 
+
 const Uri 
 TuIM::getBuddyUri(const int index)
 {
@@ -639,6 +673,7 @@ TuIM::getBuddyUri(const int index)
 
    return mBuddy[index].uri;
 }
+
 
 const Data 
 TuIM::getBuddyGroup(const int index)
