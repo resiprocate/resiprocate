@@ -15,8 +15,15 @@ class HeaderFieldValue
       ParameterList& getParameters();
       ParameterList& getUnknownParameters();
       bool isParsed() const;
+
+  bool exists(const std::string& subcomponent) throw (ParseException);
+  bool exists(const SubComponent::Type type);
   
+  SubComponent* get(const std::string& type) const;
+
   HeaderFieldValue* next;
+
+	      
 
    private:
       const char* mField;

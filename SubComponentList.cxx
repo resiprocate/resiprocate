@@ -63,6 +63,8 @@ SubComponent* SubComponentList::find(SubComponent::Type type) const
    return 0;
 }
 
+
+
 void SubComponentList::erase(SubComponent::Type type)
 {
    if(first)
@@ -109,6 +111,32 @@ SubComponent* SubComponentList::find(const string& type) const
    }
    return 0;
 }
+
+
+SubComponent* SubComponentList::find(const string& type) const
+{
+   if (first)
+   {
+      SubComponent* p = first;
+      
+      do
+      {
+         if (p->getName() == type)
+         {
+            return p;
+         }
+      }
+      while((p = p->next) != 0);
+      
+   }
+
+   UnknownSubComponent* toInsert = new UnknownSubComponent(type, "");
+   insert(toInsert);
+   
+   return toInsert;
+
+}
+
 
 void SubComponentList::erase(const string& type)
 {
