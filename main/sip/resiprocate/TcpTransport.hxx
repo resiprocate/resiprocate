@@ -13,8 +13,8 @@ class TcpTransport : public TcpBaseTransport
    public:
       TcpTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
-                   const Data& interfaceObj=Data::Empty, 
-                   bool ipv4=true);
+                   IpVersion version,
+                   const Data& interfaceObj);
       virtual  ~TcpTransport();
       
       TransportType transport() const { return TCP; }

@@ -18,15 +18,16 @@ using namespace std;
 using namespace resip;
 
 TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           const Data& sipDomain, 
-                           const Data& interfaceObj, 
                            int portNum, 
-                           const Data& keyDir, const Data& privateKeyPassPhrase,
-                           bool ipv4,
-                           SecurityTypes::SSLType sslType) : 
-   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
+                           IpVersion version,
+                           const Data& interfaceObj,
+                           Security& security,
+                           const Data& sipDomain, 
+                           SecurityTypes::SSLType sslType):
+   TcpBaseTransport(fifo, portNum, version, interfaceObj ),
    mDomain(sipDomain),
-   mSecurity(new Security(true, sslType))
+   mSecurity(&security),
+   mSslType(sslType)
 {
    mTuple.setType(transport());
 
@@ -34,33 +35,10 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << portNum);
    
-   
-   bool ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) &&
-       mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) && 
-       mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem"));
-
-   (void)ok;
-
-   InfoLog( << "Listening for TLS connections on port " << portNum  << " ok=" << ok);
+   InfoLog( << "Listening for TLS connections on port " << portNum  );
 
 }
 
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           const Data& sipDomain, 
-                           const Data& interfaceObj, 
-                           int portNum, 
-                           Security& security,
-                           bool ipv4) : 
-   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
-   mDomain(sipDomain),
-   mSecurity(&security)
-{
-    mTuple.setType(transport());
-
-    InfoLog( << "Listening for TLS connections for domain " << sipDomain << " interface=" << interfaceObj << " port=" << portNum);
-}
-   
- 
 
 TlsTransport::~TlsTransport()
 {
