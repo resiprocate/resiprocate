@@ -184,7 +184,7 @@ ParseBuffer::floatVal()
       int num = integer();
       skipChar('.');
       const char* pos = position();
-      float mant = integer();
+      float mant = float(integer());
       int s = position() - pos;
       while (s--)
       {
@@ -192,7 +192,7 @@ ParseBuffer::floatVal()
       }
       return num + mant;
    }
-   catch (Exception& e)
+   catch (Exception&)
    {
       DebugLog(<< "Expected a floating point value, got: " << Data(s, position() - s));
       throw Exception("Expected a floating point value", __FILE__, __LINE__);
