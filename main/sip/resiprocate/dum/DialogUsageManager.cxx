@@ -467,6 +467,12 @@ DialogUsageManager::findCreator(const DialogId& id)
    return creator;
 }
 
+bool
+DialogUsageManager::isValid(const BaseUsage::Handle& handle)
+{
+   return mUsageMap.find(handle.mId) != mUsageMap.end();
+}
+
 BaseUsage* 
 DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
 {
