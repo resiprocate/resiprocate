@@ -1510,8 +1510,15 @@ RequestLine::clone() const
    return new RequestLine(*this);
 }
 
-Uri&
+const Uri&
 RequestLine::uri() const 
+{
+   checkParsed(); 
+   return mUri;
+}
+
+Uri&
+RequestLine::uri()
 {
    checkParsed(); 
    return mUri;
