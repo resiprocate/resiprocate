@@ -16,11 +16,6 @@ Executive::Executive( SipStack& stack)
 void
 Executive::process(FdSet& fdset)
 {
-   bool workToDo = true;
-   
-   //DebugLog (<< "start Executive::process()");
-   
-
    processTransports(fdset);
    processTimer();
    
