@@ -17,9 +17,9 @@
 #include "resiprocate/os/Random.hxx"
 
 #ifndef NEW_MSG_HEADER_SCANNER
-#include "Preparse.hxx"
+#include "resiprocate/Preparse.hxx"
 #else
-#include "MsgHeaderScanner.hxx"
+#include "resiprocate/MsgHeaderScanner.hxx"
 #endif
 
 using namespace resip;
