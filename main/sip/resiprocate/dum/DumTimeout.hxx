@@ -22,7 +22,8 @@ class DumTimeout : public ApplicationMessage
          WaitForAck, // UAS gets no ACK
          CanDiscardAck,
          StaleCall, // UAC gets no final response
-         Subscription
+         Subscription,
+         StaleReInvite,
       } Type;
       static const unsigned long StaleCallTimeout;
 
