@@ -847,7 +847,7 @@ static char hexmap[] = "0123456789abcdef";
 Data 
 Data::escaped() const
 { 
-   Data ret(3*size(), true );  
+   Data ret((int)floor(1.1*size()), true );  
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -869,7 +869,9 @@ Data::escaped() const
          }
       }
       
-      if ( !isprint(c) )
+      if ( !isprint(c) ||
+           // rfc 3261 reserved + mark + space + tab
+           strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
       {
          ret +='%';
          
@@ -885,6 +887,47 @@ Data::escaped() const
       }
    }
 
+   return ret;
+}
+
+Data
+Data::unescaped() const
+{
+   Data ret(size(), true);
+
+   const char* p = data();
+   for (size_type i = 0; i < size(); ++i)
+   {
+      unsigned char c = *p++;
+      if (c == '%')
+      {
+         if ( i+2 < size())
+         {
+            char* high = strchr(hexmap, *p++);
+            char* low = strchr(hexmap, *p++);
+
+            if (high == 0 || low == 0)
+            {
+               assert(0);
+               // ugh
+               return ret;
+            }
+            
+            int highInt = high - hexmap;
+            int lowInt = low - hexmap;
+            ret += char(highInt<<4 | lowInt);
+            i += 2;
+         }
+         else
+         {
+            break;
+         }
+      }
+      else
+      {
+         ret += c;
+      }
+   }
    return ret;
 }
 
