@@ -7,9 +7,13 @@ using namespace Vocal2;
 
 const char* ParseBuffer::WhitespaceOrParamTerm = " \t\r\n;?";
 const char* ParseBuffer::WhitespaceOrSlash = " \t\r\n/";
-const char* ParseBuffer::WhitespaceOrSemi = " \t\r\n;";
+const char* ParseBuffer::WhitespaceOrColonOrSemiColon = " \t\r\n/;:";
+const char* ParseBuffer::WhitespaceOrSemiColonOrRAQuote = " \t\r\n/;>";
+const char* ParseBuffer::WhitespaceOrColonOrSemiColonOrRAQuote = " \t\r\n/:;>";
+const char* ParseBuffer::WhitespaceOrSemiColon = " \t\r\n;";
 const char* ParseBuffer::Whitespace = " \t\r\n";
 const char* ParseBuffer::SemiColonOrColon = ";:";
+const char* ParseBuffer::ColonOrAtSign = ":@";
 
 void
 ParseBuffer::reset(const char* pos)
