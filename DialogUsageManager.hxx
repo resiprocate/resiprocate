@@ -48,14 +48,26 @@ class DialogUsageManager
       PublicationCreator makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
       RegistrationCreator makeRegistration(BaseUsage&, const Uri& aor);
       
+      DialogIdSet findAllDialogs();
+      UsageSet    findAllUsages();
+      
+      UsageSet findInvSessions( DialogId id );
+      UsageSet findSubscriptions( DialogId id );
+      UsageSet findRegistrations( DialogId id );
+      UsageSet findPublications( DialogId id );
+      UsageSet findOutOfDialogs( DialogId id );
+      
    private:
-      DialogImpl& findOrCreateDialog(SipMessage* msg);
-      DialogImpl& findOrCreateDialog(DialogId id);
+      Dialog& findOrCreateDialog(SipMessage* msg);
+      Dialog& findDialog(DialogId id);
+
+      HashMap<DialogSetId, DialogSet > mDialogSetMap;
 
       Profile* mProfile;
       RedirectManager* mRedirectManager;
       ClientAuthManager* mClientAuthManager;
-      ServerAuthManager* mServerAuthManager;      
+      ServerAuthManager* mServerAuthManager;  
+    
       ClientInviteSessionHandler* mClientInviteSessionHandler;
       ServerInviteSessionHandler* mServerInviteSessionHandler;      
       ClientRegistrationHandler* mClientRegistrationHandler;
@@ -63,16 +75,10 @@ class DialogUsageManager
       ClientSubscriptionHandler* mClientSubscriptionHandler;
       ServerSubscriptionHandler* mServerSubscriptionHandler;      
       ClientPublicationHandler* mClientPublicationHandler;
-      ServerPublicationHandler* mServerPublicationHandler;      
-      OutOfDialogHandler* mOutOfDialogHandler;
-	  
-	  
-	  
+      ServerPublicationHandler* mServerPublicationHandler;  
+      OutOfDialogHandler* mClientOutOfDialogHandler;
+      OutOfDialogHandler* mServerOutOfDialogHandler;
       
-      HashMap<CreatorId, BaseCreatorImpl*> mBaseCreatorMap; 
-      HashMap<CreatorId, std::list<BaseUsageImpl*> > mBaseCreatorMap;
-      HashMap<DialogId, std::list<BaseUsageImpl*> > mBaseCreatorMap;
-
       SipStack& mStack;
 };
 
