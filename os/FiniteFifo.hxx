@@ -1,9 +1,6 @@
 #if !defined(RESIP_FiniteFifo_hxx)
 #define RESIP_FiniteFifo_hxx 
 
-static const char* const resipFiniteFifo_h_Version =
-   "$Id: FiniteFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
-
 #include "resiprocate/os/AbstractFifo.hxx"
 
 // efficiency note: use a circular buffer do avoid list node allocation

@@ -1,9 +1,6 @@
 #if !defined(RESIP_LOCKABLE_HXX)
 #define RESIP_LOCKABLE_HXX 
 
-static const char* const resip_Lockable_hxx_Version =
-   "$Id: Lockable.hxx,v 1.7 2003/06/02 20:52:32 ryker Exp $";
-
 /** Infrastructure common to VOCAL.<br><br>
  */
 namespace resip
