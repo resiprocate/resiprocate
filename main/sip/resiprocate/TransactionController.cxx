@@ -8,7 +8,6 @@
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/StatisticsManager.hxx"
 
 using namespace resip;
 
@@ -22,20 +21,21 @@ unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
 TransactionController::TransactionController(bool multi, 
-                                             TimeLimitFifo<Message>& tufifo, 
+                                             TimeLimitFifo<Message>& tuFifo, 
+                                             StatisticsManager& stats,
                                              bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
-   mTUFifo(tufifo),
+   mStateMacFifo(),
+   mTUFifo(tuFifo),
    mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
-   mTimers(mStateMacFifo, mTUFifo),
+   mTimers(mStateMacFifo),
    StatelessIdCounter(1),
    mShuttingDown(false),
-   mStatsManager(0)
+   mStatsManager(stats)
 {
-   RESIP_STATISTICS(mStatsManager = new StatisticsManager(*this));
 }
 
 #if defined(WIN32)
@@ -44,7 +44,6 @@ TransactionController::TransactionController(bool multi,
 
 TransactionController::~TransactionController()
 {
-   delete mStatsManager;
 }
 
 
@@ -156,23 +155,6 @@ TransactionController::send(SipMessage* msg)
 }
 
 void
-TransactionController::post(const ApplicationMessage& message)
-{
-   assert(!mShuttingDown);
-   Message* toPost = message.clone();
-   mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
-}
-
-void
-TransactionController::post(const ApplicationMessage& message,
-                            unsigned int ms)
-{
-   assert(!mShuttingDown);
-   Message* toPost = message.clone();
-   mTimers.add(Timer(ms, toPost));
-}
-
-void
 TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
@@ -216,18 +198,6 @@ TransactionController::getTimerQueueSize() const
    return mTimers.size();
 }
 
-StatisticsManager&
-TransactionController::getStatisticsManager() const
-{
-   assert(mStatsManager);
-   return *mStatsManager;
-}
-
-void
-TransactionController::setStatisticsInterval(unsigned long seconds) const
-{
-   mStatsManager->setInterval(seconds);
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
