@@ -637,6 +637,22 @@ main()
       SipMessage* msg = Helper::makeRegister(me, me);
       cerr << "encoded=" << *msg << endl;
    }
+   {
+      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+                   "To: sip:user@company.com\r\n"
+                   "From: sip:user@company.com;tag=3411345\r\n"
+                   "Max-Forwards: 8\r\n"
+                   "Contact: sip:user@host.company.com\r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "CSeq: 8 REGISTER\r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                   "Expires: 353245\r\n\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      message->header(h_RequestLine).uri();
+      auto_ptr<SipMessage> copy(new SipMessage(*message));
+      assert(message->header(h_RequestLine).getMethod() == copy->header(h_RequestLine).getMethod());
+   }
 
    cerr << "\nTEST OK" << endl;
 }
