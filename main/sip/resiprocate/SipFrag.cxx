@@ -93,7 +93,7 @@ SipFrag::message() const
 std::ostream& 
 SipFrag::encodeParsed(std::ostream& str) const
 {
-   mMessage->encode(str);
+   mMessage->encodeSipFrag(str);
 
    return str;
 }
