@@ -1,9 +1,9 @@
 
 #include <cassert>
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
-#include "resiprocate/sipstack/Subscription.hxx"
+#include "resiprocate/Subscription.hxx"
 
 
 

@@ -1,8 +1,8 @@
 
 #include <cassert>
 
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/ConnectionMap.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/ConnectionMap.hxx"
 
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT

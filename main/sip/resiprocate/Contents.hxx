@@ -1,10 +1,10 @@
 #ifndef Contents_hxx
 #define Contents_hxx
 
-#include "resiprocate/sipstack/LazyParser.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx" // .dlb. Mime, Token, StringCategory
-#include "resiprocate/sipstack/Headers.hxx"
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/LazyParser.hxx"
+#include "resiprocate/ParserCategories.hxx" // .dlb. Mime, Token, StringCategory
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/os/Data.hxx"
 #include <map>
 #include <iostream>
 

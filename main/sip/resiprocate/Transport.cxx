@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/sipstack/Transport.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/TransportMessage.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TransportMessage.hxx"
 
 using namespace Vocal2;
 using namespace std;

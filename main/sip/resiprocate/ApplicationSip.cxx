@@ -1,5 +1,5 @@
-#include "resiprocate/sipstack/ApplicationSip.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/ApplicationSip.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

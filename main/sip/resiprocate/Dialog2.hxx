@@ -3,9 +3,9 @@
 
 #include <list>
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
-#include "resiprocate/sipstack/ParserCategories.hxx"
+#include "resiprocate/ParserCategories.hxx"
 
 
 namespace Vocal2

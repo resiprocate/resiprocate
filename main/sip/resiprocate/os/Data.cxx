@@ -1,13 +1,13 @@
-// "$Id: Data.cxx,v 1.63 2003/03/24 22:42:27 jason Exp $";
+// "$Id: Data.cxx,v 1.64 2003/03/24 23:25:36 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
 #include <math.h>
 
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
-#include "resiprocate/util/vmd5.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/vmd5.hxx"
 
 
 using namespace Vocal2;

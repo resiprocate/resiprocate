@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/StringSubComponent.hxx"
-#include "resiprocate/sipstack/SubComponentList.hxx"
-#include "resiprocate/sipstack/HeaderFieldValueList.hxx"
+#include "resiprocate/StringSubComponent.hxx"
+#include "resiprocate/SubComponentList.hxx"
+#include "resiprocate/HeaderFieldValueList.hxx"
 #include <iostream>
 
 using namespace Vocal2;

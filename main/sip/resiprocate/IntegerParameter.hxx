@@ -1,8 +1,8 @@
 #ifndef IntegerParameter_hxx
 #define IntegerParameter_hxx
 
-#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
-#include "resiprocate/sipstack/Parameter.hxx"
+#include "resiprocate/ParameterTypeEnums.hxx"
+#include "resiprocate/Parameter.hxx"
 #include <iostream>
 
 namespace Vocal2
