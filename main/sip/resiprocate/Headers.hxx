@@ -221,7 +221,7 @@ defineMultiHeader(Via, "Via", Via, "RFC ????");
 //====================
 // RAckCategory
 //====================
-defineHeader(RAck, "RAck", RAckCategory, "RFC 3261");
+defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
 class RequestLineType {};
 extern RequestLineType h_RequestLine;
