@@ -29,12 +29,12 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(Fifo<TransactionMessage>& rxFifo,
-                     int portNum,
-                     const Data& intfc,
-                     bool ipv4) :
+                     int portNum, 
+                     IpVersion version,
+                     const Data& intfc) :
    mFd(-1),
    mInterface(intfc),
-   mTuple(intfc, portNum, ipv4),
+   mTuple(intfc, portNum, version==V4 ),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false)
 {
