@@ -11,13 +11,13 @@ Working with private keys:
 
 You can export a pkcs12 (.p12 or .pfx) file from outlook. This can be convered to a private key with. 
 
-openssl pkcs12 -in fluffy.pfx -passin pass:password -passout pass:password -out fluffy_key.pem -nocerts
+openssl pkcs12 -in fluffy.pfx -passin pass:password -passout pass:password -out id_key.pem -nocerts
 
 The public cert can also be extracted with 
-openssl pkcs12 -in fluffy.pfx -passin pass:password -out fluffy.pem -nokeys
+openssl pkcs12 -in fluffy.pfx -passin pass:password -out id.pem -nokeys
 
 The root certifcates can be extracted with 
-openssl pkcs12 -in fluffy.pfx -passin pass:password -out root.pem -cacerts
+openssl pkcs12 -in fluffy.pfx -passin pass:password -out root.pem -cacerts -nokeys
 
 
 Notes: 
