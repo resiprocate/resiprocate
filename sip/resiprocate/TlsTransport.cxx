@@ -5,8 +5,8 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <stdlib.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #endif
@@ -117,7 +117,7 @@ TlsTransport::processListen(FdSet& fdset)
    {
       struct sockaddr_in peer;
 		
-      socklen_t peerLen=sizeof(peer);
+      int peerLen=sizeof(peer);
       Socket sock = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( sock == -1 )
       {

@@ -113,7 +113,7 @@ int errorCount = 0;
 // version.
 int
 sendto(int s, const void *msg, size_t len, int flags,
-       const struct sockaddr *to, socklen_t tolen)
+       const struct sockaddr *to, int tolen)
 {
     fakeTxFifo.add(TestSupport::makeMessage(Data((const char *)msg, (int)len), true));
     return len;

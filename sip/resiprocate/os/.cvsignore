@@ -1,4 +1,5 @@
 .dependlibs
+bin.debug.Darwin.Power_Macintosh
 bin.debug.Linux.i686
 bin.debug.QNX.x86pc
 bin.i686
@@ -6,6 +7,7 @@ bin.nodebug.Linux.i686
 bin.opt.Linux.i686
 bin.opt.QNX.x86pc
 bin.prof.Linux.i686
+obj.debug.Darwin.Power_Macintosh
 obj.debug.Linux.i686
 obj.debug.QNX.x86pc
 obj.i686
