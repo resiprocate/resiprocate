@@ -148,6 +148,23 @@ class TestData
             Data d = f;
             assert(!(d.c_str() < f));
          }
+         
+         {
+            Data a("qwerty");
+            Data b("qwerty");
+            assert(!(a < b));
+         }
+         {
+            Data a("qwert");
+            Data b("qwerty");
+            assert(a < b);
+         }
+         {
+            Data a("qwert");
+            Data b("qwerty");
+            assert(a < b);
+            assert(!(b < a));
+         }
 
 // ==
          {
@@ -169,9 +186,18 @@ class TestData
          }
 
          {
+            const char * c("asdfasfdsadf");
+            Data d(c, strlen(c), true); // share memory
+            assert(!(d < c));
+            Data c1(d); // copy, null terminate
+            assert(!(d < c1));
+            assert(!(c1 < d));
+         }
+
+         {
             string f("asdasd");
             Data d = f + "!";
-            assert(d < f);
+            assert(!(d < f));
          }
 
          {
