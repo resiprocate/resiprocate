@@ -18,7 +18,7 @@ class TestTransportSelector
       {
          InfoLog (<< "testEmptyFail" );
 
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
       
          Tuple tuple;
@@ -31,7 +31,7 @@ class TestTransportSelector
       {
          InfoLog (<< "testExactFail" );
          
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP, 5061, V4, "127.0.0.1");
 
@@ -44,7 +44,7 @@ class TestTransportSelector
       {
          InfoLog (<< "testExact" );
          
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP, 5060, V4, "127.0.0.1");
 
@@ -58,7 +58,7 @@ class TestTransportSelector
       {
          InfoLog (<< "testExact" );
          
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP, 5060, V4, "127.0.0.1");
          ts.addTransport(UDP, 5100, V4, "127.0.0.1");
@@ -87,7 +87,7 @@ class TestTransportSelector
       {
          InfoLog (<< "testExactAnyPort" );
          
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP, 5060, V4, "127.0.0.1");
 
@@ -102,7 +102,7 @@ class TestTransportSelector
       { 
          InfoLog (<< "testAnyInterface" );
          
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP,5060,V4);
 
@@ -115,7 +115,7 @@ class TestTransportSelector
       { 
          InfoLog (<< "testAnyInterfaceAnyPort" );
 
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP, 5060, V4, Data::Empty);
          
@@ -128,7 +128,7 @@ class TestTransportSelector
       { 
          InfoLog (<< "testAnyInterfaceAnyPortV6" );
 
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(TCP,  5060,   V6);
 
@@ -141,7 +141,7 @@ class TestTransportSelector
       { 
          InfoLog (<< "testAnyInterfaceAnyPortV6" );
 
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          
          ts.addTransport(TCP,  5060,  V4);
@@ -155,7 +155,7 @@ class TestTransportSelector
       { 
          InfoLog (<< "testAnyInterfaceAnyPortFail" );
 
-         Fifo<Message> fif;
+         Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif);
          ts.addTransport(UDP,5060,V4);
 
