@@ -261,7 +261,7 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    {
       int e = getErrno();
       Transport::error( e );
-      ErrLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
+      InfoLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
    
@@ -271,7 +271,7 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    {
       int e = getErrno();
       Transport::error(e);
-      ErrLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
+      InfoLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
 
