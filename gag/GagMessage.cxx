@@ -276,8 +276,8 @@ void
 GagLogoutMessage::parse(istream &is)
 {
   valid = false;
-  DebugLog ( << "Got logout from Gaim [aor = '" << aor << "']");
   if (!GagMessage::parse(is, aor)) return;
+  DebugLog ( << "Got logout from Gaim [aor = '" << aor << "']");
   valid = true;
 }
 
