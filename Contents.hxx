@@ -12,8 +12,6 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
 
-using namespace std;
-
 namespace resip
 {
 

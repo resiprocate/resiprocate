@@ -366,21 +366,22 @@ SipStack::dump(std::ostream& strm)  const
 {
    Lock lock(mAppTimerMutex);
    strm << "SipStack: " << (this->mStrictRouting ? "strict router " : "loose router ")
-        << endl
+        << std::endl
         << "domains: " << Inserter(this->mDomains)
-        << endl
-        << " TUFifo size=" << this->mTUFifo.size() << endl
-        << " Timers size=" << this->mTransactionController.mTimers.size() << endl
-        << " AppTimers size=" << this->mAppTimers.size() << endl
-        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << endl
-        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << endl
-        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << endl
-        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << endl;
+        << std::endl
+        << " TUFifo size=" << this->mTUFifo.size() << std::endl
+        << " Timers size=" << this->mTransactionController.mTimers.size() << std::endl
+        << " AppTimers size=" << this->mAppTimers.size() << std::endl
+        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << std::endl
+        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << std::endl
+        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << std::endl
+        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << std::endl;
    return strm;
 }
 
 std::ostream& 
-resip::operator<<(ostream& strm, const SipStack& stack) 
+resip::operator<<(std::ostream& strm, 
+const SipStack& stack) 
 {
    return stack.dump(strm);
 }
