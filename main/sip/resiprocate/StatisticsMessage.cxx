@@ -59,6 +59,8 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << " TU " << stats.tuFifoSize
               << " TRANSPORT " << stats.transportFifoSizeSum
               << " TRANSACTION " << stats.transactionFifoSize
+              << " CLIENTTX " << stats.activeClientTransactions
+              << " SERVERTX " << stats.activeServerTransactions
               << " TIMERS " << stats.activeTimers
 
               << " reqi " << stats.requestsReceived
@@ -108,8 +110,8 @@ StatisticsMessage::Payload::Payload()
      transactionFifoSize(0),
      activeTimers(0),
      openTcpConnections(0),
-     activeInviteTransactions(0),
-     activeNonInviteTransactions(0),
+     activeClientTransactions(0),
+     activeServerTransactions(0),
      pendingDnsQueries(0),
      requestsSent(0),
      responsesSent(0),
@@ -141,8 +143,8 @@ StatisticsMessage::Payload::operator=(const StatisticsMessage::Payload& rhs)
       transactionFifoSize = rhs.transactionFifoSize;
 
       openTcpConnections = rhs.openTcpConnections;
-      activeInviteTransactions = rhs.activeInviteTransactions;
-      activeNonInviteTransactions = rhs.activeNonInviteTransactions;
+      activeClientTransactions = rhs.activeClientTransactions;
+      activeServerTransactions = rhs.activeServerTransactions;
       pendingDnsQueries = rhs.pendingDnsQueries;
 
       requestsSent = rhs.requestsSent;
