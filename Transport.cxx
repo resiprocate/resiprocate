@@ -1,11 +1,6 @@
 #include <iostream>
-#include <sys/types.h>
 
-#ifndef WIN32
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#endif
-
+#include "sip2/util/compat.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Socket.hxx"
 
