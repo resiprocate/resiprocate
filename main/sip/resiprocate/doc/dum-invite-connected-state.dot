@@ -2,33 +2,39 @@ digraph UAC {
         rankdir=LR;
         node [shape = box]; 
 
-        Connected -> Updating [ label = "sendOffer/UPDATE" ];
-        Updating -> Connected [ label = "200U/onAnswer" ];
-        Updating -> Connected [ label = "FailureU/onOfferRejected" ];
-        Updating -> Terminated [ label = "GeneralFailure/Terminated" ];
+        Connected -> Updating [ label = "provideOffer/UPDATE" ];
+        Updating -> Connected [ label = "on200U/onAnswer" ];
+        Updating -> Connected [ label = "onFailU/onOfferRejected" ];
+        Updating -> Terminated [ label = "onGeneralFailure/Terminated" ];
+        Updating -> Terminated [ label = "appEnd/Terminated" ];
 
-        Connected -> Reinviting [ label = "sendOfferNoUpdate/reINVITE" ];
-        Reinviting -> Connected [ label = "200I/onAnswer,ACK" ];
-        Reinviting -> Connected [ label = "FailureI/onOfferRejected" ];
-        Reinviting -> Terminated [ label = "GeneralFailure/Terminated" ];
+        Connected -> Reinviting [ label = "provideOfferNoUpdate/reINVITE" ];
+        Reinviting -> Connected [ label = "on200I/onAnswer,ACK" ];
+        Reinviting -> Connected [ label = "onFailureI/onOfferRejected" ];
+        Reinviting -> Terminated [ label = "onGeneralFailure/Terminated" ];
+        Reinviting -> Terminated [ label = "appEnd/Terminated" ]; // ok?
 
-        Connected -> ReinvitingNoOffer [ label = "reINVITE/reINVITE" ];
-        ReinvitingNoOffer -> Connected [ label = "200I/onDialogModified,ACK" ];
-        ReinvitingNoOffer -> Connected [ label = "FailureI/onReinviteFailure" ];
-        ReinvitingNoOffer -> Terminated [ label = "GeneralFailure/Terminated" ];
+        Connected -> ReinvitingNoOffer [ label = "onReINVITE/reINVITE" ];
+        ReinvitingNoOffer -> Connected [ label = "on200I/onDialogModified,ACK" ];
+        ReinvitingNoOffer -> Connected [ label = "onFailureI/onReinviteFailure" ];
+        ReinvitingNoOffer -> Terminated [ label = "onGeneralFailure/Terminated" ];
+        ReinvitingNoOffer -> Terminated [ label = "appEnd/Terminated" ]; // ok?
 
-        Connected -> UpdatePending [ label = "UPDATE/onOffer" ];
-        UpdatePending -> Connected [ label = "sendAnswer/200U" ];
-        UpdatePending -> Connected [ label = "rejectOffer/488U" ];
+        Connected -> UpdatePending [ label = "onUPDATE/onOffer" ];
+        UpdatePending -> Connected [ label = "provideAnswer/200U" ];
+        UpdatePending -> Connected [ label = "appRejectOffer/488U" ];
+        UpdatePending -> Terminated [ label = "appEnd/488U,BYE" ];
 
-        Connected -> ReinvitePending [ label = "reINVITE/onOffer" ];
-        ReinvitePending -> Connected [ label = "sendAnswer/200U" ];
-        ReinvitePending -> Connected [ label = "rejectOffer/488U" ];
+        Connected -> ReinvitePending [ label = "onreINVITE/onOffer" ];
+        ReinvitePending -> Connected [ label = "provideAnswer/200U" ];
+        ReinvitePending -> Connected [ label = "appRejectOffer/488U" ];
+        ReinvitePending -> Terminated [ label = "appEnd/488I,BYE" ];
 
-        Connected -> ReinvitePendingNoOffer [ label = "reINVITE/onDialogModified" ];
-        ReinvitePendingNoOffer -> Connected [ label = "accept/200I" ];
-        ReinvitePendingNoOffer -> Connected [ label = "reject/488I" ];
+        Connected -> ReinvitePendingNoOffer [ label = "onreINVITE/onDialogModified" ];
+        ReinvitePendingNoOffer -> Connected [ label = "appAccept/200I" ];
+        ReinvitePendingNoOffer -> Connected [ label = "appReject/488I" ];
+        ReinvitePendingNoOffer -> Terminated [ label = "appEnd/488I,BYE" ];
 
-        Connected -> Terminated [ label = "end/BYE" ];
+        Connected -> Terminated [ label = "appEnd/BYE" ];
         Connected -> Terminated [ label = "BYE/200B,delete" ];
 }
