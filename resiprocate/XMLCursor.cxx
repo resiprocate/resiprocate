@@ -249,6 +249,7 @@ XMLCursor::nextSibling()
    if (mCursor->mParent->mNext != mCursor->mParent->mChildren.end())
    {
       mCursor = *((mCursor->mParent->mNext)++);
+      mAttributesSet = false;
       return true;
    }
    else
@@ -276,6 +277,7 @@ XMLCursor::firstChild()
       mCursor->mNext = mCursor->mChildren.begin();
       mCursor->mNext++;
       mCursor = mCursor->mChildren.front();
+      mAttributesSet = false;
       return true;
    }
 }
@@ -289,6 +291,7 @@ XMLCursor::parent()
    }
 
    mCursor = mCursor->mParent;
+   mAttributesSet = false;
    return true;
 }
 
@@ -296,6 +299,7 @@ void
 XMLCursor::reset()
 {
    mCursor = mRoot;
+   mAttributesSet = false;
 }
 
 bool
@@ -326,10 +330,12 @@ XMLCursor::getTag() const
 const XMLCursor::AttributeMap&
 XMLCursor::getAttributes() const
 {
-   mAttributes.clear();
-
-   if (!atLeaf())
+   if (!atLeaf() &&
+       !mAttributesSet)
    {
+      mAttributes.clear();
+      mAttributesSet = true;
+   
       ParseBuffer pb(mCursor->mPb);
       pb.reset(mCursor->mPb.start());
 
