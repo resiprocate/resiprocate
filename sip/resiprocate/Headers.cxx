@@ -184,7 +184,7 @@ defineHeader(Date, "Date", DateCategory);
 //====================
 // WarningCategory:
 //====================
-defineHeader(Warning, "Warning", WarningCategory);
+defineMultiHeader(Warning, "Warning", WarningCategory);
 
 defineMultiHeader(Via, "Via", Via);
 
