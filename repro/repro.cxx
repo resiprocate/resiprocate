@@ -43,12 +43,12 @@ main(int argc, char** argv)
    RequestProcessorChain* locators = new RequestProcessorChain();
 
    RouteProcessor* rp = new RouteProcessor();
-   locators.addProcessor(std::auto_ptr<RequestProcessor>(rp));
+   locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
 
    LocationServer* ls = new LocationServer(regData);
-   locators.addProcessor(std::auto_ptr<RequestProcessor>(ls));
+   locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
 
-   requestProcessors.addProcessor(locators);
+   requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
 
    DigestAuthenticator* da = new DigestAuthenticator();
    requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
@@ -61,7 +61,16 @@ main(int argc, char** argv)
    Proxy proxy(stack, requestProcessors, userDb);
 
    /* Initialize a registrar */
-   Registrar registrar(stack, regData);
+   DialogUsageManager dum(stack);
+   MasterProfile profile;
+   Registrar registrar;
+
+   profile.clearSupportedMethods();
+   profile.addSupportedMethod(resip::REGISTER);
+
+   dum.setServerRegistrationHandler(&registrar);
+   dum.setRegistrationPersistenceManager(&regData);
+   dum.setMasterProfile(&profile);
 
    /* Make it all go */
    stackThread.run();

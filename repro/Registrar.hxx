@@ -13,8 +13,7 @@ namespace repro
 class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
 {
    public:
-      Registrar(resip::SipStack& stack, 
-                resip::InMemoryRegistrationDatabase& db);
+      Registrar();
       virtual ~Registrar();
       virtual void thread();
       
@@ -34,9 +33,6 @@ class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
                            const resip::SipMessage& reg);
 
    private:
-      resip::DialogUsageManager mDum;
-      resip::MasterProfile mProfile;
-      resip::InMemoryRegistrationDatabase& mDb;
 };
 }
 #endif
