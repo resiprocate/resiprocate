@@ -1,4 +1,5 @@
 #include <sip2/sipstack/HeaderFieldValueList.hxx>
+#include <sip2/sipstack/ParserCategory.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -36,6 +37,20 @@ HeaderFieldValueList::~HeaderFieldValueList()
          delete current;
          current = next;
       } while (current != 0);
+   }
+   delete mParserCategory;
+}
+
+ParserCategory&
+HeaderFieldValueList::getParserCategory()
+{
+   if (mParserCategory)
+   {
+      return *mParserCategory;
+   }
+   else
+   {
+      return first->getParserCategory();
    }
 }
 
