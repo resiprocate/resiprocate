@@ -1,4 +1,3 @@
-
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -6,17 +5,10 @@
 #include <netdb.h>
 #endif
 
-#if defined(__sparc)
-#include <inttypes.h>
-/* typedef unsigned char u_int8_t; */
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
-#endif
-
 #include <stdio.h>
 #include <errno.h>
 
+#include "sip2/util/compat.hxx"
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
 
