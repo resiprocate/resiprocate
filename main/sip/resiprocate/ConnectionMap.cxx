@@ -36,6 +36,16 @@ ConnectionMap::ConnectionMap()
    mPostOldest.mYounger = &mPreYoungest;
 }
 
+ConnectionMap::~ConnectionMap()
+{
+   for(Map::iterator it = mConnections.begin();
+       it != mConnections.end(); it++)
+   {
+      delete it->second;
+   }
+   mConnections.clear();
+}
+
 void
 ConnectionMap::touch(Connection* connection)
 {
@@ -43,23 +53,27 @@ ConnectionMap::touch(Connection* connection)
 
    connection->remove();
    connection->mOlder = mPreYoungest.mOlder;
+   mPreYoungest.mOlder->mYounger = connection;
    connection->mYounger = &mPreYoungest;
    mPreYoungest.mOlder = connection;
 }
 
 ConnectionMap::Connection*
-ConnectionMap::add(Transport::Tuple who, Socket socket)
+ConnectionMap::add(const Transport::Tuple& who, Socket socket)
 {
    assert(mConnections.find(who) == mConnections.end());
 
    Connection* connection = new Connection(who, socket);
    mConnections[who] = connection;
    touch(connection);
+
+//   DebugLog(<< "ConnectionMap::add: " << who << " fd: " << socket);
+      
    return connection;
 }
 
 ConnectionMap::Connection*
-ConnectionMap::get(Transport::Tuple who, int attempt)
+ConnectionMap::get(const Transport::Tuple& who, int attempt)
 {
    Map::const_iterator i = mConnections.find(who);
    if (i != mConnections.end())
@@ -85,14 +99,14 @@ ConnectionMap::get(Transport::Tuple who, int attempt)
    
    memset( &servaddr, sizeof(servaddr), 0 );
    servaddr.sin_family = AF_INET;
-   servaddr.sin_port = who.port;
+   servaddr.sin_port = htons(who.port);
    servaddr.sin_addr = who.ipv4;
    
    int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
    if ( e == -1 ) 
    {
-      // !cj! do error printouets 
-      //int err = errno;
+      int err = errno;
+      DebugLog( << "Error on connect to " << who << ": " << strerror(err));
       return 0;
    }
    
@@ -101,7 +115,7 @@ ConnectionMap::get(Transport::Tuple who, int attempt)
 }
 
 void
-ConnectionMap::close(Transport::Tuple who)
+ConnectionMap::close(const Transport::Tuple& who)
 {
    Map::iterator i = mConnections.find(who);
    if (i != mConnections.end())
@@ -157,7 +171,8 @@ ConnectionMap::Connection::Connection(const Transport::Tuple& who,
 ConnectionMap::Connection::~Connection()
 {
    remove();
-   shutdown(mSocket,2);
+//   shutdown(mSocket, SHUT_RDWR);
+   ::close(mSocket);
 }
 
 ConnectionMap::Connection* 
@@ -165,7 +180,7 @@ ConnectionMap::Connection::remove()
 {
    Connection* next = mYounger;
 
-   if (mYounger != 0 || mOlder != 0)
+   if (mYounger != 0 && mOlder != 0)
    {
       assert(mYounger != 0);
       assert(mOlder != 0);
@@ -302,3 +317,10 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
 }
             
             
+std::ostream& 
+Vocal2::operator<<(std::ostream& strm, const Vocal2::ConnectionMap::Connection& c)
+{
+   strm << "CONN: " << c.getSocket() << " " << c.mWho;
+   return strm;
+}
+

@@ -7,6 +7,7 @@
 #include "sip2/sipstack/SipMessage.hxx"
 
 #include "sip2/sipstack/test/TestSupport.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
 #include <ctype.h>
 
