@@ -65,6 +65,10 @@ using namespace  std;
         "Content-Length: 0" CRLF CRLF
         ;
 
+const char *crlftest = (
+    "REGISTER sip:register.com SIP/2.0" CRLF
+    "Call-ID: cid" CRLF CRLF 
+    );
 void od(const char * p, int len)
 {
     cout << hex;
@@ -93,6 +97,29 @@ void od(const char * p, int len)
     cout << dec;
 }
 
+const int nTests = 6;
+
+int tests[nTests];
+
+void rantest(int n)
+{
+    assert(n>=0);
+    assert(n<nTests);
+    
+    tests[n]++;
+}
+
+void inittest()
+{
+    for(int i = 0 ; i < nTests ; i++) tests[i] = 0;
+}
+
+
+void
+checkalltests()
+{
+    for(int i = 0 ; i < nTests ; i++) assert(tests[i]);
+}
 
 
 void doTest1()
@@ -104,7 +131,7 @@ void doTest1()
 
     int used = 0;
     int len = 100; // (less than the location of the first CRLFCRLF) 
-    const char *buffer = testData;
+    const char *buffer = strdup(testData);
 
     PreparseState::TransportAction status = PreparseState::NONE;
 
@@ -195,6 +222,32 @@ doTest4()
     assert(0);
 }
 
+void
+doTest6()
+{
+    Preparse pre;
+    
+    SipMessage msg;
+    
+    int k;
+    int len = strlen(crlftest);
+    char *p = strdup(crlftest);
+    
+    msg.addBuffer(p);
+    
+    // From test case provided by DCM.
+
+    PreparseState::TransportAction status;
+    
+    pre.process(msg, p, len, k, status);
+    
+    assert(status == PreparseState::headersComplete);
+    assert( k == len);
+
+}
+
+
+
 
 int
 main(int argc, char *argv[])
@@ -220,13 +273,17 @@ main(int argc, char *argv[])
     Log::initialize(Log::COUT, l, argv[0]);
     CritLog(<<"Test Driver Starting");
    
+    inittest();
 
-    doTest1(); // frag'd header
-    doTest2(); // no frag'd header, but NOT End of headers
-    doTest3(); // end at end
-    doTest4(); // pp error
+    //doTest1(); // frag'd header
+    //doTest2(); // no frag'd header, but NOT End of headers
+    //doTest3(); // end at end
+    //doTest4(); // pp error
     //doTest5(); // build sipmessage one byte at a time.
+    doTest6(); // trailing CRLFCRLF eating test.
 
+    checkalltests();
+    
     return 0;
     
    
