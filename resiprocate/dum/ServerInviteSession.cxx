@@ -6,6 +6,7 @@
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 
@@ -117,7 +118,16 @@ ServerInviteSession::reject(int statusCode)
 SipMessage& 
 ServerInviteSession::accept()
 {
-   return makeFinalResponse(200);   
+   SipMessage &msg = makeFinalResponse(200);
+
+   // Check if we should add our capabilites to the invite success response 
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Allow)) msg.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Accept)) msg.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptEncoding)) msg.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptLanguage)) msg.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Supported)) msg.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+
+   return msg;
 }
 
 void 
