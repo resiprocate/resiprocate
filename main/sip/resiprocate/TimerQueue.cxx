@@ -30,7 +30,7 @@ TimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the fifo
 
    Timer now(Timer::getTimeMs());
-   for (std::multiset<Timer>::iterator i=mTimers.lower_bound(now); 
+   for (std::multiset<Timer>::iterator i=mTimers.begin(); 
         i != mTimers.upper_bound(now); i++)
    {
       TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
