@@ -17,7 +17,6 @@ class TestData
       {
          {
             Data *d = new Data("origin",6);
-
             {
                Data * t = d;
 
@@ -28,7 +27,15 @@ class TestData
                // cout << d->size() << ":" << d->mCapacity << endl;
                delete t;
             }
+            delete d;
          }
+
+         {
+            char* blah = "12345";
+            Data d(blah, 3);
+            assert(strlen(d.c_str()) == 3);
+         }
+
          {
             assert(Data(0) == "0");
             assert(Data(1) == "1");
@@ -66,9 +73,8 @@ class TestData
             assert(strcmp(d.data(), "qwerty") == 0);
 
             Data e;
-            assert(strcmp(e.data(), "") == 0);
-            assert(strcmp(e.data(), "") == 0);
-            assert(strcmp(e.data(), "") == 0);
+            
+            assert(e == "");
          }
 
          {
@@ -76,8 +82,6 @@ class TestData
             assert(strcmp(d.c_str(), "qwerty") == 0);
 
             Data e;
-            assert(strcmp(e.c_str(), "") == 0);
-            assert(strcmp(e.c_str(), "") == 0);
             assert(strcmp(e.c_str(), "") == 0);
          }
 
@@ -266,6 +270,27 @@ class TestData
             Data aa(a);
             assert(a.size() == aa.size());
          }
+         {
+            Data d("ssd");
+            Data c;
+            d = c;
+            assert(d.empty());
+         }
+         {
+            Data d;
+            Data c;
+            d = c;
+            assert(d.empty());
+         }
+         {
+            char* s = "userB@whistler.gloo.net:6062\r\nCo\031";
+            char* o = "S";
+            Data d(s, strlen(s), false);
+            Data c(o, strlen(o), false);
+            
+            d = c;
+            assert(c == "S");
+         }         
       }
 };
 
