@@ -24,6 +24,27 @@ bool cseqIsValid( int msgSeq, int currentSeq)
    }
 }
 
+SipSession getSession( void )
+{
+   return mSipSession;
+}
+
+Registration getRegistration( void )
+{
+   return mRegistration;
+}
+
+void setTag( Data remoteTag );
+{
+   mRemoteTag = remoteTag;
+   mWildcardRemoteTag = false;
+}
+
+Data getRemoteTag( void )
+{
+   return mRemoteTag;
+}
+
 
 
 /* ====================================================================
