@@ -9,7 +9,7 @@ namespace Vocal2
 class UnknownParameterType
 {
    public:
-      UnknownParameterType(const char* unknownParameterName);
+      explicit UnknownParameterType(const char* unknownParameterName);
 
       const Data& getName() const {return mName;}
 

@@ -9,7 +9,7 @@ namespace Vocal2
 class UnknownHeaderType
 {
    public:
-      UnknownHeaderType(const char* unknownHeaderName);
+      explicit UnknownHeaderType(const char* unknownHeaderName);
 
       const Data& getName() const {return mName;}
 
