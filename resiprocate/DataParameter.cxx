@@ -14,11 +14,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
      mValue(),
      mQuoted(false)
 {
-   if (*pb.position() != '=')
-   {
-      throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
-   }
-   pb.skipChar();
+   pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace(); // .dlb. space allowed only before "
    if (*pb.position() == '"')
    {
