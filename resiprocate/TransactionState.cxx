@@ -282,4 +282,9 @@ TransactionState::isTranportError(Message* msg) const
    return false; // !jf!
 }
 
-
+ostream& 
+operator<<(ostream& strm, const TransactionState& state)
+{
+   strm << "Tstate[ mMach=" << mMachine <<  " mState=" 
+        << mState << " mIsRel=" << mIsReliable << endl;
+}
