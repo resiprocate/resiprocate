@@ -11,6 +11,8 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
    : Parameter(type),
      mValue(0)
 {
+   cerr << "IntegerParameter::IntegerParameter(" << type << ", pb)" << endl;
+
    if (*pb.position() != '=')
    {
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
@@ -18,6 +20,7 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
    pb.skipChar();
    // .dlb. error detection?
    mValue = atoi(pb.position());
+   pb.skipToOneOf(";?");
 }
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type, int value)
