@@ -1,8 +1,7 @@
-#if !defined(METHODSHASH_HXX)
-#define METHODSHASH_HXX
+#if !defined(RESIP_METHODSHASH_HXX)
+#define RESIP_METHODSHASH_HXX
 namespace resip 
 {
-
 
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 494, duplicates = 0 */
