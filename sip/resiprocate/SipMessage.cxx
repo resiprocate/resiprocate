@@ -343,18 +343,18 @@ SipMessage::encodeEmbedded(std::ostream& str) const
    bool first = true;
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
-      if (i != Headers::Content_Length) // !dlb! hack...
+      if (i != Headers::Content_Length)
       {
          if (mHeaders[i] != 0)
          {
-            if (!first)
+            if (first)
             {
+               str << Symbols::QUESTION;
                first = false;
-               str << Symbols::AMPERSAND;
             }
             else
             {
-               str << Symbols::QUESTION;
+               str << Symbols::AMPERSAND;
             }
             mHeaders[i]->encodeEmbedded(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
          }
@@ -364,29 +364,55 @@ SipMessage::encodeEmbedded(std::ostream& str) const
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
         i != mUnknownHeaders.end(); i++)
    {
-      if (!first)
+      if (first)
       {
+         str << Symbols::QUESTION;
          first = false;
-         str << Symbols::AMPERSAND;
       }
       else
       {
-         str << Symbols::QUESTION;
+         str << Symbols::AMPERSAND;
       }
       i->second->encodeEmbedded(i->first, str);
    }
 
    if (mContents != 0)
    {
-      str << "&body=";
-      // !dlb! encodeEmbedded for characters
-      mContents->encode(str);
+      if (first)
+      {
+         str << Symbols::QUESTION;
+      }
+      else
+      {
+         str << Symbols::AMPERSAND;
+      }
+      str << "body=";
+      // !dlb! encode escaped for characters
+      Data contents;
+      {
+         DataStream s(contents);
+         mContents->encode(s);
+      }
+      str << Embedded::encode(contents);
    }
    else if (mContentsHfv != 0)
    {
-      str << "&body=";
-      // !dlb! encodeEmbedded for characters
-      mContentsHfv->encode(str);
+      if (first)
+      {
+         str << Symbols::QUESTION;
+      }
+      else
+      {
+         str << Symbols::AMPERSAND;
+      }
+      str << "body=";
+      // !dlb! encode escaped for characters
+      Data contents;
+      {
+         DataStream s(contents);
+         mContentsHfv->encode(str);
+      }
+      str << Embedded::encode(contents);
    }
    
    return str;
