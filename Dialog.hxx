@@ -39,11 +39,13 @@ class Dialog
       
       DialogId getId() const;
       
-      void makeBye(SipMessage& proto);
-      void makeInvite(SipMessage& proto);
-      void makeAck(SipMessage& proto);
-      void makePrack(SipMessage& proto);
-      void makeMethod(SipMessage& proto, MethodTypes method);
+//      void makeBye(SipMessage& proto);
+//     void makeInvite(SipMessage& proto);
+//      void makeAck(SipMessage& proto);
+//      void makePrack(SipMessage& proto);
+      void makeRequest(SipMessage& request, MethodTypes method);
+      void makeResponse(const SipMessage& request, SipMessage& response, int responseCode);
+
       
       std::vector<ClientSubscription::Handle> findClientSubscriptions();
       ServerSubscription::Handle findServerSubscription();
@@ -76,15 +78,6 @@ class Dialog
       std::vector<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
       ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
-      //invariants
-      typedef enum // need to add
-      {
-         Invitation,   // INVITE dialog
-         Subscription, // Created by a SUBSCRIBE / NOTIFY / REFER
-         Fake          // Not really a dialog (e.g. created by a REGISTER)
-      } DialogType;
-      
-      DialogType mType; // !jf! is this necessary?
       Data mLocalTag;
       Data mRemoteTag;
       CallID mCallId;
