@@ -225,14 +225,21 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          break;
       case ReInviting:
-         if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE 
-             && msg.header(h_StatusLine).statusCode() == 200)
+         if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
          {
-            mState = Connected;
-            send(ackConnection());
-            if (offans.first != None)
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code >=200 && code < 300)
             {
-               incomingSdp(msg, offans.second);
+               mState = Connected;
+               send(ackConnection());
+               if (offans.first != None)
+               {
+                  incomingSdp(msg, offans.second);
+               }
+            }
+            else
+            {
+               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);               
             }
          }
          else
