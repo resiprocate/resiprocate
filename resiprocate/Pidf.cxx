@@ -190,7 +190,6 @@ Pidf::parse(ParseBuffer& pb)
                   {
                      if (xml.getTag() == "status")
                      {
-                        InfoLog(<< "found status");
                         // look for basic
                         if (xml.firstChild())
                         {
@@ -200,7 +199,6 @@ Pidf::parse(ParseBuffer& pb)
                               {
                                  if (xml.firstChild())
                                  {
-                                    InfoLog(<< "found basic: " << xml.getValue());
                                     t.status = (xml.getValue() == "open");
                                     xml.parent();
                                  }
