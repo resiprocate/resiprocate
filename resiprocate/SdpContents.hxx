@@ -337,6 +337,7 @@ class SdpContents : public Contents
       };
 
       SdpContents();
+      SdpContents(const Data& data, const Mime& contentTypes);
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       virtual Contents* clone() const;
 
