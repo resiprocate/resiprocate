@@ -43,7 +43,8 @@ class RequestContext
       bool chainIteratorStackIsEmpty();
 
       Proxy& getProxy();
-
+      void sendResponse(const resip::SipMessage& response);
+      
       void addTarget(const resip::NameAddr& target);
       std::vector<resip::NameAddr>& getCandidates();
       
