@@ -24,6 +24,7 @@ namespace Vocal2
       const int actData  = (1 << 5);
       const int actBad   = (1 << 6);
       const int actEndHdrs = (1 << 7);
+
   
       typedef enum {
          NewMsg = 0,
@@ -36,6 +37,7 @@ namespace Vocal2
          BuildData,
          BuildDataCrLf,
          CheckCont,
+         CheckEndHdr,
          InQ,
          InQEsc,
          InAng,
