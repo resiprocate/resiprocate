@@ -22,6 +22,10 @@ class ClientOutOfDialogReq : public BaseUsage
             friend class DialogUsageManager;
             Handle(DialogUsageManager& dum);
       };
+
+   private:
+      friend class DialogUsageManager;
+      ClientOutOfDialog::Handle mHandle;
 };
  
 }

@@ -444,19 +444,18 @@ DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
 ServerInviteSession::Handle 
 DialogUsageManager::createServerInviteSession()
 {
-   ServerInviteSession::Handle handle(*this);
    BaseUsage* usage = new ServerInviteSession();
+   
+   assert(mUsage.find(usage->mHandle.mId) == mUsage.end());
+   mUsage[usage->mHandle.mId] = usage;
 
-   assert(mUsage.find(handle.mId) == mUsage.end());
-   mUsage[handle.mId] = usage;
-
-   return handle;
+   return usage->mHandle;
 }
 
 void
-DialogUsageManager::destroyUsage(BaseUsage::Handle handle)
+DialogUsageManager::destroyUsage(BaseUsage* usage)
 {
-   UsageHandleMap::iterator i = mUsageMap.find(handle.mId);
+   UsageHandleMap::iterator i = mUsageMap.find(usage->mHandle.mId);
    if (i =! mUsageMap.end())
    {
       delete i->second;
