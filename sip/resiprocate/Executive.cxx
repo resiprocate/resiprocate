@@ -1,8 +1,7 @@
 #include <sipstack/Executive.hxx>
 #include <sipstack/SipStack.hxx>
 #include <sipstack/TransactionState.hxx>
-#include <sipstack/Logger.hxx>
-
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP

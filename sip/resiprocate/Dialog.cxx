@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sipstack/Dialog.hxx>
-#include <sipstack/Logger.hxx>
 #include <sipstack/Helper.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 

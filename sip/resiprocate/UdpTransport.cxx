@@ -15,14 +15,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <sipstack/Data.hxx>
+#include <util/Data.hxx>
 
 #endif
 
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
-#include <sipstack/Logger.hxx>
+#include <util/Logger.hxx>
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
