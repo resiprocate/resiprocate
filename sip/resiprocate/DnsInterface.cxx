@@ -40,7 +40,9 @@ DnsInterface::DnsInterface(bool sync)
    
    addTransportType(UDP);
    addTransportType(TCP);
-   addTransportType(TLS);   
+#if defined(USE_SSL)
+   //addTransportType(TLS);   
+#endif
 }
 
 DnsInterface::~DnsInterface()
