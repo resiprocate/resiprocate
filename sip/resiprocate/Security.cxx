@@ -745,6 +745,40 @@ Security::setRootCerts(  const Data& certPem )
 }
 
 
+Data 
+Security::computeIdentityHash( const Data& in )
+{
+   Data ret;
+   
+   EVP_PKEY* pKey = privateKey; // TODO - wrong one - need TLS not smime key
+    
+   assert( pKey->type ==  EVP_PKEY_RSA );
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey); 
+
+   unsigned char result[4096];
+   unsigned int resultSize = sizeof(result);
+   assert( resultSize > (unsigned int)RSA_size(rsa) );
+   
+   assert(SHA_DIGEST_LENGTH == 20);
+   unsigned char hashRes[SHA_DIGEST_LENGTH];
+   unsigned int hashResLen=SHA_DIGEST_LENGTH;
+
+   SHA_CTX sha;
+   SHA1_Init( &sha );
+   SHA1_Update(&sha, in.data() , in.size() );
+   SHA1_Final( hashRes, &sha );
+   
+   RSA_sign(NID_sha1, hashRes, hashResLen,
+            result, &resultSize,
+            rsa);
+
+   ret = Data(result,resultSize);
+   
+   assert(0);
+   return ret;
+}
+
+
 Contents* 
 Security::sign( Contents* bodyIn )
 {
@@ -767,7 +801,10 @@ Security::multipartSign( Contents* bodyIn )
    
    // add the main body to it 
    Contents* body =  bodyIn->clone();
-   body->header(h_ContentTransferEncoding).value() = "binary";
+#if 0
+   // this need to be set in body before it is passed in
+   body->header(h_ContentTransferEncoding).value() = StringCategory(Data("binary"));
+#endif
    multi->parts().push_back( body );
 
    // compute the signature 
@@ -1089,11 +1126,22 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    assert( second );
    assert( first );
    
+   CerrLog( << "message to sign is " << *first );
+   //CerrLog( << "first is of type" << typename(*first) );
+   
    Data bodyData;
-   DataStream strm( bodyData );
-   first->encodeHeaders( strm );
-   first->encode( strm );
-   strm.flush();
+   {
+      DataStream strm( bodyData );
+#if 0
+      strm << *first;
+#else      
+      // TODO - CJ 
+      first->encodeHeaders( strm );
+      first->encode( strm );
+      strm.flush();
+#endif
+   }
+   CerrLog( << "encoded version to sign is " << bodyData );
    
    // Data textData = first->getBodyData();
    Data textData = bodyData;
@@ -1157,7 +1205,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          InfoLog( << "data is pkcs7 enveloped" );
          break;
       case NID_pkcs7_data:
-         InfoLog( << "data i pkcs7 data" );
+         InfoLog( << "data is pkcs7 data" );
          break;
       case NID_pkcs7_encrypted:
          InfoLog( << "data is pkcs7 encrypted " );
@@ -1250,7 +1298,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       InfoLog(<< "No signers of this messages" );
    }
    
-#if 0 
+#if 0
    STACK_OF(PKCS7_SIGNER_INFO) *sinfos;
    PKCS7_SIGNER_INFO *si;
    PKCS7_ISSUER_AND_SERIAL *ias; 
