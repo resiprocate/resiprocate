@@ -19,10 +19,12 @@ MultiHeader<Headers::Content_Language> Vocal2::h_ContentLanguages;
 MultiHeader<Headers::Proxy_Require> Vocal2::h_ProxyRequires;
 MultiHeader<Headers::Require> Vocal2::h_Requires;
 MultiHeader<Headers::Supported> Vocal2::h_Supporteds;
+Header<Headers::Timestamp> Vocal2::h_Timestamp;
 MultiHeader<Headers::Unsupported> Vocal2::h_Unsupporteds;
 MultiHeader<Headers::Accept> Vocal2::h_Accepts;
 Header<Headers::Content_Type> Vocal2::h_ContentType;
 MultiHeader<Headers::Alert_Info> Vocal2::h_AlertInfos;
+MultiHeader<Headers::Call_Info> Vocal2::h_CallInfos;
 MultiHeader<Headers::Error_Info> Vocal2::h_ErrorInfos;
 MultiHeader<Headers::Record_Route> Vocal2::h_RecordRoutes;
 MultiHeader<Headers::Route> Vocal2::h_Routes;
@@ -55,7 +57,7 @@ MultiHeader<Headers::Via> Vocal2::h_Vias;
 MultiHeader<Headers::Subscription_State> Vocal2::h_SubscriptionStates;
 Vocal2::RequestLineType Vocal2::h_RequestLine;
 Vocal2::StatusLineType Vocal2::h_StatusLine;
-Header<Headers::Call_ID> Vocal2::h_Replaces;
+Header<Headers::Replaces> Vocal2::h_Replaces;
 
 bool
 Headers::isCommaTokenizing(Type type)
