@@ -13,7 +13,7 @@
 
 using resip::RecursiveMutex;
 
-#ifdef WIN32 
+#if defined( WIN32 ) || defined( __APPLE__ ) 
 // !cj! need to write windows mutec stuff 
 	namespace resip
 {
