@@ -12,7 +12,7 @@ const char* ParseBuffer::Whitespace = " \t\r\n";
 
 ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
    : mBuff(rhs.mBuff),
-     mTraversalPtr(rhs.mTraversalPtr),
+     mPosition(rhs.mPosition),
      mEnd(rhs.mEnd)
 {}
 
@@ -20,19 +20,18 @@ ParseBuffer&
 ParseBuffer::operator=(const ParseBuffer& rhs)
 {
    mBuff = rhs.mBuff;
-   mTraversalPtr = rhs.mTraversalPtr;
+   mPosition = rhs.mPosition;
    mEnd = rhs.mEnd;
 
    return *this;
 }
 
-// !dlb! replace with copy and assign
 void
-ParseBuffer::reset(const char* pos) //should be renamed to set
+ParseBuffer::reset(const char* pos)
 {
    assert( mBuff <= mEnd);
    assert( (pos >= mBuff) && (pos <= mEnd) );
-   mTraversalPtr = pos;
+   mPosition = pos;
 }
 
 const char* 
@@ -40,21 +39,26 @@ ParseBuffer::skipChar()
 {
    if (eof())
    {
+      DebugLog(<< "skipped over eof");
       fail(__FILE__, __LINE__);
    }
-   ++mTraversalPtr;
-   return mTraversalPtr;
+   return ++mPosition;
 }
 
 const char*
 ParseBuffer::skipChar(char c)
 {
-   if (*position() != c)
+   if (eof())
+   {
+      DebugLog(<< "skipped over eof");
+      fail(__FILE__, __LINE__);
+   }
+   if (*mPosition != c)
    {
       DebugLog (<< "Expected '" << c << "'");
       fail(__FILE__, __LINE__);
    }
-   return ++mTraversalPtr;
+   return ++mPosition;
 }
 
 const char* 
@@ -63,15 +67,15 @@ ParseBuffer::skipChars(const char* cs)
    const char* match = cs;
    while (*match != 0)
    {
-      if (eof() || (*match != *mTraversalPtr))
+      if (eof() || (*match != *mPosition))
       {
          DebugLog (<< "Expected \"" << cs << "\"");
          fail(__FILE__, __LINE__);
       }
       match++;
-      mTraversalPtr++;
+      mPosition++;
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char* 
@@ -80,56 +84,56 @@ ParseBuffer::skipChars(const Data& cs)
    const char* match = cs.data();
    for(Data::size_type i = 0; i < cs.size(); i++)
    {
-      if (eof() || (*match != *mTraversalPtr))
+      if (eof() || (*match != *mPosition))
       {
          DebugLog (<< "Expected \"" << cs << "\"");
          fail(__FILE__, __LINE__);
       }
       match++;
-      mTraversalPtr++;
+      mPosition++;
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipNonWhitespace()
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      switch (*position())
+      switch (*mPosition)
       {
          case ' ' :
          case '\t' : 
          case '\r' : 
          case '\n' : 
-            return position();
+            return mPosition;
          default : 
-            mTraversalPtr++;
+            mPosition++;
       }
    }
-   return position();
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipWhitespace()
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      switch (*position())
+      switch (*mPosition)
       {
          case ' ' :
          case '\t' : 
          case '\r' : 
          case '\n' : 
          {
-            mTraversalPtr++;
+            mPosition++;
             break;
          }
          default : 
-            return position();
+            return mPosition;
       }
    }
-   return position();
+   return mPosition;
 }
 
 // "SIP header field values can be folded onto multiple lines if the
@@ -141,19 +145,19 @@ ParseBuffer::skipLWS()
 {
    enum State {WS, CR, LF};
    State state = WS;
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      char c = *mTraversalPtr++;
+      char c = *mPosition++;
       if (c == '\\')
       {
          // treat escaped CR and LF as space
-         c = *mTraversalPtr++;
+         c = *mPosition++;
          if (c == '\r' || c == '\n')
          {
             c = ' ';
          }
       }
-      switch (*mTraversalPtr++)
+      switch (*mPosition++)
       {
          case ' ' :
          case '\t' : 
@@ -183,17 +187,17 @@ ParseBuffer::skipLWS()
             // terminating CRLF not skipped
             if (state == LF)
             {
-               mTraversalPtr -= 3;
+               mPosition -= 3;
             }
             else
             {
-               mTraversalPtr--;
+               mPosition--;
             }
-            return mTraversalPtr;
+            return mPosition;
          }
       }
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char*
@@ -203,37 +207,37 @@ ParseBuffer::skipToTermCRLF()
    {
       static Data CRLF("\r\n");
       skipToChars(CRLF);
-      mTraversalPtr += 2;
+      mPosition += 2;
       if (eof() || 
-          (*mTraversalPtr != ' ' &&
-           *mTraversalPtr != '\t' &&
+          (*mPosition != ' ' &&
+           *mPosition != '\t' &&
            // check for \CRLF -- not terminating
            //           \\CRLF -- terminating
-           ((mTraversalPtr-3 < mBuff || *(mTraversalPtr-3) != '\\') ||
-            (mTraversalPtr-4 > mBuff && *(mTraversalPtr-4) == '\\'))))
+           ((mPosition-3 < mBuff || *(mPosition-3) != '\\') ||
+            (mPosition-4 > mBuff && *(mPosition-4) == '\\'))))
       {
-         mTraversalPtr -= 2;
+         mPosition -= 2;
          break;
       }
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipToChar(char c)
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      if (*position() == c)
+      if (*mPosition == c)
       {
-         return position();
+         return mPosition;
       }
       else
       {
-         mTraversalPtr++;
+         mPosition++;
       }
    }
-   return position();
+   return mEnd;
 }
 
 const char*
@@ -244,22 +248,22 @@ ParseBuffer::skipToChars(const char* cs)
 
    const char* rpos;
    const char* cpos;
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      rpos = mTraversalPtr;
+      rpos = mPosition;
       cpos = cs;
       for (unsigned int i = 0; i < l; i++)
       {
          if (*cpos++ != *rpos++)
          {
-            mTraversalPtr++;
+            mPosition++;
             goto skip;
          }
       }
-      return mTraversalPtr;
+      return mPosition;
      skip: ;
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char*
@@ -269,22 +273,22 @@ ParseBuffer::skipToChars(const Data& cs)
 
    const char* rpos;
    const char* cpos;
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
       cpos = cs.data();
-      rpos = mTraversalPtr;
+      rpos = mPosition;
       for (size_t i = 0; i < l; i++)
       {
          if (*cpos++ != *rpos++)
          {
-            mTraversalPtr++;
+            mPosition++;
             goto skip;
          }
       }
-      return mTraversalPtr;
+      return mPosition;
      skip: ;
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 bool oneOf(char c, const char* cs)
@@ -314,75 +318,75 @@ bool oneOf(char c, const Data& cs)
 const char* 
 ParseBuffer::skipToOneOf(const char* cs)
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      if (oneOf(*position(), cs))
+      if (oneOf(*mPosition, cs))
       {
-         return position();
+         return mPosition;
       }
       else
       {
-         mTraversalPtr++;
+         mPosition++;
       }
    }
-   return position();
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipToOneOf(const char* cs1,
                          const char* cs2)
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      if (oneOf(*position(), cs1) ||
-          oneOf(*position(), cs2))
+      if (oneOf(*mPosition, cs1) ||
+          oneOf(*mPosition, cs2))
       {
-         return position();
+         return mPosition;
       }
       else
       {
-         mTraversalPtr++;
+         mPosition++;
       }
    }
-   return position();
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipToOneOf(const Data& cs1,
                          const Data& cs2)
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
-      if (oneOf(*position(), cs1) ||
-          oneOf(*position(), cs2))
+      if (oneOf(*mPosition, cs1) ||
+          oneOf(*mPosition, cs2))
       {
-         return position();
+         return mPosition;
       }
       else
       {
-         mTraversalPtr++;
+         mPosition++;
       }
    }
-   return position();
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipToEndQuote(char quote)
 {
-   while (mTraversalPtr < mEnd)
+   while (mPosition < mEnd)
    {
       // !dlb! mark character encoding
-      if (*position() == '\\')
+      if (*mPosition == '\\')
       {
-         mTraversalPtr += 2;
+         mPosition += 2;
       }
-      else if (*position() == quote)
+      else if (*mPosition == quote)
       {
-         return position();
+         return mPosition;
       }
       else
       {
-         mTraversalPtr++;
+         mPosition++;
       }
    }
 
@@ -394,32 +398,86 @@ ParseBuffer::skipToEndQuote(char quote)
 const char* 
 ParseBuffer::skipN(int count)
 {
-   mTraversalPtr += count;
-   if (mTraversalPtr > mEnd)
+   mPosition += count;
+   if (mPosition > mEnd)
    {
-      mTraversalPtr = mEnd;
+      mPosition = mEnd;
    }
-   return mTraversalPtr;
+   return mPosition;
 }
 
 const char* 
 ParseBuffer::skipToEnd()
 {
-   mTraversalPtr = mEnd;
-   return mTraversalPtr;
+   mPosition = mEnd;
+   return mPosition;
+}
+
+const char* 
+ParseBuffer::skipBackChar()
+{
+   if (bof())
+   {
+      DebugLog(<< "backed over beginning of buffer");
+      fail(__FILE__, __LINE__);
+   }
+   mPosition--;
+   return mPosition;
+}
+
+// abcde
+//     ^
+// skipBackChar('d');
+// abcde
+//    ^
+// skipChar('d');
+// abcde
+//     ^
+const char*
+ParseBuffer::skipBackChar(char c)
+{
+   if (bof())
+   {
+      DebugLog (<< "backed over beginning of buffer");
+      fail(__FILE__, __LINE__);
+   }
+   if (*(--mPosition) != c)
+   {
+      DebugLog (<< "Expected '" << c << "'");
+      fail(__FILE__, __LINE__);
+   }
+   return mPosition;
+}
+
+// abcde
+//      ^
+// skipBackToChar('c');
+// abcde
+//   ^
+const char* 
+ParseBuffer::skipBackToChar(char c)
+{
+   while (!bof())
+   {
+      if (*(--mPosition) == c)
+      {
+         return ++mPosition;
+      }
+   }
+   return mBuff;
 }
 
 void
 ParseBuffer::data(Data& data, const char* start) const
 {
    assert( mBuff <= start );
-   assert( start <= mTraversalPtr);
+   assert( start <= mPosition);
 
    if (data.mMine)
    {
       delete[] data.mBuf;
    }
-   data.mSize = (unsigned int)(mTraversalPtr - start);
+   data.mSize = (unsigned int)(mPosition - start);
    data.mBuf = const_cast<char*>(start);
    data.mCapacity = data.mSize;
    data.mMine = false;
@@ -428,9 +486,9 @@ ParseBuffer::data(Data& data, const char* start) const
 Data
 ParseBuffer::data(const char* start) const
 {
-   assert(mBuff <= start && start <= mTraversalPtr);
+   assert(mBuff <= start && start <= mPosition);
 
-   Data data(start, mTraversalPtr - start);
+   Data data(start, mPosition - start);
    return data;
 }
 
@@ -443,20 +501,20 @@ ParseBuffer::integer()
       fail(__FILE__, __LINE__);
    }
 
-   const char* p = position();
+   const char* p = mPosition;
    assert( p );
    char c = *p;
 
    if (!isdigit(c))
    {
-      DebugLog(<< "Expected a digit, got: " << Data(position(), (mEnd - position())));
+      DebugLog(<< "Expected a digit, got: " << Data(mPosition, (mEnd - mPosition)));
       fail(__FILE__, __LINE__);
    }
    
    int num = 0;
-   while (!eof() && isdigit(*position()))
+   while (!eof() && isdigit(*mPosition))
    {
-      num = num*10 + (*position()-'0');
+      num = num*10 + (*mPosition-'0');
       skipChar();
    }
    
@@ -466,18 +524,18 @@ ParseBuffer::integer()
 float
 ParseBuffer::floatVal()
 {
-   const char* s = position();
+   const char* s = mPosition;
    try
    {
       float mant = 0.0;
       int num = integer();
 
-      if (*position() == '.')
+      if (*mPosition == '.')
       {
 	  skipChar('.');
-	  const char* pos = position();
+	  const char* pos = mPosition;
 	  mant = float(integer());
-	  int s = position() - pos;
+	  int s = mPosition - pos;
 	  while (s--)
 	  {
 	     mant /= 10.0;
@@ -487,9 +545,9 @@ ParseBuffer::floatVal()
    }
    catch (Exception&)
    {
-      DebugLog(<< "Expected a floating point value, got: " << Data(s, position() - s));
+      DebugLog(<< "Expected a floating point value, got: " << Data(s, mPosition - s));
       fail(__FILE__, __LINE__);
-      return 0.0; // for warning
+      return 0.0;
    }
 }
 

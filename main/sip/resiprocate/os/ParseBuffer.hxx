@@ -12,7 +12,7 @@ class ParseBuffer
       // does NOT OWN the buffer memory
       ParseBuffer(const char* buff, unsigned int len)
          : mBuff(buff),
-           mTraversalPtr(buff),
+           mPosition(buff),
            mEnd(buff+len)
       {}
 
@@ -31,9 +31,13 @@ class ParseBuffer
       ParseBuffer& operator=(const ParseBuffer& other);
       void reset(const char* pos);
 
-      bool eof() const { return ( (mEnd==0) || (mTraversalPtr >= mEnd) );}
+      // abcdef
+      // ^     ^
+      // begin end
+      bool eof() const { return mPosition >= mEnd;}
+      bool bof() const { return mPosition <= mBuff;}
       const char* start() const { return mBuff; }
-      const char* position() const { return mTraversalPtr; }
+      const char* position() const { return mPosition; }
       const char* end() const { return mEnd; }
 
       const char* skipChar();
@@ -54,6 +58,11 @@ class ParseBuffer
       const char* skipN(int count);
       const char* skipToEnd();
 
+      // inverse of skipChar() -- end up at char not before it
+      const char* skipBackChar();
+      const char* skipBackChar(char c);
+      const char* skipBackToChar(char c);
+
       void assertEof() const;
       void assertNotEof() const;
       void fail(const char* file, unsigned int line) const;
@@ -69,7 +78,7 @@ class ParseBuffer
       static const char* ParamTerm;
    private:
       const char* mBuff;
-      const char* mTraversalPtr;
+      const char* mPosition;
       const char* mEnd;
 };
 
