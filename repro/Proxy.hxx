@@ -30,6 +30,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual void thread();
       
       UserDb &getUserDb();
+      void send(const resip::SipMessage& msg);
       
    private:
       resip::SipStack& mStack;
