@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sipstack/Dialog.hxx>
+#include <sipstack/Uri.hxx>
 #include <sipstack/Helper.hxx>
 #include <util/Logger.hxx>
 
@@ -26,9 +27,9 @@ Dialog::Dialog(const Url& localContact)
      mDialogId()
 {
    //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
-   mVia.sentHost() = localContact.host();
-   mVia.sentPort() = localContact.port();
-   mVia.transport() = localContact[p_transport];
+   mVia.sentHost() = localContact.uri().host();
+   mVia.sentPort() = localContact.uri().port();
+   mVia.transport() = localContact.uri()[p_transport];
 #if 0
    if (mVia.transport().size() == 0)
    {

@@ -7,7 +7,6 @@ using namespace Vocal2;
 Data Headers::HeaderNames[MAX_HEADERS] = {};
 bool Headers::CommaTokenizing[] = {false};
 
-
 Header<Headers::Content_Disposition> Vocal2::h_ContentDisposition;
 Header<Headers::Content_Encoding> Vocal2::h_ContentEncoding;
 Header<Headers::MIME_Version> Vocal2::h_MimeVersion;
