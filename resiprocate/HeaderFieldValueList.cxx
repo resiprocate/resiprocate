@@ -5,12 +5,15 @@ using namespace Vocal2;
 using namespace std;
 
 HeaderFieldValueList::HeaderFieldValueList()
-  : first(0), last(0)
+   : first(0), 
+     last(0),
+     mParserContainer(0)
 {}
 
-
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& other)
-  : first(0), last(0)
+  : first(0), 
+    last(0),
+    mParserContainer(0)
 {
    if (other.first)
    {
