@@ -32,11 +32,11 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
 #ifndef WIN32
    int on = 1;
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, // | SO_REUSEPORT,
-		       (void*)(&on), sizeof ( on )) )
+                       (void*)(&on), sizeof ( on )) )
    {
       int err = errno;
       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: "
-	       << strerror(err));
+               << strerror(err));
       throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
 #endif
@@ -84,7 +84,7 @@ void
 TcpTransport::buildFdSet( FdSet& fdset)
 {
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
-	it != mConnectionMap.mConnections.end(); it++)
+        it != mConnectionMap.mConnections.end(); it++)
    {
       fdset.setRead(it->second->getSocket());
 
@@ -107,9 +107,9 @@ TcpTransport::processListen(FdSet& fdset)
       Socket sock = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( sock == -1 )
       {
-	 int err = errno;
-	 DebugLog( << "Error on accept: " << strerror(err));
-	 return;
+         int err = errno;
+         DebugLog( << "Error on accept: " << strerror(err));
+         return;
       }
 
       makeSocketNonBlocking(sock);
@@ -122,8 +122,8 @@ TcpTransport::processListen(FdSet& fdset)
       mConnectionMap.add(who, sock);
 
       InfoLog (<< "Received TCP connection from: "
-	       << inet_ntoa(who.ipv4)
-	       << ":" <<  who.port); //!rm!
+               << inet_ntoa(who.ipv4)
+               << ":" <<  who.port); //!rm!
    }
 }
 
@@ -166,21 +166,21 @@ TcpTransport::processAllReads(FdSet& fdset)
    if (!mConnectionMap.mConnections.empty())
    {
       for (Connection* c = mConnectionMap.mPostOldest.mYounger;
-	   c != &mConnectionMap.mPreYoungest; c = c->mYounger)
+           c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
-	 if (fdset.readyToRead(c->getSocket()))
-	 {
-	    if (processRead(c))
-	    {
-	       return;
-	    }
-	    else
-	    {
-	       DebugLog(<< "TcpTransport::processAllReads -- closing: " << *c);
-	       mConnectionMap.close(c->mWho);
-	       return;
-	    }
-	 }
+         if (fdset.readyToRead(c->getSocket()))
+         {
+            if (processRead(c))
+            {
+               return;
+            }
+            else
+            {
+               DebugLog(<< "TcpTransport::processAllReads -- closing: " << *c);
+               mConnectionMap.close(c->mWho);
+               return;
+            }
+         }
       }
    }
 }
@@ -195,104 +195,104 @@ TcpTransport::processAllWrites( FdSet& fdset )
       Connection* conn = data->destination.connection;
       if (conn == 0)
       {
-	 conn = mConnectionMap.get(data->destination);
+         conn = mConnectionMap.get(data->destination);
       }
 
       if (conn == 0)
       {
-	 // attempt to open
-	 Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
+         // attempt to open
+         Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
 
-	 if ( sock == -1 ) // no socket found - try to free one up and try again
-	 {
-	    // !dlb! does the file descriptor become available immediately?
-	    mConnectionMap.gc(ConnectionMap::MinLastUsed); // free one up
-	    sock = socket( AF_INET, SOCK_STREAM, 0 ); // try again
-	 }
+         if ( sock == -1 ) // no socket found - try to free one up and try again
+         {
+            // !dlb! does the file descriptor become available immediately?
+            mConnectionMap.gc(ConnectionMap::MinLastUsed); // free one up
+            sock = socket( AF_INET, SOCK_STREAM, 0 ); // try again
+         }
 
-	 if ( sock == -1 )
-	 {
-	    DebugLog( << "Error in TCP finding free socket to use" );
-	 }
-	 else
-	 {
-	    struct sockaddr_in servaddr;
-	    memset( &servaddr, sizeof(servaddr), 0 );
-	    servaddr.sin_family = AF_INET;
-	    servaddr.sin_port = htons( data->destination.port);
-	    servaddr.sin_addr =  data->destination.ipv4;
+         if ( sock == -1 )
+         {
+            DebugLog( << "Error in TCP finding free socket to use" );
+         }
+         else
+         {
+            struct sockaddr_in servaddr;
+            memset( &servaddr, sizeof(servaddr), 0 );
+            servaddr.sin_family = AF_INET;
+            servaddr.sin_port = htons( data->destination.port);
+            servaddr.sin_addr =  data->destination.ipv4;
 
-	    makeSocketNonBlocking(sock);
+            makeSocketNonBlocking(sock);
 
-	    DebugLog (<<"Trying to open new connection");
+            DebugLog (<<"Trying to open new connection");
 
-	    int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
+            int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
 
-	    if ((e == -1) && (errno != EINPROGRESS))
-	    {
-	       int err = errno;
-	       InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
-	    }
-	    else
-	    {
-	       // !rk! Even though a TCP stack may get a TCP RST that
-	       // does not necessarily indicate an error condition.  It
-	       // may indicate a transient error and the OS will likely
-	       // retry rather than returning right away.  While this is
-	       // good, most timeout defaults will exceed SIP timeouts
-	       // which mean that another protocol (e.g. UDP) will never
-	       // be tried.  So wait for a while but give up pretty quickly.
+            if ((e == -1) && (errno != EINPROGRESS))
+            {
+               int err = errno;
+               InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+            }
+            else
+            {
+               // !rk! Even though a TCP stack may get a TCP RST that
+               // does not necessarily indicate an error condition.  It
+               // may indicate a transient error and the OS will likely
+               // retry rather than returning right away.  While this is
+               // good, most timeout defaults will exceed SIP timeouts
+               // which mean that another protocol (e.g. UDP) will never
+               // be tried.  So wait for a while but give up pretty quickly.
 
-	       fd_set rset, wset;
-	       FD_ZERO(&rset);
-	       FD_ZERO(&wset);
-	       FD_SET(sock, &rset);
-	       wset = rset;
-	       struct timeval timeout;
-	       timeout.tv_sec = 16 * Timer::T1 / 1000; /* !rk! change? */
-	       timeout.tv_usec = 0;
+               fd_set rset, wset;
+               FD_ZERO(&rset);
+               FD_ZERO(&wset);
+               FD_SET(sock, &rset);
+               wset = rset;
+               struct timeval timeout;
+               timeout.tv_sec = 16 * Timer::T1 / 1000; /* !rk! change? */
+               timeout.tv_usec = 0;
 
-	       while ((e = select(sock+1, &rset, &wset, NULL, &timeout)) < 0)
-	       {
-		  // may not be portable outside Linux as Linux will set
-		  // the timeout be be the remaining time on EINTR
-		  if (errno != EINTR)
-		  {
-		     break;
-		  }
-	       }
-	       if (e < 1)
-	       {
-		  InfoLog( << "Timeout on TCP connect to " <<  data->destination);
-		  close(sock);
-	       }
-	       else
-	       {
-		  // succeeded, add the connection
-		  mConnectionMap.add( data->destination, sock);
-		  conn = mConnectionMap.get(data->destination);
-		  assert( conn );
-		  InfoLog (<< "Opened new connection to "
-			   << inet_ntoa(data->destination.ipv4)
-			   << ":" << data->destination.port ); // !rm!
-	       }
-	    }
-	 }
+               while ((e = select(sock+1, &rset, &wset, NULL, &timeout)) < 0)
+               {
+                  // may not be portable outside Linux as Linux will set
+                  // the timeout be be the remaining time on EINTR
+                  if (errno != EINTR)
+                  {
+                     break;
+                  }
+               }
+               if (e < 1)
+               {
+                  InfoLog( << "Timeout on TCP connect to " <<  data->destination);
+                  close(sock);
+               }
+               else
+               {
+                  // succeeded, add the connection
+                  mConnectionMap.add( data->destination, sock);
+                  conn = mConnectionMap.get(data->destination);
+                  assert( conn );
+                  InfoLog (<< "Opened new connection to "
+                           << inet_ntoa(data->destination.ipv4)
+                           << ":" << data->destination.port ); // !rm!
+               }
+            }
+         }
       }
 
       if (conn == 0)
       {
-	 DebugLog (<< "Failed to create/get connection: " << data->destination);
-	 fail(data->transactionId);
-	 delete data;
-	 return;
+         DebugLog (<< "Failed to create/get connection: " << data->destination);
+         fail(data->transactionId);
+         delete data;
+         return;
       }
 
       if (conn->mOutstandingSends.empty())
       {
-	 DebugLog (<< "Adding " << *conn << " to send roundrobin");
-	 mSendRoundRobin.push_back(conn);
-	 conn->mSendPos = 0;
+         DebugLog (<< "Adding " << *conn << " to send roundrobin");
+         mSendRoundRobin.push_back(conn);
+         conn->mSendPos = 0;
       }
 
       conn->mOutstandingSends.push_back(data);
@@ -310,38 +310,38 @@ TcpTransport::sendFromRoundRobin(FdSet& fdset)
       ConnectionList::iterator rrPos = mSendPos;
       do
       {
-	 if (mSendPos == mSendRoundRobin.end())
-	 {
-	    mSendPos = mSendRoundRobin.begin();
-	 }
-	 if (true) // !cj! - need add to fd set if (fdset.readyToWrite((*mSendPos)->getSocket()))
-	 {
-	    if (processWrite(*mSendPos))
-	    {
-	       if ((*mSendPos)->mOutstandingSends.empty())
-	       {
-		  DebugLog (<< "Finished send, removing " << **mSendPos << " from roundrobin");
-		  mSendPos = mSendRoundRobin.erase(mSendPos);
-	       }
-	       else
-	       {
-		  mSendPos++;
-	       }
-	       return;
-	    }
-	    else
-	    {
-	       DebugLog (<< "Failed send, removing " << **mSendPos << " from roundrobin");
-	       DebugLog(<< "TcpTransport::processAllWrites -- closing: " << **mSendPos);
-	       mConnectionMap.close((*mSendPos)->mWho);
-	       mSendPos = mSendRoundRobin.erase(mSendPos);
-	       return;
-	    }
-	 }
-	 else
-	 {
-	    mSendPos++;
-	 }
+         if (mSendPos == mSendRoundRobin.end())
+         {
+            mSendPos = mSendRoundRobin.begin();
+         }
+         if (true) // !cj! - need add to fd set if (fdset.readyToWrite((*mSendPos)->getSocket()))
+         {
+            if (processWrite(*mSendPos))
+            {
+               if ((*mSendPos)->mOutstandingSends.empty())
+               {
+                  DebugLog (<< "Finished send, removing " << **mSendPos << " from roundrobin");
+                  mSendPos = mSendRoundRobin.erase(mSendPos);
+               }
+               else
+               {
+                  mSendPos++;
+               }
+               return;
+            }
+            else
+            {
+               DebugLog (<< "Failed send, removing " << **mSendPos << " from roundrobin");
+               DebugLog(<< "TcpTransport::processAllWrites -- closing: " << **mSendPos);
+               mConnectionMap.close((*mSendPos)->mWho);
+               mSendPos = mSendRoundRobin.erase(mSendPos);
+               return;
+            }
+         }
+         else
+         {
+            mSendPos++;
+         }
       } while(mSendPos != rrPos && !mSendRoundRobin.empty());
    }
 }
