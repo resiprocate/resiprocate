@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.5 2002/09/29 00:47:20 alan Exp $
+# $Id: Makefile,v 1.6 2002/11/14 01:50:55 alan Exp $
 #
 NEATO=neato
 DOT=dot
@@ -20,6 +20,7 @@ HTMLSHEET=htmlcss.xsl
 FILES=$(PSFILES) $(PDFFILES) $(SVGFILES) $(PNGFILES) $(DOCBOOKTARGETS)
 
 
+.PRECIOUS: Preparse.svg.dot Preparse.ps.dot Preparse.png.dot
 
 .phony:
 
@@ -38,11 +39,13 @@ $(OUTDIR)/%.pdf: $(OUTDIR)/%.ps Makefile $(OUTDIR)
 	ps2pdf13 $< $@
 
 #Digraphs
-$(OUTDIR)/%.ps: %.dot Makefile $(OUTDIR)
+$(OUTDIR)/%.ps: %.ps.dot Makefile $(OUTDIR)
 	$(DOT) -Tps -o$@ $<
-$(OUTDIR)/%.png: %.dot
+
+$(OUTDIR)/%.png: %.png.dot
 	$(DOT) -Tpng -o$@ $<
-$(OUTDIR)/%.svg: %.dot Makefile $(OUTDIR)
+
+$(OUTDIR)/%.svg: %.svg.dot Makefile $(OUTDIR)
 	$(DOT) -Tsvg -o$@ $<
 
 # Graphs
@@ -54,8 +57,16 @@ $(OUTDIR)/%.svg: %.neato Makefile $(OUTDIR)
 	$(NEATO) -Tsvg -o$@ $<
 
 # Code autogen
-%.dot: ../%.cxx fsm-dot.awk
-	awk -f fsm-dot.awk $< > $@
+%.ps.dot: ../%.cxx fsm-dot.awk Makefile
+	awk --assign output=$(@:.dot=) -f fsm-dot.awk $< > $@
+
+%.svg.dot: ../%.cxx fsm-dot.awk Makefile
+	awk --assign output=$(@:.dot=) -f fsm-dot.awk $< > $@
+
+
+%.png.dot: ../%.cxx fsm-dot.awk Makefile
+	awk --assign output=$(@:.dot=) -f fsm-dot.awk $< > $@
+
 
 clean: 
 	-/bin/rm -f $(FILES) *.ps
