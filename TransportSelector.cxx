@@ -71,7 +71,7 @@ TransportSelector::addTransport( Transport::Type protocol,
          transport = new TestReliableTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
       case Transport::TestUnreliable:
-         transport = new TestReliableTransport(hostname, port, nic, mStack.mStateMacFifo);
+         transport = new TestUnreliableTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
       default:
          assert(0);
