@@ -238,6 +238,43 @@ Dialog::targetRefreshRequest(const SipMessage& request)
    return 0;
 }
 
+void
+Dialog::updateRequest(SipMessage& request)
+{
+   assert (request.isRequest());
+   if (mCreated)
+   {
+      request.header(h_RequestLine).uri() = mRemoteTarget.uri();
+      request.header(h_To) = mRemoteUri;
+      if ( !mRemoteTag.empty() )
+      {
+         request.header(h_To).param(p_tag) = mRemoteTag;
+      }
+      request.header(h_From) = mLocalUri;
+      if ( !mLocalTag.empty() )
+      {
+         request.header(h_From).param(p_tag) = mLocalTag; 
+      }
+      request.header(h_CallId) = mCallId;
+      request.header(h_Routes) = mRouteSet;
+      request.header(h_Contacts).clear();
+      request.header(h_Contacts).push_front(mContact);
+      copyCSeq(request);
+      incrementCSeq(request);
+
+      request.header(h_MaxForwards).value() = 70;
+
+      Via via;
+      via.param(p_branch); // will create the branch
+      request.header(h_Vias).clear();
+      request.header(h_Vias).push_front(via);
+   }
+   else
+   {
+      DebugLog (<< "Updating a request when not in a dialog yet");
+   }
+}
+
 
 SipMessage* 
 Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
