@@ -1,8 +1,8 @@
 #ifndef Logger_hxx
 #define Logger_hxx
 
-#include <sipstack/Singleton.h>
-#include <sipstack/Threads.h>
+//#include <sipstack/Singleton.h>
+//#include <sipstack/Threads.h>
 
 #include <sipstack/Log.hxx>
 #include <sipstack/SysLogStream.hxx>
@@ -63,19 +63,18 @@ do                                                              \
 namespace Vocal2
 {
 
-class GenericLogImpl : public Loki::SingletonHolder <SysLogStream,
-                                                     Loki::CreateUsingNew,
-                                                     Loki::PhoenixSingleton,
-                                                     Loki::ClassLevelLockable>,
-                       public Log 
+class GenericLogImpl :  public Log 
 {
    public:
       static std::ostream& Instance()
       {
          if (Log::_type == Log::SYSLOG)
          {
-            return Loki::SingletonHolder<SysLogStream, Loki::CreateUsingNew, 
-                                         Loki::PhoenixSingleton, Loki::ClassLevelLockable>::Instance();
+            if (mLogger == 0)
+            {
+               mLogger = new SysLogStream;
+            }
+            return *mLogger;
          }
          else if (Log::_type == Log::FILE)
          {
@@ -91,6 +90,9 @@ class GenericLogImpl : public Loki::SingletonHolder <SysLogStream,
       {
          return (level <= Log::_level);
       }
+
+   private:
+      static std::ostream* mLogger;
 };
  
 } // namespace Vocal
