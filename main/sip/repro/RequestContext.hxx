@@ -3,11 +3,8 @@
 
 #include <vector>
 #include "resiprocate/Uri.hxx"
-<<<<<<< .mine
 #include "repro/RequestProcessorChain.hxx"
-=======
 #include "resiprocate/NameAddr.hxx"
->>>>>>> .r4105
 
 namespace resip
 {
@@ -17,15 +14,15 @@ class TransactionTerminated;
 
 namespace repro
 {
-class RequestProcessorChain;
+class Proxy;
 
 class RequestContext
 {
    public:
-      RequestContext(Proxy &proxy,
+      RequestContext(Proxy& proxy,
                      std::auto_ptr<resip::SipMessage> sipMsg,
                      RequestProcessorChain& chain);
-      ~RequestContext();
+      virtual ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
       void process(std::auto_ptr<resip::Message> msg);
@@ -45,7 +42,7 @@ class RequestContext
       RequestProcessorChain::Chain::iterator popChainIterator();
       bool chainIteratorStackIsEmpty();
 
-      Proxy &getProxy();
+      Proxy& getProxy();
 
       void addTarget(const resip::NameAddr& target);
       std::vector<resip::NameAddr>& getCandidates();
@@ -57,7 +54,7 @@ class RequestContext
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
-      Proxy &mProxy;
+      Proxy& mProxy;
 
       typedef std::vector<RequestProcessorChain::Chain::iterator>
 
