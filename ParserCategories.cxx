@@ -10,6 +10,8 @@
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/UnknownParameter.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "ParseUtil.hxx"
 
 using namespace resip;
 using namespace std;
@@ -1149,16 +1151,20 @@ Via::parse(ParseBuffer& pb)
    startMark = pb.skipWhitespace();
    if (*startMark == '[')
    {
+      startMark = pb.skipChar();
       pb.skipToChar(']');
+      pb.data(mSentHost, startMark);
+      DnsUtil::canonicalizeIpV6Address(mSentHost);
       pb.skipChar();
    }
    else
    {
       pb.skipToOneOf(";:");
+      pb.data(mSentHost, startMark);
    }
-   pb.data(mSentHost, startMark);
+
    pb.skipToOneOf(";:");
-   if (!pb.eof()&& *pb.position() == ':')
+   if (!pb.eof() && *pb.position() == ':')
    {
       startMark = pb.skipChar(':');
       mSentPort = pb.integer();
@@ -1175,7 +1181,17 @@ ostream&
 Via::encodeParsed(ostream& str) const
 {
    str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
-       << Symbols::SPACE << mSentHost;
+       << Symbols::SPACE;
+
+   if (ParseUtil::isIpV6Address(mSentHost))
+   {
+      str << '[' << mSentHost << ']';
+   }
+   else
+   {
+      str << mSentHost;
+   }
+   
    if (mSentPort != 0)
    {
       str << Symbols::COLON << mSentPort;
