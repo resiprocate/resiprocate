@@ -13,8 +13,16 @@ class TestData
    public:
       int main()
       {
-
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
+
+         {
+            Data s;
+            s = "some text";
+            s += Data::Empty;
+            s += "";
+
+            assert(s == "some text");
+         }
 
          {
            Data d;
@@ -50,7 +58,7 @@ class TestData
            }
            
          }
-         return 0;
+
          {
             Data d;
             assert(d.empty());
@@ -508,6 +516,24 @@ class TestData
             assert(Data(1234567) == "1234567");
             assert(Data(-1234567) == "-1234567");
          }
+
+         {
+            assert(Data(true) == "true");
+            assert(Data(false) == "false");
+         }
+
+         {
+            assert(Data('c') == "c");
+         }
+
+         {
+            assert(Data(0.21344) == "0.2134");
+            assert(Data(0.21347) == "0.2135");
+            assert(Data(-0.21347) == "-0.2135");
+            assert(Data(-0.21344) == "-0.2134");
+            cerr << "!! " << Data(-123454.21344, 5) << endl;            
+            assert(Data(-123454.21344, 5) == "-123454.21344");
+         }
       
          {
             Data empt;
@@ -596,6 +622,14 @@ class TestData
          }
 
          {
+            Data s;
+            s = "some text";
+            s += Data::Empty;
+
+            assert(s == "some text");
+         }
+
+         {
             Data a("one");
             Data b("two");
             Data c("three");
@@ -659,6 +693,8 @@ class TestData
             Data d((unsigned long)235235);
             assert(d == "235235");
          }
+
+         std::cerr << "All OK" << endl;
          return 0;
       }
 };
