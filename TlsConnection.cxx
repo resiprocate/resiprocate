@@ -490,7 +490,7 @@ TlsConnection::computePeerName()
       DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
       assert( name.size() == (unsigned)l );
       
-      DebugLog( << "Found commeon name in cert of " << name );
+      DebugLog( << "Found common name in cert of " << name );
       
       mPeerName = name;
    }
