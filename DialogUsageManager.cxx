@@ -103,73 +103,9 @@ DialogUsageManager::process()
                 !mergeRequest(*msg) &&
                 mServerAuthManager && mServerAuthManager->handle(*msg))
             {
-               // not in a dialog yet
-               if ( !msg->header(h_To).param(p_tag).exists() )
-               {
-                  switch (msg->header(h_RequestLine).getMethod())
-                  {
-                     case ACK:
-                        DebugLog (<< "Discarding request: " << msg->brief());
-                        break;
-                        
-                     case PRACK:
-                     case BYE:
-                     case UPDATE:
-                        //case INFO: // !rm! in an ideal world
-                        //case NOTIFY: // !rm! in an ideal world
-                     {
-                        std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 481));
-                        mStack.send(*failure);
-                        break;
-                     }
-
-                     case INVITE:  // new INVITE
-                     {
-                        ServerInvSession* session = new ServerInvSession(*this, );
-                        
-                        break;
-                     }
-                     case CANCEL:
-                        // find the appropropriate ServerInvSession
-                        break;
-                     case SUBSCRIBE:
-                     case REFER: // out-of-dialog REFER
-                        ServerSubscription* sub = new ServerSubscription(*this);
-                        break;
-                     case REGISTER:
-                        ServerRegistration* etc;
-                        break;
-                     case PUBLISH:
-                        ServerPublication*  etc;
-                        break;                       
-                     case MESSAGE :
-                     case OPTIONS :
-                     case INFO :   // handle non-dialog (illegal) INFOs
-                     case NOTIFY : // handle unsolicited (illegal) NOTIFYs
-                        // make a non-dialog BaseUsage
-                        break;
-                        
-                                                                    
-
-
-                    
-
-                  case INFO:
-                  case UPDATE :
-                  case PRACK :
-                  case ACK :
-                  case BYE :
-                  case CANCEL : 
-                  case REGISTER :
-                  case REFER :
-                  case SUBSCRIBE :
-                  case NOTIFY :
-                     
-                     {
-                        
-                     }
-                  }
-               }
+               processRequest(*msg);
+               processResponse(*msg);
+            
                
 
                DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
@@ -211,7 +147,7 @@ DialogUsageManager::process()
          {
             switch (msg->header(h_StatusLine).statusCode())
             {
-               
+               // !jf! handle retranmission of INV/200
             }
          }
          
@@ -316,6 +252,141 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
    }
    return false;
 }
+void
+DialogUsageManager::processRequest(const SipMessage& request)
+{
+   if ( !request.header(h_To).param(p_tag).exists() )
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         case ACK:
+            DebugLog (<< "Discarding request: " << request.brief());
+            break;
+                        
+         case PRACK:
+         case BYE:
+         case UPDATE:
+            //case INFO: // !rm! in an ideal world
+            //case NOTIFY: // !rm! in an ideal world
+         {
+            std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
+            mStack.send(*failure);
+            break;
+         }
+
+         case INVITE:  // new INVITE
+         {
+            ServerInvSession* session = new ServerInvSession(*this, request);
+            break;
+         }
+         case CANCEL:
+         {
+            // find the appropropriate ServerInvSession
+            DialogSet& dialogs = findDialogSet(DialogSetId(request));
+            dialogs.cancel(request);
+            break;
+         }
+         case SUBSCRIBE:
+         case REFER: // out-of-dialog REFER
+         {
+            ServerSubscription* sub = new ServerSubscription(*this, request);
+            break;
+         }
+         case REGISTER:
+         {
+            ServerRegistration* reg = new ServerRegistration(*this, request);
+            break;
+         }
+         case PUBLISH:
+         {
+            ServerPublication* pub = new ServerPublication(*this, request);
+            break;                       
+         }
+         case MESSAGE :
+         case OPTIONS :
+         case INFO :   // handle non-dialog (illegal) INFOs
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
+         {
+            // make a non-dialog BaseUsage
+            ServerOutOfDialogReq* req = new ServerOutOfDialogReq(*this, request);
+            break;
+         }
+         default:
+            assert(0);
+            break;
+      }
+   }
+   else // in a specific dialog
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         // a NOTIFY is the only request that can
+         // create a full dialog (when the 2xx from the
+         // SUBSCRIBE arrives *after* the NOTIFY
+         case NOTIFY : 
+         {
+            Dialog& dialog = findDialog(DialogId(request));
+            dialog.processNotify(request);
+            break;
+         }
+
+
+         case ACK:
+            DebugLog (<< "Discarding request: " << request.brief());
+            break;
+                        
+         case PRACK:
+         case BYE:
+         case UPDATE:
+            //case INFO: // !rm! in an ideal world
+            //case NOTIFY: // !rm! in an ideal world
+         {
+            std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
+            mStack.send(*failure);
+            break;
+         }
+
+         case INVITE:  // new INVITE
+         {
+            ServerInvSession* session = new ServerInvSession(*this, request);
+            break;
+         }
+         case CANCEL:
+         {
+            // find the appropropriate ServerInvSession
+            DialogSet& dialogs = findDialogSet(DialogSetId(request));
+            dialogs.cancel(request);
+            break;
+         }
+         case SUBSCRIBE:
+         case REFER: // out-of-dialog REFER
+         {
+            ServerSubscription* sub = new ServerSubscription(*this, request);
+            break;
+         }
+         case REGISTER:
+         {
+            ServerRegistration* reg = new ServerRegistration(*this, request);
+            break;
+         }
+         case PUBLISH:
+         {
+            ServerPublication* pub = new ServerPublication(*this, request);
+            break;                       
+         }
+         case MESSAGE :
+         case OPTIONS :
+         case INFO :   // handle non-dialog (illegal) INFOs
+         default:
+            assert(0);
+            break;
+      }
+
+      Dialog& dialog = findDialog(
+      DialogSet& dialogs = findDialogSet(DialogSetId(request));
+      dialogs.
+   }
+}
 
 Dialog&  
 DialogUsageManager::findDialog(DialogId id)
@@ -364,3 +435,4 @@ DialogUsageManager::findCreator(DialogId id)
     return (*creator);
     
 }
+

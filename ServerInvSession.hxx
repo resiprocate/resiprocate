@@ -10,6 +10,8 @@ class ServerInvSession: public BaseUsage
       class Handle
       {
       };
+
+      ServerInvSession(DialogUsageManager& dum, const SipMessage& msg);
       
       void setOffer(SdpContents* offer);
       void sendOfferInAnyMessage();
