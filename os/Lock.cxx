@@ -16,26 +16,25 @@ Lock::Lock(Lockable & lockable, LockType lockType)
 {
    switch ( lockType )
     {
-	case VOCAL_READLOCK:
-	{
-	    myLockable.readlock();
-	    break;
-	}
+       case VOCAL_READLOCK:
+       {
+          myLockable.readlock();
+          break;
+       }
 	    
-	case VOCAL_WRITELOCK:
-	{
-	    myLockable.writelock();
-	    break;
-	}
-
-    	default:
-	{
-    	    myLockable.lock();
-	    break;
-	}
+       case VOCAL_WRITELOCK:
+       {
+          myLockable.writelock();
+          break;
+       }
+       
+       default:
+       {
+          myLockable.lock();
+          break;
+       }
     }
 }
-
 
 Lock::~Lock()
 {
