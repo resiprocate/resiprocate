@@ -170,7 +170,8 @@ Tuple::presentationFormat() const
    }
    else if (IN6_IS_ADDR_V4MAPPED(&m_anonv6.sin6_addr))
    {
-      return DnsUtil::inet_ntop(*((in_addr*)(&m_anonv6.sin6_addr.s6_words[5])));
+      return DnsUtil::inet_ntop(*(reinterpret_cast<const in_addr*>(
+                                 (reinterpret_cast<const unsigned char*>(&m_anonv6.sin6_addr) + 12))));
    }
    else
    {
