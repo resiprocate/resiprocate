@@ -33,6 +33,8 @@ class ClientSubscriptionHandler;
 class ServerSubscriptionHandler;
 class ClientPublicationHandler;
 class ServerPublicationHandler;
+class ClientPagerMessageHandler;
+class ServerPagerMessageHandler;
 class OutOfDialogHandler;
 class RedirectHandler;
 
@@ -117,6 +119,9 @@ class DialogUsageManager : public HandleManager
       void addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*);
       
       void addOutOfDialogHandler(MethodTypes, OutOfDialogHandler*);
+
+      void setClientPagerMessageHandler(ClientPagerMessageHandler*);
+      void setServerPagerMessageHandler(ServerPagerMessageHandler*);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
@@ -142,13 +147,8 @@ class DialogUsageManager : public HandleManager
 
       SipMessage& makeRegistration(const NameAddr& target, AppDialogSet* = 0);
       SipMessage& makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* = 0);
-      
-      // all can be done inside of INVITE or SUBSCRIBE only; !dcm! -- now live
-      // in INVITE or SUBSCRIBE only
-//       SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
-//       SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
-//       SipMessage& makePublish(DialogId, const Uri& targetDocument, const Data& eventType, unsigned expireSeconds); 
-//       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
+
+      ClientPagerMessageHandle makePagerMessage(const NameAddr& target, const NameAddr& from, AppDialogSet* = 0);
       
       void cancel(DialogSetId invSessionId);
       void send(SipMessage& request); 
@@ -198,8 +198,10 @@ class DialogUsageManager : public HandleManager
       friend class ServerRegistration;
       friend class ServerSubscription;
       friend class BaseUsage;
+      friend class ClientPagerMessage;
+      friend class ServerPagerMessage;
 
-      
+      DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
       
       // makes a proto response to a request
@@ -266,6 +268,9 @@ class DialogUsageManager : public HandleManager
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
+
+      ClientPagerMessageHandler* mClientPagerMessageHandler;
+      ServerPagerMessageHandler* mServerPagerMessageHandler;
 
       AppDialogSetFactory* mAppDialogSetFactory;
 

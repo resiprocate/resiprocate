@@ -1,42 +1,45 @@
-#if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
-#define RESIP_SERVEROUTOFDIALOGREQ_HXX
+#if !defined(RESIP_CLIENTPAGERMESSAGE_HXX)
+#define RESIP_CLIENTPAGERMESSAGE_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/CSeqCategory.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
+class SipMessage;
 
-class ServerOutOfDialogReq : public NonDialogUsage
+class ClientPagerMessage : public NonDialogUsage
 {
-   public:
-      typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
-      ServerOutOfDialogReqHandle getHandle();
+  public:
+      ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
+      ClientPagerMessageHandle getHandle();
+      
+      //allow the user to adorn the MESSAGE message if desired
+      SipMessage& getMessageRequest();      
+      
+      //send a MESSAGE
+      virtual void page(std::auto_ptr<Contents> contents);
 
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
+      void end();      
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
-	  // Return Options response based on current Profile settings - application may need to add SDP Contents before
-	  // sending and/or change the status code.
-	  // Set fIncludeAllows to false if this is a proxy server (RFC3261 section 11.2)
-      virtual SipMessage& answerOptions(bool fIncludeAllows=true);
-	  virtual void send(SipMessage& msg);
-
    protected:
-      virtual ~ServerOutOfDialogReq();
+      virtual ~ClientPagerMessage();
 
    private:
       friend class DialogSet;
-      ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
-      
-      SipMessage mRequest;
-	  SipMessage mResponse;
 
+      //uses memory from creator
+	  SipMessage& mRequest;
+      
+      bool mInTransaction;      
+      
       // disabled
-      ServerOutOfDialogReq(const ServerOutOfDialogReq&);
-      ServerOutOfDialogReq& operator=(const ServerOutOfDialogReq&);
+      ClientPagerMessage(const ClientPagerMessage&);
+      ClientPagerMessage& operator=(const ClientPagerMessage&);
+
 };
  
 }
