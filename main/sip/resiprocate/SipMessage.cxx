@@ -236,6 +236,19 @@ SipMessage::getBody() const
    return mBody->front();
 }
 
+void
+SipMessage::updateContentLength()
+{
+   if (!mBody)
+   {
+      this->header(h_ContentLength).value() = 0;
+   }
+   else
+   {
+      this->header(h_ContentLength).value() = mBody->front()->mFieldLength;
+   }
+}
+
 // unknown header interface
 StringCategories& 
 SipMessage::header(const Data& headerName) const
