@@ -22,3 +22,8 @@ Handled::~Handled()
    mHam.remove(mId);
 }
 
+std::ostream& 
+resip::operator<<(std::ostream& strm, const Handled& handled)
+{
+   return handled.dump(strm);
+}
