@@ -197,11 +197,22 @@ class NameAddr : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
 
       bool operator<(const NameAddr& other) const;
-      
+
    protected:
       bool mAllContacts;
       mutable Uri mUri;
       mutable Data mDisplayName;
+
+   private:
+      //disallow the following parameters from being accessed in NameAddr
+      //this works on gcc 3.2 so far
+      using ParserCategory::param;
+      Transport_Param::DType& param(const Transport_Param& paramType) const;
+      Method_Param::DType& param(const Method_Param& paramType) const;
+      Ttl_Param::DType& param(const Ttl_Param& paramType) const;
+      Maddr_Param::DType& param(const Maddr_Param& paramType) const;
+      Lr_Param::DType& param(const Lr_Param& paramType) const;
+      Comp_Param::DType& param(const Comp_Param& paramType) const;
 };
 typedef ParserContainer<NameAddr> NameAddrs;
 
@@ -238,7 +249,7 @@ class CSeqCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
       
-      CSeqCategory() : ParserCategory(), mMethod(UNKNOWN), mSequence(-1) {}
+      CSeqCategory();
       CSeqCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mMethod(UNKNOWN), mSequence(-1) {}
       CSeqCategory(const CSeqCategory&);
       CSeqCategory& operator=(const CSeqCategory&);
