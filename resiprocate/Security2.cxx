@@ -9,7 +9,7 @@
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/PlainContents.hxx"
-#include "resiprocate/Security2.hxx"
+#include "resiprocate/Security.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/DataStream.hxx"
