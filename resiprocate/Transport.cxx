@@ -42,8 +42,11 @@ Transport::Transport(Fifo<Message>& rxFifo,
 
 Transport::~Transport()
 {
-   DebugLog (<< "Closing " << mFd);
-   closeSocket(mFd);
+   if (mFd != -1)
+   {
+      DebugLog (<< "Closing " << mFd);
+      closeSocket(mFd);
+   }
    mFd = -2;
 }
 
