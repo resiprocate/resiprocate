@@ -156,6 +156,7 @@ class SipMessage : public Message
       ParserContainer<AcceptLanguage_MultiHeader::Type>& header(const AcceptLanguage_MultiHeader& headerType) const;
       ParserContainer<AlertInfo_MultiHeader::Type>& header(const AlertInfo_MultiHeader& headerType) const;
       ParserContainer<Allow_MultiHeader::Type>& header(const Allow_MultiHeader& headerType) const;
+      ParserContainer<AllowEvents_MultiHeader::Type>& header(const AllowEvents_MultiHeader& headerType) const;
       ParserContainer<CallInfo_MultiHeader::Type>& header(const CallInfo_MultiHeader& headerType) const;
       ParserContainer<Contact_MultiHeader::Type>& header(const Contact_MultiHeader& headerType) const;
       ParserContainer<ContentLanguage_MultiHeader::Type>& header(const ContentLanguage_MultiHeader& headerType) const;
