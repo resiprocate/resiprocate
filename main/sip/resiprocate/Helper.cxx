@@ -307,6 +307,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
 {
 
    SipMessage* response = Helper::makeResponse(request, responseCode, reason);
+   response->header(h_Contacts).clear();
    response->header(h_Contacts).push_front(contact);
    return response;
 }
