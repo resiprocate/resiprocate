@@ -82,7 +82,7 @@ Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) :
       
       DnsUtil::inet_pton( printableAddr, addr.sin_addr);
       addr.sin_family = AF_INET;
-      addr.sin_port = port;
+      addr.sin_port = htons(port);
    }
    else
    {
@@ -90,7 +90,7 @@ Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) :
       memset(&addr, 0, sizeof(addr));
       DnsUtil::inet_pton( printableAddr, addr.sin6_addr);
       addr.sin6_family = AF_INET6;
-      addr.sin6_port = port;
+      addr.sin6_port = htons(port);
    }
 }
 
