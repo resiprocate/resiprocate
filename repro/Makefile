@@ -19,6 +19,9 @@ LDLIBS   += -ldb-4.2 -lpopt
 
 
 SRC =   \
+	WebAdmin.cxx \
+	HttpBase.cxx \
+	HttpConnection.cxx \
         monkeys/DigestAuthenticator.cxx \
 	monkeys/RouteProcessor.cxx \
 	monkeys/AmIResponsible.cxx \
@@ -32,7 +35,6 @@ SRC =   \
 	ResponseContext.cxx \
 	UserDb.cxx \
 	UserAbstractDb.cxx \
-	WebAdmin.cxx \
 	WebAdminThread.cxx \
         RequestProcessor.cxx \
         RequestProcessorChain.cxx

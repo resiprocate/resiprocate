@@ -1,40 +1,43 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(REPRO_HTTPCONNECTION_HXX)
+#define REPRO_HTTPCONNECTION_HXX 
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
-
-#include "repro/UserAbstractDb.hxx"
+#include "repro/UserDb.hxx"
 #include "repro/HttpBase.hxx"
 
 namespace repro
 {
 
-class WebAdmin: public HttpBase
+class HttpConnection
 {
-   public:
-      WebAdmin( UserAbstractDb& db,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
+      friend class HttpBase;
       
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
+   public:
+      HttpConnection( HttpBase& webAdmin, resip::Socket pSock );
+      ~HttpConnection();
+      
+      void buildFdSet(resip::FdSet& fdset);
+      bool process(resip::FdSet& fdset);
 
-   private: 
-      resip::Data buildDefaultPage();
+      void setPage(const resip::Data& page);
 
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-
-      UserAbstractDb& mDb;
+   private:
+      bool processSomeReads();
+      bool processSomeWrites();
+      void tryParse();
+            
+      HttpBase& mHttpBase;
+      const int mPageNumber;
+      static int nextPageNumber;
+            
+      resip::Socket mSock;
+      resip::Data mRxBuffer;
+      resip::Data mTxBuffer;
+      bool mParsedRequest;
 };
-
-
 
 }
 
