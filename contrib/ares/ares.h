@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.8 2003/10/31 19:37:35 adamr Exp $ */
+/* $Id: ares.h,v 1.9 2004/02/18 21:52:06 jason Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -24,7 +24,9 @@
 #include <io.h>
 #include <string.h>
 #include <stdio.h>
-#elif !defined(__CYGWIN__)
+#endif
+
+#if defined(__APPLE__)
 #include <arpa/nameser.h>
 #include <arpa/nameser_compat.h>
 #endif
