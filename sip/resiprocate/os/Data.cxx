@@ -1,5 +1,3 @@
-// "$Id: Data.cxx,v 1.78 2003/10/13 00:02:00 fluffy Exp $";
-
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
