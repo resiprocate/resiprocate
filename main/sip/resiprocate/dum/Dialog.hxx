@@ -20,6 +20,7 @@ class BaseUsage;
 class UsageSet;
 class SipMessage;
 class DialogUsageManager;
+class DialogSet;
 
 //!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
@@ -35,7 +36,7 @@ class Dialog
          
       // different behavior from request vs. response
       // (request creates to tag)
-      Dialog(DialogUsageManager& dum, const SipMessage& msg);
+      Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
       
       DialogId getId() const;
       
