@@ -35,6 +35,14 @@ ParserCategory::~ParserCategory()
    }   
 }
 
+ostream&
+ParserCategory::encodeFromHeaderFieldValue(ostream& str) const
+{
+   assert(mHeaderField);
+   str.write(mHeaderField->mField, mHeaderField->mFieldLength);
+   return str;
+}
+
 ParserCategory*
 ParserCategory::clone(HeaderFieldValue* hfv) const
 {
