@@ -133,5 +133,6 @@ main(int argc, char* argv[])
 
    // this will assert except on WIN32 where it will deadlock
    InfoLog(<< "Recursive non-debug NOT OK: " << logsInCall());
+   return 0;
 }
 

@@ -58,6 +58,7 @@ int main(int argc, char** argv)
    }
 
    cerr << "Success." << endl;
+   return 0;
 }
 
 
