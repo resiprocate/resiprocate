@@ -4,6 +4,9 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -33,6 +36,8 @@ ServerRegistration::accept(SipMessage& ok)
 {
   ok.remove(h_Contacts);
 
+  InfoLog( << "accepted a registration" );
+  
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
   RegistrationPersistenceManager::contact_list_t contacts;
@@ -62,6 +67,8 @@ ServerRegistration::accept(SipMessage& ok)
 void
 ServerRegistration::accept(int statusCode)
 {
+   InfoLog( << "accepted a registration with statusCode=" << statusCode );
+
   SipMessage success;
   mDum.makeResponse(success, mRequest, statusCode);
   accept(success);
@@ -70,6 +77,8 @@ ServerRegistration::accept(int statusCode)
 void
 ServerRegistration::reject(int statusCode)
 {
+   InfoLog( << "rejected a registration with statusCode=" << statusCode );
+
   // First, we roll back the contact database to
   // the state it was before the registration request.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;

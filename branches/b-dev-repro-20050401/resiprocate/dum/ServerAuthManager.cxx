@@ -25,6 +25,8 @@ ServerAuthManager::~ServerAuthManager()
 bool 
 ServerAuthManager::handle(std::auto_ptr<Message>& msg)
 {
+   // TODO - need to deal this this 
+
    return true;
 }
 
