@@ -4,22 +4,21 @@
 #include <list>
 
 #include "resiprocate/os/BaseException.hxx"
-#include "DialogSet.hxx"
-
-#include "BaseUsage.hxx"
-#include "InviteSession.hxx"
-#include "ClientInviteSession.hxx"
-#include "ServerInviteSession.hxx"
-#include "ClientSubscription.hxx"
-#include "ServerSubscription.hxx"
-#include "ClientRegistration.hxx"
-#include "ServerRegistration.hxx"
-#include "ServerPublication.hxx"
-#include "ClientPublication.hxx"
-#include "ServerOutOfDialogReq.hxx"
-#include "ClientOutOfDialogReq.hxx"
 #include "resiprocate/Headers.hxx"
-
+#include "BaseUsage.hxx"
+#include "ClientInviteSession.hxx"
+#include "ClientOutOfDialogReq.hxx"
+#include "ClientPublication.hxx"
+#include "ClientRegistration.hxx"
+#include "ClientSubscription.hxx"
+#include "DialogSet.hxx"
+#include "DumTimer.hxx"
+#include "InviteSession.hxx"
+#include "ServerInviteSession.hxx"
+#include "ServerOutOfDialogReq.hxx"
+#include "ServerPublication.hxx"
+#include "ServerRegistration.hxx"
+#include "ServerSubscription.hxx"
 #include "UInt64Hash.hxx"
 
 namespace resip 
@@ -88,11 +87,10 @@ class DialogUsageManager
       SipMessage& makeRegistration(const NameAddr& aor);
       SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      SipMessage& makeInviteSession(DialogId, const Uri& target);
-      SipMessage& makeSubscription(DialogId, const Uri& aor, const Data& eventType);
+      // all can be done inside of INVITE or SUBSCRIBE
+      SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
       SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublication(DialogId, const Uri& aor, const Data& eventType);
-      SipMessage& makeRegistration(DialogId, const Uri& aor);
+      SipMessage& makePublish(DialogId, const Uri& aor, const Data& eventType); 
       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
       void cancel(DialogSetId invSessionId);
@@ -117,27 +115,18 @@ class DialogUsageManager
       friend class Dialog;
       
       SipMessage& makeNewSession(BaseCreator* creator);
+      void addTimer(DumTimer::Type type, unsigned long duration, int cseq, int rseq=-1);
 
-      ClientInviteSession* makeClientInviteSession(Dialog& dialog,
-                                                   const SipMessage& msg);
-      ServerInviteSession* makeServerInviteSession(Dialog& dialog,
-                                                   const SipMessage& msg);
-      ClientSubscription* makeClientSubscription(Dialog& dialog,
-                                                 const SipMessage& msg);
-      ServerSubscription* makeServerSubscription(Dialog& dialog,
-                                                 const SipMessage& msg);
-      ClientRegistration* makeClientRegistration(Dialog& dialog,
-                                                 const SipMessage& msg);
-      ServerRegistration* makeServerRegistration(Dialog& dialog,
-                                                 const SipMessage& msg);
-      ClientPublication* makeClientPublication(Dialog& dialog,
-                                               const SipMessage& msg);
-      ServerPublication* makeServerPublication(Dialog& dialog,
-                                               const SipMessage& msg);
-      ClientOutOfDialogReq* makeClientOutOfDialog(Dialog& dialog,
-                                                  const SipMessage& msg);
-      ServerOutOfDialogReq* makeServerOutOfDialog(Dialog& dialog,
-                                                  const SipMessage& msg);
+      ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
+      ServerInviteSession* makeServerInviteSession(Dialog& dialog,const SipMessage& msg);
+      ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
+      ServerSubscription* makeServerSubscription(Dialog& dialog,const SipMessage& msg);
+      ClientRegistration* makeClientRegistration(Dialog& dialog,const SipMessage& msg);
+      ServerRegistration* makeServerRegistration(Dialog& dialog,const SipMessage& msg);
+      ClientPublication* makeClientPublication(Dialog& dialog, const SipMessage& msg);
+      ServerPublication* makeServerPublication(Dialog& dialog,const SipMessage& msg);
+      ClientOutOfDialogReq* makeClientOutOfDialog(Dialog& dialog,const SipMessage& msg);
+      ServerOutOfDialogReq* makeServerOutOfDialog(Dialog& dialog,const SipMessage& msg);
 
       // delete the usage, remove from usage handle map
       void destroyUsage(BaseUsage* usage);
@@ -182,6 +171,8 @@ class DialogUsageManager
       OutOfDialogHandler* mOutOfDialogHandler;
 
       SipStack& mStack;
+
+      friend class ClientRegistration;
 };
 
 }

@@ -483,8 +483,7 @@ DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
 }
 
 ServerInviteSession*
-DialogUsageManager::makeServerInviteSession(Dialog& dialog,
-                                            const SipMessage& request)
+DialogUsageManager::makeServerInviteSession(Dialog& dialog,const SipMessage& request)
 {
    ServerInviteSession* usage = new ServerInviteSession(*this, dialog, request);
    
