@@ -20,7 +20,6 @@ class RequestContext
 {
    public:
       RequestContext(Proxy& proxy,
-                     std::auto_ptr<resip::SipMessage> sipMsg,
                      RequestProcessorChain& chain);
       virtual ~RequestContext();
 
@@ -50,13 +49,15 @@ class RequestContext
       std::vector<resip::NameAddr>& getCandidates();
       
    private:
-      std::auto_ptr<resip::SipMessage> mOriginalRequest;
-      std::auto_ptr<resip::Message> mCurrentEvent;
+      SipMessage*  mOriginalRequest;
+      Message*  mCurrentEvent;
       RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
       Proxy& mProxy;
+      bool mHaveSentFinalResponse;
+      ResponseContext mResponseContext;
 
       typedef std::vector<RequestProcessorChain::Chain::iterator>
 
