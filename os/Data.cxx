@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.59 2003/01/31 23:41:29 jason Exp $";
+// "$Id: Data.cxx,v 1.60 2003/02/07 02:49:17 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -16,9 +16,18 @@ using namespace std;
 const Data Data::Empty("", 0);
 const int Data::npos = INT_MAX;
 
+char* 
+Data::initializeHack()
+{
+   assert(Data::Empty.mBuf == 0);
+   static char buffer[1];
+   return buffer;
+}
+
+
 Data::Data() 
    : mSize(0),
-     mBuf(Data::Empty.mBuf),
+     mBuf(Data::Empty.mBuf ? Data::Empty.mBuf : initializeHack()),
      mCapacity(mSize),
      mMine(false)
 {
@@ -439,6 +448,8 @@ Data::operator>(const char* rhs) const
 Data& 
 Data::operator=(const Data& data)
 {
+   assert(mBuf);
+   
    if (&data != this)
    {
       if (!mMine)
@@ -455,10 +466,10 @@ Data::operator=(const Data& data)
       
       mSize = data.mSize;
       // could overlap!
-	  if ( mSize > 0 )
-	  {
-      memmove(mBuf, data.mBuf, mSize);
-	  }
+      if ( mSize > 0 )
+      {
+         memmove(mBuf, data.mBuf, mSize);
+      }
       mBuf[mSize] = 0;
    }
    return *this;
