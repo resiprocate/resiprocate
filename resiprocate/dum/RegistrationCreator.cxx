@@ -1,15 +1,16 @@
 #include "resiprocate/dum/RegistrationCreator.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, Identity& identity, int RegistrationTime)
-   : BaseCreator(dum, identity)
+RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, int RegistrationTime)
+   : BaseCreator(dum)
 {
-   makeInitialRequest(target, REGISTER);
+   makeInitialRequest(target, target, REGISTER);
    mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest.header(h_Expires).value() = RegistrationTime;
 

@@ -2,7 +2,7 @@
 #define RESIP_CLIENTAUTHMANAGER_HXX
 
 #include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/dum/Identity.hxx"
+#include "resiprocate/dum/Profile.hxx"
 
 #include <map>
 #include <functional>
@@ -16,10 +16,10 @@ class SipMessage;
 class ClientAuthManager
 {
    public:
-      ClientAuthManager();
+      ClientAuthManager(Profile& profile);
 
       // return true if request is authorized
-      bool handle(Identity& identity, SipMessage& origRequest, const SipMessage& response);
+      bool handle(SipMessage& origRequest, const SipMessage& response);
       void addAuthentication(SipMessage& origRequest);
       
    private:
@@ -51,7 +51,7 @@ class ClientAuthManager
                wwwCredentials.clear();
             }
             //could work to iterator pointing to digest credential
-            typedef std::map<Auth, Identity::DigestCredential, CompareAuth > CredentialMap;            
+            typedef std::map<Auth, Profile::DigestCredential, CompareAuth > CredentialMap;            
             CredentialMap proxyCredentials;
             CredentialMap wwwCredentials;            
 
@@ -64,12 +64,9 @@ class ClientAuthManager
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
 
-      bool handleAuthHeader(Identity& identity,
-                            const Auth& auth, 
-                            AttemptedAuthMap::iterator authState, 
-                            SipMessage& origRequest, 
-                            const SipMessage& response, 
-                            bool proxy);      
+      Profile& mProfile;
+      bool handleAuthHeader(const Auth& auth, AttemptedAuthMap::iterator authState, SipMessage& origRequest, 
+                            const SipMessage& response, bool proxy);      
 
       AttemptedAuthMap mAttemptedAuths;      
 };
