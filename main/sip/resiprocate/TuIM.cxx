@@ -236,7 +236,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
       
       Data res = sec->computeIdentity( token );
 
-      msg->header(UnknownHeaderType("Identity")).push_front( StringCategory( res ) );
+      msg->header(UnknownHeaderType("Identity")).push_back( StringCategory( res ) );
    }
 #endif
    
@@ -1207,7 +1207,7 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
    
    Token t;
    t = Token(Data("presence"));
-   msg->header(h_AllowEvents).push_front( t );
+   msg->header(h_AllowEvents).push_back( t );
    
    mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
    
