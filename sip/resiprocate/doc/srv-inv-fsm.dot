@@ -148,7 +148,7 @@ digraph moonshine_ua_fsm {
         [
          shape=plaintext
          fontsize=6
-         label="Server INVITE FSM\n$Id: srv-inv-fsm.dot,v 1.1 2002/09/22 21:32:47 fluffy Exp $ $Name:" 
+         label="Server INVITE FSM\n$Id: srv-inv-fsm.dot,v 1.2 2002/09/22 21:35:29 fluffy Exp $ $Name:  $" 
         ]
         
 
