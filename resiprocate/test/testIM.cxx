@@ -113,14 +113,12 @@ main(int argc, char* argv[])
    CritLog(<<"Test Driver for IM Starting");
     
    CritLog( << "\nType a line like\nto:sip:fluffy@localhost:5060\n"
-            "to control the destination of yoru messages. "
+            "to control the destination of your messages. "
             "A line with a singe period on it ends the program\n" );
-   
-   
+      
    int port = 5060;
    Uri aor("sip:aor@localhost" );
-
-   Uri dest("sip:me@localhost:5060");
+   Uri dest("sip:you@localhost:5060");
       
    for ( int i=1; i<argc; i++)
    {
@@ -153,6 +151,7 @@ main(int argc, char* argv[])
       else
       { 
          ErrLog(<<"Bad command line opion: " << argv[i] );
+         ErrLog(<<"options are: [-v] [-vv] [-port 1234] [-aor sip:flffuy@flouf.com] [-to sip:1@foo.com]" << argv[i] );
          assert(0);
       }
    }
