@@ -227,7 +227,7 @@ GagConduit::receivedPage( const Data& msg, const Uri& from ,
                           Security::SignatureStatus sigStatus,
                           bool wasEncryped)
 {
-  Uri to("a@a"); // XXX
+  Uri to("sip:dummy@dummy.xx"); // XXX
   GagImMessage (from, to, msg).serialize(cout);
 }
 
