@@ -30,7 +30,7 @@ class Transport
             virtual const char* what() const throw();
       };
 
-      Transport(in_port_t portNum, Fifo<SipMessage>& rxFifo);
+      Transport(int portNum, Fifo<SipMessage>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
@@ -46,7 +46,7 @@ class Transport
 
    protected:
       int mFd;
-      in_port_t mPort;
+      int mPort;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<SipMessage>& mRxFifo; // passed in
 
