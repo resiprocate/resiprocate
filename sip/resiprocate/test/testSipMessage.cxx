@@ -23,7 +23,35 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-
+   
+#if 1
+   {
+      char* txt = ("SIP/2.0 401 Unauthorized\r\n"
+                   "To: <sip:foobie@example.com>;tag=12345678\r\n"
+                   "From: <sip:bar@example.com>;tag=83ec8345\r\n"
+                   "Via: SIP/2.0/TLS 192.168.2.205:5061;branch=z9hG4bK-c87542-488593999-1--c87542-;rport\r\n"
+                   "Call-ID: 3f0b546f89f28456\r\n"
+                   "CSeq: 1 REGISTER\r\n"
+                   "Expires: 3600\r\n"
+                   "Max-Forwards: 70\r\n"
+                   "Www-Authenticate: Basic realm=test\r\n"
+                   "Allow-Events: presence\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+      try
+      {
+         auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+         assert(message->exists(h_WWWAuthenticates));
+         assert(message->header(h_WWWAuthenticates).size() == 1);
+         assert(message->header(h_WWWAuthenticates).front().scheme() == "Basic");
+         assert(0);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         InfoLog (<< "Rejected unquoted realm");
+      }
+   }
+#endif
    {
       Data txt(
          "NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
@@ -92,23 +120,23 @@ main(int argc, char** argv)
          );
       
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      InfoLog (<< "msg->header(h_ContentLength).value() == " << msg->header(h_ContentLength).value());
       assert( msg->header(h_ContentLength).value() == 1929 );
    }
-
     {
        Data txt( 
-          "MESSAGE sip:fluffy@h1.cisco1.sipit.net:5060;transport=UDP SIP/2.0"
-          "To: <sip:fluffy@h1.cisco1.sipit.net:5060>"
-          "From: <sip:user@localhost:5080>;tag=20f94fd6"
-          "Via: SIP/2.0/UDP 212.157.205.40:5080;branch=z9hG4bK-c87542-1005764096-2--c87542-;rport=5080;received=212.157.205.40"
-          "Call-ID: 16f7f8fd368d8bcd"
-          "CSeq: 1 MESSAGE"
-          "Contact: <sip:user@212.157.205.40:5080>"
-          "Max-Forwards: 70"
-          "Content-Disposition: attachment;handling=required;filename=smime.p7"
-          "Content-Type: application/pkcs7-mime;smime-type=enveloped-data;name=smime.p7m"
-          "User-Agent: SIPimp.org/0.2.3 (curses)"
-          "Content-Length: 4"
+          "MESSAGE sip:fluffy@h1.cisco1.sipit.net:5060;transport=UDP SIP/2.0\r\n"
+          "To: <sip:fluffy@h1.cisco1.sipit.net:5060>\r\n"
+          "From: <sip:user@localhost:5080>;tag=20f94fd6\r\n"
+          "Via: SIP/2.0/UDP 212.157.205.40:5080;branch=z9hG4bK-c87542-1005764096-2--c87542-;rport=5080;received=212.157.205.40\r\n"
+          "Call-ID: 16f7f8fd368d8bcd\r\n"
+          "CSeq: 1 MESSAGE\r\n"
+          "Contact: <sip:user@212.157.205.40:5080>\r\n"
+          "Max-Forwards: 70\r\n"
+          "Content-Disposition: attachment;handling=required;filename=smime.p7\r\n"
+          "Content-Type: application/pkcs7-mime;smime-type=enveloped-data;name=smime.p7m\r\n"
+          "User-Agent: SIPimp.org/0.2.3 (curses)\r\n"
+          "Content-Length: 4\r\n"
           "\r\n"
           "1234" );
 
@@ -118,7 +146,6 @@ main(int argc, char** argv)
        msg->header(h_ContentDisposition);
        assert( msg->header(h_ContentLength).value() == 4 );
     }
-    
    {
       // exercise header remove
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
@@ -166,6 +193,7 @@ main(int argc, char** argv)
          str << *message;
       }
 
+      InfoLog (<< enc);
       assert(enc == ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                      "Content-Length: 0\r\n"
                      "\r\n"));
@@ -840,6 +868,9 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       assert(msg->exists(h_ContentType));
+      assert(msg->exists(h_ContentLength));
+      assert(msg->header(h_ContentLength).value() == 150);
+
       Contents* body = msg->getContents();
 
       assert(body != 0);
