@@ -1,11 +1,9 @@
-SUBDIRS = test
 CXX = ${DISTCC} @CXX@
-LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 EXTRA_DIST = PreparseInlines.cxx PreparseDiagnostic.cxx resip.spec.in
 
-lib_LTLIBRARIES = libresiprocate.la
-libresiprocate_la_SOURCES = \
+lib_LIBRARIES = libresiprocate.a
+libresiprocate_a_SOURCES = \
 	os/BaseException.cxx \
 	os/Coders.cxx \
 	os/Condition.cxx \
@@ -232,7 +230,6 @@ resiprocate_os_include_HEADERS = \
 	os/vmd5.hxx \
 	os/vthread.hxx
 
-libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 SUFFIXES = .gperf .cxx
 GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
@@ -240,3 +237,5 @@ GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 	gperf $(GPERFFLAGS) -Z `echo $* | sed -e 's/.*\///'` $< | \
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
 	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
+
+SUBDIRS = . test
