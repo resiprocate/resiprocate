@@ -23,7 +23,7 @@ class Token : public ParserCategory
       enum {isCommaTokenizing = false};
 
       Token(): ParserCategory(), mValue() {}
-      Token(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Token(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
       Token(const Token&);
       Token& operator=(const Token&);
 
@@ -363,7 +363,7 @@ class RequestLine : public ParserCategory
 class StatusLine : public ParserCategory
 {
    public:
-      StatusLine() : ParserCategory() {}
+      StatusLine() : ParserCategory(), mResponseCode(-1), mSipVersion(), mReason() {}
       StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mResponseCode(-1), mSipVersion(), mReason() {}
       StatusLine(const StatusLine&);
       StatusLine& operator=(const StatusLine&);

@@ -7,6 +7,15 @@ const Subsystem Subsystem::NONE("NONE");
 const Subsystem Subsystem::BASE("BASE");
 const Subsystem Subsystem::UTIL("UTIL");
 const Subsystem Subsystem::SIP("SIP");    // SIP Stack / Parser
+
+std::ostream& 
+Vocal2::operator<<(std::ostream& strm, const Subsystem& ss)
+{
+   strm << ss.mSubsystem;
+   return strm;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
