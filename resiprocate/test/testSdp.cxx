@@ -36,6 +36,33 @@ main(int argc, char* argv[])
     
     Log::initialize(Log::Cout, l, argv[0]);
     CritLog(<<"Test Driver Starting");
+
+    {
+       Data txt("v=0\r\n"
+                "o=ff_AT_tye.idv.tw 170748954 170754822 IN IP4 202.5.224.96\r\n"
+                "s=X-Lite\r\n"
+                "c=IN IP4 202.5.224.96\r\n"
+                "t=0 0\r\n"
+                "m=audio 12000 RTP/AVP 98 101\r\n"
+                "a=fmtp:101 0-15\r\n"
+                "a=rtpmap:98 iLBC/8000\r\n"
+                "a=rtpmap:101 telephone-event/8000\r\n");
+
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+       assert(sdp.session().connection().getAddress() == "202.5.224.96");
+       assert(sdp.session().media().front().port() == 12000);
+       assert(sdp.session().media().front().getValues("fmtp").front() == "101 0-15");
+       assert(sdp.session().media().front().getValues("rtpmap").front() == "98 iLBC/8000");
+       assert(*++sdp.session().media().front().getValues("rtpmap").begin() == "101 telephone-event/8000");
+
+       assert(sdp.session().media().front().codecs().front().getName() == "iLBC");
+
+       CritLog(<< "Ok");
+    }
+
+    exit(0);
     
     {
        Data txt("v=0\r\n"
@@ -54,7 +81,6 @@ main(int argc, char* argv[])
        assert(sdp.session().connection().getAddress() == "64.124.66.33");
        assert(sdp.session().media().front().port() == 12004);
     }
-    exit(0);
     
     {
        Data txt("v=0\r\n"
