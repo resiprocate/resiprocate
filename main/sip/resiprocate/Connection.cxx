@@ -142,7 +142,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                   char * buf = inet_ntoa(&tuple.ipv4); // !jf! not threadsafe
                   mMessage->header(h_Vias).front().param(p_received) = buf;
 #endif
-                  mMessage->header(h_Vias).front().param(p_rport) = tuple.port;
+                  mMessage->header(h_Vias).front().param(p_rport).value() = tuple.port;
                }
 
                fifo.add(mMessage);
