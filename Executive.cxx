@@ -19,7 +19,7 @@ Executive::process()
 {
   bool workToDo = true;
 
-  DebugLog (<< std::endl << "start Executive::process()");
+  DebugLog (<< "start Executive::process()");
   
   while( workToDo )
     {
@@ -41,7 +41,7 @@ Executive::process()
 	}
     }
 
-  DebugLog (<< "finish Executive::process()" << std::endl);
+  DebugLog (<< "finish Executive::process()");
 }
 
  
