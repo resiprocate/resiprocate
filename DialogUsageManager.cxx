@@ -838,7 +838,7 @@ DialogUsageManager::validateContent(const SipMessage& request)
    {
 	  if (request.exists(h_ContentType) && !mProfile->isMimeTypeSupported(request.header(h_ContentType)))
       {
-         InfoLog (<< "Received an unsupported mime type: " << request.brief());
+         InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentType) << " for " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 415);
@@ -850,7 +850,7 @@ DialogUsageManager::validateContent(const SipMessage& request)
       
 	  if (request.exists(h_ContentEncoding) && !mProfile->isContentEncodingSupported(request.header(h_ContentEncoding)))
       {
-         InfoLog (<< "Received an unsupported mime type: " << request.brief());
+         InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentEncoding) << " for " << request.brief());
          SipMessage failure;
          makeResponse(failure, request, 415);
          failure.header(h_AcceptEncodings) = mProfile->getSupportedEncodings();
@@ -862,8 +862,8 @@ DialogUsageManager::validateContent(const SipMessage& request)
       if (mProfile->validateContentLanguageEnabled() &&
           request.exists(h_ContentLanguages) && !mProfile->isLanguageSupported(request.header(h_ContentLanguages)))
       {
-         InfoLog (<< "Received an unsupported language: " << request.brief());
-
+         InfoLog (<< "Received an unsupported language: " << request.header(h_ContentLanguages).front() << " for " << request.brief());
+         
          SipMessage failure;
          makeResponse(failure, request, 415);
          failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
