@@ -4,7 +4,7 @@
 #include <iostream>
 #include "resiprocate/DnsResolver.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Message;

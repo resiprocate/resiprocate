@@ -1,6 +1,6 @@
 #include "resiprocate/os/CountStream.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 static const int BuffSize(2048);
 // singleton buffer -- not really used

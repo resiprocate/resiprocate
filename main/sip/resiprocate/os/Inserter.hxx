@@ -1,5 +1,5 @@
-#ifndef Vocal2_Inserter_hxx
-#define Vocal2_Inserter_hxx
+#ifndef resip_Inserter_hxx
+#define resip_Inserter_hxx
 
 #include <iostream>
 #include <utility>
@@ -19,7 +19,7 @@
    Maybe write insert for a map/hash_map?
  */
 
-namespace Vocal2
+namespace resip
 {
 
 /// Completely generic insert function
@@ -184,7 +184,7 @@ main(int argc, char** argv)
 }
 */
  
-} // Vocal2
+} // resip
 
 #endif // ContainerInsert_hxx
 

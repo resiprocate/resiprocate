@@ -1,7 +1,7 @@
 #include "resiprocate/ExistsParameter.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)

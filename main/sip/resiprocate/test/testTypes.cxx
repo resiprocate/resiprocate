@@ -4,9 +4,9 @@
 #endif
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/HeaderTypes.hxx"
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 void A()
 {

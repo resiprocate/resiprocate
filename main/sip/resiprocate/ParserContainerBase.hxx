@@ -5,7 +5,7 @@
 #include <iostream>
 #include "resiprocate/HeaderTypes.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class HeaderFieldValueList;

@@ -5,10 +5,10 @@
 #ifndef WIN32 // !cj! TODO FIX 
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::CONTENTS
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
 static char BANG[] = "!";
 static char HYPHEN[] = "-";

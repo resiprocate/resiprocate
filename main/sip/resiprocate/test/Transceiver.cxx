@@ -13,10 +13,10 @@
 #include "resiprocate/os/Timer.hxx"
 
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 using namespace Loadgen;
 
 Transceiver::Transceiver(int port)

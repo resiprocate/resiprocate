@@ -5,7 +5,7 @@
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/MethodHash.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 inline unsigned int
 MethodHash::hash (register const char *str, register unsigned int len)

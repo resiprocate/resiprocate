@@ -9,7 +9,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Message.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class SipMessage;
@@ -123,7 +123,7 @@ class SendData
 
 namespace std
 {
-size_t hash_value(const Vocal2::Transport::Tuple& tuple);
+size_t hash_value(const resip::Transport::Tuple& tuple);
 }
 
 #elif defined(HASH_MAP_NAMESPACE)
@@ -132,9 +132,9 @@ size_t hash_value(const Vocal2::Transport::Tuple& tuple);
 namespace __gnu_cxx
 {
 
-struct hash<Vocal2::Transport::Tuple>
+struct hash<resip::Transport::Tuple>
 {
-      size_t operator()(const Vocal2::Transport::Tuple& addrPort) const;
+      size_t operator()(const resip::Transport::Tuple& addrPort) const;
 };
  
 }

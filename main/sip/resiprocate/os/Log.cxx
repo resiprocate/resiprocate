@@ -15,7 +15,7 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 Log::Level Log::_level = Log::DEBUG;

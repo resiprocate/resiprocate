@@ -7,7 +7,7 @@
 #define UNUSED(_enum, _type) _enum = UNKNOWN
 #define used(_enum, _type) _enum
 
-namespace Vocal2
+namespace resip
 {
 
 class Parameter;

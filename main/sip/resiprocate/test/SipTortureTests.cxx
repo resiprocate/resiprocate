@@ -10,10 +10,10 @@
 #include "resiprocate/os/Logger.hxx"
 #include "tassert.h"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 #define BUGTRAILINGSPACE " "
 
@@ -817,7 +817,7 @@ void test14()
       
       tassert(  msg->header(h_Contacts).size() == 3 );
       
-      Vocal2::ParserContainer<Vocal2::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
+      resip::ParserContainer<resip::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
       while ( i != msg->header(h_Contacts).end() )
       {
          DebugLog(<< "i=" << *i  );

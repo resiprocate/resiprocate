@@ -24,10 +24,10 @@ class LimpetImpl : public Limpet
       virtual void OnBnClickedCheckOnline();
       virtual void addBuddy();
       
-      void receivedPage( const Vocal2::Data& msg,
-                         const Vocal2::Uri& from,
-                         const Vocal2::Data& signedBy,
-                         const Vocal2::Security::SignatureStatus sigStatus,
+      void receivedPage( const resip::Data& msg,
+                         const resip::Uri& from,
+                         const resip::Data& signedBy,
+                         const resip::Security::SignatureStatus sigStatus,
                          const bool wasEncryped  );
       
       void message(const QString& msg);
@@ -35,14 +35,14 @@ class LimpetImpl : public Limpet
       void sendPage(QString text,QString destination);
       void setStatus(bool online, QString note);
       //QString ClimpApp::addBuddy(QString name);
-      void presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status );
+      void presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& status );
       
       
       bool encryp;
       bool sign;
       
-      Vocal2::SipStack* sipStack;
-      Vocal2::TuIM* tuIM;
+      resip::SipStack* sipStack;
+      resip::TuIM* tuIM;
       
       
    private:

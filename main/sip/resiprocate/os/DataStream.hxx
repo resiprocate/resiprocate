@@ -1,9 +1,9 @@
-#ifndef Vocal2_DataStream_hxx
-#define Vocal2_DataStream_hxx
+#ifndef resip_DataStream_hxx
+#define resip_DataStream_hxx
 
 #include <iostream>
 
-namespace Vocal2
+namespace resip
 {
 
 class Data;

@@ -3,7 +3,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "assert.h"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 int main()

@@ -1,11 +1,11 @@
-#if !defined(Vocal2_Mutex_hxx)
-#define Vocal2_Mutex_hxx
+#if !defined(resip_Mutex_hxx)
+#define resip_Mutex_hxx
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Lockable.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 class Condition;
 	
@@ -28,7 +28,7 @@ class Mutex : public Lockable
 #endif
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 
 #endif // !defined(VOCAL_MUTEX_HXX)

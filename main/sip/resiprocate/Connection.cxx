@@ -5,9 +5,9 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 char 
 Connection::connectionStates[Connection::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
@@ -216,7 +216,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             
             
 std::ostream& 
-Vocal2::operator<<(std::ostream& strm, const Vocal2::Connection& c)
+resip::operator<<(std::ostream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << int(c.getSocket()) << " " << c.mWho;
    return strm;

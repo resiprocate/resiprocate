@@ -1,7 +1,7 @@
 #ifndef Embedded_hxx
 #define Embedded_hxx
 
-namespace Vocal2
+namespace resip
 {
 
 class Data;

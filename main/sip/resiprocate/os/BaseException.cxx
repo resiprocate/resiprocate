@@ -1,13 +1,13 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.5 2003/03/24 23:25:36 jason Exp $";
+    "$Id: BaseException.cxx,v 1.6 2003/03/25 06:33:47 jason Exp $";
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::NONE
 
 BaseException::BaseException( const Data& msg,
                         const Data& file,
@@ -22,7 +22,7 @@ BaseException::BaseException( const Data& msg,
 BaseException::~BaseException() throw()
 {}
 
-ostream& Vocal2::operator<<(ostream& strm, const BaseException& e)
+ostream& resip::operator<<(ostream& strm, const BaseException& e)
 {
    strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
    return strm;

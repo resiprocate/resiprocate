@@ -7,7 +7,7 @@
 #include "resiprocate/QuotedDataParameter.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 

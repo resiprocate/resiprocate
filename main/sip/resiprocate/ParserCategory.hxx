@@ -12,7 +12,7 @@
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
       _enum##_Param::DType& param(const _enum##_Param& paramType) const
 
-namespace Vocal2
+namespace resip
 {
 class UnknownParameter;
 class UnknownParameterType;

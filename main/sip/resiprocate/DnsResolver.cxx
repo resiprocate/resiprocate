@@ -20,9 +20,9 @@
 #include "resiprocate/TransactionState.hxx"
 
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)

@@ -63,8 +63,8 @@
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
-#define VOCAL_SUBSYSTEM Subsystem::TEST
+using namespace resip;
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 
 Condition::Condition() : mId()
