@@ -61,7 +61,7 @@ main(int argc, char* argv[])
       DataStream strm(encoded);
       message->encode(strm);
       strm.flush();
-      udp->send(*resolver.mCurrent, encoded, "foo");
+      udp->send(resolver.mNextHops.front(), encoded, "foo");
       
       FdSet fdset; 
       udp->buildFdSet(fdset);
