@@ -11,6 +11,7 @@ libtestsupport_la_SOURCES = \
 	TestSupport.cxx \
 	Transceiver.cxx
 LDADD = libtestsupport.la ../libresiprocate.la
+TESTS = testParserCategories 
 check_PROGRAMS = \
 	SipTortureTests \
 	lg \
@@ -50,7 +51,6 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor
-
 SipTortureTests_SOURCES = SipTortureTests.cxx
 lg_SOURCES = lg.cxx
 test1_SOURCES = test1.cxx
