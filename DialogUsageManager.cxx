@@ -546,6 +546,13 @@ DialogUsageManager::cancel(DialogSetId setid)
    }
 }
 
+void
+DialogUsageManager::destroy(const BaseUsage* usage)
+{
+   DestroyUsage destroy(usage->mHandle);
+   mStack->post(destroy);
+}
+
 
 // !jf! maybe this should just be a handler that the application can provide
 // (one or more of) to futz with the request before it goes out
@@ -728,6 +735,13 @@ DialogUsageManager::process()
             return true;
          }
 
+         DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
+         if (destroyUsage)
+         {
+            destroyUsage->destroy();
+            return true;
+         }
+         
          DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
          if (dumMsg )
          {

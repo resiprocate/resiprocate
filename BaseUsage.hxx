@@ -39,7 +39,8 @@ class BaseUsage : public Handled
       DialogUsageManager& mDum;
    private:
       BaseUsageHandle mHandle;
-
+      
+      friend class DestroyUsage;
       friend class DialogUsageManager;
 };
  
