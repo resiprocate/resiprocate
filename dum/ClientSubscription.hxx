@@ -32,7 +32,7 @@ class ClientSubscription: public BaseUsage
 
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimer& timer);
+      virtual void dispatch(const DumTimeout& timer);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientSubscription::Handle getHandle() {return mHandle;}

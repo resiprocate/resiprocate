@@ -1,10 +1,10 @@
 #include <cassert>
-#include "DumTimer.hxx"
+#include "DumTimeout.hxx"
 
 using namespace resip;
 
 
-DumTimer::DumTimer(Type type, unsigned long duration, BaseUsage::Handle & targetBu, int seq, int altSeq)
+DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsage::Handle & targetBu, int seq, int altSeq)
     : mType(type),
       mDuration(duration),
       mUsageHandle(targetBu),
@@ -13,53 +13,53 @@ DumTimer::DumTimer(Type type, unsigned long duration, BaseUsage::Handle & target
  {
 }
 
-DumTimer::~DumTimer()
+DumTimeout::~DumTimeout()
 {
 }
       
-DumTimer::Type 
-DumTimer::type() const
+DumTimeout::Type 
+DumTimeout::type() const
 {
    return mType;
 }
 
 int 
-DumTimer::seq() const
+DumTimeout::seq() const
 {
    return mSeq;
 }
 
 int 
-DumTimer::secondarySeq() const
+DumTimeout::secondarySeq() const
 {
    return mSecondarySeq;
 }
       
 const Data& 
-DumTimer::getTransactionId() const
+DumTimeout::getTransactionId() const
 {
    assert(0);
    return Data::Empty;
 }
 
 bool 
-DumTimer::isClientTransaction() const
+DumTimeout::isClientTransaction() const
 {
    assert(0);
    return false;
 }
       
 Data 
-DumTimer::brief() const
+DumTimeout::brief() const
 {
    Data data;
    DataStream strm(data);
-   strm << "DumTimer: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
+   strm << "DumTimeout: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
    return data;
 }
 
 std::ostream& 
-DumTimer::encode(std::ostream& strm) const
+DumTimeout::encode(std::ostream& strm) const
 {
    strm << brief();
    return strm;
