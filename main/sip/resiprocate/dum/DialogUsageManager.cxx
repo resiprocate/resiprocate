@@ -465,14 +465,15 @@ DialogUsageManager::findInviteSession(DialogId id)
    }
 }
 
-InviteSessionHandle 
+pair<InviteSessionHandle, int> 
 DialogUsageManager::findInviteSession(CallId replaces)
 {
    //486/481 decision making logic where?  App may not wish to keep track of
    //invitesession state
-   return findInviteSession(DialogId(replaces.value(), 
-                                     replaces.param(p_toTag), 
-                                     replaces.param(p_fromTag)));
+   return make_pair(findInviteSession(DialogId(replaces.value(), 
+                                               replaces.param(p_toTag), 
+                                               replaces.param(p_fromTag))),
+                    481);
 }
 
 void
