@@ -59,7 +59,7 @@ Connection::~Connection()
       }
    
       DebugLog (<< "Shutting down connection " << mSocket);
-      closesocket(mSocket);
+      closeSocket(mSocket);
 
       getConnectionManager().removeConnection(this);
    }

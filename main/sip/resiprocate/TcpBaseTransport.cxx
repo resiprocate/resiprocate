@@ -59,7 +59,7 @@ TcpBaseTransport::~TcpBaseTransport()
    DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << mPort); 
    
    //::shutdown(mFd, SHUT_RDWR);
-   closesocket(mFd);
+   closeSocket(mFd);
 
    // !jf! this is not right. should drain the sends before 
    while (mTxFifo.messageAvailable()) 
