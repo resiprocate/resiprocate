@@ -77,6 +77,7 @@ const Mime&
 SipFrag::getStaticType() 
 {
    static Mime type("message", "sipfrag");
+   //static Mime type("application", "sipfrag");
    return type;
 }
 
