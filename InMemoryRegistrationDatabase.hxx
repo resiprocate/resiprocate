@@ -1,46 +1,42 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#if !defined(RESIP_INMEMORYREGISTRATIONDATABASE_HXX)
+#define RESIP_INMEMORYREGISTRATIONDATABASE_HXX
 
-#include <list>
-#include "resiprocate/Uri.hxx"
+#include <map>
+
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 
 namespace resip
 {
 
-class RegistrationPersistenceManager
+/**
+  Trivial implementation of a persistence manager. This class keeps
+  all registrations in memory, and has no schemes for disk storage
+  or replication of any kind. It's good for testing, but probably
+  inappropriate for any commercially deployable products.
+ */
+class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
 {
   public:
-    typedef std::pair<Uri,time_t> contact_t;
-    typedef std::list<contact_t> contact_list_t;
+    InMemoryRegistrationDatabase();
+    virtual ~InMemoryRegistrationDatabase();
 
-    typedef enum
-    {
-      CONTACT_CREATED,
-      CONTACT_UPDATED
-    } update_status_t;
+    virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t());
+    virtual void removeAor(Uri &aor);
+    virtual bool aorIsRegistered(Uri &aor);
 
-    RegistrationPersistenceManager() {}
-    virtual ~RegistrationPersistenceManager() {}
+    virtual void lockRecord(Uri &aor);
+    virtual void unlockRecord(Uri &aor);
 
-    virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t()) = 0;
-    virtual void removeAor(Uri &aor) = 0;
-    virtual bool aorIsRegistered(Uri &aor) = 0;
+    virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires);
+    virtual void removeContact(Uri &aor, Uri &contact);
 
-    virtual void lockRecord(Uri &aor) = 0;
-    virtual void unlockRecord(Uri &aor) = 0;
+    virtual contact_list_t getContacts(Uri &aor);
 
-    /**
-      @param expires Absolute time of expiration, measured in seconds
-                     since midnight January 1st, 1970.
-     */
-    virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires) = 0;
-
-    virtual void removeContact(Uri &aor, Uri &contact) = 0;
-
-    virtual contact_list_t getContacts(Uri &aor) = 0;
   private:
+    typedef std::map<Uri,contact_list_t> database_map_t;
+    database_map_t mDatabase;
 };
-
+ 
 }
 
 #endif
