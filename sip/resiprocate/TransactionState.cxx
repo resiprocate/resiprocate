@@ -102,11 +102,13 @@ TransactionState::process(TransactionController& controller)
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
                state->mMsgToRetransmit = state->make100(sip);
-               state->mSource = sip->getSource();
-               // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getSentPort(*sip));
+               state->mSource = state->mTrueSource = sip->getSource();
+
+               // since we don't want to reply to the source port unless rport present  (or symetric)
+               state->mSource.setPort(Helper::getSentPort(*sip,state->mSymResponses));
+
                state->mState = Proceeding;
-               state->mIsReliable = state->mSource.transport->isReliable();
+               state->mIsReliable = state->mTrueSource.transport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -122,11 +124,11 @@ TransactionState::process(TransactionController& controller)
             else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
-               state->mSource = sip->getSource();
+               state->mSource = state->mTrueSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getSentPort(*sip));
+               state->mSource.setPort(Helper::getSentPort(*sip,state->mSymResponses));
                state->add(tid);
-               state->mIsReliable = state->mSource.transport->isReliable();
+               state->mIsReliable = state->mTrueSource.transport->isReliable();
             }
 
             // Incoming ACK just gets passed to the TU
@@ -207,8 +209,10 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
    TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, tr->mId);
    cancel->mIsReliable = tr->mIsReliable;
    cancel->mSource = tr->mSource;
+   cancel->mTrueSource = tr->mTrueSource;
    cancel->mIsCancel = true;
    cancel->mTarget = tr->mTarget;
+   cancel->mSymResponses = tr->mSymResponses;
    
    //DebugLog (<< "Creating new CANCEL TransactionState: " << *cancel);
    return cancel;
@@ -1301,7 +1305,11 @@ TransactionState::sendToWire(Message* msg, bool resend)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite)
    {
       assert(mDnsResult == 0);
-
+      DebugLog(<<"sendToWire(): !ah! sending " << (sip->isResponse()?"response":"request") << " to:" << mSource);
+      if (sip->hasForceTarget())
+      {
+         DebugLog(<<"!ah! TARGET " << sip->getForceTarget() << " GOING TO BE IGNORED");
+      }
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mSource);
@@ -1313,7 +1321,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    }
    else if (mDnsResult == 0) // no dns query yet
    {
-      DebugLog (<< "Doing dns query in sendToWire: " << *this);
+      DebugLog (<< "!ah! Doing dns query in sendToWire: " << *this);
 
       // !jf! This can only happen for a "stateless" transaction, so only send it
       // once and don't worry about failures
@@ -1322,12 +1330,17 @@ TransactionState::sendToWire(Message* msg, bool resend)
          assert (!sip->header(h_Vias).empty());
 
          Via& via = sip->header(h_Vias).front();
+         if (sip->hasForceTarget())
+         {
+            DebugLog(<<"!ah! sendToWire(response): has forceTarget -- will be ignored ? : " << sip->getForceTarget() );
+         }
 
          if (via.exists(p_received))
          {
             Tuple tuple(via.param(p_received), 
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            DebugLog(<<"!ah! sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
          else
@@ -1335,11 +1348,13 @@ TransactionState::sendToWire(Message* msg, bool resend)
             Tuple tuple(via.sentHost(),
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            DebugLog(<<"!ah! sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
       }
       else
       {
+         DebugLog(<<"sendToWire(): doing dns work for odd case with "<< (sip->isRequest()?"REQ":"RESP") << sip->brief());
          mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
          assert(mDnsResult); // !ah! is this really an assertion or an error?
 
@@ -1353,7 +1368,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    else // reuse the last dns tuple
    {
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-
+      DebugLog(<<"!ah! DNS results being used for mTarget=" << mTarget);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);
@@ -1369,7 +1384,7 @@ void
 TransactionState::sendToTU(Message* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
-   //DebugLog(<< "Send to TU: " << *msg);
+   DebugLog(<< "Send to TU: " << *msg);
    assert(sip);
    mController.mTUFifo.add(sip);
 }
@@ -1496,7 +1511,6 @@ TransactionState::terminateServerTransaction(const Data& tid)
       mController.mTUFifo.add(new TransactionTerminated(tid, false));
    }
 }
-
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::TransactionState& state)

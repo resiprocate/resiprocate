@@ -128,7 +128,7 @@ main(int argc, char* argv[])
    {
        Uri forceTarget(targetUri);
        InfoLog(<<"Setting force target to " << forceTarget);
-       msg->setTarget(forceTarget);
+       msg->setForceTarget(forceTarget);
    }
 
    if (meth != UNKNOWN)

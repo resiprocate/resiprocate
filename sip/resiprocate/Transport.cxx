@@ -370,7 +370,6 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
 void
 Transport::stampReceived(SipMessage* message)
 {
-   //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
    // set the received= and rport= parameters in the message if necessary !jf!
    if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
@@ -381,6 +380,7 @@ Transport::stampReceived(SipMessage* message)
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
+   DebugLog (<< "!ah! adding new SipMessage from " << message->getSource() << " to state machine's Fifo: " << message->brief());
 }
 
 
