@@ -57,6 +57,10 @@ static void sort_addresses(struct hostent *host, struct apattern *sortlist,
 static int get_address_index(struct in_addr *addr, struct apattern *sortlist,
 			     int nsort);
 
+#ifdef WIN32
+extern char w32hostspath[];
+#endif
+
 void ares_gethostbyname(ares_channel channel, const char *name, int family,
 			ares_host_callback callback, void *arg)
 {
@@ -221,7 +225,11 @@ static int file_lookup(const char *name, struct hostent **host)
   char **alias;
   int status;
 
+#ifdef WIN32
+  fp = fopen(w32hostspath, "r");
+#else
   fp = fopen(PATH_HOSTS, "r");
+#endif
   if (!fp)
     return ARES_ENOTFOUND;
 

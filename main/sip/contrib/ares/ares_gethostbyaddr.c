@@ -48,6 +48,10 @@ static void end_aquery(struct addr_query *aquery, int status,
 		       struct hostent *host);
 static int file_lookup(struct in_addr *addr, struct hostent **host);
 
+#ifdef WIN32
+extern char w32hostspath[];
+#endif
+
 void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
 			int family, ares_host_callback callback, void *arg)
 {
@@ -141,7 +145,11 @@ static int file_lookup(struct in_addr *addr, struct hostent **host)
   FILE *fp;
   int status;
 
+#ifdef WIN32
+  fp = fopen(w32hostspath, "r");
+#else
   fp = fopen(PATH_HOSTS, "r");
+#endif
   if (!fp)
     return ARES_ENOTFOUND;
 
