@@ -184,6 +184,20 @@ TransactionController::getTransactionFifoSize() const
    return mStateMacFifo.size();
 }
 
+
+
+unsigned int 
+TransactionController::getNumClientTransactions() const
+{
+   return mClientTransactionMap.size();
+}
+
+unsigned int 
+TransactionController::getNumServerTransactions() const
+{
+   return mServerTransactionMap.size();
+}
+
 unsigned int 
 TransactionController::getTimerQueueSize() const
 {
