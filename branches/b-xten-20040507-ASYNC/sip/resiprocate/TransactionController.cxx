@@ -18,14 +18,15 @@ using namespace resip;
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
-                                             bool stateless, ProcessNotifier::Handler* asyncHandler) : 
+                                             bool stateless, ProcessNotifier::Handler* asyncHandler,
+                                             ExternalDns* dns) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mStatelessHandler(*this),
    mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler):  new Fifo<Message> ),
-   mTransportSelector(multi, *mStateMacFifo),
+   mTransportSelector(multi, *mStateMacFifo, dns),
    mTimers(*mStateMacFifo),
    StatelessIdCounter(1),
    mShuttingDown(false)
@@ -43,14 +44,15 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
 
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
                                              ExternalSelector* tSelector, 
-                                             bool stateless, ProcessNotifier::Handler* asyncHandler) :
+                                             bool stateless, ProcessNotifier::Handler* asyncHandler,
+                                             ExternalDns* dns) :
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mStatelessHandler(*this),
    mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler) : new Fifo<Message> ),
-   mTransportSelector(multi, *mStateMacFifo),
+   mTransportSelector(multi, *mStateMacFifo, dns, tSelector),
    mTimers(*mStateMacFifo),
    StatelessIdCounter(1),
    mShuttingDown(false)

@@ -23,17 +23,22 @@ class Uri;
 class SipStack : public ProcessNotifier::Handler
 {
    public:
+      // !dcm! -- these contructors very much need to be refactored
       // If multithreaded=true, run each transports in separate threads. The
       // main stack thread still runs the dns, timers, transaction and
       // transportSelector in it. 
       // Set stateless=true, if you want to use the stack for a stateless proxy
       // (no transactions)
       SipStack(bool multiThreaded=false, Security* security=0, 
-               bool stateless=false, bool async=false, ProcessNotifier::Handler* asyncHandler=0);
+               bool stateless=false, bool async=false, 
+               ProcessNotifier::Handler* asyncHandler=0, 
+               ExternalDns* dns=0);
    
       //could merge these constructors...handler for async will default to this
       SipStack(ExternalSelector* tSelector, bool multiThreaded=false, Security* security=0, 
-               bool stateless=false, bool async=false, ProcessNotifier::Handler* asyncHandler=0);
+               bool stateless=false, bool async=false, 
+               ProcessNotifier::Handler* asyncHandler=0,
+               ExternalDns* dns=0);
 
       virtual ~SipStack();
 
@@ -122,13 +127,6 @@ class SipStack : public ProcessNotifier::Handler
 	
       // should call buildFdSet before calling process. 
       virtual void process(FdSet& fdset);
-
-      //used with AsyncNotifier to cause processing to happen when asyncronous
-      //events such as Transport, Certificate or DNS happen.
-      //!dcm!  Will generate an FdSet to avoid impact on existing process methods, but
-      //since select() won't be called, nothing will happen. This is a hack,
-      //process() should probably eventually be diverged all the way down.
-      void process();
 
       //default implementation of ProcessNotifier::Handler, chains through to process()
       void handleProcessNotification();

@@ -11,15 +11,16 @@
 
 namespace resip
 {
+class ExternalDns;
 
 class TransactionController
 {
    public:
       TransactionController(bool multithreaded, Fifo<Message>& tufifo, 
-                            bool stateless=false, ProcessNotifier::Handler* asyncHandler=0);
+                            bool stateless, ProcessNotifier::Handler* asyncHandler, ExternalDns* dns);
       
       TransactionController(bool multithreaded, Fifo<Message>& tufifo, ExternalSelector* tSelector, 
-                            bool stateLess = false, ProcessNotifier::Handler* asyncHandler=0);
+                            bool stateLess, ProcessNotifier::Handler* asyncHandler, ExternalDns* dns);
 
       ~TransactionController();
 

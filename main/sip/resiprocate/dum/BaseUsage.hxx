@@ -27,7 +27,7 @@ class BaseUsage : public Handled
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();
      
-      virtual void send(const SipMessage& request);
+      virtual void send(SipMessage& request);
 
    protected:
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
