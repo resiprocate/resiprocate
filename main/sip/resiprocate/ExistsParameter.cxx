@@ -1,4 +1,5 @@
 #include "resiprocate/ExistsParameter.hxx"
+#include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
@@ -7,7 +8,23 @@ using namespace std;
 ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
    : Parameter(type),
      mValue(true)
-{}
+{
+   // Protect ourselves just in case an exists parameter has a RHS.
+   pb.skipWhitespace();
+   if (!pb.eof() && *pb.position() == Symbols::EQUALS[0])
+   {
+      pb.skipChar();
+      if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
+      {
+         pb.skipChar();
+         pb.skipToEndQuote();
+      }
+      else
+      {
+         pb.skipToOneOf(terminators); 
+      }
+   }
+}
 
 ExistsParameter::ExistsParameter(ParameterTypes::Type type)
    : Parameter(type),
