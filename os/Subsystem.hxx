@@ -13,6 +13,7 @@ class Subsystem : public Data
       static const Subsystem TEST;   
       static const Subsystem NONE; // default subsystem
       static const Subsystem UTIL;
+      static const Subsystem BASE;
       static const Subsystem SIP;    // SIP Stack / Parser
       
    private:
