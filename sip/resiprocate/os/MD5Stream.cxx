@@ -42,7 +42,7 @@ Data
 MD5Buffer::getHex()
 {
    MD5Final((unsigned char*)mBuf, &mContext);
-   Data digest((const char*)mBuf,16, false);
+   Data digest(Data::Share, (const char*)mBuf,16);
    return digest.hex();   
 }
 
