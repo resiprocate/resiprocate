@@ -436,6 +436,7 @@ main(int argc, char* argv[])
    Uri contact("sip:user@localhost");
    bool haveContact=false;
    Uri outbound;
+   bool noRegister = false;
    
    int numAdd=0;
    Data addList[100];
@@ -457,6 +458,10 @@ main(int argc, char* argv[])
       {
          encryp = true;
       }
+      else if (!strcmp(argv[i],"-noRegister"))
+      {
+         noRegister = true;
+      }
       else if (!strcmp(argv[i],"-sign"))
       {
          sign = true;
@@ -468,7 +473,7 @@ main(int argc, char* argv[])
          assert( i<argc );
          port = atoi( argv[i] );
       } 
-      else if (!strcmp(argv[i],"-tlsport"))
+      else if (!strcmp(argv[i],"-tlsPort"))
       {
          i++;
          assert( i<argc );
@@ -529,7 +534,8 @@ main(int argc, char* argv[])
               << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
               << "\t [-sign] [-encrypt] [-key secret]" << endl
               << "\t [-contact sip:me@example.com] " << endl
-              << "\t [-outbound sip:example.com] " << endl;
+              << "\t [-outbound \"sip:example.com;lr\"] " << endl
+              << "\t [-noRegister] " << endl;
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
@@ -537,6 +543,7 @@ main(int argc, char* argv[])
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPassword sets the password to use for registration" << endl
+              << " -noRegister causes it not to register - by default the AOR is registered" << endl
               << " -to sets initial location to send messages to" << endl
               << " -outbound sets the outbound proxy" << endl
               << " -add adds a budy who's presense will be monitored" << endl
@@ -549,13 +556,13 @@ main(int argc, char* argv[])
               << " " << endl
               << "Examples" << endl
               << "An example command line for a user with account name alice at example.com is:" << endl
-              << "\t" << argv[0] << " -aor alice@example.com -aorPassword secret" << endl
+              << "\t" << argv[0] << " -aor \"alice@example.com\" -aorPassword \"secret\"" << endl
               << "to watch the presence of bob and charlie add" << endl
-              << "\t-add sip:bob@bilboxi.com -add charlie@example.com" << endl
+              << "\t-add \"sip:bob@bilboxi.com\" -add \"charlie@example.com\" " << endl
               << "If Alice was behind a NAT that had a public address of 1.2.3.4 and had forwarded" << endl
-              << "port 5070 on this NAT to the machine ALice was using, then the following " << endl
+              << "port 5070 on this NAT to the machine Alice was using, then the following " << endl
               << "options would be added" << endl
-              << "\t-contact sip:alice@1.2.3.4:5070 -port 5070" << endl
+              << "\t-contact \"sip:alice@1.2.3.4:5070\" -port 5070" << endl
               << "" << endl
               << endl;
          exit(1);
@@ -645,7 +652,10 @@ main(int argc, char* argv[])
    
    if ( haveAor )
    {
-      tuIM->registerAor( aor, aorPassword );
+      if ( !noRegister )
+      {
+         tuIM->registerAor( aor, aorPassword );
+      }
    }
    
    initscr(); 
@@ -688,8 +698,8 @@ main(int argc, char* argv[])
    waddstr(textWin,"To monitores someeone presense type\n");
    waddstr(textWin,"    add: sip:buddy@example.com \n");
    waddstr(textWin,"To change you online status type\n");
-   waddstr(textWin,"    status: in meetin\n");
-   waddstr(textWin,"To set youselft to offline type\n");
+   waddstr(textWin,"    status: in meeting\n");
+   waddstr(textWin,"To set yourself to offline type\n");
    waddstr(textWin,"   status:\n");
    waddstr(textWin,"To exit type a single period\n");
    waddstr(textWin,"\n");
