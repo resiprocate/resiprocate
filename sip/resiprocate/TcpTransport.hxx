@@ -14,17 +14,32 @@ class TcpTransport : public Transport
 {
    public:
       TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
-      virtual  ~UdpTransport();
+      virtual  ~TcpTransport();
 
       void process(fd_set* fdSet=NULL) ;
       bool isReliable() const { return true; }
       Transport::Type transport() const { return TCP; }
 
+      virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
+
    private:
+      void processAllWrites(fd_set* fdset);
+      void processAllReads(fd_set* fdset);
+
+      bool processWrite(ConnectionMap::Connection* c);
+      bool sendFromRoundRobin(fd_set* fdset);
+
+      bool processRead(ConnectionMap::Connection* c);
+
+      void processListen(fd_set* fdSet);
+
       static const int MaxBufferSize;
-      static ConnectionMap mConnectionMap;
+      ConnectionMap mConnectionMap;
+      typedef std::list<ConnectionMap::Connection*> ConnectionList;
+      ConnectionList mSendRoundRobin;
+      ConnectionList::iterator mSendPos;
 };
- 
+
 }
 
 #endif

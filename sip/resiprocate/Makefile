@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.69 2002/11/05 21:35:21 jason Exp $
+# $Id: Makefile,v 1.70 2002/11/06 02:31:35 derekm Exp $
 
 BUILD = ../../build
 
@@ -57,6 +57,7 @@ SRC = \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
+	TcpTransport.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
