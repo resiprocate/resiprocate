@@ -6,7 +6,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Embedded.hxx"
 #include <cassert>
-#include <list>
+#include <vector>
 
 namespace resip
 {
@@ -44,7 +44,7 @@ class ParserContainer : public ParserContainerBase
       ParserContainer(const ParserContainer& other)
          : ParserContainerBase(other)
       {
-         for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
+         for (typename std::vector<T*>::const_iterator i = other.mParsers.begin(); 
               i != other.mParsers.end(); ++i)
          {
             mParsers.push_back(new T(**i));
@@ -61,7 +61,7 @@ class ParserContainer : public ParserContainerBase
          if (this != &other)
          {
             clear();
-            for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
+            for (typename std::vector<T*>::const_iterator i = other.mParsers.begin(); 
                  i != other.mParsers.end(); ++i)
             {
                mParsers.push_back(new T(**i));
@@ -74,7 +74,7 @@ class ParserContainer : public ParserContainerBase
       size_type size() const { return mParsers.size(); }
       void clear()
       {
-         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+         for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
             delete *i;
@@ -87,16 +87,16 @@ class ParserContainer : public ParserContainerBase
       const T& front() const { return *mParsers.front();}
       const T& back() const { return *mParsers.back();}
       
-      void push_front(const T & t) { mParsers.push_front(new T(t)); }
+      void push_front(const T & t) { mParsers.insert(mParsers.begin(), new T(t)); }
       void push_back(const T & t) { mParsers.push_back(new T(t)); }
       
-      void pop_front() { delete mParsers.front(); mParsers.pop_front(); }
+      void pop_front() { delete mParsers.front(); mParsers.erase(mParsers.begin()); }
       void pop_back() { delete mParsers.back(); mParsers.pop_back(); }                
       
       ParserContainer reverse() const
       {
          ParserContainer tmp(*this);
-         tmp.mParsers.reverse();
+         std::reverse(tmp.mParsers.begin(), tmp.mParsers.end());
          return tmp;
       }
       
@@ -105,7 +105,7 @@ class ParserContainer : public ParserContainerBase
       class iterator
       {
          public:
-            iterator(typename std::list<T*>::iterator i) : mIt(i){}
+            iterator(typename std::vector<T*>::iterator i) : mIt(i){}
             iterator() {}
 
             iterator operator++() {iterator it(++mIt); return it;}
@@ -120,7 +120,7 @@ class ParserContainer : public ParserContainerBase
             T& operator*() {return **mIt;}
             T* operator->() {return *mIt;}
          private:
-            typename std::list<T*>::iterator mIt;
+            typename std::vector<T*>::iterator mIt;
             friend class const_iterator;
             friend class ParserContainer;
       };
@@ -128,7 +128,7 @@ class ParserContainer : public ParserContainerBase
       class const_iterator
       {
          public:
-            const_iterator(typename std::list<T*>::const_iterator i) : mIt(i) {}
+            const_iterator(typename std::vector<T*>::const_iterator i) : mIt(i) {}
             const_iterator() {}
 
             const_iterator operator++() {const_iterator it(++mIt); return it;}
@@ -145,7 +145,7 @@ class ParserContainer : public ParserContainerBase
             const T* operator->() {return *mIt;}
          private:
             friend class iterator;
-            typename std::list<T*>::const_iterator mIt;
+            typename std::vector<T*>::const_iterator mIt;
       };
       
       iterator begin() { return iterator(mParsers.begin()); }
@@ -159,7 +159,7 @@ class ParserContainer : public ParserContainerBase
 
       bool find(const T& rhs) const
       {
-         for (typename std::list<T*>::const_iterator i = mParsers.begin();
+         for (typename std::vector<T*>::const_iterator i = mParsers.begin();
               i != mParsers.end(); ++i)
          {
             if (rhs == **i)
@@ -177,7 +177,7 @@ class ParserContainer : public ParserContainerBase
       //non-stl, would be accomlished through insert in stl
       void append(const ParserContainer& source) 
       {
-         for (typename std::list<T*>::const_iterator i = source.mParsers.begin(); 
+         for (typename std::vector<T*>::const_iterator i = source.mParsers.begin(); 
               i != source.mParsers.end(); ++i)
          {
             mParsers.push_back(new T(**i));
@@ -201,7 +201,7 @@ class ParserContainer : public ParserContainerBase
                str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
             }
          
-            for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+            for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
                  i != mParsers.end(); ++i)
             {
                if (i != mParsers.begin())
@@ -233,7 +233,7 @@ class ParserContainer : public ParserContainerBase
          {
 
             bool first = true;
-            for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+            for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
                  i != mParsers.end(); ++i)
             {
                if (first)
@@ -258,7 +258,7 @@ class ParserContainer : public ParserContainerBase
       }
 
    private:
-      std::list<T*> mParsers;
+      std::vector<T*> mParsers;
 };
  
 }
