@@ -42,7 +42,7 @@ map<int, std::set<pthread_t> > Log::_serviceToThreads;
 map<int, Log::Level> Log::_serviceToLevel;
 
 const char
-Log::_descriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
+Log::_descriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
 
 Mutex Log::_mutex;
 
@@ -174,15 +174,18 @@ ostream&
 Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
 {
 #if defined( WIN32 ) || defined( __APPLE__ )
-   strm << _descriptions[level+1] << "\t" << DELIM;
+   strm << _descriptions[level+1] << DELIM 
+        << time(0) << DELIM 
+        << _appName << DELIM
+        << subsystem << DELIM;
 #else   
-     strm << _descriptions[level+1] << DELIM
+   strm << _descriptions[level+1] << DELIM
         << timestamp() << DELIM  
         << _hostname << DELIM  
         << _appName << DELIM
         << subsystem << DELIM 
         << _pid << DELIM
-		<< pthread_self() << DELIM;
+        << pthread_self() << DELIM;
 #endif 
   return strm;
 }
