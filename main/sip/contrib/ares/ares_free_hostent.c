@@ -13,11 +13,14 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_free_hostent.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_free_hostent.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
 
 #include <stdlib.h>
-//#include <netdb.h>
 #include "ares.h"
+
+#ifndef WIN32
+#include <netdb.h>
+#endif
 
 void ares_free_hostent(struct hostent *host)
 {
