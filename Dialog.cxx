@@ -17,6 +17,7 @@ using namespace resip;
 Dialog::Dialog(const NameAddr& localContact) 
    : mContact(localContact),
      mCreated(false),
+     mEarly(false),
      mRouteSet(),
      mRemoteTarget(),
      mRemoteSequence(0),
@@ -79,6 +80,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
       mDialogId.param(p_toTag) = mLocalTag;
       mDialogId.param(p_fromTag) = mRemoteTag;
 
+      mEarly = (code < 200);
       mCreated = true;
 
       return response;
@@ -138,6 +140,7 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
          mDialogId.param(p_fromTag) = mRemoteTag;
 
          mCreated = true;
+         mEarly = (response.header(h_StatusLine).statusCode() < 200);
       }
       else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
       {
@@ -177,10 +180,15 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
          mDialogId.param(p_fromTag) = mRemoteTag;
 
          mCreated = true;
+         mEarly = false;
       }
    }
    else if (msg.isResponse())
    {
+      if (mEarly) 
+      {
+         mEarly = (msg.header(h_StatusLine).statusCode() < 200);
+      }
       targetRefreshResponse(msg);
    }
 }
@@ -581,6 +589,8 @@ void
 Dialog::clear()
 {
    mCreated = false;
+   mEarly = false;
+   
    mRouteSet.clear();
    mRemoteTarget = NameAddr();
    mRemoteSequence = 0;
