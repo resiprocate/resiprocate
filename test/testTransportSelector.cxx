@@ -33,7 +33,7 @@ class TestTransportSelector
          
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP, 5061, V4, "127.0.0.1");
+         ts.addTransport(UDP, 5061, V4, "127.0.0.1",  Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.2", 5060, true, UDP);
          Transport* t = ts.findTransport(tuple);
@@ -46,7 +46,7 @@ class TestTransportSelector
          
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1", Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
@@ -60,8 +60,8 @@ class TestTransportSelector
          
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
-         ts.addTransport(UDP, 5100, V4, "127.0.0.1");
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1", Data::Empty, Data::Empty, SecurityTypes::TLSv1);
+         ts.addTransport(UDP, 5100, V4, "127.0.0.1", Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
@@ -89,7 +89,7 @@ class TestTransportSelector
          
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1", Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.1", 0, true, UDP);
          Transport* trans = ts.findTransport(tuple);
@@ -104,7 +104,7 @@ class TestTransportSelector
          
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP,5060,V4);
+         ts.addTransport(UDP,5060,V4, Data::Empty,Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
@@ -117,7 +117,7 @@ class TestTransportSelector
 
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP, 5060, V4, Data::Empty);
+         ts.addTransport(UDP, 5060, V4, Data::Empty,Data::Empty, Data::Empty, SecurityTypes::TLSv1);
          
          Tuple tuple("127.0.0.1", 0, true, UDP);
          Transport* trans = ts.findTransport(tuple);
@@ -130,7 +130,7 @@ class TestTransportSelector
 
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(TCP,  5060,   V6);
+         ts.addTransport(TCP,  5060,   V6, Data::Empty,Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("::1", 0, false, TCP);
          Transport* trans = ts.findTransport(tuple);
@@ -144,7 +144,7 @@ class TestTransportSelector
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
          
-         ts.addTransport(TCP,  5060,  V4);
+         ts.addTransport(TCP,  5060,  V4, Data::Empty,Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("::1", 0, false, TCP);
          Transport* trans = ts.findTransport(tuple);
@@ -157,7 +157,7 @@ class TestTransportSelector
 
          Fifo<TransactionMessage> fif;
          TransportSelector ts(false, fif, 0);
-         ts.addTransport(UDP,5060,V4);
+         ts.addTransport(UDP,5060,V4, Data::Empty, Data::Empty, Data::Empty, SecurityTypes::TLSv1);
 
          Tuple tuple("127.0.0.1", 0, true, TCP);
          Transport* trans = ts.findTransport(tuple);
