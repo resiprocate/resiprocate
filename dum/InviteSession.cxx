@@ -17,27 +17,40 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mCurrentLocalSdp(0),
      mCurrentRemoteSdp(0),
      mProposedLocalSdp(0),
-     mProposedRemoteSdp(0)
+     mProposedRemoteSdp(0),
+     mNextOfferOrAnswerSdp(0)
 {
    assert(mDum.mInviteSessionHandler);
 }
 
 InviteSession::~InviteSession()
 {
+   delete mCurrentLocalSdp;
+   delete mCurrentRemoteSdp;
+   delete mProposedLocalSdp;
+   delete mProposedRemoteSdp;
+   delete mNextOfferOrAnswerSdp;
    mDialog.mInviteSession = 0;
 }
 
 void
 InviteSession::setOffer(const SdpContents* sdp)
 {
-   //mProposedLocalSdp = sdp;
+   if (mProposedRemoteSdp)
+   {
+      throw UsageUseException("Cannot set an offer with an oustanding remote offer", __FILE__, __LINE__);
+   }
+   mNextOfferOrAnswerSdp = static_cast<SdpContents*>(sdp->clone());
 }
 
 void
 InviteSession::setAnswer(const SdpContents* sdp)
 {
-   //mProposedLocalSdp = 0;
-   //mCurrentLocalSdp = sdp;
+   if (mProposedLocalSdp )
+   {
+      throw UsageUseException("Cannot set an answer with an oustanding offer", __FILE__, __LINE__);
+   }
+   mNextOfferOrAnswerSdp = static_cast<SdpContents*>(sdp->clone());
 }
 
 const SdpContents* 
@@ -129,7 +142,7 @@ InviteSession::end()
    switch (mState)
    {
       case Terminated: 
-         throw new UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+         throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
          mDialog.makeRequest(mLastRequest, BYE);
@@ -142,6 +155,8 @@ InviteSession::end()
 }
 
 // If sdp==0, it means the last offer failed
+// !dcm! -- eventually handle confused UA's that send offers/answers at
+// inappropriate times, probably with a different callback
 void
 InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
 {
@@ -171,16 +186,20 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
          mOfferState = CounterOfferred;
          mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, sdp);
          break;
-         
-         
+                  
       case CounterOfferred:
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
          mOfferState = Answered;
          if (sdp)
          {
+            delete mCurrentLocalSdp;
+            delete mCurrentRemoteSdp;
             mCurrentLocalSdp = mProposedLocalSdp;
             mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+            mProposedLocalSdp = 0;
+            mProposedRemoteSdp = 0;
+            mOfferState = Answered;
             mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
          }
          else
@@ -194,20 +213,64 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
    }
 }
 
+void 
+InviteSession::send(SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      //unless the message is an ACK(in which case it is mAck)
+      //strip out the SDP after sending
+      if (msg.header(h_RequestLine).getMethod() == ACK)
+      {
+         mDum.send(msg);
+      }
+      else
+      {
+         mDum.send(msg);
+         msg.releaseContents();
+      }
+   }
+   else
+   {
+      int code = msg.header(h_StatusLine).statusCode();
+      //!dcm! -- probably kill this object earlier, handle 200 to bye in
+      //DialogUsageManager...very soon 
+      if (msg.header(h_CSeq).method() == BYE && code == 200) //!dcm! -- not 2xx?
+
+      {
+         mState = Terminated;
+         mDum.send(msg);
+         delete this;
+      }
+      else if (code >= 200 && code < 300)
+      {
+         assert(&msg == &mFinalResponse);
+         //!dcm! -- start timer...this should be mFinalResponse...maybe assign here in
+         //case the user wants to be very strange
+         if (mNextOfferOrAnswerSdp)
+         {
+            msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+            sendSdp(mNextOfferOrAnswerSdp);
+         }   
+      } 
+   }      
+   mDum.send(msg);
+}
+
 void
-InviteSession::sendSdp(const SdpContents* sdp)
+InviteSession::sendSdp(SdpContents* sdp)
 {
    switch (mOfferState)
    {
       case Nothing:
          assert(mCurrentLocalSdp == 0);
          assert(mCurrentRemoteSdp == 0);
-         mProposedLocalSdp = static_cast<SdpContents*>(sdp->clone());
+         mProposedLocalSdp = sdp;
          mOfferState = Offerred;
          break;
          
       case Offerred:
-         mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
+         mCurrentLocalSdp = sdp;
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mProposedLocalSdp = 0;
          mProposedRemoteSdp = 0;
@@ -217,11 +280,10 @@ InviteSession::sendSdp(const SdpContents* sdp)
       case Answered:
          assert(mProposedLocalSdp == 0);
          assert(mProposedRemoteSdp == 0);
-         mProposedLocalSdp = static_cast<SdpContents*>(sdp->clone());
+         mProposedLocalSdp = sdp;
          mOfferState = CounterOfferred;
          break;
         
-         
       case CounterOfferred:
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
@@ -297,6 +359,12 @@ InviteSession::copyAuthorizations(SipMessage& request)
 #endif
 }
 
+
+SipMessage& 
+InviteSession::rejectOffer(int statusCode)
+{
+}
+
 SipMessage& 
 InviteSession::targetRefresh(const NameAddr& localUri)
 {
@@ -304,9 +372,20 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 }
 
 void 
-InviteSession::makeAck(const SipMessage& response2xx)
+InviteSession::makeAck()
 {
-   assert(0);
+   mAck = mLastRequest;
+   mDialog.makeRequest(mAck, ACK);
+   if (mNextOfferOrAnswerSdp)
+   {
+      mAck.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+      sendSdp(mNextOfferOrAnswerSdp);
+   }   
+}
+
+SipMessage& 
+InviteSession::reInvite(const SdpContents* offer)
+{
 }
 
 /* ====================================================================
