@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.00"
-	Name="test"
+	Name="limpc"
 	ProjectGUID="{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
 	Keyword="Win32Proj">
 	<Platforms>
