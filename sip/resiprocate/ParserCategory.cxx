@@ -35,7 +35,7 @@ ParserCategory::operator=(const ParserCategory& rhs)
       {
          delete mHeaderField;
       }
-      if (!mIsParsed)
+      if (!rhs.mIsParsed)
       {
          mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
          mMine = true;

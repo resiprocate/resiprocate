@@ -1,7 +1,7 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.9 2002/10/06 20:59:21 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.10 2002/10/07 19:19:47 jason Exp $";
 
 #include <string>
 #include <iostream>
@@ -13,14 +13,15 @@ class Data
 {
       
    public:
-      Data( );
-      Data( const char* str );
-      Data( const char* buffer, int length );
-      Data( const Data& data );
-      Data( const std::string& str);
+      Data();
+      Data(const char* str);
+      Data(const char* buffer, int length);
+      Data(const Data& data);
+      Data(const std::string& str);
       explicit Data( const int value);
 
       bool operator==(const Data& rhs) const;
+      bool operator!=(const Data& rhs) const { return !(*this == rhs); }
       bool operator==(const char* rhs) const;
       bool operator==(const std::string& rhs) const;
 
