@@ -9,6 +9,10 @@ static const char* const resipDataHeaderVersion =
 #include <iostream>
 #include <string>
 #include "HashMap.hxx"
+#if defined(HAVE_CONFIG_HXX)
+#include "resiprocate/config.hxx"
+#endif
+
 
 class TestData;
 namespace resip
@@ -152,7 +156,7 @@ class Data
       // Larger LocalAlloc makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
 
-      enum {LocalAlloc = 128};
+      enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE};
       char mPreBuffer[LocalAlloc+1];
 
       size_type mSize;
