@@ -19,7 +19,7 @@ Connection::connectionStates[Connection::MAX][32] = { "NewMessage", "ReadingHead
 
 
 Connection::Connection()
-   : mSocket(-1), // bogus
+   : mSocket(INVALID_SOCKET), // bogus
      mWho(),
      mSendPos(0),
      mMessage(0),
@@ -47,8 +47,9 @@ Connection::Connection(const Tuple& who, Socket socket)
 
 Connection::~Connection()
 {
-   if (mSocket != -1) // bogus Connections
+   if (mSocket != INVALID_SOCKET) // bogus Connections
    {
+      InfoLog (<< "Deleting " << mSocket << " with " << mOutstandingSends.size() << " to write");
       while (!mOutstandingSends.empty())
       {
          SendData* sendData = mOutstandingSends.front();
@@ -57,7 +58,7 @@ Connection::~Connection()
          mOutstandingSends.pop_front();
       }
    
-      //DebugLog (<< "Shutting down connection " << mSocket);
+      DebugLog (<< "Shutting down connection " << mSocket);
       closesocket(mSocket);
 
       getConnectionManager().removeConnection(this);
@@ -338,12 +339,14 @@ Connection::performWrite()
 {
    //assert(hasDataToWrite());
 
+   assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
    DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
    Data::size_type bytesWritten = write(data.data() + mSendPos,data.size() - mSendPos);
 
-   if (bytesWritten < 0)
+   if (bytesWritten == INVALID_SOCKET)
    {
+      //fail(data.transactionId);
       delete this;
    }
    else

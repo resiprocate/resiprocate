@@ -77,7 +77,6 @@ TcpConnection::write( const char* buf, const int count )
 #endif
    if (bytesWritten == INVALID_SOCKET)
    {
-      assert(0);
       InfoLog (<< "Failed write on " << mSocket << " " << strerror(errno));
    }
    
