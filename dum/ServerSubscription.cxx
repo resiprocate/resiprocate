@@ -156,7 +156,7 @@ ServerSubscription::makeNotifyExpires()
 void
 ServerSubscription::makeNotify()
 {
-   mDialog.makeRequest(mLastNotify, RESIP_NOTIFY);
+   mDialog.makeRequest(mLastNotify, NOTIFY);
    mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
    if (mSubscriptionState == Terminated)
    {

@@ -62,7 +62,7 @@ class Server : public ThreadIf
                auto_ptr<SipMessage> forDel(received);
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                ErrLog ( << "Server received: " << getMethodName(meth));
-               if ( meth == RESIP_INVITE )
+               if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);
                   auto_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, contact));
@@ -75,11 +75,11 @@ class Server : public ThreadIf
                   ErrLog( << "Sent 200");
                   mStack.send(*msg200);
                }
-               if ( meth == RESIP_BYE)
+               if ( meth == BYE)
                {
                   auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, contact));
                   calls--;
-                  ErrLog( << "Sent 200 to RESIP_BYE");
+                  ErrLog( << "Sent 200 to BYE");
                   mStack.send(*msg200);
                }
             }

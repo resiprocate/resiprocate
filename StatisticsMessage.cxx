@@ -46,13 +46,13 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
    unsigned int retriesFinal = 0;
    for (int c = 200; c < 300; ++c)
    {
-      retriesFinal += stats.responsesRetransmittedByMethodByCode[RESIP_INVITE][c];
+      retriesFinal += stats.responsesRetransmittedByMethodByCode[INVITE][c];
    }
 
    unsigned int retriesNonFinal = 0;      
    for (int c = 100; c < 200; ++c)
    {
-      retriesNonFinal += stats.responsesRetransmittedByMethodByCode[RESIP_INVITE][c];
+      retriesNonFinal += stats.responsesRetransmittedByMethodByCode[INVITE][c];
    }
 
    WarningLog(<< subsystem
@@ -67,34 +67,34 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << " reqo " << stats.requestsSent
               << " rspi " << stats.responsesReceived
               << " rspo " << stats.responsesSent
-              << " INVi " << stats.requestsReceivedByMethod[RESIP_INVITE]
-              << " INVo " << stats.requestsSentByMethod[RESIP_INVITE]-stats.requestsRetransmittedByMethod[RESIP_INVITE]
-              << " ACKi " << stats.requestsReceivedByMethod[RESIP_ACK]
-              << " ACKo " << stats.requestsSentByMethod[RESIP_ACK]-stats.requestsRetransmittedByMethod[RESIP_ACK]
-              << " BYEi " << stats.requestsReceivedByMethod[RESIP_BYE]
-              << " BYEo " << stats.requestsSentByMethod[RESIP_BYE]-stats.requestsRetransmittedByMethod[RESIP_BYE]
-              << " CANi " << stats.requestsReceivedByMethod[RESIP_CANCEL]
-              << " CANo " << stats.requestsSentByMethod[RESIP_CANCEL]-stats.requestsRetransmittedByMethod[RESIP_CANCEL]
-              << " OPTi " << stats.requestsReceivedByMethod[RESIP_OPTIONS]
-              << " OPTo " << stats.requestsSentByMethod[RESIP_OPTIONS]-stats.requestsRetransmittedByMethod[RESIP_OPTIONS]
-              << " REGi " << stats.requestsReceivedByMethod[RESIP_REGISTER]
-              << " REGo " << stats.requestsSentByMethod[RESIP_REGISTER]-stats.requestsRetransmittedByMethod[RESIP_REGISTER]
-              << " PUBi " << stats.requestsReceivedByMethod[RESIP_PUBLISH]
-              << " PUBo " << stats.requestsSentByMethod[RESIP_PUBLISH]
-              << " SUBi " << stats.requestsReceivedByMethod[RESIP_SUBSCRIBE]
-              << " SUBo " << stats.requestsSentByMethod[RESIP_SUBSCRIBE]
-              << " NOTi " << stats.requestsReceivedByMethod[RESIP_NOTIFY]
-              << " NOTo " << stats.requestsSentByMethod[RESIP_NOTIFY]
-              << " INVx " << stats.requestsRetransmittedByMethod[RESIP_INVITE]
-              << " BYEx " << stats.requestsRetransmittedByMethod[RESIP_BYE]
-              << " CANx " << stats.requestsRetransmittedByMethod[RESIP_CANCEL]
-              << " OPTx " << stats.requestsRetransmittedByMethod[RESIP_OPTIONS]
-              << " REGx " << stats.requestsRetransmittedByMethod[RESIP_REGISTER]
+              << " INVi " << stats.requestsReceivedByMethod[INVITE]
+              << " INVo " << stats.requestsSentByMethod[INVITE]-stats.requestsRetransmittedByMethod[INVITE]
+              << " ACKi " << stats.requestsReceivedByMethod[ACK]
+              << " ACKo " << stats.requestsSentByMethod[ACK]-stats.requestsRetransmittedByMethod[ACK]
+              << " BYEi " << stats.requestsReceivedByMethod[BYE]
+              << " BYEo " << stats.requestsSentByMethod[BYE]-stats.requestsRetransmittedByMethod[BYE]
+              << " CANi " << stats.requestsReceivedByMethod[CANCEL]
+              << " CANo " << stats.requestsSentByMethod[CANCEL]-stats.requestsRetransmittedByMethod[CANCEL]
+              << " OPTi " << stats.requestsReceivedByMethod[OPTIONS]
+              << " OPTo " << stats.requestsSentByMethod[OPTIONS]-stats.requestsRetransmittedByMethod[OPTIONS]
+              << " REGi " << stats.requestsReceivedByMethod[REGISTER]
+              << " REGo " << stats.requestsSentByMethod[REGISTER]-stats.requestsRetransmittedByMethod[REGISTER]
+              << " PUBi " << stats.requestsReceivedByMethod[PUBLISH]
+              << " PUBo " << stats.requestsSentByMethod[PUBLISH]
+              << " SUBi " << stats.requestsReceivedByMethod[SUBSCRIBE]
+              << " SUBo " << stats.requestsSentByMethod[SUBSCRIBE]
+              << " NOTi " << stats.requestsReceivedByMethod[NOTIFY]
+              << " NOTo " << stats.requestsSentByMethod[NOTIFY]
+              << " INVx " << stats.requestsRetransmittedByMethod[INVITE]
+              << " BYEx " << stats.requestsRetransmittedByMethod[BYE]
+              << " CANx " << stats.requestsRetransmittedByMethod[CANCEL]
+              << " OPTx " << stats.requestsRetransmittedByMethod[OPTIONS]
+              << " REGx " << stats.requestsRetransmittedByMethod[REGISTER]
               << " finx " << retriesFinal
               << " nonx " << retriesNonFinal
-              << " PUBx " << stats.requestsRetransmittedByMethod[RESIP_PUBLISH]
-              << " SUBx " << stats.requestsRetransmittedByMethod[RESIP_SUBSCRIBE]
-              << " NOTx " << stats.requestsRetransmittedByMethod[RESIP_NOTIFY]);
+              << " PUBx " << stats.requestsRetransmittedByMethod[PUBLISH]
+              << " SUBx " << stats.requestsRetransmittedByMethod[SUBSCRIBE]
+              << " NOTx " << stats.requestsRetransmittedByMethod[NOTIFY]);
 }
 
 

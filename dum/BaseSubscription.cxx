@@ -12,7 +12,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    mSubscriptionState(Invalid)
    
 {
-   if (request.header(h_RequestLine).method() == RESIP_REFER)
+   if (request.header(h_RequestLine).method() == REFER)
    {
       mEventType = "refer";
    }

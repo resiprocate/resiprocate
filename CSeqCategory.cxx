@@ -19,17 +19,15 @@ using namespace std;
 // CSeqCategory:
 //====================
 CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mMethod(RESIP_UNKNOWN), mSequence(-1)
-{
-}
+   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
+{}
 
 CSeqCategory::CSeqCategory() 
    : ParserCategory(), 
-     mMethod(RESIP_UNKNOWN),
-     mUnknownMethodName(getMethodName(RESIP_UNKNOWN)),
+     mMethod(UNKNOWN), 
+     mUnknownMethodName(getMethodName(UNKNOWN)),
      mSequence(-1) 
-{
-}
+{}
 
 CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
    : ParserCategory(rhs),
@@ -55,7 +53,7 @@ bool
 CSeqCategory::operator==(const CSeqCategory& rhs) const
 {
    return (mMethod == rhs.mMethod &&
-           (mMethod != RESIP_UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
+           (mMethod != UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
            mSequence == rhs.mSequence);
 }
 
@@ -123,16 +121,16 @@ CSeqCategory::sequence() const
 }
 
 // examples to test: 
-// "CSeq:15 RESIP_ACK"  // ok
-// "CSeq:RESIP_ACK"     // bad
+// "CSeq:15 ACK"  // ok
+// "CSeq:ACK"     // bad
 // "CSeq:JOE"     // ok
 // "CSeq:1 JOE"   // ok
-// "CSeq:1323333 RESIP_INVITE" // ok 
+// "CSeq:1323333 INVITE" // ok 
 // "CSeq:1323333 Invite" // ok - not invite
 // "CSeq:1323333 InviTe" // ok - not invite
-// "CSeq:\t\t  \t15\t\t\t    \t RESIP_ACK"  // ok
+// "CSeq:\t\t  \t15\t\t\t    \t ACK"  // ok
 // "CSeq:\t\t  \t15\t\t\t    \t"  // bad
-// "CSeq:1xihzihsihtqnognsd RESIP_INVITE" // not ok, but parses (?)
+// "CSeq:1xihzihsihtqnognsd INVITE" // not ok, but parses (?)
 
 void
 CSeqCategory::parse(ParseBuffer& pb)
@@ -151,7 +149,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 std::ostream& 
 CSeqCategory::encodeParsed(std::ostream& str) const
 {
-   str << mSequence << Symbols::SPACE << (mMethod != RESIP_UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
+   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 

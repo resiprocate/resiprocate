@@ -44,8 +44,8 @@ class TimeLimitFifo : public AbstractFifo
       // Add a message to the fifo.
       // return true iff succeeds
       // second arg:
-      //    EnforceTimeDepth -- external (non RESIP_ACK) requests
-      //    IgnoreTimeDepth -- external reponse and RESIP_ACK
+      //    EnforceTimeDepth -- external (non ACK) requests
+      //    IgnoreTimeDepth -- external reponse and ACK
       //    InternalElement -- internal messages (timers, application postbacks..); used reseved queue space
       bool add(Msg* msg, DepthUsage usage);
 

@@ -5,7 +5,6 @@
 #include "resiprocate/ParameterTypes.hxx"
 namespace resip {
 using namespace std;
-using namespace resip;
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 220, duplicates = 1 */
 

@@ -74,7 +74,7 @@ main(int arc, char** argv)
       char* username = "user";
       char* password = "secret";
       char* realm = "localhost";
-      char* method = "RESIP_REGISTER";
+      char* method = "REGISTER";
       char* uri = "user@host.com";
       char* nonce = "92347fea23";
 
@@ -114,7 +114,7 @@ main(int arc, char** argv)
       char* username = "user";
       char* password = "secret";
       char* realm = "localhost";
-      char* method = "RESIP_REGISTER";
+      char* method = "REGISTER";
       char* uri = "user@host.com";
       char* nonce = "92347fea23";
       char* cnonce = "72345hef";
@@ -160,7 +160,7 @@ main(int arc, char** argv)
       char* username = "user";
       char* password = "secret";
       char* realm = "localhost";
-      char* method = "RESIP_REGISTER";
+      char* method = "REGISTER";
       char* uri = "user@host.com";
       char* nonce = "92347fea23";
 
@@ -196,11 +196,11 @@ main(int arc, char** argv)
    }
 
 /*
-RESIP_REGISTER sip:kelowna.gloo.net SIP/2.0
+REGISTER sip:kelowna.gloo.net SIP/2.0
 To: sip:100@kelowna.gloo.net
 From: <sip:100@kelowna.gloo.net>
 Call-ID: 000532ff-828108c2-79016ad7-69ac4815@192.168.2.233
-CSeq: 102 RESIP_REGISTER
+CSeq: 102 REGISTER
 Contact: sip:100@192.168.2.233:5060
 Via: SIP/2.0/UDP 192.168.2.233:5060;received=192.168.2.233;rport=5060
 Expires: 3600
@@ -218,7 +218,7 @@ Proxy-Authorization: Digest username="sip:100@kelowna.gloo.net:5060",realm="kelo
       char* username = "sip:100@kelowna.gloo.net:5060";
       char* password = "secret";
       char* realm = "kelowna.gloo.net";
-      char* method = "RESIP_REGISTER";
+      char* method = "REGISTER";
       char* uri = "sip:kelowna.gloo.net";
       char* nonce = "1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7";
       char* cnonce = "";
@@ -265,7 +265,7 @@ Calling form_SIPdigest with:
   nonce    = 1039063045
   user     = sip:100@kelowna.gloo.net:5060
   pswd     = secret
-  method   = RESIP_REGISTER
+  method   = REGISTER
   uri      = sip:kelowna.gloo.net
   realm    = kelowna.gloo.net
   algorithm= MD5
@@ -277,7 +277,7 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
       char* username = "sip:100@kelowna.gloo.net:5060";
       char* password = "secret";
       char* realm = "kelowna.gloo.net";
-      char* method = "RESIP_REGISTER";
+      char* method = "REGISTER";
       char* uri = "sip:kelowna.gloo.net";
       char* nonce = "1039063045";
 
@@ -314,12 +314,12 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
    }
 
    {
-      Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 RESIP_INVITE\r\n"
+               "CSeq: 314159 INVITE\r\n"
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: application/sdp\r\n"
@@ -388,12 +388,12 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
    }
 
    {
-      Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 RESIP_INVITE\r\n"
+               "CSeq: 314159 INVITE\r\n"
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: application/sdp\r\n"
