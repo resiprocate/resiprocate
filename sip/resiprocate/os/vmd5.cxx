@@ -27,7 +27,7 @@
 #include <netinet/in.h>		/* for ntohl() */
 #endif
 
-#include "resiprocate/util/vmd5.hxx"
+#include "resiprocate/os/vmd5.hxx"
 
 /* Add _BIG_ENDIAN for Solaris    -ctam */
 #if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN)

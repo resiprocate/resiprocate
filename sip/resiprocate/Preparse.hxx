@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/HeaderTypes.hxx"
 
 #if defined(PP_DO_INLINES)
 #define INLINE inline
@@ -172,7 +172,7 @@ namespace PreparseConst
 // --
 }
 #if defined(PP_DO_INLINES)
-#include "resiprocate/sipstack/PreparseInlines.cxx"
+#include "resiprocate/PreparseInlines.cxx"
 #endif
 }
 

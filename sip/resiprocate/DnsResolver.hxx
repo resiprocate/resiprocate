@@ -11,15 +11,15 @@
 #if defined(USE_ARES)
 extern "C"
 {
-#include "resiprocate/contrib/ares-1.1.1/ares.h"
-#include "resiprocate/contrib/ares-1.1.1/ares_dns.h"
+#include "ares.h"
+#include "ares_dns.h"
 }
 #endif
 
-#include "resiprocate/util/HashMap.hxx"
-#include "resiprocate/util/BaseException.hxx"
-#include "resiprocate/sipstack/Transport.hxx"
-#include "resiprocate/sipstack/Message.hxx"
+#include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/Message.hxx"
 
 namespace Vocal2
 {

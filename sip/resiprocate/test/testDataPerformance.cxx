@@ -1,5 +1,5 @@
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/Random.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Random.hxx"
 
 using namespace Vocal2;
 

@@ -2,23 +2,23 @@
 #include <cassert>
 #include <memory>
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Dialog.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Dialog.hxx"
 
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Random.hxx"
-#include "resiprocate/sipstack/TuIM.hxx"
-#include "resiprocate/sipstack/Contents.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx"
-#include "resiprocate/sipstack/PlainContents.hxx"
-#include "resiprocate/sipstack/Pkcs7Contents.hxx"
-#include "resiprocate/sipstack/MultipartSignedContents.hxx"
-#include "resiprocate/sipstack/Security.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/Pidf.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
+#include "resiprocate/TuIM.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/Security.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/Pidf.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 

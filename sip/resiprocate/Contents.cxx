@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/Contents.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 

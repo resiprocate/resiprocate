@@ -2,7 +2,7 @@
 /* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z ParameterHash ParameterHash.gperf  */
 #include <string.h>
 #include <ctype.h>
-#include "resiprocate/sipstack/ParameterTypes.hxx"
+#include "resiprocate/ParameterTypes.hxx"
 namespace Vocal2 {
 using namespace Vocal2;
 using namespace std;

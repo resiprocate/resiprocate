@@ -1,5 +1,5 @@
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/ThreadIf.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
 using namespace Vocal2;
 

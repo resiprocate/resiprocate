@@ -1,8 +1,8 @@
 #ifndef Vocal2_SysLogStream_hxx
 #define Vocal2_SysLogStream_hxx
 
-#include "resiprocate/util/Log.hxx"
-#include "resiprocate/util/SysLogBuf.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/SysLogBuf.hxx"
 
 namespace Vocal2
 {
