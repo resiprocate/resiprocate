@@ -416,21 +416,24 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
          }
          
-         Via& topVia(msg->header(h_Vias).front());
-         topVia.remove(p_maddr); // !jf! why do this? 
+         if (target.transport) // findTransport may have failed
+         {
+            Via& topVia(msg->header(h_Vias).front());
+            topVia.remove(p_maddr); // !jf! why do this? 
 
-         // insert the via
-         if (topVia.transport().empty())
-         {
-            topVia.transport() = Tuple::toData(target.transport->transport());
-         }
-         if (!topVia.sentHost().size())
-         {
-            msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
-         }
-         if (!topVia.sentPort())
-         {
-            msg->header(h_Vias).front().sentPort() = target.transport->port();
+            // insert the via
+            if (topVia.transport().empty())
+            {
+               topVia.transport() = Tuple::toData(target.transport->transport());
+            }
+            if (!topVia.sentHost().size())
+            {
+               msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+            }
+            if (!topVia.sentPort())
+            {
+               msg->header(h_Vias).front().sentPort() = target.transport->port();
+            }
          }
       }
       else if (msg->isResponse())
@@ -583,7 +586,7 @@ TransportSelector::findTransport(const Tuple& search)
    //DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
    //DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
    //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
-   
+
    WarningLog(<< "Can't find matching transport " << search);
    return 0;
 }
