@@ -39,14 +39,46 @@ GagConduit::handleMessage(GagMessage *message)
   }
 }
 
+
+map<Uri,TuIM>::iterator
+GagConduit::getTu(Uri &aor)
+{
+  map<Uri,TuIM>::iterator tu = tuIM.find(aor);
+  if (tu == tuIM.end())
+  {
+    Data error;
+    error = "You are not logged in as ";
+    error += aor.getAor();
+    GagErrorMessage errorMessage(error);
+    errorMessage.serialize(cout);
+  }
+  return tu;
+}
+
 void
 GagConduit::gaimIm(GagImMessage *msg)
 {
+  Uri *from = msg->getFromPtr();
+  Uri *to = msg->getToPtr();
+  Data *im = msg->getImPtr();
+
+  map<Uri,TuIM>::iterator tu = getTu(*from);
+  if (tu == tuIM.end()) return;
+
+  tu->second.sendPage(*im, *to, false, to->getAor());
 }
 
 void
 GagConduit::gaimPresence(GagPresenceMessage *msg)
 {
+  Uri *aor = msg->getAorPtr();
+  bool online = msg->getAvailable();
+  Data *status = msg->getStatusPtr();
+
+  map<Uri,TuIM>::iterator tu = getTu(*aor);
+  if (tu == tuIM.end()) return;
+
+  tu->second.setMyPresence(online, *status);
 }
 
 void
@@ -79,8 +111,8 @@ void
 GagConduit::process()
 {
   map<Uri,TuIM>::iterator tu;
-  tu = tuIMList.begin();
-  while (tu != tuIMList.end())
+  tu = tuIM.begin();
+  while (tu != tuIM.end())
   {
     (tu->second).process();
     tu++;
