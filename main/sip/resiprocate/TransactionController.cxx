@@ -2,6 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"

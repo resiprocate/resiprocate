@@ -7,6 +7,7 @@
 
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/DnsResult.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransportMessage.hxx"
