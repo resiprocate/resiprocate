@@ -14,7 +14,7 @@ class Client : public ClientRegistrationHandler
       virtual void onSuccess(ClientRegistration::Handle h, const SipMessage& response)
       {
          cerr << "Client::Success: " << response << endl;
-         Sleep(5);
+         sleep(5);
          h->removeAll();
          done = true;
       }
