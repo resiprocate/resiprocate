@@ -16,6 +16,20 @@ class TestData
       void main()
       {
          {
+            Data *d = new Data("origin",6);
+
+            {
+               Data * t = d;
+
+               d = new Data(*d);
+
+               assert(d->size() == t->size());
+               assert(d->mCapacity == t->mCapacity);
+               // cout << d->size() << ":" << d->mCapacity << endl;
+               delete t;
+            }
+         }
+         {
             assert(Data(0) == "0");
             assert(Data(1) == "1");
             assert(Data(-1) == "-1");
@@ -246,6 +260,11 @@ class TestData
             Data mixed("miXed");
             mixed.uppercase();
             assert(mixed == "MIXED");
+         }
+         {
+            Data a("a");
+            Data aa(a);
+            assert(a.size() == aa.size());
          }
       }
 };
