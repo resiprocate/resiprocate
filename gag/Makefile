@@ -1,11 +1,12 @@
 LIBSIP = ../build/resiprocate/libresiprocate.a
 LIBARES = ../contrib/ares/libares.a
+GETOPT = ../contrib/getopt/getopt.o
 CFLAGS = -I .. -g
 LDFLAGS = -lssl -lcrypto -lpthread
 
 all: gag
 
-gag: gag.o GagMessage.o GagConduit.o $(LIBSIP) $(LIBARES)
+gag: gag.o GagMessage.o GagConduit.o $(LIBSIP) $(LIBARES) $(GETOPT)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cxx
