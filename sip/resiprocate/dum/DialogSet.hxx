@@ -75,6 +75,7 @@ class DialogSet
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
       bool mCancelled;
+      bool mReceivedProvisional;      
 
       //inelegant, but destruction can happen both automatically and forced by
       //the user.  Extremely single threaded.

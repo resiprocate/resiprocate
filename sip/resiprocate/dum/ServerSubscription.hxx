@@ -42,6 +42,7 @@ class ServerSubscription : public BaseSubscription
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
       void makeNotifyExpires();
+      void makeNotify();      
 
 //      const Contents* mCurrentEventDocument;
       SipMessage mLastNotify;

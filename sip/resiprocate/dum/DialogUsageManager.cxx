@@ -843,7 +843,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    InfoLog ( << "DialogUsageManager::processResponse: " << response);
-   if (response.header(h_StatusLine).statusCode() > 100 && response.header(h_CSeq).method() != CANCEL)
+   if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   
