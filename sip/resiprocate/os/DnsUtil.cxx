@@ -1,3 +1,5 @@
+
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -34,6 +36,9 @@ DnsUtil::lookupARecords(const Data& host)
    struct hostent hostbuf; 
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
+#elif defined( __MACH__ ) || defined (__FreeBSD__)
+   result = gethostbyname( host.c_str() );
+   herrno = h_errno;
 #else
 #error "need to define some version of gethostbyname for your arch"
 #endif
@@ -82,8 +87,6 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
       return ipAddress;
    }
        
-#if defined(__GLIBC__)
-#endif
    struct in_addr addrStruct;
    int ret = inet_aton(ipAddress.c_str(), &addrStruct);
    if (ret == 0)
@@ -92,10 +95,12 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
    }
 
    struct hostent h;
-   char buf[8192];
+   struct hostent* hp;
    int localErrno;
-
+   hp = &h;
+   
 #if defined(__GLIBC__)
+   char buf[8192];
    hostent* pres;
    ret = gethostbyaddr_r (&addrStruct,
                           sizeof(addrStruct),
@@ -105,8 +110,8 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
                           8192,
                           &pres,
                           &localErrno);
-#else
-#if !defined(WIN32)
+#elif defined(__linux__) || defined(__QNX__)  || defined(__SUNPRO_CC)
+   char buf[8192];
    ret = gethostbyaddr_r ((char *)(&addrStruct),
                           sizeof(addrStruct),
                           AF_INET,
@@ -114,15 +119,19 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
                           buf,
                           8192,
                           &localErrno);
+#elif defined(__MACH__) || defined(__FreeBSD__)
+   hp = gethostbyaddr( (char *)(&addrStruct),
+                       sizeof(addrStruct),
+                       AF_INET);
+   localErrno = h_errno;
 #else
 #error no implementation for critical function
 #endif
-#endif      
    if (ret != 0)
    {
       throw Exception("getHostByAddr failed to lookup PTR", __FILE__, __LINE__);
    }
-   return Data(h.h_name);
+   return Data(hp->h_name);
 }
 
 Data 
