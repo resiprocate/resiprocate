@@ -46,12 +46,14 @@ void ParameterList::insert(Parameter* param)
 
 Parameter* ParameterList::find(ParameterTypes::Type type) const
 {
+   cerr << "ParameterList::find:type" << endl;
    if (first)
    {
       Parameter* p = first;
       
       do
       {
+         cerr << "ParameterList::find:node:type->" << p->getType() << endl;
          if (p->getType() == type)
          {
             return p;
@@ -95,6 +97,7 @@ void ParameterList::erase(ParameterTypes::Type type)
 
 Parameter* ParameterList::find(const Data& type) const
 {
+   cerr << "ParameterList::find:Data" << endl;
    if (first)
    {
       Parameter* p = first;
@@ -181,5 +184,12 @@ ParameterList::encode(ostream& stream) const
       while((p = p->next) != 0);
    }
    return stream;
+}
+
+ostream&
+Vocal2::operator<<(ostream& str, const ParameterList& pl)
+{
+   pl.encode(str);
+   return str;
 }
 

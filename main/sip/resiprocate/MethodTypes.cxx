@@ -51,7 +51,7 @@ int strncasecmp(const char* a, const char* b, int len)
 {
    for (int i = 0; i < len; i++)
    {
-      int c = (a[i] | 0x40) - (b[i] | 0x40);
+      int c = (a[i] | 0x20) - (b[i] | 0x20);
       if (c != 0)
       {
          return c;
