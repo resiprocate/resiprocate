@@ -96,6 +96,8 @@ class Transport
       bool mShutdown ;
 };
 
+std::ostream& operator<<(std::ostream& strm, const Transport::Tuple& tuple);
+
 class SendData
 {
    public:
