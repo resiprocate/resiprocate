@@ -9,7 +9,7 @@ namespace resip
 class ExternalTimerHandler
 {
    public:
-      virtual void handleTimeout(AsyncID timerID);
+      virtual void handleTimeout(AsyncID timerID)=0;
 };
 
 //used by the asynchronous executive
@@ -19,9 +19,9 @@ class ExternalTimer
       virtual AsyncID generateAsyncID()=0;
       virtual void setHandler(ExternalTimerHandler* handler)=0;
       
-      virtual void createTimer(AsyncID timerID, unsigned long ms);
-      virtual void createRecurringTimer(AsyncID timerID, unsigned long every_ms);
-      virtual void deleteTimer(AsyncID timerID);
+      virtual void createTimer(AsyncID timerID, unsigned long ms)=0;
+      virtual void createRecurringTimer(AsyncID timerID, unsigned long every_ms)=0;
+      virtual void deleteTimer(AsyncID timerID)=0;
 };
 
 }
