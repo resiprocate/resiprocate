@@ -286,89 +286,101 @@ TransportSelector::dnsResolve(SipMessage* msg,
    return result;
 }
 
-void
-TransportSelector::srcAddrForDest(const Tuple& dest, 
-                                  Tuple& source) const
+Tuple
+TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const
 {
-   Socket tmp = INVALID_SOCKET;
-   if (dest.isV4())
+   assert(msg->exists(h_Vias));
+   assert(!msg->header(h_Vias).empty());
+   const Via& via = msg->header(h_Vias).front();
+   if (!via.sentHost().empty())
    {
-      if (mSocket == INVALID_SOCKET)
-      {
-         mSocket = Transport::socket(UDP, dest.isV4()); // may throw
-      }
-      tmp = mSocket;
+      return Tuple(via.sentHost(), via.sentPort(), dest.isV4(), dest.getType());
    }
    else
    {
-      if (mSocket6 == INVALID_SOCKET)
+      Socket tmp = INVALID_SOCKET;
+      if (dest.isV4())
       {
-         mSocket6 = Transport::socket(UDP, dest.isV4()); // may throw
+         if (mSocket == INVALID_SOCKET)
+         {
+            mSocket = Transport::socket(UDP, dest.isV4()); // may throw
+         }
+         tmp = mSocket;
       }
-      tmp = mSocket6;
-   }
+      else
+      {
+         if (mSocket6 == INVALID_SOCKET)
+         {
+            mSocket6 = Transport::socket(UDP, dest.isV4()); // may throw
+         }
+         tmp = mSocket6;
+      }
    
-   int ret = connect(tmp,&dest.getSockaddr(), dest.length());
-   if (ret < 0)
-   {
-      int e = getErrno();
-      Transport::error( e );
-      InfoLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
-      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-   }
+      int ret = connect(tmp,&dest.getSockaddr(), dest.length());
+      if (ret < 0)
+      {
+         int e = getErrno();
+         Transport::error( e );
+         InfoLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
+         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+      }
    
-   socklen_t len = source.length();  
-   ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-   if (ret < 0)
-   {
-      int e = getErrno();
-      Transport::error(e);
-      InfoLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
-      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-   }
+      Tuple source(dest);
+      source.setPort(via.sentPort());
+      
+      socklen_t len = source.length();  
+      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+      if (ret < 0)
+      {
+         int e = getErrno();
+         Transport::error(e);
+         InfoLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
+         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+      }
 
-   DebugLog (<< "Looked up source for " << dest << " -> " << source);
+      DebugLog (<< "Looked up source for " << dest << " -> " << source);
 
-   // Unconnect
-   if (dest.isV4())
-   {
-      ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
-   }
+      // Unconnect
+      if (dest.isV4())
+      {
+         ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+      }
 #if USE_IPV6
-   else
-   {
-      ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
-   }
+      else
+      {
+         ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+      }
 #else
-   else
-   {
-	   assert(0);
-   }
+      else
+      {
+         assert(0);
+      }
 #endif
    
-   if ( ret<0 )
-   {
-      int e =  getErrno();
-      if  ( e != EAFNOSUPPORT )
+      if ( ret<0 )
       {
-         ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
-         throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+         int e =  getErrno();
+         if  ( e != EAFNOSUPPORT )
+         {
+            ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+         }
       }
+      return source;
    }
 }
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::transmit(SipMessage* msg, 
-                            Tuple& destination)
+TransportSelector::transmit(SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
    try
    {
-      Tuple source(destination);
-      srcAddrForDest(destination,source);
-
+      // there must be a via, use the port in the via as a hint of what
+      // port to send on
+      Tuple source = determineSourceInterface(msg, destination);
       if (destination.transport == 0)
       {
          if (destination.getType() == TLS)
@@ -377,9 +389,6 @@ TransportSelector::transmit(SipMessage* msg,
          }
          else
          {
-            // there must be a via, use the port in the via as a hint of what
-            // port to send on
-            source.setPort(msg->header(h_Vias).front().sentPort());
             destination.transport = findTransport(source);
          }
       }
@@ -486,47 +495,52 @@ TransportSelector::findTransport(const Tuple& search)
 {
    DebugLog(<< "findTransport(" << search << ")");
 
-   // 1. search for exact match
+   if (search.getPort() != 0)
    {
-      ExactTupleMap::const_iterator i = mExactTransports.find(search);
-      if (i != mExactTransports.end())
+      // 1. search for matching port on a specific interface
       {
-         DebugLog(<< "findTransport (exact) => " << i->first);
-         return i->second;
+         ExactTupleMap::const_iterator i = mExactTransports.find(search);
+         if (i != mExactTransports.end())
+         {
+            DebugLog(<< "findTransport (exact) => " << i->first);
+            return i->second;
+         }
+      }
+
+      // 2. search for specific port on ANY interface
+      {
+         AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
+         if (i != mAnyInterfaceTransports.end())
+         {
+            DebugLog(<< "findTransport (any interface) => " << i->first);
+            return i->second;
+         }
       }
    }
-
-   // 2. search for specific port on ANY interface
+   else
    {
-      AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
-      if (i != mAnyInterfaceTransports.end())
+      // 1. search for ANY port on specific interface
       {
-         DebugLog(<< "findTransport (any interface) => " << i->first);
-         return i->second;
+         AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
+         if (i != mAnyPortTransports.end())
+         {
+            DebugLog(<< "findTransport (any port, specific interface) => " << i->first);
+            return i->second;
+         }
+      }
+
+      // 2. search for ANY port on ANY interface
+      {
+         //CerrLog(<< "Trying AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
+         AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
+         if (i != mAnyPortAnyInterfaceTransports.end())
+         {
+            DebugLog(<< "findTransport (any port, any interface) => " << i->first);
+            return i->second;
+         }
       }
    }
    
-   // 3. search for ANY port on specific interface
-   {
-      AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
-      if (i != mAnyPortTransports.end())
-      {
-         DebugLog(<< "findTransport (any port, specific interface) => " << i->first);
-         return i->second;
-      }
-   }
-
-   // 4. search for ANY port on ANY interface
-   {
-      //CerrLog(<< "Trying AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
-      AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
-      if (i != mAnyPortAnyInterfaceTransports.end())
-      {
-         DebugLog(<< "findTransport (any port, any interface) => " << i->first);
-         return i->second;
-      }
-   }
-
    ErrLog(<< "Can't find matching transport " << DnsUtil::inet_ntop(search));
    return 0;
 }
