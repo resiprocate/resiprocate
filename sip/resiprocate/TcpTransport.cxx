@@ -85,7 +85,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    {
       //int err = errno;
       // !cj! deal with errors
-      assert(0);
+	  throw Exception("Address already in use", __FILE__,__LINE__);
    }
 }
 

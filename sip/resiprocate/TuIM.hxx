@@ -28,6 +28,7 @@ public:
             virtual void sendPageFailed(const Uri& dest, int respNumber ) =0;
             virtual void receivePageFailed(const Uri& sender) =0;
             virtual void registrationFailed(const Uri& dest, int respNumber ) =0;
+            virtual void registrationWorked(const Uri& dest ) =0;
             virtual void presenseUpdate(const Uri& dest, bool open, const Data& status ) =0;
             virtual ~Callback();
       };
@@ -86,6 +87,7 @@ public:
             Data status;
       };
       vector<Buddy> mBuddy;
+	  typedef vector<Buddy>::iterator BuddyIterator;
 
       // people who subscribe to me 
       vector<Dialog*> mSubscribers;
