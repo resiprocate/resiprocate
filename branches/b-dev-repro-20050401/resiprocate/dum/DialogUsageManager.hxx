@@ -191,19 +191,18 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void end(DialogSetId invSessionId);
       void send(SipMessage& request); 
       
-      void buildFdSet(FdSet& fdset);
-
 
       // Call this version of process if you are running the sipstack in its own
       // thread. you must call run() before calling process()
       bool process();
 
+      //void buildFdSet(FdSet& fdset);
       // Call this version of process if you want to run the stack in the
       // application's thread
-      void process(FdSet& fdset);
+      //void process(FdSet& fdset);
       
       /// returns time in milliseconds when process next needs to be called 
-      int getTimeTillNextProcessMS(); 
+      //int getTimeTillNextProcessMS(); 
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode

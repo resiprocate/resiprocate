@@ -64,6 +64,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mDumShutdownHandler(0),
    mShutdownState(Running)
 {
+   mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
 }
 
@@ -406,7 +407,7 @@ void
 DialogUsageManager::sendResponse(SipMessage& response)
 {
    assert(response.isResponse());
-   mStack.send(response);
+   mStack.send(response, this);
 }
 
 SipMessage&
@@ -652,11 +653,11 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, Sip
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
       DebugLog ( << "Using outbound proxy");
-      mStack.sendTo(msg, userProfile.getOutboundProxy().uri());
+      mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
    }
    else
    {
-      mStack.send(msg);
+      mStack.send(msg, this);
    }
 }
 
@@ -717,17 +718,6 @@ DialogUsageManager::destroy(Dialog* d)
    }
 }
 
-void
-DialogUsageManager::buildFdSet(FdSet& fdset)
-{
-   mStack.buildFdSet(fdset);
-}
-
-int
-DialogUsageManager::getTimeTillNextProcessMS()
-{
-   return mStack.getTimeTillNextProcessMS();
-}
 
 Dialog*
 DialogUsageManager::findDialog(const DialogId& id)
@@ -987,7 +977,7 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
             mRequiresCerts[opt->getTransactionId()] = sipMsg;
             //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
             //are there issues with outbound proxies.
-            mStack.send(*opt);
+            mStack.send(*opt, this);
 
             return true;
          }
@@ -1008,14 +998,20 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 bool 
 DialogUsageManager::process()
 {
-   if (mFifo.messageAvailable())
-   {
-      return internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
-   }
-   else
-   {
-      return false;
-   }
+   return (mFifo.messageAvailable() && internalProcess(std::auto_ptr<Message>(mFifo.getNext())));
+}
+
+#if 0
+void
+DialogUsageManager::buildFdSet(FdSet& fdset)
+{
+   mStack.buildFdSet(fdset);
+}
+
+int
+DialogUsageManager::getTimeTillNextProcessMS()
+{
+   return mStack.getTimeTillNextProcessMS();
 }
 
 void
@@ -1032,7 +1028,7 @@ DialogUsageManager::process(FdSet& fdset)
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
 }
-
+#endif
 
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)

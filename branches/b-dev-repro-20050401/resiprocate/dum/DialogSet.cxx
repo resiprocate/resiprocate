@@ -345,11 +345,11 @@ DialogSet::dispatch(const SipMessage& msg)
 
    if (dialog)
    {
-      InfoLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
    }
    else
    {
-      InfoLog (<< "No matching dialog for " << endl << msg);
+      StackLog (<< "No matching dialog for " << endl << msg);
    }
    
    if (msg.isRequest())
