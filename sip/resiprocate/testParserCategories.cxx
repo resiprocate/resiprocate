@@ -702,6 +702,22 @@ main(int arc, char** argv)
    }
    
 
+   {
+      char* warningString = "307 isi.edu \"Session parameter 'foo' not understood\"";
+      HeaderFieldValue hfv(warningString, strlen(warningString));
+      
+      WarningCategory warn(&hfv);
+
+      assert(warn.code() == 307);
+      assert(warn.hostname() == "isi.edu");
+
+      cout << warn.text() << endl;
+      assert(warn.text() == "\"Session parameter 'foo' not understood\"");
+
+      stringstream s;
+      warn.encode(s);
+      assert(s.str() == warningString);
+   }
 
    cerr << "\nTEST OK" << endl;
 }
