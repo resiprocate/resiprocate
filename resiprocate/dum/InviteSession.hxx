@@ -35,6 +35,10 @@ class InviteSession : public BaseUsage
       /// should be 488? to a reinvite INVITE or an UPDATE
       virtual SipMessage& rejectOffer(int statusCode);
       
+      //accept a re-invite, etc.  Always 200?
+      virtual SipMessage& acceptOffer(int statusCode = 200);
+
+      
       // If the app has called setOffer prior to targetRefresh, the reINVITE
       // will contain the proposed offer. If the peer supports UPDATE, always
       // prefer UPDATE over reINVITE (no 3-way handshake required)
@@ -43,6 +47,11 @@ class InviteSession : public BaseUsage
       // established dialogs, in case user approval is required.
       virtual SipMessage& targetRefresh(const NameAddr& localUri);
 
+      //always does re-invite for now...ACK is hidden
+      //call setOffer or setAnswer bfore calling these.
+      //calling answerModifySession /wout setAnswer is invalid
+      virtual SipMessage& modifySession();
+ 
       virtual SipMessage& makeRefer(const NameAddr& referTo);
 
       const SdpContents* getLocalSdp();
@@ -87,7 +96,9 @@ class InviteSession : public BaseUsage
          Accepting, 
          Cancelled,
          Connected,
-         Terminated
+         Terminated,
+         ReInviting,
+         AcceptingReInvite
       } State;
 
       State mState;
