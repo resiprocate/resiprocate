@@ -16,13 +16,6 @@ class TransactionState
       static void process(SipStack& stack); 
      
    private:
-
-      void processClientNonInvite(  Message* msg );
-      void processClientInvite(  Message* msg );
-      void processServerNonInvite(  Message* msg );
-      void processServerInvite(  Message* msg );
-      void processStale(  Message* msg );
-      
       typedef enum 
       {
          ClientNonInvite,
@@ -38,27 +31,38 @@ class TransactionState
          Trying,
          Proceeding,
          Completed,
-         Terminated
+         Confirmed,
+         Terminated,
+         Bogus
       } State;
 
-      TransactionState(SipStack& stack, Machine m, State s) : mStack(stack), mMachine(m), mState(s){}
+      TransactionState(SipStack& stack, Machine m, State s);
+      ~TransactionState();
+      
+      void processClientNonInvite(  Message* msg );
+      void processClientInvite(  Message* msg );
+      void processServerNonInvite(  Message* msg );
+      void processServerInvite(  Message* msg );
+      void processStale(  Message* msg );
+      
       
 
    private:
       bool isRequest(Message* msg) const;
-      bool isFinalResponse(Message* msg) const;
-      bool isProvisionalResponse(Message* msg) const;
-      bool isFailureResponse(Message* msg) const;
-      bool isSuccessResponse(Message* msg) const;
+      bool isTimer(Message* msg) const;
+      bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
       bool isTranportError(Message* msg) const;
+      void sendToTU(Message* msg) const;
+      void sendToWire(Message* msg) const;
+      SipMessage* make100(SipMessage* request) const;
       
       SipStack& mStack;
       Machine mMachine;
       State mState;
       bool mIsReliable;
       
-      TransactionState* cancelStateMachine;
+      TransactionState* mCancelStateMachine;
 
       SipMessage* mMsgToRetransmit;
 

@@ -30,7 +30,7 @@ TimerQueue::process()
    for (std::multiset<Timer>::iterator i=mTimers.lower_bound(now); 
         i != mTimers.upper_bound(now); i++)
    {
-      TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType);
+      TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
       DebugLog (<< "Adding timer to fifo: " << " tid=" << i->mTransactionId << " type=" << i->mType);
       mFifo.add(t);
    }
