@@ -5,8 +5,12 @@
 #include <sipstack/ParserCategory.hxx>
 #include <sipstack/Symbols.hxx>
 
+#include <util/Logger.hxx>
+
 using namespace std;
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 HeaderFieldValue::HeaderFieldValue()
    : next(0),
@@ -63,24 +67,79 @@ HeaderFieldValue::clone() const
 }
       
 void 
-HeaderFieldValue::parseParameters(const char* startPos)
+HeaderFieldValue::parseParameters(const char* startPos, unsigned int length)
 {
-   const char* endPos = mField + mFieldLength;
-   if (startPos < endPos)
+   Data data(startPos, length);
+
+   Data key;
+   Data value;
+
+   bool done = false;
+   while(!done)
    {
-      assert(*startPos == Symbols::SEMI_COLON[0]);
-      //const char* endKey = scan(startPos, endPos, Symbols::SEMI_OR_EQUAL);
+      bool isQuoted = false;
+      char matchedChar=0;
       
-      
+      key = data.matchChar(Symbols::SEMI_OR_EQUAL, &matchedChar);
+      if(matchedChar == Symbols::EQUALS[0])
+      {
+         // this is a separator, so stuff before this is a thing
+         value = data.matchChar(Symbols::SEMI_COLON, &matchedChar);
+         if(matchedChar != Symbols::SEMI_COLON[0])
+         {
+            value = data;
+            done = true;
+         }
+
+         int eaten = value.eatWhiteSpace();
+         if (value.size() && value[0] == Symbols::DOUBLE_QUOTE[0])
+         {
+            isQuoted = true;
+            value = value.substr(1, value.size()-2);
+         }
+         else if (value.empty())
+         {
+            DebugLog (<< "Found no value after param " << key);
+            throw ParseException("error parsing param", __FILE__,__LINE__);
+         }
+         else if (eaten)
+         {
+            DebugLog (<< "Found whitespace before non-quoted value in param: " << key);
+            throw ParseException("error parsing param", __FILE__,__LINE__);
+         }
+
+         ParameterTypes::Type type = ParameterTypes::getType(key.data(), key.size());
+         if (type == ParameterTypes::UNKNOWN)
+         {
+            UnknownParameter* p = new UnknownParameter(key.data(), key.size(), value.data(), value.size());
+            p->setQuoted(isQuoted);
+            mParameterList.insert(p);
+         }
+         else
+         {
+            //Parameter* p = ParameterTypes::make(type);
+         }
+      }
+      else if(matchedChar == Symbols::SEMI_COLON[0])
+      {
+         // no value here, so just stuff nothing into the value
+         assert (key != "");
+         //operator[](key) = "";
+      }
+      else
+      {
+         // nothing left, so done
+         // done
+         if(data.size() != 0)
+         {
+            assert (data != "");
+            //operator[](data) = "";
+         }
+         done = true;
+      }
    }
 }
 
-#if 0
-const char* 
-HeaderFieldValue::scan(const char* start, const char* end, const Data& charset)
-{
-}
-#endif
 
 ParameterList& 
 HeaderFieldValue::getParameters()
