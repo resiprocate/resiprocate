@@ -6,19 +6,17 @@ TimerMessage::~TimerMessage()
 {
 }
 
-
 Data 
 TimerMessage::brief() const
 {
-   assert(0);
+   return mTransactionId;
 }
 
 std::ostream& TimerMessage::dump(std::ostream& strm) const
 {
-   return strm << "TimerMessage[ mTransactionId["
-               << mTransactionId << "] mType"
-               << mType << "]]";
-   
+   return strm << "TimerMessage TransactionId[" << mTransactionId << "] "
+               << " Type[" << mType << "]"
+               << " duration[" << mDuration << "]";
 }
 
 
