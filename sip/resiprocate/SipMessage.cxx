@@ -1,7 +1,9 @@
-#include <sstream>
+//#include <sstream>
+#include <strstream>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <util/Logger.hxx>
+#include <util/compat.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -148,8 +150,10 @@ SipMessage::encode(std::ostream& str) const
 const Data& 
 SipMessage::encode() 
 {
-   stringstream strm;
+   char buff[2048]; //!jf!
+   ostrstream strm(buff, sizeof(buff));
    encode(strm);
+   strm << ends;
    mEncoded = strm.str();
    return mEncoded;
 }
