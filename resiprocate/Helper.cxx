@@ -47,7 +47,9 @@ Helper::makeRegister(const NameAddr& registrar,
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
-   rLine.uri() = registrar.uri();
+
+   rLine.uri().scheme() = registrar.uri().scheme();
+   rLine.uri().host() = registrar.uri().host();
 
    request->header(h_To) = aor;
    request->header(h_RequestLine) = rLine;

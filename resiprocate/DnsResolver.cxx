@@ -77,9 +77,9 @@ determinePort(const Data& scheme, Transport::Type transport)
    return Symbols::DefaultSipPort;
 }
 
+
 void
-DnsResolver::lookup(const Data& transactionId,
-                    const Via& via)
+DnsResolver::lookup(const Data& transactionId, const Via& via)
 {
    //duplicate entry has not been eliminated
    Transport::Type transport = Transport::toTransport(via.transport());
@@ -145,15 +145,11 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             {
                transport = Transport::UDP;
             }
-            else if (uri.scheme() == Symbols::Sips)
-            {
-               assert(0);
-               transport = Transport::TLS;
-            }
             else
             {
-               mStack.mStateMacFifo.add(new DnsMessage(transactionId));
-               return;
+                assert(0);
+                mStack.mStateMacFifo.add(new DnsMessage(transactionId));
+                return;
             }
          }
          else
@@ -258,6 +254,7 @@ bool
 DnsResolver::isIpAddress(const Data& data)
 {
    // ok, this is fairly monstrous but it works. 
+    // !cj! - won't work for IPV6
    unsigned int p1,p2,p3,p4;
    int count=0;
    int result = sscanf( data.c_str(), 
