@@ -5,7 +5,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/UnknownHeaderType.hxx"
+#include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 #include "resiprocate/os/Logger.hxx"
 

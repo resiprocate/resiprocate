@@ -77,6 +77,8 @@ SRC = \
 	DnsResult.cxx \
 	DtlsTransport.cxx \
 	Embedded.cxx \
+	ExtensionParameter.cxx \
+	ExtensionHeader.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
 	ExternalDnsFactory.cxx \
@@ -144,9 +146,7 @@ SRC = \
 	TransportSelector.cxx \
 	TuIM.cxx \
 	UdpTransport.cxx \
-	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
-	UnknownParameterType.cxx \
 	Uri.cxx \
 	X509Contents.cxx \
 	XMLCursor.cxx 

@@ -80,6 +80,9 @@ class Contents : public LazyParser
       bool exists(const MIME_Header& headerType) const;
       void remove(const MIME_Header& headerType);
 
+      // !dlb! break into const and non-const -- throw on const if not exists
+      // !dlb! requires a nested exception...
+
       // shared header types
       H_ContentType::Type& header(const H_ContentType& headerType) const;
       H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const;
