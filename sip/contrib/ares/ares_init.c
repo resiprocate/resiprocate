@@ -318,7 +318,6 @@ static int init_by_defaults(ares_channel channel)
 #ifdef WIN32
      /*
       * Way of getting nameservers that should work on all Windows from 98 on.
-      * To use, include IPHlpAPI.lib as a linker dependency.
       */
       FIXED_INFO *     FixedInfo;
       ULONG            ulOutBufLen;
