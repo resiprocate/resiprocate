@@ -3,59 +3,52 @@
 
 #include "SetupDlgImpl.hxx"
 #include "Limpet.hxx"
-
-//#include "resiprocate/os/Logger.hxx"
-//
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/Security.hxx"
 #include "resiprocate/TuIM.hxx"
-//#include "buddydlg.h"
-#include "sip2/sipstack/Security.hxx"
-
 
 class SetupDlgImpl;
 
 
 class LimpetImpl : public Limpet
 {
-    Q_OBJECT
-
-    public:
-        LimpetImpl( QWidget* parent = 0, const char* name = 0,
-		      bool modal = false, WFlags f = 0 );
-
-  	virtual void logon();
-	virtual void send();
-	virtual void setup();
-	virtual void OnBnClickedCheckOnline();
-	virtual void addBuddy();
-
-	void receivedPage( const Vocal2::Data& msg,
-		const Vocal2::Uri& from,
-		const Vocal2::Data& signedBy,
-		const Vocal2::Security::SignatureStatus sigStatus,
-		const bool wasEncryped  );
-
-	void message(const QString& msg);
-	virtual void process(void);
-	void sendPage(QString text,QString destination);
-	void setStatus(bool online, QString note);
-	//QString ClimpApp::addBuddy(QString name);
-	void presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status );
-
-
-	bool encryp;
-	bool sign;
-
-	Vocal2::SipStack* sipStack;
-	Vocal2::TuIM* tuIM;
-
-
-    private:
-	SetupDlgImpl* setUpDlgImpl;
+      Q_OBJECT
+      
+   public:
+      LimpetImpl( QWidget* parent = 0, const char* name = 0,
+                  bool modal = false, WFlags f = 0 );
+      
+      virtual void logon();
+      virtual void send();
+      virtual void setup();
+      virtual void OnBnClickedCheckOnline();
+      virtual void addBuddy();
+      
+      void receivedPage( const Vocal2::Data& msg,
+                         const Vocal2::Uri& from,
+                         const Vocal2::Data& signedBy,
+                         const Vocal2::Security::SignatureStatus sigStatus,
+                         const bool wasEncryped  );
+      
+      void message(const QString& msg);
+      virtual void process(void);
+      void sendPage(QString text,QString destination);
+      void setStatus(bool online, QString note);
+      //QString ClimpApp::addBuddy(QString name);
+      void presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status );
+      
+      
+      bool encryp;
+      bool sign;
+      
+      Vocal2::SipStack* sipStack;
+      Vocal2::TuIM* tuIM;
+      
+      
+   private:
+      SetupDlgImpl* setUpDlgImpl;
 };
-  
+
 #endif // LIMPETIMPL_H
 
 
