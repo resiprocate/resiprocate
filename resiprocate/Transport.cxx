@@ -31,7 +31,8 @@ Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool
    mFd(-1),
    mPort(portNum), 
    mInterface(intfc),
-   mStateMachineFifo(rxFifo)
+   mStateMachineFifo(rxFifo),
+   mV4(ipv4)
 {
 }
 
