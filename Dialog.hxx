@@ -61,7 +61,8 @@ class Dialog
       void processNotify(const SipMessage& notify);
       
    private:
-      BaseUsage* findUsage(const SipMessage& msg);
+      ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
+      ClientSubscription* findMatchingClientSub(const SipMessage& msg);
 
       DialogId mId;  
       DialogUsageManager& mDum;
@@ -73,8 +74,8 @@ class Dialog
       ServerRegistration* mServerRegistration;
       ClientPublication* mClientPublication;
       ServerPublication* mServerPublication;
-      ClientOutOfDialogReq* mClientOutOfDialogReq;
-      ServerOutOfDialogReq* mServerOutOfDialogReq;
+      std::vector<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
+      ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
       //invariants
       typedef enum // need to add
