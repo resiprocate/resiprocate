@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 	clientDum.setClientAuthManager(clientAuth);
 	clientDum.getMasterProfile()->setDefaultRegistrationTime(70);		
 	clientDum.getMasterProfile()->addSupportedMethod(MESSAGE);
-	clientDum.getMasterProfile()->addSupportedMimeType(Mime("text", "plain"));
+	clientDum.getMasterProfile()->addSupportedMimeType(MESSAGE, Mime("text", "plain"));
 	ClientMessageHandler *cmh = new ClientMessageHandler();
 	ServerMessageHandler *smh = new ServerMessageHandler();
 	clientDum.setClientPagerMessageHandler(cmh);
