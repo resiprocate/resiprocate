@@ -1210,16 +1210,6 @@ TransactionState::resendToWire(Message* msg) const
    assert (mDnsState != NotStarted); 
    assert (mDnsState != Waiting);  // !jf! can this happen? 
    
-#if 1
-   // !cj! the following code should be removed and is just stuck in as a hack 
-   if (mCurrent == mTuples.end())
-   {
-      InfoLog( << "TransactionState::resendToWire This code should never run - is should likely assert " );
-      return;
-   }
-#endif
-
-   assert (mCurrent != mTuples.end());
    if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
@@ -1227,6 +1217,7 @@ TransactionState::resendToWire(Message* msg) const
    }
    else
    {
+      assert (mCurrent != mTuples.end());
       mStack.mTransportSelector.send(sip, *mCurrent, true);
    }
 }
