@@ -1,7 +1,6 @@
 #include "ares.h"
 #include "ares_local.h"
 
-// Copyright (C) 2004 Alan Hawrylyshen, All rights reserved.
 
 
 int ares_local_gethostbyname(ares_channel channel, const char *name, int family,
