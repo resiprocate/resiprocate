@@ -68,6 +68,7 @@ class TransportSelector
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
+      Transport* findDtlsTransport(const Data& domain);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       bool mMultiThreaded;

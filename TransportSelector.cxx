@@ -644,6 +644,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                target.transport = findTlsTransport(msg->getTlsDomain());
             }
+            else if (target.getType() == DTLS)
+            {
+                target.transport = findDtlsTransport(msg->getTlsDomain());
+            }
             else
             {
                target.transport = findTransport(source);
@@ -938,6 +942,29 @@ TransportSelector::findTlsTransport(const Data& domainname)
    else  // don't know which one to use
    {
       DebugLog (<< "No TLS transport found");
+      return 0;
+   }
+}
+
+Transport*
+TransportSelector::findDtlsTransport(const Data& domainname)
+
+{
+   DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
+   // If no domainname specified and there is only 1 TLS transport, use it.
+   if (domainname == Data::Empty && mDtlsTransports.size() == 1)
+   {
+      DebugLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
+      return mDtlsTransports.begin()->second;
+   }
+   else if (mDtlsTransports.count(domainname))
+   {
+      DebugLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
+      return mDtlsTransports[domainname];
+   }
+   else  // don't know which one to use
+   {
+      DebugLog (<< "No DTLS transport found");
       return 0;
    }
 }
