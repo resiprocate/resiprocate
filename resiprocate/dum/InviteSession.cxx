@@ -4,7 +4,9 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/os/Logger.hxx"
 
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -31,6 +33,52 @@ InviteSession::getRemoteSdp()
 {
    return mCurrentRemoteSdp;
 }
+
+void
+InviteSession::dispatch(const SipMessage& msg)
+{
+   std::pair<OfferAnswerType, const SdpContents*> offans;
+   offans = InviteSession::getOfferOrAnswer(msg);
+
+   // reINVITE
+   if (msg.isRequest())
+   {
+      switch(msg.header(h_RequestLine).method())
+      {
+         case INVITE:
+            mDialog.update(msg);
+            mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
+                  
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            break;
+
+         case BYE:
+            end();
+            break;
+
+         case UPDATE:
+            assert(0);
+            break;
+                  
+         case INFO:
+            mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
+            break;
+                  
+         case REFER:
+            assert(0); // !jf! 
+            mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
+            break;
+                  
+         default:
+            InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
+            break;
+      }
+   }
+}
+
 
 SipMessage&
 InviteSession::end()
