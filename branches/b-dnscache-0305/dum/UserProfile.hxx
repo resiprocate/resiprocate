@@ -44,8 +44,7 @@ class UserProfile : public Profile
       /// The following functions deal with clearing, setting and getting of digest credentals 
       virtual void  clearDigestCredentials();
       virtual void  setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
-      virtual const DigestCredential& getDigestCredential( const Data& realm );
-      virtual const DigestCredential& getDigestCredential( const SipMessage& challenge );      
+      virtual const DigestCredential& getDigestCredential( const Data& realm, const SipMessage& challenge );
 
    private:
       NameAddr mDefaultFrom;

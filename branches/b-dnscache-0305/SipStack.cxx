@@ -31,6 +31,7 @@
 #include "resiprocate/TlsTransport.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/DtlsTransport.hxx"
+#include "resiprocate/TransactionUser.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -47,14 +48,15 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
+   mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
-   mAppTimers(mTUFifo),
+   mAppTimers(mTuSelector),
    mStatsManager(*this),
-   mTransactionController(mTUFifo, mStatsManager, mSecurity, handler, stateless),
+   mTransactionController(*this),
    mStrictRouting(false),
    mShuttingDown(false),
-   mAsyncProcessHandler(handler)
+   mTuSelector(mTUFifo)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -260,13 +262,14 @@ SipStack::getUri() const
 }
 
 void 
-SipStack::send(const SipMessage& msg)
+SipStack::send(const SipMessage& msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
+   if (tu) toSend->setTransactionUser(tu);
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
@@ -276,11 +279,12 @@ SipStack::send(const SipMessage& msg)
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::sendTo(const SipMessage& msg, const Uri& uri)
+SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
 {
    //assert(!mShuttingDown);
 
    SipMessage* toSend = new SipMessage(msg);
+   if (tu) toSend->setTransactionUser(tu);
    toSend->setForceTarget(uri);
    toSend->setFromTU();
 
@@ -290,14 +294,14 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
+SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
    assert(destination.transport);
    
    //SipMessage* toSend = new SipMessage(msg);
    SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
-
+   if (tu) toSend->setTransactionUser(tu);
    toSend->setDestination(destination);
    toSend->setFromTU();
 
@@ -317,17 +321,20 @@ SipStack::post(const ApplicationMessage& message)
 }
 
 void
-SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater)
+SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
    postMS(message, secondsLater*1000);
 }
 
 void
-SipStack::postMS(const ApplicationMessage& message, unsigned int ms)
+SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
+                 TransactionUser* tu)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
+   if (tu) toPost->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
    mAppTimers.add(Timer(ms, toPost));
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
@@ -406,7 +413,7 @@ SipStack::process(FdSet& fdset)
    mTransactionController.process(fdset);
 
    Lock lock(mAppTimerMutex);
-   mAppTimers.process();
+   mAppTimers.process();   
 }
 
 /// returns time in milliseconds when process next needs to be called 
@@ -436,11 +443,16 @@ SipStack::getSecurity() const
     return mSecurity;
 }
 
-
 void
 SipStack::setStatisticsInterval(unsigned long seconds)
 {
    mStatsManager.setInterval(seconds);
+}
+
+void 
+SipStack::registerTransactionUser(TransactionUser& tu)
+{
+   mTuSelector.registerTransactionUser(tu);
 }
 
 std::ostream& 

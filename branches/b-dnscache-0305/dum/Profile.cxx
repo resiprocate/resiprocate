@@ -51,6 +51,9 @@ Profile::Profile(Profile *baseProfile) :
       mHasUserAgent = false;
 
       mHasOverrideHostPort = false;
+
+      mHasKeepAliveTime = true;
+      mKeepAliveTime = 30;      // 30 seconds
    }
    else
    {
@@ -68,6 +71,7 @@ Profile::Profile(Profile *baseProfile) :
 	  mHasRportEnabled = false;
       mHasUserAgent = false;
       mHasOverrideHostPort = false;
+      mHasKeepAliveTime = false;
    }
 }
 
@@ -373,6 +377,24 @@ Profile::hasUserAgent() const
        return mBaseProfile->hasUserAgent();
    }
    return mHasUserAgent;
+}
+
+void 
+Profile::setKeepAliveTime(int keepAliveTime)
+{
+   mKeepAliveTime = keepAliveTime;
+   mHasKeepAliveTime = true;
+}
+
+int 
+Profile::getKeepAliveTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasKeepAliveTime && mBaseProfile)
+   {
+       return mBaseProfile->getKeepAliveTime();
+   }
+   return mKeepAliveTime;
 }
 
    

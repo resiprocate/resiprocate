@@ -13,16 +13,20 @@ class SipStack;
 class KeepAliveManager
 {
    public:
-      typedef std::map<Tuple, int> NetworkAssociationMap;
+      struct NetworkAssociationInfo
+      {
+         int refCount;
+         int keepAliveInterval;  // In seconds
+      };
+      typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
       KeepAliveManager() {}
       void setStack(SipStack* stack) { mStack = stack; }
-      void add(const Tuple& target);
+      void add(const Tuple& target, int keepAliveInterval);
       void remove(const Tuple& target);
       void process(KeepAliveTimeout& timeout);
 
    protected:
-      enum { KeepAliveInterval = 30 * 1000 };
       SipStack* mStack;
       NetworkAssociationMap mNetworkAssociations;
       
@@ -32,3 +36,4 @@ class KeepAliveManager
 
 
 #endif
+

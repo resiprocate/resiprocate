@@ -6,14 +6,23 @@
 
 namespace resip
 {
-
+class TransactionUser;
 class Message 
 {
    public:
+      Message();
       virtual ~Message() {}
       virtual Data brief() const=0;
       virtual Message* clone() const=0;
       virtual std::ostream& encode(std::ostream& strm) const=0;
+   protected:
+      friend class TuSelector;      
+      friend class TransactionState;
+      friend class SipStack;
+      bool hasTransactionUser() const { return tu != 0; }
+      void setTransactionUser(TransactionUser* t) { tu = t; }
+      TransactionUser* getTransactionUser() { return tu; }
+      TransactionUser* tu;      
 };
 
 std::ostream& 
