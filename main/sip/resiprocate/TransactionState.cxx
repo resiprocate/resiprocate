@@ -18,60 +18,79 @@ Vocal2::TransactionState::process(SipStack& stack)
       timer = dynamic_cast<TimerMessage*>(message);
    }
    
-   if (sip)
-   {
       Data& tid = message->getTransactionId();
       TransactionState* state = stack.mTransactionMap.find(tid);
-      if (state)
+      if (state) // found transaction for sip msg
       {
+
       }
       else // new transaction
       {
-         if (sip->isRequest())
+         if (sip)
          {
-            // create a new state object and insert in the TransactionMap
-
-            if (sip->isExternal())
+            if (sip->isRequest())
             {
-               if (sip[RequestLine].getMethod() == INVITE)
+               // create a new state object and insert in the TransactionMap
+               
+               if (sip->isExternal()) // new sip msg from transport
                {
-                  TransactionState* state = new TransactionState(ServerInvite, Proceeding);
-                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
-                  stack.mTransactionMap.add(tid,state);
+                  if (sip[RequestLine].getMethod() == INVITE)
+                  {
+                     TransactionState* state = new TransactionState(ServerInvite, Proceeding);
+                     stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
+                        stack.mTransactionMap.add(tid,state);
+                  }
+                  else 
+                  {
+                     TransactionState* state = new TransactionState(ServerNonInvite,Trying);
+                     stack.mTransactionMap.add(tid,state);
+                  }
+                  stack.mTUFifo.add(sip);
                }
-               else 
+               else // new sip msg from the TU
                {
-                  TransactionState* state = new TransactionState(ServerNonInvite,Trying);
-                  stack.mTransactionMap.add(tid,state);
+                  if (sip[RequestLine].getMethod() == INVITE)
+                  {
+                     TransactionState* state = new TransactionState(ClientInvite, Calling);
+                     stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
+                     stack.mTransactionMap.add(tid,state);
+                  }
+                  else 
+                  {
+                     TransactionState* state = new TransactionState(ClientNonInvite, Trying);
+                     stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
+                     stack.mTransactionMap.add(tid,state);
+                  }
+                  stack.mTransportSelector.send(sip);
                }
-               stack.mTUFifo.add(sip);
             }
-            else
+            else if (sip->isResponse()) // stray response
             {
-               if (sip[RequestLine].getMethod() == INVITE)
+               if (stack.mDiscardStrayResponses)
                {
-                  TransactionState* state = new TransactionState(ClientInvite, Calling);
-                  stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
-                  stack.mTransactionMap.add(tid,state);
+                  DebugLog (<< "discarding stray response: " << sip->brief());
+                  delete message;
                }
-               else 
+               else
                {
-                  TransactionState* state = new TransactionState(ClientNonInvite, Trying);
-                  stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
-                  stack.mTransactionMap.add(tid,state);
+                  // forward this statelessly
+                  assert(0);
                }
-               stack.mTransportSelector.send(sip);
-            }
          }
-         else if (sip->isResponse())
+         else // wasn't a request or a response
          {
-            
+            DebugLog (<< "discarding unknown message: " << sip->brief());
          }
-         else
-         {
-            assert(0);
-         }
+      } 
+      else // timer or other non-sip msg
+      {
+         DebugLog (<< "discarding non-sip message: " << message->brief());
+         delete message;
       }
+   }
+   else
+   {
+      DebugLog (<< "discarding unknown message: " << sip->brief());
    }
    
 }

@@ -45,7 +45,9 @@ class SipStack
       TransportSelector mTransportSelector;
       TransactionMap mTransactionMap;
       TimerQueue  mTimers;
-
+      
+      bool mDiscardStrayResponses;
+      
    private:
       // TransportDirector mTransportDirector;
 };
