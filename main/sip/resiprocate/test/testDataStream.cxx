@@ -18,11 +18,12 @@ int main()
 
       ds << "Here is some stuff " << foo << 17 << ' ' << 'c' << ' ' << -157 << endl;
       cerr << "!! <" << d << ">" << endl;
+      ds.flush();
       assert(d == "Here is some stuff foo17 c -157\n");
    }
 
    {
-      Data d(300, true);
+      Data d(3, true);
       DataStream ds(d);
       
       for (int i = 0; i < 200; i++)

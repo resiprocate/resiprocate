@@ -11,7 +11,6 @@ class DataBuffer : public std::streambuf
 {
       // data
       Data& _str;
-      char _buf[128];
 
    public:
       DataBuffer(Data& str);
@@ -20,6 +19,24 @@ class DataBuffer : public std::streambuf
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
+};
+
+// To use:
+// Data result(4096, true); // size zero, capacity 4096
+// DataStream ds(result);
+// msg->encode(ds);
+//
+// result contains the encoded message
+// -- may be larger than previously allocated
+
+class DataStream : public std::iostream
+{
+      // data
+      DataBuffer _streambuf;
+
+   public:
+      DataStream(Data& str);
+      ~DataStream();
 };
 
 class iDataStream : public std::istream 
@@ -39,16 +56,6 @@ class oDataStream : public std::ostream {
    public:
       oDataStream(Data& str);
       ~oDataStream();
-};
-
-class DataStream : public std::iostream
-{
-      // data
-      DataBuffer _streambuf;
-
-   public:
-      DataStream(Data& str);
-      ~DataStream();
 };
 
 }
