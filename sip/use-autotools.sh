@@ -1,7 +1,7 @@
 #!/bin/bash
-# $Id: use-autotools.sh,v 1.4 2004/02/24 01:19:32 alan Exp $
+# $Id: use-autotools.sh,v 1.5 2004/02/24 01:24:54 alan Exp $
 
-AUTOTOOLS_BRANCH=b-ah-atools
+AUTOTOOLS_BRANCH=b-autotools
 # We 'remove' these files in CVS.
 
 AUTOTOOLS_ARTIFACTS="
