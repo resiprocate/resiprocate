@@ -14,7 +14,7 @@ namespace repro
       virtual processor_action_t handleRequest(RequestContext &);
 
     private:
-      void challengeRequest(RequestContext &);
+      void challengeRequest(RequestContext &, bool stale = false);
       void requestUserAuthInfo(RequestContext &);
 
       RealmMap mRealmMap;
