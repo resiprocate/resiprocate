@@ -542,7 +542,8 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   InviteSession::Event event = toEvent(msg, sdp.get());
+   switch (event)
    {
       case OnRedirect:
          handleRedirect(msg);
@@ -627,7 +628,10 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Got garbage : " << msg);
          break;
    }
 }
