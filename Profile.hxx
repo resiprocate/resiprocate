@@ -25,6 +25,7 @@ class Profile
       Tokens getSupportedEncodings();
       Tokens getSupportedLanguages();
       NameAddr& getDefaultAor();
+      int getDefaultRegistrationTime();
       
       void addSupportedScheme(const Data& scheme);
       void addSupportedMethod(const MethodTypes& method);
@@ -34,6 +35,13 @@ class Profile
       void addSupportedLanguage(const Token& lang);
 
       void setDefaultAor(const NameAddr& from);
+      void setDefaultRegistrationTime(int secs);
+
+      void addGruu(const Data& aor, const NameAddr& contact, const NameAddr& gruu);
+      bool hasGruu(const Data& aor);
+      NameAddr& getGruu(const Data& aor);
+      NameAddr& getGruu(const Data& aor, const NameAddr& contact);
+      
       const NameAddr& getDefaultAor() const;
 
       void setOutboundProxy( const Data& uri );
@@ -57,7 +65,7 @@ class Profile
       
       void setDigestHandler( DigestCredentialHandler* handler );
       //@}
-         
+      
    private:
 };
    
