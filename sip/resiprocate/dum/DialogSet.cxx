@@ -132,12 +132,15 @@ DialogSet::dispatch(const SipMessage& msg)
       dialog = new Dialog(mDum, msg, *this);
       InfoLog ( << "### Calling CreateAppDialog ### " << msg);
 
-      AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
-      dialog->mAppDialog = appDialog;
       if (mCancelled)
       {
          dialog->cancel();
          dialog = findDialog(msg);
+      }
+      else
+      {
+         AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
+         dialog->mAppDialog = appDialog;
       }
    }     
    if (dialog)
@@ -147,7 +150,8 @@ DialogSet::dispatch(const SipMessage& msg)
    else if (msg.isRequest())
    {
       SipMessage response;
-      mDum.send(mDum.makeResponse(response, msg, 481));
+      mDum.makeResponse(response, msg, 481);
+      mDum.send(response);
    }
 }
 
