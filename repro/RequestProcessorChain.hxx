@@ -17,9 +17,10 @@ namespace repro
 
       virtual processor_action_t handleRequest(RequestContext &);
 
+      typedef std::vector<RequestProcessor*> Chain;
+
     private:
-      typedef std::vector<RequestProcessor*> chain_t;
-      chain_t chain;
+      Chain chain;
   };
 }
 #endif

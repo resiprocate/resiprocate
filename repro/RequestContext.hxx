@@ -3,7 +3,11 @@
 
 #include <vector>
 #include "resiprocate/Uri.hxx"
+<<<<<<< .mine
+#include "repro/RequestProcessorChain.hxx"
+=======
 #include "resiprocate/NameAddr.hxx"
+>>>>>>> .r4105
 
 namespace resip
 {
@@ -18,7 +22,9 @@ class RequestProcessorChain;
 class RequestContext
 {
    public:
-      RequestContext(std::auto_ptr<resip::SipMessage> sipMsg, RequestProcessorChain& chain);
+      RequestContext(Proxy &proxy,
+                     std::auto_ptr<resip::SipMessage> sipMsg,
+                     RequestProcessorChain& chain);
       ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
@@ -35,6 +41,12 @@ class RequestContext
       void setDigestIdentity (const resip::Data&);
       const resip::Data& getDigestIdentity() const;
 
+      void pushChainIterator(RequestProcessorChain::Chain::iterator&);
+      RequestProcessorChain::Chain::iterator popChainIterator();
+      bool chainIteratorStackIsEmpty();
+
+      Proxy &getProxy();
+
       void addTarget(const resip::NameAddr& target);
       std::vector<resip::NameAddr>& getCandidates();
       
@@ -45,6 +57,15 @@ class RequestContext
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
+      Proxy &mProxy;
+
+      typedef std::vector<RequestProcessorChain::Chain::iterator>
+
+      /** Stack of iterators used to keep track of where
+          we are in the request processor chain(s) for
+          async processing */
+        ChainIteratorStack;
+      ChainIteratorStack mChainIteratorStack;
 
       friend class ResponseContext;
 };
