@@ -63,10 +63,14 @@ class Uri : public ParserCategory
       mutable Data mAor;
       mutable Data mPassword;
 
+      // cache for aor
       mutable Data mOldScheme;
       mutable Data mOldHost;
       mutable Data mOldUser;
       mutable int mOldPort;
+
+      // cache for IPV6 host comparison
+      mutable Data mCanonicalHost;
 
    private:
       Data mEmbeddedHeadersText;
