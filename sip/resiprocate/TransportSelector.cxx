@@ -442,8 +442,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
             }
          }
          
-         DebugLog (<< "!ah! Transmitting " << *msg << " to " << destination << " !ah! via " << source);
-
          Data& encoded = msg->getEncoded();
          encoded.clear();
          DataStream encodeStream(encoded);
@@ -451,6 +449,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
          encodeStream.flush();
 
          assert(!msg->getEncoded().empty());
+         DebugLog (<< "Transmitting to " << destination << " via " << source << endl << encoded.escaped());
          //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
          
          // send it over the transport
@@ -564,8 +563,6 @@ TransportSelector::findTransport(const Tuple& search)
    //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
    
    WarningLog(<< "Can't find matching transport " << search);
-   assert(0);
-   
    return 0;
 }
 
