@@ -84,6 +84,7 @@ class Symbols
       static const char* Required;
 
       static const char* C100rel;
+      static const char* Undefined;
 };
 
 }
