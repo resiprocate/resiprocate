@@ -104,7 +104,7 @@ SipFrag::parse(ParseBuffer& pb)
           mMessage->exists(h_ContentLength))
       {
          assert(used == pre.nDiscardOffset());
-         mMessage->setBody(buffer+used,size-used);
+         mMessage->setBody( buffer+used, int(size-used) );
       }
       else
       {
@@ -113,7 +113,7 @@ SipFrag::parse(ParseBuffer& pb)
          {
             pb.reset(buffer + used);
             pb.skipChars(Symbols::CRLF);
-            mMessage->setBody(pb.position(),pb.end()-pb.position());
+            mMessage->setBody(pb.position(),int(pb.end()-pb.position()) );
          }
       }
       pb.reset(pb.end());
