@@ -35,6 +35,9 @@ class ParameterList
       Parameter* first;
 };
 
+std::ostream&
+operator<<(std::ostream&, const ParameterList&);
+
 }
 
 #endif
