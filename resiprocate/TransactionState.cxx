@@ -103,17 +103,17 @@ TransactionState::process(SipStack& stack)
                if ((*sip)[RequestLine].getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
-                  stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
                   stack.mTransactionMap.add(tid,state);
+                  state->processClientInvite(sip);
+                  //stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
+                  //stack.mTransportSelector.send(sip);
                }
                else 
                {
                   TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
-                  stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
                   stack.mTransactionMap.add(tid,state);
+                  state->processClientNonInvite(sip);
                }
-               DebugLog(<< "Sending sip message to transport selector");
-               stack.mTransportSelector.send(sip);
             }
          }
          else if (sip->isResponse()) // stray response
@@ -145,7 +145,115 @@ TransactionState::process(SipStack& stack)
 void
 TransactionState::processClientNonInvite(  Message* msg )
 { 
+   if (isRequest(msg) && isFromTU(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      mMsgToRetransmit = sip;
+      mStack.mTimers.add(Timer::TimerF, msg->getTransactionId(), 64*Timer::T1 );
+      sendToWire(sip);  // don't delete
+   }
+   else if (isSentIndication(msg))
+   {
+      if (mIsReliable)
+      {
+         // ignore
+         delete msg;
+      }
+      else
+      {
+         // state might affect this !jf!
+         mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
+         delete msg;
+      }
+   }
+   else if (isResponse(msg) && !isFromTU(msg)) // from the wire
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      int code = (*sip)[StatusLine].getResponseCode();
+      if (code >= 100 && code < 200) // 1XX
+      {
+         if (mState == Trying || mState == Proceeding)
+         {
+            mState = Proceeding;
+            if (!mIsReliable)
+            {
+               mStack.mTimers.add(Timer::TimerE2, msg->getTransactionId(), Timer::T2 );
+            }
+            sendToTU(msg); // don't delete            
+         }
+         else
+         {
+            // ignore
+            delete msg;
+         }
+      }
+      else if (code >= 200)
+      {
+         if (mIsReliable)
+         {
+            sendToTU(msg); // don't delete
+            delete this;
+         }
+         else
+         {
+            mState = Completed;
+            mStack.mTimers.add(Timer::TimerK, msg->getTransactionId(), Timer::T4 );            
+            sendToTU(msg); // don't delete            
+         }
+      }
+   }
+   else if (isTimer(msg))
+   {
+      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      switch (timer->getType())
+      {
+         case Timer::TimerE1:
+            if (mState == Trying)
+            {
+               unsigned long d = timer->getDuration();
+               if (d < Timer::T2) d *= 2;
+               mStack.mTimers.add(Timer::TimerG, msg->getTransactionId(), d);
+               sendToWire(mMsgToRetransmit); 
+               delete msg;
+            }
+            else
+            {
+               // ignore
+               delete msg;
+            }
+            break;
 
+         case Timer::TimerE2:
+            if (mState == Proceeding)
+            {
+               mStack.mTimers.add(Timer::TimerE2, msg->getTransactionId(), Timer::T2);
+               sendToWire(mMsgToRetransmit); 
+               delete msg;
+            }
+            else 
+            {
+               // ignore
+               delete msg;
+            }
+            break;
+
+         case Timer::TimerF:
+            // Need to clone, since this is about to be deleted !jf!
+            sendToTU(mMsgToRetransmit->clone()); // don't delete
+            delete this;
+            break;
+
+         default:
+            assert(0);
+            break;
+      }
+   }
+   else if (isTranportError(msg))
+   {
+      // inform the TU
+      assert(0);
+      delete this;
+   }
 }
 
 
@@ -515,6 +623,13 @@ TransactionState::isTranportError(Message* msg) const
 {
    return false; // !jf!
 }
+
+bool
+TransactionState::isSentIndication(Message* msg) const
+{
+   return false; // !jf!
+}
+
 
 void
 TransactionState::sendToWire(Message* msg) const
