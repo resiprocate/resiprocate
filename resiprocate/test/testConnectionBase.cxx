@@ -53,17 +53,33 @@ class FakeTransport :  public Transport
 class TestConnection : public ConnectionBase
 {
    public:
-      TestConnection(const Tuple& who) : ConnectionBase(who) {}
-
-      void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
+      TestConnection(const Tuple& who, const Data& bytes, Fifo<TransactionMessage>& fifo) : 
+         ConnectionBase(who),
+         mTestStream(bytes),
+         mStreamPos(0),
+         mRxFifo(fifo)
+      {}
+      
+      bool read(int minChunkSize, int maxChunkSize)
       {
-         ConnectionBase::preparseNewBytes(bytesRead, fifo);
+         int chunk = Random::getRandom() % maxChunkSize;
+         chunk = chunk < minChunkSize ? minChunkSize : chunk;
+         chunk = chunk > maxChunkSize ? maxChunkSize : chunk;
+         chunk = chunk > mTestStream.size() - mStreamPos ? mTestStream.size() - mStreamPos : chunk;
+         assert(chunk > 0);
+         std::pair<char*, size_t> writePair = getWriteBuffer();
+         memcpy(writePair.first, mTestStream.data() + mStreamPos, chunk);
+         mStreamPos += chunk;
+         assert(mStreamPos <= mTestStream.size());
+
+         preparseNewBytes(chunk, mRxFifo);
+         return mStreamPos != mTestStream.size();
       }
       
-      void setBuffer(char* bytes, int count)
-      {
-         ConnectionBase::setBuffer(bytes, count);
-      }
+   private:
+      Data mTestStream;
+      int mStreamPos;
+      Fifo<TransactionMessage>& mRxFifo;
 };
 
 int
@@ -115,25 +131,16 @@ main(int argc, char** argv)
    Tuple who(fake.getTuple());
    who.transport = &fake;
   
-  TestConnection cBase(who);
-   
-   int runs = 1;
-   int chunks = 3;
+   int chunkRange = 700;
+   int runs = 100;
 
-   for (int r = 0; r < runs; r++)
+   for (int i=0; i < runs; i++)
    {
-      char* buf = new char[bytes.size()];
-      memcpy(buf, bytes.data(), bytes.size());
-      cBase.setBuffer(buf, bytes.size());
-      int bytesRead = 0;
-      while(bytesRead < bytes.size())   
-      {
-         int bytesToRead = resipMax((size_t)1, Random::getRandom() % (bytes.size() - bytesRead));
-		 DebugLog( << "BytesRead: " << bytesRead << " of: " << bytes.size());
-         bytesRead += bytesToRead;
-         assert(bytesRead <= bytes.size());
-         cBase.preparseNewBytes(bytesToRead, testRxFifo);
-      }
+      TestConnection cBase(who, bytes, testRxFifo);
+      int minChunk = Random::getRandom() % chunkRange;
+      int maxChunk = Random::getRandom() % chunkRange;
+      if (maxChunk < minChunk) swap(maxChunk, minChunk);
+      while(cBase.read(minChunk, maxChunk));      
    }
    assert(testRxFifo.size() == runs * 2);
 
