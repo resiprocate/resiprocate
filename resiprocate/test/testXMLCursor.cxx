@@ -18,6 +18,11 @@ using namespace std;
 int
 main()
 {
+   // test assume that whitespace is not significant
+   //   may eventually be controlled by the document/element
+   // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-white-space
+   assert(!XMLCursor::WhitespaceSignificant);
+
    {
       cerr << "test empty root" << endl;
       Data contents("<?xml version=\"1.0\"?><foo/>");
@@ -43,7 +48,8 @@ main()
 
    {
       cerr << "test childless root" << endl;
-      Data contents("<?xml version=\"1.0\"?><foo></foo>");
+      Data contents("<?xml version=\"1.0\"?>\n"
+                    "<foo>       </foo>");
       XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
       
       assert(xmlc.getTag() == "foo");
@@ -131,7 +137,17 @@ main()
 
    {
       cerr << "test tree" << endl;
-      Data contents("<?xml version=\"1.0\"?>  <root><P1><A1></A1><A2></A2></P1><P2><B1></B1><B2></B2></P2></root> ");
+      Data contents("<?xml version=\"1.0\"?>  \n"
+                    "<root>\n"
+                    "  <P1>\n"
+                    "    <A1></A1>\n"
+                    "    <A2></A2>\n"
+                    "  </P1>\n"
+                    "  <P2>\n"
+                    "    <B1></B1>\n"
+                    "    <B2></B2>\n"
+                    "  </P2>\n"
+                    " </root> ");
 
       XMLCursor tree(ParseBuffer(contents.data(), contents.size()));
 
