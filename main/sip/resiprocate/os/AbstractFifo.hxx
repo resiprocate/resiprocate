@@ -40,6 +40,16 @@ class AbstractFifo
        */
       void* getNext();
 
+
+      /** Returns the next message available. Will wait up to
+       *  ms milliseconds if no information is available. If
+       *  the specified time passes or a signal interrupts the
+       *  wait, this method returns 0. This interface provides
+       *  no mechanism to distinguish between timeout and
+       *  interrupt.
+       */
+      void* getNext(int ms);
+
       enum {NoSize = 0UL -1};
 
       std::deque<void*> mFifo;
