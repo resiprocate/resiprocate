@@ -68,16 +68,17 @@ SipMessage::SipMessage(const SipMessage& from)
       {
          mStartLine = new HeaderFieldValueList(*from.mStartLine); 
       }
-      if (from.mContents != 0 && from.mContents->isParsed())
+      if (from.mContents != 0)
       {
          mContents = from.mContents->clone();
       }
+      else if (from.mContentsHfv != 0)
+      {
+          mContentsHfv = new HeaderFieldValue(*from.mContentsHfv);
+      }
       else
       {
-         if (from.mContentsHfv != 0)
-         {
-            mContentsHfv = new HeaderFieldValue(*from.mContentsHfv);
-         }
+          // no body to copy
       }
    }
 }
@@ -203,6 +204,10 @@ SipMessage::encode(std::ostream& str) const
                cs.flush();
                str << "Content-Length: " << cs.size() << "\r\n";
             }
+	    else if (mContentsHfv != 0)
+	    {
+               str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
+	    }
             else
             {
                str << "Content-Length: 0\r\n";
@@ -222,6 +227,10 @@ SipMessage::encode(std::ostream& str) const
    if (mContents != 0)
    {
       mContents->encode(str);
+   }
+   else if (mContentsHfv != 0)
+   {
+      mContentsHfv->encode(str);
    }
    
    return str;
@@ -294,7 +303,7 @@ SipMessage::getContents() const
          DebugLog(<< "SipMessage::getContents: " << header(h_ContentType) << " not known ");
          return 0;
       }
-      //DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
+//      DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
       assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
       mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
    }
