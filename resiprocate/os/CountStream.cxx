@@ -42,8 +42,8 @@ CountBuffer::overflow(int c)
 }
 
 CountStream::CountStream(size_t& count)
-   : std::ostream(&mStreamBuf),
-     mStreamBuf(count)
+   : CountBuffer(count), std::ostream(this)
+     //mStreamBuf(count)
 {
    //init(&mStreamBuf);
 }
