@@ -1,6 +1,7 @@
 #if !defined(RESIP_USER_AUTH_INFO_HXX)
 #define RESIP_USER_AUTH_INFO_HXX 
 
+#include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
 
 namespace repro
@@ -9,9 +10,9 @@ namespace repro
 class UserAuthInfo : public resip::Message
 {
   public:
-    Data getA1();
-    Data getRealm();
-    Data getUser();
+    resip::Data getA1();
+    resip::Data getRealm();
+    resip::Data getUser();
 };
 
 }
