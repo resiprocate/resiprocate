@@ -39,7 +39,7 @@ main (int argc, char **argv)
   sipStack.addTransport(TCP, tcpPort);
   sipStack.addTlsTransport(tlsTcpPort);
 
-  GagConduit conduit(sipStack);
+  GagConduit conduit(sipStack, udpPort);
 
   // Main processing loop
   int time;
