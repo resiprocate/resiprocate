@@ -236,8 +236,8 @@ ClientInviteSession::sendPrack(const SipMessage& response)
           response.header(h_StatusLine).statusCode() < 200);
    
    SipMessage prack;
-   mDialog.makePrack(prack);
-
+   mDialog.makeRequest(prack, PRACK);
+   
    if (mProposedRemoteSdp)
    {
       assert(mProposedLocalSdp);
@@ -272,7 +272,7 @@ ClientInviteSession::handlePrackResponse(const SipMessage& response)
 void
 ClientInviteSession::sendAck(const SipMessage& ok)
 {
-   mDialog.makeAck(mAck);
+   makeAck(ok);
    if (mProposedLocalSdp)
    {
       // !jf! ?
