@@ -1,5 +1,8 @@
 #include "resiprocate/AresDns.hxx"
+
+#if !defined(WIN32)
 #include <arpa/nameser.h>
+#endif
 
 extern "C"
 {
