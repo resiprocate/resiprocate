@@ -222,32 +222,26 @@ Random::getCryptoRandom(unsigned int len)
 }
 
 Data 
-Random::getRandomHex(unsigned int len)
+Random::getRandomHex(unsigned int numBytes)
 {
    if (!mIsInitialized)
    {
      initialize();
    }
    assert( mIsInitialized == true );
-   // !dlb! is this a reasonable assert
-   // how about getRandom((len+1)/2)?
-   assert( len%2 == 0 );
-	
-   Data rand = Random::getRandom(len/2);
+   Data rand = Random::getRandom(numBytes);
    return rand.hex();
 }
 
 Data 
-Random::getCryptoRandomHex(unsigned int len)
+Random::getCryptoRandomHex(unsigned int numBytes)
 {
    if (!mIsInitialized)
    {
      initialize();
    }
    assert( mIsInitialized == true );
-   assert( len%2 == 0 );
-	
-   Data rand = Random::getCryptoRandom(len/2);
+   Data rand = Random::getCryptoRandom(numBytes);
    return rand.hex();
 }
 

@@ -6,7 +6,7 @@ using namespace Vocal2;
 int 
 main()
 {
-   Data data = Random::getRandomHex(16);
+   Data data = Random::getRandomHex(8);
    for (int j=0; j<100; j++)
    {
       Data output(1000000,true);
