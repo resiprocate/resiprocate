@@ -45,7 +45,7 @@ class DnsUtil
       static bool isIpV6Address(const Data& ipAddress);
 
       //pass-throughs when supported, actual implemenation in the WIN32 case
-      static const char * DnsUtil::inet_ntop(int af, const void* src, char* dst, size_t size);      
+      static const char * inet_ntop(int af, const void* src, char* dst, size_t size);      
       static int inet_pton(int af, const char * src, void * dst);
 
       // returns pair of interface name, ip address

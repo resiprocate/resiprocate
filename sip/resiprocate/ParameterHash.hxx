@@ -2,8 +2,6 @@
 #define PARAMETERHASH_HXX
 namespace resip 
 {
-using namespace resip;
-
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 494, duplicates = 0 */
 

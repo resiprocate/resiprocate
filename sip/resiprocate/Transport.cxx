@@ -29,7 +29,7 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(Fifo<Message>& rxFifo,
-                                     const GenericIPAddress& address) :
+                     const GenericIPAddress& address) :
    mTuple(address),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false)
