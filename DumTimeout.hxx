@@ -19,10 +19,12 @@ class DumTimeout : public Message
          Provisional1,
          Provisional2,
          Publication,
-         Retransmit200
+         Retransmit200,
+         StaleCall, // UAC gets no final response
       } Type;
+      static const unsigned long StaleCallTimeout;
 
-      DumTimeout(Type type, unsigned long duration, resip::BaseUsage::Handle& target,  int seq, int aseq = -1);
+      DumTimeout(Type type, unsigned long duration, resip::BaseUsage::Handle target,  int seq, int aseq = -1);
       ~DumTimeout();
       
       Type type() const;
