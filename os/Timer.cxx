@@ -26,25 +26,25 @@ Vocal2::Timer::mBootTime=0L;
 unsigned long
 Vocal2::Timer::mTimerCount = 0L;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::T1 = 500;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::T2 = 8 * T1;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::T4 = 10 * T1;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::T100 = 80;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::TD = 32000;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::TC = 3*60*1000;
 
-const unsigned long
+unsigned long
 Vocal2::Timer::TS = 32000;
 
 
@@ -70,7 +70,7 @@ Timer::toData(Type timer)
       case TimerF:
          return "Timer F";
       case TimerG: 
-         return "TimerG :";
+         return "Timer G";
       case TimerH:
          return "Timer H";
       case TimerI:
@@ -81,8 +81,10 @@ Timer::toData(Type timer)
          return "Timer K";
       case TimerTrying:
          return "Timer Trying";
-      case TimerStale:
-         return "Timer Stale";
+      case TimerStaleClient:
+         return "Timer StaleClient";
+      case TimerStaleServer:
+         return "Timer StaleServer";
       default:
          assert(0);
    }

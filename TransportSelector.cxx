@@ -129,7 +129,7 @@ TransportSelector::hasDataToSend() const
 
 
 void
-TransportSelector::dnsResolve( SipMessage* msg)
+TransportSelector::dnsResolve( SipMessage* msg, const Data& tid)
 {
    // Picking the target destination:
    //   - for request, use forced target if set
@@ -139,11 +139,6 @@ TransportSelector::dnsResolve( SipMessage* msg)
    if (msg->isRequest())
    {
       // If this is an ACK we need to fix the tid to reflect that
-      Data tid = msg->getTransactionId();
-      if (msg->header(h_RequestLine).getMethod() == ACK)
-      {
-	 tid += "ACK";
-      }
       if (msg->hasTarget())
       {
          mStack.mDnsResolver.lookup(tid, msg->getTarget());
@@ -162,11 +157,11 @@ TransportSelector::dnsResolve( SipMessage* msg)
       assert (!msg->header(h_Vias).empty());
       if (msg->hasTarget())
       {
-         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->getTarget());
+         mStack.mDnsResolver.lookup(tid, msg->getTarget());
       }
       else
       {
-         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Vias).front());
+         mStack.mDnsResolver.lookup(tid, msg->header(h_Vias).front());
       }
    }
    else
@@ -178,22 +173,13 @@ TransportSelector::dnsResolve( SipMessage* msg)
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isResend )
+TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Data& tid, bool isResend )
 {
    assert( &destination != 0 );
 
    if (destination.transport == 0)
    {
       destination.transport = findTransport(destination);
-   }
- 
-   // If this is an ACK we need to fix the tid to reflect that
-   Data tid = msg->getTransactionId();
-
-   if (msg->isRequest() &&
-       msg->header(h_RequestLine).getMethod() == ACK)
-   {
-      tid += "ACK";
    }
 
    if (destination.transport)
@@ -209,7 +195,7 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isR
 #if 1 // select if we use an IP address of FQDN in via 
          msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
 #else
-		 msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
+         msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
 #endif
 
          const Via &v(msg->header(h_Vias).front());
@@ -234,7 +220,7 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isR
       msg->encode(encodeStream);
       encodeStream.flush();
 
-      DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
+      //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
    
       // send it over the transport
       destination.transport->send(destination, encoded, tid);

@@ -25,8 +25,7 @@ class TransactionState
          ClientInvite,
          ServerNonInvite,
          ServerInvite,
-         Stale,
-         Ack  // may not be needed
+         Stateless  // may not be needed
       } Machine;
       
       typedef enum 
@@ -48,11 +47,11 @@ class TransactionState
          NoLookupRequired // used for sending responses
       } DnsState;
 
-
+      
       TransactionState(SipStack& stack, Machine m, State s);
       
       void processDns( Message* msg );
-      void processAck( Message* msg);
+      void processStateless( Message* msg);
       void processClientNonInvite(  Message* msg );
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
@@ -76,6 +75,11 @@ class TransactionState
       void sendToWire(Message* msg);
       void resendToWire(Message* msg) const;
       SipMessage* make100(SipMessage* request) const;
+      void terminateClientTransaction(const Data& tid); 
+      void terminateServerTransaction(const Data& tid); 
+      const Data& tid(SipMessage* sip) const;
+      
+      static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine);
       
       SipStack& mStack;
       Machine mMachine;
@@ -90,14 +94,17 @@ class TransactionState
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
 
-      //DnsResolver::Id mDnsQueryId;
       DnsState mDnsState;
       DnsResolver::TupleList mTuples;
       DnsResolver::TupleIterator mCurrent;
       
       Transport::Tuple mSource; // used to reply to requests
+      Data mId;
+      Data mToTag; // for failure responses on ServerInviteTransaction 
       
-      bool mRFC2543ResponseUpdated;
+      // this shouldn't be static since there can be more than one SipStack in
+      // an app. Should be stored in the SipStack
+      static unsigned long StatelessIdCounter;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
 };
