@@ -30,18 +30,6 @@ class ClientInviteSession : public InviteSession
       void sendPrack(const SipMessage& response);
       void sendAck(const SipMessage& ok);
 
-
-      typedef enum
-      {
-         Initial,  // No session setup yet
-         Early,    
-         Proceeding,
-         Cancelled,
-         Connected,
-         Terminated
-      } State;
-      State mState;
-
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;

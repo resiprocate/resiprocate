@@ -569,13 +569,29 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    request.header(h_CSeq).method() = method;
    request.header(h_MaxForwards).value() = 70;
 
-   Via via;
-   via.param(p_branch); // will create the branch
-   request.header(h_Vias).push_front(via);
-
+   //must keep old via for cancel
+   if (method != CANCEL)
+   {
+      Via via;
+      via.param(p_branch); // will create the branch
+      request.header(h_Vias).push_front(via);
+   }
+   else
+   {
+      assert(request.exists(h_Vias));
+   }
    request.header(h_CSeq).sequence() = ++mLocalCSeq;
 }
 
+void 
+Dialog::makeCancel(SipMessage& request)
+{
+   makeRequest(request, CANCEL);   
+
+   //not allowed in a CANCEL
+   request.remove(h_Requires);
+   request.remove(h_ProxyRequires);
+}
 
 void 
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
