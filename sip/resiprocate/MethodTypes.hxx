@@ -17,8 +17,11 @@ typedef enum
    REFER,
    REGISTER,
    SUBSCRIBE,
-   UNKNOWN
+   UNKNOWN,
+   MAX_METHODS
 } MethodTypes;
+
+extern Data MethodNames[MAX_METHODS];
 
 MethodTypes
 getMethodType(const Data& name);

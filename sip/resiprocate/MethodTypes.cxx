@@ -7,6 +7,20 @@
 
 using namespace Vocal2;
 
+Data Vocal2::MethodNames[MAX_METHODS] = 
+{
+   "ACK",
+   "BYE",
+   "CANCEL",
+   "INVITE",
+   "NOTIFY",
+   "OPTIONS",
+   "REFER",
+   "REGISTER",
+   "SUBSCRIBE",
+   "UNKNOWN",
+};
+
 inline int hash(const char *in)
 {
    

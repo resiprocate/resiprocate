@@ -7,13 +7,100 @@ using namespace Vocal2;
 using namespace std;
 
 //====================
+// Token
+//===================
+Token::Token(const Token& rhs)
+   : ParserCategory(rhs),
+     mValue(rhs.mValue)
+{}
+
+void
+Token::parse()
+{
+   assert(0);
+   // remember to call parseParameters()
+}
+
+ParserCategory* 
+Token::clone() const
+{
+   return new Token(*this);
+}
+
+std::ostream& 
+Token::encode(std::ostream& str) const
+{
+   str << mValue;
+   return str;
+}
+
+//====================
+// MIME
+//====================
+Mime::Mime(const Mime& rhs)
+   : ParserCategory(rhs),
+     mType(rhs.mType),
+     mSubType(rhs.mSubType)
+{
+}
+
+void
+Mime::parse()
+{
+   assert(0);
+}
+
+ParserCategory* 
+Mime::clone() const
+{
+   return new Mime(*this);
+}
+
+std::ostream&
+Mime::encode(std::ostream& str) const
+{
+   str << mType << Symbols::SLASH << mSubType;
+   return str;
+}
+
+//====================
+// Auth:
+//====================
+Auth::Auth(const Auth& rhs)
+   : ParserCategory(rhs)
+{}
+
+void
+Auth::parse()
+{
+   assert(0);
+}
+
+std::ostream& 
+Auth::encode(std::ostream& str) const
+{
+   assert(0);
+   return str;
+}
+
+ParserCategory* 
+Auth::clone() const
+{
+   return new Auth(*this);
+}
+
+//====================
 // CSeqComponent:
 //====================
-ParserCategory* CSeqComponent::clone(HeaderFieldValue*) const
+CSeqComponent::CSeqComponent(const CSeqComponent& rhs)
+   : ParserCategory(rhs),
+     mMethod(rhs.mMethod),
+     mSequence(rhs.mSequence)
+{}
+
+ParserCategory* CSeqComponent::clone() const
 {
-  
-  cerr << "No body for CSeqComponent::clone()" << endl;
-  assert(0);
+   return new CSeqComponent(*this);
 }
 
 void
@@ -38,27 +125,79 @@ CSeqComponent::parse()
       ParseException except;
       throw except;
    }
-
 }
 
 std::ostream& 
 CSeqComponent::encode(std::ostream& str) const
 {
-   // NEED TO FIX THIS!!!
-   // method needs to print out a string, not the enum type
-   str << int(mMethod) << " " << mSequence;
+   str << MethodNames[mMethod] << Symbols::SPACE << mSequence;
+   return str;
+}
+
+//====================
+// Date
+//====================
+DateComponent::DateComponent(const DateComponent& rhs)
+   : ParserCategory(rhs),
+     mValue(rhs.mValue)
+{}
+
+void
+DateComponent::parse()
+{
+   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
+}
+
+ParserCategory* 
+DateComponent::clone() const
+{
+   return new DateComponent(*this);
+}
+
+std::ostream& 
+DateComponent::encode(std::ostream& str) const
+{
+   str << mValue;
+   return str;
+}
+
+//====================
+// WarningComponent
+//====================
+WarningComponent::WarningComponent(const WarningComponent& rhs)
+   : ParserCategory(rhs)
+{
+}
+
+void
+WarningComponent::parse()
+{
+   assert(0);
+}
+
+ParserCategory* 
+WarningComponent::clone() const
+{
+   return new WarningComponent(*this);
+}
+
+std::ostream& 
+WarningComponent::encode(std::ostream& str) const
+{
    return str;
 }
 
 //====================
 // Integer:
 //====================
-ParserCategory* IntegerComponent::clone(HeaderFieldValue*) const
+IntegerComponent::IntegerComponent(const IntegerComponent& rhs)
+   : ParserCategory(rhs),
+     mValue(0)
+{}
+
+ParserCategory* IntegerComponent::clone() const
 {
-  
-  cerr << "No body for IntegerComponent::clone()" << endl;
-  assert(0);
-  
+   return new IntegerComponent(*this);
 }
 
 void
@@ -74,74 +213,70 @@ IntegerComponent::parse()
 
   // Starts with a comment, bad
   if (retn == FIRST)
-    {
-      ParseException except;
-      throw except;
-    }
+  {
+     ParseException except;
+     throw except;
+  }
 
   // we have a comment, handle it
   else if (retn == FOUND)
-    {
-      // right now only look to verify that they close
-      // we really need to also look for escaped \) parens (or anything
-      // else for that matter) and also replace cr lf with two spaces
+  {
+     // right now only look to verify that they close
+     // we really need to also look for escaped \) parens (or anything
+     // else for that matter) and also replace cr lf with two spaces
       
-      Data remainder;
-      retn = comment.match(")", &remainder, true);
+     Data remainder;
+     retn = comment.match(")", &remainder, true);
       
-      // if it is not found, they never close, if it is first, the comment
-      // is empty. Either is illegal
-      if (retn != FOUND)
-	{
-	  ParseException except;
-	  throw except;
-	}
+     // if it is not found, they never close, if it is first, the comment
+     // is empty. Either is illegal
+     if (retn != FOUND)
+     {
+        ParseException except;
+        throw except;
+     }
 
-      mComment = comment;
+     mComment = comment;
 
-      // we should immediately see a ; or nothing, so see if there 
-      // is anything after the )
+     // we should immediately see a ; or nothing, so see if there 
+     // is anything after the )
       
-      if (remainder.size() != 0)
-	{
-	  
-	  retn = remainder.match(";", &params, true);
-	  if (retn != FIRST)
-	    {
-	      // something between the comment and the ;, or something
-	      // after the ) and no ;. Both are bad.
-	      ParseException except;
-	      throw except;
-	    }
-	  else
-	    {
-	      // walk params and populate list
-	    }
-	}
+     if (remainder.size() != 0)
+     {
+        retn = remainder.match(";", &params, true);
+        if (retn != FIRST)
+        {
+           // something between the comment and the ;, or something
+           // after the ) and no ;. Both are bad.
+           ParseException except;
+           throw except;
+        }
+        else
+        {
+           // walk params and populate list
+        }
+     }
       
-      mValue = rawdata.convertInt();
-
-    }
+     mValue = rawdata.convertInt();
+  }
   
   // no comment
   else if (retn == NOT_FOUND)
-    {
+  {
       
-      int ret = rawdata.match(";", &params, true);
-      if (ret == FOUND)
-        {
-	  // walk params and populate list
-	}
-
-      mValue = rawdata.convertInt();
-
-    }
-} 
+     int ret = rawdata.match(";", &params, true);
+     if (ret == FOUND)
+     {
+        // walk params and populate list
+     }
+     
+     mValue = rawdata.convertInt();
+  }
+}
 
 std::ostream& 
 IntegerComponent::encode(std::ostream& str) const
 {
-  
   str << mValue;
   if (!mComment.empty())
     {
@@ -153,13 +288,16 @@ IntegerComponent::encode(std::ostream& str) const
 }
 
 //====================
-// String:
+// StringComponent
 //====================
+StringComponent::StringComponent(const StringComponent& rhs)
+   : ParserCategory(rhs)
+{}
+
 ParserCategory* 
-StringComponent::clone(HeaderFieldValue*) const
+StringComponent::clone() const
 {
-   assert(0);
-   return 0;
+   return new StringComponent(*this);
 }
 
 void 
@@ -175,14 +313,44 @@ StringComponent::encode(std::ostream& str) const
    return str;
 }
 
+//====================
+// GenericUri
+//====================
+GenericURI::GenericURI(const GenericURI& rhs)
+   : ParserCategory(rhs)
+{}
+
+void
+GenericURI::parse()
+{
+   assert(0);
+}
+
+ParserCategory* 
+GenericURI::clone() const
+{
+   return new GenericURI(*this);
+}
+
+std::ostream& 
+GenericURI::encode(std::ostream& str) const
+{
+   return str;
+}
 
 //====================
 // Via:
 //====================
-ParserCategory *
-Via::clone(HeaderFieldValue*) const
+Via::Via(const Via& rhs)
+   : ParserCategory(rhs),
+     mSentPort(0)
 {
-  assert(0);
+}
+
+ParserCategory *
+Via::clone() const
+{
+   return new Via(*this);
 }
 
 void
@@ -201,10 +369,14 @@ Via::encode(ostream& str) const
 //====================
 // CallId:
 //====================
+CallId::CallId(const CallId& rhs)
+   : ParserCategory(rhs)
+{}
+
 ParserCategory *
-CallId::clone(HeaderFieldValue*) const
+CallId::clone() const
 {
-  assert(0);
+   return new CallId(*this);
 }
 
 void
@@ -216,17 +388,21 @@ CallId::parse()
 ostream&
 CallId::encode(ostream& str) const
 {
-   assert(0);
+   str << mValue;
+   return str;
 }
-
 
 //====================
 // Url:
 //====================
+Url::Url(const Url& rhs)
+   : ParserCategory(rhs)
+{}
+
 ParserCategory *
-Url::clone(HeaderFieldValue*) const
+Url::clone() const
 {
-  assert(0);
+   return new Url(*this);
 }
 
 void
@@ -244,10 +420,16 @@ Url::encode(ostream& str) const
 //====================
 // RequestLine:
 //====================
+RequestLine::RequestLine(const RequestLine& rhs)
+   : Url(rhs),
+     mMethod(rhs.mMethod),
+     mSipVersion(rhs.mSipVersion)
+{}
+
 ParserCategory *
-RequestLine::clone(HeaderFieldValue*) const
+RequestLine::clone() const
 {
-  assert(0);
+   return new RequestLine(*this);
 }
 
 void 
@@ -259,18 +441,26 @@ RequestLine::parse()
 ostream&
 RequestLine::encode(ostream& str) const
 {
-   assert(0);
+   str << MethodNames[mMethod] << Symbols::SPACE 
+       << Url::encode(str) << Symbols::SPACE 
+       << mSipVersion;
+   return str;
 }
-
 
 //====================
 // StatusLine:
 //====================
-
+StatusLine::StatusLine(const StatusLine& rhs)
+   : ParserCategory(rhs),
+     mResponseCode(rhs.mResponseCode),
+     mSipVersion(rhs.mSipVersion),
+     mReason(rhs.mReason)
+{}
+     
 ParserCategory *
-StatusLine::clone(HeaderFieldValue*) const
+StatusLine::clone() const
 {
-  assert(0);
+   return new StatusLine(*this);
 }
 
 void
@@ -282,5 +472,8 @@ StatusLine::parse()
 ostream&
 StatusLine::encode(ostream& str) const
 {
-   assert(0);
+   str << mSipVersion << Symbols::SPACE 
+       << mResponseCode << Symbols::SPACE
+       << mReason;
+   return str;
 }

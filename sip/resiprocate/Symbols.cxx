@@ -4,10 +4,12 @@ using namespace Vocal2;
 
 const char * const Symbols::DefaultSipVersion = "SIP/2.0";
 
+const char * const Symbols::CRLF = "\r\n";
 const char * const Symbols::SPACE = " ";
 const char * const Symbols::COLON = ":";
 const char * const Symbols::EQUALS = "=";
 const char * const Symbols::SEMI_COLON = ";";
+const char * const Symbols::SLASH = "/";
 
 const char * const Symbols::Accept = "Accept";
 const char * const Symbols::Accept_Encoding = "Accept-Encoding";
@@ -41,8 +43,11 @@ const char * const Symbols::Proxy_Require = "Proxy-Require";
 const char * const Symbols::Record_Route = "Record-Route";
 const char * const Symbols::Reply_To = "Reply-To";
 const char * const Symbols::Retry_After = "Retry-After";
+const char * const Symbols::Require = "Require";
 const char * const Symbols::Route = "Route";
 const char * const Symbols::Server = "Server";
+const char * const Symbols::Subject = "Subject";
+const char * const Symbols::Subscription_State = "Subscription_State";
 const char * const Symbols::Supported = "Supported";
 const char * const Symbols::Timestamp = "Timestamp";
 const char * const Symbols::To = "To";
@@ -59,6 +64,8 @@ const char * const Symbols::Invite = "Invite";
 const char * const Symbols::Notify = "Notify";
 const char * const Symbols::Options = "Options";
 const char * const Symbols::Refer = "Refer";
+const char * const Symbols::Refer_To = "Refer_To";
+const char * const Symbols::Referred_By = "Referred_By";
 const char * const Symbols::Register = "Register";
 const char * const Symbols::Subscribe = "Subscribe";
 

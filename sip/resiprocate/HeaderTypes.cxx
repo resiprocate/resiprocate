@@ -5,61 +5,11 @@
 using namespace Vocal2;
 
 Data Headers::HeaderNames[MAX_HEADERS] = {};
+bool Headers::CommaTokenizing[] = {false};
 
 bool
 Headers::isCommaTokenizing(Type type)
 {
-   static bool once = true;
-   if (once)
-   {
-      once = false;
-      Headers::CommaTokenizing[Headers::Accept] = true;
-      Headers::CommaTokenizing[Headers::Accept_Encoding] = true;
-      Headers::CommaTokenizing[Headers::Accept_Language] = true;
-      Headers::CommaTokenizing[Headers::Alert_Info] = true;
-      Headers::CommaTokenizing[Headers::Allow] = true;
-      Headers::CommaTokenizing[Headers::Authentication_Info] = false;
-      Headers::CommaTokenizing[Headers::Authorization] = false;
-      Headers::CommaTokenizing[Headers::CSeq] = false;
-      Headers::CommaTokenizing[Headers::Call_ID] = false;
-      Headers::CommaTokenizing[Headers::Contact] = true;
-      Headers::CommaTokenizing[Headers::Content_Disposition] = true;
-      Headers::CommaTokenizing[Headers::Content_Encoding] = true;
-      Headers::CommaTokenizing[Headers::Content_Language] = true;
-      Headers::CommaTokenizing[Headers::Content_Length] = false;
-      Headers::CommaTokenizing[Headers::Content_Type] = true;
-      Headers::CommaTokenizing[Headers::Date] = false;
-      Headers::CommaTokenizing[Headers::Error_Info] = true;
-      Headers::CommaTokenizing[Headers::Expires] = false;
-      Headers::CommaTokenizing[Headers::From] = true;
-      Headers::CommaTokenizing[Headers::In_Reply_To] = false;
-      Headers::CommaTokenizing[Headers::MIME_Version] = true;
-      Headers::CommaTokenizing[Headers::Max_Forwards] = false;
-      Headers::CommaTokenizing[Headers::Min_Expires] = false;
-      Headers::CommaTokenizing[Headers::Organization] = false;
-      Headers::CommaTokenizing[Headers::Priority] = true;
-      Headers::CommaTokenizing[Headers::Proxy_Authenticate] = false;
-      Headers::CommaTokenizing[Headers::Proxy_Authorization] = false;
-      Headers::CommaTokenizing[Headers::Proxy_Require] = true;
-      Headers::CommaTokenizing[Headers::Record_Route] = true;
-      Headers::CommaTokenizing[Headers::Reply_To] = true;
-      Headers::CommaTokenizing[Headers::Refer_To] = true;
-      Headers::CommaTokenizing[Headers::Referred_By] = true;
-      Headers::CommaTokenizing[Headers::Require] = true;
-      Headers::CommaTokenizing[Headers::Retry_After] = false;
-      Headers::CommaTokenizing[Headers::Route] = true;
-      Headers::CommaTokenizing[Headers::Server] = false;
-      Headers::CommaTokenizing[Headers::Subject] = false;
-      Headers::CommaTokenizing[Headers::Supported] = true;
-      Headers::CommaTokenizing[Headers::To] = true;
-      Headers::CommaTokenizing[Headers::Unsupported] = true;
-      Headers::CommaTokenizing[Headers::User_Agent] = false;
-      Headers::CommaTokenizing[Headers::Via] = true;
-      Headers::CommaTokenizing[Headers::WWW_Authenticate] = false;
-      Headers::CommaTokenizing[Headers::Warning] = true;
-      Headers::CommaTokenizing[Headers::UNKNOWN] = false;
-   }
-   
    return CommaTokenizing[type];
 }
 
@@ -93,8 +43,6 @@ static const unsigned int IntVal_Unsu = 1970499157;
 static const unsigned int IntVal_User = 1919251285;
 static const unsigned int IntVal_Warn = 1852989783;
 static const unsigned int IntVal_WWW_ = 760698711;
-
-bool Headers::CommaTokenizing[] = {false};
 
 Headers::Type
 Headers::getHeaderType(const char* name, int len)
