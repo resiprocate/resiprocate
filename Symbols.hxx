@@ -27,6 +27,7 @@ class Symbols
       static const char * const B_SLASH;
       static const char * const SPACE;
       static const char * const COMMA;
+      static const char * const ZERO;
       
       static const char * const ProtocolName;
       static const char * const ProtocolVersion;
