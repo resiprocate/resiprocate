@@ -132,7 +132,7 @@ class FdSet
          FD_ZERO(&write);
       }
 
-   private:
+      // Make this stuff public for async dns/ares to use
       fd_set read;
       fd_set write;
       int size;
