@@ -149,6 +149,8 @@ TransportSelector::dnsResolve( SipMessage* msg)
 void 
 TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool isResend )
 {
+	assert( &destination != 0 );
+
    if (destination.transport == 0)
    {
       destination.transport = findTransport(destination);
