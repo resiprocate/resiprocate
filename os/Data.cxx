@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.47 2002/12/11 07:15:49 jason Exp $";
+// "$Id: Data.cxx,v 1.48 2002/12/17 18:05:02 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -516,7 +516,7 @@ Data::operator+=(char c)
 char& 
 Data::operator[](size_type p)
 {
-   assert(p >= 0 && p < mSize);
+   assert(p < mSize);
    if (!mMine)
    {
       resize(mSize, true);
@@ -527,7 +527,7 @@ Data::operator[](size_type p)
 char 
 Data::operator[](size_type p) const
 {
-   assert(p >= 0 && p < mSize);
+   assert(p < mSize);
    return mBuf[p];
 }
 
@@ -836,8 +836,6 @@ Data
 Data::substr(size_type first, size_type count) const
 {
    assert(first <= mSize);
-   assert(first >= 0);
-
    if ( (int)count == Data::npos)
    {
       return Data(mBuf+first, mSize-first);
