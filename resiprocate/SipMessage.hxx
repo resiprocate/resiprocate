@@ -211,6 +211,8 @@ class SipMessage : public TransactionMessage
 
       defineHeader(RSeq);
       defineHeader(RAck);
+      defineHeader(Identity);
+      defineHeader(IdentityInfo);
 
 #endif // METHOD_TEMPLATES
 
