@@ -26,10 +26,8 @@ class ClientInviteSession : public InviteSession
       virtual void end ();
       virtual void reject (int statusCode);
       virtual void targetRefresh (const NameAddr& localUri);
-      /* !slg if these are here, then you cannot use refer at all in a ClientInviteSession
       virtual void refer (const NameAddr& referTo);
       virtual void refer (const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-      */
       virtual void info (const Contents& contents);
 
       const SdpContents& getEarlyMedia() const;
