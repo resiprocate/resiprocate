@@ -52,24 +52,37 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
-static const Data rootCert("root_cert_");
-static const Data domainCert("domain_cert_");
-static const Data domainKey("domain_key_");
-static const Data userCert("user_cert_");
-static const Data userKey("user_key_");
-static const Data pem(".pem");
+static const Data PEM(".pem");
 
-static const Data pemTypePrefixes[] =
+
+static const Data 
+pemTypePrefixes(  Security::PEMType pType )
 {
-   rootCert,
-   domainCert,
-   domainKey,
-   userCert,
-   userKey
-};
+   static const Data rootCert("root_cert_");
+   static const Data domainCert("domain_cert_");
+   static const Data domainKey("domain_key_");
+   static const Data userCert("user_cert_");
+   static const Data userKey("user_key_");
+   static const Data unkonwKey("user_key_");
+
+   switch (pType)
+   {
+      case  Security::RootCert:         return rootCert;
+      case  Security::DomainCert:       return domainCert;
+      case  Security::DomainPrivateKey: return domainKey;
+      case  Security::UserCert:         return userCert;
+      case  Security::UserPrivateKey:   return userKey;
+      default:
+      {
+         ErrLog( << "Some unkonw pem type prefix requested" << (int)(pType) );
+         assert(0);
+      }
+   }
+   return unkonwKey;
+}
 
 
-Data
+static Data
 readIntoData(const Data& filename)
 {
    DebugLog( << "Trying to read file " << filename );
@@ -103,10 +116,11 @@ readIntoData(const Data& filename)
 }
 
 
-Data
-getAor(const Data& filename, const Data& prefix)
+static Data
+getAor(const Data& filename, const  Security::PEMType &pemType )
 {
-   return filename.substr(prefix.size(), filename.size() - prefix.size() - pem.size());
+   const Data& prefix = pemTypePrefixes( pemType );
+   return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
 
@@ -118,35 +132,48 @@ Security::Security(const Data& directory) : mPath(directory)
 void
 Security::preload()
 {
-#if 0
+#if 1
    FileSystem::Directory dir(mPath);
-   char buffer[8192];
-   Data fileT(Data::Borrow, buffer, sizeof(buffer));
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
    {
-      if (it->postfix(pem))
+      Data name = *it;
+           
+      if (name.postfix(PEM))
       {
-         if (it->prefix(userCert))
+         Data fileName = mPath + name;
+         
+         DebugLog(<< "Trying to load file " << name );
+
+         try
          {
-            addUserCertPEM(getAor(*it, userCert), readIntoData(*it));
+            if (name.prefix(pemTypePrefixes(UserCert)))
+            {
+               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
+            }
+            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
+            {
+               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainCert)))
+            {
+               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
+            {
+               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(RootCert)))
+            {
+               addRootCertPEM(readIntoData(fileName));
+            }
          }
-         else if (it->prefix(userKey))
-         {
-            addUserPrivateKeyPEM(getAor(*it, userKey), readIntoData(*it));
+         catch (...)
+         {  
+            ErrLog(<< "Some problem reading " << fileName );
          }
-         else if (it->prefix(domainCert))
-         {
-            addDomainPrivateKeyPEM(getAor(*it, domainCert), readIntoData(*it));
-         }
-         else if (it->prefix(domainKey))
-         {
-            addDomainPrivateKeyPEM(getAor(*it, domainKey), readIntoData(*it));
-         }
-         else if (it->prefix(rootCert))
-         {
-            addRootCertPEM(readIntoData(*it));
-         }
+         
+         InfoLog(<<"Sucessfully loaded " << fileName );
       }
    }
 #else
@@ -170,30 +197,39 @@ Security::preload()
       Data name( d->d_name );
       Data fileName = mPath+name;
       
-      if (name.postfix(pem))
+      if (name.postfix(PEM))
       {
-         InfoLog( << "Going to read file " << fileName );
+         InfoLog( << "Going to try to read file " << fileName );
          
-         if (name.prefix(userCert))
+         try
          {
-            addUserCertPEM(getAor(name, userCert), readIntoData(fileName));
+            if (name.prefix(pemTypePrefixes(UserCert)))
+            {
+               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
+            }
+            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
+            {
+               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainCert)))
+            {
+               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
+            {
+               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(RootCert)))
+            {
+               addRootCertPEM(readIntoData(fileName));
+            }
          }
-         else if (name.prefix(userKey))
-         {
-            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(fileName));
+         catch (...)
+         {  
+            ErrLog(<< "Some problem reading " << fileName );
          }
-         else if (name.prefix(domainCert))
-         {
-            addDomainCertPEM(getAor(name, domainCert), readIntoData(fileName));
-         }
-         else if (name.prefix(domainKey))
-         {
-            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(fileName));
-         }
-         else if (name.prefix(rootCert))
-         {
-            addRootCertPEM(readIntoData(fileName));
-         }
+         
+         InfoLog(<<"Sucessfully loaded " << fileName );
       }
    }
    closedir( dir );
@@ -204,7 +240,7 @@ Security::preload()
 void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
-   Data filename = mPath + pemTypePrefixes[type] + name + pem;
+   Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
    // .dlb. extra copy
    buffer = readIntoData(filename);
@@ -214,7 +250,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
-   Data filename = mPath + pemTypePrefixes[type] + name + pem;
+   Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
    ofstream str(filename.c_str(), ios::binary);
    str.write(buffer.data(), buffer.size());
@@ -229,6 +265,7 @@ Security::onRemovePEM(const Data& name, PEMType type) const
 }
 
 
+#if 0
 namespace
 {
 FILE* 
@@ -255,7 +292,8 @@ void
 clearError ()
 {
     while (ERR_get_error())
-        ;
+    {
+    }
 }
 
 
@@ -365,6 +403,7 @@ hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
 
 
 }  // namespace
+#endif
 
 
 
@@ -566,7 +605,6 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    
    privateKeys.insert(std::make_pair(name, nKey));
       
-#if 0 // CJ TODO FIX - for some reason doing write when load a key 
    if (write)
    {
       // figure out a passPhrase to encrypt with 
@@ -620,8 +658,6 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
       }
       BIO_free(bio);
    }
-#endif
-
 }
 
 
@@ -658,7 +694,7 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
       EVP_PKEY* privateKey;
       if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
       {
-         ErrLog(<< "Could not read private key from '" << privateKeyDER << "' using pass phrase '" << passPhrase << "'" );
+         ErrLog(<< "Could not read private key from <" << privateKeyDER << ">" );
          throw Exception("Could not read private key ", __FILE__,__LINE__);
       }
       
@@ -714,8 +750,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       EVP_PKEY* privateKey=0;
       if (PEM_read_bio_PrivateKey(in, &privateKey, 0, passPhrase) == 0)
       {
-         ErrLog(<< "Could not read private key from '" << endl 
-                << privateKeyPEM << "using pass phrase '" << passPhrase <<endl );
+         ErrLog(<< "Could not read private key from <" << privateKeyPEM << ">" );
          throw Exception("Could not read private key ", __FILE__,__LINE__);
       }
       
@@ -1016,8 +1051,6 @@ BaseSecurity::getRootCertDescriptions() const
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 {
-    return;
-   assert(0);
 #if 0
    assert( !x509PEMEncodedRootCerts.empty() );
 
@@ -1036,8 +1069,10 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 	};
 
    if (mRootCerts == 0)
-       mRootCerts = X509_STORE_new();
-
+   {
+      mRootCerts = X509_STORE_new();
+   }
+   
    assert( mRootCerts );
 
    X509_LOOKUP* lookup = X509_STORE_add_lookup(mRootCerts, &x509_pemstring_lookup);
@@ -2242,7 +2277,7 @@ BaseSecurity::getSslCtx ()
 void
 BaseSecurity::dumpAsn( char* name, Data data)
 {
-#if 0 // !CJ! TODO turn off
+#if 1 // !CJ! TODO turn off
    assert(name);
 
    if (true) // dump asn.1 stuff to debug file
