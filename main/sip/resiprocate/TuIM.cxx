@@ -1099,7 +1099,7 @@ TuIM::process()
                         
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
-            msg->header(h_Expires).value() = mRegistrationTimeSeconds;
+            msg->header(h_Expires).value() = mSubscriptionTimeSeconds;
             
             setOutbound( *msg );
 
