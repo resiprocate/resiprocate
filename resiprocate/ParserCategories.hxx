@@ -88,7 +88,7 @@ class Auth : public ParserCategory
       void parseAuthParameters(ParseBuffer& pb);
       std::ostream& encodeAuthParameters(std::ostream& str) const;
 
-      Data& scheme();
+      Data& scheme() const {checkParsed(); return mScheme;}
 
       Algorithm_Param::DType& param(const Algorithm_Param& paramType) const;
       Cnonce_Param::DType& param(const Cnonce_Param& paramType) const;
