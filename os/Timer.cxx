@@ -85,6 +85,7 @@ Timer::toData(Type timer)
       default:
          assert(0);
    }
+   return "Bad Bad Bad in timer";
 }
 
 Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
