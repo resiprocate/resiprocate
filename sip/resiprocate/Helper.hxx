@@ -66,6 +66,10 @@ class Helper
                                        const NameAddr& from,
                                        const NameAddr& contact);
 
+      static SipMessage* makePublish(const NameAddr& target, 
+                                     const NameAddr& from,
+                                     const NameAddr& contact);
+
       static SipMessage* makeFailureAck(const SipMessage& request, const SipMessage& response);
       
       static Data computeUniqueBranch();
