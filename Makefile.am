@@ -75,7 +75,7 @@ libresiprocate_la_SOURCES = \
 	Security.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
-	SipSession.cxx	\
+	SipSession.cxx \
 	SipStack.cxx \
 	StatelessHandler.cxx \
 	Subscription.cxx \
@@ -94,7 +94,8 @@ libresiprocate_la_SOURCES = \
 	UnknownParameter.cxx \
 	UnknownParameterType.cxx \
 	Uri.cxx \
-	XMLCursor.cxx
+	XMLCursor.cxx \
+	X_msMsgsInvite.cxx
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
@@ -179,6 +180,7 @@ resiprocate_include_HEADERS = \
 	Uri.hxx \
 	XMLCursor.hxx \
 	XPidf.hxx \
+	X_msMsgsInvite.hxx \
 	config.hxx \
 	supported.hxx
 
