@@ -2,9 +2,14 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <ostream>
+
 #include "resiprocate/SipMessage.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/RequestContext.hxx"
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -12,6 +17,7 @@ using namespace std;
 
 repro::RequestProcessorChain::RequestProcessorChain()
 {
+  DebugLog(<< "Instantiating new monkey chain");
 }
 
 repro::RequestProcessorChain::~RequestProcessorChain()
@@ -26,6 +32,7 @@ repro::RequestProcessorChain::~RequestProcessorChain()
 void
 repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
 {
+  DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
   chain.push_back(rp.release());
 }
 
@@ -66,6 +73,13 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 
   }
   return Continue;
+}
+
+void
+RequestProcessorChain::dump(std::ostream &os) const
+{
+  os << "Monkey Chain!" << std::endl;
+  // !abr! Dump monkey chain here
 }
 
 /* ====================================================================

@@ -174,6 +174,12 @@ DigestAuthenticator::getRealm(RequestContext &rc)
   return sipMessage->header(h_RequestLine).uri().host();
 }
 
+void
+DigestAuthenticator::dump(std::ostream &os) const
+{
+  os << "DigestAuthentication monkey" << std::endl;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

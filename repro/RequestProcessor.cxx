@@ -2,8 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <ostream>
 #include "resiprocate/SipMessage.hxx"
-#include "RequestProcessor.hxx"
+#include "repro/RequestProcessor.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -17,6 +18,12 @@ RequestProcessor::~RequestProcessor()
 {
 }
 
+std::ostream &
+repro::operator << (std::ostream &os, const repro::RequestProcessor &rp)
+{
+  rp.dump(os);
+  return os;
+}
 
 
 /* ====================================================================
