@@ -26,6 +26,9 @@ class RegistrationPersistenceManager
     virtual void removeAor(Uri &aor) = 0;
     virtual bool aorIsRegistered(Uri &aor) = 0;
 
+    virtual void lockRecord(Uri &aor) = 0;
+    virtual void unlockRecord(Uri &aor) = 0;
+
     /**
       @param expires Absolute time of expiration, measured in seconds
                      since midnight January 1st, 1970.
