@@ -41,6 +41,14 @@ class InviteSessionHandler
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
 
+      /// called when a 3xx with valid targets is encountered in an early dialog     
+      /// This is different then getting a 3xx in onTerminated, as another
+      /// request will be attempted, so the DialogSet will not be destroyed.
+      /// Basically an onTermintated that conveys more information.
+      /// checking for 3xx respones in onTerminated will not work as there may
+      /// be no valid targets.
+      virtual void onRedirected(InviteSessionHandle, const SipMessage& msg)=0;
+
       // called to allow app to adorn a message. default is to send immediately
       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 

@@ -326,6 +326,15 @@ ClientInviteSession::handlePrackResponse(const SipMessage& response)
    assert(0);
 }
 
+void ClientInviteSession::redirected(const SipMessage& msg)
+{
+   if (mState == Initial || mState == Early || mState == Proceeding)
+   {
+      mDum.mInviteSessionHandler->onRedirected(getSessionHandle(), msg);
+      delete this;      
+   }     
+}
+
 #if 0 //?dcm? --PRACKISH dispatch, or just cruft?
 // void
 // ClientInviteSession::dispatch(const SipMessage& msg)

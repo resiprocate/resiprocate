@@ -33,6 +33,7 @@ class ServerSubscriptionHandler;
 class ClientPublicationHandler;
 class ServerPublicationHandler;
 class OutOfDialogHandler;
+class RedirectHandler;
 
 class Dialog;
 class InviteSessionCreator;
@@ -80,8 +81,13 @@ class DialogUsageManager : public HandleManager
       void setProfile(Profile* profile);
       Profile* getProfile();
       
-      /// There should probably be a default redirect manager
+      //There is a default RedirectManager.  Setting one will cause the old one
+      //to be delete. The RedirectManager is deleted when the DUM is destroyed,
       void setRedirectManager(RedirectManager* redirect);
+
+      //informational, so a RedirectHandler is not required
+      void setRedirectHandler(RedirectHandler* handler);      
+      RedirectHandler* getRedirectHandler();      
 
       /// If there is no ClientAuthManager, when the client receives a 401/407,
       /// pass it up through the normal BaseUsageHandler
@@ -172,7 +178,8 @@ class DialogUsageManager : public HandleManager
 
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
-
+   protected:
+      virtual void shutdown();      
    private:
       friend class Dialog;
       friend class DialogSet;
@@ -247,6 +254,7 @@ class DialogUsageManager : public HandleManager
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
+      RedirectHandler* mRedirectHandler;      
 
 	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 
@@ -261,6 +269,7 @@ class DialogUsageManager : public HandleManager
 
       SipStack& mStack;
       DumShutdownHandler* mDumShutdownHandler;       
+      bool mDestroying;
 };
 
 }

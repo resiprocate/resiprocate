@@ -22,8 +22,10 @@ class ClientInviteSession : public InviteSession
 
       virtual SipMessage& end();
       virtual void send(SipMessage& msg);
-      
+
    private:
+      void redirected(const SipMessage& msg);      
+
       friend class Dialog;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
