@@ -30,6 +30,7 @@ void shutdown (SipStack *stack)
   if (!stack) return;
   // Wait for all transactions to complete
   bool done = false;
+  stack->shutdown();
   while (!done)
   {
       FdSet fdset; 
