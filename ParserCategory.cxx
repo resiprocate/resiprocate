@@ -90,6 +90,7 @@ ParserCategory::copyParametersFrom(const ParserCategory& other)
 
 ParserCategory::~ParserCategory()
 {
+   clear();
 }
 
 Data&
