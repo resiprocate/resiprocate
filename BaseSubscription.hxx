@@ -1,7 +1,7 @@
 #if !defined(RESIP_BASESUBSCRIPTION_HXX)
 #define RESIP_BASESUBSCRIPTION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/DialogUsage.hxx"
 #include "resiprocate/dum/SubscriptionState.hxx"
 #include "resiprocate/SipMessage.hxx"
 
@@ -12,7 +12,7 @@ class DialogUsageManager;
 
 //!dcm! -- update contact in dialog if required
 
-class BaseSubscription: public BaseUsage
+class BaseSubscription: public DialogUsage
 {
    public:      
       bool matches(const SipMessage& subOrNotify);

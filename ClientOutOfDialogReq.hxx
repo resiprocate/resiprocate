@@ -1,17 +1,17 @@
 #if !defined(RESIP_CLIENTOUTOFDIALOGREQ_HXX)
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class ClientOutOfDialogReq : public BaseUsage
+class ClientOutOfDialogReq : public NonDialogUsage
 {
   public:
-      ClientOutOfDialogReq(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
+      ClientOutOfDialogReq(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& req);
       ClientOutOfDialogReqHandle getHandle();
 
       bool matches(const SipMessage& msg) const;
@@ -23,13 +23,13 @@ class ClientOutOfDialogReq : public BaseUsage
       virtual ~ClientOutOfDialogReq();
 
    private:
+      friend class DialogSet;
       CSeqCategory mCSeq;
       
       // disabled
       ClientOutOfDialogReq(const ClientOutOfDialogReq&);
       ClientOutOfDialogReq& operator=(const ClientOutOfDialogReq&);
 
-      friend class Dialog;
 };
  
 }

@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/HandleManager.hxx"
+#include "resiprocate/dum/HandleException.hxx"
 
 namespace resip
 {
@@ -34,6 +35,10 @@ class Handle
       // throws if not found
       T* get()
       {
+         if (!mHam)
+         {
+            throw HandleException("Reference to unitialized handle.", __FILE__, __LINE__);
+         }
          return static_cast<T*>(mHam->getHandled(mId));
       }
       

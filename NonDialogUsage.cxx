@@ -1,45 +1,40 @@
-#if !defined(RESIP_CLIENTPUBLICATION_HXX)
-#define RESIP_CLIENTPUBLICATION_HXX
-
+#include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+using namespace resip;
+
+NonDialogUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+   : BaseException(msg, file, line)
 {
-
-class ClientPublication : public NonDialogUsage
-{
-   public:
-      ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SipMessage& pub);
-
-      typedef Handle<ClientPublication> ClientPublicationHandle;
-      ClientPublicationHandle getHandle();
-
-      //0 means the last value of Expires will be used.
-      void refresh(unsigned int expiration=0);
-      void update(const Contents* body);
-
-      virtual SipMessage& end();
-
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
-   protected:
-      virtual ~ClientPublication();
-   private:
-      friend class DialogSet;
-
-      SipMessage& mPublish;
-      Data mEventType;
-      int mTimerSeq; // expected timer seq (all < are stale)
-
-      // disabled
-      ClientPublication(const ClientPublication&);
-      ClientPublication& operator=(const ClientPublication&);
-};
- 
 }
 
-#endif
+const char*
+NonDialogUsage::Exception::name() const
+{
+   return "NonDialogUsage::Exception";
+}
+
+NonDialogUsage::NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet) :
+   BaseUsage(dum),
+   mDialogSet(dialogSet)
+{
+}
+
+NonDialogUsage::~NonDialogUsage()
+{
+   mDialogSet.possiblyDie();
+}
+
+AppDialogSetHandle 
+NonDialogUsage::getAppDialogSet()
+{
+   return mDialogSet.mAppDialogSet->getHandle();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

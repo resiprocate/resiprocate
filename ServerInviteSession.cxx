@@ -44,7 +44,8 @@ ServerInviteSession::end()
 void 
 ServerInviteSession::send(SipMessage& msg)
 {
-   if (mState == Accepting || mState == Connected || mState == Terminated)
+   if (mState == Accepting || mState == Connected || mState == Terminated 
+       || mState == ReInviting || mState == AcceptingReInvite)
    {
       InviteSession::send(msg);
       return;

@@ -10,13 +10,13 @@ ServerRegistration::getHandle()
    return ServerRegistrationHandle(mDum, getBaseHandle().getId());
 }
 
-ServerRegistration::ServerRegistration(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& request)
-   : BaseUsage(dum, dialog)
+ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& request)
+   : NonDialogUsage(dum, dialogSet)
 {}
 
 ServerRegistration::~ServerRegistration()
 {
-   mDialog.mServerRegistration = 0;
+   mDialogSet.mServerRegistration = 0;
 }
 
 void 
