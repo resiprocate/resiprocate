@@ -23,6 +23,7 @@
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
 #include <util/Logger.hxx>
+#include <util/Socket.hxx>
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -31,12 +32,13 @@ using namespace Vocal2;
 
 const size_t UdpTransport::MaxBufferSize = 8192;
 
+
 UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) : 
    Transport(portNum, fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-   if ( mFd < 0 )
+   if ( mFd == INVALID_SOCKET )
    {
       InfoLog (<< "Failed to open socket: " << portNum);
    }
@@ -46,7 +48,7 @@ UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) :
    addr.sin_addr.s_addr = htonl(INADDR_ANY); // !jf! 
    addr.sin_port = htons(portNum);
    
-   if ( bind( mFd, (struct sockaddr*) &addr, sizeof(addr)) != 0 )
+   if ( bind( mFd, (struct sockaddr*) &addr, sizeof(addr)) == SOCKET_ERROR )
    {
       int err = errno;
       if ( err == EADDRINUSE )
@@ -74,9 +76,11 @@ UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) :
 
 }
 
+
 UdpTransport::~UdpTransport()
 {
 }
+
 
 void 
 UdpTransport::send( const sockaddr_in& dest,
@@ -95,7 +99,8 @@ UdpTransport::send( const sockaddr_in& dest,
 }
 
 
-void UdpTransport::process()
+void 
+UdpTransport::process()
 {
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
@@ -107,18 +112,18 @@ void UdpTransport::process()
    {
       SendData* data = mTxFifo.getNext();
       DebugLog (<< "Sending message on udp");
-      unsigned int count = ::sendto(mFd, data->buffer, data->length, 0,
+      int count = sendto(mFd, data->buffer, data->length, 0,
                                     (const sockaddr*)&data->destination, 
                                     sizeof(data->destination));
    
-      if ( count < 0 )
+      if ( count == SOCKET_ERROR )
       {
          DebugLog (<< strerror(errno));
          // !jf! what to do if it fails
          assert(0);
       }
 
-      assert (count == data->length || count < 0);
+      assert ( (count == int(data->length) ) || (count == SOCKET_ERROR ) );
    }
 
 // #define UDP_SHORT   
@@ -172,7 +177,7 @@ void UdpTransport::process()
      
 #endif
 
-   if ( len <= 0 )
+   if ( len == SOCKET_ERROR )
    {
       int err = errno;
       ErrLog(<<"Error receiving, errno="<<err);
