@@ -103,18 +103,13 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
     {
         case UAC_EarlyWithAnswer:
         {
-            //  Creates an UPDATE request with application supplied offer and
-            //  session timer.
+            //  Creates an UPDATE request with application supplied offer.
             SipMessage req;
             mDialog.makeRequest(req, UPDATE);
             InviteSession::setSdp(req, offer);
-            req.header(h_SessionExpires).value() = mSessionInterval;
-            req.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
 
             //  Remember last seesion modification.
             mLastSessionModification = req;
-            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
-            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
 
             //  Remember proposed local SDP.
             mProposedLocalSdp = offer;
@@ -148,34 +143,29 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 {
     switch(mState)
     {
-        case UAC_EarlyWithAnswer:
+        case UAC_EarlyWithOffer:
         {
-            //  Creates an UPDATE request with application supplied offer and
-            //  session timer.
+            //  Creates an PRACK request with application supplied offer.
             SipMessage req;
-            mDialog.makeRequest(req, UPDATE);
+            mDialog.makeRequest(req, PRACK);
             InviteSession::setSdp(req, offer);
-            req.header(h_SessionExpires).value() = mSessionInterval;
-            req.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
 
             //  Remember last seesion modification.
             mLastSessionModification = req;
-            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
-            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
 
             //  Remember proposed local SDP.
             mProposedLocalSdp = offer;
 
             //  Send the req and do state transition.
             mDum.send(req);
-            transition(UAC_SentUpdateEarly);
+            transition(UAC_PrackAnswerWait);
             break;
         }
 
         case UAC_Start:
         case UAC_Early:
-        case UAC_EarlyWithOffer:
-        //case UAC_EarlyWithAnswer:
+        //case UAC_EarlyWithOffer:
+        case UAC_EarlyWithAnswer:
         case UAC_WaitingForAnswerFromApp:
         case UAC_Terminated:
         case UAC_SentUpdateEarly:
@@ -197,28 +187,68 @@ ClientInviteSession::end()
 void
 ClientInviteSession::reject (int statusCode)
 {
+    switch(mState)
+    {
+        case UAC_ReceivedUpdateEarly:
+        {
+            //  Creates an PRACK request with application supplied status code.
+            //  !kh! hopefully 488....
+            SipMessage req;
+            mDialog.makeRequest(req, PRACK);
+            req.header(h_StatusLine).statusCode() = statusCode;
+
+            //  Send the req and do state transition.
+            mDum.send(req);
+            transition(UAC_EarlyWithAnswer);
+            break;
+        }
+
+        case UAC_Start:
+        case UAC_Early:
+        case UAC_EarlyWithOffer:
+        case UAC_EarlyWithAnswer:
+        case UAC_WaitingForAnswerFromApp:
+        case UAC_Terminated:
+        case UAC_SentUpdateEarly:
+        //case UAC_ReceivedUpdateEarly:
+        case UAC_PrackAnswerWait:
+        case UAC_Canceled:
+            assert(0);
+            break;
+
+        default:
+            InviteSession::reject(statusCode);
+            break;
+    }
 }
 void
 ClientInviteSession::targetRefresh (const NameAddr& localUri)
 {
+   WarningLog (<< "Can't send INFO before Connected");
+   assert(0);
+   throw UsageUseException("Can't send TARGETREFRESH before Connected", __FILE__, __LINE__);
 }
 void
-ClientInviteSession::refer  (const NameAddr& referTo)
+ClientInviteSession::refer(const NameAddr& referTo)
 {
+   WarningLog (<< "Can't refer before Connected");
+   assert(0);
+   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
 void
-ClientInviteSession::refer  (const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
 {
+   WarningLog (<< "Can't refer before Connected");
+   assert(0);
+   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
 void
-ClientInviteSession::info  (const Contents& contents)
+ClientInviteSession::info(const Contents& contents)
 {
+   WarningLog (<< "Can't send INFO before Connected");
+   assert(0);
+   throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
 }
-void
-ClientInviteSession::cancel  ()
-{
-}
-
 
 void
 ClientInviteSession::dispatchStart (const SipMessage& msg, const SdpContents* sdp)
