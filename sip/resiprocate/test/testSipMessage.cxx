@@ -23,6 +23,142 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+
+   {
+      InfoLog(<< "Testing assignment");
+
+      Data txt1 = ("SIP/2.0 401 Unauthorized\r\n"
+                   "To: <sip:foobie@example.com>;tag=12345678\r\n"
+                   "From: <sip:bar@example.com>;tag=83ec8345\r\n"
+                   "Via: SIP/2.0/TLS 192.168.2.205:5061;branch=z9hG4bK-c87542-488593999-1--c87542-;rport\r\n"
+                   "Call-ID: 3f0b546f89f28456\r\n"
+                   "CSeq: 1 REGISTER\r\n"
+                   "Expires: 3600\r\n"
+                   "Max-Forwards: 70\r\n"
+                   "Www-Authenticate: Basic realm=test\r\n"
+                   "Allow-Events: presence\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+
+
+      Data txt2 = ("NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
+                   "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-107338443-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
+                   "To: sip:fluffy@212.157.205.40\r\n"
+                   "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
+                   "Max-Forwards: 70\r\n"
+                   "CSeq: 1 NOTIFY\r\n"
+                   "Call-ID: 28067261571992032320\r\n"
+                   "Contact: sip:ntt2@212.157.205.198:5060\r\n"
+                   "Content-Length: 1929\r\n"
+                   "Content-Type: multipart/signed;\r\n"
+                   " protocol=\"application/pkcs7-signature\";\r\n"
+                   " micalg=sha1; boundary=\"----YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\"\r\n"
+                   "\r\n"
+                   "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\r\n"
+                   "Content-Type: multipart/mixed;boundary=\"----lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\"\r\n"
+                   "Content-Length: 870\r\n"
+                   "Content-Disposition: attachment;handling=required\r\n"
+                   "\r\n"
+                   "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\r\n"
+                   "Content-Type: application/sipfrag\r\n"
+                   "Content-Length: 320\r\n"
+                   "\r\n"
+                   "To: sip:fluffy@212.157.205.40\r\n"
+                   "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
+                   "CSeq: 1 NOTIFY\r\n"
+                   "Call-ID: 28067261571992032320\r\n"
+                   "Contact: sip:ntt2@212.157.205.198:5060\r\n"
+                   "Event: presence\r\n"
+                   "Content-Length: 210\r\n"
+                   "Content-Type: application/xpidf+xml\r\n"
+                   "Subscription-State: active\r\n"
+                   "User-Agent: XXX SecureSession User-Agent\r\n"
+                   "\r\n"
+                   "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\r\n"
+                   "Content-Type: application/xpidf+xml\r\n"
+                   "Content-Length: 210\r\n"
+                   "\r\n"
+                   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+                   "<presence xmlns:impp=\"urn:ietf:params:xml:ns:pidf\" entity=\"pres:someone@example.com\">\r\n"
+                   "<tuple id=\"765\">\r\n"
+                   "<status>\r\n"
+                   "<basic>open</basic>\r\n"
+                   "</status>\r\n"
+                   "</tuple>\r\n"
+                   "</presence>\r\n"
+                   "\r\n"
+                   "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY--\r\n"
+                   "\r\n"
+                   "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\r\n"
+                   "Content-Type: application/pkcs7-signature; name=\"smime.p7s\"\r\n"
+                   "Content-Transfer-Encoding: base64\r\n"
+                   "Content-Disposition: attachment; filename=\"smime.p7s\"; handling=required\r\n"
+                   "\r\n"
+                   "MIIBVgYJKoZIhvcNAQcCoIIBRzCCAUMCAQExCzAJBgUrDgMCGgUAMAsGCSqGSIb3\r\n"
+                   "DQEHATGCASIwggEeAgEBMHwwcDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlm\r\n"
+                   "b3JuaWExETAPBgNVBAcTCFNhbiBKb3NlMQ4wDAYDVQQKEwVzaXBpdDEpMCcGA1UE\r\n"
+                   "CxMgU2lwaXQgVGVzdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkCCAIWABUCBgIVMAkG\r\n"
+                   "BSsOAwIaBQAwDQYJKoZIhvcNAQEBBQAEgYAer8TPSMtA3ZqweGnXLUYKR51bp52N\r\n"
+                   "oGBEqHZz7xR0Nhs6DsAOXiSFv19vTR//33u6Se3zpNNHP/zj7NRr+olimI2PeBNB\r\n"
+                   "tczNdqexoN0pjRW7l7mHZ0e39pqZmI5bhFl+z9CJJu5xW0aSarw84CZxbh5RQaYr\r\n"
+                   "zhSvTYdki20aiQ==\r\n"
+                   "\r\n"
+                   "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC--\r\n"
+         );
+
+      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+
+      SipMessage message3;
+      UnknownHeaderType h_Foo("foo");
+      UnknownHeaderType h_Bar("bar");
+
+      message3.header(h_Foo);
+      message3.header(h_Bar).push_back(StringCategory("bar1"));
+      message3.header(h_Bar).push_back(StringCategory("bar2"));
+
+      //message3.header(h_Vias);
+      message3.header(h_To);
+      
+      message3.header(h_RequestLine) = RequestLine(INVITE);
+      message3.header(h_RequestLine).uri() = Uri("sip:bob@biloxi.com");
+      message3.header(h_To) = NameAddr("sip:bob@biloxi.com");
+      message3.header(h_From) = NameAddr("Alice <sip:alice@atlanta.com>;tag=1928301774");
+      message3.header(h_CallId).value() = "314159";
+      message3.header(h_CSeq).sequence() = 14;
+      message3.header(h_CSeq).method() = INVITE;
+
+      PlainContents pc("here is some plain ol' contents");
+      message3.setContents(&pc);
+
+      message3 = *message2;
+
+      // cause some parsing
+      assert(!message2->header(h_To).exists(p_tag));
+      message2->getContents();
+
+      // cause some parsing
+      assert(message1->header(h_Vias).front().param(p_branch).clientData().empty());
+
+      assert(message1.get());
+      *message2 = *message1;
+
+      // cause some parsing
+      message3.getContents();
+      message3 = *message2;
+
+      CerrLog(<< Data::from(message3));
+      CerrLog(<< Data::from(*message1));
+
+      assert(message1.get());
+      assert(message3.isRequest() == message1->isRequest());
+      assert(message3.isResponse() == message1->isResponse());
+      
+      assert(Data::from(message3) == Data::from(*message1));
+   }
    
 #if 1
    {
