@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.16 2002/10/31 20:52:17 jason Exp $";
+"$Id: Data.cxx,v 1.17 2002/11/01 22:01:07 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -11,13 +11,14 @@ static const char* const Data_cxx_Version =
 using namespace Vocal2;
 using namespace std;
 
+const Data Data::Empty("", 0);
+
 Data::Data() 
    : mSize(0),
-     mBuf(new char[mSize + 1]),
+     mBuf(Data::Empty.mBuf),
      mCapacity(mSize),
-     mMine(true)
+     mMine(false)
 {
-   mBuf[0] = 0;
 }
 
 Data::Data(const char* str, int length) 
