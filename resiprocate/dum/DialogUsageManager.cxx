@@ -358,8 +358,8 @@ DialogUsageManager::processRequest(const SipMessage& request)
          
          default:
          {
-            Dialog& dialog = findDialog(DialogId(request));
-            dialog.process(DialogId(request));
+            DialogSet& dialogs = findDialogSet(DialogSetId(request));
+            dialogs.dispatch(request);
          }
       }
    }
