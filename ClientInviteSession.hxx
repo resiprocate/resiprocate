@@ -57,19 +57,12 @@ class ClientInviteSession : public InviteSession
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
+      void sendSipFrag(const SipMessage& response);
 
       SipMessage mInvite; // the original INVITE sent
       int mLastReceivedRSeq;
-      //int lastExpectedRSeq; // !jf! why do I care? 
       int mStaleCallTimerSeq;
       ServerSubscriptionHandle mServerSub;
-
-#if 0
-      void redirected(const SipMessage& msg);
-      void sendSipFrag(const SipMessage& response);
-      void handlePrackResponse(const SipMessage& response);
-      void sendPrack(const SipMessage& response);
-#endif
 
       // disabled
       ClientInviteSession(const ClientInviteSession&);

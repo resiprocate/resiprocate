@@ -74,12 +74,12 @@ DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
 DialogUsageManager::~DialogUsageManager()
 {  
    mShutdownState = Destroying;
-   InfoLog ( << "~DialogUsageManager" );
+   //InfoLog ( << "~DialogUsageManager" );
    while(!mDialogSetMap.empty())
    {
       delete mDialogSetMap.begin()->second;
    }
-   InfoLog ( << "~DialogUsageManager done" );
+   //InfoLog ( << "~DialogUsageManager done" );
 }
 
 bool 
