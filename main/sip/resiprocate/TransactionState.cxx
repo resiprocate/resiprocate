@@ -1432,7 +1432,8 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       StackLog (<< "sendToWire with no dns result: " << *this);
       assert(sip->isRequest());
       assert(!mIsCancel);
-      mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
+      mDnsResult = mController.mTransportSelector.createDnsResult(this);
+      mController.mTransportSelector.dnsResolve(mDnsResult, sip);
       assert(mDnsResult); // !ah! is this really an assertion or an error?
 
       // do it now, if there is an immediate result
