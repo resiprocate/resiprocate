@@ -1,82 +1,64 @@
-# $Id: Makefile,v 1.58 2003/10/05 04:47:50 fluffy Exp $
+# $Id: Makefile,v 1.59 2003/10/13 17:24:23 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
-LDLIBS += -lncurses
+LDLIBS += -lncurses 
 
-POPT = 1
-
-ifeq ($(POPT),1)
-CXXFLAGS += -I/opt/sfw/include
-LDFLAGS  += -L/opt/sfw/lib
-LDLIBS   += -lpopt
-
-TESTPROGRAMS += testTcp.cxx \
+# this is so that popt only works where there is popt
+# To enable popt, add USE_POPT=true to sip/build/Makefile.conf
+# This only applies to the non-autotools build system
+ifdef USE_POPT
+LDLIBS += -lpopt
+TESTPROGRAMS += testDns.cxx \
+		testTcp.cxx \
 		testUdp.cxx \
-		testStack.cxx 
+		testStack.cxx \
+		testResponses.cxx 
 endif
 
-TESTPROGRAMS +=	testTypedef.cxx \
-		testIntrusiveList.cxx \
-		testSelect.cxx \
-		limpc.cxx \
-		testParseUtil.cxx \
-		testParseBuffer.cxx \
-	        testData.cxx \
-	        testDataStream.cxx \
+TESTPROGRAMS += limpc.cxx \
+		testApplicationSip.cxx \
+		testClient.cxx \
 		testCountStream.cxx \
-	        testDataPerformance.cxx \
-	        testRandomHex.cxx \
-	        testCoders.cxx \
-		testEmptyHeader.cxx \
-		testThreadIf.cxx \
-		testLogger.cxx \
-		testXMLCursor.cxx \
-		testEmbedded.cxx \
-		testIM.cxx \
-		testUri.cxx \
-		SipTortureTests.cxx \
 		testDigestAuthentication.cxx \
+		testEmbedded.cxx \
+		testEmptyHeader.cxx \
 		testIM.cxx \
+		testIM.cxx \
+		testIntrusiveList.cxx \
 		testLockStep.cxx \
+		testLockStep.cxx \
+		testLogger.cxx \
 		testMessageWaiting.cxx \
+		testMultipartMixedContents.cxx \
+		testParseBuffer.cxx \
+		testParseUtil.cxx \
 		testPlainContents.cxx \
 		testSdp.cxx \
+		testSelect.cxx \
+		testServer.cxx \
 		testSipFrag.cxx \
-		testApplicationSip.cxx \
 		testSipMessageMemory.cxx \
 		testSpeed.cxx \
+		testThreadIf.cxx \
 		testTimer.cxx \
 		testTransactionFSM.cxx \
+		testTypedef.cxx \
+		testUri.cxx \
+		testXMLCursor.cxx \
+	        testCoders.cxx \
+	        testData.cxx \
+	        testDataPerformance.cxx \
+	        testDataStream.cxx \
 	        testParserCategories.cxx \
 	        testPreparse.cxx \
+	        testRandomHex.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
-		testLockStep.cxx \
-		testMultipartMixedContents.cxx \
-		testClient.cxx \
-		testServer.cxx \
-		testDns.cxx \
-
-#	        testTcpTransport.cxx \
-#		lg.cxx \
-#		test1.cxx \
-#		test2.cxx \
 
 SRC = 		TestSupport.cxx
-
-#		Register.cxx \
-#		Transceiver.cxx \
-#		Registrar.cxx \
-#		InviteClient.cxx \
-#		InviteServer.cxx \
-
-#		Resolver.cxx	
-
-#	        testNonInviteClientTx.cxx \
-#		testNameAddrParamExclusions.cxx \
 
 
 include $(BUILD)/Makefile.post
