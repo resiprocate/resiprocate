@@ -4,10 +4,30 @@
 namespace resip
 {
 
+class Data;
+class Mime;
+class Token;
+
+
 class Profile
 {
    public:
+      bool isSchemeSupported(const Data& scheme);
+      bool isMethodSupported(MethodTypes method);
+      bool isMimeTypeSupported(const Mime& mimeType);
+      
+      // return the list of unsupported tokens from set of requires tokens
+      Tokens isSupported(Token& requires);
+      Tokens getAllowedMethods();
+      Mimes getSupportedMimeTypes();
+      
+      void addSupportedScheme(const Data& scheme);
+      void addSupportedMethod(const MethodTypes& method);
+      void addSuportedOptionTags(const Token& tag);
+      void addSupportedMimeType(const Mime& mimeType);
+
       void setOutboundProxy( const Data& uri );
+
 
       /// The following functions deal with getting digest credentals 
       //@{ 
