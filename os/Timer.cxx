@@ -341,6 +341,14 @@ Timer::getTimeMs()
 
 
 UInt64 
+Timer::getForever()
+{
+   assert( sizeof(UInt64) == 8 );
+   return 18446744073709551615ULL;
+}
+
+
+UInt64 
 Timer::getRandomFutureTimeMs( UInt64 futureMs )
 {
    UInt64 now = getTimeMs();
