@@ -16,7 +16,7 @@ class SipMessage;
 class NameAddr;
 class CallID;
 
-class Dialog
+class DeprecatedDialog
 {
    public:
       class Exception : public BaseException 
@@ -29,7 +29,7 @@ class Dialog
       };
       
       // pass in a contact for this location e.g. "sip:local@domain:5060"
-      Dialog(const NameAddr& localContact);
+      DeprecatedDialog(const NameAddr& localContact);
 
       // If a dialog is not yet created, make a dialog or early dialog as
       // follows. Otherwise, just make response from the dialog state
@@ -134,11 +134,11 @@ class Dialog
 
       UInt64 expireyTimeAbsoluteMs;
       
-      friend std::ostream& operator<<(std::ostream&, const Dialog&);
+      friend std::ostream& operator<<(std::ostream&, const DeprecatedDialog&);
 };
 
 std::ostream&
-operator<<(std::ostream& strm, const Dialog& d);
+operator<<(std::ostream& strm, const DeprecatedDialog& d);
  
 } // namespace Cathay
 
