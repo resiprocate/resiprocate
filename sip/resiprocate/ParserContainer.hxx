@@ -98,10 +98,12 @@ class ParserContainer : public ParserContainerBase
          for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
-            str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
+            if (mType != Headers::NONE)
+            {
+               str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
+            }
             if ((*i)->isParsed())
             {
-               assert(mType >= 0 && mType < Headers::UNKNOWN);
                (*i)->encode(str);
             }
             else

@@ -524,10 +524,9 @@ CallId::encode(ostream& str) const
 NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs),
      mAllContacts(rhs.mAllContacts),
-     mUri(new Uri(*rhs.mUri)),
+     mUri(rhs.mUri == 0 ? 0 : new Uri(*rhs.mUri)),
      mDisplayName(rhs.mDisplayName)
 {
-   assert(mUri);
 }
 
 NameAddr&
@@ -671,7 +670,8 @@ NameAddr::encode(ostream& str) const
 // RequestLine:
 //====================
 RequestLine::RequestLine(const RequestLine& rhs)
-   : mUri(rhs.mUri ? new Uri(*rhs.mUri) : 0),
+   : ParserCategory(rhs),
+     mUri(rhs.mUri ? new Uri(*rhs.mUri) : 0),
      mMethod(rhs.mMethod),
      mSipVersion(rhs.mSipVersion)
 {}
