@@ -244,8 +244,16 @@ main(int arc, char** argv)
       assert (!(n2 < n1));
       assert (n1.uri().getAor() == n2.uri().getAor());
    }
+
+   {
+      TR _tr("Test NameAddr q value");
+
+      NameAddr w("<sip:wombat@192.168.2.221:5062;transport=Udp>;expires=63;q=1");
+      assert(w.param(p_q) == 1.0);
+   }
    
    {
+      TR _tr("Test NameAddr comparison");
 
       NameAddr w1("<sip:wombat@192.168.2.221:5062;transport=Udp>;expires=63");
       NameAddr w2("<sip:wombat@192.168.2.221:5063;transport=Udp>;expires=66");
