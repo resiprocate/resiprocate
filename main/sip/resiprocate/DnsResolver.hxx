@@ -35,8 +35,8 @@ class Via;
 class DnsResolver
 {
    public:
-      typedef std::list<Transport::Tuple> TupleList;
-      typedef std::list<Transport::Tuple>::const_iterator TupleIterator;
+      typedef std::list<Tuple> TupleList;
+      typedef std::list<Tuple>::const_iterator TupleIterator;
 
       struct Srv
       {
@@ -44,7 +44,7 @@ class DnsResolver
             int weight;
             int port;
             Data host;
-            Transport::Type transport;
+            TransportType transport;
             
             bool operator<(const Srv& rhs) const
             {
@@ -80,7 +80,7 @@ class DnsResolver
 
       struct Request
       {
-            Request(TransactionController& pstack, const Data& ptid, const Data& phost, int pport, Transport::Type ptransport, Data pscheme)
+            Request(TransactionController& pstack, const Data& ptid, const Data& phost, int pport, TransportType ptransport, Data pscheme)
                : controller(pstack),tid(ptid),host(phost),port(pport),transport(ptransport),scheme(pscheme),isFinal(false)
             {
             }
@@ -89,9 +89,9 @@ class DnsResolver
             Data tid;
             Data host;
             int port;
-            Transport::Type transport;
+            TransportType transport;
             Data scheme;
-            std::list<Transport::Type> otherTransports;
+            std::list<TransportType> otherTransports;
             bool isFinal;
       };
      
@@ -130,7 +130,7 @@ class DnsResolver
       void lookupARecords(const Data& transactionId, 
                           const Data& host, 
                           int port, 
-                          Transport::Type transport);
+                          TransportType transport);
       
       static bool isIpAddress(const Data& data);
       

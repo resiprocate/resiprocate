@@ -8,6 +8,10 @@ namespace resip
 {
 
 #ifdef WIN32
+#include <winsock2.h>
+#include <stdlib.h>
+#include <io.h>
+
 typedef int socklen_t;
 //#define errno WSAGetLastError()
 typedef SOCKET Socket;

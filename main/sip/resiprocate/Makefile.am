@@ -26,6 +26,7 @@ libresiprocate_la_SOURCES = \
 	os/Subsystem.cxx \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
+	os/Tuple.cxx \
 	os/vmd5.cxx \
 	ApplicationSip.cxx \
 	BranchParameter.cxx \
@@ -217,6 +218,7 @@ resiprocate_os_include_HEADERS = \
 	os/SysLogStream.hxx \
 	os/ThreadIf.hxx \
 	os/Timer.hxx \
+	os/Tuple.hxx \
 	os/compat.hxx \
 	os/vmd5.hxx \
 	os/vthread.hxx

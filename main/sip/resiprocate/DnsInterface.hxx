@@ -31,7 +31,7 @@ class Via;
 class DnsInterface
 {
    public:
-      typedef const Data (TransportArray)[Transport::MAX_TRANSPORT];
+      typedef const Data (TransportArray)[MAX_TRANSPORT];
 
       // These are sets of transports that can be passed to the DnsInterface on
       // construction to indicate which transports a client supports

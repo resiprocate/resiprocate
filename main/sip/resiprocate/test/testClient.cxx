@@ -26,7 +26,7 @@ using namespace std;
 class Client
 {
     public:
-      Client(Transport::Type transport, const NameAddr& contact, const NameAddr& target) 
+      Client(TransportType transport, const NameAddr& contact, const NameAddr& target) 
          : mStack(),
            mContact(contact),
            mTarget(target),
@@ -112,7 +112,7 @@ main(int argc, char* argv[])
    contact.uri().port() = 5080;
    contact.uri().user() = "yffulf";
 
-   Transport::Type protocol;
+   TransportType protocol;
    if (isEqualNoCase(target.uri().param(p_transport), "UDP"))
    {
       protocol = Transport::UDP;

@@ -78,7 +78,7 @@ TransactionController::buildFdSet( FdSet& fdset)
 }
 
 void
-TransactionController::addTransport( Transport::Type protocol, 
+TransactionController::addTransport( TransportType protocol, 
                                      int port,
                                      const Data& hostName,
                                      const Data& nic) 
