@@ -573,7 +573,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       }
       else
       {
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
          DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
 #endif
          primeResults();
@@ -682,7 +682,7 @@ void
 DnsResult::primeResults()
 {
    DebugLog (<< "primeResults() " << mType);
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
 #endif
 
@@ -716,7 +716,7 @@ DnsResult::primeResults()
             Tuple tuple(*i, next.port, next.transport);
             mResults.push_back(tuple);
          }
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
          DebugLog (<< "Try: " << Inserter(mResults));
 #endif
 
@@ -779,7 +779,7 @@ DnsResult::retrieveSRV()
    int selected = Random::getRandom() % (mCumulativeWeight+1);
 
    DebugLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
 #endif
 
