@@ -169,6 +169,12 @@ UInt64
 Timer::getSystemTicks()
 {
    UInt64 tick;
+/* block ADFE9093
+ * RjS - This code fails for systems with variable speed
+ *       CPUs (such as laptops with Intel SpeedStep
+ *       This block (and its associated endifs) is
+ *       commented out for now while the impact of this
+ *       change is being tested. 
 #if defined(WIN32) 
    volatile unsigned int lowtick=0,hightick=0;
    __asm
@@ -184,6 +190,8 @@ Timer::getSystemTicks()
 #  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
    asm("rdtsc" : "=A" (tick)); // this should actually work anywhere GNUC does
 #  else
+*/
+
 #    if defined (__SUNPRO_CC)	
    tick = gethrtime();//This is Not expensive Under solaris 8 & above but systemcall in solaris7
 #    else
@@ -204,8 +212,10 @@ Timer::getSystemTicks()
    //tick = cjGetSystemTimeOfDay();
 #      endif
 #    endif
+/* RjS - endifs matching block ADFE9093
 #  endif
 #endif
+*/
    return tick;
 }
 
