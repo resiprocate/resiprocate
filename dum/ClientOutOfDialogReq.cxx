@@ -23,6 +23,18 @@ ClientOutOfDialogReq::Handle::operator->()
    return static_cast<ClientOutOfDialogReq*>(get());
 }
 
+void 
+ClientOutOfDialogReq::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ClientOutOfDialogReq::dispatch(const DumTimeout& timer)
+{
+}
+
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
