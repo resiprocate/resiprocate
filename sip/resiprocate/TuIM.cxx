@@ -275,7 +275,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 
    sendNotify( dialog );
 
-#if 0 // do symetric subscriptions 
+   // do symetric subscriptions 
    // See if this person is our buddy list and if we are not subscribed to them
 
     UInt64 now = Timer::getTimeMs();
@@ -289,11 +289,14 @@ TuIM::processSubscribeRequest(SipMessage* msg)
        {
           if (  from.getAor() == i->uri.getAor() )
           {
-             i->mNextTimeToSubscribe = now;
+	    /* RjS - this is my quick fix to the subscription storm */
+	    if  ( (i->mNextTimeToSubscribe - now) > 32000 )
+	    {
+              i->mNextTimeToSubscribe = now;
+	    }
           }
        }
     }
-#endif
 }
 
 
