@@ -13,6 +13,7 @@ class Pidf : public Contents
 {
    public:
       Pidf();
+      Pidf(const Mime& contentType);
       // Pidf(const Data& text);
       Pidf(HeaderFieldValue* hfv, const Mime& contentType);
       // Pidf(const Data& data, const Mime& contentType);
@@ -22,8 +23,7 @@ class Pidf : public Contents
 
       virtual Contents* clone() const;
 
-      //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
@@ -47,14 +47,17 @@ class Pidf : public Contents
             Data timeStamp;
       };
 
+      static bool init();   
+   
    private:
       void clear();
-      static ContentsFactory<Pidf> Factory;
 
       Data mEntity;
       Data mNote;
       vector<Tuple> mTuple;
 };
+
+static bool invokePidfInit = Pidf::init();
 
 }
 
