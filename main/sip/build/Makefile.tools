@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.9 2003/10/05 02:45:42 jason Exp $
+# $Id: Makefile.tools,v 1.10 2003/10/19 17:52:20 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -29,12 +29,18 @@
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
-ifeq ($(USE_DISTCC),true)
-CC		= $(DISTCC) gcc
-CXX		= $(DISTCC) g++
-else
-CC		= gcc
-CXX		= g++
+
+ifeq ($(USE_CCACHE),true)
+ ifeq ($(USE_DISTCC),true)
+  CC = $(CCACHE) $(DISTCC) gcc
+  CXX = $(CCACHE) $(DISTCC) g++
+ else
+  CC = $(CCACHE) gcc
+  CXX = $(CCACHE) g++
+ endif
+else 
+ CC = gcc
+ CXX = g++
 endif
 
 MKSHLIB		= $(CC) -fPIC -shared 
