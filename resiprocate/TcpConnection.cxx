@@ -13,7 +13,7 @@ using namespace resip;
 
 TcpConnection::TcpConnection(const Tuple& who, Socket fd) : Connection(who, fd)
 {
-   DebugLog (<< "Creating TCP connection " << who << " on " << fd);
+   InfoLog (<< "Creating TCP connection " << who << " on " << fd);
 }
 
 int 
@@ -55,7 +55,6 @@ TcpConnection::read( char* buf, int count )
       }
 
       InfoLog (<< "Failed read on " << mSocket << " " << strerror(errno));
-      assert(0);
    }
 
    return bytesRead;
