@@ -24,7 +24,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib Iphlpapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
