@@ -14,7 +14,7 @@ Data SubscriptionStates[] =
    "Unknown"
 };
 
-Data SubscriptionStateReasons[] = 
+Data TerminateReasons[] = 
 {
    "Deactivated",
    "Probation",
@@ -36,11 +36,11 @@ resip::getSubscriptionStateString(SubscriptionState state)
 }
 
 const Data&
-resip::getSubscriptionStateReasonString(Reason state) 
+resip::getTerminateReasonString(TerminateReason state) 
 {
 //    if (state > Unknown ||  state < Deactivated) 
 //    {
 //       state = Unknown;
 //    }
-   return SubscriptionStateReasons[state];
+   return TerminateReasons[state];
 }
