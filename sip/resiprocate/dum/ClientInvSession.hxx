@@ -1,3 +1,9 @@
+#if !defined(RESIP_CLIENTINVSESSION_HXX)
+#define RESIP_CLIENTINVSESSION_HXX
+
+namespace resip
+{
+
 class ClientInvSession : public BaseSession
 {
    public:
@@ -11,4 +17,7 @@ class ClientInvSession : public BaseSession
       SdpContents* mOutstandingOffer;
 };
 
-   
+ 
+}
+
+#endif
