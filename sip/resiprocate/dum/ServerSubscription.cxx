@@ -1,42 +1,14 @@
-#include "InviteSession.hxx"
+#include "ServerSubscription.hxx"
 
-InviteSession::InviteSession(DialogUsageManager& dum) : 
-   mDum(dum),
-   mLocalSdp(0),
-   mRemoteSdp(0),
-   mMyNextOffer(0),
-   mPendingReceivedOffer(0)
-{
-}
+ServerSubscription::Handle::Handle(const ServerSubscription& handled)
+   : mDum(handled.mDum),
+     mDialogId(handled.dialog().getId())
+{}
 
-const SdpContents* 
-InviteSession::getLocalSdp()
+ServerSubscription*
+ServerSubscription::Handle::operator->()
 {
-   return mLocalSdp;
-}
-
-const SdpContents* 
-InviteSession::getRemoteSdp()
-{
-   return mRemoteSdp;
-}
-
-InviteSession::Handle::Handle(ClientInviteSession::Handle& handle)
-   : DialogUsageManager::Handle(handle.mDum)
-{
-   mId = handle.mId;
-}
-
-InviteSession::Handle::Handle(ServerInviteSession::Handle& handle)
-   : DialogUsageManager::Handle(handle.mDum)
-{
-   mId = handle.mId;
-}
-
-InviteSession*
-InviteSession::Handle::operator->()
-{
-   return static_cast<InviteSession*>get();
+   return &mDum.findServerSubscription(mDialogId);
 }
 
 /* ====================================================================
@@ -54,7 +26,6 @@ InviteSession::Handle::operator->()
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
