@@ -17,6 +17,7 @@
 #include "repro/Registrar.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
+#include "repro/ReproServerAuthManager.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
@@ -114,10 +115,10 @@ main(int argc, char** argv)
       dum->setMasterProfile(&profile);
       
       dumThread = new DumThread(*dum);
-   }
 
-   //ServerAuthManager uasAuth;
-   //dum.setClientAuthManager(&uasAuth);
+     auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
+     dum->setServerAuthManager(uasAuth);
+   }
 
    /* Make it all go */
    stackThread.run();
