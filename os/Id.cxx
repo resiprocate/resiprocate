@@ -1,7 +1,6 @@
-#if defined(RESIP_ID_CXX)
 
 static const char* const resipId_cxx_version = 
-    "@(#) $Id: Id.cxx,v 1.1 2004/04/05 18:49:12 alan Exp $";
+    "@(#) $Id: Id.cxx,v 1.2 2004/04/05 18:54:31 alan Exp $";
 
 #include <typeinfo>
 #if defined(RESIP_ID_DEBUG)
@@ -12,7 +11,7 @@ static const char* const resipId_cxx_version =
 
 // #include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/os//Id.hxx"
+#include "resiprocate/os/Id.hxx"
 using namespace resip;
 
 namespace resip
