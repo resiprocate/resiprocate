@@ -10,6 +10,7 @@
 #include "resiprocate/os/Subsystem.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
+#include "resiprocate/dum/KeepAliveManager.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
@@ -106,6 +107,10 @@ main (int argc, char** argv)
    clientDum.addTransport(UDP, 15060);
    clientDum.setMasterProfile(&profile);
 
+   // keep alive test.
+   auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
+   clientDum.setKeepAliveManager(keepAlive);
+
    clientDum.setClientRegistrationHandler(&client);
    clientDum.setClientAuthManager(clientAuth);
    clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
@@ -138,7 +143,7 @@ main (int argc, char** argv)
 
      clientDum.process(fdset);
      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
-
+     if (n == 1000) client.done = true;
    }   
    return 0;
 }
