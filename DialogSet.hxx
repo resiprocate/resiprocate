@@ -24,7 +24,6 @@ class DialogSet
       DialogSetId getId();
       
       void addDialog(Dialog*);
-      void removeDialog(const Dialog*);
       
 //!dcm! -- kill      DialogIdSet getDialogs() const;
       bool empty() const;
@@ -41,6 +40,7 @@ class DialogSet
       bool mergeRequest(const SipMessage& request);
 
    private:
+      friend class Dialog;
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
 
