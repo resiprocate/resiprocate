@@ -617,8 +617,8 @@ Security::loadMyPublicCert( const Data&  filePath )
    FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
    {
-      ErrLog(<< "Could not read public cert from " << filePath );
-      Data err( "Could not read public cert from " );
+      ErrLog(<< "Could not read my public cert from " << filePath );
+      Data err( "Could not read my public cert from " );
       err += filePath;
       throw Exception(err, __FILE__,__LINE__);
       return false;
@@ -627,7 +627,7 @@ Security::loadMyPublicCert( const Data&  filePath )
    publicCert = PEM_read_X509(fp,NULL,NULL,NULL);
    if (!publicCert)
    {
-      ErrLog( << "Error reading contents of public cert file " << filePath );
+      ErrLog( << "Error reading contents of my public cert file " << filePath );
 	    
       while (true)
       {
@@ -646,14 +646,14 @@ Security::loadMyPublicCert( const Data&  filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
-      Data err( "Error reading contents of public cert file " );
+      Data err( "Error reading contents of my public cert file " );
       err += filePath;
       throw Exception(err, __FILE__,__LINE__);
       
       return false;
    }
    
-   InfoLog( << "Loaded public cert from " << filePath );
+   InfoLog( << "Loaded my public cert from " << filePath );
    
    return true;
 }
@@ -887,7 +887,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
       return false;
    }
    
-   //DebugLog( "password is " << password );
+   DebugLog( << "password is " << password );
    
    privateKey = PEM_read_PrivateKey(fp,NULL,NULL,(void*)password.c_str());
    if (!privateKey)
