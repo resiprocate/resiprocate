@@ -70,6 +70,7 @@ libresiprocate_la_SOURCES = \
 	Pkcs7Contents.cxx \
 	PlainContents.cxx \
 	Preparse.cxx \
+	Rlmi.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	Registration.cxx \
@@ -159,6 +160,7 @@ resiprocate_include_HEADERS = \
 	QuotedDataParameter.hxx \
 	Registration.hxx \
 	ReliabilityMessage.hxx \
+	Rlmi.hxx \
 	RportParameter.hxx \
 	SdpContents.hxx \
 	Security.hxx \
