@@ -3,13 +3,14 @@ USE_SSL = 1
 BUILD = ../../build
 
 include $(BUILD)/Makefile.pre
+-include ../Makefile.opt
 
 USE_REPO=false
 QT_LIBNAME = qt
 QT_LIBDIRS = /usr/lib/qt-3.0.5/lib
 QT_INCLUDEDIRS = /usr/lib/qt-3.0.5/include
 NCURSES_LIBNAME = ncurses
-PACKAGES += SIP2 SIPSTACK2 UTIL2 PTHREAD NCURSES QT
+PACKAGES += SIP2 SIPSTACK2 UTIL2 ARES PTHREAD NCURSES QT
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
@@ -55,10 +56,6 @@ moc_SetupDlg.cxx: SetupDlg.hxx
 
 moc_SetupDlgImpl.cxx: SetupDlgImpl.hxx
 		moc -o moc_SetupDlgImpl.cxx SetupDlgImpl.hxx
-
-
-
-
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
