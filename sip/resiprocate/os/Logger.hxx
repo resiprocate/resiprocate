@@ -75,7 +75,10 @@ do                                                                              
          resip::Log::tags(level_, system_, __FILE__, __LINE__,                  \
                           resip::GenericLogImpl::Instance()) << DELIM           \
                           args_ << std::endl;                                   \
-         if(Log::_type == Log::VSDebugWindow) resip::GenericLogImpl::OutputToWin32DebugWindow(); \
+         if (resip::Log::_type == resip::Log::VSDebugWindow)                    \
+         {                                                                      \
+            resip::GenericLogImpl::OutputToWin32DebugWindow();                  \
+         }                                                                      \
       }                                                                         \
    }                                                                            \
    else                                                                         \
@@ -90,7 +93,10 @@ do                                                                              
             resip::Log::tags(level_, system_, __FILE__, __LINE__,               \
                              resip::GenericLogImpl::Instance()) << DELIM        \
                              args_ << std::endl;                                \
-            if(Log::_type == Log::VSDebugWindow) resip::GenericLogImpl::OutputToWin32DebugWindow(); \
+            if (resip::Log::_type == resip::Log::VSDebugWindow)                 \
+            {                                                                   \
+               resip::GenericLogImpl::OutputToWin32DebugWindow();               \
+            }                                                                   \
          }                                                                      \
       }                                                                         \
    }                                                                            \
@@ -113,15 +119,15 @@ class GenericLogImpl :  public Log
       static std::ostream& Instance();
       static bool isLogging(Log::Level level) ;
       static unsigned int MaxLineCount;
-	  static void OutputToWin32DebugWindow(); //xkd-2004-11-8
+      static void OutputToWin32DebugWindow(); //xkd-2004-11-8
 
    private:
       static std::ostream* mLogger;
       static unsigned int mLineCount;
 #ifdef WIN32
-	  static Data *mWin32DebugData;
-	  static DataStream *mWin32DebugStream;
-#endif 
+      static Data *mWin32DebugData;
+      static DataStream *mWin32DebugStream;
+#endif
 
 };
  
