@@ -65,9 +65,8 @@ Data Base64Coder::encode(const Data& data)
         assert(dstIndex <= dstLimitLength);
         // outputed all d0,d1, and d2
     }
-    Data retval(dstData,dstIndex);
-    delete[] dstData;
-    return retval;
+    return Data(Data::Take, reinterpret_cast<char*>(dstData),
+                dstIndex);
 }
 
 unsigned char Base64Coder::toBits(unsigned char c)
