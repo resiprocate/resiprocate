@@ -226,9 +226,23 @@ DnsResult::getDefaultPort(TransportType transport, int port)
 
 
 void
+DnsResult::lookupAAAARecords(const Data& target)
+{
+   InfoLog(<< "Doing host (AAAA) lookup: " << target);
+   mPassHostFromAAAAtoA = target; // hackage
+#if defined(USE_ARES)
+   ares_query(mInterface.mChannel, target.c_str(), C_IN, T_AAAA, DnsResult::aresAAAACallback, this); 
+#else
+   /*TODO - deal with looking for AAAAs directly */
+   /* For now, shortcut straight to looking for A records */
+   lookupARecords(target);
+#endif
+}
+
+void
 DnsResult::lookupARecords(const Data& target)
 {
-   InfoLog (<< "Doing A lookup: " << target);
+   InfoLog (<< "Doing Host (A) lookup: " << target);
 
 #if defined(USE_ARES)
    ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
@@ -338,14 +352,25 @@ DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
    DebugLog (<< "Received SRV result for: " << thisp->mHandler << " for " << thisp->mTarget);
    thisp->processSRV(status, abuf, alen);
 }
+
+void
+DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
+{
+   DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
+   DebugLog (<< "Received AAAA result for: " << thisp->mHandler << " for " << thisp->mTarget);
+   thisp->processAAAA(status, abuf, alen);
+}
 #endif
+
 
 void
 DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 {
    DebugLog (<< "DnsResult::processNAPTR() " << status);
 
-   // There can only be one NAPTR query outstanding at a time
+   // This function assumes that the NAPTR query that caused this
+   // callback is the ONLY outstanding query that might cause
+   // a callback into this object
    if (mType == Destroyed)
    {
       destroy();
@@ -460,10 +485,13 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 void
 DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 {
+   assert(mSRVCount>=0);
    mSRVCount--;
    DebugLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
 
-   // There could be multiple SRV queries outstanding
+   // There could be multiple SRV queries outstanding, but there will be no
+   // other DNS queries outstanding that might cause a callback into this
+   // object.
    if (mType == Destroyed && mSRVCount == 0)
    {
       destroy();
@@ -564,14 +592,60 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    }
 }
 
+void
+DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
+{
+   DebugLog (<< "DnsResult::processAAAA() " << status);
+   // This function assumes that the AAAA query that caused this callback
+   // is the _only_ outstanding DNS query that might result in a
+   // callback into this function
+   if ( mType == Destroyed )
+   {
+      destroy();
+      return;
+   }
+   if (status == ARES_SUCCESS)
+   {
+     const unsigned char *aptr = abuf + HFIXEDSZ;
+
+     int qdcount = DNS_HEADER_QDCOUNT(abuf); /*question count*/
+     for (int i=0; i < qdcount && aptr; i++)
+     {
+       aptr = skipDNSQuestion(aptr, abuf, alen);
+     }
+
+     int ancount = DNS_HEADER_ANCOUNT(abuf); /*answer count*/
+     for (int i=0; i < ancount && aptr ; i++)
+     {
+       struct in6_addr aaaa;
+       aptr = parseAAAA(aptr,abuf,alen,&aaaa);
+       if (aptr)
+       {
+         Tuple tuple(aaaa,mPort,mTransport);
+         mResults.push_back(tuple);
+       }
+     }
+   }
+   else
+   {
+#ifdef USE_ARES
+      char* errmem=0;
+      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+#endif
+   }
+   lookupARecords(mPassHostFromAAAAtoA);
+}
 
 void
 DnsResult::processHost(int status, struct hostent* result)
 {
    DebugLog (<< "DnsResult::processHost() " << status);
    
-   // There can only be one A/AAAA query outstanding at a time
-   if (mType == Destroyed)
+   // This function assumes that the A query that caused this callback
+   // is the _only_ outstanding DNS query that might result in a
+   // callback into this function
+   if ( mType == Destroyed )
    {
       destroy();
       return;
@@ -579,7 +653,7 @@ DnsResult::processHost(int status, struct hostent* result)
 
    if (status == ARES_SUCCESS)
    {
-      DebugLog (<< "DNS lookup canonical name: " << result->h_name);
+      DebugLog (<< "DNS A lookup canonical name: " << result->h_name);
       Tuple tuple;
       tuple.port = mPort;
       tuple.transportType = mTransport;
@@ -630,8 +704,15 @@ DnsResult::primeResults()
       SRV next = retrieveSRV();
       DebugLog (<< "Primed with SRV=" << next);
       
-      if (mARecords.count(next.target))
+      if ( mARecords.count(next.target) + mAAAARecords.count(next.target) )
       {
+         std::list<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
+         for (std::list<struct in6_addr>::const_iterator i=aaaarecs.begin();
+	         i!=aaaarecs.end(); i++)
+         {
+            Tuple tuple(*i,next.port,next.transport);
+            mResults.push_back(tuple);
+         }
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
@@ -660,7 +741,7 @@ DnsResult::primeResults()
          mPort = next.port;
          mTransport = next.transport;
          
-         lookupARecords(next.target);
+         lookupAAAARecords(next.target);
       }
 
       // recurse if there are no results. This could happen if the DNS SRV
@@ -838,6 +919,19 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       mARecords[key].push_back(addr);
       return aptr + dlen;
    }
+   else if (type == T_AAAA)
+   {
+      if (dlen != 16) // The RR is 128 bits of ipv6 address
+      {
+         InfoLog (<< "Failed parse of RR");
+         return NULL;
+      }
+      struct in6_addr addr;
+      memcpy(&addr, aptr, sizeof(struct in6_addr));
+      // Log something nice here?
+      mAAAARecords[key].push_back(addr);
+      return aptr + dlen;
+   }
    else // just skip it (we don't care :)
    {
       //DebugLog (<< "Skipping: " << key);
@@ -954,6 +1048,66 @@ DnsResult::parseSRV(const unsigned char *aptr,
    }
 }
       
+
+// adapted from the adig.c example in ares
+const unsigned char* 
+DnsResult::parseAAAA(const unsigned char *aptr,
+                     const unsigned char *abuf, 
+                     int alen,
+                     in6_addr * aaaa)
+{
+   char *name;
+   int len=0;
+   int status=0;
+
+   // Parse the RR name. 
+   status = ares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != ARES_SUCCESS)
+   {
+      InfoLog (<< "Failed parse of RR");
+      return NULL;
+   }
+   aptr += len;
+
+   /* Make sure there is enough data after the RR name for the fixed
+    * part of the RR.
+    */
+   if (aptr + RRFIXEDSZ > abuf + alen)
+   {
+      free(name);
+      InfoLog (<< "Failed parse of RR");
+      return NULL;
+   }
+  
+   // Parse the fixed part of the RR, and advance to the RR data
+   // field. 
+   int type = DNS_RR_TYPE(aptr);
+   int dlen = DNS_RR_LEN(aptr);
+   aptr += RRFIXEDSZ;
+   if (aptr + dlen > abuf + alen)
+   {
+      free(name);
+      InfoLog (<< "Failed parse of RR");
+      return NULL;
+   }
+   Data key = name;
+   free(name);
+
+   // Display the RR data.  Don't touch aptr. 
+   if (type == T_AAAA)
+   {
+      // The RR data is 128 bits of ipv6 address in network byte
+      // order
+      memcpy(aaaa, aptr, sizeof(in6_addr));
+      return aptr + dlen;
+   }
+   else
+   {
+      InfoLog (<< "Failed parse of RR");
+      return NULL;
+   }
+}
+
 // adapted from the adig.c example in ares
 const unsigned char* 
 DnsResult::parseNAPTR(const unsigned char *aptr,
