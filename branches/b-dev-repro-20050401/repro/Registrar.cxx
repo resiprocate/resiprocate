@@ -17,7 +17,6 @@ Registrar::~Registrar()
 {
 }
 
-
 void
 Registrar::thread()
 {

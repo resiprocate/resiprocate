@@ -1,4 +1,5 @@
-#include  "resiprocate/TransactionUser.hxx"
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
 
 using namespace resip;
 
@@ -46,6 +47,12 @@ TransactionUser::isForMe(const SipMessage& msg) const
           return true;
        }       
    }
+   return false;
+}
+
+bool
+MessageFilterRule::matches(const SipMessage&) const
+{
    return false;
 }
 
