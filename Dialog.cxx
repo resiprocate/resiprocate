@@ -583,9 +583,10 @@ Dialog::setExpirySeconds( int secondsInFuture )
 int  
 Dialog::getExpirySeconds()
 {
+	// !cj! TODO - may be bugs here when result is negative 
    UInt64 delta = ( expireyTimeAbsoluteMs - Timer::getTimeMs() )/1000;
 
-   int ret = delta;
+   int ret = (int)delta;
    return ret;
 }
 
