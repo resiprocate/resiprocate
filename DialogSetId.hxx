@@ -20,7 +20,7 @@ class DialogSetId
       bool operator<(const DialogSetId& rhs) const;
       bool operator>(const DialogSetId& rhs) const;
       size_t hash() const;
-//      friend std::ostream& operator<<(std::ostream&, DialogSetId& id);
+      friend std::ostream& operator<<(std::ostream&, const DialogSetId& id);
 
    private:
       Data mCallId;
@@ -33,6 +33,8 @@ class DialogSetId
       friend size_t hash_value(const resip::DialogSetId& id);
 #endif
 };
+
+    std::ostream& operator<<(std::ostream&, const DialogSetId&);
 
 }
 
