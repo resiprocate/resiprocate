@@ -82,7 +82,7 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
    }
    
    // attempt to open
-   int sock = socket( AF_INET, SOCK_STREAM, 0 );
+   Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
    if ( sock == -1 )
    {
       if (attempt > ConnectionMap::MaxAttempts)
