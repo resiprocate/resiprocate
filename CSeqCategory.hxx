@@ -31,7 +31,8 @@ class CSeqCategory : public ParserCategory
       int sequence() const;
 
       bool operator==(const CSeqCategory& rhs) const;
-
+      bool operator<(const CSeqCategory& rhs) const;
+      
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encodeParsed(std::ostream& str) const;

@@ -57,6 +57,22 @@ CSeqCategory::operator==(const CSeqCategory& rhs) const
            mSequence == rhs.mSequence);
 }
 
+bool
+CSeqCategory::operator<(const CSeqCategory& rhs) const
+{
+   if (mUnknownMethodName < rhs.mUnknownMethodName) 
+   {
+      return true;
+   }
+   else if (mUnknownMethodName > rhs.mUnknownMethodName) 
+   {
+      return false;
+   }
+   
+   return mSequence < rhs.mSequence;
+}
+
+
 ParserCategory* 
 CSeqCategory::clone() const
 {
