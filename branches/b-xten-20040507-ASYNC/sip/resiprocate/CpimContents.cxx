@@ -5,6 +5,7 @@
 #include "resiprocate/CpimContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;
