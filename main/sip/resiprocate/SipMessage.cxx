@@ -194,7 +194,7 @@ SipMessage::copyFrom(const SipMessage& from)
 
 // unknown header interface
 StringComponents& 
-SipMessage::get(const Data& headerName)
+SipMessage::header(const Data& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
@@ -308,7 +308,7 @@ SipMessage::clearFixedDest()
 
 
 RequestLineComponent& 
-SipMessage::get(const RequestLineType& l)
+SipMessage::header(const RequestLineType& l)
 {
    //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
    // close to right
@@ -326,7 +326,7 @@ SipMessage::get(const RequestLineType& l)
 
 
 StatusLineComponent& 
-SipMessage::get(const StatusLineType& l)
+SipMessage::header(const StatusLineType& l)
 {
    //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
    // close to right
