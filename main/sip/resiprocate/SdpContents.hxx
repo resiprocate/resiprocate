@@ -72,12 +72,19 @@ class SdpContents : public Contents
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
 
+                  typedef map<int, Codec> CodecMap;
+                  // "static" payload types as defined in RFC 3551.
+                  // Maps payload type (number) to Codec definition.
+                  static CodecMap& getStaticCodecs();
+
                private:
                   Data mName;
                   unsigned long mRate;
                   int mPayloadType;
                   Data mParameters;
 
+                  static CodecMap sStaticCodecs;
+                  static bool sStaticCodecsCreated;
                   friend bool operator==(const Codec&, const Codec&);
                   friend std::ostream& operator<<(std::ostream&, const Codec&);
             };
