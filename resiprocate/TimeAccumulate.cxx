@@ -5,19 +5,37 @@
 
 using namespace resip;
 
-resip::Mutex TimeAccumulate::mutex;
+resip::Mutex TimeAccumulate::mMutex;
 
-TimeAccumulate::TimeMap TimeAccumulate::times;
+TimeAccumulate::TimeMap TimeAccumulate::mTimes;
 
 void
 TimeAccumulate::dump()
 {
-   Lock lock(mutex);
-   InfoLog(<< "Accumulated times:");
-   for (TimeMap::const_iterator i = TimeAccumulate::times.begin();
-        i != TimeAccumulate::times.end(); i++)
+   Lock lock(mMutex);
+   WarningLog(<< "Accumulated times -------------------------:");
+   for (TimeMap::const_iterator i = TimeAccumulate::mTimes.begin();
+        i != TimeAccumulate::mTimes.end(); i++)
    {
-      WarningLog(<< i->first << " = " << i->second);
+      if (i->second.totalTime)
+      {
+         WarningLog(<< i->first << " = " << i->second.totalTime/1000.0 
+                    << " seconds for " << i->second.count 
+                    << " at " << i->second.count / (i->second.totalTime/1000.0) << " per second");
+      }
+   }
+}
+
+void
+TimeAccumulate::clear()
+{
+   Lock lock(mMutex);
+
+   for (TimeMap::iterator i = TimeAccumulate::mTimes.begin();
+        i != TimeAccumulate::mTimes.end(); i++)
+   {
+      i->second.count = 0;
+      i->second.totalTime = 0;
    }
 }
 
