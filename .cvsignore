@@ -5,3 +5,5 @@ bin.*
 headers-hash.c
 html
 obj.*
+testSipStack1
+testUdp
