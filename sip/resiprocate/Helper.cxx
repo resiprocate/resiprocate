@@ -246,6 +246,20 @@ Helper::makeResponse(SipMessage& response,
                      const Data& hostname,
                      const Data& warning)
 {
+   makeResponse(response,request, responseCode, reason,hostname, warning);
+   response.header(h_Contacts).clear();
+   response.header(h_Contacts).push_back(myContact);
+}
+
+
+void
+Helper::makeResponse(SipMessage& response, 
+                     const SipMessage& request, 
+                     int responseCode, 
+                     const Data& reason,
+                     const Data& hostname,
+                     const Data& warning)
+{
    DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
    response.header(h_StatusLine).responseCode() = responseCode;
    response.header(h_From) = request.header(h_From);
@@ -253,7 +267,6 @@ Helper::makeResponse(SipMessage& response,
    response.header(h_CallId) = request.header(h_CallId);
    response.header(h_CSeq) = request.header(h_CSeq);
    response.header(h_Vias) = request.header(h_Vias);
-   response.header(h_Contacts).push_front(myContact);
 
    if (!warning.empty())
    {
@@ -263,13 +276,6 @@ Helper::makeResponse(SipMessage& response,
       warn.text() = warning;
       response.header(h_Warnings).push_back(warn);
    }
-   
-   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
-   // No totag for failure responses or 100s
-   if (!response.header(h_To).exists(p_tag) && responseCode > 100)
-   {
-      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   }
 
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
 
@@ -278,6 +284,12 @@ Helper::makeResponse(SipMessage& response,
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
    {
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
+   }
+
+   if (responseCode/100 == 2)
+   {
+      NameAddr contact;
+      response.header(h_Contacts).push_back(contact);
    }
 
    if (request.isExternal())
@@ -355,33 +367,31 @@ Helper::makeResponse(SipMessage& response,
    }
 }
 
-void
-Helper::makeResponse(SipMessage& response, 
-                     const SipMessage& request, 
+SipMessage*
+Helper::makeResponse(const SipMessage& request, 
                      int responseCode, 
-                     const Data& reason,
-                     const Data& hostname,
+                     const NameAddr& myContact, 
+                     const Data& reason, 
+                     const Data& hostname, 
                      const Data& warning)
 {
-   NameAddr contact;
-   Helper::makeResponse(response, request, responseCode, contact, reason, hostname, warning);
-}
-
-SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason, 
-                     const Data& hostname, const Data& warning)
-{
    SipMessage* response = new SipMessage;
-   makeResponse(*response, request, responseCode, contact, reason, hostname, warning);
+   makeResponse(*response, request, responseCode, reason, hostname, warning);
+   response->header(h_Contacts).clear();
+   response->header(h_Contacts).push_back(myContact);
    return response;
 }
 
+
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, 
-                     const Data& reason, const Data& hostname, const Data& warning)
+Helper::makeResponse(const SipMessage& request, 
+                     int responseCode, 
+                     const Data& reason, 
+                     const Data& hostname, 
+                     const Data& warning)
 {
-   NameAddr contact;
-   SipMessage* response = Helper::makeResponse(request, responseCode, contact, reason, hostname, warning);
+   SipMessage* response = new SipMessage;
+   makeResponse(*response, request, responseCode, reason, hostname, warning);
    return response;
 }
 
