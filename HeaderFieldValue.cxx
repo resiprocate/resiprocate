@@ -114,6 +114,12 @@ HeaderFieldValue::get(const Data& type)
   return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
 
+ostream& encode(ostream& str) const
+{
+   
+   return str;
+}
+
 ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
   if (hfv.isParsed())
