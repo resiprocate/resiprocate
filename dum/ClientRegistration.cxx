@@ -1,19 +1,161 @@
+#include "resiprocate/Helper.hxx"
+
+#include "BaseCreator.hxx"
 #include "ClientRegistration.hxx"
+#include "RegistrationHandler.hxx"
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
+#include "Profile.hxx"
 
 using namespace resip;
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
+                                       BaseCreator* creator,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseUsage(dum, dialog),
-     mHandle(dum)
-{}
+     mHandle(dum),
+     mLastRequest(creator->getLastRequest())
+{
+   if (mLastRequest.exists(h_Contacts))
+   {
+      mMyContacts = mLastRequest.header(h_Contacts);
+   }
+}
+
+void 
+ClientRegistration::addBinding(const NameAddr& contact)
+{
+   mMyContacts.push_back(contact);
+   mLastRequest.header(h_Contacts) = mMyContacts;
+   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+   mLastRequest.header(h_CSeq).sequence()++;
+   // caller prefs
+   mDum.send(mLastRequest);
+}
+
+void 
+ClientRegistration::removeBinding(const NameAddr& contact)
+{
+   for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
+   {
+      if (i->uri() == contact.uri())
+      {
+         mMyContacts.erase(i);
+
+         mLastRequest.header(h_Contacts) = mMyContacts;
+         mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+         mLastRequest.header(h_CSeq).sequence()++;
+         mDum.send(mLastRequest);
+
+         return;
+      }
+   }
+
+   throw Exception("No such binding", __FILE__, __LINE__);
+}
+
+void 
+ClientRegistration::removeAll()
+{
+   mAllContacts.clear();
+   mMyContacts.clear();
+   
+   NameAddr all;
+   all.setAllContacts();
+   mLastRequest.header(h_Contacts).clear();
+   mLastRequest.header(h_Contacts).push_back(all);
+   mLastRequest.header(h_Expires).value() = 0;
+   mLastRequest.header(h_CSeq).sequence()++;
+   mDum.send(mLastRequest);
+}
+
+void 
+ClientRegistration::removeMyBindings()
+{
+   for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
+   {
+      i->param(p_expires) = 0;
+   }
+   // !jf! might want to remove from mAllContacts
+   mLastRequest.header(h_Contacts) = mMyContacts;
+   mLastRequest.remove(h_Expires);
+   mLastRequest.header(h_CSeq).sequence()++;
+   mDum.send(mLastRequest);
+}
+
+void 
+ClientRegistration::requestRefresh()
+{
+   mLastRequest.header(h_CSeq).sequence()++;
+   mDum.send(mLastRequest);
+   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+   mDum.addTimer(DumTimer::Registration, Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), mLastRequest.header(h_CSeq).sequence());
+}
+
+const NameAddrs& 
+ClientRegistration::myContacts()
+{
+   return mMyContacts;
+}
+
+const NameAddrs& 
+ClientRegistration::allContacts()
+{
+   return mAllContacts;
+}
+
+void 
+ClientRegistration::dispatch(const SipMessage& msg)
+{
+   // !jf! there may be repairable errors that we can handle here
+   assert(msg.isResponse());
+   int& code = msg.header(h_StatusLine).statusCode();
+   if (code < 200)
+   {
+      // throw it away
+   }
+   else if (code < 300) // success
+   {
+      // !jf! consider what to do if no contacts
+      mAllContacts = msg.header(h_Contacts);
+      // make timers to re-register
+      // store the GRUUs
+      mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+   }
+   else
+   {
+      if (code == 423) // interval too short
+      {
+         // maximum 1 day 
+         if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
+         {
+            mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
+            mLastRequest.header(h_CSeq).sequence()++;
+            mDum.send(mLastRequest);
+            return;
+         }
+      }
+      mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);      
+   }
+}
+
+void
+ClientRegistration::dispatch(const DumTimer& timer)
+{
+   if (mLastRequest.header(h_CSeq).sequence() == timer.cseq())
+   {
+      if (!mMyContacts.empty())
+      {
+         requestRefresh();
+      }
+   }
+}
 
 ClientRegistration::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
-{}
+{
+}
 
 ClientRegistration* 
 ClientRegistration::Handle::operator->()
