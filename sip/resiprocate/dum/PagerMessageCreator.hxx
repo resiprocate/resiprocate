@@ -12,7 +12,7 @@ class SipMessage;
 class PagerMessageCreator: public BaseCreator
 {
    public:
-      PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, Identity& identity);
+      PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from);
 };
  
 }
