@@ -1,5 +1,5 @@
-#ifndef ReliabilityMessage_hxx
-#define ReliabilityMessage_hxx
+#if !defined(RESIP_RELIABILITYMESSAGE_HXX)
+#define RESIP_RELIABILITYMESSAGE_HXX 
 
 #include <iostream>
 #include "resiprocate/Message.hxx"
@@ -39,9 +39,7 @@ class ReliabilityMessage : public Message
 
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
-#ifndef ParserCategories_hxx
-#define ParserCategories_hxx
+#if !defined(RESIP_PARSERCATEGORIES_HXX)
+#define RESIP_PARSERCATEGORIES_HXX 
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
@@ -576,7 +576,6 @@ class StatusLine : public ParserCategory
 
 #endif
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -626,7 +625,3 @@ class StatusLine : public ParserCategory
  * <http://www.vovida.org/>.
  *
  */
-
-/* Local Variables: */
-/* c-file-style: "ellemtel" */
-/* End: */
