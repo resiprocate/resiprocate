@@ -31,8 +31,7 @@ class ClientRegistration: public BaseUsage
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
 
-      virtual BaseUsage::Handle getBaseHandle() { return mHandle; }
-      ClientRegistration::Handle getHandle() { return mHandle; }
+      ClientRegistration::Handle& getHandle() { return reinterpret_cast<ClientRegistration::Handle&>(mHandle); }
       
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -47,7 +46,6 @@ class ClientRegistration: public BaseUsage
 
       void updateMyContacts(const NameAddrs& allContacts);
       
-      ClientRegistration::Handle mHandle;
       SipMessage& mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Register knows about 

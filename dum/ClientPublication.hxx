@@ -30,8 +30,7 @@ class ClientPublication : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ClientPublication::Handle getHandle() {return mHandle;}
+      ClientPublication::Handle& getHandle() { return reinterpret_cast<ClientPublication::Handle&>(mHandle); }
    protected:
       virtual ~ClientPublication();
    private:
@@ -40,7 +39,6 @@ class ClientPublication : public BaseUsage
                         Dialog& dialog,
                         SipMessage& pub);
       
-      ClientPublication::Handle mHandle;
       SipMessage& mPublish;
       int mTimerSeq; // expected timer seq (all < are stale)
 

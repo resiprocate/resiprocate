@@ -18,7 +18,10 @@
 using namespace resip;
 
 DialogUsageManager::~DialogUsageManager()
-{
+{  
+   DebugLog ( << "~DialogUsageManager" );
+   DebugLog ( << "UsageMap size: " << mUsageMap.size());
+   DebugLog ( << Inserter(mUsageMap) );
    for(UsageHandleMap::iterator it = mUsageMap.begin(); it != mUsageMap.end(); it++)
    {
       delete it->second;

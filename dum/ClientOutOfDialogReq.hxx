@@ -24,8 +24,7 @@ class ClientOutOfDialogReq : public BaseUsage
             Handle(DialogUsageManager& dum);
       };
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ClientOutOfDialogReq::Handle getHandle() {return mHandle;}
+      ClientOutOfDialogReq::Handle& getHandle() {return static_cast<ClientOutOfDialogReq::Handle&>(mHandle);}
       bool matches(const SipMessage& msg) const;
 
       virtual void dispatch(const SipMessage& msg);
@@ -38,7 +37,6 @@ class ClientOutOfDialogReq : public BaseUsage
                            Dialog& dialog,
                            const SipMessage& req);
       
-      ClientOutOfDialogReq::Handle mHandle;
       CSeqCategory mCSeq;
       
       // disabled

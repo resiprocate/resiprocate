@@ -5,8 +5,7 @@
 using namespace resip;
 
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& request)
-   : BaseUsage(dum, dialog),
-     mHandle(dum)
+   : BaseUsage(dum, dialog)
 {}
 
 ServerRegistration::~ServerRegistration()
