@@ -57,7 +57,9 @@ class DnsUtil
       static Data getLocalDomainName();
       static Data getLocalIpAddress();
       static Data getIpAddress(const struct in_addr& addr);
+      static bool isIpAddress(const Data& ipAddress);
       static bool isIpV4Address(const Data& ipAddress);
+      static bool isIpV6Address(const Data& ipAddress);
 };
 
 
