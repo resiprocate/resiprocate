@@ -118,13 +118,13 @@ class BaseSecurity
       // returns NULL if fails. returns the data that was originally signed
       Contents* checkSignature( const Data& signerAor, MultipartSignedContents*, Data& signedBy, SignatureStatus& sigStat );
 
-   private:
-      friend class SecuredTransportCtx;
-
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
       typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
       typedef std::map<Data,Data>      PassPhraseMap;
+
+   private:
+      friend class SecuredTransportCtx;
 
       // root cert list
       X509_STORE*    mRootCerts;
