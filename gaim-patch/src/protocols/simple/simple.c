@@ -326,6 +326,8 @@ sippy_logout(GaimConnection *gc)
    gaim_debug(GAIM_DEBUG_INFO,"sippy","sending LOGOUT to gag aor=%s\n",gc->account->username);
    sippy_send_command( SIMPLE_LOGOUT );
    sippy_send_string( gc->account->username );
+   gaim_debug(GAIM_DEBUG_INFO,"sippy","Removing gag's gaim_input\n");
+   gaim_input_remove(gc->inpa);
 }
 
 static void
@@ -539,10 +541,33 @@ static void
 sippy_login(GaimAccount *account)
 {
   GaimConnection *gc = gaim_account_get_connection(account);
+
+  if (gaim_connection_get_state(gc) == GAIM_CONNECTED)
+  {
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Somebody's trying to login to something that's already connected - ignoring the request\n");  
+    return;
+  }
+
+  struct simple_connection_cache *sc_cache;
   
-  struct simple_connection_cache *sc_cache 
-	                           = gc->proto_data
-	                           = g_new0(struct simple_connection_cache,1);
+  if (gc->proto_data == NULL)
+  {
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Creating new simple cache\n");  
+    sc_cache = gc->proto_data = g_new0(struct simple_connection_cache,1);
+  }
+  else
+  {
+    /* I don't think this will ever happen - RjS */
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Reusing old simple cache\n");  
+    sc_cache = gc->proto_data;
+  }
+
+  if (sc_cache->friends != NULL)
+  {
+    /* Likewise, I don't think this will ever happen - RjS */
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Destroying old simple friend list\n");  
+    g_hash_table_destroy(sc_cache->friends);
+  } 
 
   sc_cache->friends = g_hash_table_new_full(g_str_hash,
 		                            g_str_equal,
@@ -551,6 +576,7 @@ sippy_login(GaimAccount *account)
 
   if (!gaginitialized)  
   {
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Initializing gag\n");  
     init_gag(gc);
   }
 
@@ -587,6 +613,18 @@ sippy_login(GaimAccount *account)
                                     ?"true":"false"));
   sippy_send_bool(gaim_account_get_bool(account,"publish_to_service",TRUE));
 
+  if (gc->inpa!=0)
+  {
+    /* I don't think this will ever happen, and it points out a huge
+       issue with the current plumbing - trying to login to two SIPPY
+       accounts _will_ cause the gagtogaim fd to get put on gaim's
+       input queue twice, with different gc's - the callbacks are going
+       to happen with very wrong contexts
+     */
+    gaim_debug(GAIM_DEBUG_INFO,"sippy","Removing old simple gaim_input\n");  
+    gaim_input_remove(gc->inpa);
+  }
+  gaim_debug(GAIM_DEBUG_INFO,"sippy","Adding gag's simple gaim_input\n");  
   gc->inpa = gaim_input_add(FD_GAG_TO_GAIM,GAIM_INPUT_READ,sippy_recv_cb,gc);
 
 }
