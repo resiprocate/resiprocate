@@ -2,6 +2,7 @@
 #define RESIP_TIMER_HXX 
      
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 #include <iostream>
 
 namespace resip
@@ -14,6 +15,7 @@ class Message;
 class Timer
 {
    public:
+      RESIP_HeapCount(Timer);
       typedef unsigned long Id;
       typedef enum 
       {

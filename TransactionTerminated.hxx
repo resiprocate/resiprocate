@@ -2,6 +2,7 @@
 #define RESIP_TRANSACTIONTERMINATED_HXX 
 
 #include "TransactionMessage.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -9,6 +10,8 @@ namespace resip
 class TransactionTerminated : public TransactionMessage
 {
    public:
+      RESIP_HeapCount(TransactionTerminated);
+
       TransactionTerminated(const Data& tid, bool isClient) : mTransactionId(tid), mIsClient(isClient) {}
       virtual const Data& getTransactionId() const { return mTransactionId; }
       virtual bool isClientTransaction() const { return mIsClient; }

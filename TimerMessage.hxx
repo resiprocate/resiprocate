@@ -5,6 +5,7 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -12,6 +13,7 @@ namespace resip
 class TimerMessage : public TransactionMessage
 {
    public:
+      RESIP_HeapCount(TimerMessage);
       TimerMessage(Data transactionId, Timer::Type type, unsigned long duration);
       ~TimerMessage();
 
