@@ -377,7 +377,7 @@ Security::getPath( const Data& dirPath, const Data& file )
 
 
 bool 
-Security::loadAllCerts( const Data& password, const Data&  dirPath )
+Security::loadAllCerts( const Data& password, const Data& dirPath )
 {
    bool ok = true;
    ok = loadRootCerts( getPath( dirPath, Data("root.pem")) ) ? ok : false;
