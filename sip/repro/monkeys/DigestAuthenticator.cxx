@@ -2,47 +2,64 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/Message.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Auth.hxx"
+#include "resiprocate/Helper.hxx"
+#include "repro/Proxy.hxx"
+#include "repro/RequestContext.hxx"
+#include "repro/UserDb.hxx"
+#include "repro/UserAuthInfo.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
-
-
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-processor_action_t
+DigestAuthenticator::DigestAuthenticator()
+{
+}
+
+DigestAuthenticator::~DigestAuthenticator()
+{
+}
+
+repro::RequestProcessor::processor_action_t
 DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 {
-  Message *message = getCurrentEvent();
+  Message *message = rc.getCurrentEvent();
 
   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
   UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
 
   if (sipMessage)
   {
-    if (!sipMessage.exists(h_ProxyAuthorizations))
+    if (!sipMessage->exists(h_ProxyAuthorizations))
     {
       challengeRequest(rc, false);
       return SkipAllChains;
     }
     else
     {
-      requestUserAuthInfo(rc);
-      return WaitingForEvent;
+      return requestUserAuthInfo(rc);
     }
   }
   else if (userAuthInfo)
   {
     // Handle response from user authentication database
-    sipMessage = rc.getOriginalMessage();
-    Helper::AuthResult result =
-      Helper::authenticateRequest(sipMessage, a1, 15);
+    sipMessage = &rc.getOriginalRequest();
+    Data a1 = userAuthInfo->getA1();
+    Data realm = userAuthInfo->getRealm();
+    Data user = userAuthInfo->getUser();
 
-    switch (result)
+    pair<Helper::AuthResult,Data> result =
+      Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 15);
+
+    switch (result.first)
     {
-      case Failed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403));
+      case Helper::Failed:
+        rc.sendResponse(*auto_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 403)));
         return SkipAllChains;
 
         // !abr! Eventually, this should just append a counter to
@@ -50,17 +67,18 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
         // If this count is smaller than some reasonable limit,
         // then we re-challenge; otherwise, we send a 403 instead.
 
-      case Authenticated:
-        rc.setDigestIdentity();
+      case Helper::Authenticated:
+        rc.setDigestIdentity(user);
         return Continue;
 
-      case Expired:
+      case Helper::Expired:
         challengeRequest(rc, true);
         return SkipAllChains;
 
-      case BadlyFormed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403, 
-                        "Where on earth did you get that nonce from?"));
+      case Helper::BadlyFormed:
+        rc.sendResponse(*auto_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 403,
+                            "Where on earth did you get that nonce?")));
         return SkipAllChains;
     }
   }
@@ -72,19 +90,67 @@ void
 DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
                                       bool stale)
 {
-  Data realm = sipMessage.
-  Helper::makeProxyChallenge();
-  rc.sendResponse(challenge);
+  Message *message = rc.getCurrentEvent();
+  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+  assert(sipMessage);
+
+  Data realm = getRealm(rc);
+
+  SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, 
+                                                     true, stale);
+  rc.sendResponse(*challenge);
+
+  delete challenge;
 }
 
-void
+repro::RequestProcessor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
 {
-  UserDB &database = rc.getProxy().getUserDB();
-  Auth &authorizationHeader = sipMessage.header(h_ProxyAuthorizations);
+  Message *message = rc.getCurrentEvent();
+  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+  assert(sipMessage);
+
+  UserDB &database = rc.getProxy().getUserDb();
+  Data realm = getRealm(rc);
+
+  // Extract the user from the appropriate Proxy-Authorization header
+  Auths &authorizationHeaders = sipMessage->header(h_ProxyAuthorizations); 
+  Auths::iterator i;
   Data user;
+
+  for (i = authorizationHeaders.begin();
+       i != authorizationHeaders.end(); i++)
+  {
+    if (    i->exists(p_realm) && 
+            i->param(p_realm) == realm
+        &&  i->exists(p_username))
+    {
+      user = i->param(p_username);
+      break;
+    }
+  }
+
+  if (!user.empty())
+  {
+    database.requestUserAuthInfo(user, realm);
+    return WaitingForEvent;
+  }
+  else
+  {
+    challengeRequest(rc, false);
+    return SkipAllChains;
+  }
+}
+
+resip::Data
+DigestAuthenticator::getRealm(RequestContext &rc)
+{
   Data realm;
-  database.requestUserAuthInfo(user, realm);
+  Message *message = rc.getCurrentEvent();
+  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+  assert(sipMessage);
+
+  return realm;
 }
 
 

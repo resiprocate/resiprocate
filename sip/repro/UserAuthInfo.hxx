@@ -1,24 +1,19 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#if !defined(RESIP_USER_AUTH_INFO_HXX)
+#define RESIP_USER_AUTH_INFO_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "repro/RequestProcessor.hxx"
+#include "resiprocate/Message.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public RequestProcessor
-  {
-    public:
-      DigestAuthenticator();
-      ~DigestAuthenticator();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+class UserAuthInfo : public resip::Message
+{
+  public:
+    Data getA1();
+    Data getRealm();
+    Data getUser();
+};
 
-    private:
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &);
-      virtual resip::Data getRealm(RequestContext &);
-  };
 }
 #endif
 
