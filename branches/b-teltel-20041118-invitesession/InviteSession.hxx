@@ -49,6 +49,9 @@ class InviteSession : public DialogUsage
       ///
       virtual void info(const Contents& contents);
 
+      virtual void acceptInfo(int statusCode = 200);
+      virtual void rejectInfo(int statusCode = 488);
+
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
@@ -223,6 +226,7 @@ class InviteSession : public DialogUsage
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
+      SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
       
       unsigned long mCurrentRetransmit200;
 
