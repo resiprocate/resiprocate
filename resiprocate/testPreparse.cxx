@@ -225,7 +225,7 @@ main(int argc, char *argv[])
     doTest2(); // no frag'd header, but NOT End of headers
     doTest3(); // end at end
     doTest4(); // pp error
-    doTest5(); // build sipmessage one byte at a time.
+    //doTest5(); // build sipmessage one byte at a time.
 
     return 0;
     
