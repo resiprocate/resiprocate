@@ -1,4 +1,3 @@
-
 #ifndef WIN32
 #include <sys/time.h>
 #include <unistd.h>
@@ -11,13 +10,12 @@
 #include <iostream>
 #include <memory>
 
+#include "resiprocate/Dialog.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Uri.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Logger.hxx"
-
 
 using namespace resip;
 using namespace std;
@@ -28,10 +26,7 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::ERR, argv[0]);
-   
    Log::toLevel( Data("DEBUG") );
-
-   //const Data& ret = ParameterTypes::ParameterNames[ParameterTypes::transport];
 
    SipStack stack1;
    SipStack stack2;
@@ -48,11 +43,7 @@ main(int argc, char* argv[])
    NameAddr from = dest;
    from.uri().port() = 5070;
    
-#ifdef WIN32
-   int totalCalls = 50;
-#else
    int totalCalls = 500;
-#endif
 
    bool done[10000];
    assert( sizeof(done)/sizeof(bool) > (unsigned int)(totalCalls+1) );
@@ -75,8 +66,9 @@ main(int argc, char* argv[])
       {
          Data count( ++lastSent );
          from.uri().user() = count;
-         auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
+         SipMessage* message = Helper::makeInvite( dest, from, from);
          stack1.send(*message);
+         delete message;
          InfoLog( << "Stack1 sent msg from user: " << count );
       }
          
@@ -119,16 +111,6 @@ main(int argc, char* argv[])
                
                   DebugLog(<< "Sending ack: << *ack");
                   stack1.send(*ack);
-               
-#if 0
-                    FdSet fdset;
-      stack1.buildFdSet(fdset);
-      stack2.buildFdSet(fdset);
-      int err = fdset.select(0);
-      assert (err != -1);
-	  
-	  stack1.process(fdset);
-#endif
 
                   DebugLog(<< "Sending bye: << *bye");
                   stack1.send(*bye);  
@@ -162,16 +144,6 @@ main(int argc, char* argv[])
             //msg180->header(h_To).uri().param(p_tag) = localTag;
             stack2.send( *msg180);
             
-#if 0
-           FdSet fdset;
-      stack1.buildFdSet(fdset);
-      stack2.buildFdSet(fdset);
-      int err = fdset.select(0);
-      assert (err != -1);
-	  stack2.process(fdset); // !cj! seems to be a bug that cuases this to be
-            // needed 
-#endif
-
             auto_ptr<SipMessage> msg200(Helper::makeResponse(*received2, 200, dest, "OK"));
             //msg200->header(h_To).uri().param(p_tag) = localTag;
             stack2.send(*msg200);
