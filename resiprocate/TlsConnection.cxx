@@ -72,7 +72,7 @@ TlsConnection::fromState(TlsConnection::State s)
 TlsConnection::State
 TlsConnection::checkState()
 {
-   DebugLog(<<"state is " << fromState(mState));
+   //DebugLog(<<"state is " << fromState(mState));
 
    if (mState == Up || mState == Broken)
      return mState;
@@ -262,7 +262,7 @@ TlsConnection::read(char* buf, int count )
       }
       assert(0);
    }
-   DebugLog(<<"SSL bytesRead="<<bytesRead);
+   //DebugLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
 }
 
@@ -344,7 +344,7 @@ TlsConnection::hasDataToRead() // has data that can be read
 	return false;
 
    int p = SSL_pending(mSsl);
-   DebugLog(<<"hasDataToRead(): "<<p);
+   //DebugLog(<<"hasDataToRead(): "<<p);
    return (p>0);
 }
 
