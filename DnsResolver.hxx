@@ -98,6 +98,7 @@ class DnsResolver
             virtual const Data& getTransactionId() const { return mTransactionId; }
             virtual Data brief() const;
             virtual std::ostream& encode(std::ostream& strm) const;
+            virtual bool isClientTransaction() const;
             
             Data mTransactionId;
             TupleList mTuples;

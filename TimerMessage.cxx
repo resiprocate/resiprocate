@@ -6,6 +6,39 @@ TimerMessage::~TimerMessage()
 {
 }
 
+
+bool 
+TimerMessage::isClientTransaction() const
+{
+   switch (mType)
+   {
+      case Timer::TimerA:
+      case Timer::TimerB:
+      case Timer::TimerD:
+      case Timer::TimerE1:
+      case Timer::TimerE2:
+      case Timer::TimerF:
+      case Timer::TimerK:
+      case Timer::TimerStaleClient:
+         return true;
+
+      case Timer::TimerG:
+      case Timer::TimerH:
+      case Timer::TimerI:
+      case Timer::TimerJ:
+      case Timer::TimerStaleServer:
+      case Timer::TimerTrying:
+         return false;
+
+      case Timer::TimerC:
+         assert(0);
+         break;
+   }
+   assert(0);
+}
+
+
+
 Data 
 TimerMessage::brief() const
 {

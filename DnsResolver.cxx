@@ -255,7 +255,8 @@ void
 DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int port, Transport::Type transport)
 
 {
-   TransactionState* txn = mStack.mTransactionMap.find(transactionId);
+   // !jf! may eventually have to look in mServerTransactionMap as well
+   TransactionState* txn = mStack.mClientTransactionMap.find(transactionId);
    if (!txn)
    {
       DebugLog(<< "DNS lookup for non-existent transaction");
@@ -711,6 +712,14 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
    delete request;
 }
 #endif
+
+bool 
+DnsResolver::DnsMessage::isClientTransaction() const
+{
+   // !jf! this will not always be true, when we do dns lookups on responses
+   // that fail
+   return true;
+}
 
 Data 
 DnsResolver::DnsMessage::brief() const 
