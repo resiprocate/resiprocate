@@ -34,7 +34,10 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -66,6 +69,8 @@ using namespace Vocal2;
 using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::APP
+#define PORT 5060
+
 
 // --------------------------------------------------
 
@@ -85,6 +90,27 @@ ParseBuffer* TestSpecParseBuf = 0;
 list<WaitNode*> WaitQueue;
 SipStack* client = 0;
 FdSet clientFdSet;
+struct sockaddr_in clientSa;
+int clientFd;
+Fifo<SipMessage> fakeTxFifo;
+
+// --------------------------------------------------
+
+// This is pure evil.  We interpose our own version of sendto
+// so that this gets called by the UDP transport instead of the libc
+// version.
+int
+sendto(int s, const void *msg, size_t len, int flags,
+       const struct sockaddr *to, socklen_t tolen)
+{
+    cerr << "In local sendto() function!" << endl;
+    cerr.flush();
+    fakeTxFifo.add(Helper::makeMessage(Data((const char *)msg, (int)len), true));
+    return len;
+}
+
+// --------------------------------------------------
+
 
 void
 exitusage()
@@ -97,6 +123,7 @@ exitusage()
 void
 processTimeouts(int arg)
 {
+    client->buildFdSet(clientFdSet);
     client->process(clientFdSet);
 
     if (WaitQueue.empty())
@@ -117,11 +144,9 @@ processTimeouts(int arg)
     //    If yes, warn, else just continue.
 
     // First go through the "wire" data
-    TestBufType& msgFifo = TestOutBuffer::instance().getBuf();
-    while (msgFifo.messageAvailable())
+    while (fakeTxFifo.messageAvailable())
     {
-	Data* newMessage = msgFifo.getNext();
-	message = Helper::makeMessage(*newMessage, true);
+	message = fakeTxFifo.getNext();
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
 	     /* don't increment */)
@@ -131,9 +156,8 @@ processTimeouts(int arg)
 		if ((*i)->mMethod == message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
-		    delete newMessage;
-		    newMessage = 0;
 		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -149,9 +173,8 @@ processTimeouts(int arg)
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
-		    delete newMessage;
-		    newMessage = 0;
 		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -166,16 +189,16 @@ processTimeouts(int arg)
 		++i;
 	    }
 	}
-	if (newMessage)
+	if (message)
 	{
 	    DebugLog( << "Warning: unexpected message seen at the transport: " 
 		      << message);
-	    delete newMessage;
 	}
 	else
 	{
 	    DebugLog( << "Success: expected message seen at the transport");
 	}
+	delete message;
     }
 
     // Now go through the data at the TU.
@@ -324,9 +347,11 @@ processInject()
     }
     else
     {
-	SipMessage* message = Helper::makeMessage(start, false);
-	assert(message);
-	client->send(*message);
+	// SipMessage* message = Helper::makeMessage(start, false);
+	// assert(message);
+	// client->send(*message);
+	sendto(clientFd, start, strlen(start), 0,
+		(struct sockaddr*)& clientSa, sizeof(clientSa));
     }
 }
 
@@ -504,9 +529,16 @@ main(int argc, char *argv[])
     TestSpecParseBuf = new ParseBuffer(TestSpecBuf, buf.st_size);
     assert(TestSpecParseBuf);
 
+    int clientFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    clientSa.sin_family = PF_INET;
+    clientSa.sin_addr.s_addr = inet_addr("127.0.0.1");
+    clientSa.sin_port = htons(PORT);
+    int clientFdFlags = fcntl(clientFd, F_GETFL, 0);
+    fcntl(clientFd, F_SETFL, clientFdFlags | O_NONBLOCK);
+
     client = new SipStack();
     assert(client);
-    client->addTransport(Transport::TestUnreliable, 1234);
+    client->addTransport(Transport::UDP, PORT);
 
     signal(SIGALRM, processTimeouts);
 
