@@ -85,6 +85,7 @@ class Dialog
       friend class ClientOutOfDialogReq;
       friend class ServerOutOfDialogReq;
 
+      friend class AppDialog;
       void possiblyDie();
 
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
