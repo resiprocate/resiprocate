@@ -750,6 +750,7 @@ myMain(int argc, char* argv[])
    //InfoLog( << "Using port " << port );
   
 #ifdef USE_SSL
+   InfoLog( << "Setting up Security" );
    Security* security=NULL;
    try
    {
@@ -762,13 +763,14 @@ myMain(int argc, char* argv[])
 
       security = new Security( cert_dir ) ;
 
-      ::free( home_dir ) ;
+      //  ::free( home_dir ) ; // CJ TODO mem leak 
    }
    catch( ... )
    {
       security = NULL;
       ErrLog( << "Got a exception setting up Security" );
    }
+
    SipStack sipStack( false /*multihtread*/, security );  
 #else
    SipStack sipStack( false /*multihtread*/ );  
