@@ -72,6 +72,9 @@ AC_DEFUN([RESIP_EXCEPTION_DEBUG_LOGS],
            AC_DEFINE([RESIP_NO_EXCEPTION_DEBUG_LOGS],
                      [1],
                      [BaseException DebugLog Disposition])
+           AC_MSG_RESULT([disabled])
+           else
+           AC_MSG_RESULT([defaulted to on])
            fi
         ])
 ])
@@ -142,6 +145,32 @@ AC_DEFUN([RESIP_PROG_DISTCC],
 	])
 ])
 
+AC_DEFUN([RESIP_SELECT_CONTENTS],
+[
+        # These are the files that can be suppressed with --without options.
+        # for example --without-SipFrag --without-TuIM...
+        # Looking for this? it's in acinclude.m4
+        for F in $( ls $srcdir/resiprocate/*Contents.cxx \
+                $srcdir/resiprocate/SipFrag.cxx \
+                $srcdir/resiprocate/TuIM.cxx  \
+                        | sed s:\.cxx:.lo:g ); do
+                resip_tcf=`basename $F`
+                resip_tcfd=`basename $resip_tcf .lo`
+                AC_MSG_CHECKING([for $resip_tcfd ])                
+                if test x_$resip_tcf = x_Contents.o; then
+                        continue
+                        # Contents.o is not options and is a part of the base sources for the
+                        # library.
+                fi
+                if  test x_`eval echo "\\$with_$resip_tcfd"`  = x_no ; then
+                        AC_MSG_RESULT([NO])
+                else
+                        AC_MSG_RESULT([YES])
+                        CONTENTS_OBJS="$CONTENTS_OBJS $resip_tcf"
+                fi
+        done
+        AC_SUBST([CONTENTS_OBJS])
+])
 
 dnl ## !ah! macro for probing structures for interesting things
 
