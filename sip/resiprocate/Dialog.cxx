@@ -206,19 +206,11 @@ Dialog::makeInvite()
 // create a BYE message, depending on whether the UA was the
 // originator of the dialog
 SipMessage*
-Dialog::makeBye(bool isOriginator)
+Dialog::makeBye()
 {
    SipMessage* request = makeRequest(BYE);
    incrementCSeq(*request);
 
-   if (!isOriginator)
-   {
-       request->header(h_RequestLine).uri() = request->header(h_To).uri();
-       request->header(h_From) = mRemoteUri;
-       request->header(h_From).param(p_tag) = mRemoteTag;
-       request->header(h_To) = mLocalUri;
-       request->header(h_To).param(p_tag) = mLocalTag;
-   }
    return request;
 }
 
