@@ -562,11 +562,10 @@ TransactionState::processClientInvite(  Message* msg )
                          take care of re-Transmission of ACK 
                      */
                      mState = Completed;
-                     SipMessage* invite = mMsgToRetransmit;
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
-                     mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
-                     delete invite;
-                     resendToWire(mMsgToRetransmit);
+                     SipMessage* ack;
+                     ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
+                     resendToWire(ack);
                      sendToTU(msg); // don't delete msg
                   }
                   else if (mState == Completed)
@@ -575,7 +574,9 @@ TransactionState::processClientInvite(  Message* msg )
                         the "Completed" state MUST cause the ACK to be re-passed to the
                         transport layer for retransmission
 		     */
-                     resendToWire(mMsgToRetransmit);
+                     SipMessage* ack;
+                     ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
+                     resendToWire(ack);
                      sendToTU(msg); // don't delete msg
                   }
                   else
