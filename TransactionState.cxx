@@ -36,6 +36,7 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    {
       mDnsState = NoLookupRequired;
    }
+   DebugLog (<< "Creating new TransactionState: " << *this);
 }
 
 TransactionState* 
@@ -44,6 +45,7 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
    TransactionState* cancel = new TransactionState(tr->mStack, machine, Trying);
    cancel->mIsReliable = tr->mIsReliable;
    cancel->mSource = tr->mSource;
+   DebugLog (<< "Creating new CANCEL TransactionState: " << *cancel);
    return cancel;
 }
 
@@ -77,9 +79,9 @@ TransactionState::process(SipStack& stack)
       delete sip;
       return;
    }
-
+   
    Data tid = message->getTransactionId();
-   DebugLog (<< "TransactionState::process: tid='" << tid << "' " << message->brief());
+   DebugLog (<< "TransactionState::process: " << message->brief());
    
    TransactionState* state = ( message->isClientTransaction() 
                                ? stack.mClientTransactionMap.find(tid) 
@@ -135,8 +137,6 @@ TransactionState::process(SipStack& stack)
          {
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
-               DebugLog (<< "Create new INVITE transaction for inbound msg " << sip->brief());
-
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                state->mMsgToRetransmit = state->make100(sip);
@@ -158,7 +158,6 @@ TransactionState::process(SipStack& stack)
             }
             else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
-               DebugLog(<<"Adding non-INVITE transaction state " << sip->brief());
                TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                state->mSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
@@ -167,12 +166,11 @@ TransactionState::process(SipStack& stack)
             }
 
             // Incoming ACK just gets passed to the TU
-            DebugLog(<< "Adding incoming message to TU fifo " << tid);
+            //DebugLog(<< "Adding incoming message to TU fifo " << tid);
             stack.mTUFifo.add(sip);
          }
          else // new sip msg from the TU
          {
-            DebugLog (<< "Create new transaction for msg from TU " << tid);
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
                TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
@@ -184,7 +182,6 @@ TransactionState::process(SipStack& stack)
                TransactionState* state = new TransactionState(stack, Stateless, Calling);
                state->mId = Data(TransactionState::StatelessIdCounter++);
                state->add(state->mId);
-               DebugLog (<< "Creating stateless transaction: " << state->mId);
                state->processStateless(sip);
             }
             else 
@@ -207,7 +204,6 @@ TransactionState::process(SipStack& stack)
             DebugLog (<< "forwarding stateless response: " << sip->brief());
             TransactionState* state = new TransactionState(stack, Stateless, Calling);
             state->mId = Data(TransactionState::StatelessIdCounter++);
-            DebugLog (<< "Creating stateless transaction: " << state->mId);
             state->add(state->mId);
             state->processStateless(sip);
          }
@@ -455,8 +451,7 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
 
          default:
-
-            assert(0);
+            InfoLog (<< "Ignoring timer: " << *msg);
             break;
       }
    }
@@ -491,11 +486,11 @@ TransactionState::processClientNonInvite(  Message* msg )
 void
 TransactionState::processClientInvite(  Message* msg )
 {
-   DebugLog(<< "TransactionState::processClientInvite: " << *msg);
+   DebugLog(<< "TransactionState::processClientInvite: " << msg->brief());
    
    if (isRequest(msg) && isFromTU(msg))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+     SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
          /* Received INVITE request from TU="Transaction User", Fire Timer B which controls
@@ -1027,7 +1022,7 @@ TransactionState::processServerInvite(  Message* msg )
 	       break;
 	    }
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
-            WarningLog(<<"former sendToTU(msg)(skipped) : " << msg->brief() );
+            //WarningLog(<<"former sendToTU(msg)(skipped) : " << msg->brief() );
             //sendToTU(msg); // don't delete -- beacuse it is still being used...
             break;
             
@@ -1344,7 +1339,7 @@ void
 TransactionState::sendToTU(Message* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
-   DebugLog(<< "Send to TU: " << *msg);
+   //DebugLog(<< "Send to TU: " << *msg);
    assert(sip);
    mStack.mTUFifo.add(sip);
 }
