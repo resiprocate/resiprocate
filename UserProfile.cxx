@@ -25,6 +25,18 @@ UserProfile::getDefaultFrom()
    return mDefaultFrom;
 }
 
+void
+UserProfile::setInstanceId(const Data& id)
+{
+   mInstanceId = id;
+}
+
+const Data&
+UserProfile::getInstanceId() const
+{
+   return mInstanceId;
+}
+
 void 
 UserProfile::addGruu(const Data& aor, const NameAddr& contact)
 {

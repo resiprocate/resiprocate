@@ -26,7 +26,9 @@ class UserProfile : public Profile
       virtual NameAddr& getGruu(const Data& aor);
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
       virtual void disableGruu();
-            
+      virtual void setInstanceId(const Data& id);
+      virtual const Data& getInstanceId() const;
+      
       struct DigestCredential
       {
             DigestCredential();
@@ -46,7 +48,8 @@ class UserProfile : public Profile
 
    private:
       NameAddr mDefaultFrom;
-
+      Data mInstanceId;
+      
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 };
