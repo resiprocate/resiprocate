@@ -95,9 +95,17 @@ processStdin(  TuIM& tuIM, Uri* dest )
 {
    char buf[1024];
 
-   //DebugLog( << "start read " << sizeof(buf) << " charaters from stdin" );
+#if 0
+   DebugLog( << "eof = " << eof(fileno(stdin)) );
+	if ( eof(fileno(stdin)) )
+	{
+		return true;
+	}
+#endif
+
+   DebugLog( << "start read " << sizeof(buf) << " charaters from stdin" );
    int num = read(fileno(stdin),buf,sizeof(buf));
-   //DebugLog( << "Read " << num << " charaters from stdin" );
+   DebugLog( << "Read " << num << " charaters from stdin" );
    
    if ( (num>3) && (!strncmp("to:",buf,3)) )
    {
@@ -137,6 +145,8 @@ main(int argc, char* argv[])
 {  
    Log::initialize(Log::COUT, Log::ERR, argv[0]);
    
+   Log::setLevel(Log::DEBUG_STACK);
+
    InfoLog(<<"Test Driver for IM Starting");
     
    InfoLog( << "\nType a line like\nto:sip:fluffy@localhost:5060\n"
@@ -144,8 +154,8 @@ main(int argc, char* argv[])
             "A line with a singe period on it ends the program\n" );
    
    int port = 5060;
-   Uri aor("sip:aor@localhost" );
-   Uri dest("sip:you@localhost:5060");
+   Uri aor("sip:aor@localhost:5060" );
+   Uri dest("sip:you@localhost:5070");
       
    for ( int i=1; i<argc; i++)
    {
@@ -211,6 +221,8 @@ main(int argc, char* argv[])
    
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback);
     
+   //Vocal2::makeSocketNonBlocking( fileno(stdin) );
+
    while (1)
    {
       FdSet fdset; 
@@ -227,12 +239,13 @@ main(int argc, char* argv[])
       //InfoLog(<< "Select returned");
        
       if ( fdset.readyToRead( fileno(stdin) ) )
+	  //if ( !eof( fileno(stdin) ) )
       {
          bool keepGoing = processStdin(tuIM,&dest);
          if (!keepGoing) break;
       }
        
-      //DebugLog ( << "Try TO PROCESS " );
+      // DebugLog ( << "Try TO PROCESS " );
       sipStack.process(fdset);
        
       tuIM.process();

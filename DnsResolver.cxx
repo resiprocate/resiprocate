@@ -188,12 +188,11 @@ DnsResolver::lookupARecords(const Data& transactionId,
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
 #else
-#error "need to define some version of gethostbyname for your arch"
+#   error "need to define some version of gethostbyname for your arch"
 #endif
 
    if ( (ret!=0) || (result==0) )
    {
-
       switch (herrno)
       {
          case HOST_NOT_FOUND:
@@ -208,6 +207,10 @@ DnsResolver::lookupARecords(const Data& transactionId,
          case TRY_AGAIN:
             InfoLog ( << "try again: " << host);
             break;
+		 default:
+			 ErrLog( << "DNS Resolver got error" << herrno << " looking up " << host );
+			 assert(0);
+			 break;
       }
    }
    else

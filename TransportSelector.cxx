@@ -227,7 +227,7 @@ TransportSelector::findTransport(const Transport::Tuple& tuple)
          return *i;
       }
    }
-   DebugLog (<< "Couldn't find a transport for " << tuple);
+   ErrLog (<< "Couldn't find a transport for " << tuple);
    return 0;
 }
 

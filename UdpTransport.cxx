@@ -122,33 +122,40 @@ UdpTransport::process(FdSet& fdset)
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
 
-   //DebugLog( << "starting recvfrom" );
+   DebugLog( << "starting recvfrom" );
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
-   //DebugLog( << "completed recvfrom" );
-
    if ( len == SOCKET_ERROR )
    {
       int err = errno;
       switch (err)
       {
-         case 0:
-            assert(0);
-            break;
-                 
+	  case WSANOTINITIALISED:
+		  assert(0);
+		  break;
+
          case EWOULDBLOCK:
-            DebugLog (<< " UdpTransport::EWOULDBLOCK");
+            DebugLog (<< " UdpTransport recvfrom got EWOULDBLOCK");
+            break;
+
+	    //case 0:
+            ErrLog (<< " UdpTransport recvfrom got error 0 ");
+            break;
+
+ 	    //case 9:
+            DebugLog (<< " UdpTransport recvfrom got error 9 ");
             break;
 
          default:
-            ErrLog(<<"Error receiving, errno="<<err);
+            ErrLog(<<"Error receiving, errno="<<err << " " << strerror(err) );
             break;
       }
    }
+   DebugLog( << "completed recvfrom" );
 
    if (len == 0 || len == SOCKET_ERROR)
    {
