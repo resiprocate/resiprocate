@@ -14,7 +14,6 @@
 #include <util/Timer.hxx>
 #include <util/Logger.hxx>
 
-
 using namespace Vocal2;
 
 unsigned long 
@@ -252,7 +251,15 @@ Timer::getTimeMs()
 
 bool Vocal2::operator<(const Timer& t1, const Timer& t2)
 {
-   return t1.mWhen <  t2.mWhen;
+   //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
+   return t1.mWhen < t2.mWhen;
+}
+
+std::ostream& 
+Vocal2::operator<<(std::ostream& str, const Timer& t)
+{
+   str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
+   return str;
 }
 
 /* ====================================================================
