@@ -330,6 +330,24 @@ main(int argc, char* argv[])
       assert(sdp.session().media().size() == 2);
    }
 
+   {
+      Data txt("v=0\r\n"
+               "o=CiscoSystemsSIP-GW-UserAgent 4316 2064 IN IP4 65.39.205.114\r\n"
+               "s=SIP Call\r\n"
+               "c=IN IP4 65.39.205.114\r\n"
+               "t=0 0\r\n"
+               "m=audio 36928 RTP/AVP 0\r\n"
+               "c=IN IP4 65.39.205.114\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n"
+               "m=video 36924 RTP/AVP\r\n"
+               "c=IN IP4 65.39.205.114\r\n");
+      
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
+
+      assert(sdp.session().media().size() == 2);
+   }
    return 0;   
 }
 
