@@ -39,6 +39,7 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
+using namespace std;
 
 static int IMMethodList[] = { (int) REGISTER, (int) MESSAGE, 
 	                      (int) SUBSCRIBE, (int) NOTIFY };
@@ -673,6 +674,7 @@ TuIM::processNotifyResponse(SipMessage* msg, Dialog& d )
    
    if ( number >= 300 )
    {
+      // TODO 
    }
 }
 
@@ -685,6 +687,7 @@ TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
    
    if ( number >= 300 )
    {
+      // TODO
    }
 }
 
@@ -695,14 +698,29 @@ TuIM::processPageResponse(SipMessage* msg, Page& page )
    int number = msg->header(h_StatusLine).responseCode();
    DebugLog( << "got MESSAGE response of type " << number );
    
-   if ( number >= 300 )
+   if ( number >= 400 )
    {
       Uri dest = msg->header(h_To).uri();
       assert( mCallback );
       mCallback->sendPageFailed( dest,number );
    }
 
-   if ( number >= 200 )
+   if ( (number>=300) && (number<400) )
+   {
+      ParserContainer<NameAddr>::iterator dest =  msg->header(h_Contacts).begin();
+      while ( dest != msg->header(h_Contacts).end() )
+      {
+         DebugLog(<< "Got a 3xx to" << *dest  );
+
+         // send a message to redirected location
+         Uri uri = dest->uri();
+         sendPage( page.text, uri, page.sign, page.encryptFor );
+         
+         dest++;
+      }
+   }
+
+   if (  (number>=200) && (number<300) )
    { 
       // got a final response for notify - can remove this dialog information
       CallId id = msg->header(h_CallId);
@@ -746,7 +764,18 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 
    if (  (number>=300) && (number<400) )
    {
-      ErrLog( << "Still need to implement 3xx handing" ); // !cj!
+      ParserContainer<NameAddr>::iterator dest =  msg->header(h_Contacts).begin();
+      while ( dest != msg->header(h_Contacts).end() )
+      {
+         DebugLog(<< "Got a 3xx to" << *dest  );
+         Uri uri = dest->uri();
+
+         addBuddy( uri , buddy.group );
+
+         buddy.mNextTimeToSubscribe = Timer::getForever();
+ 
+         dest++;
+      }
    }
    
    if (  (number>=400) )
@@ -1029,8 +1058,16 @@ TuIM::sendPublish(StateAgent& sa)
 
 
 void 
-TuIM::setMyPresence( const bool open, const Data& status )
+TuIM::authorizeSubscription( const Data& user )
 {
+   // TODO implement this 
+}
+
+
+void 
+TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
+{
+   // TODO implement the pser user status (when user is not empty)
    assert( mPidf );
    mPidf->setSimpleStatus( open, status, mContact.getAor() );
    
