@@ -124,6 +124,12 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
 
 Security::Security(const Data& directory) : mPath(directory)
 {
+   // since the preloader won't work otherwise and VERY difficult to figure
+   // out. 
+   if (mPath[mPath.size()-1] != char(Symbols::SLASH))
+   {
+      mPath += Symbols::SLASH;
+   }
 }
 
 
@@ -141,8 +147,7 @@ Security::preload()
       {
          Data fileName = mPath + name;
          
-         DebugLog(<< "Trying to load file " << name );
-
+         InfoLog(<< "Trying to load file " << name );
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
