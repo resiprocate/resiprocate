@@ -36,7 +36,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 bool Random::mIsInitialized = false;
+#if 0
 Random::Init Random::initer;
+#endif
 
 void
 Random::initialize()

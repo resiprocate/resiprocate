@@ -80,6 +80,7 @@ void mvvline(...) {};
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
 
+static int myMain(int argc, char* argv[]);
 
 using namespace resip;
 
@@ -437,6 +438,25 @@ processStdin( Uri* dest, bool sign, bool encryp )
 
 int
 main(int argc, char* argv[])
+{
+   int r;
+   
+   try
+   {
+      r = myMain( argc, argv );
+   }
+   catch( ... )
+   {
+      ErrLog( << "Got a exception passed all the way to the top of limp" );
+      exit(-1);
+   }
+   
+   return r;
+}
+
+
+static int
+myMain(int argc, char* argv[])
 {  
 #ifdef ERR // ncurses defines a macro called ERR 
    Log::initialize(Log::COUT, Log::SIP2_ERR, argv[0]);
