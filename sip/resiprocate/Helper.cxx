@@ -18,7 +18,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_CSeq).method() = method;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
-   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_From).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_Contacts).push_front(contact);
    request->header(h_CallId).value() = Helper::computeCallId();
    request->header(h_ContentLength).value() = 0;
@@ -35,16 +35,17 @@ Helper::makeRegister(const NameAddr& registrar,
                      const NameAddr& aor)
 {
 
-   SipMessage request;
+   SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
    rLine.uri() = registrar.uri();
+
    request->header(h_To) = aor;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
    request->header(h_CSeq).method() = REGISTER;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = aor;
-   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_From).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    request->header(h_ContentLength).value() = 0;
 
@@ -61,11 +62,13 @@ Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr&
    return Helper::makeRequest(target, from, contact, INVITE);
 }
 
+
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode)
+Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
 {
    SipMessage* response = new SipMessage;
    response->header(h_StatusLine).responseCode() = responseCode;
+   response->header(h_StatusLine).reason() = reason;
    response->header(h_From) = request.header(h_From);
    response->header(h_To) = request.header(h_To);
    response->header(h_CallId) = request.header(h_CallId);
@@ -75,18 +78,20 @@ Helper::makeResponse(const SipMessage& request, int responseCode)
 
    if (responseCode > 100 && responseCode < 500)
    {
-      if (!response->header(h_To).exists(p_tag))
+      if (!response->header(h_To).uri().exists(p_tag))
       {
-         response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+         response->header(h_To).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
       }
    }
    return response;
 }
 
+
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact)
+Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact,  const Data& reason)
 {
-   SipMessage* response = Helper::makeResponse(request, responseCode);
+
+   SipMessage* response = Helper::makeResponse(request, responseCode, reason);
    response->header(h_Contacts).push_front(contact);
    return response;
 }

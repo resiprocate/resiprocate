@@ -23,10 +23,9 @@ class Helper
 
 
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
-
-      static SipMessage* makeResponse(const SipMessage& request, int responseCode);
-
-      static SipMessage* makeResponse(const SipMessage& request, int responseCode, const NameAddr& myContact);
+      
+      static SipMessage* makeResponse(const SipMessage& request, int responseCode, const Data& reason = "");
+      static SipMessage* makeResponse(const SipMessage& request, int responseCode, const NameAddr& myContact, const Data& reason = "");
 
       //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       static SipMessage* makeRequest(const NameAddr& target, MethodTypes method); // deprecated
