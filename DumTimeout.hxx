@@ -29,7 +29,7 @@ class DumTimeout : public Message
       int seq() const;
       int secondarySeq() const;
 
-      BaseUsage::Handle& baseUsage();
+      BaseUsage::Handle getBaseUsage() const;
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;

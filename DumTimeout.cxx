@@ -65,3 +65,11 @@ DumTimeout::encode(std::ostream& strm) const
    return strm;
 }
 
+BaseUsage::Handle 
+DumTimeout::getBaseUsage() const
+{
+   return mUsageHandle;
+}
+
+   
+

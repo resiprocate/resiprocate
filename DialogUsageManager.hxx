@@ -113,8 +113,8 @@ class DialogUsageManager
       
       void process(FdSet& fdset);
       
-      DialogIdSet findAllDialogs();
-      UsageSet    findAllUsages();
+//!dcm!--kill      DialogIdSet findAllDialogs();
+//!dcm!--kill      UsageSet findAllUsages();
       
       InviteSession::Handle findInviteSession(DialogId id);
       std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogId id);

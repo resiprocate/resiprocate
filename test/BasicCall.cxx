@@ -1,26 +1,31 @@
+#include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/RegistrationHandler.hxx"
+
 
 using namespace resip;
 
 
-class HandlerA : public InvSessionHandler, public RegistrationHandler
+class HandlerA : public InviteSessionHandler, public ClientRegistrationHandler
 {
 
    public:
       bool* pDone;
 
-      InvHandlerA(bool* pDone) { this.pDone = pDone; }
+      HandlerA(bool* pDone) { this->pDone = pDone; }
 
       // Put some onNewInvSessionStuff here
       void 
-      onNewInvSession(ClientInviteSession::Handle cis, const SipMessage& msg)
+      onNewSession(ClientInviteSession::Handle, OfferAnswerType oat, const SipMessage& msg)=0
       {
          cout << "A thinks there's a new INVITE session now" << endl;
       }
-
+         
       void
       onAnswer(ClientInviteSession::Handle cis, const SipMessage& msg)
       {
-         cout << "A has an answer from B" << endl;
+         cout << "A has an answer(SDP) from B" << endl;
       }
 
       void
@@ -48,21 +53,21 @@ class HandlerA : public InvSessionHandler, public RegistrationHandler
 
 };
 
-class HandlerB : public InvSessionHandler, public RegistrationHandler
+class HandlerB : public InviteSessionHandler, public ClientRegistrationHandler
 {
 
    public:
       bool* pDone;
       time_t* pHangupAt;
 
-      InvHandlerB(bool* pDone, time_t* pHangupAt) 
+      HandlerB(bool* pDone, time_t* pHangupAt) 
       { this.pDone = pDone; this.pHangupAt = pHangupAt;}
 
-      void
-      onNewInvSession(ServerInviteSession::Handle sis, const SipMessage& msg)
+
+      void 
+      onNewSession(ClientInviteSession::Handle, OfferAnswerType oat, const SipMessage& msg)=0
       {
          cout << "B thinks there's a new INVITE session now" << endl;
-         mSis = sis;
       }
 
       void
@@ -73,7 +78,8 @@ class HandlerB : public InvSessionHandler, public RegistrationHandler
          sis->accept();
          pHangupAt = time(NULL)+5;
       }
-
+      
+      void
       onTerminated(InviteSession::Handle is, const SipMessage& msg)
       {
          cout << "B thinks a session has been terminated" << endl;
@@ -111,8 +117,7 @@ class HandlerB : public InvSessionHandler, public RegistrationHandler
       }
 
    private:
-      ServerInviteSession::Handle mSis = NULL;
-
+      ServerInviteSession::Handle mSis;      
 };
 
 int 

@@ -3,6 +3,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/dum/DumTimeout.hxx"
 
 using namespace resip;
 
@@ -299,6 +300,22 @@ ClientInviteSession::getSessionHandle()
    // don't ask, don't tell
    return (InviteSession::Handle&)mHandle;
 }
+
+void 
+ClientInviteSession::setOffer(const SdpContents* offer)
+{
+}
+
+void 
+ClientInviteSession::setAnswer(const SdpContents* answer)
+{  
+}
+
+void 
+ClientInviteSession::dispatch(const DumTimeout& timout)
+{
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -21,7 +21,7 @@ class UsageSet;
 class SipMessage;
 class DialogUsageManager;
 
-typedef std::list<DialogId> DialogIdSet;
+//!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
 class Dialog 
 {
@@ -45,6 +45,9 @@ class Dialog
 //      void makePrack(SipMessage& proto);
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(const SipMessage& request, SipMessage& response, int responseCode);
+
+      void setLocalContact(const NameAddr& localContact);
+      void setRemoteTarget(const NameAddr& remoteTarget);
 
       
       std::vector<ClientSubscription::Handle> findClientSubscriptions();
