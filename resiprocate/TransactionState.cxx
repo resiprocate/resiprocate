@@ -52,8 +52,8 @@ TransactionState::~TransactionState()
    const Data& id = tid(mMsgToRetransmit);
    
    DebugLog (<< "Deleting TransactionState " << id);
-   mStack.mTransactionMap.erase(id);
-
+   erase(id);
+   
    // mCancelStateMachine will take care of deleting itself
    
    delete mMsgToRetransmit;
@@ -74,8 +74,10 @@ TransactionState::process(SipStack& stack)
 
    DebugLog (<< "TransactionState::process: tid='" << tid << "' " << message->brief());
    
-   TransactionState* state = stack.mTransactionMap.find(tid);
-
+   TransactionState* state = ( message->isClientTransaction() 
+                               ? stack.mClientTransactionMap.find(tid) 
+                               : stack.mServerTransactionMap.find(tid) );
+   
    // this code makes sure that an ACK to a 200 is going to create a new
    // stateless transaction. In an ACK to a failure response, the mToTag will
    // have been set in the ServerTransaction as the 4xx passes through so it
@@ -135,7 +137,7 @@ TransactionState::process(SipStack& stack)
                // since we don't want to reply to the source port unless rport present 
                state->mSource.port = Helper::getSentPort(*sip);
                state->mState = Proceeding;
-               stack.mTransactionMap.add(tid,state);
+               state->add(tid);
                
                if (Timer::T100 == 0)
                {
@@ -154,7 +156,7 @@ TransactionState::process(SipStack& stack)
                state->mSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
                state->mSource.port = Helper::getSentPort(*sip);
-               stack.mTransactionMap.add(tid,state);
+               state->add(tid);
             }
 
             // Incoming ACK just gets passed to the TU
@@ -167,21 +169,21 @@ TransactionState::process(SipStack& stack)
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
                TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
-               stack.mTransactionMap.add(tid,state);
+               state->add(tid);
                state->processClientInvite(sip);
             }
             else if (sip->header(h_RequestLine).getMethod() == ACK)
             {
                TransactionState* state = new TransactionState(stack, Stateless, Calling);
                state->mId = Data(TransactionState::StatelessIdCounter++);
-               stack.mTransactionMap.add(state->mId,state);
+               state->add(state->mId);
                DebugLog (<< "Creating stateless transaction: " << state->mId);
                state->processStateless(sip);
             }
             else 
             {
                TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
-               stack.mTransactionMap.add(tid,state);
+               state->add(tid);
                state->processClientNonInvite(sip);
             }
          }
@@ -199,7 +201,7 @@ TransactionState::process(SipStack& stack)
             TransactionState* state = new TransactionState(stack, Stateless, Calling);
             state->mId = Data(TransactionState::StatelessIdCounter++);
             DebugLog (<< "Creating stateless transaction: " << state->mId);
-            stack.mTransactionMap.add(state->mId,state);
+            state->add(state->mId);
             state->processStateless(sip);
          }
       }
@@ -1167,6 +1169,33 @@ TransactionState::processStale(  Message* msg )
    }
 }
 
+void
+TransactionState::add(const Data& tid)
+{
+   if (mMachine == ClientNonInvite || mMachine == ClientInvite || mMachine == Stateless)
+   {
+      mStack.mClientTransactionMap.add(tid, this);
+   }
+   else
+   {
+      mStack.mServerTransactionMap.add(tid, this);
+   }
+}
+
+void
+TransactionState::erase(const Data& tid)
+{
+   if (mMachine == ClientNonInvite || mMachine == ClientInvite || mMachine == Stateless)
+   {
+      mStack.mClientTransactionMap.erase(tid);
+   }
+   else
+   {
+      mStack.mServerTransactionMap.erase(tid);
+   }
+}
+
+
 bool
 TransactionState::isRequest(Message* msg) const
 {
@@ -1330,7 +1359,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
    if (mStack.mRegisteredForTransactionTermination)
    {
       DebugLog (<< "Terminate transaction " << tid);
-      mStack.mTUFifo.add(new TransactionTerminated(tid));
+      mStack.mTUFifo.add(new TransactionTerminated(tid, true));
    }
 }
 
@@ -1341,7 +1370,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
    if (mStack.mRegisteredForTransactionTermination)
    {
       DebugLog (<< "Terminate transaction " << tid);
-      mStack.mTUFifo.add(new TransactionTerminated(tid));
+      mStack.mTUFifo.add(new TransactionTerminated(tid, false));
    }
 }
 
