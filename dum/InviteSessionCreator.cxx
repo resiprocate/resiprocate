@@ -21,5 +21,6 @@ InviteSessionCreator::end()
 void
 InviteSessionCreator::dispatch(const SipMessage& msg)
 {
-   
+   // !jf! does this have to do with CANCELing all of the branches associated
+   // with a single invite request
 }
