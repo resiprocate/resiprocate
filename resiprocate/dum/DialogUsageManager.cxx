@@ -79,7 +79,7 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 
 void 
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 
-                             resip::BaseUsage::Handle& target, int cseq, int rseq)
+                             resip::BaseUsage::Handle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.post(t, duration);
