@@ -2,6 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/SipMessage.hxx"
 #include "RequestProcessorChain.hxx"
 
 using namespace resip;
@@ -24,17 +25,20 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 
   for (i = chain.begin(); i != chain.end(); i++)
   {
-    action = i->handleRequest(rc);
-    if (action == SKIP_ALL_CHAINS)
+    action = (**i).handleRequest(rc);
+
+    if (action == SkipAllChains)
     {
-      return SKIP_ALL_CHAINS;
+      return SkipAllChains;
     }
-    if (action == SKIP_THIS_CHAIN)
+
+    if (action == SkipThisChain)
     {
-      return CONTINUE;
+      return Continue;
     }
+
   }
-  return CONTINUE;
+  return Continue;
 }
 
 /* ====================================================================
