@@ -33,6 +33,8 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    
    return request;
 }
+
+
 // MOVEME !ah! this goes in a test_support package
 SipMessage*
 Helper::makeMessage(const Data& data, bool isExternal )
@@ -52,7 +54,6 @@ Helper::makeMessage(const Data& data, bool isExternal )
 
    size_t used = 0;
    size_t discard = 0;
-   
    
    pre.process(*msg, buffer, size, 0, used, discard, status);
    if (status == stPreparseError ||
@@ -80,6 +81,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
    }
    return msg;
 }
+
 
 SipMessage*
 Helper::makeRegister(const NameAddr& registrar,
