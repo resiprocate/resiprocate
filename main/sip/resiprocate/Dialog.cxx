@@ -27,9 +27,12 @@ Dialog::Dialog(const NameAddr& localContact)
      mDialogId()
 {
    //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
-   mVia.sentHost() = localContact.uri().host();
-   mVia.sentPort() = localContact.uri().port();
-   mVia.transport() = localContact.uri().param(p_transport);
+   mVia.sentHost() = mContact.uri().host();
+   mVia.sentPort() = mContact.uri().port();
+   if (mContact.uri().exists(p_transport))
+   {
+      mVia.transport() = mContact.uri().param(p_transport);
+   }
 }
 
 SipMessage*
@@ -46,8 +49,8 @@ Dialog::makeResponse(const SipMessage& request, int code)
       assert (request.header(h_Contacts).size() == 1);
 
       SipMessage* response = Helper::makeResponse(request, code, mContact);
-      assert (!response->header(h_To).uri().exists(p_tag));
-      response->header(h_To).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
+      assert (!response->header(h_To).exists(p_tag));
+      response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
       
       mRouteSet = request.header(h_RecordRoutes);
       mRemoteTarget = request.header(h_Contacts).front();
@@ -56,16 +59,19 @@ Dialog::makeResponse(const SipMessage& request, int code)
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      mLocalTag = response->header(h_To).uri().param(p_tag); // from response
-      mRemoteTag = request.header(h_From).uri().param(p_tag); 
+      mLocalTag = response->header(h_To).param(p_tag); // from response
+      mRemoteTag = request.header(h_From).param(p_tag); 
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
+
       mCreated = true;
 
       mDialogId = mCallId.value();
       mDialogId += mRemoteTag;
       mDialogId += mLocalTag;
 
+      DebugLog(<< "Created dialog establishing response: " << *response);
+      DebugLog(<< "CallId: " << mCallId);
       return response;
    }
    else
@@ -73,9 +79,10 @@ Dialog::makeResponse(const SipMessage& request, int code)
       SipMessage* response = Helper::makeResponse(request, code, mContact);
       if (mCreated)
       {
-         assert (!response->header(h_To).uri().exists(p_tag));
-         response->header(h_To).uri().param(p_tag) = mLocalTag;
+         assert (!response->header(h_To).exists(p_tag));
+         response->header(h_To).param(p_tag) = mLocalTag;
       }
+      DebugLog(<< "Created response within dialog: " << *response);
       return response;
    }
 }
@@ -101,8 +108,8 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mLocalSequence = request.header(h_CSeq).sequence();
       mLocalEmpty = false;
       mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_From).uri().param(p_tag);  
-      mRemoteTag = response.header(h_To).uri().param(p_tag); 
+      mLocalTag = response.header(h_From).param(p_tag);  
+      mRemoteTag = response.header(h_To).param(p_tag); 
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
       mCreated = true;
@@ -215,6 +222,7 @@ Dialog::makeAck(const SipMessage& original)
    {    
       request->header(h_Authorization) = original.header(h_Authorization);
    }
+   request->header(h_CSeq) = original.header(h_CSeq);
    return request;
 }
 
@@ -272,17 +280,21 @@ Dialog::makeRequest(MethodTypes method)
    
    request->header(h_RequestLine) = rLine;
    request->header(h_To) = mRemoteUri;
-   request->header(h_To).uri().param(p_tag) = mRemoteTag;
+   request->header(h_To).param(p_tag) = mRemoteTag;
    request->header(h_From) = mLocalUri;
-   request->header(h_From).uri().param(p_tag) = mLocalTag; // !jf! may not be necessary
+   request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
    request->header(h_CallId) = mCallId;
    request->header(h_Routes) = mRouteSet;
    request->header(h_Contacts).push_front(mContact);
+   request->header(h_CSeq).method() = method;
+   request->header(h_ContentLength).value() = 0;
 
    Via via;
    via.param(p_branch); // will create the branch
    request->header(h_Vias).push_front(via);
 
+   DebugLog(<<"Created a request within dialog: " << this << "  " << mContact);
+   DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
    return request;
 }
 
