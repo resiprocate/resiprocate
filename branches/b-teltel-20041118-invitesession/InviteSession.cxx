@@ -1418,7 +1418,9 @@ InviteSession::transition(State target)
 bool
 InviteSession::isReliable(const SipMessage& msg)
 {
-   return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel));
+   // Ensure supported both locally and remotely
+   return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) &&
+          mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::C100rel));
 }
 
 std::auto_ptr<SdpContents>
@@ -1461,7 +1463,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
 {
    MethodTypes method = msg.header(h_CSeq).method();
    int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
-   bool reliable = InviteSession::isReliable(msg);
+   bool reliable = isReliable(msg);
    bool sentOffer = mProposedLocalSdp.get();
 
    if (code == 481 || code == 408)
