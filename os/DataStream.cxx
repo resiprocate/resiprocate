@@ -5,9 +5,10 @@ using namespace Vocal2;
 DataBuffer::DataBuffer(Data& str)
    : _str(str)
 {
-   char* gbuf = const_cast<char*>(_str.data());
+   char* gbuf = const_cast<char*>(_str.mBuf);
    setg(gbuf, gbuf, gbuf+_str.size());
-   setp(_buf, _buf + sizeof(_buf));
+   // expose the excess capacity as the put buffer
+   setp(gbuf+_str.mSize, gbuf+_str.mCapacity);
 }
 
 DataBuffer::~DataBuffer()
@@ -17,14 +18,16 @@ DataBuffer::~DataBuffer()
 int
 DataBuffer::sync()
 {
-   size_t l = pptr() - pbase();
-   if (l > 0) 
+   size_t len = pptr() - pbase();
+   if (len > 0) 
    {
       size_t pos = gptr() - eback();  // remember the get position
-      _str.append(_buf, l);
-      setp(_buf, _buf+sizeof(_buf));
+      _str.mSize += len;
       char* gbuf = const_cast<char*>(_str.data());
-      setg(gbuf, gbuf+pos, gbuf+_str.size()); // reset the get buffer
+      // reset the get buffer
+      setg(gbuf, gbuf+pos, gbuf+_str.size()); 
+      // reset the put buffer
+      setp(gbuf + _str.mSize, gbuf + _str.mCapacity);
    }
    return 0;
 }
@@ -32,10 +35,27 @@ DataBuffer::sync()
 int
 DataBuffer::overflow(int c)
 {
-   sync();
+   // sync, but reallocate
+   size_t len = pptr() - pbase();
+   if (len > 0) 
+   {
+      size_t pos = gptr() - eback();  // remember the get position
+
+      // update the length
+      _str.mSize += len;
+
+      // resize the underlying Data and reset the input buffer
+      _str.resize(((_str.mCapacity+16)*3)/2, true);
+
+      char* gbuf = const_cast<char*>(_str.mBuf);
+      // reset the get buffer
+      setg(gbuf, gbuf+pos, gbuf+_str.mSize); 
+      // reset the put buffer
+      setp(gbuf + _str.mSize, gbuf + _str.mCapacity);
+   }
    if (c != -1) 
    {
-      *_buf = c;
+      _str.mBuf[_str.mSize] = c;
       pbump(1);
       return c;
    }
