@@ -334,10 +334,18 @@ TransactionState::processDns(Message* message)
 
          if (dns->mTuples.size())
          {
-	    // Don't overwrite mTuples - we may still be using them.
-            mTuples.splice(mTuples.end(), dns->mTuples,
-               dns->mTuples.begin(), dns->mTuples.end());
-            sendToWire(mMsgToRetransmit);
+	    if (mCurrent == mTuples.end())
+	    {
+	       mTuples = dns->mTuples;
+	       mCurrent = mTuples.begin();
+	       sendToWire(mMsgToRetransmit);
+	    }
+	    else
+	    {
+               // Don't overwrite mTuples - we may still be using them.
+               mTuples.insert(mTuples.end(),
+                  dns->mTuples.begin(), dns->mTuples.end());
+	    }
          }
       }
    }
