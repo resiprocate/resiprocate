@@ -24,6 +24,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
+const char bf[] = "\033[01;34m";
+const char gf[] = "\033[01;32m";
+const char rf[] = "\033[01;31m";
+const char ub[] = "\033[01;00m";
+
 namespace resip
 {
 
@@ -33,8 +38,8 @@ class TestDnsHandler : public DnsHandler
       void handle(DnsResult* result)
       {
          while (result->available() == DnsResult::Available)
-         {
-            std::cout << result->target() << " -> " << result->next() << std::endl;
+        {
+             std::cout << gf << result->target() << " -> " << result->next() << ub <<  std::endl;
          }
       }
 };
@@ -44,6 +49,9 @@ class TestDns : public DnsInterface, public ThreadIf
    public:
       TestDns() : DnsInterface(false)
       {
+          addTransportType(TCP);
+          addTransportType(UDP);
+          addTransportType(TLS);
       }
 
       void thread()
@@ -87,8 +95,6 @@ main(int argc, const char** argv)
    dns.run();
    
    Uri uri;
-   uri.scheme() = "sip";
-   uri.host() = "cathaynetworks.com";
 
    std::list<DnsResult*> results;
 #if defined(HAVE_POPT_H)
@@ -98,21 +104,23 @@ main(int argc, const char** argv)
 #endif
    while (args && *args != 0)
    {
-      uri.host() = *args++;
-      results.push_back(dns.lookup(uri, &handler));
+       uri = Uri(*args++);
+       results.push_back(dns.lookup(uri, &handler));
    }
 
    while (!results.empty())
    {
       if (results.front()->available() == DnsResult::Finished)
       {
-         delete results.front();
-         results.pop_front();
+          std::cout << bf << "Deleting results: " << *(results.front()) << ub << std::endl;
+          delete results.front();
+          results.pop_front();
+          std::cout << gf << results.size() << " remaining to resolve" << ub << std::endl;
       }
       else
       {
-         std::cout << "Waiting for " << *(results.front()) << std::endl;
-         sleep(1);
+          std::cout << rf << "Waiting for " << *(results.front()) << ub << std::endl;
+          sleep(1);
       }
    }
 
