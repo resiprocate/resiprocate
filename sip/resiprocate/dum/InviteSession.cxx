@@ -448,12 +448,17 @@ void
 InviteSession::makeAck()
 {
    mAck = mLastRequest;
+
+   InfoLog ( << "InviteSession::makeAck:before: " << mAck );   
+
    mDialog.makeRequest(mAck, ACK);
    if (mNextOfferOrAnswerSdp)
    {
       mAck.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
       sendSdp(mNextOfferOrAnswerSdp);
-   }   
+   }
+
+   InfoLog ( << "InviteSession::makeAck:after: " << mAck );   
 }
 
 SipMessage& 
