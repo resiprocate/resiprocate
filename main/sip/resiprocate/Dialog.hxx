@@ -1,4 +1,3 @@
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -154,8 +153,6 @@ class Dialog
 
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
-
-      //Data mDialogId;
 
       bool secure; // indicates the messages in this Dialog must use TLS
       

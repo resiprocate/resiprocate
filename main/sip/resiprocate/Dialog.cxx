@@ -57,10 +57,6 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
       mCreated = true;
 
-      // mDialogId = mCallId.value();
-      //mDialogId += mRemoteTag;
-      //mDialogId += mLocalTag;
-
       DebugLog(<< "Created dialog establishing response: " << *response);
       DebugLog(<< "CallId: " << mCallId);
       return response;
@@ -103,10 +99,6 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
       mCreated = true;
-      
-      //mDialogId = mCallId.value();
-      //mDialogId += mRemoteTag;
-      //mDialogId += mLocalTag;
    }
 }
 
@@ -141,10 +133,6 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       mRemoteUri = response.header(h_To);
       mLocalUri = response.header(h_From);
       mCreated = true;
-      
-      // mDialogId = mCallId.value();
-      //mDialogId += mRemoteTag;
-      //mDialogId += mLocalTag;
    }
 }
 
