@@ -83,7 +83,10 @@ class SipMessage : public Message
 
       virtual bool isClientTransaction() const;
       
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encode(std::ostream& str) const;      
+      //sipfrags will not output Content Length if there is no body--introduce
+      //friendship to hide this?
+      virtual std::ostream& encodeSipFrag(std::ostream& str) const;
       std::ostream& encodeEmbedded(std::ostream& str) const;
       
       Data brief() const;
@@ -267,12 +270,17 @@ class SipMessage : public Message
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
+      SipMessage& mergeUri(const Uri& source);      
+
    protected:
       void cleanUp();
    
    private:
       void compute2543TransactionHash() const;
-      
+
+      std::ostream& 
+      encode(std::ostream& str, bool isSipFrag) const;      
+
       void copyFrom(const SipMessage& message);
 
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single);
@@ -335,6 +343,8 @@ class SipMessage : public Message
 #undef ensureHeaderTypeUseable
 #undef ensureSingleHeader
 #undef ensureMultiHeader
+#undef defineHeader
+#undef defineMultiHeader
 
 #endif
 
