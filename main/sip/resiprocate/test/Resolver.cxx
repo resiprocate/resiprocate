@@ -1,12 +1,12 @@
 #ifndef WIN32
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #else
-
+#include <sys/types.h>
 #endif
 
-#include <sys/types.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -154,7 +154,7 @@ Resolver::lookupARecords()
    {
 #else
 
-#ifdef WIN32
+#if defined( WIN32 ) || defined( __MACH__ )
 	assert(0); // !cj! 
 	int ret = -1;
 #else
