@@ -509,7 +509,7 @@ TransportSelector::findTransport(const Tuple& search)
 
    // 4. search for ANY port on ANY interface
    {
-      CerrLog(<< "Tyring AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
+      //CerrLog(<< "Trying AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
       AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
       if (i != mAnyPortAnyInterfaceTransports.end())
       {
