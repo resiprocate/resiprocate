@@ -22,8 +22,7 @@ SipMessage::SipMessage()
 }
 
 SipMessage::SipMessage(const SipMessage& from)
-// TODO - I have no idea if this should be true or false 
-   : mIsExternal(false),
+   : mIsExternal(from.mRequest),
      mRequest(from.mRequest),
      mResponse(from.mResponse)
 {
@@ -56,11 +55,11 @@ SipMessage::SipMessage(const SipMessage& from)
       }
       if (from.mStartLine != 0)
       {
-         mStartLine = new HeaderFieldValue(*from.mStartLine);
+         mStartLine = new HeaderFieldValue(*from.mStartLine, 0); // !jf!
       }
       if (from.mBody != 0)
       {
-         mBody = new HeaderFieldValue(*from.mBody);
+         mBody = new HeaderFieldValue(*from.mBody, 0); // !jf!
       }
    }
 }
