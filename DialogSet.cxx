@@ -19,7 +19,9 @@
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -459,10 +461,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            // Got a failure response to a request to create a dialog(s). Should
-            // make callback on the AppDialogSet here. 
-            InfoLog (<< "Got failure response to a request that doesn't match a dialog " << msg.brief());
-            return;
+            InfoLog (<< "No matching dialog: " << msg.brief());
          }
       }
       
@@ -530,6 +529,8 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog* 
 DialogSet::findDialog(const DialogId id)
 {
+   DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
    {
