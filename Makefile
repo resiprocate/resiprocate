@@ -41,6 +41,7 @@ SRC =   \
 	OutOfDialogReqCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
+	RedirectManager.cxx \
 	RegistrationCreator.cxx \
 	ServerAuthManager.cxx \
 	ServerInviteSession.cxx \
