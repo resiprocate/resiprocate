@@ -2,9 +2,82 @@
 #define RESIP_WEBADMIN_HXX 
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Tuple.hxx"
 
 namespace repro
 {
+class HttpConnection;
+
+class HttpBase
+{
+      friend class HttpConnection;
+      
+   public:
+      HttpBase( int port, resip::IpVersion version);
+      virtual ~HttpBase();
+      
+      void buildFdSet(resip::FdSet& fdset);
+      void process(resip::FdSet& fdset);
+
+   protected:
+      virtual void buildPage( const resip::Data& uri, int pageNumber )=0;
+      void setPage( const resip::Data& page, int pageNumber );
+      
+   private:
+      static const int MaxConnections = 10;
+      
+      resip::Socket mFd;
+      int nextConnection;
+      resip::Tuple mTuple;
+
+      HttpConnection* mConnection[MaxConnections];
+};
+
+
+class HttpConnection
+{
+      friend class HttpBase;
+      
+   public:
+      HttpConnection( HttpBase& webAdmin, resip::Socket pSock );
+      ~HttpConnection();
+      
+      void buildFdSet(resip::FdSet& fdset);
+      bool process(resip::FdSet& fdset);
+
+      void setPage(const resip::Data& page);
+
+   private:
+      bool processSomeReads();
+      bool processSomeWrites();
+      void tryParse();
+            
+      HttpBase& mHttpBase;
+      const int mPageNumber;
+      static int nextPageNumber;
+            
+      resip::Socket mSock;
+      resip::Data mRxBuffer;
+      resip::Data mTxBuffer;
+      bool mParsedRequest;
+};
+
+
+class WebAdmin: public HttpBase
+{
+   public:
+      WebAdmin( int port, resip::IpVersion version=resip::V4);
+      
+   protected:
+      virtual void buildPage( const resip::Data& uri, int pageNumber );
+
+   private: 
+      resip::Data buildUserPage();
+};
+
+
 
 }
 
