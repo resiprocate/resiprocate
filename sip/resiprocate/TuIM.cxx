@@ -12,6 +12,7 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/Dialog.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
@@ -423,10 +424,17 @@ TuIM::processMessageRequest(SipMessage* msg)
 void
 TuIM::processResponse(SipMessage* msg)
 {  
+   assert( msg->exists(h_CallId));
    CallId id = msg->header(h_CallId);
-   
+   assert( id.value() != Data::Empty );
+
    // see if it is a registraition response 
-   if ( id == mRegistrationDialog.getCallId() )
+   CallId regId = mRegistrationDialog.getCallId(); 
+
+   Data v1 = id.value();
+   Data v2 = regId.value();
+
+   if ( id == regId )
    {
       DebugLog ( << "matched the reg dialog" <<  mRegistrationDialog.getCallId() << " = " << id  );
       processRegisterResponse( msg );
@@ -474,7 +482,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
    if ( number >= 200 )
    { 
-      mRegistrationDialog.createDialogAsUAC( *msg );
+      mRegistrationDialog.createRegistrationAsUAC( *msg );
    }
    
    if ( ((number == 401) || (number == 407)) && (cSeq != mLastAuthCSeq) )
