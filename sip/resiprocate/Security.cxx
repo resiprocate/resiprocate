@@ -15,18 +15,18 @@
 #include <dirent.h>
 #endif
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Security.hxx"
-#include "resiprocate/sipstack/Contents.hxx"
-#include "resiprocate/sipstack/Pkcs7Contents.hxx"
-#include "resiprocate/sipstack/PlainContents.hxx"
-#include "resiprocate/sipstack/MultipartSignedContents.hxx"
-#include "resiprocate/util/Random.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/BaseException.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Security.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 using namespace Vocal2;
 

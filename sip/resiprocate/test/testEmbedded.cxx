@@ -1,10 +1,10 @@
-#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/Embedded.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Embedded.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 

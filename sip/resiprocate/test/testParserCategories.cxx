@@ -3,16 +3,16 @@
 #include <sstream>
 #include <string.h>
 #include <string>
-#include "resiprocate/sipstack/HeaderFieldValue.hxx"
-#include "resiprocate/sipstack/HeaderTypes.hxx"
-#include "resiprocate/sipstack/Headers.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx"
-#include "resiprocate/sipstack/UnknownHeaderType.hxx"
-#include "resiprocate/sipstack/UnknownParameterType.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/HeaderFieldValue.hxx"
+#include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/UnknownHeaderType.hxx"
+#include "resiprocate/UnknownParameterType.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace std;
 using namespace Vocal2;

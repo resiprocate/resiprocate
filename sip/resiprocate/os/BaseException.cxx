@@ -1,8 +1,8 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.4 2003/03/24 22:42:27 jason Exp $";
+    "$Id: BaseException.cxx,v 1.5 2003/03/24 23:25:36 jason Exp $";
 
-#include "resiprocate/util/BaseException.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

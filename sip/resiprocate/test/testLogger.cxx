@@ -1,7 +1,7 @@
 
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/ThreadIf.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
 using namespace Vocal2;
 using namespace std;

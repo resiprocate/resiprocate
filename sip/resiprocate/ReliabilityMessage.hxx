@@ -2,8 +2,8 @@
 #define ReliabilityMessage_hxx
 
 #include <iostream>
-#include "resiprocate/sipstack/Message.hxx"
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace Vocal2
 {

@@ -3,23 +3,23 @@
 
 #include <set>
 
-#include "resiprocate/util/Fifo.hxx"
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
-#include "resiprocate/sipstack/Executive.hxx"
-#include "resiprocate/sipstack/TransportSelector.hxx"
-#include "resiprocate/sipstack/TransactionMap.hxx"
-#include "resiprocate/sipstack/TimerQueue.hxx"
-#include "resiprocate/sipstack/Dialog.hxx"
-#include "resiprocate/sipstack/DnsResolver.hxx"
-#include "resiprocate/sipstack/SdpContents.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/TransactionTerminated.hxx"
-#include "resiprocate/sipstack/SipFrag.hxx"
-#include "resiprocate/sipstack/ApplicationSip.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/UnknownParameterType.hxx"
+#include "resiprocate/Executive.hxx"
+#include "resiprocate/TransportSelector.hxx"
+#include "resiprocate/TransactionMap.hxx"
+#include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DnsResolver.hxx"
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TransactionTerminated.hxx"
+#include "resiprocate/SipFrag.hxx"
+#include "resiprocate/ApplicationSip.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/UnknownParameterType.hxx"
 
 namespace Vocal2
 {

@@ -1,7 +1,7 @@
 #ifndef Vocal2_Vmd5_hxx
 #define Vocal2_Vmd5_hxx
 
-static const char* const Vocal2vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.9 2003/03/24 22:42:27 jason Exp $";
+static const char* const Vocal2vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.10 2003/03/24 23:25:36 jason Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -34,7 +34,7 @@ typedef uint32_t u_int32_t;
 
 #endif
 
-#include "resiprocate/util/compat.hxx"
+#include "resiprocate/os/compat.hxx"
 
 namespace Vocal2
 {

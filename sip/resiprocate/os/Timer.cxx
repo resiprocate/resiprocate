@@ -1,5 +1,5 @@
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #if defined( WIN32 )
 #  include <windows.h>
@@ -11,9 +11,9 @@
 
 #include <cassert>
 #include <iostream>
-#include "resiprocate/util/Timer.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Random.hxx"
+#include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
 
 using namespace Vocal2;
 

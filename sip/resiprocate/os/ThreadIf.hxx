@@ -1,7 +1,7 @@
 #ifndef Vocal2_ThreadIf_hxx
 #define Vocal2_ThreadIf_hxx
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #ifdef WIN32
 #  include <BaseTsd.h>
@@ -10,8 +10,8 @@
 #  include <pthread.h>
 #endif
 
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Condition.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Condition.hxx"
 
 namespace Vocal2
 {

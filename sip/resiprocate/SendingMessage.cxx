@@ -1,7 +1,7 @@
 
 #include <cassert>
 
-#include "resiprocate/sipstack/SendingMessage.hxx"
+#include "resiprocate/SendingMessage.hxx"
 
 using namespace Vocal2;
 

@@ -1,4 +1,4 @@
-#include "resiprocate/sipstack/TimerMessage.hxx"
+#include "resiprocate/TimerMessage.hxx"
 
 using namespace Vocal2;
 

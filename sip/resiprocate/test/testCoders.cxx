@@ -3,8 +3,8 @@
 #include <cassert>
 #include <memory>
 
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Coders.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Coders.hxx"
 #include <iostream>
 
 #ifdef __FreeBSD__

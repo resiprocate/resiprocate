@@ -1,12 +1,12 @@
 #include <memory>
 
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Timer.hxx"
 
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "Resolver.hxx"
-#include "resiprocate/sipstack/Dialog.hxx"
+#include "resiprocate/Dialog.hxx"
 
 #include "InviteServer.hxx"
 #include "Transceiver.hxx"

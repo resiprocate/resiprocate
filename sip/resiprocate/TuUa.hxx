@@ -2,8 +2,8 @@
 #define TUUA_HXX
 
 #include <map>
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/sipstack/DialogSet.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/DialogSet.hxx"
 
 namespace Vocal2
 {

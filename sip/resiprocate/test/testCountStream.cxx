@@ -1,6 +1,6 @@
-#include "resiprocate/util/CountStream.hxx"
+#include "resiprocate/os/CountStream.hxx"
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "assert.h"
 
 using namespace Vocal2;
