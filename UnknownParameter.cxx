@@ -48,7 +48,8 @@ UnknownParameter::UnknownParameter(const char* startName,
 
 UnknownParameter::UnknownParameter(const Data& name)
    : Parameter(ParameterTypes::UNKNOWN),
-     mName(name)
+     mName(name),
+     mIsQuoted(false)
 {
 }
 
