@@ -51,6 +51,7 @@ class Symbols
       
       static const Data Sip;
       static const Data Sips;
+      static const Data Tel;
 
       static const Data auth;
 

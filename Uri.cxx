@@ -42,6 +42,7 @@ Uri::Uri(const Uri& rhs)
      mScheme(rhs.mScheme),
      mHost(rhs.mHost),
      mUser(rhs.mUser),
+     mUserParameters(rhs.mUserParameters),
      mPort(rhs.mPort),
      mPassword(rhs.mPassword),
      mOldPort(0),
@@ -70,6 +71,7 @@ Uri::operator=(const Uri& rhs)
       mScheme = rhs.mScheme;
       mHost = rhs.mHost;
       mUser = rhs.mUser;
+      mUserParameters = rhs.mUserParameters;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
       if (rhs.mEmbeddedHeaders != 0)
@@ -105,6 +107,7 @@ Uri::operator==(const Uri& other) const
    if (isEqualNoCase(mScheme, other.mScheme) &&
        isEqualNoCase(mHost, other.mHost) &&
        mUser == other.mUser &&
+       mUserParameters == other.mUserParameters &&
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
@@ -232,6 +235,16 @@ Uri::operator<(const Uri& other) const
       return false;
    }
 
+   if (mUserParameters < other.mUserParameters)
+   {
+      return true;
+   }
+
+   if (mUserParameters > other.mUserParameters)
+   {
+      return false;
+   }
+
    if (mHost < other.mHost)
    {
       return true;
@@ -308,26 +321,45 @@ Uri::parse(ParseBuffer& pb)
    const char* start = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
 
-   if ( !pb.eof() )
+   pb.assertNotEof();
+
+   pb.data(mScheme, start);
+   pb.skipChar();   
+   mScheme.lowercase();
+
+   if (isEqualNoCase(mScheme, Symbols::Tel))
    {
-      pb.data(mScheme, start);
-      pb.skipChar();   
-   }
-   else
-   {
-      pb.reset(start);
+      const char* anchor = pb.position();
+      pb.skipToChar(Symbols::SEMI_COLON[0]);
+      pb.data(mUser, anchor);
+      if (!pb.eof())
+      {
+         anchor = pb.skipChar();
+         pb.skipToEnd();
+         pb.data(mUserParameters, anchor);
+      }
+      return;
    }
 
    if (!(isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)))
    {
       start = pb.position();
-      pb.skipToEnd();
-      assert( start <= pb.position() );
-      pb.data(mUser, start);
-      return;
+      pb.skipToChar(Symbols::SEMI_COLON[0]);
+      if (!pb.eof())
+      {
+         pb.data(mHost, start);
+         // extract user parameters as opaque data
+         start = pb.skipChar();
+         pb.skipToEnd();
+         pb.data(mUserParameters, start);
+      }
+      else
+      {
+         pb.data(mUser, start);
+         return;
+      }
    }
    
-   mScheme.lowercase();
    start = pb.position();
    pb.skipToChar(Symbols::AT_SIGN[0]);
    if (!pb.eof())
@@ -336,6 +368,16 @@ Uri::parse(ParseBuffer& pb)
       start = pb.position();
       pb.skipToOneOf(":@");
       pb.data(mUser, start);
+      {
+         ParseBuffer sub(mUser.data(), mUser.size());
+         const char* anchor = sub.skipToChar(Symbols::SEMI_COLON[0]);
+         if (!sub.eof())
+         {
+            sub.data(mUser, sub.start());
+            sub.skipToEnd();
+            sub.data(mUserParameters, anchor+1);
+         }
+      }
       if (!pb.eof() && *pb.position() == Symbols::COLON[0])
       {
          start = pb.skipChar();
@@ -394,13 +436,19 @@ Uri::encodeParsed(std::ostream& str) const
    if (!mUser.empty())
    {
       str << mUser;
+      if (!mUserParameters.empty())
+      {
+         str << Symbols::SEMI_COLON[0] << mUserParameters;
+      }
       if (!mPassword.empty())
       {
          str << Symbols::COLON << mPassword;
       }
-      str << Symbols::AT_SIGN;
    }
-   str << mHost;
+   if (!mHost.empty())
+   {
+      str << Symbols::AT_SIGN << mHost;
+   }
    if (mPort != 0)
    {
       str << Symbols::COLON << mPort;
