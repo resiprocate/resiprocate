@@ -70,6 +70,9 @@ class InviteSession : public DialogUsage
 //      typedef Handle<InviteSession> InviteSessionHandle;
       InviteSessionHandle getSessionHandle();
 
+      void handleSessionTimerResponse(const SipMessage& msg);
+      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
+
       typedef enum
       {
          None, // means no Offer or Answer (may have SDP)
@@ -136,7 +139,12 @@ class InviteSession : public DialogUsage
       CSeqToMessageMap mFinalResponseMap;
       
       bool mUserConnected;
-      SipMessage* mQueuedBye;      
+      SipMessage* mQueuedBye;     
+
+      // Session Timer settings
+      int  mSessionInterval;
+      bool mSessionRefresherUAS;
+      int  mSessionTimerSeq;
 
       virtual ~InviteSession();
       
