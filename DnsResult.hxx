@@ -102,6 +102,8 @@ class DnsResult
       // used. Otherwise, load the results into mResults
       void lookupNAPTR();
 
+      void lookupNAPTR(const Data& target);
+
       // peforms an SRV lookup on target. May be asynchronous if ares is
       // used. Otherwise, load the results into mResults
       void lookupSRV(const Data& target);
@@ -165,6 +167,12 @@ class DnsResult
                                              const unsigned char *abuf, 
                                              int alen,
                                              NAPTR& naptr);
+
+    static const unsigned char * parseCNAME(const unsigned char *aptr,
+                                            const unsigned char *abuf, 
+                                            int alen,
+                                            Data& trueName);
+
    private:
       DnsInterface& mInterface;
       DnsHandler* mHandler;
