@@ -60,8 +60,12 @@ class DnsUtil
       static bool isIpAddress(const Data& ipAddress);
       static bool isIpV4Address(const Data& ipAddress);
       static bool isIpV6Address(const Data& ipAddress);
-};
 
+      // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
+      // so string (case) comparison will work
+      // or something
+      static void canonicalizeIpV6Address(Data& ipV6Address);
+};
 
 }
 
