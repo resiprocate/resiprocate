@@ -125,7 +125,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                // ...but the chunk is completely processed.
                //.jacob. I've discarded the "assigned" concept.
                //DebugLog(<< "Data assigned, not fragmented, not complete");
-               mBuffer = new char[ChunkSize];
+               mBuffer = new char[ChunkSize + 5];
                mBufferPos = 0;
                mBufferSize = ChunkSize;
             }
@@ -137,7 +137,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                {
                   size = Connection::ChunkSize;
                }
-               char* newBuffer = new char[size];
+               char* newBuffer = new char[size + 5];
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBuffer = newBuffer;
                mBufferPos = numUnprocessedChars;
@@ -153,7 +153,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
             if (numUnprocessedChars < contentLength)
             {
                // The message body is incomplete.
-               char* newBuffer = new char[contentLength];
+               char* newBuffer = new char[contentLength + 5];
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
                mBufferSize = contentLength;
@@ -188,7 +188,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                   {
                      size = Connection::ChunkSize;
                   }
-                  char* newBuffer = new char[size];
+                  char* newBuffer = new char[size + 5];
                   memcpy(newBuffer,
                          unprocessedCharPtr + contentLength,
                          overHang);
@@ -298,7 +298,8 @@ Connection::getWriteBuffer()
    {
       DebugLog (<< "Creating buffer for " << *this);
 
-      mBuffer = new char [Connection::ChunkSize];
+      // .dlb. room for sentinels
+      mBuffer = new char [Connection::ChunkSize+5];
       mBufferSize = Connection::ChunkSize;
       mBufferPos = 0;
    }
