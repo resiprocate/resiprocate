@@ -178,4 +178,5 @@ main(int argc, char** argv)
    }
 
    cerr << endl << "Tests OK" << endl;
+   return 0;
 }

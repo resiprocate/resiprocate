@@ -17,4 +17,5 @@ main()
          strm << data;
       }
    }
+   return 0;
 }
