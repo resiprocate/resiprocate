@@ -756,32 +756,41 @@ class TestData
             Data d((unsigned long)235235);
             assert(d == "235235");
          }
-         
+ 
+         if (1)
          {
+            Data d3("MTIz"); Data e3("123" );
+            //cerr << "base64 test " <<e3<< " = "<< d3.base64decode().c_str()<<endl;
+            //cerr << "base64 test " <<d3<< " = "<< e3.base64encode().c_str()<<endl;
+            assert( d3.base64decode() == e3 );
+            assert( e3.base64encode() == d3 );
             
-            Data d3("MTIz");
-            //cerr << "base64 test "<<d3<<" = "<<d3.base64decode().hex().c_str()<<endl;
-            assert( d3.base64decode() == Data("123" ) );
-
-            Data d1("MQ==");
-            //cerr << "base64 test "<<d1<<" = "<<d1.base64decode().hex().c_str()<<endl;
-            assert( d1.base64decode() == Data("1" ) );
-
+            Data d1("MQ=="); Data e1("1" );
+            //cerr << "base64 test "<<e1<<" = <"<<d1.base64decode()<<">"<<endl;
+            //cerr << "base64 test hex "<<e1.hex()<<" = <"<<d1.base64decode().hex()<<">"<<endl;
+            //cerr << "base64 test "<<d1<<" = <"<<e1.base64encode()<<">"<<endl;
+            assert( e1 == d1.base64decode() );
+            assert( e1.base64encode() == d1 );
+          
             Data d2("MTI=");
-            cerr << "base64 test "<<d2<<" = "<<d2.base64decode().hex().c_str()<<endl;
             assert( d2.base64decode() == Data("12" ) );
-
+            assert(  Data("12" ).base64encode() == d2 );
+            
             Data d4("MTIzNA==");
             assert( d4.base64decode() == Data("1234" ) );
-
+            assert(  Data("1234" ).base64encode() == d4 );
+            
             Data d5("MTIzNDU=");
             assert( d5.base64decode() == Data("12345" ) );
-
+            assert(  Data("12345" ).base64encode() == d5 );
+            
             Data d6("MTIzNDU2");
             assert( d6.base64decode() == Data("123456" ) );
-
+            assert(  Data("123456" ).base64encode() == d6 );
+            
             Data d7("MTIzNDU2Nw==");
             assert( d7.base64decode() == Data("1234567" ) );
+            assert(  Data("1234567" ).base64encode() == d7 );
          }
          
          {
