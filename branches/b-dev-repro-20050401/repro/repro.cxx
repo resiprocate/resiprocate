@@ -40,14 +40,19 @@ main(int argc, char** argv)
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
 
+   RequestProcessorChain* locators = newRequestProcessorChain();
+
    RouteProcessor* rp = new RouteProcessor();
-   requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(rp));
+   locators.addProcessor(std::auto_ptr<RequestProcessor>(rp));
+
+   LocationServer* ls = new LocationServer(regData);
+   locators.addProcessor(std::auto_ptr<RequestProcessor>(ls));
+
+   requestProcessors.addProcessor(locators);
 
    DigestAuthenticator* da = new DigestAuthenticator();
    requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
    
-   LocationServer* ls = new LocationServer(regData);
-   requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(ls));
 
    UserDb userDb;
    WebAdmin admin(userDb);
