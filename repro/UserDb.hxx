@@ -4,9 +4,14 @@
 #include <db4/db_185.h>
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/Message.hxx"
+
 
 namespace repro
 {
+
+typedef resip::Fifo<resip::Message> MessageFifo;
 
 class UserAbstractDb
 {
@@ -16,7 +21,8 @@ class UserAbstractDb
       virtual ~UserAbstractDb();
       
       void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm ) const;
+                                const resip::Data& realm,
+                                MessageFifo* fifo ) const;
 
       resip::Data getUserAuthInfo( const resip::Data& key ) const;
       
