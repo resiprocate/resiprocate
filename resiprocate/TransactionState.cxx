@@ -39,15 +39,19 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
 
 
 TransactionState* 
-TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
+TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine, const Data& tid)
 {
-   TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, tr->mId + "cancel");
+   TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, tid);
    // !jf! don't set this since it will be set by TransactionState::processReliability()
    //cancel->mIsReliable = tr->mIsReliable;  
    cancel->mResponseTarget = tr->mResponseTarget;
    cancel->mIsCancel = true;
    cancel->mTarget = tr->mTarget;
-   
+   cancel->add(tid);
+
+   // !jf! don't call processServerNonInvite since it will delete
+   // the sip message which needs to get sent to the TU
+   cancel->processReliability(tr->mTarget.getType());
    return cancel;
 }
 
@@ -190,15 +194,7 @@ TransactionState::process(TransactionController& controller)
                else
                {
                   assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite);
-
-                  state->mResponseTarget = sip->getSource();
-                  // since we don't want to reply to the source port unless rport present 
-                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-                  state->add(tid);
-                  state->processReliability(matchingInvite->mTarget.getType());
-                  // !jf! don't call processServerNonInvite since it will delete
-                  // the sip message which needs to get sent to the TU
+                  state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
                }
             }
             else if (sip->header(h_RequestLine).getMethod() != ACK)
@@ -250,6 +246,14 @@ TransactionState::process(TransactionController& controller)
                   // !jf! the code here used to send a 200 and a 487 to the TU,
                   // if no INVITE had been sent out yet. -- i.e. dns result not
                   // processed yet 
+
+                  // The CANCEL was received before the INVITE was sent!
+                  //SipMessage* response200 = Helper::makeResponse(*sip, 200);
+                  //sendToTU(response200);
+                  //SipMessage* response487 = Helper::makeResponse(matchingInvite->mMsgToRetransmit, 487);
+                  //sendToTU(response487);
+                  //delete matchingInvite;
+                  
                   delete sip;
                   assert(0);
                }
@@ -263,10 +267,12 @@ TransactionState::process(TransactionController& controller)
                else
                {
                   assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite);
-                  state->add(tid);
+                  state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
                   state->processReliability(matchingInvite->mTarget.getType());
-                  state->processClientNonInvite(sip);                  
+                  state->processClientNonInvite(sip);
+                  
+                  // for the INVITE in case we never get a 487
+                  matchingInvite->mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 128*Timer::T1);
                }
             }
             else 
@@ -480,7 +486,6 @@ void
 TransactionState::processClientInvite(  Message* msg )
 {
    DebugLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
-   
    if (isRequest(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -498,7 +503,7 @@ TransactionState::processClientInvite(  Message* msg )
          case CANCEL:
             assert(0);
             break;
-            
+
          default:
             delete msg;
             break;
@@ -655,27 +660,19 @@ TransactionState::processClientInvite(  Message* msg )
             delete this;
             break;
 
-#if 0 // !jf!
          case Timer::TimerCleanUp:
-            if (!mCancelStateMachine)
+            // !ah! Cancelled Invite Cleanup Timer fired.
+            DebugLog (<< "Timer::TimerCleanUp: " << *this << endl << *mMsgToRetransmit);
+            if (mState == Proceeding)
             {
-               // !ah! Cancelled Invite Cleanup Timer fired.
-               if (mMsgToRetransmit && 
-                   mMsgToRetransmit->header(h_RequestLine).getMethod() == 
-                   INVITE)
-               {
-                  // InfoLog(<<"Making 408 for canceled invite: "<< *mMsgToRetransmit);
-                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
-               }
+               assert(mMsgToRetransmit && mMsgToRetransmit->header(h_RequestLine).getMethod() == INVITE);
+               InfoLog(<<"Making 408 for canceled invite that received no response: "<< mMsgToRetransmit->brief());
+               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
                terminateClientTransaction(msg->getTransactionId());
                delete this;
             }
-            else
-            {
-               DebugLog(<<"ugh -- cancel state machine still lives.");
-            }
+            delete msg;
             break;
-#endif
 
          default:
             delete msg;
