@@ -63,13 +63,31 @@ DialogSet::findDialog(const DialogId id)
 Dialog*
 Dialogset::findDialog( const Data& otherTag )
 {
-    /** @todo Implment this method */
+    std::list<Dialog*>::iterator it = mDialogs.start();
+    Dialog *dialog;
+    while (it != mDialogs.end())
+    {
+        dialog  = it.next();
+        if (dialog->getId() == otherTag)
+        {
+            return dialog;
+        }
+    }
     return NULL;
 }
 
 Dialog* findDialog(SipMessage& msg)
 {
-    /** @todo Implment this method */
+    std::list<Dialog*>::iterator it = mDialogs.start();
+    Dialog *dialog;
+    while (it != mDialogs.end())
+    {
+        dialog  = it.next();
+        if (dialog->getId() == msg)
+        {
+            return dialog;
+        }
+    }
     return NULL;
 }
 
