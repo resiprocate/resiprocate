@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.2 2002/09/26 02:03:58 jason Exp $";
+"$Id: Data.hxx,v 1.3 2002/09/27 02:00:36 jason Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -54,6 +54,9 @@ class Data : public std::string
       // removes spaces before and after a string.
       void removeSpaces();
 
+      // remove whitespace from the beginning and return num chars eaten
+      int eatWhiteSpace();
+      
       //expand requird for expandin headers
       void expand(const Data& startFrom, 
                   const Data& findstr, 
