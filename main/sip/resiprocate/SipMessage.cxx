@@ -231,8 +231,11 @@ SipMessage::updateRFC2543TransactionId()
 {
    assert(isResponse());
    MD5Stream strm2;
-   strm2 << mRFC2543TransactionId
-         << header(h_To).param(p_tag);
+   strm2 << mRFC2543TransactionId;
+   if (exists(h_To))
+   {
+       strm2 << header(h_To).param(p_tag);
+   }
    mRFC2543TransactionId = strm2.getHex();
    return mRFC2543TransactionId;
 }
