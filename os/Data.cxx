@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.37 2002/11/25 19:29:27 davidb Exp $";
+"$Id: Data.cxx,v 1.38 2002/11/28 01:19:00 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -14,6 +14,7 @@ using namespace Vocal2;
 using namespace std;
 
 const Data Data::Empty("", 0);
+const int Data::npos = INT_MAX;
 
 Data::Data() 
    : mSize(0),
@@ -764,6 +765,24 @@ Data::convertDouble() const
 
    return s*val;
 }
+
+Data 
+Data::substr(size_type first, size_type count) const
+{
+   assert(first <= mSize);
+   assert(first >= 0);
+
+   if (count == Data::npos)
+   {
+      return Data(mBuf+first, mSize-first);
+   }
+   else
+   {
+      assert(first + count <= mSize);
+      return Data(mBuf+first, count);
+   }
+}
+
 
 bool
 Vocal2::operator==(const char* s, const Data& d)
