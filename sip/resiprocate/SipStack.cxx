@@ -16,7 +16,19 @@ SipStack::SipStack(bool multiThreaded)
     mTransportSelector(*this),
     mTimers(mStateMacFifo)
 {
+   addTransport(Transport::UDP, 5060);
+   //addTransport(Transport::TCP, 5060); // !jf!
 }
+
+void 
+SipStack::addTransport( Transport::Type protocol, 
+                        int port,
+                        const Data& hostName,
+                        const Data& interface) 
+{
+   mTransportSelector.addTransport(protocol, port, hostName, interface);
+}
+
 
 void 
 SipStack::send(const SipMessage& msg)
@@ -64,7 +76,7 @@ SipStack::receive()
 void 
 SipStack::process(fd_set* fdSet)
 {
-	mExecutive.process(fdSet);
+   mExecutive.process(fdSet);
 }
 
 
