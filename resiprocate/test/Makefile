@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.56 2003/09/29 20:25:31 davidb Exp $
+# $Id: Makefile,v 1.57 2003/09/30 19:31:55 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -6,11 +6,12 @@ include $(BUILD)/Makefile.pre
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses -lpopt
 
-#CXXFLAGS += -I/usr/local/ssl/include
-#LDFLAGS  += -L/usr/local/ssl/lib 
-#LDLIBS   += /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a 
+CXXFLAGS += -I/opt/sfw/include
+LDFLAGS  += -L/opt/sfw/lib
+LDLIBS   += -lpopt
 
 TESTPROGRAMS =	testTcp.cxx testUdp.cxx testStack.cxx \
+		testTypedef.cxx \
 		testIntrusiveList.cxx \
 		testSelect.cxx \
 		limpc.cxx \
