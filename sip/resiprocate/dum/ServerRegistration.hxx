@@ -15,7 +15,7 @@ class ServerRegistration: public BaseUsage
             // throws if no session 
             ServerRegistration* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ServerRegistration;
             Handle(DialogUsageManager& dum);
       };
 
@@ -28,12 +28,18 @@ class ServerRegistration: public BaseUsage
       /// reject a SIP registration 
       void reject(int statusCode);
 
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+
    private:
       friend class DialogUsageManager;
       ServerRegistration(DialogUsageManager& dum,
                          Dialog& dialog);
 
       ServerRegistration::Handle mHandle;
+
+      // disabled
+      ServerRegistration(const ServerRegistration&);
+      ServerRegistration& operator=(const ServerRegistration&);
 };
  
 }

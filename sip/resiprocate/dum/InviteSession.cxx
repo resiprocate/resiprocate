@@ -1,12 +1,14 @@
 #include "InviteSession.hxx"
 
-InviteSession::InviteSession(DialogUsageManager& dum) : 
-   mDum(dum),
-   mLocalSdp(0),
-   mRemoteSdp(0),
-   mMyNextOffer(0),
-   mPendingReceivedOffer(0),
-   mHandle(dum)
+using namespace resip;
+
+InviteSession::InviteSession(DialogUsageManager& dum,
+                             Dialog& dialog)
+   : BaseUsage(dum, dialog),
+     mLocalSdp(0),
+     mRemoteSdp(0),
+     mMyNextOffer(0),
+     mPendingReceivedOffer(0)
 {
 }
 
@@ -23,13 +25,13 @@ InviteSession::getRemoteSdp()
 }
 
 InviteSession::Handle::Handle(DialogUsageManager& dum)
-   : mDum(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 InviteSession*
 InviteSession::Handle::operator->()
 {
-   return static_cast<InviteSession*>get();
+   return static_cast<InviteSession*>(get());
 }
 
 /* ====================================================================

@@ -19,16 +19,21 @@ class ClientOutOfDialogReq : public BaseUsage
             // throws if no session 
             ClientOutOfDialogReq* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ClientOutOfDialogReq;
             Handle(DialogUsageManager& dum);
       };
 
    private:
       friend class DialogUsageManager;
       ClientOutOfDialogReq(DialogUsageManager& dum,
-                           Dialog& dialog);
+                           Dialog& dialog,
+                           const SipMessage& req);
       
       ClientOutOfDialogReq::Handle mHandle;
+
+      // disabled
+      ClientOutOfDialogReq(const ClientOutOfDialogReq&);
+      ClientOutOfDialogReq& operator=(const ClientOutOfDialogReq&);
 };
  
 }

@@ -2,12 +2,14 @@
 #define RESIP_BASEUSAGE_HXX
 
 #include "resiprocate/os/compat.hxx"
-
+#include "resiprocate/os/BaseException.hxx"
+#include <cassert>
 namespace resip
 {
 
 class DialogUsageManager;
 class Dialog;
+class SipMessage;
 
 class BaseUsage
 {
@@ -33,8 +35,8 @@ class BaseUsage
             // throws if not found
             BaseUsage* get();
          private:
+            DialogUsageManager* mDum;
             Id mId;
-            DialogUsageManager& mDum;
             friend class DialogUsageManager;
             static UInt64 getNext();
       };
@@ -42,8 +44,8 @@ class BaseUsage
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~BaseUsage();
 
-      SipMessage* makeInvite();
-      SipMessage* makeSubscribe();
+      SipMessage* makeInviteSession();
+      SipMessage* makeSubscription();
       SipMessage* makeRefer();
       SipMessage* makePublication();
       SipMessage* makeRegistration();
@@ -56,8 +58,9 @@ class BaseUsage
       Dialog& dialog();
       
       virtual void end()=0;
-      virtual void dispatch(const SipMessage& msg)=0;
-      
+      virtual void dispatch(const SipMessage& msg) = 0;
+      virtual BaseUsage::Handle getBaseHandle() = 0;
+
    private:
       DialogUsageManager& mDum;
       Dialog& mDialog;
