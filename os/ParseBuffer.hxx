@@ -1,7 +1,7 @@
 #ifndef ParseBuffer_hxx
 #define ParseBuffer_hxx
-#include <util/Data.hxx>
-#include <util/VException.hxx>
+#include "util/Data.hxx"
+#include "util/VException.hxx"
 
 namespace Vocal2
 {

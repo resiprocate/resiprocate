@@ -1,4 +1,4 @@
-#include <sipstack/SendingMessage.hxx>
+#include "sipstack/SendingMessage.hxx"
 
 using namespace Vocal2;
 

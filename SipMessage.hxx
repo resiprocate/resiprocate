@@ -1,7 +1,7 @@
 #ifndef SipMessage_hxx
 #define SipMessage_hxx
 
-#include <util/Socket.hxx>
+#include "util/Socket.hxx"
 
 #include <sys/types.h>
 
@@ -14,12 +14,12 @@
 #include <vector>
 #include <utility>
 
-#include <sipstack/Headers.hxx>
-#include <sipstack/Message.hxx>
-#include <sipstack/ParserCategories.hxx>
-#include <sipstack/ParserContainer.hxx>
-#include <sipstack/Transport.hxx>
-#include <util/VException.hxx>
+#include "sipstack/Headers.hxx"
+#include "sipstack/Message.hxx"
+#include "sipstack/ParserCategories.hxx"
+#include "sipstack/ParserContainer.hxx"
+#include "sipstack/Transport.hxx"
+#include "util/VException.hxx"
 
 namespace Vocal2
 {

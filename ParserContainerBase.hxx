@@ -1,9 +1,9 @@
 #ifndef ParserContainerBase_hxx
 #define ParserContainerBase_hxx
 
-#include <sipstack/ParserCategory.hxx>
+#include "sipstack/ParserCategory.hxx"
 #include <iostream>
-#include <sipstack/HeaderTypes.hxx>
+#include "sipstack/HeaderTypes.hxx"
 
 namespace Vocal2
 {

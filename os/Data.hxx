@@ -1,11 +1,11 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.25 2002/11/06 02:32:39 derekm Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.26 2002/11/06 02:59:29 davidb Exp $";
 
 #include <iostream>
 #include <string>
-#include <util/compat.hxx>
+#include "util/compat.hxx"
 
 class TestData;
 namespace Vocal2

@@ -2,8 +2,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <sipstack/SipStack.hxx>
-#include <sipstack/DnsMessage.hxx>
+#include "sipstack/SipStack.hxx"
+#include "sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 
