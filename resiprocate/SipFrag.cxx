@@ -171,29 +171,36 @@ SipFrag::parse(ParseBuffer& pb)
    termCharArray[3] = '\n';
    char *scanTermCharPtr;
    MsgHeaderScanner::ScanChunkResult scanChunkResult =
-       msgHeaderScanner.scanChunk(buffer,
-                                  size + sentinelLength,
-                                  &scanTermCharPtr);
+      msgHeaderScanner.scanChunk(buffer,
+                                 size + sentinelLength,
+                                 &scanTermCharPtr);
    termCharArray[0] = saveTermCharArray[0];
    termCharArray[1] = saveTermCharArray[1];
    termCharArray[2] = saveTermCharArray[2];
    termCharArray[3] = saveTermCharArray[3];
-   if (scanChunkResult != MsgHeaderScanner::scrEnd) {
-     pb.fail(__FILE__, __LINE__);
-   } else {
-     size_t used = scanTermCharPtr - buffer;
+   // !dlb! not at all clear what to do here
+   // see: "// tests end of message problem (MsgHeaderScanner?)"
+   //      in test/testSipFrag.cxx
+   if (false && scanChunkResult != MsgHeaderScanner::scrEnd) 
+   {
+      CerrLog(<< "not MsgHeaderScanner::scrEnd");
+      pb.fail(__FILE__, __LINE__);
+   } 
+   else 
+   {
+      size_t used = scanTermCharPtr - buffer;
 
-     // !ah! I think this is broken .. if we are UDP then the 
-     // remainder is the SigFrag, not the Content-Length... ??
-     if (mMessage->exists(h_ContentLength))
+      // !ah! I think this is broken .. if we are UDP then the 
+      // remainder is the SigFrag, not the Content-Length... ??
+      if (mMessage->exists(h_ContentLength))
       {
          mMessage->setBody(scanTermCharPtr,
                            static_cast<int>(size - used));
       }
       else
       {
-        // !ah! So the headers weren't complete. Why are we here?
-        // !dlb! 
+         // !ah! So the headers weren't complete. Why are we here?
+         // !dlb! 
          if (mMessage->exists(h_ContentLength))
          {
             pb.reset(buffer + used);
