@@ -68,20 +68,6 @@ class ClientInviteSession : public InviteSession
         void dispatchPrackAnswerWait (const SipMessage& msg, const SdpContents* sdp);
         void dispatchCanceled (const SipMessage& msg, const SdpContents* sdp);
 
-        enum State
-        {
-            UAC_Start,
-            UAC_Early,
-            UAC_EarlyWithOffer,
-            UAC_EarlyWithAnswer,
-            UAC_WaitingForAnswerFromApp,
-            UAC_Terminated,
-            UAC_SentUpdateEarly,
-            UAC_ReceivedUpdateEarly,
-            UAC_PrackAnswerWait,
-            UAC_Canceled,
-        };
-
     // !kh! ==========
 
    private:
