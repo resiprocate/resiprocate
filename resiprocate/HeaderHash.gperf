@@ -21,7 +21,7 @@ k, Headers::Supported
 t, Headers::To
 v, Headers::Via
 x, Headers::SessionExpires
-y, Headers::Idenity
+y, Headers::Identity
 cseq, Headers::CSeq
 call-id, Headers::CallID
 contact, Headers::Contact
