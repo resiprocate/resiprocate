@@ -98,6 +98,10 @@ class SipStack
       void sendTo(const SipMessage& msg, const Uri& uri);
       void sendTo(const SipMessage& msg, const Tuple& tuple);
 
+      // makes the message available to the TU later
+      void post(const Message& message,
+                unsigned int secondsLater);
+
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
 
