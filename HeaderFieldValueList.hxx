@@ -1,5 +1,5 @@
-#ifndef HeaderFieldValueList_hxx
-#define HeaderFieldValueList_hxx
+#if !defined(RESIP_HEADERFIELDVALUELIST_HXX)
+#define RESIP_HEADERFIELDVALUELIST_HXX 
 
 #include <iostream>
 #include <list>
@@ -58,7 +58,6 @@ class HeaderFieldValueList
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

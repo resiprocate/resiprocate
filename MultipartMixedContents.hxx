@@ -1,5 +1,5 @@
-#ifndef MultipartMixedContents_hxx
-#define MultipartMixedContents_hxx
+#if !defined(RESIP_MULTIPARTMIXEDCONTENTS_HXX)
+#define RESIP_MULTIPARTMIXEDCONTENTS_HXX 
 
 #include <list>
 

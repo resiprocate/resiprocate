@@ -1,5 +1,5 @@
-#ifndef DataParameter_hxx
-#define DataParameter_hxx
+#if !defined(RESIP_DATAPARAMETER_HXX)
+#define RESIP_DATAPARAMETER_HXX
 
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
