@@ -629,12 +629,6 @@ Dialog::setRemoteTarget(const NameAddr& remoteTarget)
 }
 #endif
 
-bool 
-Dialog::shouldMerge(const SipMessage& request) const
-{
-   return false;
-}
-
 void Dialog::possiblyDie()
 {
    if (mClientSubscriptions.empty() &&
