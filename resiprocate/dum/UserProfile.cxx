@@ -86,14 +86,7 @@ UserProfile::clearDigestCredentials()
 void 
 UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password)
 {
-   MD5Stream a1;
-   a1 << user
-      << Symbols::COLON
-      << realm
-      << Symbols::COLON
-      << password;
-
-   DigestCredential cred( realm, user, a1.getHex() );
+   DigestCredential cred( realm, user, password );
 
    DebugLog (<< "Adding credential: " << cred);
    mDigestCredentials.erase(cred);
