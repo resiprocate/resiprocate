@@ -6,12 +6,14 @@ using namespace resip;
 
 BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
    mDum(dum),
-   mDialog(dialog)
+   mDialog(dialog),
+   mHandle(dum)
 {
 }
 
 BaseUsage::~BaseUsage()
 {
+   mDum.mUsageMap.erase(getBaseHandle().mId);
    mDialog.possiblyDie();
 }
 
@@ -51,7 +53,6 @@ BaseUsage::Handle::operator->()
 {
    return get();
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -139,6 +139,7 @@ class DialogUsageManager
       friend class ServerInviteSession;
       friend class InviteSession;
       friend class ClientPublication;
+      friend class BaseUsage;      
       friend class BaseUsage::Handle;
       
       SipMessage& makeNewSession(BaseCreator* creator);

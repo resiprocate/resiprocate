@@ -55,7 +55,6 @@ class ServerSubscription : public BaseUsage
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
 
-      ServerSubscription::Handle mHandle;
       SipMessage mLastRequest;
 
       // disabled

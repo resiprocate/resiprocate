@@ -15,7 +15,6 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          const SipMessage& request, 
                                          const SdpContents* initialOffer)
    : InviteSession(dum, dialog),
-     mHandle(dum),
      lastReceivedRSeq(0),
      lastExpectedRSeq(0),
      mStaleCallTimerSeq(1)
