@@ -1,5 +1,6 @@
-#ifndef resip_ParseBuffer_hxx
-#define resip_ParseBuffer_hxx
+#if !defined(RESIP_PARSEBUFFER_HXX)
+#define RESIP_PARSEBUFFER_HXX 
+
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
 
@@ -133,6 +134,7 @@ class ParseBuffer
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -1,5 +1,5 @@
-#ifndef resip_SysLogBuf_hxx
-#define resip_SysLogBuf_hxx
+#if !defined(RESIP_SYSLOGBUF_HXX)
+#define RESIP_SYSLOGBUF_HXX 
 
 #include <iostream>
 #include <cassert>
@@ -67,6 +67,7 @@ inline int SysLogBuf::overflow (int c)
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

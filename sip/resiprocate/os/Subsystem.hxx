@@ -1,5 +1,5 @@
-#ifndef resip_Subsystem_hxx
-#define resip_Subsystem_hxx
+#if !defined(RESIP_SUBSYSTEM_HXX)
+#define RESIP_SUBSYSTEM_HXX 
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
@@ -55,11 +55,11 @@ class Subsystem : public resip::Subsystem
  
 }
 */
-
  
 }
 
-#endif // Subsystem.hxx
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -1,5 +1,5 @@
-#ifndef resip_Inserter_hxx
-#define resip_Inserter_hxx
+#if !defined(RESIP_INSERTER_HXX)
+#define RESIP_INSERTER_HXX 
 
 #include <iostream>
 #include <utility>
@@ -186,7 +186,7 @@ main(int argc, char** argv)
  
 } // resip
 
-#endif // ContainerInsert_hxx
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
