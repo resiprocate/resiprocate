@@ -878,9 +878,9 @@ DialogUsageManager::process()
          }
 
          DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-         if (dumMsg )
+         if (dumMsg)
          {
-            if ( !dumMsg->getBaseUsage().isValid())
+            if (!dumMsg->getBaseUsage().isValid())
             {
                return true;
             }
