@@ -1,4 +1,4 @@
-#include "resiprocate/sam/DialogSet.hxx"
+#include "DialogSet.hxx"
 
 using namespace resip;
 using namespace std;
