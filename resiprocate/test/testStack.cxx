@@ -59,39 +59,22 @@ main(int argc, char* argv[])
    from.uri().port() = 5070;
    
 
-   InfoLog (<< "Creating messages");
-   list<SipMessage*> messages;
-   {
-      UInt64 startTime = Timer::getTimeMs();
-      for (int i=0; i<runs; i++)
-      {
-         SipMessage* m = Helper::makeRegister( target, from, from);
-         messages.push_back(m);
-      }
-      
-      UInt64 elapsed = Timer::getTimeMs() - startTime;
-      cout <<  runs * ( 1000.0 / (float) elapsed) * ( 1000.0 / (float)Timer::getCpuSpeedMhz() ) 
-           << " half calls/s/GHz  ["
-           << runs << " calls performed in " << elapsed << " ms, a rate of " 
-           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
-      
-      InfoLog (<< messages.size() << " messages created");
-   }
-
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
+   int sent = 0;
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
       
       // load up the send window
-      while (outstanding < window && !messages.empty())
+      while (sent < runs && outstanding < window)
       {
-         SipMessage* next = messages.front();
-         messages.pop_front();
+         DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
+         SipMessage* next = Helper::makeRegister( target, from, from);
          sender.send(*next);
          outstanding++;
+         sent++;
          delete next;
       }
       
