@@ -138,7 +138,7 @@ TlsTransport::processListen(FdSet& fdset)
       
       ConnectionMap::Connection* con = mConnectionMap.add(who, sock);
       assert( con );
-      con->mTlsConnection = tls;
+      //  con->mTlsConnection = tls;
 
       ErrLog( << "Added server connection " << int(con) );
       
@@ -154,8 +154,8 @@ TlsTransport::processRead(ConnectionMap::Connection* c)
    ErrLog( << "Read from connection " << int(c) );
 
    // int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
-   assert( c->mTlsConnection );
-   int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
+//   assert( c->mTlsConnection );
+   int bytesRead = 0; // = c->mTlsConnection->read( writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {
       int err = errno;
@@ -241,7 +241,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
                // succeeded, add the connection
                conn =  mConnectionMap.add(who, sock);
 
-               conn->mTlsConnection = tls;   
+               //     conn->mTlsConnection = tls;   
 
                ErrLog( << "Added client connection " << int(conn) );
             }
@@ -336,8 +336,8 @@ TlsTransport::processWrite(ConnectionMap::Connection* c)
 
    //int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos,
    //bytesToWrite);
-   assert( c->mTlsConnection );
-   int bytesWritten = c->mTlsConnection->write( data->data.data() + c->mSendPos, bytesToWrite);
+//   assert( c->mTlsConnection );
+   int bytesWritten = 0; // c->mTlsConnection->write( data->data.data() + c->mSendPos, bytesToWrite);
    int err = errno;
 
    if (bytesWritten <= 0)
