@@ -76,6 +76,9 @@
    your system. */
 #undef PTHREAD_CREATE_JOINABLE
 
+/* Data local size */
+#undef RESIP_DATA_LOCAL_SIZE
+
 /* The major version number of resip */
 #undef RESIP_MAJOR_VERSION
 
