@@ -1,5 +1,6 @@
 
 #include <cassert>
+#include <memory>
 
 #include "sip2/util/Socket.hxx"
 
