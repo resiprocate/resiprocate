@@ -1,8 +1,8 @@
 #ifndef IntegerParameter_hxx
 #define IntegerParameter_hxx
 
-#include <sipstack/ParameterTypeEnums.hxx>
-#include <sipstack/Parameter.hxx>
+#include "sipstack/ParameterTypeEnums.hxx"
+#include "sipstack/Parameter.hxx"
 #include <iostream>
 
 namespace Vocal2

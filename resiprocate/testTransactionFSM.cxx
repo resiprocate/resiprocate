@@ -45,18 +45,18 @@
 #include <fstream>
 #include <string>
 
-#include <util/Data.hxx>
-#include <util/Logger.hxx>
-#include <util/DataStream.hxx>
+#include "util/Data.hxx"
+#include "util/Logger.hxx"
+#include "util/DataStream.hxx"
 
-#include <sipstack/Helper.hxx>
-#include <sipstack/MethodTypes.hxx>
-#include <sipstack/Preparse.hxx>
-#include <sipstack/SipStack.hxx>
-#include <sipstack/SipMessage.hxx>
-#include <sipstack/Symbols.hxx>
-#include <sipstack/TestTransport.hxx>
-#include <sipstack/Transport.hxx>
+#include "sipstack/Helper.hxx"
+#include "sipstack/MethodTypes.hxx"
+#include "sipstack/Preparse.hxx"
+#include "sipstack/SipStack.hxx"
+#include "sipstack/SipMessage.hxx"
+#include "sipstack/Symbols.hxx"
+#include "sipstack/TestTransport.hxx"
+#include "sipstack/Transport.hxx"
 
 using namespace Vocal2;
 using namespace std;

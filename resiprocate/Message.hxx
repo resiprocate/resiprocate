@@ -1,7 +1,7 @@
 #ifndef Message_hxx
 #define Message_hxx
 
-#include <util/Data.hxx>
+#include "util/Data.hxx"
 #include <iostream>
 
 namespace Vocal2
