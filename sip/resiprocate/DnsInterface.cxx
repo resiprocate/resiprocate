@@ -13,6 +13,10 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+#if !defined(USE_ARES)
+#error Must have ARES
+#endif
+
 const Data DnsInterface::UdpOnly[] =
 {
    Data("SIP+D2U"),
@@ -38,7 +42,6 @@ DnsInterface::DnsInterface(bool sync)
    : mSupportedTransports(&TcpAndUdp)
 {
    assert(sync == false);
-#if defined(USE_ARES)
    int status=0;
    if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
    {
@@ -48,11 +51,11 @@ DnsInterface::DnsInterface(bool sync)
       ares_free_errmem(errmem);
       throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
-#endif
 }
 
 DnsInterface::~DnsInterface()
 {
+   ares_destroy(mChannel);
 }
 
 void 
