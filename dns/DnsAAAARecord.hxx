@@ -1,6 +1,7 @@
 #ifndef RESIP_DNS_AAAA_RECORD
 #define RESIP_DNS_AAAA_RECORD
 
+#ifdef USE_IPV6
 namespace resip
 {
 
@@ -13,14 +14,16 @@ class DnsAAAARecord : public DnsResourceRecord
       DnsAAAARecord(const RROverlay& overlay);
       ~DnsAAAARecord() {}
 
-      const in6_addr& v6Address() const { return mAddr; }
+      const struct in6_addr& v6Address() const { return mAddr; }
       
    private:
-      in6_addr mAddr;
+      struct in6_addr mAddr;
       
 };
 
 }
+
+#endif
 
 
 #endif

@@ -39,7 +39,11 @@ extern RR_##_name q_##_name
 
 defineQueryType(A, DnsHostRecord, 1, true, "RFC 1035");
 defineQueryType(CNAME, DnsCnameRecord, 5, false, "RFC 1035");
+
+#ifdef USE_IPV6
 defineQueryType(AAAA, DnsAAAARecord, 28, true, "RFC 3596");
+#endif
+
 defineQueryType(SRV, DnsSrvRecord, 33, false, "RFC 2782");
 defineQueryType(NAPTR, DnsNaptrRecord, 35, true, "RFC 2915");
 
