@@ -120,11 +120,8 @@ UdpTransport::process(fd_set* fdSet)
       assert ( (count == int(data->length) ) || (count == SOCKET_ERROR ) );
    }
 
-//#define UDP_SHORT   
-
    struct sockaddr_in from;
 
-#if !defined(UDP_SHORT)
    // !ah! debug is just to always return a sample message
    // !jf! this may have to change - when we read a message that is too big
    
@@ -155,33 +152,6 @@ UdpTransport::process(fd_set* fdSet)
                        (size_t*)&fromLen);
 #endif
 
-      
-#else
-
-#define CRLF "\r\n"
-   
-   char buffer[] = 
-      "INVITE foo@bar.com SIP/2.0" CRLF
-      "Via: SIP/2.0/UDP pc33.atlanta.com;branch=foo" CRLF
-      "To: <sip:alan@ieee.org>" CRLF
-      "From: <sip:cj@whistler.com>"CRLF
-      "Route: <sip:1023@1.2.3.4>, <sip:1023@3.4.5.6>, <sip:1023@10.1.1.1>" CRLF
-      "Subject: Good Morning!"CRLF
-      "Call-Id: 123" CRLF
-      CRLF
-   ;
-   int len = sizeof(buffer)/sizeof(*buffer);
-   static int fired = 0;
-   if (!fired)
-   {
-      fired++;
-   }
-   else
-   {
-      len = 0;
-   }
-     
-#endif
 
    if ( len == SOCKET_ERROR )
    {
@@ -253,8 +223,9 @@ UdpTransport::process(fd_set* fdSet)
       else
       {
       
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: "
-                   << message);
+         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message);
+
+         // set the received= and rport= parameters in the message if necessary !jf!
          mStateMachineFifo.add(message);
       }
    }
