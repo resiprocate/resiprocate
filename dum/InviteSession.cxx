@@ -447,7 +447,7 @@ InviteSession::send(SipMessage& msg)
       {
          mState = Terminated;
          mDum.send(msg);
-	     mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
+	     //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      // This is actually called when recieving the BYE message so that the BYE message can be passed to onTerminated
          guard.destroy();
       }
       else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
