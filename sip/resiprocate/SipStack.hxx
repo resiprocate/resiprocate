@@ -121,6 +121,9 @@ class SipStack
       // loose routing policy is used. 
       void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
       bool isStrictRouting() const { return mStrictRouting; }
+
+      // output current state of the stack - for debug
+      std::ostream& dump(std::ostream& strm) const;
       
       /// if this object exists, it manages advanced security featues
       Security* security;
@@ -151,6 +154,8 @@ class SipStack
       friend class TestDnsResolver;
       friend class TestFSM;
 };
+
+std::ostream& operator<<(ostream& strm, const SipStack& stack);
  
 }
 

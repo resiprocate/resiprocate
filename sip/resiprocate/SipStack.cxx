@@ -22,7 +22,7 @@
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-
+#include "resiprocate/os/Inserter.hxx"
 
 
 #ifdef WIN32
@@ -65,6 +65,7 @@ SipStack::shutdown()
 {
    //InfoLog (<< "Shutting down stack " << this);
    mShuttingDown = true;
+   cerr << *this << endl;
    mTUFifo.add(new ShutdownMessage);
 }
 
@@ -314,6 +315,28 @@ void
 SipStack::buildFdSet(FdSet& fdset)
 {
    mExecutive.buildFdSet( fdset );
+}
+
+std::ostream& 
+SipStack::dump(std::ostream& strm)  const
+{
+   strm << "SipStack: " << (this->mStrictRouting ? "strict router " : "loose router ")
+        << endl
+        << "domains: " << Inserter(this->mDomains)
+        << endl
+        << " TUFifo size=" << this->mTUFifo.size() << endl
+        << " Timers size=" << this->mTransactionController.mTimers.size() << endl
+        << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << endl
+        << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << endl
+        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << endl
+        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << endl;
+   return strm;
+}
+
+std::ostream& 
+resip::operator<<(ostream& strm, const SipStack& stack) 
+{
+   return stack.dump(strm);
 }
 
 
