@@ -10,9 +10,12 @@ namespace resip
 class Message 
 {
    public:
-      virtual ~Message(){}
+      virtual ~Message() {}
       virtual const Data& getTransactionId() const=0; 
       virtual Data brief() const=0;
+
+      // override in application messages
+      virtual Message* clone() const;
 
       // indicates this message is associated with a Client Transaction for the
       // purpose of determining which TransactionMap to use
@@ -77,3 +80,4 @@ operator<<(std::ostream& strm, const resip::Message& msg);
  * <http://www.vovida.org/>.
  *
  */
+
