@@ -1,11 +1,24 @@
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/DumTimeout.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
-   : InviteSession(dum, dialog)
+   : InviteSession(dum, dialog, Proceeding)
 {
+   std::pair<OfferAnswerType, const SdpContents*> offans;
+   offans = InviteSession::getOfferOrAnswer(msg);
+   if (offans.first == Offer)
+   {
+      InviteSession::incomingSdp(msg, offans.second);
+   }
 }
 
 ServerInviteSessionHandle 
@@ -14,51 +27,106 @@ ServerInviteSession::getHandle()
    return ServerInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-void 
-ServerInviteSession::setOffer(const SdpContents* offer)
-{
-}
-
-void 
-ServerInviteSession::setAnswer(const SdpContents* answer)
-{
-}
-
 SipMessage&
 ServerInviteSession::end()
 {
-   assert(0);
-   return mLastRequest;
+   switch (mState)
+   {
+      case Accepting:
+      case Terminated: 
+      case Connected:
+         return InviteSession::end();
+         break;
+      default:
+         return reject(410);
+   }
 }
 
-SipMessage& 
-ServerInviteSession::rejectOffer(int statusCode)
+void 
+ServerInviteSession::send(SipMessage& msg)
 {
-   assert(0);
-   return mLastRequest; // bogus
-}
-
-SipMessage&  
-ServerInviteSession::accept()
-{
+   //!dcm! -- not considering prack, so offer/answer only happens in 2xx
+   if(msg.isResponse())
+   {
+      int code = msg.header(h_StatusLine).statusCode();
+      if (code < 200)
+      {
+         mDum.send(msg);
+      }
+      else if (code < 300)
+      {
+         if (msg.header(h_CSeq).method() == INVITE)
+         {
+            InviteSession::send(msg);
+         }
+         else
+         {
+            mDum.send(msg);
+         }
+      }
+      else 
+      {
+         mDum.send(msg);
+         delete this;
+      }
+   }
+   else
+   {
+      //!dcm!-- accepting logic is in InviteSession(merge w/ reinvite),
+      //so no requests should be legal, which makes this user error
+      assert(0);
+   }
 }
 
 SipMessage& 
 ServerInviteSession::provisional(int statusCode)
 {
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
 }
 
 SipMessage& 
 ServerInviteSession::reject(int statusCode)
 {
-   assert(0);
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
 }
 
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
+   std::pair<OfferAnswerType, const SdpContents*> offans;
+   offans = InviteSession::getOfferOrAnswer(msg);
+
+   switch(mState)
+   {
+      case Proceeding:
+      {
+         if (msg.isRequest())
+         {
+            // !jf! consider UPDATE method
+            if (msg.header(h_RequestLine).method() == CANCEL)
+            {
+               mDialog.makeResponse(mLastResponse, msg, 200);
+               mDum.send(msg);
+               mDialog.makeResponse(mLastResponse, msg, 487);         
+               mDum.send(msg);
+            }
+            else
+            {
+               assert(0); //!dcm! -- throw, toss away, inform other endpoint?
+            }
+         }
+         else
+         {
+            assert(0);  //!dcm! -- throw, toss away, inform other endpoint?
+         }
+      }
+      break;
+      default:
+         InviteSession::dispatch(msg);
+   }
 }
 
+//!dcm! Nothing here, all up in InviteSession?
 void 
 ServerInviteSession::dispatch(const DumTimeout& timer)
 {
