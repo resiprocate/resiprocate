@@ -24,6 +24,8 @@
 namespace Vocal2
 {
 
+class Contents;
+
 class SipMessage : public Message
 {
    public:
@@ -61,12 +63,18 @@ class SipMessage : public Message
          return mIsExternal;
       }
 
-      bool isRequest() const;
-      bool isResponse() const;
-
       virtual std::ostream& encode(std::ostream& str) const;
       
       Data brief() const;
+
+      bool isRequest() const;
+      bool isResponse() const;
+
+      RequestLine& 
+      header(const RequestLineType& l) const;
+
+      StatusLine& 
+      header(const StatusLineType& l) const;
 
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
@@ -121,12 +129,6 @@ class SipMessage : public Message
       ParserContainer<Unsupported_MultiHeader::Type>& header(const Unsupported_MultiHeader& headerType) const;
       ParserContainer<Via_MultiHeader::Type>& header(const Via_MultiHeader& headerType) const;
 
-      RequestLine& 
-      header(const RequestLineType& l) const;
-
-      StatusLine& 
-      header(const StatusLineType& l) const;
-      
       // unknown header interface
       StringCategories& header(const Data& symbol) const;
       bool exists(const Data& symbol) const;
@@ -137,12 +139,13 @@ class SipMessage : public Message
       void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
 
+      Contents* getContents() const;
+      void setContents(const Contents* contents);
+
       // transport interface
       void setStartLine(const char* start, int len); 
-      void setBody(const char* start, int len); 
 
-      const HeaderFieldValue* getBody() const; 
-      void updateContentLength();
+      void setBody(const char* start, int len); 
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -186,7 +189,8 @@ class SipMessage : public Message
       // !dlb! hack out with pre-data pointer in buffer for intrusive list?
       std::vector<char*> mBufferList;
       mutable HeaderFieldValueList* mStartLine;
-      mutable HeaderFieldValueList* mBody;
+      mutable HeaderFieldValue* mContentsHfv;
+      mutable Contents* mContents;
       mutable Data mRFC2543TransactionId;
       mutable bool mRequest;
       mutable bool mResponse;

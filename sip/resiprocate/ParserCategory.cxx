@@ -14,34 +14,23 @@ using namespace Vocal2;
 using namespace std;
 
 ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue)
-    : mHeaderField(headerFieldValue),
+    : LazyParser(headerFieldValue),
       mParameters(),
-      mUnknownParameters(),
-      mMine(false),
-      mIsParsed(mHeaderField->mField == 0) //although this has a hfv it is
-                                           //parsed, as the hfv has no content
+      mUnknownParameters()
 {
 }
 
 ParserCategory::ParserCategory()
-   : mHeaderField(0),
-     mMine(true),
-     mIsParsed(true)
+   : LazyParser()
 {
 }
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
-   : mHeaderField(0),
-     mMine(true),
-     mIsParsed(rhs.mIsParsed)
+   : LazyParser(rhs)
 {
-   if (mIsParsed)
+   if (isParsed())
    {
       copyParametersFrom(rhs);
-   }
-   else if (rhs.mHeaderField)
-   {
-      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
 }
 
@@ -50,18 +39,10 @@ ParserCategory::operator=(const ParserCategory& rhs)
 {
    if (this != &rhs)
    {
-      clear();
-      mIsParsed = rhs.mIsParsed;
-      if (rhs.mIsParsed)
+      LazyParser::operator=(rhs);
+      if (rhs.isParsed())
       {
          copyParametersFrom(rhs);
-         mHeaderField = 0;
-         mMine = false;
-      }
-      else
-      {
-         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
-         mMine = true;
       }
    }
    return *this;
@@ -70,6 +51,8 @@ ParserCategory::operator=(const ParserCategory& rhs)
 void
 ParserCategory::clear()
 {
+   DebugLog(<<"ParserCategory::clear");
+   LazyParser::clear();
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
@@ -82,11 +65,6 @@ ParserCategory::clear()
       delete *it;
    }   
    mUnknownParameters.clear();
-   if (mMine)
-   {
-      delete mHeaderField;
-      mHeaderField = 0;
-   }
 }
 
 void 
@@ -106,27 +84,6 @@ ParserCategory::copyParametersFrom(const ParserCategory& other)
 
 ParserCategory::~ParserCategory()
 {
-   clear();
-}
-
-void
-ParserCategory::checkParsed() const
-{
-   if (!mIsParsed)
-   {
-      ParserCategory* ncThis = const_cast<ParserCategory*>(this);
-      ncThis->mIsParsed = true;
-      ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
-      ncThis->parse(pb);
-   }
-}
-
-ostream&
-ParserCategory::encodeFromHeaderFieldValue(ostream& str) const
-{
-   assert(mHeaderField);
-   mHeaderField->encode(str);
-   return str;
 }
 
 // !dlb! need to convert existing parameter by enum to UnknownParameter for backward compatibility
