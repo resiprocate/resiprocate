@@ -54,8 +54,6 @@ class InviteSessionHandler
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
       /// useful 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
-
-      //!dcm! -- timer B handling?--timer B for re-invite?
       
       /// callebranch/sip/resiprocate/dum/d when some state in the Dialog changes - typically remoteURI
       virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)=0;
