@@ -89,6 +89,12 @@ const char* Symbols::Pending = "pending";
 const char* Symbols::Active = "active";
 const char* Symbols::Terminated = "terminated";
 
+#if defined(WIN32)
+const char *Symbols::pathSep = "\\";
+#else
+const char *Symbols::pathSep = "/";
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -7,6 +7,7 @@
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/Security.hxx"
 
 namespace resip
 {
@@ -33,7 +34,9 @@ class TransactionController
                             const Data& privateKeyPassPhrase,
                             const Data& domainname,
                             IpVersion version,
-                            const Data& ipInterface);
+                            const Data& ipInterface,
+                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                            );
       
       void send(SipMessage* msg);
 
