@@ -57,6 +57,7 @@ const int actHdr   = (1 << 4);
 const int actData  = (1 << 5);
 const int actBad   = (1 << 6);
 const int actEndHdrs = (1 << 7);
+const int actFrag = (1<<8);
 
   
 typedef enum {
@@ -116,6 +117,9 @@ class Preparse
         // of the mHeader enum
       
         PreparseState::State mState;
+        
+        // State of machine.  This is manipulated
+        // oddly for fragmentation; see the code.
         
 };
  
