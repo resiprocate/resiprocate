@@ -51,7 +51,7 @@ class BaseUsage
       virtual ~BaseUsage();
 
       // to send a request on an existing dialog (made from make... methods above)
-      void send(const SipMessage& request);
+      virtual void send(const SipMessage& request);
       
       DialogUsageManager& dum();
       Dialog& dialog();
