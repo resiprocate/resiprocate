@@ -23,6 +23,10 @@ class SendData
 {
    public:
       SendData(const sockaddr_in dest, const Data* pdata): destination(dest),data(pdata)  { }
+      ~SendData() 
+      {
+         delete data;
+      }
       const sockaddr_in destination;
       const Data* data;
 };
