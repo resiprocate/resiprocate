@@ -12,7 +12,7 @@ class TransactionState
       
       static void process(); 
 
-      void process( SipMessage* msg );
+      void process( Message* msg );
      
       
    private:
