@@ -101,24 +101,12 @@ DialogSet::getCreator()
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
-   if (msg.isRequest())
+   assert(msg.isRequest() || msg.isResponse());
+   Dialog* dialog = findDialog(msg);
+   if (dialog == 0)
    {
+      dialog = new Dialog(mDum, msg);
+      this->addDialog(dialog);
    }
-   else if (msg.isResponse())
-   {
-      Dialog* dialog = findDialog(msg);
-      if (dialog == 0)
-      {
-         Dialog* dialog = new Dialog(mDum, msg);
-         mDialogs.push_back(dialog);
-      }
-      else
-      {
-         dialog->dispatch(msg);
-      }
-   }
-   else
-   {
-      assert(0);
-   }
+   dialog->dispatch(msg);
 }
