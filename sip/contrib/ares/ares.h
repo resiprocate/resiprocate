@@ -1,5 +1,3 @@
-/* $Id: ares.h,v 1.9 2004/02/18 21:52:06 jason Exp $ */
-
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
  * Permission to use, copy, modify, and distribute this
