@@ -57,14 +57,17 @@ class DialogUsageManager
       ClientAuthManager* mClientAuthManager;
       ServerAuthManager* mServerAuthManager;      
       ClientInviteSessionHandler* mClientInviteSessionHandler;
-      ServerInviteSessionHandler* ClientInviteSessionHandler;      
+      ServerInviteSessionHandler* mServerInviteSessionHandler;      
       ClientRegistrationHandler* mClientRegistrationHandler;
-      ServerRegistrationHandler* ClientRegistrationHandler;      
+      ServerRegistrationHandler* mServerRegistrationHandler;      
       ClientSubscriptionHandler* mClientSubscriptionHandler;
-      ServerSubscriptionHandler* ClientSubscriptionHandler;      
+      ServerSubscriptionHandler* mServerSubscriptionHandler;      
       ClientPublicationHandler* mClientPublicationHandler;
       ServerPublicationHandler* mServerPublicationHandler;      
       OutOfDialogHandler* mOutOfDialogHandler;
+	  
+	  
+	  
       
       HashMap<CreatorId, BaseCreatorImpl*> mBaseCreatorMap; 
       HashMap<CreatorId, std::list<BaseUsageImpl*> > mBaseCreatorMap;
