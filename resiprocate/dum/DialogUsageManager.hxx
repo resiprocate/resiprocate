@@ -22,7 +22,7 @@ namespace resip
 class Security;
 class SipStack;
 class FdSet;
-class MasterProfile;
+class Profile;
 class RedirectManager;
 class ClientAuthManager;
 class ServerAuthManager;
@@ -87,8 +87,8 @@ class DialogUsageManager : public HandleManager
 
       void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
 
-      void setMasterProfile(MasterProfile* masterProfile);
-      MasterProfile* getMasterProfile();
+      void setProfile(Profile* profile);
+      Profile* getProfile();
       
       //optional handler to track the progress of DialogSets
       void setDialogSetHandler(DialogSetHandler* handler);
@@ -136,49 +136,33 @@ class DialogUsageManager : public HandleManager
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const NameAddr& target, Identity& identity, const SdpContents* initialOffer, AppDialogSet* = 0);
-      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, const NameAddr& from, const SdpContents* initialOffer, AppDialogSet* = 0);
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
                                              const SdpContents* initialOffer, AppDialogSet* = 0);
       
-      SipMessage& makeSubscription(const NameAddr& target, Identity& identity, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, Identity& identity, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, Identity& identity, const Data& eventType, 
-                                   int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, 
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
                                    int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
 
       //unsolicited refer
-      SipMessage& makeRefer(const NameAddr& target, Identity& identity, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
-      SipMessage& makeRefer(const NameAddr& target, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+      SipMessage& makeRefer(const NameAddr& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
       SipMessage& makePublication(const NameAddr& target, 
-                                  Identity& identity, 
-                                  const Contents& body, 
-                                  const Data& eventType, 
-                                  unsigned expiresSeconds, 
-                                  AppDialogSet* = 0);
-      SipMessage& makePublication(const NameAddr& target, 
+                                  const NameAddr& from, 
                                   const Contents& body, 
                                   const Data& eventType, 
                                   unsigned expiresSeconds, 
                                   AppDialogSet* = 0);
 
-      SipMessage& makeRegistration(const NameAddr& target, Identity& identity, AppDialogSet* = 0);
-      SipMessage& makeRegistration(const NameAddr& target, Identity& identity, int registrationTime, AppDialogSet* = 0);
       SipMessage& makeRegistration(const NameAddr& target, AppDialogSet* = 0);
       SipMessage& makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* = 0);
+      SipMessage& makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* = 0);
 
-      SipMessage& makeOutOfDialogRequest(const NameAddr& target, Identity& identity, const MethodTypes meth, AppDialogSet* = 0);
-      SipMessage& makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* = 0);
-
-      ClientPagerMessageHandle makePagerMessage(const NameAddr& target, Identity& identity, AppDialogSet* = 0);
-      ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
+      ClientPagerMessageHandle makePagerMessage(const NameAddr& target, const NameAddr& from, AppDialogSet* = 0);
       
       void cancel(DialogSetId invSessionId);
       void send(SipMessage& request); 
@@ -251,7 +235,7 @@ class DialogUsageManager : public HandleManager
       // May call a callback to let the app adorn
       void sendResponse(SipMessage& response);
 
-      void sendUsingOutboundIfAppropriate(Identity& identity, SipMessage& msg);      
+      void sendUsingOutboundIfAppropriate(SipMessage& msg);      
 
       void addTimer(DumTimeout::Type type,
                     unsigned long duration,
@@ -297,7 +281,7 @@ class DialogUsageManager : public HandleManager
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
       DialogSetMap mDialogSetMap;
 
-      MasterProfile* mMasterProfile;
+      Profile* mProfile;
       std::auto_ptr<RedirectManager>   mRedirectManager;
       std::auto_ptr<ClientAuthManager> mClientAuthManager;
       std::auto_ptr<ServerAuthManager> mServerAuthManager;  

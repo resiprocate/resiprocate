@@ -8,7 +8,6 @@
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
@@ -461,7 +460,7 @@ Dialog::dispatch(const SipMessage& msg)
             default:
                break;
          }
-         if ( lastRequest && mDum.mClientAuthManager.get() && mDum.mClientAuthManager->handle( *mDialogSet.getIdentity(), *lastRequest, msg ) )
+		 if ( lastRequest && mDum.mClientAuthManager.get() && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << *lastRequest );
@@ -812,10 +811,10 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    // If method is INVITE then advertise required headers
    if(method == INVITE)
    {
-      if(mDialogSet.getIdentity()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-      if(mDialogSet.getIdentity()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-      if(mDialogSet.getIdentity()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-      if(mDialogSet.getIdentity()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
    }
 
    // Remove Session Timer headers for all requests except INVITE and UPDATE
