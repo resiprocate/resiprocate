@@ -1,8 +1,5 @@
-
 #include <util/Socket.hxx>
-
 #include <iostream> // debug only !ah!
-
 #include <util/Data.hxx>
 #include <util/Logger.hxx>
 #include <sipstack/Preparse.hxx>
@@ -12,6 +9,7 @@
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 using namespace Vocal2;
+using namespace std;
 
 // Table helpers
 //  AE(int start, int disposition, const char *p, int next, int workMask);
@@ -24,13 +22,14 @@ Edge *** mTransitionTable = 0;
 
 #if !defined(NDEBUG) && defined(DEBUG)
 
-Data showN(const char * p, size_t l)
+string showN(const char * p, size_t l)
 {
-   Data s;
+   string s;
    
    for(unsigned int i = 0 ; i < l ; i++)
       s += p[i];
    return s;
+   
 }
 
 const char *  stateName(PreparseStateTable::State s)
@@ -59,10 +58,10 @@ const char *  stateName(PreparseStateTable::State s)
 }
 
 
-Data
+string
 workString(int m)
 {
-   Data s("[");
+   string s("[");
 
    if ( m &  actNil) s += " Nil ";
    if ( m &  actAdd) s += " Add ";
@@ -298,7 +297,7 @@ Preparse::addBuffer(const char * buffer, size_t length)
    mPtr = buffer;
    mDone = false;
 #if defined(DEBUG)
-   cout << "added buffer" << mBuffer << ' ' << mLength << endl;
+   DebugLog( << "added buffer" << mBuffer << ' ' << mLength );
 #endif
 }
 
@@ -326,7 +325,7 @@ Preparse::process()
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
 
-#if defined(DEBUG)
+#if defined(DEBUG) && defined(SUPER_DEBUG)
       DebugLog( << "EDGE " << ::stateName(mState)
                 << " (" << (int) *mPtr << ')'
                 << " -> " << ::stateName(e.nextState)
@@ -336,9 +335,9 @@ Preparse::process()
       if (e.workMask & actAdd)
       {
 	 mAnchorEnd = mPtr;
-#if defined(DEBUG)         
+#if defined(DEBUG) && defined(SUPER_DEBUG)
          DebugLog( << "+++Adding char '"
-                   << showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1)
+                   << showN( mAnchorBeg, mAnchorEnd-mAnchorBeg+1)
                    << '\'' );
 #endif
       }
@@ -358,7 +357,7 @@ Preparse::process()
          {
             mDisposition = dContinuous;
          }
-#if defined(DEBUG)         
+#if defined(DEBUG)
          DebugLog(<<"Hdr \'"
                   << showN(mHeader, mHeaderLength)
                   << "\' Type: " << int(mHeaderType) );
@@ -373,8 +372,10 @@ Preparse::process()
                                mAnchorBeg,
                                mAnchorEnd - mAnchorBeg + 1
             );
-#if defined(DEBUG)                   
-         DebugLog(<<"DATA \'"
+#if defined(DEBUG)
+         DebugLog(<<"DATA "
+                  << Headers::HeaderNames[mHeaderType]
+                  << ": \'"
                   << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
                   << "\'");
 #endif
@@ -403,7 +404,9 @@ Preparse::process()
 
       if (e.workMask & actEndHdrs)
       {
+#if defined(DEBUG)
          DebugLog(<<"END_HDR");
+#endif
          mDone = true;
       }
       
@@ -413,11 +416,14 @@ Preparse::process()
       if (e.workMask & actReset)
       {
 	 mAnchorBeg = mAnchorEnd = mPtr;
+#if defined(DEBUG)
+         DebugLog(<<"RESET");
+#endif
       }
       
    }
-   return mDone;
-   
+   return !mDone; // mDone means we a done, client wants false when
+                  // we are complete. (return inverse)
 }
 
 
