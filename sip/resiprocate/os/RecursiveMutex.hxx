@@ -18,7 +18,7 @@ class RecursiveMutex : public Lockable
 
    private:
 #ifdef WIN32   
-      HANDLE mId;
+	  CRITICAL_SECTION mId;
 #else
       pthread_mutexattr_t mMutexAttr;
       mutable  pthread_mutex_t mId;
