@@ -24,6 +24,7 @@ static ::resip::ApiCheck::ApiEntry resipApiSizeList[] =
     TENT(SipStack),
     TENT(DnsResult),
     TENT(Security),
+    TENT(Connection),
     TENT(TlsConnection),
     TENT(TransportSelector),
     TENT(DnsInterface),
