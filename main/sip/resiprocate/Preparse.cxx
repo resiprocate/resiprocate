@@ -125,6 +125,8 @@ PreparseStateTable::InitStatePreparseStateTable()
      
    static bool initialised = false;
    
+   // !ah! This needs to be mutexd
+
    if (initialised) return;
 
    mTransitionTable = new Edge**[nStates];
