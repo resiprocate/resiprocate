@@ -66,6 +66,10 @@ class Helper
                                        const NameAddr& from,
                                        const NameAddr& contact);
 
+      static SipMessage* makeMessage(const NameAddr& target, 
+                                     const NameAddr& from,
+                                     const NameAddr& contact);
+
       static SipMessage* makePublish(const NameAddr& target, 
                                      const NameAddr& from,
                                      const NameAddr& contact);

@@ -139,6 +139,32 @@ Helper::makePublish(const NameAddr& target,
 
 
 SipMessage*
+Helper::makeMessage(const NameAddr& target, 
+                    const NameAddr& from,
+                    const NameAddr& contact)
+{
+   SipMessage* request = new SipMessage;
+   RequestLine rLine(MESSAGE);
+   rLine.uri() = target.uri();
+
+   request->header(h_To) = target;
+   request->header(h_RequestLine) = rLine;
+   request->header(h_MaxForwards).value() = 70;
+   request->header(h_CSeq).method() = MESSAGE;
+   request->header(h_CSeq).sequence() = 1;
+   request->header(h_From) = from;
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_CallId).value() = Helper::computeCallId();
+   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
+   request->header(h_Contacts).push_front( contact );
+   Via via;
+   request->header(h_Vias).push_front(via);
+   
+   return request;
+}
+
+
+SipMessage*
 Helper::makeSubscribe(const NameAddr& target, 
                       const NameAddr& from,
                       const NameAddr& contact)
