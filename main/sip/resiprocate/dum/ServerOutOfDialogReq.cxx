@@ -1,56 +1,14 @@
-#if !defined(RESIP_CLIENTINVITESESSION_HXX)
-#define RESIP_CLIENTINVITESESSION_HXX
+#include "ServerOutOfDialogReq.hxx"
 
-#include "InviteSession.hxx"
+ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
+   : DialogUsageManager::Handle(dum)
+{}
 
-namespace resip
+ServerOutOfDialogReq* 
+ServerOutOfDialogReq::Handle::operator->()
 {
-class SdpContents;
-
-class ClientInviteSession : public InviteSession
-{
-   public:
-      class Handle : public InviteSession::Handle
-      {
-         public:
-            // throws if no session 
-            ClientInviteSession* operator->();
-         private:
-            friend class DialogUsageManager;
-            Handle(DialogUsageManager& dum);
-      };
-
-      /// Called to set the offer that will be used in the next messages that
-      /// sends and offer. Does not send an offer 
-      virtual void setOffer(SdpContents* offer);
-      
-      /// Sends an offer in whatever messages is approperate to send one at
-      /// this point in the dialog. Must call setOffer before this.
-      virtual void sendOfferInAnyMessage();
-      
-      /// Called to set the answer that will be used in the next messages that
-      /// sends and offer. Does not send an answer
-      virtual void setAnswer(SdpContents* answer);
-
-      /// Sends an offer in whatever messages is approperate to send one at
-      /// this point in the dialog. Must call setAnswer before this. 
-      virtual void sendAnswerInAnyMessage();
-
-      /// Makes the dialog end. Depending ont eh current state, this might
-      /// results in BYE or CANCEL being sent.
-      virtual void end();
-
-      /// Rejects an offer at the SIP level. So this can send a 487 to a
-      /// reINVITE or and UPDATE
-      virtual void rejectOffer(int statusCode);
-      
-   private:
-      friend class DialogUsageManager;
-};
- 
+   return static_cast<ServerOutOfDialogReq*>get();
 }
-
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
