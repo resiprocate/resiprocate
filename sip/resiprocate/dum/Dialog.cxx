@@ -603,6 +603,12 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
    : BaseException(msg, file, line)
 {}
 
+void
+Dialog::update(const SipMessage& msg)
+{
+}
+
+#if 0
 void 
 Dialog::setLocalContact(const NameAddr& localContact)
 {
@@ -614,6 +620,7 @@ Dialog::setRemoteTarget(const NameAddr& remoteTarget)
 {
    mRemoteTarget = remoteTarget;
 }
+#endif
 
 bool 
 Dialog::shouldMerge(const SipMessage& request) const
