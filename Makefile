@@ -13,7 +13,6 @@ TESTPROGRAMS =
 #LDFLAGS  += -L/sw/lib
 
 SRC = \
-	\
 	os/HeapInstanceCounter.cxx \
 	\
 	os/AbstractFifo.cxx \
