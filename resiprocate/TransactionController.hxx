@@ -18,6 +18,9 @@ class StatisticsManager;
 class TransactionController
 {
    public:
+      // set after starting at your peril
+      static unsigned int MaxTUFifoSize;
+
       TransactionController(bool multithreaded, 
                             Fifo<Message>& tufifo, 
                             bool stateless=false);
@@ -65,6 +68,7 @@ class TransactionController
       unsigned int getNumClientTransactions() const;
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
+      void setStatisticsInterval(unsigned long seconds) const;
 
    private:
       TransactionController(const TransactionController& rhs);

@@ -14,12 +14,11 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-static unsigned int MaxTUFifoSize = 1000;
-
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 
+unsigned int TransactionController::MaxTUFifoSize = 1000;
 
 TransactionController::TransactionController(bool multi, 
                                              Fifo<Message>& tufifo, 
@@ -221,6 +220,12 @@ TransactionController::getStatisticsManager() const
 {
    assert(mStatsManager);
    return *mStatsManager;
+}
+
+void
+TransactionController::setStatisticsInterval(unsigned long seconds) const
+{
+   mStatsManager->setInterval(seconds);
 }
 
 /* ====================================================================
