@@ -1,7 +1,9 @@
 .dependlibs
 .dependlibs
+.gdb_history
 8
 bin.debug.Darwin.Power_Macintosh
+bin.debug.Darwin.ppc
 bin.debug.Linux.i686
 bin.debug.Linux.i686
 bin.debug.QNX.x86pc
@@ -13,6 +15,7 @@ bin.prof.Linux.i686
 foo.i
 limpc
 obj.debug.Darwin.Power_Macintosh
+obj.debug.Darwin.ppc
 obj.debug.Linux.i686
 obj.debug.Linux.i686
 obj.debug.QNX.x86pc
