@@ -1311,11 +1311,12 @@ DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
 
-   if (mShutdownState != Running)
-   {
-      InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
-      return;
-   }
+   // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
+   //if (mShutdownState != Running)
+   //{
+   //   InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
+   //   return;
+   //}
 
    if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
