@@ -65,7 +65,7 @@ Pidf::operator=(const Pidf& rhs)
       mNote = rhs.mNote;
       mEntity = rhs.mEntity;
       mTupple.clear();
-      for( unsigned int i; i < rhs.mTupple.size(); i++)
+      for( unsigned int i=0; i < rhs.mTupple.size(); i++)
       {
          Tupple t = rhs.mTupple[i];
          mTupple.push_back( t );
