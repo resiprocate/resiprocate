@@ -14,6 +14,7 @@ namespace resip
 class TransactionMessage;
 class ApplicationMessage;
 class StatisticsManager;
+class AsyncProcessHandler;
 
 class TransactionController
 {
@@ -22,10 +23,10 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(bool multithreaded, 
-                            TimeLimitFifo<Message>& tufifo, 
+      TransactionController(TimeLimitFifo<Message>& tufifo, 
                             StatisticsManager& stats,
                             Security* security,
+                            AsyncProcessHandler* asyncHandler=0,
                             bool stateless=false);
       ~TransactionController();
 
@@ -36,13 +37,8 @@ class TransactionController
       // graceful shutdown (eventually)
       void shutdown();
 
-      bool addTransport( TransportType protocol,
-                         int port, 
-                         IpVersion version,
-                         const Data& ipInterface , 
-                         const Data& sipDomainname ,
-                         const Data& privateKeyPassPhrase ,
-                         SecurityTypes::SSLType sslType  );
+      TransportSelector& transportSelector() { return mTransportSelector; }
+      const TransportSelector& transportSelector() const { return mTransportSelector; }
 
       bool isTUOverloaded() const;
       

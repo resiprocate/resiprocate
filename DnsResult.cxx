@@ -66,6 +66,18 @@ DnsResult::~DnsResult()
    assert(mType != Pending);
 }
 
+void 
+DnsResult::transition(Type t)
+{
+   if ((t == Finished || t == Destroyed || t == Available) &&
+       (mType == Pending))
+   {
+      mInterface.mActiveQueryCount--;
+      assert(mInterface.mActiveQueryCount >= 0);
+   }
+   mType = t;
+}
+
 void
 DnsResult::destroy()
 {
@@ -74,7 +86,7 @@ DnsResult::destroy()
    
    if (mType == Pending)
    {
-      mType = Destroyed;
+      transition(Destroyed);
    }
    else
    {
@@ -135,7 +147,7 @@ DnsResult::lookup(const Uri& uri)
          Tuple tuple(mTarget, mPort, mTransport, mTarget);
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
-         mType = Available;
+         transition(Available);
          mHandler->handle(this);         
       }
       else if (uri.port() != 0)
@@ -150,17 +162,36 @@ DnsResult::lookup(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
+               if (!mInterface.isSupported(mTransport))
+               {
+                  transition(Finished);
+                  mHandler->handle(this);
+                  return;
+               }
                mSRVCount++;
                lookupSRV("_sips._udp." + mTarget);
             }
             else
             {
+               if (!mInterface.isSupported(TLS))
+               {
+                  transition(Finished);
+                  mHandler->handle(this);
+                  return;
+               }
                mSRVCount++;
                lookupSRV("_sips._tcp." + mTarget);
             }
          }
          else
          {
+            if (!mInterface.isSupported(mTransport))
+            {
+               transition(Finished);
+               mHandler->handle(this);
+               return;
+            }
+
             switch(mTransport)
             {
                case TLS: //deprecated, mean TLS over TCP
@@ -196,7 +227,7 @@ DnsResult::lookup(const Uri& uri)
             mPort = getDefaultPort(mTransport, uri.port());
             Tuple tuple(mTarget, mPort, mTransport, mTarget);
             mResults.push_back(tuple);
-            mType = Available;
+            transition(Available);
             DebugLog (<< "Numeric result so return immediately: " << tuple);
             mHandler->handle(this);
          }
@@ -351,7 +382,7 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
       if (mPreferredNAPTR.key.empty())
       {
          StackLog (<< "No NAPTR records that are supported by this client");
-         mType = Finished;
+         transition(Finished);
          mHandler->handle(this);
          return;
       }
@@ -386,7 +417,7 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
          assert(!mPreferredNAPTR.replacement.empty());
 
          StackLog (<< "No SRV record for " << mPreferredNAPTR.replacement << " in additional section");
-         mType = Pending;
+         transition(Pending);
          mSRVCount++;
          lookupSRV(mPreferredNAPTR.replacement);
       }
@@ -399,22 +430,44 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
    }
    else
    {
-      StackLog (<< "NAPTR lookup failed: " << mInterface.errorMessage(status));
+      if (status > 6)
+      {
+         DebugLog (<< "NAPTR lookup failed: " << mInterface.errorMessage(status));
+      }
+      else
+      {
+         StackLog (<< "NAPTR lookup failed: " << mInterface.errorMessage(status));
+      }   
       
       // This will result in no NAPTR results. In this case, send out SRV
       // queries for each supported protocol
      NAPTRFail:
       if (mSips)
       {
+         if (!mInterface.isSupported(TLS))
+         {
+            transition(Finished);
+            mHandler->handle(this);
+            return;
+         }
+
          mSRVCount++;
          lookupSRV("_sips._tcp." + mTarget);
       }
       else
       {
-         // For now, don't add _sips._tcp in this case. 
-         mSRVCount+=2;         
-         lookupSRV("_sip._tcp." + mTarget);
-         lookupSRV("_sip._udp." + mTarget);
+         //.dcm. assumes udp is supported
+         if (mInterface.isSupported(TCP))
+         {
+            mSRVCount+=2;         
+            lookupSRV("_sip._tcp." + mTarget);
+            lookupSRV("_sip._udp." + mTarget);
+         }
+         else
+         {
+            mSRVCount++;         
+            lookupSRV("_sip._udp." + mTarget);
+         }
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
@@ -536,7 +589,7 @@ void
 DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 {
    StackLog (<< "Received AAAA result for: " << mTarget);
-#ifdef USE_IPV6
+#if defined(USE_IPV6)
    StackLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -671,7 +724,7 @@ DnsResult::processHost(int status, const struct hostent* result)
       }
       else 
       {
-         mType = Available;
+         transition(Available);
       }
       if (changed) mHandler->handle(this);
    }
@@ -690,12 +743,12 @@ DnsResult::primeResults()
       SRV next = retrieveSRV();
       StackLog (<< "Primed with SRV=" << next);
       if ( mARecords.count(next.target) 
-#ifdef USE_IPV6 
+#if defined(USE_IPV6)
            + mAAAARecords.count(next.target)
 #endif
          )
       {
-#ifdef USE_IPV6 
+#if defined(USE_IPV6)
          std::vector<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
          for (std::vector<struct in6_addr>::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
@@ -715,7 +768,7 @@ DnsResult::primeResults()
          StackLog (<< "Try: " << Inserter(mResults));
 
          bool changed = (mType == Pending);
-         mType = Available;
+         transition(Available);
          if (changed) mHandler->handle(this);
 
          // recurse if there are no results. This could happen if the DNS SRV
@@ -733,7 +786,7 @@ DnsResult::primeResults()
          // Records of the DNS result
          // we will need to store the SRV record that is being looked up so we
          // can populate the resulting Tuples 
-         mType = Pending;
+         transition(Pending);
          mPort = next.port;
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
@@ -745,7 +798,7 @@ DnsResult::primeResults()
    else
    {
       bool changed = (mType == Pending);
-      mType = Finished;
+      transition(Finished);
       if (changed) mHandler->handle(this);
    }
 
@@ -768,8 +821,13 @@ DnsResult::retrieveSRV()
       int priority = srv.priority;
    
       mCumulativeWeight=0;
+      //!dcm! -- this should be fixed properly; TCP req. lines were being sent
+      //out on UDP
+      TransportType transport = mSRVResults.begin()->transport;      
       for (std::vector<SRV>::iterator i=mSRVResults.begin(); 
-           i!=mSRVResults.end() && i->priority == priority; i++)
+           i!=mSRVResults.end() 
+              && i->priority == priority 
+              && i->transport == transport; i++)
       {
          mCumulativeWeight += i->weight;
          i->cumulativeWeight = mCumulativeWeight;
@@ -918,7 +976,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       }
       return aptr + dlen;
    }
-#ifdef USE_IPV6
+#if defined(USE_IPV6)
    else if (type == T_AAAA)
    {
       if (dlen != 16) // The RR is 128 bits of ipv6 address
@@ -1060,7 +1118,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
 }
       
 
-#ifdef USE_IPV6
+#if defined(USE_IPV6)
 // adapted from the adig.c example in ares
 const unsigned char* 
 DnsResult::parseAAAA(const unsigned char *aptr,
@@ -1331,25 +1389,25 @@ DnsResult::SRV::SRV() : priority(0), weight(0), cumulativeWeight(0), port(0)
 bool 
 DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 {
-   if (priority < rhs.priority)
+   if (transport < rhs.transport)
    {
       return true;
    }
-   else if (priority == rhs.priority)
+   else if (transport == rhs.transport)
    {
-      if (weight < rhs.weight)
+      if (target < rhs.target)
       {
          return true;
       }
-      else if (weight == rhs.weight)
+      else if (target == rhs.target)
       {
-         if (transport < rhs.transport)
+         if (priority < rhs.priority)
          {
             return true;
          }
-         else if (transport == rhs.transport)
+         else if (priority == rhs.priority)
          {
-            if (target < rhs.target)
+            if (weight < rhs.weight)
             {
                return true;
             }

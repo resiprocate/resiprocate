@@ -14,13 +14,10 @@
 
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TcpTransport.hxx"
-#include "resiprocate/TlsTransport.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/DtlsTransport.hxx"
+#include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "resiprocate/os/DataStream.hxx"
@@ -37,8 +34,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, Security* security) :
-   mMultiThreaded(multithreaded),
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security) :
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
@@ -58,17 +54,20 @@ TransportSelector::~TransportSelector()
 {
    while (!mExactTransports.empty())
    {
-      ExactTupleMap::const_iterator i = mExactTransports.begin();
+      ExactTupleMap::iterator i = mExactTransports.begin();
       Transport* t = i->second;
-      mExactTransports.erase(i->first);
+      mExactTransports.erase(i);
       delete t;
    }
 
+   InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
+   
    while (!mAnyInterfaceTransports.empty())
    {
-      AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
+      AnyInterfaceTupleMap::iterator i = mAnyInterfaceTransports.begin();
       Transport* t = i->second;
-      mAnyInterfaceTransports.erase(i->first);
+      mAnyInterfaceTransports.erase(i);
+      InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
       delete t;
    }
 }
@@ -101,85 +100,22 @@ TransportSelector::isFinished() const
 }
 
 
-// !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
-bool
-TransportSelector::addTransport( TransportType protocol,
-                                 int port,
-                                 IpVersion version,
-                                 const Data& ipInterface ,
-                                 const Data& sipDomainname ,
-                                 const Data& privateKeyPassPhrase ,
-                                 SecurityTypes::SSLType sslType  )
+//!dcm! Refactor wrt factory addtransport; do DtlsTransport/TlsTransport maps
+//need to be specially typed. Deal w/ transports that desire their own thread,
+//thread shutdown via destructor?
+void
+TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
-   assert( port >  0 );
-   Transport* transport=0;
-
-   try
-   {
-      switch (protocol)
-      {
-         case UDP:
-            transport = new UdpTransport(mStateMacFifo, port, version, ipInterface);
-            break;
-         case TCP:
-            transport = new TcpTransport(mStateMacFifo, port, version, ipInterface);
-            break;
-         case TLS:
-#if defined( USE_SSL )
-            assert(mTlsTransports.count(sipDomainname) == 0);
-            transport = new TlsTransport(mStateMacFifo,
-                                         port,
-                                         version,
-                                         ipInterface,
-                                         *mSecurity,
-                                         sipDomainname,
-                                         sslType);
-#else
-            CritLog (<< "TLS not supported in this stack. You don't have openssl");
-            assert(0);
-            return false;
-#endif
-            break;
-         case DTLS:
-#if defined( USE_DTLS )
-            assert(mDtlsTransports.count(sipDomainname) == 0);
-            transport = new DtlsTransport(mStateMacFifo,
-                                          port,
-                                          version,
-                                          ipInterface,
-                                          *mSecurity,
-                                          sipDomainname);
-#else
-            CritLog (<< "TLS not supported in this stack. You don't have openssl");
-            assert(0);
-            return false;
-#endif
-            break;
-         default:
-            assert(0);
-            break;
-      }
-   }
-   catch (Transport::Exception& )
-   {
-      ErrLog(<< "Failed to create transport: "
-             << (version == V4 ? "V4" : "V6") << " "
-             << Tuple::toData(protocol) << " " << port << " on "
-             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
-      return false;
-   }
-
-   if (mMultiThreaded)
-   {
-      transport->run();
-   }
-
-   switch (protocol)
+   Transport* transport = tAuto.release();   
+   mDns.addTransportType(transport->transport());
+   switch (transport->transport())
    {
       case UDP:
       case TCP:
       {
-         Tuple key(ipInterface, port, version == V4, protocol);
+         Tuple key(transport->interfaceName(), transport->port(), 
+                   transport->ipVersion(), transport->transport());
+         
          assert(mExactTransports.find(key) == mExactTransports.end() &&
                 mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
@@ -188,7 +124,7 @@ TransportSelector::addTransport( TransportType protocol,
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
-         if (ipInterface.empty())
+         if (transport->interfaceName().empty())
          {
             mAnyInterfaceTransports[key] = transport;
             mAnyPortAnyInterfaceTransports[key] = transport;
@@ -202,16 +138,13 @@ TransportSelector::addTransport( TransportType protocol,
       break;
       case TLS:
       {
-         assert(  dynamic_cast<TlsTransport*>(transport) );
-         mTlsTransports[sipDomainname] = dynamic_cast<TlsTransport*>(transport);
+         mTlsTransports[transport->interfaceName()] = transport;
       }
       break;
 #ifdef USE_DTLS
       case DTLS:
       {
-         assert( dynamic_cast<DtlsTransport*>(transport) ) ;
-         mDtlsTransports[ sipDomainname ] =
-            dynamic_cast<DtlsTransport *>(transport) ;
+         mDtlsTransports[transport->interfaceName()] = transport;
       }
       break;
 #endif
@@ -220,106 +153,60 @@ TransportSelector::addTransport( TransportType protocol,
          break;
    }
 
-   return true;
+   if (transport->shareStackProcessAndSelect())
+   {
+      mSharedProcessTransports.push_back(transport);
+   }
+   else
+   {
+      mHasOwnProcessTransports.push_back(transport);
+      transport->startOwnProcessing();
+   }
 }
-
+  
+void
+TransportSelector::buildFdSet(FdSet& fdset)
+{
+   mDns.buildFdSet(fdset);
+   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+       it != mSharedProcessTransports.end(); it++)
+   {
+      (*it)->buildFdSet(fdset);
+   }
+}
 
 void
 TransportSelector::process(FdSet& fdset)
 {
    mDns.process(fdset);
-
-   if (!mMultiThreaded)
+   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+       it != mSharedProcessTransports.end(); it++)
    {
-      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
-           i != mExactTransports.end(); i++)
+      try
       {
-         try
-         {
-            i->second->process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
+         (*it)->process(fdset);
       }
-      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
-           i != mAnyInterfaceTransports.end(); i++)
+      catch (BaseException& e)
       {
-         try
-         {
-            i->second->process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
+         InfoLog (<< "Exception thrown from Transport::process: " << e);
       }
-
-      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin();
-           i != mTlsTransports.end(); i++)
-      {
-         try
-         {
-            (i->second)->process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-
-#ifdef USE_DTLS
-      for (std::map<Data, DtlsTransport*>::const_iterator i=mDtlsTransports.begin();
-           i != mDtlsTransports.end(); i++)
-      {
-         try
-         {
-            (i->second)->process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-#endif
    }
 }
 
 bool
 TransportSelector::hasDataToSend() const
 {
-   if (!mMultiThreaded)
+   for(TransportList::const_iterator it = mSharedProcessTransports.begin();
+       it != mSharedProcessTransports.end(); it++)
    {
-      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
-           i != mExactTransports.end(); i++)
+      if ((*it)->hasDataToSend())
       {
-         if (i->second->hasDataToSend())
-         {
-            return true;
-         }
-      }
-      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
-           i != mAnyInterfaceTransports.end(); i++)
-      {
-         if (i->second->hasDataToSend())
-         {
-            return true;
-         }
-      }
-
-      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin();
-           i != mTlsTransports.end(); i++)
-      {
-         if ( (i->second)->hasDataToSend() )
-         {
-            return true;
-         }
+         return true;
       }
    }
-
    return false;
 }
+
 //!jf! the problem here is that DnsResult is returned after looking
 //mDns.lookup() but this can result in a synchronous call to handle() which
 //assumes that dnsresult has been assigned to the TransactionState
@@ -467,7 +354,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    if (msg->isRequest() && !via.sentHost().empty())
    // hint provided in sent-by of via by application
    {
-      return Tuple(via.sentHost(), via.sentPort(), target.isV4(), target.getType());
+      return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
    }
    else
    {
@@ -500,7 +387,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             {
                if (mSocket == INVALID_SOCKET)
                {
-                  mSocket = Transport::socket(UDP, true); // may throw
+                  mSocket = InternalTransport::socket(UDP, V4); // may throw
                }
                tmp = mSocket;
             }
@@ -508,7 +395,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             {
                if (mSocket6 == INVALID_SOCKET)
                {
-                  mSocket6 = Transport::socket(UDP, false); // may throw
+                  mSocket6 = InternalTransport::socket(UDP, V6); // may throw
                }
                tmp = mSocket6;
             }
@@ -843,40 +730,6 @@ TransportSelector::sumTransportFifoSizes() const
    }
 
    return sum;
-}
-
-void
-TransportSelector::buildFdSet(FdSet& fdset)
-{
-   mDns.buildFdSet(fdset);
-
-   if (!mMultiThreaded)
-   {
-      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
-           i != mExactTransports.end(); ++i)
-      {
-         i->second->buildFdSet(fdset);
-      }
-      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
-           i != mAnyInterfaceTransports.end(); ++i)
-      {
-         i->second->buildFdSet(fdset);
-      }
-
-      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin();
-           i != mTlsTransports.end(); ++i)
-      {
-         (i->second)->buildFdSet(fdset);
-      }
-
-#ifdef USE_DTLS
-      for (std::map<Data, DtlsTransport*>::const_iterator i=mDtlsTransports.begin();
-           i != mDtlsTransports.end(); ++i)
-      {
-         (i->second)->buildFdSet(fdset);
-      }
-#endif
-   }
 }
 
 Transport*

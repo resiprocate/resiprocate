@@ -246,6 +246,9 @@
 				RelativePath="Connection.cxx">
 			</File>
 			<File
+				RelativePath=".\ConnectionBase.cxx">
+			</File>
+			<File
 				RelativePath="ConnectionManager.cxx">
 			</File>
 			<File
@@ -271,6 +274,9 @@
 			</File>
 			<File
 				RelativePath=".\DateCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\Dialog.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
@@ -331,6 +337,9 @@
 			</File>
 			<File
 				RelativePath="IntegerParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
