@@ -29,7 +29,7 @@ class Dialog
       // return status code of response to generate - 0 if ok
       int targetRefreshRequest(SipMessage& request);
 
-      const Data& dialogId() const { return mDialogId; }
+      StringComponent& dialogId() { return mDialogId; }
       const Data& getLocalTag() const { return mLocalTag; }
       const Url& getRemoteTarget() const { return mRemoteTarget; }
 
@@ -66,7 +66,7 @@ class Dialog
       Data mRemoteTag;
       Url mRemoteUri;
       Url mLocalUri;
-      Data mDialogId;
+      StringComponent mDialogId;
 
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
 };
