@@ -10,72 +10,63 @@ using namespace Vocal2;
 Data Headers::HeaderNames[MAX_HEADERS];
 bool Headers::CommaTokenizing[] = {false};
 
-Header<Headers::Content_Disposition> Vocal2::h_ContentDisposition;
-Header<Headers::Content_Encoding> Vocal2::h_ContentEncoding;
-Header<Headers::MIME_Version> Vocal2::h_MimeVersion;
-Header<Headers::Priority> Vocal2::h_Priority;
-MultiHeader<Headers::Accept_Encoding> Vocal2::h_AcceptEncodings;
-MultiHeader<Headers::Accept_Language> Vocal2::h_AcceptLanguages;
-MultiHeader<Headers::Allow> Vocal2::h_Allows;
-MultiHeader<Headers::Content_Language> Vocal2::h_ContentLanguages;
-MultiHeader<Headers::Proxy_Require> Vocal2::h_ProxyRequires;
-MultiHeader<Headers::Require> Vocal2::h_Requires;
-MultiHeader<Headers::Supported> Vocal2::h_Supporteds;
-Header<Headers::Timestamp> Vocal2::h_Timestamp;
-MultiHeader<Headers::Unsupported> Vocal2::h_Unsupporteds;
-MultiHeader<Headers::Accept> Vocal2::h_Accepts;
-Header<Headers::Content_Type> Vocal2::h_ContentType;
-MultiHeader<Headers::Alert_Info> Vocal2::h_AlertInfos;
-MultiHeader<Headers::Call_Info> Vocal2::h_CallInfos;
-MultiHeader<Headers::Error_Info> Vocal2::h_ErrorInfos;
-MultiHeader<Headers::Record_Route> Vocal2::h_RecordRoutes;
-MultiHeader<Headers::Route> Vocal2::h_Routes;
-MultiHeader<Headers::Contact> Vocal2::h_Contacts;
-Header<Headers::From> Vocal2::h_From;
-Header<Headers::Reply_To> Vocal2::h_ReplyTo;
-Header<Headers::Refer_To> Vocal2::h_ReferTo;
-Header<Headers::Referred_By> Vocal2::h_ReferredBy;
-Header<Headers::To> Vocal2::h_To;
-Header<Headers::Organization> Vocal2::h_Organization;
-Header<Headers::Server> Vocal2::h_Server;
-Header<Headers::Subject> Vocal2::h_Subject;
-Header<Headers::User_Agent> Vocal2::h_UserAgent;
-Header<Headers::Content_Length> Vocal2::h_ContentLength;
-Header<Headers::Expires> Vocal2::h_Expires;
-Header<Headers::Max_Forwards> Vocal2::h_MaxForwards;
-Header<Headers::Min_Expires> Vocal2::h_MinExpires;
-Header<Headers::Retry_After> Vocal2::h_RetryAfter;
-Header<Headers::Call_ID> Vocal2::h_CallId;
-Header<Headers::In_Reply_To> Vocal2::h_InReplyTo;
-Header<Headers::Authentication_Info> Vocal2::h_AuthenticationInfo;
-Header<Headers::Authorization> Vocal2::h_Authorization;
-Header<Headers::Proxy_Authenticate> Vocal2::h_ProxyAuthenticate;
-Header<Headers::Proxy_Authorization> Vocal2::h_ProxyAuthorization;
-Header<Headers::WWW_Authenticate> Vocal2::h_WWWAuthenticate;
-Header<Headers::CSeq> Vocal2::h_CSeq;
-Header<Headers::Date> Vocal2::h_Date;
-Header<Headers::Warning> Vocal2::h_Warning;
-MultiHeader<Headers::Via> Vocal2::h_Vias;
-MultiHeader<Headers::Subscription_State> Vocal2::h_SubscriptionStates;
-Vocal2::RequestLineType Vocal2::h_RequestLine;
-Vocal2::StatusLineType Vocal2::h_StatusLine;
-Header<Headers::Replaces> Vocal2::h_Replaces;
-
-bool
+bool 
 Headers::isCommaTokenizing(Type type)
 {
    return CommaTokenizing[type];
 }
 
+RequestLineType Vocal2::h_RequestLine;
+StatusLineType Vocal2::h_StatusLine;
 
-#ifndef WIN32
-// !ah! We might not want this
-Headers::Type& Vocal2::operator++(Headers::Type& t)
-{
-   t = static_cast<Headers::Type>(t + 1);
-   return t;
-}
-#endif
+Content_Disposition_Header Vocal2::h_ContentDisposition;
+Content_Encoding_Header Vocal2::h_ContentEncoding;
+MIME_Version_Header Vocal2::h_MimeVersion;
+Priority_Header Vocal2::h_Priority;
+Accept_Encoding_MultiHeader Vocal2::h_AcceptEncodings;
+Accept_Language_MultiHeader Vocal2::h_AcceptLanguages;
+Allow_MultiHeader Vocal2::h_Allows;
+Content_Language_MultiHeader Vocal2::h_ContentLanguages;
+Proxy_Require_MultiHeader Vocal2::h_ProxyRequires;
+Require_MultiHeader Vocal2::h_Requires;
+Supported_MultiHeader Vocal2::h_Supporteds;
+Timestamp_Header Vocal2::h_Timestamp;
+Unsupported_MultiHeader Vocal2::h_Unsupporteds;
+Accept_MultiHeader Vocal2::h_Accepts;
+Content_Type_Header Vocal2::h_ContentType;
+Alert_Info_MultiHeader Vocal2::h_AlertInfos;
+Call_Info_MultiHeader Vocal2::h_CallInfos;
+Error_Info_MultiHeader Vocal2::h_ErrorInfos;
+Record_Route_MultiHeader Vocal2::h_RecordRoutes;
+Route_MultiHeader Vocal2::h_Routes;
+Contact_MultiHeader Vocal2::h_Contacts;
+From_Header Vocal2::h_From;
+Reply_To_Header Vocal2::h_ReplyTo;
+Refer_To_Header Vocal2::h_ReferTo;
+Referred_By_Header Vocal2::h_ReferredBy;
+To_Header Vocal2::h_To;
+Organization_Header Vocal2::h_Organization;
+Server_Header Vocal2::h_Server;
+Subject_Header Vocal2::h_Subject;
+User_Agent_Header Vocal2::h_UserAgent;
+Content_Length_Header Vocal2::h_ContentLength;
+Expires_Header Vocal2::h_Expires;
+Max_Forwards_Header Vocal2::h_MaxForwards;
+Min_Expires_Header Vocal2::h_MinExpires;
+Retry_After_Header Vocal2::h_RetryAfter;
+Call_ID_Header Vocal2::h_CallId;
+In_Reply_To_Header Vocal2::h_InReplyTo;
+Authentication_Info_Header Vocal2::h_AuthenticationInfo;
+Authorization_Header Vocal2::h_Authorization;
+Proxy_Authenticate_Header Vocal2::h_ProxyAuthenticate;
+Proxy_Authorization_Header Vocal2::h_ProxyAuthorization;
+WWW_Authenticate_Header Vocal2::h_WWWAuthenticate;
+CSeq_Header Vocal2::h_CSeq;
+Date_Header Vocal2::h_Date;
+Warning_Header Vocal2::h_Warning;
+Via_MultiHeader Vocal2::h_Vias;
+Subscription_State_MultiHeader Vocal2::h_SubscriptionStates;
+Replaces_Header Vocal2::h_Replaces;
 
 // to generate the perfect hash:
 // gperf -L ANSI-C -t -k '*' headers.gperf > bar
@@ -85,7 +76,7 @@ Headers::Type& Vocal2::operator++(Headers::Type& t)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
-struct params { char *name; Headers::Type type; };
+struct headers { char *name; Headers::Type type; };
 
 #define TOTAL_KEYWORDS 48
 #define MIN_WORD_LENGTH 2
@@ -184,10 +175,10 @@ hash (register const char *str, register unsigned int len)
 #ifdef __GNUC__
 __inline
 #endif
-struct params *
+struct headers *
 h_in_word_set (register const char *str, register unsigned int len)
 {
-   static struct params wordlist[] =
+   static struct headers wordlist[] =
       {
          {""}, {""},
          {"to", Headers::To},
@@ -293,7 +284,7 @@ h_in_word_set (register const char *str, register unsigned int len)
 Headers::Type
 Headers::getType(const char* name, int len)
 {
-   struct params* p;
+   struct headers* p;
    p = h_in_word_set(name, len);
    return p ? Headers::Type(p->type) : Headers::UNKNOWN;
 }
