@@ -24,7 +24,7 @@ const int ppDebugEdgeVerbose = 0x04; // ALL edge taken
 const int ppDebugActions     = 0x08; // Actions ( not Add )
 const int ppDebugPrettyPrint = 0x10; // pp the buffers.
 
-static int ppDebugFlags = 0;
+static int ppDebugFlags = 0xff;
 
 #endif
 
@@ -441,7 +441,7 @@ Preparse::process(SipMessage& msg,
         DebugLog(<<"mStart: " << mStart);
         DebugLog(<<"buffer: " << (void*)buffer);
 	DebugLog(<<"length: " << length);
-	TestSupport::prettyPrint(buffer,length);
+        DebugLog(<< Data(buffer, length));
      }
 #endif
 
@@ -486,7 +486,7 @@ Preparse::process(SipMessage& msg,
                  (!ppDebugSupress))
              {
                 DebugLog( << "+++Accumulated chars '"
-                          << TestSupport::showN( 
+                          << Data( 
                              &buffer[mAnchorBegOff],
                              mAnchorEndOff-mAnchorBegOff+1)
                           << '\'' );
@@ -518,8 +518,8 @@ Preparse::process(SipMessage& msg,
              if (ppDebugFlags & ppDebugActions)
              {
                 DebugLog(<<"Hdr \'"
-                         << TestSupport::showN(&buffer[mHeaderOff],
-                                               mHeaderLength)
+                         << Data(&buffer[mHeaderOff],
+                                 mHeaderLength)
                          << "\' Type: " << int(mHeaderType) );
              }
 #endif
@@ -540,7 +540,7 @@ Preparse::process(SipMessage& msg,
              if (ppDebugFlags & ppDebugActions)
              {
                 DebugLog(<<"DATA : \'"
-                         << TestSupport::showN(
+                         << Data(
                             &buffer[mAnchorBegOff],
                             mAnchorEndOff - mAnchorBegOff + 1)
                          << "\' (offset=" << mAnchorBegOff <<")");
@@ -556,7 +556,7 @@ Preparse::process(SipMessage& msg,
              if (ppDebugFlags & ppDebugActions)
              {
                 DebugLog(<<"FLINE \'"
-                         << TestSupport::showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
+                         << Data(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
                          << "\'");
              }
 #endif
