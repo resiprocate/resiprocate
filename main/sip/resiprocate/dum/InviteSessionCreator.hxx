@@ -17,7 +17,8 @@ class InviteSessionCreator : public BaseCreator
       void end();
 
       virtual void dispatch(const SipMessage& msg);
-
+      const SdpContents* getInitialOffer() const;
+      
    private:
       typedef enum
       {
