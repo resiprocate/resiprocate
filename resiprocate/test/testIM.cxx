@@ -13,6 +13,7 @@
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/TuIM.hxx"
+#include "sip2/sipstack/Security.hxx"
 
 #include "testIM.hxx"
 
@@ -25,7 +26,7 @@ using namespace std;
 class TestPageCallback: public TuIM::PageCallback
 {
    public:
-      virtual void receivedPage( Data& msg, Uri& from );
+      virtual void receivedPage( const Data& msg, const Uri& from );
 
       Uri* mDest;
 };
@@ -33,12 +34,12 @@ class TestPageCallback: public TuIM::PageCallback
 class TestErrCallback: public  TuIM::ErrCallback
 {
    public:
-      virtual void sendPageFailed( Uri& dest );
+      virtual void sendPageFailed( const Uri& dest );
 };
 
 
 void 
-TestPageCallback::receivedPage( Data& msg, Uri& from )
+TestPageCallback::receivedPage( const Data& msg, const Uri& from )
 {  
    InfoLog(<< "In TestPageCallback");
 
@@ -60,7 +61,7 @@ TestPageCallback::receivedPage( Data& msg, Uri& from )
 
 
 void 
-TestErrCallback::sendPageFailed( Uri& dest )
+TestErrCallback::sendPageFailed( const Uri& dest )
 {
    InfoLog(<< "In TestErrCallback");  
    cerr << "Message to " << dest << " failed" << endl;
@@ -160,6 +161,13 @@ main(int argc, char* argv[])
    
    SipStack sipStack;  
 
+   assert( sipStack.security );
+   //sipStack.security = new Security;
+   
+   bool ok = sipStack.security->loadAllCerts( Data("password") );
+   assert( ok );
+   
+   
    sipStack.addTransport(Transport::UDP, port);
 
    TestPageCallback pageCallback;

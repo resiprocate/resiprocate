@@ -1,7 +1,18 @@
 #if defined(USE_SSL)
 
+#include <openssl/crypto.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/pkcs7.h>
+
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Security.hxx"
+#include "sip2/sipstack/Contents.hxx"
+#include "sip2/sipstack/Pkcs7Contents.hxx"
+#include "sip2/sipstack/PlainContents.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/Random.hxx"
+#include "sip2/util/DataStream.hxx"
 
 
 using namespace Vocal2;
@@ -12,6 +23,19 @@ using namespace Vocal2;
 
 Security::Security()
 {
+   privateKey = NULL;
+   publicCert = NULL;
+
+   static bool initDone=false;
+   if ( !initDone )
+   {
+      initDone = true;
+      
+      OpenSSL_add_all_algorithms();
+      ERR_load_crypto_strings();
+
+      Random::initialize();
+   }
 }
 
 
@@ -19,6 +43,257 @@ Security::~Security()
 {
 }
 
+
+bool 
+Security::loadAllCerts( const Data& password, char* directoryPath )
+{
+   bool ok = true;
+   ok = loadMyPublicCert() ? ok : false;
+   ok = loadMyPrivateKey(password) ? ok : false;
+
+   return ok;
+}
+     
+
+bool 
+Security::loadMyPublicCert( char* filePath )
+{
+   if ( !filePath )
+   {
+      filePath = "/home/cullen/certs/id.pem";
+   }
+   
+   FILE* fp = fopen(filePath,"r");
+   if ( !fp )
+   {
+      ErrLog( << "Could not read public cert from " << filePath );
+      return false;
+   }
+   
+   publicCert = PEM_read_X509(fp,NULL,NULL,NULL);
+   if (!publicCert)
+   {
+      ErrLog( << "Error reading contents of public cert file " << filePath );
+      return false;
+   }
+   
+   DebugLog( << "Loaded public cert");
+   
+   return true;
+}
+
+
+bool 
+Security::loadMyPrivateKey( const Data& password, char* filePath )
+{
+   if ( !filePath )
+   {
+      filePath = "/home/cullen/certs/id_key.pem";
+   }
+   
+   FILE* fp = fopen(filePath,"r");
+   if ( !fp )
+   {
+      ErrLog( << "Could not read private key from " << filePath );
+      return false;
+   }
+   
+   //DebugLog( "password is " << password );
+   
+   privateKey = PEM_read_PrivateKey(fp,NULL,NULL,(void*)password.c_str());
+   if (!privateKey)
+   {
+      ErrLog( << "Error reading contents of private key file " << filePath );
+
+      while (1)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+      return false;
+   }
+   
+   DebugLog( << "Loaded private key");
+   
+   return true;
+}
+
+
+
+Pkcs7Contents* 
+Security::sign( Contents* bodyIn )
+{
+   assert( bodyIn );
+   
+   Data bodyData;
+   oDataStream strm(bodyData);
+   bodyIn->encode( strm );
+   strm.flush();
+   
+   DebugLog( << "body data to sign is <" << bodyData << ">" );
+      
+   const char* p = bodyData.data();
+   int s = bodyData.size();
+   
+   BIO* in;
+   in = BIO_new_mem_buf( (void*)p,s);
+   assert(in);
+   DebugLog( << "ceated in BIO");
+    
+   BIO* out;
+   out = BIO_new(BIO_s_mem());
+   assert(out);
+   DebugLog( << "created out BIO" );
+     
+   STACK_OF(X509)* chain=NULL;
+   chain = sk_X509_new_null();
+   assert(chain);
+
+   DebugLog( << "checking" );
+   assert( publicCert );
+   assert( privateKey );
+   
+   int i = X509_check_private_key(publicCert, privateKey);
+   DebugLog( << "checked cert and key ret=" << i  );
+   
+   PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, 0 /*flags*/);
+   if ( !pkcs7 )
+   {
+       ErrLog( << "Error creating PKCS7 signing object" );
+      return NULL;
+   }
+    DebugLog( << "created PKCS7 sign object " );
+
+#if 1
+   if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
+   {
+      ErrLog( << "Error doind S/MIME write of signed object" );
+      return NULL;
+   }
+   DebugLog( << "created SMIME write object" );
+#else
+   i2d_PKCS7_bio(out,pkcs7);
+#endif
+   BIO_flush(out);
+   
+   char* outBuf=NULL;
+   long size = BIO_get_mem_data(out,&outBuf);
+   assert( size > 0 );
+   
+   Data outData(outBuf,size);
+  
+   // DebugLog( << "Signed body is <" << outData << ">" );
+
+   Pkcs7Contents* outBody = new Pkcs7Contents( outData );
+   assert( outBody );
+
+   return outBody;
+}
+
+
+Contents* 
+Security::uncode( Pkcs7Contents* sBody )
+{
+   // for now, assume that this is only a singed message 
+   
+   assert( sBody );
+   
+   const char* p = sBody->text().data();
+   int   s = sBody->text().size();
+   
+   BIO* in;
+   in = BIO_new_mem_buf( (void*)p,s);
+   assert(in);
+   DebugLog( << "ceated in BIO");
+    
+   BIO* out;
+   out = BIO_new(BIO_s_mem());
+   assert(out);
+   DebugLog( << "created out BIO" );
+
+   BIO* pkcs7Bio=NULL;
+   PKCS7* pkcs7 = SMIME_read_PKCS7(in,&pkcs7Bio);
+   if ( !pkcs7 )
+   {
+      ErrLog( << "Problems doing SMIME_read_PKCS7" );
+      return NULL;
+   }
+   if ( pkcs7Bio )
+   {
+      ErrLog( << "Can not deal with mutlipart mime version stuff " );
+      return NULL;
+   }  
+   
+   X509_STORE* store;
+   store = X509_STORE_new();
+   assert( store);
+   
+   if ( X509_STORE_load_locations(store,"/home/cullen/certs/root.pem",NULL) != 1 )
+   {  
+      ErrLog( << "Problems doing X509_STORE_load_locations" );
+      assert(0);
+   }
+   
+   STACK_OF(X509)* certs;
+   certs = sk_X509_new_null();
+   assert( certs );
+   
+   //sk_X509_push(certs, publicCert);
+   
+   int flags = 0;
+   //flags |=  PKCS7_NOVERIFY;
+   
+   if ( PKCS7_verify(pkcs7, certs, store, pkcs7Bio, out, flags ) != 1 )
+   {
+      ErrLog( << "Problems doing PKCS7_verify" );
+      while (1)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+      return NULL;
+   }
+
+   BIO_flush(out);
+   char* outBuf=NULL;
+   long size = BIO_get_mem_data(out,&outBuf);
+   assert( size > 0 );
+   
+   Data outData(outBuf,size);
+  
+   DebugLog( << "uncodec body is <" << outData << ">" );
+
+   PlainContents* outBody = new PlainContents( outData );
+   assert( outBody );
+
+   return outBody;  
+}
+
+     
 
 #endif
 
