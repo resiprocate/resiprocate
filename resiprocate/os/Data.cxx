@@ -1007,7 +1007,7 @@ Data::hex() const
 {
    Data ret( 2*mSize, true );
 
-   char* p = mBuf;
+   const char* p = mBuf;
    char* r = ret.mBuf;
    for (size_type i=0; i < mSize; ++i)
    {
