@@ -15,7 +15,7 @@ endif
 LDLIBS += -lncurses $(DTLS_LIBS)
 
 CXXFLAGS += -I/sw/include
-LDFLAGS  += -Ldtls -L/sw/lib
+LDFLAGS  += -L/sw/lib
 
 # this is so that popt only works where there is popt
 # To enable popt, add USE_POPT=true to sip/build/Makefile.conf
