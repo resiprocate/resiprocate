@@ -588,7 +588,7 @@ ParseBuffer::dataUnescaped(Data& data, const char* start) const
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
-   if (data.mMine)
+   if (data.mMine == Data::Take)
    {
       delete[] data.mBuf;
    }
