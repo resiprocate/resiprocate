@@ -132,7 +132,7 @@ class SipStack
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
       // For stateless stacks, this has a different behavior and does not create
-      // a transaction for each request and does not do any special tranaaction
+      // a transaction for each request and does not do any special transaction
       // processing for requests or responses
       Fifo<Message> mStateMacFifo;
 
