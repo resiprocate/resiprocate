@@ -63,6 +63,23 @@ ParseBuffer::skipChars(const char* cs)
 }
 
 const char* 
+ParseBuffer::skipChars(const Data& cs)
+{
+   const char* match = cs.data();
+   for(Data::size_type i = 0; i < cs.size(); i++)
+   {
+      if (eof() || (*match != *mTraversalPtr))
+      {
+         DebugLog (<< "Expected \"" << cs << "\"");
+         throw Exception("parse error", __FILE__, __LINE__);
+      }
+      match++;
+      mTraversalPtr++;
+   }
+   return mTraversalPtr;
+}
+
+const char* 
 ParseBuffer::skipNonWhitespace()
 {
    while (mTraversalPtr < mEnd)
@@ -186,6 +203,18 @@ bool oneOf(char c, const char* cs)
    return false;
 }
 
+bool oneOf(char c, const Data& cs)
+{
+   for (Data::size_type i = 0; i < cs.size(); i++)
+   {
+      if (c == cs[i])
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 const char* 
 ParseBuffer::skipToOneOf(const char* cs)
 {
@@ -206,6 +235,25 @@ ParseBuffer::skipToOneOf(const char* cs)
 const char* 
 ParseBuffer::skipToOneOf(const char* cs1,
                          const char* cs2)
+{
+   while (mTraversalPtr < mEnd)
+   {
+      if (oneOf(*position(), cs1) ||
+          oneOf(*position(), cs2))
+      {
+         return position();
+      }
+      else
+      {
+         mTraversalPtr++;
+      }
+   }
+   return position();
+}
+
+const char* 
+ParseBuffer::skipToOneOf(const Data& cs1,
+                         const Data& cs2)
 {
    while (mTraversalPtr < mEnd)
    {
