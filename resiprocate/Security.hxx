@@ -66,10 +66,15 @@ class Security
 
       /* load function return true if they worked, false otherwise */
       bool loadAllCerts( const Data& password,  const Data& dirPath  );
-      bool loadRootCerts(  const Data& filePath );
 
+      bool loadRootCerts(  const Data& filePath );
       bool loadMyPublicCert(  const Data& filePath );
       bool loadMyPrivateKey(  const Data& password,  const Data& filePath );
+
+      bool setRootCerts(const Data& certPem);
+      bool setMyPublicCert(const Data& certPem);
+      bool setMyPrivateKey(const Data& password, const Data& pemKey);
+
       bool createSelfSignedKey( const Data& password, 
                                 const Data& filePathPrivateKey=Data::Empty,
                                 const Data& filePathPublicKey=Data::Empty );
@@ -135,7 +140,7 @@ class Security
                               Data* signedBy, 
                               SignatureStatus* sigStat ); // returns NULL if fails 
 
-      Data getPath( const Data& dir, const Data& file );
+      static Data getPath( const Data& dir, const Data& file );
 
    private:
 

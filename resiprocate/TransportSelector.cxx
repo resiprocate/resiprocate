@@ -211,6 +211,55 @@ TransportSelector::addTlsTransport(const Data& domainName,
 
 }
 
+bool 
+TransportSelector::addTlsTransport(const Data& domainName, 
+				   Security& security,
+				   int port, 
+				   IpVersion version,
+				   const Data& ipInterface
+    )
+{
+#if defined( USE_SSL )
+   assert( port >  0 );
+   assert(mTlsTransports.count(domainName) == 0);
+
+   assert (port != 0);
+   TlsTransport* transport = 0;
+   try
+   {
+      // if port == 0, do an SRV lookup and use the ports from there
+      transport = new TlsTransport(mStateMacFifo, 
+                                   domainName, 
+                                   ipInterface,
+                                   port, 
+				   security,
+                                   version == V4);
+   }
+   catch (Transport::Exception& )
+   {
+      ErrLog(<< "Failed to create TLS transport: " 
+             << (version == V4 ? "V4" : "V6") << " port "
+             << port << " on "  
+             << (ipInterface.empty() ? "ANY" : ipInterface));
+      return false;
+   }
+
+   if (mMultiThreaded)
+   {
+      transport->run();
+   }
+
+   mTlsTransports[domainName] = transport;
+   return true;
+   
+#else
+   CritLog (<< "TLS not supported in this stack. Maybe you don't have openssl");
+   assert(0);
+   return false;
+#endif
+
+}
+
 void 
 TransportSelector::process(FdSet& fdset)
 {
