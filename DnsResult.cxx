@@ -208,7 +208,6 @@ DnsResult::lookup(const Uri& uri)
                case UDP:
                default: //fall through to UDP for unimplemented & unknown
                   mSRVCount++;
-                  //lookupSRV("_sip._udp." + mTarget);
                   mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
             }
          }
@@ -807,7 +806,6 @@ DnsResult::primeResults()
          mPort = next.port;
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
-         //lookupAAAARecords(next.target);         
          lookupHost(next.target);
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
@@ -816,7 +814,8 @@ DnsResult::primeResults()
    else
    {
       bool changed = (mType == Pending);
-      transition(Finished);
+      //transition(Finished);
+      mType = Finished;
       if (changed) mHandler->handle(this);
    }
 
@@ -1519,7 +1518,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       }
       else 
       {
-         mType = Available;
+         if (this->mSRVResults.empty())
+         {
+            transition(Available);
+         }
+         else
+         {
+            mType = Available;
+         }
       }
       if (changed) mHandler->handle(this);
    }
@@ -1685,7 +1691,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       if (mPreferredNAPTR.key.empty())
       {
          StackLog (<< "No NAPTR records that are supported by this client");
-         mType = Finished;
+         transition(Finished);
          mHandler->handle(this);
          return;
       }
@@ -1697,14 +1703,21 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       }
       else
       {
-         mType = Pending;
+         transition(Pending);
          mSRVCount++;
          mDns.lookup<RR_SRV, DnsResultSink>(mPreferredNAPTR.replacement, this);
       }
    }
    else
    {
-      StackLog (<< "NAPTR lookup failed: " << result.msg);
+      if (result.status > 6)
+      {
+         DebugLog (<< "NAPTR lookup failed: " << result.msg);
+      }
+      else
+      {
+         StackLog (<< "NAPTR lookup failed: " << result.msg);
+      }
       bFail = true;
    }
 
@@ -1712,15 +1725,30 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
    {
       if (mSips)
       {
+         if (!mInterface.isSupported(TLS))
+         {
+            transition(Finished);
+            mHandler->handle(this);
+            return;
+         }
+
          mSRVCount++;
          mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
       }
       else
       {
-         // For now, don't add _sips._tcp in this case. 
-         mSRVCount+=2;         
-         mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
-         mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+         //.dcm. assumes udp is supported
+         if (mInterface.isSupported(TCP))
+         {
+            mSRVCount+=2;
+            mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
+            mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+         }
+         else
+         {
+            mSRVCount++;
+            mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+         }
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
