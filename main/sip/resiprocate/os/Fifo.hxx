@@ -53,7 +53,7 @@
 
 
 static const char* const Fifo_h_Version =
-    "$Id: Fifo.hxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
+    "$Id: Fifo.hxx,v 1.3 2002/09/28 17:30:44 fluffy Exp $";
 
 #include <util/Mutex.hxx>
 #include <util/Condition.hxx>
@@ -89,9 +89,7 @@ class Fifo
        */
       Msg* getNext();
       
-      /** Get the current size of the fifo. Note that the current
-       *  size includes all of the pending events, even those which
-       *  have not yet activated so you should not use this function
+      /** Get the current size of the fifo. Note you should not use this function
        *  to determine whether a call to getNext() will block or not.
        *  Use messageAvailable() instead.
        */
@@ -100,13 +98,8 @@ class Fifo
       /** Returns true if a message is available.
        */
       bool messageAvailable() const;
-      bool messageAvailableNoLock() const;
-      
-    protected:
-      int blockNoLock();
-      void wakeup();
-      int wait();
-      
+
+protected:
       typedef std::list < Msg* > MessageContainer;
       MessageContainer mFifo;
 
@@ -129,10 +122,11 @@ template <class Msg>
 void
 Fifo<Msg>::add(Msg* msg)
 {
-    Lock lock(mMutex); (void)lock;
-    mFifo.push_back(msg);
-    wakeup();
+	Lock lock(mMutex); (void)lock;
+	mFifo.push_back(msg);
+	mCondition.signal();
 }
+
 
 template <class Msg>
 Msg*
@@ -140,11 +134,11 @@ Fifo<Msg> ::getNext()
 {
     Lock lock(mMutex); (void)lock;
 
-    // Wait while there are no messages available.
+    // Wait while there are messages available.
     //
-    while ( !messageAvailableNoLock() )
+    while ( mFifo.size() == 0 )
     {
-        blockNoLock();
+	    mCondition.wait(&mMutex);
     }
 
     // Return the first message on the fifo.
@@ -165,93 +159,15 @@ Fifo<Msg> ::size() const
     return mFifo.size(); 
 }
 
+
 template <class Msg>
 bool
 Fifo<Msg>::messageAvailable() const
 {
     Lock lock(mMutex); (void)lock;
     
-    return ( messageAvailableNoLock() );
+    return ( mFifo.size() > 0 );
 }
-
-template <class Msg>
-bool
-Fifo<Msg>::messageAvailableNoLock() const
-{
-    return ( mFifo.size() > 0);
-}
-
-template <class Msg>
-int
-Fifo<Msg>::blockNoLock()
-{
-    // Wait for an event. A timer expiry or signal will return a 0 here.
-    //
-    int numberActive = wait();
-
-    if ( numberActive > 0 )
-    {
-        return ( numberActive );
-    }
-
-    // See if a timer has expired.  If it has expired, return 1 to indicate
-    // a message is available from the timer.
-    //
-    if ( messageAvailableNoLock() )
-    {
-        return ( 1 );
-    }
-
-    // To get here, either a signal woke us up, or the we used the
-    // relativeTimeout value, meaning that a message isn't available from
-    // the timer container.
-    //
-    return ( 0 );
-}
-
-
-template <class Msg>
-void
-Fifo<Msg>::wakeup()
-{
-    // Tell any waiting threads the FIFO is no longer empty
-    //
-    int error = mCondition.signal();
-    assert( !error );
-}
-
-
-template <class Msg>
-int
-Fifo<Msg>::wait()
-{
-    // This will unlock the object's mutex, wait for a condition's signal,
-    // and relock.
-    //
-    int error = mCondition.wait(&mMutex);
-
-    if ( error != 0 )
-    {
-        // If we have been awaken due to a unix signal, i.e. SIGTERM,
-        // or a timeout return 0 to indicate no activity.
-        //
-        if ( error == EINTR || error == ETIMEDOUT )
-        {
-            return ( 0 );
-        }
-
-        // Defensive, shouldn't ever get here.
-        //
-        else
-        {
-            assert( 0 );
-        }
-    }
-
-    return ( mFifo.size() );
-}
-
-
 
 } // namespace Vocal2
 

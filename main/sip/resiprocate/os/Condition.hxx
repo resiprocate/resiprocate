@@ -75,19 +75,19 @@ class Condition
        *  it will wait indefinately. Uses the specified mutex to synchronize 
        *  access to the condition. Returns 0, if successful, or an errorcode.
        */
-      int wait (Mutex* mutex);
+      void wait (Mutex* mutex);
 
       /** Signal one waiting thread.
        *  Returns 0, if successful, or an errorcode.
        */
-      int signal();
+      void signal();
 
-
+#if 0 
       /** Signal all waiting threads.
        *  Returns 0, if successful, or an errorcode.
        */
-      int broadcast();
-         
+      void broadcast();
+#endif   
 
 #if 0
       /** Returns the operating system dependent unique id of the condition.
@@ -98,7 +98,11 @@ class Condition
 
    private:
 
-      mutable  pthread_cond_t mId;
+#ifdef WIN32
+	HANDLE mId;
+#else
+	mutable  pthread_cond_t mId;
+#endif
 };
 
 } // namespace Vocal2
