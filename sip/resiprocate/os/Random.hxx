@@ -23,6 +23,7 @@ class Random
    private:
       static bool  mIsInitialized;
       
+#if 0
       class Init
       {
          public:
@@ -33,6 +34,7 @@ class Random
       };
 
       static Init initer;
+#endif
 };
  
 }

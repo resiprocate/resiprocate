@@ -13,6 +13,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 #if defined(USE_SSL)
 
@@ -44,6 +45,9 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 
 Security::Security( bool tlsServer, bool useTls )
 {
+   Timer::getTimeMs(); // initalize time offsets
+   Random::initialize(); // initialize 
+
    privateKey = NULL;
    publicCert = NULL;
    certAuthorities = NULL;
@@ -147,6 +151,8 @@ Security::getTlsCtx(bool isServer)
    {
       ErrLog( << "Could not set any TLS ciphers");
    }
+
+   DebugLog( << "Done setting up TLS client" );
 
    return ctxTls;
 }
