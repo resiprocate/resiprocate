@@ -21,7 +21,9 @@ class DialogSetId
       bool operator>(const DialogSetId& rhs) const;
       size_t hash() const;
       friend std::ostream& operator<<(std::ostream&, const DialogSetId& id);
-
+      
+      const Data& getCallId() const { return mCallId; }
+      const Data& getLocalTag() const { return mTag; }
    private:
       Data mCallId;
       Data mTag;
