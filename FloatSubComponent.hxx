@@ -19,9 +19,9 @@ class FloatSubComponent : public SubComponent
       std::string mData;
 };
  
-}
+std::ostream& operator<<(std::ostream& stream, FloatSubComponent& comp);
 
-std::ostream& operator<<(std::ostream& stream, Vocal2::FloatSubComponent& comp);
+}
 
 
 #endif
