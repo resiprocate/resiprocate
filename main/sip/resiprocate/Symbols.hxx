@@ -1,7 +1,6 @@
 #ifndef Symbols_hxx
 #define Symbols_hxx
 
-#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
@@ -9,55 +8,55 @@ namespace resip
 class Symbols
 {
    public:
-      static const Data DefaultSipVersion;
-      static const Data DefaultSipScheme;
+      static const char* DefaultSipVersion;
+      static const char* DefaultSipScheme;
 
-      static const Data AT_SIGN;
-      static const Data COLON;
-      static const Data DASH;
-      static const Data DASHDASH;
-      static const Data DOT;
-      static const Data COMMA_OR_EQUAL;
-      static const Data CRLF;
-      static const Data CRLFCRLF;
-      static const Data CR;
-      static const Data LF;
-      static const Data TAB;
-      static const Data DOUBLE_QUOTE;
-      static const Data LA_QUOTE;
-      static const Data RA_QUOTE;
-      static const Data EQUALS;
-      static const Data SEMI_COLON;
-      static const Data SEMI_OR_EQUAL;
-      static const Data SLASH;
-      static const Data B_SLASH;
-      static const Data SPACE;
-      static const Data COMMA;
-      static const Data ZERO;
-      static const Data LPAREN;
-      static const Data RPAREN;
-      static const Data PERIOD;
-      static const Data QUESTION;
-      static const Data AMPERSAND;
-      static const Data PERCENT;
-      static const Data STAR;
+      static const char* AT_SIGN;
+      static const char* COLON;
+      static const char* DASH;
+      static const char* DASHDASH;
+      static const char* DOT;
+      static const char* COMMA_OR_EQUAL;
+      static const char* CRLF;
+      static const char* CRLFCRLF;
+      static const char* CR;
+      static const char* LF;
+      static const char* TAB;
+      static const char* DOUBLE_QUOTE;
+      static const char* LA_QUOTE;
+      static const char* RA_QUOTE;
+      static const char* EQUALS;
+      static const char* SEMI_COLON;
+      static const char* SEMI_OR_EQUAL;
+      static const char* SLASH;
+      static const char* B_SLASH;
+      static const char* SPACE;
+      static const char* COMMA;
+      static const char* ZERO;
+      static const char* LPAREN;
+      static const char* RPAREN;
+      static const char* PERIOD;
+      static const char* QUESTION;
+      static const char* AMPERSAND;
+      static const char* PERCENT;
+      static const char* STAR;
 
-      static const Data ProtocolName;
-      static const Data ProtocolVersion;
-      static const Data UDP;
-      static const Data TCP;
-      static const Data TLS;
-      static const Data SCTP;
+      static const char* ProtocolName;
+      static const char* ProtocolVersion;
+      static const char* UDP;
+      static const char* TCP;
+      static const char* TLS;
+      static const char* SCTP;
       
-      static const Data Sip;
-      static const Data Sips;
-      static const Data Tel;
+      static const char* Sip;
+      static const char* Sips;
+      static const char* Tel;
       
-      static const Data Phone;
-      static const Data Isub;
-      static const Data Postd;
+      static const char* Phone;
+      static const char* Isub;
+      static const char* Postd;
 
-      static const Data auth;
+      static const char* auth;
 
       static const char * const MagicCookie;
       static const char * const resipCookie;
@@ -66,17 +65,17 @@ class Symbols
       static const int SipTlsPort;
       static const int DefaultSipsPort;
 
-      static const Data SrvSip;
-      static const Data SrvSips;
-      static const Data SrvUdp;
-      static const Data SrvTcp;
-      static const Data NaptrSip;
-      static const Data NaptrSips;
-      static const Data NaptrUdp;
-      static const Data NaptrTcp;
+      static const char* SrvSip;
+      static const char* SrvSips;
+      static const char* SrvUdp;
+      static const char* SrvTcp;
+      static const char* NaptrSip;
+      static const char* NaptrSips;
+      static const char* NaptrUdp;
+      static const char* NaptrTcp;
 
-      static const Data audio;
-      static const Data RTP_AVP;
+      static const char* audio;
+      static const char* RTP_AVP;
 };
 
 }
