@@ -18,6 +18,15 @@ Message::clone() const
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {
+
+   // .dlb. what a bad idea..
+   // encoding should be handled at Data 
+   // msg scanner should indicate that it saw encoded characters
+   // Data's coming from a marked buffer should assome they need to be encoded.
+   // Data's coming from user should assume they need to be encoded.
+   // Otherwise, Data's should NOT encode.
+   // 
+/*
    Data encoded;
 
    DataStream encodeStream(encoded);
@@ -25,6 +34,10 @@ resip::operator<<(std::ostream& strm, const resip::Message& msg)
    encodeStream.flush();
 
    strm << encoded.escaped();
+*/
+
+   // in the meantime, hope for the best.
+   msg.encode(strm);
    
    return strm;
 }
