@@ -34,15 +34,15 @@ TimerQueue::msTillNextTimer()
       else
       {
          UInt64 ret64 = next - now;
-        if ( ret64 > UInt64(INT_MAX) )
-        {
-                return INT_MAX;
-        }
-        else
-        { 
-                int ret = int(ret64);
-                return ret;
-        }
+         if ( ret64 > UInt64(INT_MAX) )
+         {
+            return INT_MAX;
+         }
+         else
+         { 
+            int ret = int(ret64);
+            return ret;
+         }
       }
    }
    else
@@ -105,6 +105,7 @@ TimerQueue::process()
       }
       else 
       {
+         //DebugLog(<< "ApplicationTimer " << *i->getMessage());
          // application timer -- queue the payload message
          assert(i->getMessage());
          mFifo.add(i->getMessage());
@@ -126,8 +127,7 @@ resip::operator<<(ostream& str, const TimerQueue& tq)
    str << "TimerQueue[" ;
 
     for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
-        i != tq.mTimers.end();
-		i++)
+        i != tq.mTimers.end(); ++i)
    {
       str << *i << " " ;
    }
