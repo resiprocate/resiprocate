@@ -1,6 +1,10 @@
 #if !defined(VOCAL_POSIX_VTHREAD_H)
 #define VOCAL_POSIX_VTHREAD_H
 
+#ifdef WIN32
+#error this should not be used in win32 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -53,7 +57,7 @@
 
 
 static const char* const posix_vthread_h_Version =
-    "$Id: vthread.hxx,v 1.1 2002/09/21 05:57:28 jason Exp $";
+    "$Id: vthread.hxx,v 1.2 2002/09/25 04:31:36 fluffy Exp $";
 
 
 #include <pthread.h>

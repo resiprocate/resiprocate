@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <cassert>
+
+#ifndef WIN32
 #include <syslog.h>
+#endif
 
 namespace Vocal2
 {
