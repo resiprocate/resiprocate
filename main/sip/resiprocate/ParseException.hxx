@@ -1,16 +1,16 @@
 #ifndef ParseException_hxx
 #define ParseException_hxx
 
-#include "sip2/util/VException.hxx"
+#include "sip2/util/BaseException.hxx"
 
 namespace Vocal2
 {
 
-class ParseException : public VException
+class ParseException : public BaseException
 {
    public:
       ParseException(const Data& msg, const Data& file, const int line)
-         : VException(msg, file, line) {}
+         : BaseException(msg, file, line) {}
       const char* name() const { return "ParseException"; }
 };
  
