@@ -6,7 +6,7 @@
 using namespace Vocal2;
 
 void
-Vocal2::TransactionState::process(SipStack& stack)
+TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
    
@@ -18,26 +18,26 @@ Vocal2::TransactionState::process(SipStack& stack)
       timer = dynamic_cast<TimerMessage*>(message);
    }
    
-   Data& tid = message->getTransactionId();
+   const Data& tid = message->getTransactionId();
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
    {
       switch (state->mMachine)
       {
          case ClientNonInvite:
-            processClientNonInvite(message);
+            state->processClientNonInvite(message);
             break;
          case ClientInvite:
-            processClientInvite(message);
+            state->processClientInvite(message);
             break;
          case ServerNonInvite:
-            processServerNonInvite(message);
+            state->processServerNonInvite(message);
             break;
          case ServerInvite:
-            processClientInvite(message);
+            state->processClientInvite(message);
             break;
          case Stale:
-            processStale(message);
+            state->processStale(message);
             break;
          default:
             assert(0);
