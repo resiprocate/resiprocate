@@ -25,6 +25,7 @@
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/MultipartAlternativeContents.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

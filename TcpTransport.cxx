@@ -9,6 +9,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TcpConnection.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

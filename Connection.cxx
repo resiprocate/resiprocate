@@ -9,6 +9,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/TcpBaseTransport.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
