@@ -531,7 +531,11 @@ Uri::encodeParsed(std::ostream& str) const
    }
    if (!mHost.empty())
    {
-      str << Symbols::AT_SIGN << mHost;
+     if (!mUser.empty())
+     {
+       str << Symbols::AT_SIGN;
+     }
+      str << mHost;
    }
    if (mPort != 0)
    {

@@ -439,17 +439,10 @@ DateCategory::DateCategory()
              << " " << mHour << ":" << mMin << ":" << mSec);
 }
 
-
 DateCategory::DateCategory(const DateCategory& rhs)
-   : ParserCategory(rhs),
-     mDayOfWeek(Sun),
-     mDayOfMonth(),
-     mMonth(Jan),
-     mYear(0),
-     mHour(0),
-     mMin(0),
-     mSec(0)
-{}
+{
+   *this = rhs;
+}
 
 DateCategory&
 DateCategory::operator=(const DateCategory& rhs)
