@@ -39,7 +39,7 @@ class ServerInviteSession: public InviteSession
 
       /// Makes the dialog end. Depending ont eh current state, this might
       /// results in BYE or CANCEL being sent.
-      virtual void end();
+      virtual SipMessage& end();
 
       /// Rejects an offer at the SIP level. So this can send a 487 to a
       /// reINVITE or and UPDATE

@@ -5,15 +5,20 @@
 
 using namespace resip;
 
-InviteSession::InviteSession(DialogUsageManager& dum,
-                             Dialog& dialog)
+InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : BaseUsage(dum, dialog),
+     mOfferState(None),
      mCurrentLocalSdp(0),
      mCurrentRemoteSdp(0),
      mProposedLocalSdp(0),
-     mProposedRemoteSdp(0),
-     mState(Unknown)
+     mProposedRemoteSdp(0)
 {
+}
+
+SipMessage& 
+InviteSession::getOfferOrAnswer()
+{
+   return mLastRequest;
 }
 
 const SdpContents* 
@@ -28,16 +33,112 @@ InviteSession::getRemoteSdp()
    return mCurrentRemoteSdp;
 }
 
-void
+SipMessage&
 InviteSession::end()
 {
-   assert(mState == Connected);
+   //assert(mState == Connected);
 
+#if 0
    // no way for the application to modify the BYE yet
    SipMessage bye;
    mDialog.makeBye(bye);
    copyAuthorizations(bye);
-   mDum.send(bye);
+   //mDum.send(bye);
+#endif
+   return mLastRequest;
+}
+
+// If sdp==0, it means the last offer failed
+void 
+InviteSession::incomingSdp(SdpContents* sdp)
+{
+   switch (mOfferState)
+   {
+      case None:
+         assert(mCurrentLocalSdp == 0);
+         assert(mCurrentRemoteSdp == 0);
+         mProposedRemoteSdp = sdp;
+         mOfferState = Offerred;
+         break;
+         
+      case Offerred:
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = sdp;
+         mProposedLocalSdp = 0;
+         mProposedRemoteSdp = 0;
+         mOfferState = Answered;
+         break;
+
+      case Answered:
+         assert(mProposedLocalSdp == 0);
+         assert(mProposedRemoteSdp == 0);
+         mProposedRemoteSdp = sdp;
+         mOfferState = CounterOfferred;
+         break;
+         
+         
+      case CounterOfferred:
+         assert(mCurrentLocalSdp);
+         assert(mCurrentRemoteSdp);
+         if (sdp)
+         {
+            mCurrentLocalSdp = mProposedLocalSdp;
+            mCurrentRemoteSdp = sdp;
+         }
+         else
+         {
+            mProposedLocalSdp = 0;
+            mProposedRemoteSdp = 0;
+         }
+         mOfferState = Answered;
+         break;
+   }
+}
+
+void
+InviteSession::sendSdp(SdpContents* sdp)
+{
+   switch (mOfferState)
+   {
+      case None:
+         assert(mCurrentLocalSdp == 0);
+         assert(mCurrentRemoteSdp == 0);
+         mProposedLocalSdp = sdp;
+         mOfferState = Offerred;
+         break;
+         
+      case Offerred:
+         mCurrentLocalSdp = sdp;
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mProposedLocalSdp = 0;
+         mProposedRemoteSdp = 0;
+         mOfferState = Answered;
+         break;
+
+      case Answered:
+         assert(mProposedLocalSdp == 0);
+         assert(mProposedRemoteSdp == 0);
+         mProposedLocalSdp = sdp;
+         mOfferState = CounterOfferred;
+         break;
+        
+         
+      case CounterOfferred:
+         assert(mCurrentLocalSdp);
+         assert(mCurrentRemoteSdp);
+         if (sdp)
+         {
+            mCurrentLocalSdp = sdp;
+            mCurrentRemoteSdp = mProposedRemoteSdp;
+         }
+         else
+         {
+            mProposedLocalSdp = 0;
+            mProposedRemoteSdp = 0;
+         }
+         mOfferState = Answered;
+         break;
+   }
 }
 
 void
