@@ -161,7 +161,8 @@ Transport::toTransport(const Data& type)
 Transport::Tuple::Tuple() : 
    port(0), 
    transportType(Unknown), 
-   transport(0)
+   transport(0),
+   connection(0)
 {
    memset(&ipv4, 0, sizeof(ipv4));
 }
@@ -172,7 +173,8 @@ Transport::Tuple::Tuple(in_addr pipv4,
    : ipv4(pipv4),
      port(pport),
      transportType(ptype),
-     transport(0)
+     transport(0),
+     connection(0)
 {
 }
 
@@ -180,7 +182,8 @@ bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
 {
    return (memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4)) == 0 &&
            port == rhs.port &&
-           transportType == rhs.transportType);
+           transportType == rhs.transportType && 
+           connection == rhs.connection);
 }
 
 bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
