@@ -62,8 +62,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsResult::DnsResult(DnsInterface& interface, DnsHandler* handler) 
-   : mInterface(interface),
+DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler) 
+   : mInterface(interfaceObj),
      mHandler(handler),
      mSRVCount(0),
      mSips(false),
@@ -145,7 +145,7 @@ DnsResult::lookup(const Uri& uri)
          Tuple tuple;
          tuple.transportType = mTransport;
          tuple.transport = 0;
-         inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
+		 DnsUtil::inet_pton( mTarget, tuple.ipv4); // !jf! - check return 
          mPort = getDefaultPort(mTransport, uri.port());
          tuple.port = mPort;
 
@@ -178,7 +178,7 @@ DnsResult::lookup(const Uri& uri)
             Tuple tuple;
             tuple.transportType = mTransport;
             tuple.transport = 0;
-            inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
+			DnsUtil::inet_pton( mTarget, tuple.ipv4 ); // !jf! check return 
 
             mPort = getDefaultPort(mTransport, uri.port());
             tuple.port = mPort;
@@ -219,6 +219,9 @@ DnsResult::getDefaultPort(TransportType transport, int port)
    {
       return port;
    }
+
+	assert(0);
+	return 0;
 }
 
 
@@ -553,7 +556,9 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       }
       else
       {
+#ifndef WIN32
          DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
+#endif
          primeResults();
       }
    }
@@ -612,8 +617,10 @@ void
 DnsResult::primeResults()
 {
    DebugLog (<< "primeResults() " << mType);
+#ifndef WIN32
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
-   
+#endif
+
    //assert(mType != Pending);
    //assert(mType != Finished);
    assert(mResults.empty());
@@ -635,8 +642,10 @@ DnsResult::primeResults()
             tuple.ipv4 = *i;
             mResults.push_back(tuple);
          }
+#ifndef WIN32
          DebugLog (<< "Try: " << Inserter(mResults));
-         
+#endif
+
          mType = Available;
          mHandler->handle(this);
       }
@@ -696,7 +705,9 @@ DnsResult::retrieveSRV()
    int selected = Random::getRandom() % (mCumulativeWeight+1);
 
    DebugLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
+#ifndef WIN32
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
+#endif
 
    std::set<SRV>::iterator i;
    for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)

@@ -21,16 +21,16 @@ const size_t TlsTransport::MaxReadSize = 4096;
 
 TlsTransport::TlsTransport(Fifo<Message>& fifo, 
                            const Data& sipDomain, 
-                           const Data& interface, 
+                           const Data& interfaceObj, 
                            int portNum, 
                            const Data& keyDir, const Data& privateKeyPassPhrase,
                            bool ipv4) : 
-   Transport(fifo, portNum, interface, ipv4),
+   Transport(fifo, portNum, interfaceObj, ipv4),
    mDomain(sipDomain),
    mSecurity(new Security(true, true))
 {
    InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interface 
+            << sipDomain << " interface=" << interfaceObj 
             << " port=" << portNum);
    
    bool ok = true;
