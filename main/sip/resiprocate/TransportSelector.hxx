@@ -26,7 +26,7 @@ class TransactionController;
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<Message>& fifo);
+      TransportSelector(bool multithreaded, Fifo<Message>& fifo);
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
@@ -59,6 +59,7 @@ class TransportSelector
       Transport* findTransport(const Tuple& tuple) const;
       Transport* findTlsTransport(const Data& domain);
 
+      bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<Message>& mStateMacFifo;
       std::vector<Transport*> mTransports;

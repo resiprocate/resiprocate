@@ -48,8 +48,7 @@ Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& sendhost, b
    mFd(-1),
    mHost(sendhost),
    mPort(portNum), 
-   mStateMachineFifo(rxFifo),
-   mShutdown(false)
+   mStateMachineFifo(rxFifo)
 {
 }
 
@@ -60,38 +59,26 @@ Transport::~Transport()
 
 
 void
-Transport::run()
+Transport::thread()
 {
+   InfoLog (<< "Starting transport thread for " << this);
    while (!mShutdown)
    {
       FdSet fdset; 
-      fdset.reset();
-      fdset.setRead(mFd);
-      fdset.setWrite(mFd);
-      int  err = fdset.selectMilliSeconds(0);
-      if (err == 0)
+      buildFdSet(fdset);
+      int  err = fdset.selectMilliSeconds(100);
+      if (err >= 0)
       {
          try
          {
-            assert(0);
-            //process();
+            process(fdset);
          }
          catch (BaseException& e)
          {
             InfoLog (<< "Uncaught exception: " << e);
          }
       }
-      else
-      {
-         assert(0);
-      }
    }
-}
-
-void
-Transport::shutdown()
-{
-   mShutdown = true;
 }
 
 void
@@ -99,13 +86,6 @@ Transport::fail(const Data& tid)
 {
    mStateMachineFifo.add(new TransportMessage(tid, true));
 }
-
-void
-Transport::ok(const Data& tid)
-{
-   mStateMachineFifo.add(new TransportMessage(tid, false));
-}
-
 
 bool 
 Transport::hasDataToSend() const
