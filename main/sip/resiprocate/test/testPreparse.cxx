@@ -513,7 +513,8 @@ main(int argc, char *argv[])
 
     pre.reset();
     Data longMsg(longMessage);
-    SipMessage *message = new SipMessage(SipMessage::FromWire);
+    Transport* external = (Transport*)(0xFFFF);
+    SipMessage *message = new SipMessage(external);
 
     unsigned int chunk = 2048;
     char* o = const_cast<char*>(longMsg.data());

@@ -34,15 +34,7 @@ class SipMessage : public Message
    public:
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
-      class FromWireType
-      {
-            friend class SipMessage;
-      };
-      static const FromWireType *FromWire;
-      static const FromWireType *NotFromWire;
-
-      explicit SipMessage(const FromWireType* fromWire = SipMessage::NotFromWire);
-      
+      explicit SipMessage(const Transport* fromWire = 0);
       SipMessage(const SipMessage& message);
 
       // returns the transaction id from the branch or if 2543, the computed hash
@@ -223,11 +215,16 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
+      // Interface used to determine which Transport was used to receive a
+      // particular SipMessage. If the SipMessage was not received from the
+      // wire, getReceivedTransport() returns 0. Set in constructor
+      const Transport* getReceivedTransport() const { return mTransport; }
+
       // Returns the source tuple that the message was received from
       // only makes sense for messages received from the wire
       void setSource(const Transport::Tuple& tuple) { mSource = tuple; }
       const Transport::Tuple& getSource() const { return mSource; }
-
+      
       // Used by the stateless interface to specify where to send a request/response
       void setDestination(const Transport::Tuple& tuple) { mDestination = tuple; }
       const Transport::Tuple& getDestination() const { return mDestination; }
@@ -245,6 +242,9 @@ class SipMessage : public Message
       void clearTarget();
       const Uri& getTarget() const;
       bool hasTarget() const;
+
+      const Data& getTlsDomain() const { return mTlsDomain; }
+      void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
       
    private:
       void compute2543TransactionHash() const;
@@ -261,6 +261,7 @@ class SipMessage : public Message
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       mutable UnknownHeaders mUnknownHeaders;
   
+      const Transport* mTransport;
       Transport::Tuple mSource;
       Transport::Tuple mDestination;
       
@@ -276,7 +277,8 @@ class SipMessage : public Message
       UInt64 mCreatedTime;
 
       Uri* mTarget;
-      
+      Data mTlsDomain;
+
       friend class TransportSelector;
 };
 
