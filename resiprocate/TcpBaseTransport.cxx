@@ -104,7 +104,7 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
    Connection* curr = mConnectionManager.getNextWrite(); 
    if (curr && fdset.readyToWrite(curr->getSocket()))
    {
-      DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
+      //DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
       curr->performWrite();
    }
 }
@@ -117,7 +117,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
    {
       if (fdset.readyToRead(curr->getSocket()))
       {
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << curr->getSocket());
+         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << curr->getSocket());
          //FD_CLR(curr->getSocket(), &fdset.read);
 
          std::pair<char*, size_t> writePair = curr->getWriteBuffer();
