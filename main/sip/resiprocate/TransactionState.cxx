@@ -230,8 +230,7 @@ TransactionState::processStateless(Message* message)
    {
       if (isFromTU(message))
       {
-         //assert(sip->header(h_RequestLine).getMethod() == ACK);
-         DebugLog (<< "Sending to wire statelessly: " << *sip);
+         DebugLog (<< "Sending to wire statelessly: " << sip->getTransactionId() << endl << *sip);
          mMsgToRetransmit = sip;
          sendToWire(sip);
       }
@@ -251,6 +250,7 @@ TransactionState::processStateless(Message* message)
       // the pseudotransaction ends on successful transmission
       if (mMsgToRetransmit)
       {
+         assert(!mMsgToRetransmit->getTransactionId().empty());
          terminateClientTransaction(mMsgToRetransmit->getTransactionId());
       }
       
