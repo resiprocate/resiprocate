@@ -1,8 +1,15 @@
 #include "ClientPublication.hxx"
 
-ClientPublication::ClientPublication(DialogUsageManager& dum)
-   : mHandle(dum)
-{}
+using namespace resip;
+
+ClientPublication::ClientPublication(DialogUsageManager& dum,
+                                     Dialog& dialog,
+                                     const SipMessage& req)
+   : BaseUsage(dum, dialog),
+     mHandle(dum)
+{
+   assert(false);
+}
 
 ClientPublication::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
@@ -11,7 +18,7 @@ ClientPublication::Handle::Handle(DialogUsageManager& dum)
 ClientPublication* 
 ClientPublication::Handle::operator->()
 {
-   return static_cast<ClientPublication*>get();
+   return static_cast<ClientPublication*>(get());
 }
 
 /* ====================================================================

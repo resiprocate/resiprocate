@@ -13,10 +13,10 @@ class ClientRegistration: public BaseUsage
       class Handle : public BaseUsage::Handle
       {
          public:
-            // throws if no session 
+            // throws if no usage
             ClientRegistration* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ClientRegistration;
             Handle(DialogUsageManager& dum);
       };
       
@@ -32,16 +32,24 @@ class ClientRegistration: public BaseUsage
       
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
+
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ClientRegistration::Handle getHandle() {return mHandle;}
       
    private:
       friend class DialogUsageManager;
       ClientRegistration(DialogUsageManager& dum,
-                         Dialog& dialog);
+                         Dialog& dialog,
+                         const SipMessage& req);
       
       ClientRegistration::Handle mHandle;
       NameAddrs mMyContacts;
       NameAddrs mAllContacts;
       UInt64    mExpirationTime;
+
+      // disabled
+      ClientRegistration(const ClientRegistration&);
+      ClientRegistration& operator=(const ClientRegistration&);
 };
  
 }
