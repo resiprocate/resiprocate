@@ -66,7 +66,6 @@ TESTPROGRAMS += test503Generator.cxx \
 		testServer.cxx \
 		testSipFrag.cxx \
 		testSipMessageMemory.cxx \
-		testSpeed.cxx \
 		testThreadIf.cxx \
 		testTime.cxx \
 		testTimer.cxx \
