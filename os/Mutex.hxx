@@ -21,7 +21,7 @@ class Mutex : public Lockable
 
    private:
 #ifdef WIN32   
-      HANDLE mId;
+	  CRITICAL_SECTION mId;
 #else
       mutable  pthread_mutex_t mId;
       pthread_mutex_t* getId() const;
