@@ -73,7 +73,7 @@ SipStack::~SipStack()
 void
 SipStack::shutdown()
 {
-   InfoLog (<< "Shutting down stack " << this);
+   InfoLog (<< "Shutting down sip stack " << this);
 
    static Mutex shutDownMutex;
    {
@@ -147,6 +147,7 @@ SipStack::addTransport( TransportType protocol,
              << (version == V4 ? "V4" : "V6") << " "
              << Tuple::toData(protocol) << " " << port << " on "
              << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
+      throw;
    }
    //!dcm! -- prob. should be cons param or exposed method
    transport->mHasOwnThread = (threadApproach == RunsInOwnThread);   
