@@ -14,7 +14,8 @@ HeaderFieldValueList::~HeaderFieldValueList()
 }
 
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
-   : mParserContainer(0)
+   : mHeaders(0),
+     mParserContainer(0)
 {
    if (rhs.mParserContainer != 0)
    {

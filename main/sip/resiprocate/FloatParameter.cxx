@@ -8,7 +8,8 @@ using namespace std;
 
 FloatParameter::FloatParameter(ParameterTypes::Type type, 
                                ParseBuffer& pb)
-   : Parameter(type)
+   : Parameter(type),
+     mValue(0)
 {
    if (*pb.position() != '=')
    {
