@@ -49,6 +49,8 @@
  */
 
 #include <cassert>
+#include <pthread.h>
+#include <errno.h>
 
 #include "sip2/util/Condition.hxx"
 #include "sip2/util/Mutex.hxx"
