@@ -70,9 +70,6 @@ class InviteSession : public DialogUsage
 //      typedef Handle<InviteSession> InviteSessionHandle;
       InviteSessionHandle getSessionHandle();
 
-      void handleSessionTimerResponse(const SipMessage& msg);
-      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
-
       typedef enum
       {
          None, // means no Offer or Answer (may have SDP)
@@ -117,6 +114,9 @@ class InviteSession : public DialogUsage
       } NitState;
       
       NitState mNitState;               
+
+      void handleSessionTimerResponse(const SipMessage& msg);
+      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
       SipMessage& makeAck();
