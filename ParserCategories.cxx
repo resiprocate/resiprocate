@@ -1422,30 +1422,34 @@ NameAddr::parse(ParseBuffer& pb)
    mUri.parse(pb);
    if (laQuote)
    {
-      mUri.parseParameters(pb);
       pb.skipChar('>');
       pb.skipWhitespace();
+      parseParameters(pb);
    }
-   parseParameters(pb);
-   for (ParameterList::iterator it = mParameters.begin(); 
-        it != mParameters.end();)
+   else
    {
-      switch ((*it)->getType())
+      swap(mParameters, mUri.mParameters);
+      swap(mUnknownParameters, mUri.mUnknownParameters);
+      for (ParameterList::iterator it = mParameters.begin(); 
+           it != mParameters.end();)
       {
-         case ParameterTypes::transport:
-         case ParameterTypes::ttl:
-         case ParameterTypes::maddr:
-         case ParameterTypes::lr:
-         case ParameterTypes::method: 
-         case ParameterTypes::comp:             
+         switch ((*it)->getType())
          {
-            mUri.mParameters.push_back(*it);
-            it = mParameters.erase(it);
-            break;
-         }
-         default:
-         {
-            it++;
+            case ParameterTypes::transport:
+            case ParameterTypes::ttl:
+            case ParameterTypes::maddr:
+            case ParameterTypes::lr:
+            case ParameterTypes::method: 
+            case ParameterTypes::comp:             
+            {
+               mUri.mParameters.push_back(*it);
+               it = mParameters.erase(it);
+               break;
+            }
+            default:
+            {
+               it++;
+            }
          }
       }
    }
@@ -1517,7 +1521,6 @@ RequestLine::parse(ParseBuffer& pb)
    }
    pb.skipWhitespace();
    mUri.parse(pb);
-   mUri.parseParameters(pb);
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    pb.data(mSipVersion, start);
@@ -1638,3 +1641,4 @@ StatusLine::encodeParsed(ostream& str) const
 /* Local Variables: */
 /* c-file-style: "ellemtel" */
 /* End: */
+
