@@ -4,6 +4,8 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
@@ -13,12 +15,10 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/compat.hxx"
 
-//#include "resiprocate/dum/ServerInviteSession.hxx"
-//#include "resiprocate/dum/ClientInviteSession.hxx"
-
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
+#pragma warning( disable : 4800 ) // forcing value to bool (performance warning)
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -164,11 +164,18 @@ InviteSession::provideOffer(const SdpContents& offer)
             transition(SentReinvite);
             mDialog.makeRequest(mLastSessionModification, INVITE);
          }
-
-         // !jf! should I check if value > 90? 
-         mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
-         mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
          
+         if(mSessionInterval >= 90)  // If mSessionInterval is 0 then SessionTimers are considered disabled
+         {
+            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
+            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+         }
+         else
+         {
+            mLastSessionModification.remove(h_SessionExpires); 
+            mLastSessionModification.remove(h_MinSE); 
+         }
+
          InfoLog (<< "Sending " << mLastSessionModification.brief());
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          InviteSession::setSdp(mLastSessionModification, offer);
@@ -181,6 +188,7 @@ InviteSession::provideOffer(const SdpContents& offer)
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
          
+      // !slg! Can we handle all of the states listed in isConnected() ???
       default:
          WarningLog (<< "Can't provideOffer when not in Connected state");
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
@@ -197,6 +205,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
+         handleSessionTimerRequest(mInvite200, mLastSessionModification);
          InviteSession::setSdp(mInvite200, answer);
          InfoLog (<< "Sending " << mInvite200.brief());
          mDialog.send(mInvite200);
@@ -209,6 +218,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
 
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 200);
+         handleSessionTimerRequest(response, mLastSessionModification);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InviteSession::setSdp(response, answer);
@@ -468,7 +478,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if(timeout.seq() == mSessionTimerSeq)
       {
-         if(mState == Connected)
+         if(isConnected())  // !slg! this check isn't 100% safe - ie. provideOffer will throw if in some states - ie. SentReInvite, etc.
          {
             provideOffer(*mCurrentLocalSdp);
          }
@@ -571,6 +581,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
 
       case On200Update:
          transition(Connected);
+         handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
@@ -619,7 +630,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       
       case On1xx:
       case On1xxEarly:
-         // !slg! Some UA's send a 100 response to an ReInvite - just ignore it
+         // !slg! Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
       case On2xxAnswer:
@@ -627,7 +638,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On2xx:
       {
          transition(Connected);
-
+         handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
@@ -950,6 +961,120 @@ InviteSession::start491Timer()
    int seq = mLastSessionModification.header(h_CSeq).sequence();
    int timer = Random::getRandom() % 4000;
    mDum.addTimerMs(DumTimeout::Glare, timer, getBaseHandle(), seq);
+}
+
+void 
+InviteSession::handleSessionTimerResponse(const SipMessage& msg) 
+{ 
+   // If session timers are locally supported then handle response 
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
+   { 
+      bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
+    
+      // Process Session Timer headers 
+      if(msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Timer))) 
+      { 
+         if(msg.exists(h_SessionExpires)) 
+         { 
+            mSessionInterval = msg.header(h_SessionExpires).value(); 
+            mSessionRefresherUAS = fUAS;  // Default to us as refresher 
+            if(msg.header(h_SessionExpires).exists(p_refresher)) 
+            { 
+                mSessionRefresherUAS = (msg.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
+            } 
+         } 
+         else 
+         { 
+            // If no Session Expires in response then session timer is to be 'turned off' 
+            mSessionInterval = 0; 
+         } 
+      } 
+      else if(msg.exists(h_SessionExpires))  // If UAS decides to be the refresher - then he MAY not set the Requires header to timer 
+      { 
+         mSessionInterval = msg.header(h_SessionExpires).value(); 
+         mSessionRefresherUAS = fUAS;  // Default to us as refresher 
+         if(msg.header(h_SessionExpires).exists(p_refresher)) 
+         { 
+             mSessionRefresherUAS = (msg.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
+         } 
+      } 
+      // Note:  If no Requires or Session-Expires, then UAS does not support Session Timers - we are free to use our settings 
+
+      if(mSessionInterval >= 90)  // 90 is the absolute minimum 
+      { 
+         // Check if we are the refresher 
+         if((fUAS && mSessionRefresherUAS) || (!fUAS && !mSessionRefresherUAS)) 
+         { 
+            // Start Session-Refresh Timer to mSessionInterval / 2 (recommended by draft-ietf-sip-session-timer-15) 
+            mDum.addTimer(DumTimeout::SessionRefresh, mSessionInterval / 2, getBaseHandle(), ++mSessionTimerSeq); 
+         } 
+         else 
+         { 
+            // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15) 
+            mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq); 
+         } 
+      } 
+   } 
+}
+    
+void 
+InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request) 
+{ 
+   // If session timers are locally supported then add necessary headers to response 
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
+   { 
+      bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
+  
+      // Check if we are the refresher 
+      if((fUAS && mSessionRefresherUAS) || (!fUAS && !mSessionRefresherUAS)) 
+      { 
+         // If we receive a reinvite, but we are the refresher - don't process for session timers (probably just a TargetRefresh or hold request) 
+         return; 
+      } 
+   
+      mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if UAC doesn't request a time 
+      mSessionRefresherUAS = true;  // Used only if UAC doesn't request a time 
+    
+      // Check if far-end supports 
+      bool farEndSupportsTimer = false; 
+      if(request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::Timer))) 
+      { 
+         farEndSupportsTimer = true; 
+         if(request.exists(h_SessionExpires)) 
+         { 
+            // Use Session Interval requested by UAC - if none then use local settings 
+            mSessionInterval = request.header(h_SessionExpires).value(); 
+            mSessionRefresherUAS = fUAS;  // Default to us as refresher 
+            if(request.header(h_SessionExpires).exists(p_refresher)) 
+            { 
+                mSessionRefresherUAS = (request.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
+            } 
+         } 
+      } 
+   
+      // Add Session-Expires if required 
+      if(mSessionInterval >= 90) 
+      { 
+         if(farEndSupportsTimer) 
+         { 
+            response.header(h_Requires).push_back(Token(Symbols::Timer)); 
+         } 
+         response.header(h_SessionExpires).value() = mSessionInterval; 
+         response.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac"); 
+   
+         // Check if we are the refresher 
+         if((fUAS && mSessionRefresherUAS) || (!fUAS && !mSessionRefresherUAS)) 
+         { 
+            // Start Session-Refresh Timer to mSessionInterval / 2 (recommended by draft-ietf-sip-session-timer-15) 
+            mDum.addTimer(DumTimeout::SessionRefresh, mSessionInterval / 2, getBaseHandle(), ++mSessionTimerSeq); 
+         } 
+         else 
+         { 
+            // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15) 
+            mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq); 
+         } 
+      } 
+   } 
 }
 
 Data

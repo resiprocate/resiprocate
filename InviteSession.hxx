@@ -183,6 +183,9 @@ class InviteSession : public DialogUsage
       void startRetransmitTimer();
       void start491Timer();
 
+      void handleSessionTimerResponse(const SipMessage& msg);
+      void handleSessionTimerRequest(SipMessage &response, const SipMessage& request);
+
       static Data toData(State state);
       void transition(State target);
 
