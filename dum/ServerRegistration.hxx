@@ -28,8 +28,7 @@ class ServerRegistration: public BaseUsage
       /// reject a SIP registration 
       void reject(int statusCode);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ServerRegistration::Handle getHandle() {return mHandle;}
+      ServerRegistration::Handle& getHandle() { return reinterpret_cast<ServerRegistration::Handle&>(mHandle); }
 
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
@@ -40,7 +39,6 @@ class ServerRegistration: public BaseUsage
       friend class Dialog;
       ServerRegistration(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
-      ServerRegistration::Handle mHandle;
 
       // disabled
       ServerRegistration(const ServerRegistration&);
