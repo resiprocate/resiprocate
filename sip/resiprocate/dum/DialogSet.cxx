@@ -12,6 +12,7 @@
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/Helper.hxx"
 
 
@@ -126,7 +127,7 @@ DialogSet::addDialog(Dialog *dialog)
 }
 
 BaseCreator* 
-DialogSet::getCreator() 
+DialogSet::getCreator()
 {
    return mCreator;
 }
@@ -135,7 +136,39 @@ Dialog*
 DialogSet::findDialog(const SipMessage& msg)
 {
    DialogId id(msg);
-   return findDialog(id);
+   Dialog* dlog = findDialog(id);
+   //vonage/2543 matching here
+   if (dlog)
+   {
+      return dlog;
+   }
+   else if (msg.exists(h_Contacts) && 
+            msg.header(h_Contacts).size() == 1 
+            && msg.isResponse() 
+            && mDum.getProfile()->looseToTagMatching()
+            && msg.header(h_To).exists(p_tag))     
+   {
+      //match by contact
+      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+      {
+         if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
+         {
+            //!dcm! in the vonage case, the to tag should be updated to match the fake
+            //vonage tag introduced in the 200 which is also used for the BYE.
+            //find out how deep this rabbit hole goes, may just have a pugabble
+            //filter api that can be added for dialog matching if things get any
+            //more specific--this is the VonageKludgeFilter
+            Dialog* dialog = it->second;            
+            DialogId old = dialog->getId();
+            dialog->mId = DialogId(old.getCallId(), old.getLocalTag(), msg.header(h_To).param(p_tag));
+            dialog->mRemoteNameAddr.param(p_tag) = msg.header(h_To).param(p_tag);
+            mDialogs.erase(it);
+            mDialogs[dialog->getId()] = dialog;
+            return dialog;
+         }
+      }
+   }
+   return 0;
 }
 
 bool
@@ -275,6 +308,8 @@ DialogSet::dispatch(const SipMessage& msg)
       }
    }
 
+   //!dcm! -- even if this matches, if a final reponses matches the inital request all
+   //usages should be cancelled?
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
@@ -287,16 +322,35 @@ DialogSet::dispatch(const SipMessage& msg)
          return;         
       }
 
-      if (msg.isResponse() 
-          && msg.header(h_To).exists(p_tag) 
-          && !msg.exists(h_Contacts) 
-          && msg.header(h_StatusLine).statusCode() < 200)
+      if (msg.isResponse())
       {
-         InfoLog ( << "Cannot create a dialog, no Contact in 180." );
-         //call OnProgress in proposed DialogSetHandler here
-         return;         
+         int code = msg.header(h_StatusLine).statusCode();
+         
+         if (code < 200                     
+             && msg.header(h_To).exists(p_tag) 
+             && !msg.exists(h_Contacts))
+         {
+            InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+            //call OnProgress in proposed DialogSetHandler here
+            return;         
+         }
+         else
+         {
+            //!dcm! no forking for now, think about onSessionTerminated call(vs
+            // forking) also think about 3xx after early dialog(ugh)--is this possible?
+            //so, short term appropach, dispatch this failur to all existing
+            //usages, return, if no usage allow one to be created.
+            if (!mDialogs.empty())
+            {
+               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+               {
+                  it->second->dispatch(msg);
+               }
+               return;
+            }
+         }
       }
-
+      
       InfoLog ( << "Creating a new Dialog from msg: " << msg);
 
       try

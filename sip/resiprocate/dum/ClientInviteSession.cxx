@@ -138,6 +138,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code < 300)
             {
+               sendSipFrag(msg);            
                //!dcm! -- pretty sure the following timer was bogus
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
                ++mStaleCallTimerSeq;  //unifies timer handling logic
@@ -153,6 +154,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code >= 300)
             {
+               sendSipFrag(msg);            
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                guard.destroy();
             }
@@ -173,6 +175,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
+               sendSipFrag(msg);            
 	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                guard.destroy();
             }
@@ -188,7 +191,7 @@ void
 ClientInviteSession::dispatch(const DumTimeout& timeout)
 {
    Destroyer::Guard guard(mDestroyer);
-   if (timeout.type() == DumTimeout::StaleCall 
+    if (timeout.type() == DumTimeout::StaleCall 
        && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
@@ -208,7 +211,7 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
       contents.message().header(h_StatusLine) = response.header(h_StatusLine);
       //will be cloned...ServerSub may not have the most efficient API possible
       int code = response.header(h_StatusLine).statusCode();
-      SipMessage& notify = (code > 200) ? mServerSub->end(NoResource, &contents) : mServerSub->update(&contents);
+      SipMessage& notify = (code >= 200) ? mServerSub->end(NoResource, &contents) : mServerSub->update(&contents);
 //      mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
       mServerSub->send(notify);
    }   

@@ -527,6 +527,7 @@ Dialog::dispatch(const SipMessage& msg)
                server->dispatch(response);
             }
          }
+         break;         
          default:
             assert(0);
             return;

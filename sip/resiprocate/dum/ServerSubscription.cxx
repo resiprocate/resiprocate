@@ -150,9 +150,10 @@ ServerSubscription::makeNotify()
 {
    mDialog.makeRequest(mLastNotify, NOTIFY);
    mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
+   mLastNotify.header(h_Event).value() = mEventType;   
    if (!mSubscriptionId.empty())
    {
-      mLastRequest.header(h_Event).param(p_id) = mSubscriptionId;
+      mLastNotify.header(h_Event).param(p_id) = mSubscriptionId;
    }
 }
 
@@ -164,9 +165,9 @@ ServerSubscription::end(TerminateReason reason, const Contents* document)
    mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
    if (document)
    {
-      mLastRequest.setContents(document);
+      mLastNotify.setContents(document);
    }
-   return mLastRequest;
+   return mLastNotify;
 }
 
 void
@@ -187,8 +188,8 @@ SipMessage&
 ServerSubscription::update(const Contents* document)
 {
    makeNotify();
-   mLastRequest.setContents(document);
-   return mLastRequest;
+   mLastNotify.setContents(document);
+   return mLastNotify;
 }
 
 
