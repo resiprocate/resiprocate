@@ -165,6 +165,17 @@ DialogSet::findDialog(const SipMessage& msg)
    {
       return dlog;
    }
+   //match off transaction ID
+   else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
+   {
+      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+      {
+         if (it->second->matches(msg))
+         {
+            return it->second;            
+         }
+      }
+   }
    else if (msg.exists(h_Contacts) && 
             msg.header(h_Contacts).size() == 1 
             && msg.isResponse() 
@@ -211,7 +222,7 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
-          msg.header(h_CSeq).method() == getCreator()->getLastRequest().header(h_RequestLine).method())
+          msg.header(h_CSeq) == getCreator()->getLastRequest().header(h_CSeq))
       {
          if (mDum.mClientAuthManager.get())
          {
@@ -351,15 +362,16 @@ DialogSet::dispatch(const SipMessage& msg)
          case SUBSCRIBE:
          case BYE:
          case ACK:
-            if(response.header(h_To).exists(p_tag))
-            {
-               break;  //dialog creating/handled by dialog
-            }
-            else
-            {
-               //throw away, informational status message eventually
-               return;               
-            }
+            break; //dialog creating/handled by dialog(2543 & illegal 3261 responses)
+//             if(response.header(h_To).exists(p_tag))
+//             {
+//                break;  //dialog creating/handled by dialog
+//             }
+//             else
+//             {
+//                //throw away, informational status message eventually
+//                return;               
+//             }
          case CANCEL:
          case REFER:  //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
