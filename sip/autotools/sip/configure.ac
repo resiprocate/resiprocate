@@ -12,7 +12,13 @@ RESIP_MINOR_VERSION=5
 RESIP_MICRO_VERSION=0
 
 RESIP_VERSION=$RESIP_MAJOR_VERSION.$RESIP_MINOR_VERSION.$RESIP_MICRO_VERSION
-LIBRESIP_SO_VERSION=`expr $RESIP_MINOR_VERSION + $RESIP_MAJOR_VERSION`:$RESIP_MICRO_VERSION:$RESIP_MINOR_VERSION
+#
+#LIBRESIP_SO_VERSION=`expr $RESIP_MINOR_VERSION + $RESIP_MAJOR_VERSION`:$RESIP_MICRO_VERSION:$RESIP_MINOR_VERSION
+# This SO version IS NOT related to the release (0.5.0) versions AT ALL.
+# This needs to increment independently when the ABI to the library changes.
+#
+LIBRESIP_SO_VERSION=0:5:0
+
 
 VERSION=$RESIP_VERSION
 PACKAGE=resiprocate
@@ -110,6 +116,7 @@ RESIP_IPV6
 RESIP_SCANNER
 RESIP_SCANNER_DEBUG
 RESIP_EXCEPTION_DEBUG_LOGS
+RESIP_SELECT_CONTENTS
 
 AC_DEFINE_UNQUOTED([RESIP_VERSION], 
         ["$RESIP_VERSION"],
@@ -141,6 +148,11 @@ dnl CC="$PTHREAD_CC"
 
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
+
+dnl Derive the contents object list
+#CONTENTS_OBJS="SdpContents.o GenericContents.o PlainContents.o"
+#AC_SUBST([CONTENTS_OBJS])
+
 
 AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])  
 
