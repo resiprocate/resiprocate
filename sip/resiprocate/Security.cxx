@@ -177,6 +177,7 @@ Security::preload()
       }
    }
 #else
+   // CJ - TODO - delete this old crap 
    DIR* dir = opendir( mPath.c_str() );
 
    if (!dir )
@@ -463,9 +464,28 @@ BaseSecurity::addCertPEM (PEMType type,
 void
 BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write) const
 {
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
-
-   certs.insert(std::make_pair(key, cert));
+   switch (type)
+   {
+      case DomainCert:
+      {
+         mDomainCerts.insert(std::make_pair(key, cert));
+      }
+      break;
+      case UserCert:
+      { 
+         mUserCerts.insert(std::make_pair(key, cert));
+      }
+      break;
+      case RootCert:
+      {
+         X509_STORE_add_cert(mRootCerts,cert);
+      }
+      break;
+      default:
+      {
+         assert(0);
+      }
+   }
    
    if (write)
    {
@@ -1050,8 +1070,11 @@ BaseSecurity::getRootCertDescriptions() const
 
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
-{
-#if 0
+{ 
+   assert( mRootCerts );
+#if 1
+   addCertPEM(RootCert,Data::Empty,x509PEMEncodedRootCerts,false);
+#else
    assert( !x509PEMEncodedRootCerts.empty() );
 
    static X509_LOOKUP_METHOD x509_pemstring_lookup =
@@ -1977,13 +2000,18 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    ++i;
    assert( i != multi->parts().end() );
    Contents* second = *i;
+
+#if 0
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
 
    if ( !sig )
    {
       ErrLog( << "Don't know how to deal with signature type " );
-      throw Exception("Invalid contents passed to checkSignature", __FILE__, __LINE__);
+      //throw Exception("Invalid contents passed to checkSignature", __FILE__,
+      //__LINE__);
+      return first;
    }
+#endif
 
    int flags=0;
    flags |= PKCS7_BINARY;
@@ -1991,14 +2019,14 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert( second );
    assert( first );
 
-   //CerrLog( << "message to sign is " << *first );
+   InfoLog( << "message to sign is " << *first );
 
    Data bodyData;
    DataStream strm( bodyData );
    first->encodeHeaders( strm );
    first->encode( strm );
    strm.flush();
-   //CerrLog( << "encoded version to sign is " << bodyData );
+   InfoLog( << "encoded version to sign is " << bodyData );
 
    // Data textData = first->getBodyData();
    Data textData = bodyData;
@@ -2015,8 +2043,8 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert(out);
    InfoLog( << "created out BIO" );
 
-   DebugLog( << "verify <"    << textData.escaped() << ">" );
-   DebugLog( << "signature <" << sigData.escaped() << ">" );
+   InfoLog( << "verify <"    << textData.escaped() << ">" );
+   InfoLog( << "signature <" << sigData.escaped() << ">" );
 
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
    assert(pkcs7Bio);
@@ -2081,7 +2109,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    if ( *signedBy == Data::Empty )
    {
-#if 1 // CJ TODO FIX 
+#if 0 // CJ TODO FIX 
       // THIS IS ALL WRONG 
       *signedBy == Data("kumiko@example.net");
       
@@ -2092,14 +2120,18 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          sk_X509_push(certs, cert);
       }
 #else
-      assert(0);
-      // need to add back in code that adds all certs when sender unkonwn
+      //assert(0);
+       InfoLog( <<"Adding cert from root list to check sig" );  
+
+       sk_X509_push(certs, mRootCerts );
+        // need to add back in code that adds all certs when sender unkonwn
 #endif
    }
    else
    {
-      if (mUserCerts.count( *signedBy))
+      if (mUserCerts.count( *signedBy ))
       {
+         InfoLog( <<"Adding cert from" <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
          assert(cert);
          sk_X509_push(certs, cert);
