@@ -1,21 +1,49 @@
 #ifndef Logger_hxx
 #define Logger_hxx
 
-//#include <util/Singleton.h>
-//#include <util/Threads.h>
 #include <util/Socket.hxx>
-
 #include <util/Log.hxx>
 #include <util/SysLogStream.hxx>
 #include <util/Lock.hxx>
 
 #ifdef WIN32
 
-#define DebugLog( a )
-#define CritLog( a )
-#define ErrLog( a )
-#define WarningLog( a )
-#define InfoLog( a )
+#ifdef NO_DEBUG
+// Suppress debug loging at compile time
+#define DebugLog(__VA_ARGS__ )
+#else
+#define DebugLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__ )
+#endif
+
+#define CritLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__ )
+
+#define ErrLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__ )
+
+#define WarningLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__ )
+
+#define InfoLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__ )
+
+// do/while allows a {} block in an expression
+#define GenericLog(system__, level__,  __VA_ARGS__)                     \
+do                                                              \
+{                                                               \
+  if (Vocal2::GenericLogImpl::isLogging(level__))               \
+  {                                                             \
+     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
+     if (Vocal2::GenericLogImpl::isLogging(level__))            \
+     {                                                          \
+        Vocal2::Log::tags(level__, system__,                    \
+                          Vocal2::GenericLogImpl::Instance())   \
+          << __FILE__ << ':' << __LINE__ << DELIM               \
+          __VA_ARGS__  << std::endl;                            \
+     }                                                          \
+  }                                                             \
+} while (0)
 
 #else
 
@@ -86,14 +114,15 @@ class GenericLogImpl :  public Log
             }
             return *mLogger;
          }
-         else if (Log::_type == Log::FILE)
+         else 
+		 {
+			 if (Log::_type == Log::FILE)
          {
             assert(0);
          }
-         else
-         {
-            return std::cout;
-         }
+		 }
+
+		 return std::cout;
       }
       
       static bool isLogging(Log::Level level) 
