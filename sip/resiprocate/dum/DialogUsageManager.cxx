@@ -54,6 +54,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
+   mDialogSetHandler(0),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
@@ -224,6 +225,12 @@ DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* hand
 {
    assert(!mServerRegistrationHandler);
    mServerRegistrationHandler = handler;
+}
+
+void 
+DialogUsageManager::setDialogSetHandler(DialogSetHandler* handler)
+{
+   mDialogSetHandler = handler;   
 }
 
 void 
