@@ -36,7 +36,8 @@ libresiprocate_la_SOURCES = \
 	Dialog.cxx \
 	Dialog2.cxx \
 	DialogSet.cxx \
-	DnsResolver.cxx \
+	DnsInterface.cxx \
+	DnsResult.cxx \
 	Embedded.cxx \
 	Executive.cxx \
 	ExistsParameter.cxx \
@@ -108,7 +109,9 @@ resiprocate_include_HEADERS = \
 	Dialog.hxx \
 	Dialog2.hxx \
 	DialogSet.hxx \
-	DnsResolver.hxx \
+	DnsInterface.hxx \
+	DnsResult.hxx \
+	DnsHandler.hxx \
 	Embedded.hxx \
 	Executive.hxx \
 	ExistsParameter.hxx \
