@@ -54,7 +54,7 @@ MultipartSignedContents::clone() const
 
 
 const Mime& 
-MultipartSignedContents::getStaticType() const
+MultipartSignedContents::getStaticType() 
 {
    static Mime type("multipart","signed");
    return type;
