@@ -137,9 +137,18 @@ DialogSet::dispatch(const SipMessage& msg)
       if (mCancelled)
       {
          dialog->cancel();
+         dialog = findDialog(msg);
       }
    }     
-   dialog->dispatch(msg);
+   if (dialog)
+   {     
+      dialog->dispatch(msg);
+   }
+   else if (msg.isRequest())
+   {
+      SipMessage response;
+      mDum.send(mDum.makeResponse(response, msg, 481));
+   }
 }
 
 Dialog* 
