@@ -102,7 +102,7 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
    SendData* data = new SendData(dest, d, tid);
    assert(dest.port != -1);
-   DebugLog (<< "Adding message to tx buffer to: " << dest << " " << d.escaped());
+   DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
    mTxFifo.add(data); // !jf!
 }
 
