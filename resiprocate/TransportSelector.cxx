@@ -87,7 +87,7 @@ TransportSelector::addTransport( Transport::Type protocol,
       case Transport::TCP:
          transport = new TcpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
-#ifdef USE_SSL
+#if defined( USE_SSL )
       case Transport::TLS:
          transport = new TlsTransport(hostname, port, nic, mStack.mStateMacFifo, mStack.security);
          break;

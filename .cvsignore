@@ -8,3 +8,4 @@ config.status
 lib.debug.Linux.i686
 lib.opt.Linux.i686
 libtool
+.DS_Store

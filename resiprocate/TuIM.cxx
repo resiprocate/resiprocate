@@ -65,7 +65,7 @@ TuIM::TuIM(SipStack* stack,
 bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
 {
-#ifdef USE_SSL 
+#if defined( USE_SSL )
    Security* sec = mStack->security;
    assert(sec);
    
@@ -116,7 +116,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
  
    Contents* body = new PlainContents(text);
    
-#if USE_SSL
+#if defined( USE_SSL )
    if ( !encryptFor.empty() )
    {
       Security* sec = mStack->security;
@@ -354,7 +354,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    Security::SignatureStatus sigStat = Security::none;
    bool encrypted=false;
 
-#ifdef USE_SSL
+#if defined( USE_SSL )
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
