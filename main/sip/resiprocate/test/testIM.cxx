@@ -45,7 +45,7 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from,
                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
                                 bool wasEncryped  )
 {  
-   InfoLog(<< "In TestPageCallback");
+   DebugLog(<< "In TestPageCallback");
 
    if ( mDest && ( *mDest != from) )
    {
@@ -127,7 +127,7 @@ processStdin(  TuIM& tuIM, Uri* dest )
          
          DebugLog( << "Read <" << text << ">" );
          
-         InfoLog( << "Send to <" << *dest << ">" );
+         cout << "Send to <" << *dest << ">";
          
          //tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
          tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
@@ -145,7 +145,7 @@ main(int argc, char* argv[])
 {  
    Log::initialize(Log::COUT, Log::ERR, argv[0]);
    
-   Log::setLevel(Log::DEBUG_STACK);
+   //Log::setLevel(Log::DEBUG_STACK);
 
    InfoLog(<<"Test Driver for IM Starting");
     
@@ -234,7 +234,14 @@ main(int argc, char* argv[])
       if ( err == -1 )
       {
          int e = errno;
-         InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+		 switch (e)
+		 {
+		 case 0:
+			 break;
+		 default:
+			InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+			break;
+			}
       }
       //InfoLog(<< "Select returned");
        
