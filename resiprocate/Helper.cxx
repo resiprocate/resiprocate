@@ -38,12 +38,12 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   request->header(h_Contacts).push_front(contact);
+   request->header(h_Contacts).push_back(contact);
    request->header(h_CallId).value() = Helper::computeCallId();
    //request->header(h_ContentLength).value() = 0;
    
    Via via;
-   request->header(h_Vias).push_front(via);
+   request->header(h_Vias).push_back(via);
    
    return request;
 }
@@ -85,10 +85,10 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
-   request->header(h_Contacts).push_front( contact );
+   request->header(h_Contacts).push_back( contact );
    
    Via via;
-   request->header(h_Vias).push_front(via);
+   request->header(h_Vias).push_back(via);
    
    return request;
 }
@@ -124,10 +124,10 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
-   request->header(h_Contacts).push_front( contact );
+   request->header(h_Contacts).push_back( contact );
    
    Via via;
-   request->header(h_Vias).push_front(via);
+   request->header(h_Vias).push_back(via);
    
    return request;
 }
@@ -156,9 +156,9 @@ Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
-   request->header(h_Contacts).push_front( contact );
+   request->header(h_Contacts).push_back( contact );
    Via via;
-   request->header(h_Vias).push_front(via);
+   request->header(h_Vias).push_back(via);
    
    return request;
 }
@@ -186,9 +186,9 @@ Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
-   request->header(h_Contacts).push_front( contact );
+   request->header(h_Contacts).push_back( contact );
    Via via;
-   request->header(h_Vias).push_front(via);
+   request->header(h_Vias).push_back(via);
    
    return request;
 }
@@ -882,7 +882,7 @@ Helper::processStrictRoute(SipMessage& request)
       // route list.  Force the message target to be the next hop router.
       request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
       request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
-      request.header(h_Routes).pop_front();
+      request.header(h_Routes).pop_front(); // !jf!
       assert(!request.hasForceTarget());
       request.setForceTarget(request.header(h_RequestLine).uri());
    }
