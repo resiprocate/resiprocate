@@ -4,6 +4,12 @@
 
 using namespace Vocal2;
 
+bool
+Headers::isCommaTokenizing(Type type)
+{
+   return type % 3;
+}
+
 // can't do  *(int*)"Acce" at compile time, so precalculated
 static const unsigned int IntVal_Acce = 1701012289;
 static const unsigned int IntVal_Aler = 1919249473;
