@@ -14,10 +14,11 @@ class UserAuthInfo : public resip::ApplicationMessage
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
                     const resip::Data& a1,
-                    const resip::Data& transactionToken);
+                    const resip::Data& transactionID);
       ~UserAuthInfo();
-      
-      const resip::Data& getTransactionToken() const;
+         
+      virtual const Data& getTransactionId() const;
+
       const resip::Data& getA1() const;
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
@@ -27,7 +28,7 @@ class UserAuthInfo : public resip::ApplicationMessage
       virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
-      resip::Data mTransactionToken;
+      resip::Data mTransactionId;
       resip::Data mA1;
       resip::Data mRealm;
       resip::Data mUser;
