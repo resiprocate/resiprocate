@@ -26,24 +26,11 @@ class ServerInviteSession: public InviteSession
       /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
       virtual SipMessage& reject(int statusCode);
 
-
-      // Inherited methods follow
-      //////////////////////////////////////////////////////////////////////
-      /// Called to set the offer that will be used in the next messages that
-      /// sends and offer. Does not send an offer 
-      virtual void setOffer(const SdpContents* offer);
-      
-      /// Called to set the answer that will be used in the next messages that
-      /// sends and offer. Does not send an answer
-      virtual void setAnswer(const SdpContents* answer);
+      virtual void send(SipMessage& msg);
 
       /// Makes the dialog end. Depending ont eh current state, this might
       /// results in BYE or CANCEL being sent.
       virtual SipMessage& end();
-
-      /// Rejects an offer at the SIP level. So this can send a 487 to a
-      /// reINVITE or and UPDATE
-      virtual SipMessage& rejectOffer(int statusCode);
       
       void dispatch(const SipMessage& msg);
       void dispatch(const DumTimeout& timer);
