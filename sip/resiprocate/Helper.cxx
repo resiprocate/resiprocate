@@ -70,6 +70,8 @@ SipMessage
 Helper::makeRequest(const NameAddr& target, MethodTypes method)
 {
    assert(0);
+   SipMessage junk;
+   return junk;
 }
 
 
@@ -78,20 +80,26 @@ Helper::makeRequest(const NameAddr& target, MethodTypes method)
 SipMessage 
 Helper::makeAck(const SipMessage& request, const SipMessage& response)
 {
-   assert(0);
+   assert(0);   
+   SipMessage junk;
+   return junk;
 }
 
 
 Data 
 Helper::computeUniqueBranch()
 {
-   assert(0);
+   assert(0);  
+   Data junk;
+   return junk;
 }
 
 Data 
 Helper::computeProxyBranch()
 {
    assert(0);
+    Data junk;
+   return junk;
 }
 
 Data

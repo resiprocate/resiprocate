@@ -21,6 +21,7 @@ class Transport_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::transport;}
       Transport_Param()
       {
@@ -34,6 +35,7 @@ class User_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::user;}
       User_Param()
       {
@@ -47,6 +49,7 @@ class Method_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::method;}
       Method_Param()
       {
@@ -60,6 +63,7 @@ class Ttl_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
+	  typedef IntegerParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::ttl;}
       Ttl_Param()
       {
@@ -73,6 +77,7 @@ class Maddr_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::maddr;}
       Maddr_Param()
       {
@@ -86,6 +91,7 @@ class Lr_Param : public ParamBase
 {
    public:
       typedef ExistsParameter Type;
+	  typedef ExistsParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::lr;}
       Lr_Param()
       {
@@ -99,6 +105,7 @@ class Q_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::q;}
       Q_Param()
       {
@@ -112,6 +119,7 @@ class Purpose_Param : public ParamBase
 {
    public:
       typedef FloatParameter Type;
+	  typedef FloatParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::purpose;}
       Purpose_Param()
       {
@@ -125,6 +133,7 @@ class Expires_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
+	  typedef IntegerParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::expires;}
       Expires_Param()
       {
@@ -138,6 +147,7 @@ class Handling_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::handling;}
       Handling_Param()
       {
@@ -151,6 +161,7 @@ class Tag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::tag;}
       Tag_Param()
       {
@@ -164,6 +175,7 @@ class ToTag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::toTag;}
       ToTag_Param()
       {
@@ -177,6 +189,7 @@ class FromTag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::fromTag;}
       FromTag_Param()
       {
@@ -190,6 +203,7 @@ class Duration_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
+	  typedef IntegerParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::duration;}
       Duration_Param()
       {
@@ -203,6 +217,7 @@ class Branch_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::branch;}
       Branch_Param()
       {
@@ -216,6 +231,7 @@ class Received_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::received;}
       Received_Param()
       {
@@ -229,6 +245,7 @@ class Mobility_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::mobility;}
       Mobility_Param()
       {
@@ -242,6 +259,7 @@ class Comp_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::comp;}
       Comp_Param()
       {
@@ -255,6 +273,7 @@ class Rport_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
+	  typedef IntegerParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::rport;}
       Rport_Param()
       {
