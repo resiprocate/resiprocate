@@ -684,13 +684,12 @@ TransactionState::processClientInvite(  Message* msg )
                   }
                   else if (mState == Completed)
                   {
-                     /* Any retransmissions of the final response that are received while in
-                        the "Completed" state MUST cause the ACK to be re-passed to the
-                        transport layer for retransmission
-                     */
-                     SipMessage* ack;
-                     ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
-                     resendToWire(ack);
+                     /* Any retransmissions of the final response that
+                        are received while in the "Completed" state MUST
+                        cause the ACK to be re-passed to the transport
+                        layer for retransmission.
+                      */
+                     resendToWire(mMsgToRetransmit);
                      sendToTU(msg); // don't delete msg
                   }
                   else
