@@ -1,6 +1,8 @@
 #if !defined(SECURITY_HXX)
 #define SECURITY_HXX
 
+#include <map>
+
 
 #ifdef USE_SSL
 #include <openssl/evp.h>
@@ -104,8 +106,12 @@ class Security
                
       Data getPath( const Data& dir, const Data& file );
 #ifdef USE_SSL   
-      // need a map of certName to certificates
-
+      // map of name to certificates
+      typedef std::map<Data,X509*> Map;
+      typedef Map::iterator MapIterator;
+      typedef Map::const_iterator MapConstIterator;
+      Map publicKeys;
+      
       // root cert list 
       X509_STORE* certAuthorities;
 
