@@ -108,7 +108,7 @@ SdpContents::encodeParsed(ostream& s) const
 }
 
 const Mime& 
-SdpContents::getStaticType() const
+SdpContents::getStaticType() 
 {
    static Mime type("application", "sdp");
    return type;
