@@ -99,6 +99,7 @@ ServerSubscription::send(SipMessage& msg)
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             mDum.send(msg);
+            mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
             mState = Established;            
          }
          else
