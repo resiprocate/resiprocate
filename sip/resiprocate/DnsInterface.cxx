@@ -28,6 +28,31 @@ DnsInterface::DnsInterface(DnsInterface::Handler* handler)
    mSupportedTransports.insert(Transport::TCP);
 }
 
+DnsInterface::~DnsInterface()
+{
+}
+
+void 
+DnsInterface::buildFdSet(FdSet& fdset)
+{
+#if defined(USE_ARES)
+   int size = ares_fds(mChannel, &fdset.read, &fdset.write);
+   if ( size > fdset.size )
+   {
+      fdset.size = size;
+   }
+#endif
+}
+
+void 
+DnsInterface::process(FdSet& fdset)
+{
+#if defined(USE_ARES)
+   ares_process(mChannel, &fdset.read, &fdset.write);
+#endif
+}
+
+
 DnsResult*
 DnsInterface::lookup(const Uri& uri, const Data& transactionId)
 {
