@@ -1,1 +1,4 @@
+.dependlibs
+bin.debug.Darwin.ppc
 html
+obj.debug.Darwin.ppc
