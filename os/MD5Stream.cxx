@@ -2,44 +2,63 @@
 
 using namespace Vocal2;
 
-MD5Stream::MD5Stream()
+MD5Buffer::MD5Buffer()
 {
    MD5Init(&mContext);
+   setp(mBuf, mBuf + sizeof(mBuf));
 }
+
+MD5Buffer::~MD5Buffer()
+{
+}
+
+int
+MD5Buffer::sync()
+{
+   size_t len = pptr() - pbase();
+   if (len > 0) 
+   {
+      MD5Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+      // reset the put buffer
+      setp(mBuf, mBuf + sizeof(mBuf));
+   }
+   return 0;
+}
+
+int
+MD5Buffer::overflow(int c)
+{
+   sync();
+   if (c != -1) 
+   {
+      mBuf[0] = c;
+      pbump(1);
+      return c;
+   }
+   return 0;
+}
+
+Data 
+MD5Buffer::getHex()
+{
+   MD5Final((unsigned char*)mBuf, &mContext);
+   Data digest((const char*)mBuf,16, false);
+   return digest.hex();   
+}
+
+MD5Stream::MD5Stream()
+   : std::ostream(0),
+     mStreambuf()
+{
+   init(&mStreambuf);
+}
+
+MD5Stream::~MD5Stream()
+{}
 
 Data 
 MD5Stream::getHex()
 {
-   unsigned char digestBuf[16];
-   MD5Final(digestBuf, &mContext);
-   Data digest((const char*)digestBuf,16, false);
-   return digest.hex();   
-}
-
-Data 
-MD5Stream::get()
-{
-   unsigned char digestBuf[16];
-   MD5Final(digestBuf, &mContext);
-   Data digest((const char*)digestBuf,16, false);
-   return digest;
-}
-
-MD5Stream&
-MD5Stream::write(const char* s, size_t size)
-{
-   MD5Update(&mContext, reinterpret_cast <unsigned const char*>(s), size);
-   return *this;
-}
-
-MD5Stream& 
-Vocal2::operator<<(MD5Stream& strm, const Data& d)
-{
-   return strm.write(d.data(), d.size());
-}
-
-MD5Stream& 
-Vocal2::operator<<(MD5Stream& strm, const char* s)
-{
-   return strm.write(s, strlen(s));
+   flush();
+   return mStreambuf.getHex();
 }

@@ -12,6 +12,7 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/test/TestSupport.hxx"
 #include "sip2/util/Timer.hxx"
+#include "sip2/util/DataStream.hxx"
 #include "sip2/util/MD5Stream.hxx"
 #include "digcalc.hxx"
 
@@ -29,6 +30,44 @@ main(int arc, char** argv)
       assert(Data("abcdefghijklmnopqrstuvwxyz").md5() == "c3fcd3d76192e4007dfb496cca67e13b");
       assert(Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789").md5() == "d174ab98d277d9f5a5611c2c9f419d9f");
       assert(Data("12345678901234567890123456789012345678901234567890123456789012345678901234567890").md5() == "57edf4a22be3c955ac49da2e2107b67a");
+   }
+   
+   {
+      {
+         MD5Stream s;
+         assert(s.getHex() == Data("").md5());
+      }
+      {
+         MD5Stream s;
+         s << "a";
+         assert(s.getHex() == Data("a").md5());
+      }
+      {
+         MD5Stream s;
+         s << "abc";
+         assert(s.getHex() == Data("abc").md5());
+      }
+      {
+         MD5Stream s;
+         s << "message digest";
+         assert(s.getHex() == Data("message digest").md5());
+      }
+      {
+         MD5Stream s;
+         s << "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+         assert(s.getHex() == Data("12345678901234567890123456789012345678901234567890123456789012345678901234567890").md5());
+      }
+      {
+         Data d;
+         DataStream ds(d);
+         MD5Stream s;
+
+         s << "this involves" << 7.8 << "foo" << 34653453 << -6 << "hike";
+         ds << "this involves" << 7.8 << "foo" << 34653453 << -6 << "hike";
+         ds.flush();
+
+         assert(d.md5() == s.getHex());
+      }
    }
 
    {
@@ -82,6 +121,110 @@ main(int arc, char** argv)
       char* cnonce = "72345hef";
       char* cnonceCount = "00000001";
       char* qop = "auth";
+
+      Data responseMD5 = Helper::makeResponseMD5(username,
+                                                 password,
+                                                 realm,
+                                                 method,
+                                                 uri,
+                                                 nonce,
+                                                 qop,
+                                                 cnonce,
+                                                 cnonceCount);
+      
+      HASHHEX a1Hash;
+      HASHHEX response;
+
+      DigestCalcHA1(alg,
+                    username,
+                    realm,
+                    password,
+                    nonce,
+                    cnonce,
+                    a1Hash);
+
+      DigestCalcResponse(a1Hash,
+                         nonce,
+                         cnonceCount,
+                         cnonce,
+                         qop,
+                         method,
+                         uri,
+                         (char*)"",
+                         response);
+
+      assert(responseMD5 == response);
+   }
+
+   {
+      char* alg = "MD5";
+      char* username = "user";
+      char* password = "secret";
+      char* realm = "localhost";
+      char* method = "REGISTER";
+      char* uri = "user@host.com";
+      char* nonce = "92347fea23";
+
+      Data responseMD5 = Helper::makeResponseMD5(username,
+                                                 password,
+                                                 realm,
+                                                 method,
+                                                 uri,
+                                                 nonce);
+      
+      HASHHEX a1Hash;
+      HASHHEX response;
+
+      DigestCalcHA1(alg,
+                    username,
+                    realm,
+                    password,
+                    nonce,
+                    (char*)"",
+                    a1Hash);
+
+      DigestCalcResponse(a1Hash,
+                         nonce,
+                         (char*)"",
+                         (char*)"",
+                         (char*)"",
+                         method,
+                         uri,
+                         (char*)"",
+                         response);
+
+      assert(responseMD5 == response);
+   }
+
+/*
+REGISTER sip:kelowna.gloo.net SIP/2.0
+To: sip:100@kelowna.gloo.net
+From: <sip:100@kelowna.gloo.net>
+Call-ID: 000532ff-828108c2-79016ad7-69ac4815@192.168.2.233
+CSeq: 102 REGISTER
+Contact: sip:100@192.168.2.233:5060
+Via: SIP/2.0/UDP 192.168.2.233:5060;received=192.168.2.233;rport=5060
+Expires: 3600
+Date: Sat, 07 Dec 2002 02:21:59 GMT
+Proxy-Authorization: Digest username="sip:100@kelowna.gloo.net:5060",realm="kelowna.gloo.net",uri="sip:kelowna.gloo.net",response="8485db84088e6be6c55717d2eb891eca",nonce="1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7",algorithm=MD5
+User-Agent: CSCO/4
+Content-Length: 0
+*/
+
+/*
+Proxy-Authorization: Digest username="sip:100@kelowna.gloo.net:5060",realm="kelowna.gloo.net",uri="sip:kelowna.gloo.net",response="8485db84088e6be6c55717d2eb891eca",nonce="1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7",algorithm=MD5
+*/
+   {
+      char* alg = "MD5";
+      char* username = "sip:100@kelowna.gloo.net:5060";
+      char* password = "secret";
+      char* realm = "kelowna.gloo.net";
+      char* method = "REGISTER";
+      char* uri = "sip:kelowna.gloo.net";
+      char* nonce = "1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7";
+      char* cnonce = "";
+      char* cnonceCount = "";
+      char* qop = "";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,

@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.45 2002/12/07 07:43:55 fluffy Exp $";
+// "$Id: Data.cxx,v 1.46 2002/12/09 19:28:26 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -639,7 +639,8 @@ Data::md5() const
    return ret;
 }
 
-static char map[] = "0123456789ABCDEF";
+//must be lowercase for MD5
+static char map[] = "0123456789abcdef";
 
 Data 
 Data::escaped() const
