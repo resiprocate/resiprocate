@@ -37,6 +37,8 @@ class HeaderFieldValueList
 
       void pop_front();
 
+      HeaderFieldValue* front() {return first;}
+      
       HeaderFieldValue* first;
   
       HeaderFieldValue* last;
