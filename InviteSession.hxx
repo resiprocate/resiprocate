@@ -135,6 +135,7 @@ class InviteSession : public DialogUsage
          On2xx, 
          On2xxOffer,
          On2xxAnswer,
+         On487Invite,
          On489Invite,
          On491Invite,
          OnInviteFailure,

@@ -290,6 +290,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
+               InfoLog (<< request);
                mInviteSession->dispatch(request);
             }
             break;
@@ -905,7 +906,7 @@ void Dialog::possiblyDie()
           mServerSubscriptions.empty() &&
           !mInviteSession)
       {
-         delete this;
+         mDum.destroy(this);
       }
    }   
 }

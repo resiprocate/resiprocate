@@ -134,6 +134,8 @@ DialogUsageManager::shutdown()
 void 
 DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
+   InfoLog (<< "shutdown giveup=" << giveUpSeconds);
+   
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
    shutdownWhenEmpty();
@@ -142,6 +144,8 @@ DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 void 
 DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
+   InfoLog (<< "shutdown when no usages giveup=" << giveUpSeconds);
+
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
    assert(0);
@@ -150,6 +154,8 @@ DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long give
 void 
 DialogUsageManager::forceShutdown(DumShutdownHandler* h)
 {
+   InfoLog (<< "force shutdown");
+   
    mDumShutdownHandler = h;
    //HandleManager::shutdown();  // clear out usages
    mShutdownState = ShutdownRequested;
@@ -550,6 +556,20 @@ void
 DialogUsageManager::destroy(const BaseUsage* usage)
 {
    DestroyUsage destroy(usage->mHandle);
+   mStack->post(destroy);
+}
+
+void
+DialogUsageManager::destroy(DialogSet* dset)
+{
+   DestroyUsage destroy(dset);
+   mStack->post(destroy);
+}
+
+void
+DialogUsageManager::destroy(Dialog* d)
+{
+   DestroyUsage destroy(d);
    mStack->post(destroy);
 }
 
