@@ -1,49 +1,126 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 
-#include <list>
-#include "resiprocate/Uri.hxx"
+using namespace resip;
 
-namespace resip
+InMemoryRegistrationDatabase::InMemoryRegistrationDatabase()
 {
-
-class RegistrationPersistenceManager
-{
-  public:
-    typedef std::pair<Uri,time_t> contact_t;
-    typedef std::list<contact_t> contact_list_t;
-
-    typedef enum
-    {
-      CONTACT_CREATED,
-      CONTACT_UPDATED
-    } update_status_t;
-
-    RegistrationPersistenceManager() {}
-    virtual ~RegistrationPersistenceManager() {}
-
-    virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t()) = 0;
-    virtual void removeAor(Uri &aor) = 0;
-    virtual bool aorIsRegistered(Uri &aor) = 0;
-
-    virtual void lockRecord(Uri &aor) = 0;
-    virtual void unlockRecord(Uri &aor) = 0;
-
-    /**
-      @param expires Absolute time of expiration, measured in seconds
-                     since midnight January 1st, 1970.
-     */
-    virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires) = 0;
-
-    virtual void removeContact(Uri &aor, Uri &contact) = 0;
-
-    virtual contact_list_t getContacts(Uri &aor) = 0;
-  private:
-};
-
 }
 
-#endif
+InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
+{
+}
+
+void 
+InMemoryRegistrationDatabase::addAor(Uri &aor,
+    RegistrationPersistenceManager::contact_list_t contacts)
+{
+  mDatabase[aor] = contacts;
+}
+
+void 
+InMemoryRegistrationDatabase::removeAor(Uri &aor)
+{
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i != mDatabase.end())
+  {
+    mDatabase.erase(i);
+  }
+}
+
+bool 
+InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
+{
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
+  {
+    return false;
+  }
+  return true;
+}
+
+void
+InMemoryRegistrationDatabase::lockRecord(Uri &aor)
+{
+  // Currently doesn't do any locking.
+}
+
+void
+InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
+{
+  // Currently doesn't do any locking.
+}
+
+RegistrationPersistenceManager::update_status_t 
+InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expires)
+{
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
+  {
+    addAor(aor);
+    i = mDatabase.find(aor);
+  }
+
+  assert(i != mDatabase.end());
+
+  contact_list_t::iterator j;
+
+  // See if the contact is already present. We use URI matching rules here.
+  for (j = i->second.begin(); j != i->second.end(); j++)
+  {
+    if ((*j).first == contact)
+    {
+      (*j).first = contact;
+      (*j).second = expires;
+      return CONTACT_UPDATED;
+    }
+  }
+
+  // This is a new contact, so we add it to the list.
+  i->second.push_back(std::make_pair<Uri,time_t>(contact,expires));
+  return CONTACT_CREATED;
+}
+
+void 
+InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
+{
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
+  {
+    return;
+  }
+
+  contact_list_t::iterator j;
+
+  // See if the contact is present. We use URI matching rules here.
+  for (j = i->second.begin(); j != i->second.end(); j++)
+  {
+    if ((*j).first == contact)
+    {
+      i->second.erase(j);
+      if (i->second.empty())
+      {
+        removeAor(aor);
+      }
+      return;
+    }
+  }
+}
+
+RegistrationPersistenceManager::contact_list_t
+InMemoryRegistrationDatabase::getContacts(Uri &aor)
+{
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
+  {
+    return contact_list_t();
+  }
+  return i->second;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

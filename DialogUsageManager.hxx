@@ -11,6 +11,7 @@
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
@@ -131,6 +132,9 @@ class DialogUsageManager : public HandleManager
 
       void setClientPagerMessageHandler(ClientPagerMessageHandler*);
       void setServerPagerMessageHandler(ServerPagerMessageHandler*);
+
+      /// Sets a manager to handle storage of registration state
+      void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
@@ -311,6 +315,8 @@ class DialogUsageManager : public HandleManager
       ServerRegistrationHandler* mServerRegistrationHandler;      
       RedirectHandler* mRedirectHandler;
       DialogSetHandler* mDialogSetHandler;      
+
+      RegistrationPersistenceManager *mRegistrationPersistenceManager;
 
 	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 

@@ -54,6 +54,7 @@ DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
    mDialogSetHandler(0),
+   mRegistrationPersistenceManager(0),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
@@ -227,6 +228,14 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
    assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
 }
+
+void
+DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceManager* manager)
+{
+   assert(!mRegistrationPersistenceManager);
+   mRegistrationPersistenceManager = manager;
+}
+
 
 void 
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 
@@ -1197,6 +1206,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case INFO :    // handle non-dialog (illegal) INFOs
          case OPTIONS : // handle non-dialog OPTIONS
          case MESSAGE :
+         case REGISTER:
          {
             {
                DialogSetId id(request);
@@ -1238,14 +1248,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
             
             break;
          }
-         case REGISTER:
-         {
-            SipMessage failure;
-            makeResponse(failure, request, 405);
-            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-            sendResponse(failure);
-         }
-         break;         
          case RESPONSE:
          case SERVICE:
             assert(false);
@@ -1263,7 +1265,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case REGISTER:
          {
             SipMessage failure;
-            makeResponse(failure, request, 400, "rjs says, Go to hell");
+            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
             failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
             sendResponse(failure);
             break;
