@@ -42,6 +42,7 @@ class Dialog
       void makeBye(SipMessage& proto);
       void makeInvite(SipMessage& proto);
       void makeAck(SipMessage& proto);
+      void makePrack(SipMessage& proto);
       
       //SipMessage* makeSubscription();
       //SipMessage* makeRefer();
