@@ -316,3 +316,51 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
    }
    return false;
 }
+
+Dialog&  
+DialogUsageManager::findDialog(DialogId id)
+{
+
+    HashMap<DialogSetId, DialogSet>::const_iterator it;
+
+    DialogSetId setId = id.getDialogSetId();
+    if ((it = mDialogSetMap.find(setId)) == mDialogSetMap.end())
+    {
+        /**  @todo: return empty object (?)
+    }
+    DialogSet dialogSet = it->second();
+    Dialog dialog;
+    if ((dialog = dialogSet.find(id)) == NULL)
+    {
+    /**  @todo: return empty object (?) */
+    }
+    return *dialog;
+    
+}
+ 
+DialogSet&
+DialogUsageManager::findDialogSet( DialogSetId id )
+{
+    HashMap<DialogSetId, DialogSet>::const_iterator it;
+
+    if ((it = mDialogSetMap.find(id)) == mDialogSetMap.end())
+    {
+        /**  @todo: return empty object (?) **/
+    }
+    return it->first();
+
+}
+
+BaseCreator&
+DialogUsageManager::findCreator(DialogId id)
+{
+    DialogSetId setId = id.getDialogSetId();
+    DialogSet dialogSet = findDialogSet(setId);
+    BaseCreator creator = dialogset.getCreator();
+    if (creator == NULL)
+    {
+        /* @todo; return empty object (?) */
+    }
+    return (*creator);
+    
+}
