@@ -6,35 +6,82 @@ using namespace resip;
 std::ostream* 
 GenericLogImpl::mLogger=0;
 
-static pthread_t currentThread;
-
-AssertOnRecursiveLock::AssertOnRecursiveLock()
+struct LogState
 {
-#ifdef CHECK_RECURSIVE_LOG
+      LogState()
+         : id(0),
+           count(0)
+      {}
+
+      Mutex mutex;
+      ThreadIf::Id id;
+      bool isDebug;
+      int count;
+};
+
+static LogState logState;
+
+bool
+checkAndSetLogState(Log::Level level)
+{
+   Lock lock(logState.mutex);
+
+   // first lock
+   if (logState.count == 0 ||
+       logState.id != ThreadIf::selfId())
+   {
+      Log::_mutex.lock();
+      logState.id = ThreadIf::selfId();
+      logState.isDebug = (level >= Log::DEBUG);
+      logState.count = 1;
+      return true;
+   }
+
+   // recursive lock
+   logState.count++;
+   if (level >= Log::DEBUG)
+   {
+      // nested debug logs permitted
+      return true;
+   }
+   else
+   {
+      // nested non-debug logs not permitted
+      if (!logState.isDebug)
+      {
+         return false;
+      }
+      else
+      {
+         // note that lock is non-debug
+         logState.isDebug = false;
+      }
+      return true;
+   }
+}
+
+RecursiveLogLock::RecursiveLogLock(Log::Level level)
+{
 #ifdef WIN32
 #else
-   // should be atomic
-   assert(currentThread != ThreadIf::selfId());
-#endif
+   assert(checkAndSetLogState(level));
 #endif
 }
 
-void
-AssertOnRecursiveLock::set()
+RecursiveLogLock::~RecursiveLogLock()
 {
-#ifdef CHECK_RECURSIVE_LOG
 #ifdef WIN32
 #else
-   currentThread = ThreadIf::selfId();
-#endif
-#endif
-}
+   Lock lock(logState.mutex);
 
-AssertOnRecursiveLock::~AssertOnRecursiveLock()
-{
-#ifdef WIN32
-#else
-   currentThread = 0;
+   assert(logState.count);
+
+   logState.count--;
+
+   if (logState.count == 0)
+   {
+      Log::_mutex.unlock();
+   }
 #endif
 }
 

@@ -37,18 +37,24 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::WARNING, args_)
 #define InfoLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::INFO, args_)
 
-#define CHECK_RECURSIVE_LOG
-class AssertOnRecursiveLock
+namespace resip {
+class RecursiveLogLock
 {
    public:
-      AssertOnRecursiveLock();
-      void set();
-      ~AssertOnRecursiveLock();
+      RecursiveLogLock(resip::Log::Level level);
+      ~RecursiveLogLock();
    private:
       // no object semantics
-      AssertOnRecursiveLock(const AssertOnRecursiveLock &);
-      const AssertOnRecursiveLock & operator=(const AssertOnRecursiveLock &);
+      RecursiveLogLock(const RecursiveLogLock &);
+      const RecursiveLogLock & operator=(const RecursiveLogLock &);
 };
+}
+
+#ifndef NO_DEBUG
+#define LOG_LOCK(level) resip::RecursiveLogLock lock(level)
+#else
+#define LOG_LOCK(level) resip::Lock lock(Log::_mutex)
+#endif
 
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)                                      \
@@ -59,28 +65,24 @@ do                                                                              
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
-         AssertOnRecursiveLock check;                                           \
-         resip::Lock lock(resip::Log::_mutex);                                  \
-         check.set();                                                           \
+         LOG_LOCK(level_);                                                      \
          resip::Log::tags(level_, system_,                                      \
-                           resip::GenericLogImpl::Instance())                   \
-                              << __FILE__ << ':' << __LINE__ << DELIM           \
-            args_ << std::endl;                                                 \
+                          resip::GenericLogImpl::Instance())                    \
+                          << __FILE__ << ':' << __LINE__ << DELIM               \
+                          args_ << std::endl;                                   \
       }                                                                         \
    }                                                                            \
    else                                                                         \
    {                                                                            \
       if (resip::GenericLogImpl::isLogging(level_))                             \
       {                                                                         \
-         AssertOnRecursiveLock check;                                           \
-         resip::Lock lock(resip::Log::_mutex);                                  \
-         check.set();                                                           \
+         LOG_LOCK(level_);                                                      \
          if (resip::GenericLogImpl::isLogging(level_))                          \
          {                                                                      \
             resip::Log::tags(level_, system_,                                   \
-                              resip::GenericLogImpl::Instance())                \
-                                 << __FILE__ << ':' << __LINE__ << DELIM        \
-               args_ << std::endl;                                              \
+                             resip::GenericLogImpl::Instance())                 \
+                             << __FILE__ << ':' << __LINE__ << DELIM            \
+                             args_ << std::endl;                                \
          }                                                                      \
       }                                                                         \
    }                                                                            \
