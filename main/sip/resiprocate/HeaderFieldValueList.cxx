@@ -105,11 +105,7 @@ HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
 std::ostream&
 HeaderFieldValueList::encodeEmbedded(const Data& headerName, std::ostream& str)
 {
-  if (headerName.empty())
-  {
-    assert(false);
-    return str;
-  }
+  assert(!headerName.empty());
 
    if (getParserContainer() != 0)
    {
