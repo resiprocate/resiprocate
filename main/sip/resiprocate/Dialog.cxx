@@ -276,7 +276,7 @@ Dialog::updateRequest(SipMessage& request)
 }
 
 void
-Dialog::makeResponse(SipMessage& request, SipMessage& response, int code)
+Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
 {
    assert(request.isRequest());
    if ( (!mCreated) && (code < 300) && (code > 100) )
@@ -285,7 +285,7 @@ Dialog::makeResponse(SipMessage& request, SipMessage& response, int code)
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       assert (request.header(h_Contacts).size() == 1);
 
-      Helper::makeResponse(request, response, code, mContact);
+      Helper::makeResponse(response, request, code, mContact);
       if (request.exists(h_RecordRoutes))
       {
          mRouteSet = request.header(h_RecordRoutes);
