@@ -6,32 +6,35 @@
 
 namespace resip
 {
-  class SipMessage;
+class SipMessage;
 }
 
 namespace repro
 {
-  class RequestProcessorChain;
+class RequestProcessorChain;
 
-  class RequestContext
-  {
-    public:
+class RequestContext
+{
+   public:
       RequestContext(RequestProcessorChain &);
       ~RequestContext();
 
+      void process(SipMessage& msg);
+      void process(TransactionTerminated& msg);
+      
       void setSipRequest(resip::SipMessage *);
       resip::SipMessage *getSipRequest();
 
       void setDigestIdentity (std::string&);
       const std::string& getDigestIdentity() const;
 
-    private:
+   private:
       RequestProcessorChain &mRequestProcessorChain;
       std::string mDigestIdentity;
       resip::SipMessage *mSipRequest;
 
       std::vector<resip::Uri> mTargetSet;
-  };
+};
 }
 #endif
 
