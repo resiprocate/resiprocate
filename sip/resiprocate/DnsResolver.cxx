@@ -116,7 +116,7 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
 {
    //duplicate entry has not been eliminated
    Transport::Type transport = Transport::toTransport(via.transport());
-   Data& target = via.exists(p_maddr) ? via.param(p_maddr) : via.sentHost();
+   const Data& target = via.exists(p_maddr) ? via.param(p_maddr) : via.sentHost();
    if (via.exists(p_received))
    {
       if (via.exists(p_rport))
@@ -156,7 +156,7 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
 void
 DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 {
-   Data& target = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
+   const Data& target = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    bool isNumeric = isIpAddress(target);
    int port;
    
