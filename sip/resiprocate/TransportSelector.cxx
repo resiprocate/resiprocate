@@ -59,7 +59,7 @@ TransportSelector::addTransport( Transport::Type protocol,
    Data hostname = hostName;
    if ( hostname.empty() )
    {
-      hostname = DnsUtil::getLocalHostName();
+	   hostname = DnsUtil::getLocalHostName();
    }
    
    Transport* transport=0;
@@ -93,7 +93,7 @@ TransportSelector::addTlsTransport(const Data& domainName,
    Data hostname = hostName;
    if ( hostname.empty() )
    {
-      hostname = DnsUtil::getLocalHostName();
+	   hostname = DnsUtil::getLocalHostName();
    }
    if (port == 0)
    {

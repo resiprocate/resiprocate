@@ -32,6 +32,10 @@ insert(std::ostream& s, const T& t)
    return s;
 }
 
+#if 0 
+// !cj! help - can someone look at this - do we really need it 
+// it does not compile under windows 
+
 /// Container generic insert function
 template <class T, template <class> class C>
 std::ostream&
@@ -51,6 +55,7 @@ insert(std::ostream& s, const C<T>& c)
    s << "]";
    return s;
 }
+#endif
 
 template <class K, class C>
 std::ostream&
