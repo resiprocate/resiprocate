@@ -951,6 +951,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
    {
       // header missing
       // assert(false);
+      InfoLog( << "Missing Header " << type );
       throw Exception("Missing header", __FILE__, __LINE__);
    }
    // !dlb! not thrilled about checking this every access
@@ -960,6 +961,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       {
          // !dlb! when will this happen?
          // assert(false);
+         InfoLog( << "Missing Header " << type );
          throw Exception("Empty header", __FILE__, __LINE__);
       }
    }
