@@ -2001,7 +2001,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert( i != multi->parts().end() );
    Contents* second = *i;
 
-#if 0
+#if 1
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
 
    if ( !sig )
