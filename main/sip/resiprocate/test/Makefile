@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.37 2003/02/20 20:33:31 fluffy Exp $
+# $Id: Makefile,v 1.38 2003/02/21 16:32:29 alan Exp $
 
 USE_SSL = 1
 
@@ -24,6 +24,7 @@ LDFLAGS += -lssl -lcrypto
 endif
 
 TESTPROGRAMS =	\
+		testNotify.cxx \
 		testXMLCursor.cxx \
 		testEmbedded.cxx \
 		testIM.cxx \
