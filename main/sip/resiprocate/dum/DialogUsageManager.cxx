@@ -139,8 +139,9 @@ DialogUsageManager::prepareInitialRequest(SipMessage& request)
 }
 
 void
-DialogUsageManager::process()
+DialogUsageManager::process(FdSet& fdset)
 {
+   mStack.process(fdset);
    SipMessage* msg = mStack.receive();
    if (msg)
    {

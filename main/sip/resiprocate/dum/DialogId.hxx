@@ -4,9 +4,9 @@ using namespace std;
 namespace resip
 {
 
-    class SipMessage;
-    class Data;
-    class DialogSetId;
+class SipMessage;
+class Data;
+class DialogSetId;
 
 class DialogId
 {
@@ -17,7 +17,7 @@ class DialogId
       
       DialogSetId getDialogSetId() const;
       
-  private:
+   private:
       Data& mId;
 };
 
