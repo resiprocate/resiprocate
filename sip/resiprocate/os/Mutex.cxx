@@ -10,10 +10,8 @@
 #  include <pthread.h>
 #endif
 
-namespace resip
-{
+using namespace resip;
 
-#include <stdio.h>
 Mutex::Mutex()
 {
 #ifndef WIN32
@@ -74,8 +72,6 @@ Mutex::getId() const
     return ( &mId );
 }
 #endif
-
-}
 
 
 /* ====================================================================
