@@ -11,8 +11,21 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<Pkcs7Contents> Pkcs7Contents::Factory;
-ContentsFactory<Pkcs7SignedContents> Pkcs7SignedContents::Factory;
+bool
+Pkcs7Contents::init()
+{
+   static ContentsFactory<Pkcs7Contents> factory;
+   (void)factory;
+   return true;
+}
+
+bool
+Pkcs7SignedContents::init()
+{
+   static ContentsFactory<Pkcs7SignedContents> factory;
+   (void)factory;
+   return true;
+}
 
 Pkcs7Contents::Pkcs7Contents()
    : Contents(getStaticType()),
