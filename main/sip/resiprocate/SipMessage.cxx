@@ -554,18 +554,6 @@ SipMessage::header(const Authentication_Info_Header& headerType) const
    return dynamic_cast<ParserContainer<Authentication_Info_Header::Type>*>(hfvs->getParserContainer())->front();
 };
 
-Authorization_Header::Type&
-SipMessage::header(const Authorization_Header& headerType) const
-{
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
-   if (hfvs->getParserContainer() == 0)
-   {
-      hfvs->setParserContainer(new ParserContainer<Authorization_Header::Type>(hfvs,
-                                                                               headerType.getTypeNum()));
-   }
-   return dynamic_cast<ParserContainer<Authorization_Header::Type>*>(hfvs->getParserContainer())->front();
-};
-
 Content_Disposition_Header::Type&
 SipMessage::header(const Content_Disposition_Header& headerType) const
 {
@@ -717,30 +705,6 @@ SipMessage::header(const Priority_Header& headerType) const
    return dynamic_cast<ParserContainer<Priority_Header::Type>*>(hfvs->getParserContainer())->front();
 };
 
-Proxy_Authenticate_Header::Type&
-SipMessage::header(const Proxy_Authenticate_Header& headerType) const
-{
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
-   if (hfvs->getParserContainer() == 0)
-   {
-      hfvs->setParserContainer(new ParserContainer<Proxy_Authenticate_Header::Type>(hfvs,
-                                                                                    headerType.getTypeNum()));
-   }
-   return dynamic_cast<ParserContainer<Proxy_Authenticate_Header::Type>*>(hfvs->getParserContainer())->front();
-};
-
-Proxy_Authorization_Header::Type&
-SipMessage::header(const Proxy_Authorization_Header& headerType) const
-{
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
-   if (hfvs->getParserContainer() == 0)
-   {
-      hfvs->setParserContainer(new ParserContainer<Proxy_Authorization_Header::Type>(hfvs,
-                                                                                     headerType.getTypeNum()));
-   }
-   return dynamic_cast<ParserContainer<Proxy_Authorization_Header::Type>*>(hfvs->getParserContainer())->front();
-};
-
 Refer_To_Header::Type&
 SipMessage::header(const Refer_To_Header& headerType) const
 {
@@ -859,18 +823,6 @@ SipMessage::header(const User_Agent_Header& headerType) const
    return dynamic_cast<ParserContainer<User_Agent_Header::Type>*>(hfvs->getParserContainer())->front();
 };
 
-WWW_Authenticate_Header::Type&
-SipMessage::header(const WWW_Authenticate_Header& headerType) const
-{
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
-   if (hfvs->getParserContainer() == 0)
-   {
-      hfvs->setParserContainer(new ParserContainer<WWW_Authenticate_Header::Type>(hfvs,
-                                                                                  headerType.getTypeNum()));
-   }
-   return dynamic_cast<ParserContainer<WWW_Authenticate_Header::Type>*>(hfvs->getParserContainer())->front();
-};
-
 Warning_Header::Type&
 SipMessage::header(const Warning_Header& headerType) const
 {
@@ -881,6 +833,50 @@ SipMessage::header(const Warning_Header& headerType) const
                                                                          headerType.getTypeNum()));
    }
    return dynamic_cast<ParserContainer<Warning_Header::Type>*>(hfvs->getParserContainer())->front();
+};
+
+ParserContainer<Authorization_MultiHeader::Type>&
+SipMessage::header(const Authorization_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Authorization_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Authorization_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Proxy_Authenticate_MultiHeader::Type>&
+SipMessage::header(const Proxy_Authenticate_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Proxy_Authenticate_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Proxy_Authorization_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Proxy_Authorization_MultiHeader::Type>&
+SipMessage::header(const Proxy_Authorization_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Proxy_Authorization_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Proxy_Authorization_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<WWW_Authenticate_MultiHeader::Type>&
+SipMessage::header(const WWW_Authenticate_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<WWW_Authenticate_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<WWW_Authenticate_MultiHeader::Type>*>(hfvs->getParserContainer());
 };
 
 ParserContainer<Accept_MultiHeader::Type>&
