@@ -39,7 +39,8 @@ class Dialog
       SipMessage* makeResponse(const SipMessage& request, int code=200);
       
       // This happens when a dialog gets created on a UAC when 
-      // a UAC receives a response that creates a dialog
+      // a UAC receives a response that creates a dialog. Also works for NOTIFY
+      // requests which create a dialog
       void createDialogAsUAC(const SipMessage& response);
 
       // Called when a 2xx response is received in an existing dialog
@@ -52,11 +53,12 @@ class Dialog
 
       bool isCreated() const { return mCreated; };
       
+      static Data dialogId(const SipMessage& msg);
       const Data dialogId() const;
       const CallID& getCallId() const { return mCallId; }
       const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       //const Data& getLocalTag() const { return mLocalTag; }
-      //const Data& getRemoteTag() const { return mRemoteTag; }
+      const Data& getRemoteTag() const { return mRemoteTag; }
       
       // For creating request which do not form a dialog but whose response
       // might create a dialog 
