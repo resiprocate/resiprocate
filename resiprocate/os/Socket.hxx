@@ -151,7 +151,7 @@ class FdSet
 #       endif
 
           FD_SET(fd,&except);
-          size = std::max( static_cast<int>(fd+1), size );
+		  size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
 
 
