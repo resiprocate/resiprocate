@@ -141,6 +141,13 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool is
    {
       destination.transport = findTransport(destination);
    }
+ 
+   // If this is an ACK we need to fix the tid to reflect that
+   Data tid = msg->getTransactionId();
+   if (msg->header(h_RequestLine).getMethod() == ACK)
+   {
+      tid += "ACK";
+   }
 
    if (destination.transport)
    {
@@ -164,15 +171,15 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool is
       DebugLog (<< "encoded=" << std::endl << encoded.c_str() << "EOM");
    
       // send it over the transport
-      destination.transport->send(destination, encoded, msg->getTransactionId());
+      destination.transport->send(destination, encoded, tid);
       if (! isResend)
       {
-          mStack.mStateMacFifo.add(new ReliabilityMessage(msg->getTransactionId(), destination.transport->isReliable()));
+          mStack.mStateMacFifo.add(new ReliabilityMessage(tid, destination.transport->isReliable()));
       }
    }
    else
    {
-       mStack.mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+      mStack.mStateMacFifo.add(new TransportMessage(tid, true));
    }
 }
 
