@@ -58,7 +58,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    {
       if (mUserProfile.hasOverrideHostAndPort())
       {
-         contact.uri() = mUserProfile.getOverideHostAndPort();
+         contact.uri() = mUserProfile.getOverrideHostAndPort();
       }
       contact.uri().user() = mUserProfile.getDefaultFrom().uri().user();      
       mLastRequest.header(h_Contacts).push_front(contact);
