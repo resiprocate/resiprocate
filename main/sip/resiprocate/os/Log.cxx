@@ -16,6 +16,8 @@
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
+#define DELIM " | "
+
 using namespace resip;
 using namespace std;
 
@@ -170,7 +172,6 @@ Log::toType(const Data& arg)
    }
 }
 
-
 ostream&
 Log::tags(Log::Level level, 
           const Subsystem& subsystem, 
@@ -185,6 +186,8 @@ Log::tags(Log::Level level,
         << subsystem << DELIM
         << pfile << ":" << line;
 #else   
+   char buffer[256];
+   Data tstamp(Data::Borrow, buffer, sizeof(buffer));
 #if defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
@@ -197,7 +200,7 @@ Log::tags(Log::Level level,
       ++file;
    }
    strm << _descriptions[level+1] << DELIM
-        << timestamp() << DELIM  
+        << timestamp(tstamp) << DELIM  
         << _appName << DELIM
         << subsystem << DELIM 
         << GetCurrentThreadId() << DELIM
@@ -217,42 +220,51 @@ Log::tags(Log::Level level,
 }
 
 Data
-Log::timestamp() 
+Log::timestamp()
 {
-   char datebuf[256];
-   const unsigned int datebufSize = sizeof(datebuf)/sizeof(*datebuf);
+   char buffer[256];
+   Data result(Data::Borrow, buffer, sizeof(buffer));
+   return timestamp(result);
+}
+
+Data&
+Log::timestamp(Data& res) 
+{
+   char* datebuf = const_cast<char*>(res.data());
+   const unsigned int datebufSize = 256;
+   res.clear();
    
 #ifdef WIN32 
-  int result = 1; 
-  SYSTEMTIME systemTime;
-  struct { int tv_sec; int tv_usec; } tv = {0,0};
-  time((time_t *)(&tv.tv_sec));
-  GetLocalTime(&systemTime);
-  tv.tv_usec = systemTime.wMilliseconds * 1000; 
+   int result = 1; 
+   SYSTEMTIME systemTime;
+   struct { int tv_sec; int tv_usec; } tv = {0,0};
+   time((time_t *)(&tv.tv_sec));
+   GetLocalTime(&systemTime);
+   tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
-  struct timeval tv; 
-  int result = gettimeofday (&tv, NULL);
+   struct timeval tv; 
+   int result = gettimeofday (&tv, NULL);
 #endif   
 
    if (result == -1)
    {
       /* If we can't get the time of day, don't print a timestamp.
-        Under Unix, this will never happen:  gettimeofday can fail only
-        if the timezone is invalid which it can't be, since it is
-        uninitialized]or if tv or tz are invalid pointers. */
-        datebuf [0] = 0;
-    }
-    else
-    {
-       /* The tv_sec field represents the number of seconds passed since
-          the Epoch, which is exactly the argument gettimeofday needs. */
-       const time_t timeInSeconds = (time_t) tv.tv_sec;
-       strftime (datebuf,
-                 datebufSize,
-                 "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
-                                     hence don't check return code */
-                 localtime (&timeInSeconds));
-    }
+         Under Unix, this will never happen:  gettimeofday can fail only
+         if the timezone is invalid which it can't be, since it is
+         uninitialized]or if tv or tz are invalid pointers. */
+      datebuf [0] = 0;
+   }
+   else
+   {
+      /* The tv_sec field represents the number of seconds passed since
+         the Epoch, which is exactly the argument gettimeofday needs. */
+      const time_t timeInSeconds = (time_t) tv.tv_sec;
+      strftime (datebuf,
+                datebufSize,
+                "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
+                                    hence don't check return code */
+                localtime (&timeInSeconds));
+   }
    
    char msbuf[5];
    /* Dividing (without remainder) by 1000 rounds the microseconds
@@ -261,13 +273,15 @@ Log::timestamp()
 
    int datebufCharsRemaining = datebufSize - strlen (datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
+
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
                                         thereby leaving its last character at
                                         the end, instead of a null terminator */
 
-   return Data(datebuf);
+   // ugh, resize the Data
+   res.at(strlen(datebuf)-1);
+   return res;
 }
-
 
 Log::Level 
 Log::getServiceLevel(int service)
