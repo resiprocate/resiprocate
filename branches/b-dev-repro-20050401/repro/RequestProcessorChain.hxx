@@ -7,9 +7,9 @@
 
 namespace repro
 {
-  class RequestProcessorChain : public RequestProcessor
-  {
-    public:
+class RequestProcessorChain : public RequestProcessor
+{
+   public:
       RequestProcessorChain();
       virtual ~RequestProcessorChain();
 
@@ -19,9 +19,9 @@ namespace repro
 
       typedef std::vector<RequestProcessor*> Chain;
 
-    private:
+   private:
       Chain chain;
-  };
+};
 }
 #endif
 

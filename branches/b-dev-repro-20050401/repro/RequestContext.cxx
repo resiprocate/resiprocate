@@ -12,8 +12,9 @@ using namespace std;
 
 RequestContext::RequestContext(Proxy& proxy, 
                                RequestProcessorChain& chain) : 
-   mRequestProcessorChain(chain),
    mOriginalRequest(0),
+   mCurrentEvent(0),
+   mRequestProcessorChain(chain),
    mTransactionCount(1),
    mProxy(proxy),
    mHaveSentFinalResponse(false),
@@ -45,27 +46,42 @@ void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
    mCurrentEvent = msg.release();
+   SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
    { 
-     mOriginalRequest=mCurrentEvent; 
-     assert(dynamic_cast<SipMessage*>(mOriginalRequest));
-     fixStrictRouterDamage();
-     checkTopRouteForSelf();
+      assert(sip);
+      mOriginalRequest=sip;
+      fixStrictRouterDamage();
+      removeTopRouteIfSelf();
+   }
+   
+   // if it's a CANCEL I need to call processCancel here 
+   if (sip && sip->isRequest())
+   {
+      if (sip->header(h_RequestLine).method() == CANCEL)
+      {
+         mResponseContext.processCancel(*sip);
+      }
+      else
+      {
+         mRequestProcessorChain.handleRequest(*this); 
+      }
+   }
+   else if (sip && sip->isResponse())
+   {
+      // Do the lemurs if its a response (response processor chain)
+      // Call handle Response if its a response
+      mResponseContext.processResponse(*sip);
+   }
+   else
+   {
+      mRequestProcessorChain.handleRequest(*this);       
    }
 
-   mRequestProcessorChain.handleRequest(mCurrentEvent); 
-
-    // if it's a CANCEL I need to call processCancel here 
-
-   // Do the lemurs if its a response
-   // Call handle Response if its a response
-
-   // Do this is its any other message
    if (!mHaveSentFinalResponse)
    {
-     mResponseContext.processCandidates();
+      mResponseContext.processCandidates();
    }
-
 }
 
 resip::SipMessage& 
@@ -89,13 +105,13 @@ RequestContext::getTransactionId() const
 resip::Message* 
 RequestContext::getCurrentEvent()
 {
-   return mCurrentEvent.get();
+   return mCurrentEvent;
 }
 
 const resip::Message* 
 RequestContext::getCurrentEvent() const
 {
-   return mCurrentEvent.get();
+   return mCurrentEvent;
 }
 
 void 
@@ -126,9 +142,7 @@ void
 RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
-
-//TODO Send the damn thing
-
+   mProxy.send(msg);
    mHaveSentFinalResponse=true;
 }
 
@@ -159,7 +173,7 @@ RequestContext::fixStrictRouterDamage()
 
 /** @brief Pops the topmost route if it's us */
 void
-RequestContext::checkTopRouteForSelf()
+RequestContext::removeTopRouteIfSelf()
 {
   if (    mOriginalRequest->exists(h_Routes)
       && !mOriginalRequest->header(h_Routes).empty()

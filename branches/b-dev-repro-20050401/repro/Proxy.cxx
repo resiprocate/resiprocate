@@ -5,6 +5,7 @@
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/Helper.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 
@@ -59,19 +60,39 @@ Proxy::thread()
          {
             if (sip->isRequest())
             {
-               // !jf! handle ACK specially (to 200) here
+               if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
+               {
+                  std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 482));
+                  mStack.send(*response, this);
+                  break;
+               }
+               
                if (sip->header(h_RequestLine).method() == CANCEL)
                {
                   HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
                   assert (i != mRequestContexts.end());
                   i->second->process(std::auto_ptr<resip::Message>(msg));
                }
+               else if (sip->header(h_RequestLine).method() == ACK)
+               {
+                  // ACK needs to create its own RequestContext based on a
+                  // unique transaction id. 
+                  static Data ack("ack");
+                  Data tid = sip->getTransactionId() + ack;
+                  assert (mRequestContexts.count(tid) == 0);
+                  
+                  RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
+                  mRequestContexts[tid] = context;
+
+                  // The stack will send TransactionTerminated messages for
+                  // client and server transaction which will clean up this
+                  // RequestContext 
+                  context->process(std::auto_ptr<resip::Message>(msg));
+               }
                else
                {
                   assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
-                  RequestContext* context = 
-                       new RequestContext(*this, 
-                                          mRequestProcessorChain);
+                  RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
                   mRequestContexts[sip->getTransactionId()] = context;
                   context->process(std::auto_ptr<resip::Message>(msg));
                }
@@ -115,6 +136,13 @@ Proxy::isMyDomain(resip::Uri& uri) const
 {
    return mStack.isMyDomain(uri.host(),uri.port());
 }
+
+void
+Proxy::send(const SipMessage& msg) 
+{
+   mStack.send(msg, this);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
