@@ -65,7 +65,7 @@ class TransportSelector
       Fifo<Message>& mStateMacFifo;
 
       // specific port and interface
-      typedef map<Tuple, Transport*> ExactTupleMap;
+      typedef HashMap<Tuple, Transport*> ExactTupleMap;
       ExactTupleMap mExactTransports;
 
       // specific port, ANY interface
