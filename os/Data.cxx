@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.52 2003/01/11 01:54:55 alan Exp $";
+// "$Id: Data.cxx,v 1.53 2003/01/15 20:54:12 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -283,6 +283,44 @@ Data::Data(unsigned long value)
       v /= 10;
    }
 }
+
+Data::Data(unsigned int value)
+   : mSize(0), 
+     mBuf(0),
+     mCapacity(0),
+     mMine(true)
+{
+   if (value == 0)
+   {
+      mBuf = new char[2];
+      mBuf[0] = '0';
+      mBuf[1] = 0;
+      mSize = 1;
+      return;
+   }
+
+   int c = 0;
+   unsigned long v = value;
+   while (v /= 10)
+   {
+      c++;
+   }
+
+   mSize = c+1;
+   mCapacity = c+1;
+   mBuf = new char[c+2];
+   mBuf[c+1] = 0;
+   
+   v = value;
+   while (v)
+   {
+      unsigned int digit = v%10;
+	  unsigned char d = (char)digit;
+      mBuf[c--] = '0' + d;
+      v /= 10;
+   }
+}
+
 
 Data::Data(char c)
    : mSize(1), 
