@@ -31,7 +31,15 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
 
 TransactionState::~TransactionState()
 {
-   const Data& tid = mMsgToRetransmit->getTransactionId();
+   
+   Data tid = mMsgToRetransmit->getTransactionId();
+   if (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK)
+   {
+      // make ACK tid different from INVITE for cleanup too.
+      // this design is pretty gross
+      tid += "ACK";
+   }
+
    DebugLog (<< "Deleting TransactionState " << tid);
    mStack.mTransactionMap.remove(tid);
 
@@ -89,6 +97,7 @@ TransactionState::process(SipStack& stack)
             break;
          case Ack:
             state->processAck(message);
+            break;
          default:
             assert(0);
       }
@@ -113,21 +122,13 @@ TransactionState::process(SipStack& stack)
                    stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                    stack.mTransactionMap.add(tid,state);
                }
-               else if (sip->header(h_RequestLine).getMethod() == ACK) 
-               {
-                   DebugLog(<<"Received ACK from TU");
-                   TransactionState* state = new TransactionState(stack, Ack, Trying);
-                   state->mMsgToRetransmit = sip;
-                   // bogus fischl timer
-                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T4); 
-                   stack.mTransactionMap.add(tid,state);
-               }
                else 
                {
                    DebugLog(<<"Adding non-INVITE transaction state");
                    TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                    stack.mTransactionMap.add(tid,state);
                }
+               // Incoming ACK just gets passed to the TU
                DebugLog(<< "Adding incoming message to TU fifo");
                stack.mTUFifo.add(sip);
            }
@@ -139,6 +140,12 @@ TransactionState::process(SipStack& stack)
                    TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                    stack.mTransactionMap.add(tid,state);
                    state->processClientInvite(sip);
+               }
+               else if (sip->header(h_RequestLine).getMethod() == ACK)
+               {
+                   TransactionState* state = new TransactionState(stack, Ack, Calling);
+                   stack.mTransactionMap.add(tid,state);
+                   state->processAck(sip);
                }
                else 
                {
@@ -187,23 +194,19 @@ TransactionState::processAck(Message* message)
    if (sip)
    {
       assert(sip->header(h_RequestLine).getMethod() == ACK);
+      mMsgToRetransmit = sip;
       sendToWire(sip);
    }
-   else if (isDns(message))
+   else if (isDns(message) || isTransportError(message))
    {
+      // resend with a different tuple or delete this if no more tuples
       processDns(message);
    }
    else if (result)
    {
-      if (result->isFailed())
-      {
-         delete message;
-         delete this;
-      }
-      else
-      {
+      // the pseudotransaction ends on successful transmission
       delete message;
-      }
+      delete this;
    }
    else
    {
@@ -607,7 +610,7 @@ TransactionState::processClientInvite(  Message* msg )
 
          case Timer::TimerB:
             // !rk! is this right?
-            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
+            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
             delete msg;
             delete this;
             break;
