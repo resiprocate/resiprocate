@@ -40,7 +40,13 @@ class InviteSessionHandler
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
       /// times out
-      virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
+      typedef enum
+      {
+         PeerEnded, // received a BYE or CANCEL from peer
+         //Ended, // ended by the application
+         GeneralFailure // ended due to a failure
+      } TerminatedReason;
+      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a 3xx with valid targets is encountered in an early dialog     
       /// This is different then getting a 3xx in onTerminated, as another
@@ -90,10 +96,7 @@ class InviteSessionHandler
 
       //default behaviour is to send a BYE to end the dialog, msg is the 
       //2xx that was being retransmitted
-      virtual void onAckNotReceived(InviteSessionHandle, const SipMessage& msg);
-
-      virtual void onIllegalNegotiation(InviteSessionHandle, const SipMessage& msg);     
-
+      virtual void onAckNotReceived(InviteSessionHandle);
 };
 
 }

@@ -15,6 +15,7 @@ class Profile
 {
    public:        
       Profile(Profile *baseProfile = 0);  // Default to no base profile
+      virtual ~Profile();
       
       virtual void setDefaultRegistrationTime(int secs);
       virtual int getDefaultRegistrationTime() const;

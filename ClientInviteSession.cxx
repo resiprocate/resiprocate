@@ -966,7 +966,7 @@ ClientInviteSession::dispatchCanceled (const SipMessage& msg)
       case OnCancelFailure:
       case On487Invite:
       case OnRedirect:
-         handler->onTerminated(getSessionHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
          break;
          

@@ -44,6 +44,8 @@ class InviteSession : public DialogUsage
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
       virtual void info(const Contents& contents);
 
+      const NameAddr& myAddr() const;
+      const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
       bool peerSupportsUpdateMethod() const;
