@@ -1,7 +1,7 @@
 #ifndef HostSpecification_hxx
 #define HostSpecification_hxx
 
-#include <sipstack/Data.hxx>
+#include <util/Data.hxx>
 
 namespace Vocal2
 {
