@@ -14,6 +14,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
      mValue(),
      mQuoted(false)
 {
+   pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace(); // .dlb. space allowed only before "
    if (*pb.position() == '"')

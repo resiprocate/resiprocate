@@ -11,11 +11,13 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
    : Parameter(type),
      mValue(0)
 {
+   pb.skipWhitespace();
    if (*pb.position() != '=')
    {
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
    }
    pb.skipChar();
+   pb.skipWhitespace();
    // .dlb. error detection?
    mValue = pb.integer();
 }
