@@ -5,6 +5,7 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 namespace resip
 {
@@ -14,27 +15,21 @@ class Pidf : public Contents
    public:
       Pidf();
       Pidf(const Mime& contentType);
-      // Pidf(const Data& text);
       Pidf(HeaderFieldValue* hfv, const Mime& contentType);
-      // Pidf(const Data& data, const Mime& contentType);
       Pidf(const Pidf& rhs);
       virtual ~Pidf();
+
       Pidf& operator=(const Pidf& rhs);
-
       virtual Contents* clone() const;
-
       static const Mime& getStaticType() ;
-
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       void setSimpleId( const Data& id );
       void setEntity( const Data& d) { mEntity=d; };
-      const Data& getEntity() const { return mEntity; };
-      void setSimpleStatus( bool online, const Data& note=Data::Empty, const Data& contact=Data::Empty );
-      bool getSimpleStatus( Data* note=NULL );
-      
-      int  getNumTuples() const { return mTuple.size(); };
+      const Data& getEntity() const;
+      void setSimpleStatus(bool online, const Data& note=Data::Empty, const Data& contact=Data::Empty);
+      bool getSimpleStatus(Data* note=NULL) const;
       
       class Tuple
       {
@@ -45,16 +40,20 @@ class Pidf : public Contents
             float contactPriority;
             Data note;
             Data timeStamp;
+            HashMap<Data, Data> attributes;
       };
+
+      std::vector<Tuple>& getTuples();
+      // ?dlb? consider returning an XML cursor as well?
+
+      int getNumTuples() const;
 
       static bool init();   
    
    private:
-      void clear();
-
       Data mEntity;
       Data mNote;
-      vector<Tuple> mTuple;
+      std::vector<Tuple> mTuples;
 };
 
 static bool invokePidfInit = Pidf::init();
