@@ -1,6 +1,9 @@
 #include "BaseUsage.hxx"
 #include "Dialog.hxx"
 #include "DialogUsageManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -13,14 +16,15 @@ BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
 
 BaseUsage::~BaseUsage()
 {
+   DebugLog (<< "BaseUsage::~BaseUsage() " << getBaseHandle().mId);
    mDum.mUsageMap.erase(getBaseHandle().mId);
    mDialog.possiblyDie();
 }
 
 // connected to BaseUsage in DialogManager on make...
-BaseUsage::Handle::Handle(DialogUsageManager& dum)
-   : mDum(&dum),
-     mId(getNext())
+BaseUsage::Handle::Handle(DialogUsageManager& dum)  : 
+   mId(getNext()),
+   mDum(&dum)
 {}
 
 bool
