@@ -1,13 +1,17 @@
 #if !defined(RESIP_REPRO_HXX)
 #define RESIP_REPRO_HXX 
 
-#include "RequestProcessor.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "RequestContext.hxx"
 
 namespace repro
 {
+  class RequestProcessorChain;
   class Repro /* : public Tu */
   {
     public:
+    private:
+      RequestProcessorChain &mRequestProcessorChain;
   };
 }
 #endif

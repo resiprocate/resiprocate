@@ -12,7 +12,7 @@ namespace repro
 
       typedef enum
       {
-        GO_TO_THE_NEXT_PROCESSOR,
+        CONTINUE,
         SKIP_THIS_CHAIN,
         SKIP_ALL_CHAINS
       }

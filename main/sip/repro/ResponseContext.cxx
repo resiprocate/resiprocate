@@ -2,6 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/SipMessage.hxx"
+#include "ResponseContext.hxx"
+
 using namespace resip;
 using namespace repro;
 using namespace std;
