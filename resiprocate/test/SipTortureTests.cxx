@@ -1,8 +1,7 @@
 #include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Helper.hxx"
 #include "sip2/util/Logger.hxx"
+#include "TestSupport.hxx"
 #include "tassert.h"
 
 #include <iostream>
@@ -38,11 +37,11 @@ test1()
                    "Content-Type: application/sdp \r\n" 
                    "v:  SIP  / 2.0  / TCP     1192.168.156.222   ;\r\n" 
                    "  branch  =   9ikj8  , \r\n"
-                   "SIP  /    2.0   / UDP  192.168.255.111   ; hidden\r\n" 
+                   " SIP  /    2.0   / UDP  192.168.255.111   ; hidden\r\n" 
                    "m:\"Quoted string\\\"\\\"\"<sip:caller@caller-company.com>; newparam =\r\n" 
-                   "newvalue ;\r\n" 
-                   "secondparam = secondvalue  ; q = 0.33,\r\n" 
-                   "tel:4443322 \r\n"
+                   " newvalue ;\r\n" 
+                   "  secondparam = secondvalue  ; q = 0.33,\r\n" 
+                   " tel:4443322 \r\n"
                    "\r\n"
                    "v=0\r\n" 
                    "o=mhandley 29739 7272939 IN IP4 126.5.4.3 \r\n"
@@ -51,11 +50,19 @@ test1()
                    "t=0 0 \r\n"
                    "m=audio 492170 RTP/AVP 0 12 \r\n"
                    "m=video 3227 RTP/AVP 31 \r\n"
-                   "a=rtpmap:31 LPC \r\n");
+                   "a=rtpmap:31 LPC \r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+
+      TestSupport::prettyPrint(txt,strlen(txt));
+
+      SipMessage* msg = TestSupport::makeMessage(txt);
+      
 
       tassert_reset();
+      tassert(msg)
+
+      auto_ptr<SipMessage> message(msg);
+
       tassert(message->isRequest());
       tassert(message->isResponse() == false);
 
@@ -132,7 +139,7 @@ test1()
                    "CSeq: 8 INVITE\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
       
@@ -212,7 +219,7 @@ test3()
                    "m=video 3227 RTP/AVP 31 \r\n"
                    "a=rtpmap:31 LPC \r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       InfoLog(<<*message);
       
@@ -287,7 +294,7 @@ test4()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: Sat, 01 Dec 2040 16:00:00 GMT\r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
       
@@ -383,7 +390,7 @@ test5()
                    "\r\n"
                    "\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       tassert_reset();
 
