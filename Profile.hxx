@@ -95,10 +95,6 @@ class Profile
       virtual const NameAddr& getOutboundProxy() const;
       virtual bool hasOutboundProxy() const;
       
-      //defaults to false, turn on for VONAGE
-      virtual void setLooseToTagMatching(bool enabled);
-      virtual bool getLooseToTagMatching() const;      
-
       //enable/disable rport for requests. rport is enabled by default
       virtual void setRportEnabled(bool enabled);
       virtual bool getRportEnabled() const;      
@@ -142,9 +138,6 @@ class Profile
 
 	  bool mHasAdvertisedCapabilities;
 	  std::set<Headers::Type> mAdvertisedCapabilities;
-
-	  bool mHasLooseToTagMatching;
-      bool mLooseToTagMatching;
 
 	  bool mHasRportEnabled;
       bool mRportEnabled;

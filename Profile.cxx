@@ -45,9 +45,6 @@ Profile::Profile(Profile *baseProfile) :
       addAdvertisedCapability(Headers::Allow);  
       addAdvertisedCapability(Headers::Supported);  
 
-	  mHasLooseToTagMatching = true;
-      mLooseToTagMatching = false;
-
 	  mHasRportEnabled = true;
       mRportEnabled = true;
 
@@ -68,7 +65,6 @@ Profile::Profile(Profile *baseProfile) :
       mHas1xxRetransmissionTime = false;
       mHasOutboundProxy = false;
 	  mHasAdvertisedCapabilities = false;
-	  mHasLooseToTagMatching = false;
 	  mHasRportEnabled = false;
       mHasUserAgent = false;
       mHasOverrideHostPort = false;
@@ -331,24 +327,6 @@ Profile::hasOutboundProxy() const
    return mHasOutboundProxy;
 }
    
-void 
-Profile::setLooseToTagMatching(bool enabled)
-{
-   mLooseToTagMatching = enabled;
-   mHasLooseToTagMatching = true;
-}
-
-bool 
-Profile::getLooseToTagMatching() const
-{
-   // Fall through seting (if required)
-   if(!mHasLooseToTagMatching && mBaseProfile)
-   {
-       return mBaseProfile->getLooseToTagMatching();
-   }
-   return mLooseToTagMatching;
-}
-
 void 
 Profile::setRportEnabled(bool enabled)
 {
