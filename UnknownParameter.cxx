@@ -11,8 +11,8 @@ UnknownParameter::UnknownParameter(const char* startName, unsigned int nameSize,
 }
 
 
-UnknownParameter::UnknownParameter(const Data& name, const Data& data)
-   : DataParameter(ParameterTypes::UNKNOWN, data),
+UnknownParameter::UnknownParameter(const Data& name)
+   : DataParameter(ParameterTypes::UNKNOWN),
      mName(name)
 {
 }
