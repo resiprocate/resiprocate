@@ -18,6 +18,12 @@
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Security2.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/MultipartAlternativeContents.hxx"
 
 using namespace resip;
 
@@ -1030,6 +1036,103 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
                          pair.substr(pos+sep.size()).c_str());
 }
 #endif
+
+Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
+                                           std::auto_ptr<SecurityAttributes> attributes)
+   : mContents(contents),
+     mAttributes(attributes)
+{}
+
+Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
+   : mContents(rhs.mContents),
+     mAttributes(rhs.mAttributes)
+{}
+
+Contents*
+extractFromPkcs7Recurse(Contents* tree,
+                        const Data& signerAor,
+                        const Data& receiverAor,
+                        SecurityAttributes* attributes,
+                        Security& security)
+{
+   Pkcs7Contents* pk;
+   if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
+   {
+      Contents* contents = security.decrypt(receiverAor, pk);
+      if (contents)
+      {
+         attributes->setEncrypted();
+      }
+      return contents;
+   }
+
+   MultipartSignedContents* mps;
+   if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
+   {
+      Data signer;
+      Security::SignatureStatus sigStatus;
+      Contents* b = extractFromPkcs7Recurse(security.checkSignature(signerAor,
+                                                                    mps, 
+                                                                    signer,
+                                                                    sigStatus),
+                                            signerAor, 
+                                            receiverAor, attributes, security);
+      attributes->setSigner(signer);
+      attributes->setSignatureStatus(sigStatus);
+      return b;
+   }
+
+   MultipartAlternativeContents* alt;
+   if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
+   {
+      for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
+           i != alt->parts().rend(); ++i)
+      {
+         Contents* b = extractFromPkcs7Recurse(*i, signerAor, receiverAor,
+                                               attributes, security);
+         if (b)
+         {
+            return b;
+         }
+      }
+   }
+
+   MultipartMixedContents* mult;
+   if ((mult = dynamic_cast<MultipartMixedContents*>(tree)))
+   {
+      for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
+           i != mult->parts().end(); ++i)
+      {
+         Contents* b = extractFromPkcs7Recurse(*i, signerAor, receiverAor,
+                                               attributes, security);
+         if (b)
+         {
+            return b;
+         }
+      };
+
+      return 0;
+   }
+
+   return tree->clone();
+}
+
+Helper::ContentsSecAttrs
+Helper::extractFromPkcs7(const SipMessage& message, 
+                         Security& security)
+{
+   SecurityAttributes* attr = new SecurityAttributes;
+   // .dlb. currently flattening SecurityAttributes?
+   //attr->setIdentity(message.getIdentity());
+   attr->setIdentity(message.header(h_From).uri().getAor());
+   Contents *b = extractFromPkcs7Recurse(message.getContents(),
+                                         message.header(h_To).uri().getAor(),
+                                         message.header(h_From).uri().getAor(),
+                                         attr, security);
+   std::auto_ptr<Contents> c(b);
+   std::auto_ptr<SecurityAttributes> a(attr);
+   return ContentsSecAttrs(c, a);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
