@@ -281,7 +281,7 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
-      void setSecurityAttributes(auto_ptr<SecurityAttributes>) const;
+      void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
    protected:
@@ -347,7 +347,7 @@ class SipMessage : public TransactionMessage
       // domain associated with this message for tls cert
       Data mTlsDomain;
 
-      mutable auto_ptr<SecurityAttributes> mSecurityAttributes;
+      mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 
       friend class TransportSelector;
 };

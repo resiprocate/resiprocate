@@ -698,7 +698,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
 
          case Timer::TimerCleanUp:
             // !ah! Cancelled Invite Cleanup Timer fired.
-            StackLog (<< "Timer::TimerCleanUp: " << *this << endl << *mMsgToRetransmit);
+            StackLog (<< "Timer::TimerCleanUp: " << *this << std::endl << *mMsgToRetransmit);
             if (mState == Proceeding)
             {
                assert(mMsgToRetransmit && mMsgToRetransmit->header(h_RequestLine).getMethod() == INVITE);
