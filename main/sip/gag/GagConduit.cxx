@@ -40,6 +40,9 @@ GagConduit::handleMessage(GagMessage *message)
     case GagMessage::ERROR:
       gaimError(reinterpret_cast<GagErrorMessage *>(message));
       break;
+    case GagMessage::LOGIN_STATUS:
+      gaimLoginStatus(reinterpret_cast<GagLoginStatusMessage *>(message));
+      break;
     default:
       // XXX Yikes! What is this?
       break;
@@ -189,6 +192,12 @@ GagConduit::gaimShutdown(GagShutdownMessage *msg)
 
 void
 GagConduit::gaimError(GagErrorMessage *msg)
+{
+  // XXX This should *never* be called..
+}
+
+void
+GagConduit::gaimLoginStatus(GagLoginStatusMessage *msg)
 {
   // XXX This should *never* be called..
 }
