@@ -29,11 +29,12 @@ void *poller(void *arg)
 
 int main(int argc, char* argv[])
 {
-    SipStack stack1(true);
+    SipStack stack1;
     pthread_t tid;
     void *retval;
     stack1.addTransport(UDP, 5060);
     stack1.addTransport(TCP, 5060);
-    pthread_create(&tid, NULL, poller, &stack1);
-    pthread_join(tid, &retval);
+    //    pthread_create(&tid, NULL, poller, &stack1);
+    //    pthread_join(tid, &retval);
+    poller((void*)&stack1);
 }
