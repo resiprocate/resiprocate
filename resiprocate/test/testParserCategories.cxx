@@ -8,6 +8,8 @@
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/DataStream.hxx"
+
 
 using namespace std;
 using namespace Vocal2;
@@ -540,6 +542,35 @@ main(int arc, char** argv)
       cerr << s.str() << endl;
       
       assert(s.str() == "realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+   }
+
+   {
+      Auth auth;
+      Auth auth2;
+      auth.scheme() = "Digest";
+      auth.param(p_username) = "bob";
+
+      auth2 = auth;
+      Auth auth3(auth2);
+      
+      Data a;
+      Data a1;
+      Data a2;
+      {
+         DataStream s(a);
+         s << auth;
+      }
+      {
+         DataStream s(a1);
+         s << auth;
+      }
+      {
+         DataStream s(a2);
+         s << auth;
+      }
+      
+      assert(a == a1);
+      assert(a1 == a2);
    }
 
    {
