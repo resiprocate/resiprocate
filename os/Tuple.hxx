@@ -53,11 +53,13 @@ class Tuple
       
       // convert from a tuple to a sockaddr structure
       const sockaddr& getSockaddr() const { return mSockaddr; }
+
       TransportType getType() const { return mTransportType; }
       void setPort(int port);
       int getPort() const;
       bool isV4() const;
-
+      socklen_t length() const; // of sockaddr
+      
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
       
