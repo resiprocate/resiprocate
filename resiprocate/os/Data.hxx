@@ -1,7 +1,7 @@
 #if !defined(resip_Data_hxx)
 #define resip_Data_hxx
 
-static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.63 2003/04/16 21:50:04 davidb Exp $";
+static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.64 2003/04/30 15:53:04 alan Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -152,7 +152,7 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 
 inline bool isLessThanNoCase(const Data& left, const Data& right)
 {
-   size_t minsize = vocal2Min( left.size(), right.size() );
+   size_t minsize = resipMin( left.size(), right.size() );
    int res = strncasecmp(left.data(), right.data(), minsize);
 
    if (res < 0)
