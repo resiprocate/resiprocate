@@ -9,15 +9,14 @@ namespace resip
 class Uri;
 
 /** @file PublicationCreator.hxx
- *   @todo This file is empty
+ *
  */
 
 class PublicationCreator: public BaseCreator
 {
    public:
-      PublicationCreator(DialogUsageManager& dum, const Uri& aor);
-
-      virtual void dispatch(SipMessage& msg);
+      PublicationCreator(DialogUsageManager& dum, const Uri& targetDocument, 
+                         const Contents& body, const Data& eventType, unsigned expireSeconds );
 };
  
 }
