@@ -33,6 +33,7 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
    mShuttingDown(false)
 {
    RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
+   assert(asyncHandler);
 }
 
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
@@ -52,7 +53,8 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
    mStatsManager(0)
 {
    RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
- }
+   assert(asyncHandler);
+}
 
 
 
@@ -115,16 +117,14 @@ TransactionController::getTimeTillNextProcessMS()
       return 0;
    }
    
-   int ret = mTimers.msTillNextTimer();
-
-#if 1 // !cj! just keep a max of 500ms for good luck - should not be needed   
-   if ( ret > 1 )
+   return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());
+#if 0 // !cj! just keep a max of 500ms for good luck - should not be needed   
+   if ( ret > 1000 )
    {
-      ret = 500;
+      ret = 1000;
    }
-#endif
-
    return ret;
+#endif
 } 
    
 void 
