@@ -25,8 +25,8 @@ class StatisticsManager : public StatisticsMessage::Payload
          TUFifoSize,
          ActiveTimers,
          OpenTcpConnections,
-         ActiveNonInviteTransactions,
-         ActiveInviteTransactions,
+         ActiveClientTransactions,
+         ActiveServerTransactions,
          PendingDnsQueries,
          StatsMemUsed
       } Measurement;
