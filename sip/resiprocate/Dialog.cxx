@@ -189,7 +189,11 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
       {
          mEarly = (msg.header(h_StatusLine).statusCode() < 200);
       }
-      targetRefreshResponse(msg);
+      // don't update target for register since contact is not a target
+      if ( msg.header(h_CSeq).method() != REGISTER )
+      {
+         targetRefreshResponse(msg);
+      }
    }
 }
 
@@ -202,7 +206,9 @@ Dialog::targetRefreshResponse(const SipMessage& response)
    }
    else
    {
-      InfoLog (<< "Response must have 1 contact when it has: " << response.header(h_Contacts).size());
+      int size = response.header(h_Contacts).size();
+      
+      InfoLog (<< "Response must have 1 contact when it has: " << size );
       DebugLog (<< response);
       throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
    }
