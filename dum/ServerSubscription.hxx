@@ -11,7 +11,7 @@ class ServerSubscription: public BaseUsage
       {
       };
       
-      ServerSubscription(DialogUsageManager& dum, const SipMessage& req);
+      ServerSubscription(DialogUsageManager::Handle& dum, const SipMessage& req);
     
       void sendResponse(SipMessage& msg);
       void sendNotify(SipMessage& msg);
