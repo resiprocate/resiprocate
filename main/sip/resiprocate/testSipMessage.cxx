@@ -24,7 +24,6 @@ main()
       message.encode(cerr);
 
    }
-   return 0;
    
    {
       cerr << "test multiheaders access" << endl;
