@@ -1,0 +1,9 @@
+struct days { char *name; DayOfWeek type; };
+%%
+Sun, DayOfWeek::Sun
+Mon, DayOfWeek::Mon
+Tue, DayOfWeek::Tue
+Wed, DayOfWeek::Wed
+Thu, DayOfWeek::Thu
+Fri, DayOfWeek::Fri
+Sat, DayOfWeek::Sat
