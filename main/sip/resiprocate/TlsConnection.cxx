@@ -21,8 +21,12 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, bool server ) :
-    Connection(tuple, fd)
+TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, 
+                              bool server, SecurityTypes::SSLType sslType ) :
+   Connection(tuple, fd),
+   mServer(server),
+   mSecurity(security),
+   mSslType( sslType )
 {
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
@@ -30,7 +34,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    mPeerName = Data::Empty;
    mBio= NULL;
   
-   if (server)
+   if (mServer)
    {
       DebugLog( << "Trying to form TLS connection - acting as server" );
    }
@@ -39,19 +43,51 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
 
-   assert( security );
-   SSL_CTX* ctx = security->getTlsCtx(server);
+   assert( mSecurity );
+   SSL_CTX* ctx=NULL;
+   if ( mSslType ==  SecurityTypes::SSLv23 )
+   {
+      assert(0); // TODO uncoment next line 
+      //      ctx = mSecurity->getSslCtx();
+   }
+   else
+   {
+
+      ctx = mSecurity->getTlsCtx(mServer);
+      assert(0); // TODO switch to next line from previos 
+      //      ctx = mSecurity->getTlsCtx();
+   }   
    assert(ctx);
    
    mSsl = SSL_new(ctx);
    assert(mSsl);
-   
+
+   if ( mServer )
+   {
+      assert( mSecurity );
+#if 0
+      if(!SSL_use_certificate(mSsl, mSecurity->publicCert))
+      {
+         throw Exception("SSL_use_certificate failed",
+                         __FILE__,__LINE__);
+         }
+      
+      if (!SSL_use_PrivateKey(mSsl, mSecurity->rivateKey))
+      {
+         throw Exception("SSL_use_PrivateKey failed.",
+                            __FILE__,__LINE__);
+      }
+#else
+      assert(0);
+#endif
+   }
+
    mBio = BIO_new_socket(fd,0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );
 
-   mState = server ? Accepting : Connecting;
+   mState = mServer ? Accepting : Connecting;
 
    if (checkState() == Broken)
    {
