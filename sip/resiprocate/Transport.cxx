@@ -112,6 +112,10 @@ Transport::toData(Transport::Type type)
          return"SCTP";
       case DCCP:
          return "DCCP";
+      case TestReliable:
+         return "TestReliable";
+      case TestUnreliable:
+         return "TestUnreliable";
       case Unknown:
       default:
          assert(0);
