@@ -33,14 +33,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
    if (msg.isRequest() )
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
-//
-// move check to dialog
-//       if (!msg.exists(h_SubscriptionState))
-//       {         
-//          //!dcm! -- appropriate 4xx response?
-//          return;         
-//       }
-
       mDialog.makeResponse(mLastResponse, msg, 200);
       send(mLastResponse);
 

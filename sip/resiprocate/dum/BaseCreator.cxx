@@ -31,9 +31,7 @@ void
 BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
    RequestLine rLine(method);
-   rLine.uri().scheme() = target.uri().scheme();
-   rLine.uri().host() = target.uri().host();
-   rLine.uri().port() = target.uri().port();
+   rLine.uri() = target.uri();   
    mLastRequest.header(h_RequestLine) = rLine;
 
    mLastRequest.header(h_To) = target;

@@ -232,16 +232,16 @@ void
 DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler* handler)
 {
    assert(handler);
-   assert(mClientPublicationHandler.count(eventType) == 0);
-   mClientPublicationHandler[eventType] = handler;
+   assert(mClientPublicationHandlers.count(eventType) == 0);
+   mClientPublicationHandlers[eventType] = handler;
 }
 
 void 
 DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler* handler)
 {
    assert(handler);
-   assert(mServerPublicationHandler.count(eventType) == 0);
-   mServerPublicationHandler[eventType] = handler;
+   assert(mServerPublicationHandlers.count(eventType) == 0);
+   mServerPublicationHandlers[eventType] = handler;
 }
 
 void 
@@ -298,7 +298,6 @@ SipMessage&
 DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
-   inv.header(h_RequestLine).uri() = target;
    return inv;   
 }
 
@@ -751,6 +750,8 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             break;
          case PUBLISH:
             assert(0);
+         default:
+            assert(0);
       }
    }
    
@@ -836,6 +837,37 @@ DialogUsageManager::getServerSubscriptionHandler(const Data& eventType)
       return 0;
    }
 }
+
+ClientPublicationHandler* 
+DialogUsageManager::getClientPublicationHandler(const Data& eventType)
+{
+   map<Data, ClientPublicationHandler*>::iterator res = mClientPublicationHandlers.find(eventType);
+   if (res != mClientPublicationHandlers.end())
+   {
+      return res->second;
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+ServerPublicationHandler* 
+DialogUsageManager::getServerPublicationHandler(const Data& eventType)
+{
+   map<Data, ServerPublicationHandler*>::iterator res = mServerPublicationHandlers.find(eventType);
+   if (res != mServerPublicationHandlers.end())
+   {
+      return res->second;
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+
+
 
 
 
