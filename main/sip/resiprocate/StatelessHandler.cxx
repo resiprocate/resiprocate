@@ -48,11 +48,8 @@ StatelessHandler::process()
             Via& via = sip->header(h_Vias).front();
             // this is here so that we will reuse the tcp connection
             via.param(p_rport).port() = sip->getSource().getPort();
-            if (!mController.mTUFifo.add(sip, TimeLimitFifo<Message>::InternalElement))
-            {
-               CritLog(<< "Fifo hard limit exceeded -- ignoring message");
+            mController.mTuSelector.add(sip, TimeLimitFifo<Message>::InternalElement);            
             }
-         }
          else if (sip->isRequest())
          {
             if (sip->getDestination().transport)
