@@ -6,6 +6,7 @@
 #include "sip2/sipstack/TransportSelector.hxx"
 #include "sip2/sipstack/UdpTransport.hxx"
 #include "sip2/sipstack/TcpTransport.hxx"
+#include "sip2/sipstack/TlsTransport.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/TransportMessage.hxx"
 #include "sip2/sipstack/ReliabilityMessage.hxx"
@@ -85,6 +86,11 @@ TransportSelector::addTransport( Transport::Type protocol,
       case Transport::TCP:
          transport = new TcpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
+#ifdef USE_SSL
+      case Transport::TLS:
+         transport = new TlsTransport(hostname, port, nic, mStack.mStateMacFifo, mStack.security);
+         break;
+#endif
       default:
          assert(0);
          break;
@@ -222,7 +228,7 @@ TransportSelector::findTransport(const Transport::Tuple& tuple)
    // !jf! not done yet
    for (std::vector<Transport*>::iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
-      if ((*i)->transport() == tuple.transportType)
+      if ( (*i)->transport() == tuple.transportType )
       {
          return *i;
       }
