@@ -1,7 +1,7 @@
 #if !defined(RESIP_TUIM_HXX)
 #define RESIP_TUIM_HXX
 
-#include <vector>
+#include <list>
 
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/Security.hxx"
@@ -68,7 +68,8 @@ public:
 
       // Presence management
       void setMyPresence( const bool open, const Data& status = Data::Empty );
-
+      void addStateAgent( const Uri& ur );
+      
    private:
       void processRequest(SipMessage* msg);
       void processMessageRequest(SipMessage* msg);
@@ -90,7 +91,6 @@ public:
       SipStack* mStack;
       Uri mAor;
       Uri mContact;
-      //Data mPassword;
 
       // people I subscibe too 
       class Buddy
@@ -103,11 +103,14 @@ public:
             bool online;
             Data status;
       };
+
+      // people I subscribe to
       std::vector<Buddy> mBuddy;
-	  typedef std::vector<Buddy>::iterator BuddyIterator;
+      typedef std::vector<Buddy>::iterator BuddyIterator;
 
       // people who subscribe to me 
-      std::vector<Dialog*> mSubscribers;
+      std::list<Dialog*> mSubscribers;
+      typedef std::list<Dialog*>::iterator SubscriberIterator;
       Pidf* mPidf;
       
       // registration information
@@ -126,7 +129,6 @@ public:
       Uri mOutboundProxy;
       Data mUAName;
       TransportType mDefaultProtocol;
-
 };
 
 }
