@@ -28,7 +28,7 @@ class ClientPublication : public BaseUsage
 
       virtual SipMessage& unpublish();
       virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimer& timer);
+      virtual void dispatch(const DumTimeout& timer);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientPublication::Handle getHandle() {return mHandle;}

@@ -231,7 +231,7 @@ DialogUsageManager::process(FdSet& fdset)
       return;
    }
 
-   DumTimer* dumMsg = dynamic_cast<DumTimer*>(msg);
+   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg);
    if (dumMsg && dumMsg->baseUsage().isValid())
    {
        dumMsg->baseUsage()->dispatch(*dumMsg);

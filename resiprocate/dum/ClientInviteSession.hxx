@@ -38,7 +38,7 @@ class ClientInviteSession : public InviteSession
                           const SipMessage& request,
                           const SdpContents* initialOffer);
       void dispatch(const SipMessage& msg);
-      void dispatch(const DumTimer& timer);
+      void dispatch(const DumTimeout& timer);
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
       void sendAck(const SipMessage& ok);
