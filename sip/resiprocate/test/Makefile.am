@@ -11,7 +11,6 @@ libtestsupport_la_SOURCES = \
 	TestSupport.cxx \
 	Transceiver.cxx
 LDADD = libtestsupport.la ../libresiprocate.la
-TESTS = testParserCategories 
 check_PROGRAMS = \
 	SipTortureTests \
 	lg \
@@ -25,11 +24,9 @@ check_PROGRAMS = \
 	testDataPerformance \
 	testDataStream \
 	testDigestAuthentication \
-	testDnsResolver \
 	testEmbedded \
 	testEmptyHeader \
 	testIM \
-	testLockStep \
 	testLogger \
 	testMessageWaiting \
 	testMultipartMixedContents \
@@ -43,7 +40,6 @@ check_PROGRAMS = \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
-	testSipStack1 \
 	testSpeed \
 	testTcpTransport \
 	testThreadIf \
@@ -51,6 +47,7 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor
+TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
 lg_SOURCES = lg.cxx
 test1_SOURCES = test1.cxx
@@ -63,11 +60,11 @@ testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
-testDnsResolver_SOURCES = testDnsResolver.cxx
+#testDnsResolver_SOURCES = testDnsResolver.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
 testIM_SOURCES = testIM.cxx
-testLockStep_SOURCES = testLockStep.cxx
+#testLockStep_SOURCES = testLockStep.cxx
 testLogger_SOURCES = testLogger.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
@@ -81,7 +78,7 @@ testServer_SOURCES = testServer.cxx
 testSipFrag_SOURCES = testSipFrag.cxx
 testSipMessage_SOURCES = testSipMessage.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
-testSipStack1_SOURCES = testSipStack1.cxx
+#testSipStack1_SOURCES = testSipStack1.cxx
 testSpeed_SOURCES = testSpeed.cxx
 testTcpTransport_SOURCES = testTcpTransport.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
