@@ -18,8 +18,8 @@ extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
 
 using resip::RecursiveMutex;
 
-#if defined( WIN32 ) || defined( __APPLE__ )  || defined (__INTEL_COMPILER)
-// !cj! need to write windows mutex stuff 
+#if defined( __APPLE__ )  || defined (__INTEL_COMPILER)
+// !cj! need to write apple/intel mutex stuff 
 namespace resip
 {
 
@@ -56,49 +56,68 @@ namespace resip
 
 RecursiveMutex::RecursiveMutex()
 {
+#ifndef WIN32
    int rc = pthread_mutexattr_init(&mMutexAttr);
-#if defined(__linux__)
+ #if defined(__linux__)
    pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE_NP);
-#else
+ #else
    pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE);
-#endif
+ #endif
+
    rc = pthread_mutex_init(&mId, &mMutexAttr);
    assert( rc == 0 );
+#else
+	InitializeCriticalSection(&mId);
+#endif
 }
 
 
 RecursiveMutex::~RecursiveMutex ()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_destroy(&mId);
     assert( rc != EBUSY );  // currently locked 
     assert( rc == 0 );
     rc = pthread_mutexattr_destroy(&mMutexAttr);
+#else
+	DeleteCriticalSection(&mId);
+#endif
 }
 
 
 void
 RecursiveMutex::lock()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
     assert( rc != EINVAL );
     assert( rc != EDEADLK );
     assert( rc == 0 );
+#else
+	EnterCriticalSection(&mId);
+#endif
 }
 
 void
 RecursiveMutex::unlock()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
     assert( rc != EINVAL );
     assert( rc != EPERM );
     assert( rc == 0 );
+#else
+	LeaveCriticalSection(&mId);
+#endif
 }
 
+#ifndef WIN32
 pthread_mutex_t*
 RecursiveMutex::getId() const
 {
     return ( &mId );
 }
+#endif
 
 }
 
