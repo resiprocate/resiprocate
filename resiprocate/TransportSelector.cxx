@@ -178,7 +178,7 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool is
       msg->encode(encodeStream);
       encodeStream.flush();
 
-      DebugLog (<< "encoded=" << std::endl << encoded.c_str() << "EOM");
+      DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
    
       // send it over the transport
       destination.transport->send(destination, encoded, tid);

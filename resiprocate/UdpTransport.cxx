@@ -171,7 +171,7 @@ UdpTransport::process(FdSet& fdset)
          InfoLog(<<"Possibly truncated");
       }
       DebugLog ( << "UDP Rcv : " << len << " b" );
-      DebugLog ( << Data(buffer, len).c_str());
+      DebugLog ( << Data(buffer, len).escaped().c_str());
       
       SipMessage* message = new SipMessage(true);
       
