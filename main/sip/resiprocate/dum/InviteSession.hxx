@@ -20,7 +20,7 @@ class InviteSession : public BaseUsage
       virtual void setOffer(const SdpContents* offer);
       
       /// Called to set the answer that will be used in the next messages that
-      /// sends and offer. Does not send an answer
+      /// sends an offer. Does not send an answer
       virtual void setAnswer(const SdpContents* answer);
 
       /// Completes the three way handshake.  In some circumstances(not re-invite), setAnswer
@@ -43,7 +43,6 @@ class InviteSession : public BaseUsage
       // established dialogs, in case user approval is required.
       virtual SipMessage& targetRefresh(const NameAddr& localUri);
 
-      // confusing wrong signature, should maybe just same NameAddr
       virtual SipMessage& makeRefer(const NameAddr& referTo);
 
       const SdpContents* getLocalSdp();
