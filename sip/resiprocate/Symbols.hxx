@@ -57,7 +57,9 @@ class Symbols
       static const char* Postd;
 
       static const char* auth;
-
+      static const char* Digest;
+      static const char* Basic;
+      
       static const char * const MagicCookie;
       static const char * const resipCookie;
 
