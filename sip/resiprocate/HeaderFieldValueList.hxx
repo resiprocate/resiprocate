@@ -7,6 +7,8 @@
 namespace Vocal2
 {
 
+class ParserContainerBase;
+
 class HeaderFieldValueList
 {
    public:
@@ -19,9 +21,9 @@ class HeaderFieldValueList
       HeaderFieldValueList* clone() const;
 
       void
-      setParserCategory(ParserCategory* parser)
+      setParserContainer(ParserContainerBase* parser)
       {
-         mParserCategory = parser;
+         mParserContainer = parser;
       }
       
       ParserCategory&
@@ -39,7 +41,8 @@ class HeaderFieldValueList
   
       HeaderFieldValue* last;
 
-      ParserCategory* mParserCategory;
+   private:
+      ParserContainerBase* mParserContainer;
 };
 
 }
