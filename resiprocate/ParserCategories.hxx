@@ -6,13 +6,13 @@
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>
-
 #include <util/Data.hxx>
 
 namespace Vocal2
 {
 
 class HeaderFieldValueList;
+class Uri;
 
 //====================
 // Token:
@@ -81,14 +81,14 @@ class Auth : public ParserCategory
 //====================
 // Integer:
 //====================
-class IntegerComponent : public ParserCategory
+class IntegerCategory : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = false};
 
-      IntegerComponent() : ParserCategory() {}
-      IntegerComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
-      IntegerComponent(const IntegerComponent&);
+      IntegerCategory() : ParserCategory() {}
+      IntegerCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      IntegerCategory(const IntegerCategory&);
 
       virtual void parse();
       virtual std::ostream& encode(std::ostream& str) const;
@@ -103,16 +103,16 @@ class IntegerComponent : public ParserCategory
 };
 
 //====================
-// StringComponent
+// StringCategory
 //====================
-class StringComponent : public ParserCategory
+class StringCategory : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = false};
       
-      StringComponent() : ParserCategory() {}
-      StringComponent(const StringComponent&);
-      StringComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      StringCategory() : ParserCategory() {}
+      StringCategory(const StringCategory&);
+      StringCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
 
       virtual void parse();
       virtual std::ostream& encode(std::ostream& str) const;
@@ -123,7 +123,7 @@ class StringComponent : public ParserCategory
    private:
       mutable Data mValue;
 };
-typedef ParserContainer<StringComponent> StringComponents;
+typedef ParserContainer<StringCategory> StringCategories;
 
 //====================
 // GenericUri:
@@ -146,51 +146,46 @@ class GenericURI : public ParserCategory
 typedef ParserContainer<GenericURI> GenericURIs;
 
 //====================
-// Url:
+// NameAddr:
 //====================
-class Url : public ParserCategory
+class NameAddr : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = true};
 
-      Url() : 
+      NameAddr() : 
          ParserCategory(),
-         mAllContacts(false)
+         mAllContacts(false),
+         mUri(0)
       {}
-      Url(HeaderFieldValue* hfv)
+
+      NameAddr(HeaderFieldValue* hfv)
          : ParserCategory(hfv), 
-           mAllContacts(false)
+           mAllContacts(false),
+           mUri(0)
       {}
-      Url(const Url&);
 
-      Data& host() const {checkParsed(); return mHost;}
-      Data& user() const {checkParsed(); return mUser;}
+      NameAddr(const NameAddr&);
+      NameAddr(const Uri&);
+
+      virtual ~NameAddr();
+      
+      Uri& uri() const {checkParsed(); return *mUri;}
       Data& displayName() const {checkParsed(); return mDisplayName;}
-      const Data& getAor() const;
-      Data& scheme() const {checkParsed(); return mScheme;}
-      int& port() const {checkParsed(); return mPort;}
-      Data& password() const {checkParsed(); return mPassword;}
-
       void setAllContacts() { mAllContacts = true;}
       
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
-      bool operator<(const Url& other) const;
+      bool operator<(const NameAddr& other) const;
       
    protected:
       bool mAllContacts;
-      mutable Data mScheme;
-      mutable Data mHost;
-      mutable Data mUser;
-      Data aor;
-      mutable int mPort;
-      mutable Data mPassword;
+      mutable Uri* mUri;
       mutable Data mDisplayName;
 };
-
-typedef ParserContainer<Url> Urls;
+typedef ParserContainer<NameAddr> NameAddrs;
 
 //====================
 // CallId:
@@ -216,16 +211,16 @@ class CallId : public ParserCategory
 typedef ParserContainer<CallId> CallIds;
 
 //====================
-// CSeqComponent:
+// CSeqCategory:
 //====================
-class CSeqComponent : public ParserCategory
+class CSeqCategory : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = false};
       
-      CSeqComponent() : ParserCategory() {}
-      CSeqComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
-      CSeqComponent(const CSeqComponent&);
+      CSeqCategory() : ParserCategory() {}
+      CSeqCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      CSeqCategory(const CSeqCategory&);
 
       MethodTypes& method() const {checkParsed(); return mMethod;}
       int& sequence() const {checkParsed(); return mSequence;}
@@ -240,16 +235,16 @@ class CSeqComponent : public ParserCategory
 };
 
 //====================
-// DateComponent:
+// DateCategory:
 //====================
-class DateComponent : public ParserCategory
+class DateCategory : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = false};
 
-      DateComponent() : ParserCategory() {}
-      DateComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
-      DateComponent(const DateComponent&);
+      DateCategory() : ParserCategory() {}
+      DateCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      DateCategory(const DateCategory&);
 
       Data& value() const {checkParsed(); return mValue;}
 
@@ -262,16 +257,16 @@ class DateComponent : public ParserCategory
 };
 
 //====================
-// WarningComponent:
+// WarningCategory:
 //====================
-class WarningComponent : public ParserCategory
+class WarningCategory : public ParserCategory
 {
    public:
       enum {isCommaTokenizing = true};
 
-      WarningComponent() : ParserCategory() {}
-      WarningComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
-      WarningComponent(const WarningComponent&);
+      WarningCategory() : ParserCategory() {}
+      WarningCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      WarningCategory(const WarningCategory&);
 
       virtual void parse();
       virtual ParserCategory* clone() const;
@@ -312,17 +307,20 @@ typedef ParserContainer<Via> Vias;
 //====================
 // RequestLine:
 //====================
-class RequestLine : public Url
+class RequestLine : public ParserCategory
 {
    public:
       RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion)
-         : Url(),
+         : mUri(0),
            mMethod(method),
            mSipVersion(sipVersion)
       {}
-      RequestLine(HeaderFieldValue* hfv) : Url(hfv) {}
+      RequestLine(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       RequestLine(const RequestLine&);
 
+      virtual ~RequestLine();
+
+      Uri& uri() const {checkParsed(); return *mUri;}
       MethodTypes getMethod() const {checkParsed(); return mMethod;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
@@ -331,6 +329,7 @@ class RequestLine : public Url
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
+      Uri* mUri;
       MethodTypes mMethod;
       Data mSipVersion;
 };
