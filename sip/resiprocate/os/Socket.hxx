@@ -70,6 +70,7 @@ void
 initNetwork();
 
 bool makeSocketNonBlocking(Socket fd);
+bool makeSocketBlocking(Socket fd);
 
 
 class FdSet
