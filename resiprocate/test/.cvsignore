@@ -3,6 +3,7 @@
 8
 bin.debug.Linux.i686
 bin.debug.Linux.i686
+bin.debug.QNX.x86pc
 foo.i
 obj.debug.Linux.i686
 obj.debug.Linux.i686
