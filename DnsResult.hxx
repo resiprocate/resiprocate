@@ -11,6 +11,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/DnsStub.hxx"
 
 struct hostent;
 
@@ -19,11 +20,11 @@ namespace resip
 class DnsInterface;
 class DnsHandler;
 
-class DnsResult
+class DnsResult : public DnsResultSink
 {
    public:
       RESIP_HeapCount(DnsResult);
-      DnsResult(DnsInterface& interfaceObj, DnsHandler* handler);
+      DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler);
       ~DnsResult();
 
       typedef enum
@@ -110,6 +111,8 @@ class DnsResult
       // peforms an SRV lookup on target. May be asynchronous if ares is
       // used. Otherwise, load the results into mResults
       void lookupSRV(const Data& target);
+
+      void lookupHost(const Data& target);
     
       // process a NAPTR record as per rfc3263
       void processNAPTR(int status, const unsigned char* abuf, int alen);
@@ -166,13 +169,15 @@ class DnsResult
                                              int alen,
                                              NAPTR& naptr);
 
-    static const unsigned char * parseCNAME(const unsigned char *aptr,
-                                            const unsigned char *abuf, 
-                                            int alen,
-                                            Data& trueName);
+      static const unsigned char * parseCNAME(const unsigned char *aptr,
+                                              const unsigned char *abuf, 
+                                              int alen,
+                                              Data& trueName);
+      
 
    private:
       DnsInterface& mInterface;
+      DnsStub& mDns;
       DnsHandler* mHandler;
       int mSRVCount;
       bool mSips;
@@ -214,6 +219,13 @@ class DnsResult
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
+
+      // DnsResultSink
+      void onDnsResult(const DNSResult<DnsHostRecord>&);
+      void onDnsResult(const DNSResult<DnsAAAARecord>&);
+      void onDnsResult(const DNSResult<DnsSrvRecord>&);
+      void onDnsResult(const DNSResult<DnsNaptrRecord>&);
+      void onDnsResult(const DNSResult<DnsCnameRecord>&);
 };
 
 std::ostream& operator<<(std::ostream& strm, const DnsResult&);

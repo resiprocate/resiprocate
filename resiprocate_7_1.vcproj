@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	RootNamespace="resiprocate"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -276,13 +277,28 @@
 				RelativePath=".\DateCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\Dialog.cxx">
+				RelativePath=".\DnsAAAARecord.cxx">
+			</File>
+			<File
+				RelativePath=".\DnsCnameRecord.cxx">
+			</File>
+			<File
+				RelativePath=".\DnsHostRecord.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
+				RelativePath=".\DnsNaptrRecord.cxx">
+			</File>
+			<File
 				RelativePath="DnsResult.cxx">
+			</File>
+			<File
+				RelativePath=".\DnsSrvRecord.cxx">
+			</File>
+			<File
+				RelativePath=".\DnsStub.cxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.cxx">
@@ -343,6 +359,9 @@
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
+			</File>
+			<File
+				RelativePath=".\LocalDns.cxx">
 			</File>
 			<File
 				RelativePath="os\Lock.cxx">
@@ -426,6 +445,9 @@
 				RelativePath="QopParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\QueryTypes.cxx">
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
@@ -448,6 +470,9 @@
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\RROverlay.cxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.cxx">
@@ -670,13 +695,34 @@
 				RelativePath=".\Dialog.hxx">
 			</File>
 			<File
+				RelativePath=".\DnsAAAARecord.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsCnameRecord.hxx">
+			</File>
+			<File
 				RelativePath=".\DnsHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsHostRecord.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
+				RelativePath=".\DnsNaptrRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsResourceRecord.hxx">
+			</File>
+			<File
 				RelativePath="DnsResult.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsSrvRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsStub.hxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.hxx">
@@ -743,6 +789,9 @@
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
+			</File>
+			<File
+				RelativePath=".\LocalDns.hxx">
 			</File>
 			<File
 				RelativePath="os\Lock.hxx">
@@ -838,6 +887,9 @@
 				RelativePath="QopParameter.hxx">
 			</File>
 			<File
+				RelativePath=".\QueryTypes.hxx">
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
@@ -869,6 +921,15 @@
 			</File>
 			<File
 				RelativePath="RportParameter.hxx">
+			</File>
+			<File
+				RelativePath=".\RRCache.hxx">
+			</File>
+			<File
+				RelativePath=".\RRList.hxx">
+			</File>
+			<File
+				RelativePath=".\RROverlay.hxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.hxx">

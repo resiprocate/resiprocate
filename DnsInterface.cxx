@@ -12,7 +12,10 @@ extern "C"
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/socket.hxx"
 
+#include "resiprocate/DnsStub.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
@@ -33,21 +36,19 @@ DnsInterface::DnsInterface() :
    if (retCode != 0)
    {
       ErrLog (<< "Failed to initialize async dns library");
-      char* errmem = mDnsProvider->errorMessage(retCode);      
+      char* errmem = mDnsProvider->errorMessage(retCode);
       ErrLog (<< errmem);
       delete errmem;
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
-//   addTransportType(UDP);
-//   addTransportType(TCP);
-#if defined(USE_SSL)
-   //addTransportType(TLS);   
-#endif
+   mDnsStub = new DnsStub(this);
+   assert(mDnsStub!=0);
 }
 
 DnsInterface::~DnsInterface()
 {
    delete mDnsProvider;
+   delete mDnsStub;
 }
 
 void 
@@ -144,7 +145,7 @@ DnsInterface::process(FdSet& fdset)
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this, handler);
+   DnsResult* result = new DnsResult(*this, *mDnsStub, handler);
    mActiveQueryCount++;  
    return result;
 }
@@ -161,6 +162,7 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
 // DnsInterface::lookup(const Via& via, DnsHandler* handler)
 // {
 //    assert(0);
+
 //    //DnsResult* result = new DnsResult(*this);
 //    return NULL;
 // }
@@ -196,6 +198,19 @@ DnsInterface::handle_host(ExternalDnsHostResult res)
 //?dcm? -- why is this here?
 DnsHandler::~DnsHandler()
 {
+}
+
+void 
+DnsInterface::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
+{
+   mDnsProvider->lookup(target.c_str(), type, this, sink);
+}
+
+void 
+DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
 }
 
 //  Copyright (c) 2003, Jason Fischl 

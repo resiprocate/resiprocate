@@ -12,12 +12,15 @@
 namespace resip
 {
 class DnsHandler;
+class DnsResultSink;
 class DnsResult;
 class TransactionState;
 class Uri;
 class Via;
 class ExternalDns;
-// 
+class DnsRawSink;
+class DnsStub;
+
 class DnsInterface : public ExternalDnsHandler
 {
    public:
@@ -89,6 +92,10 @@ class DnsInterface : public ExternalDnsHandler
       virtual void handle_AAAA(ExternalDnsRawResult res);
       virtual void handle_host(ExternalDnsHostResult res);
 
+      // new version
+      void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
+      virtual void handleDnsRaw(ExternalDnsRawResult);
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
@@ -99,6 +106,8 @@ class DnsInterface : public ExternalDnsHandler
 
       ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
+
+      DnsStub* mDnsStub;
 };
 
 }
