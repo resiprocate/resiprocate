@@ -98,14 +98,14 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             mUserConnected = true;            
             mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
             
-            if (offans.first != None)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
-            }
             if (offans.first == Answer)
             {
                //no late media required, so just send the ACK
                send(makeAck());
+            }
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
             }
          }
          else if (code >= 300)
