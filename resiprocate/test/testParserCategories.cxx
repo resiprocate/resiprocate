@@ -16,6 +16,12 @@ int
 main(int arc, char** argv)
 {
    {
+      Uri foo;
+      // valgrind complains, but the problem moves when closely observed
+      assert(foo.getAor().empty());
+   }
+   
+   {
       // test header hash
       for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)
       {
@@ -709,8 +715,6 @@ main(int arc, char** argv)
       assert(via.param(p_branch).transactionId() == "jason");
    }
    
-
-
    cerr << "\nTEST OK" << endl;
 }
 
