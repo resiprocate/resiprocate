@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.7 2003/10/01 19:47:16 jason Exp $
+# $Id: Makefile.tools,v 1.8 2003/10/03 02:35:17 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -54,16 +54,8 @@ DFLAG_INTEGRATED = -MMD
 REPO_FLAG       = -frepo -fPIC
 DEBUG_FLAG	= -g -O2
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
-ifneq  ($(OSTYPE),Darwin)
-DEBUG_FLAG	= -ggdb -O2
-LD_STATIC       = -Wl,-Bstatic
-LD_DYNAMIC      = -Wl,-Bdynamic
-else
-endif
+OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops -fomit-frame-pointer -march=pentium4 
 MAKE_SEPARATE_DEPENDENCY = 1
-ifeq ($(OSTYPE),Linux)
-#    LDLIBS_LAST    += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-endif
 
 endif
 
@@ -72,6 +64,7 @@ endif
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),intel)
 AR              = ar
 ARFLAGS         = rv
+MKSHLIB		= $(CC) -shared 
 CC              = /opt/intel/compiler70/ia32/bin/icc
 CXX             = /opt/intel/compiler70/ia32/bin/icc
 DEP             = /opt/intel/compiler70/ia32/bin/icc -E
@@ -83,47 +76,15 @@ LNDIR           = $(shell pwd)/$(ROOT)/build/lndir.sh
 
 CFLAGS          += -w1
 CXXFLAGS        += -w1
+OPTFLAGS 	+= -O3 -xW -tpp7 -ipo -ipo_obj
 
 DEBUG_FLAG      = -g
-LDLIBS_LAST    += -Wl, -Wl,-Bdynamic
+#LDLIBS_LAST    += -Wl, -Wl,-Bdynamic
 RANLIB		= ranlib
 
 COMPILE_SMALL_FLAG = -Os -fno-inline
 
 endif
-
-####################################### GNU 3.0 toolChain ############################
-
-ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu3)
-CC		= gcc3 
-CXX		= g++3 
-MKSHLIB		= $(CC) -fPIC -shared 
-DEP		= $(CXX) 
-LINKER		= $(CXX)
-AR		= ar
-ARFLAGS		= rv
-DFLAGS		= -MM
-DMANGLE		=
-INSTALL		= install
-LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
-CFLAGS		+= -Wall -fPIC
-CXXFLAGS	+= -Wall -fPIC
-DFLAG_INTEGRATED = -MMD
-HAS_REPO        = true
-DEBUG_FLAG	= -g
-REPO_FLAG       = -frepo -fPIC
-COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
-LD_STATIC       = -Wl,-Bstatic
-LD_DYNAMIC      = -Wl,-Bdynamic
-MAKE_SEPARATE_DEPENDENCY = 1
-RANLIB		= ranlib
-
-ifeq ($(OSTYPE),Linux)
-    LDLIBS_LAST    += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-endif
-
-endif
-
 
 ####################################### GNU ARM cross-compiler for ipaq linux and sharp zaurus ############################
 
