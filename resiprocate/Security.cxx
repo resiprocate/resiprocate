@@ -126,7 +126,7 @@ Security::Security(const Data& directory) : mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
-   if (mPath[mPath.size()-1] != char(Symbols::SLASH))
+   if ( mPath[mPath.size()-1] != Symbols::SLASH[0] )
    {
       mPath += Symbols::SLASH;
    }
@@ -967,9 +967,12 @@ BaseSecurity::BaseSecurity () :
    mRootCerts = X509_STORE_new();
    assert(mRootCerts);
 
-   static char* cipher="RSA+SHA+AES+3DES";
+   // static char* cipher="RSA+SHA+AES+3DES";
    // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
-
+   //static char* cipher="ALL";
+   //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
+   static char* cipher="TLSv1";
+     
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
