@@ -1155,7 +1155,7 @@ TransactionState::processServerStale(  Message* msg )
 void
 TransactionState::processNoDnsResults()
 {
-   InfoLog (<< "Ran out of dns entries for " << mMsgToRetransmit->brief());
+   InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
    assert(mDnsResult->available() == DnsResult::Finished);
    sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "No DNS entries left")); // !jf! should be 480? 
    terminateClientTransaction(mId);
