@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.54 2003/01/22 00:55:42 davidb Exp $";
+// "$Id: Data.cxx,v 1.55 2003/01/24 02:48:28 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -339,8 +339,8 @@ Data::Data(bool value)
      mCapacity(0),
      mMine(false)
 {
-   static char* truec = "true";
-   static char* falsec = "false";
+   static char truec[] = "true";
+   static char falsec[] = "false";
 
    if (value)
    {

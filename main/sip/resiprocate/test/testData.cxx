@@ -133,7 +133,7 @@ class TestData
          }
 
          {
-            char* blah = "12345";
+            char blah[] = "12345";
             Data d(blah, 3);
             assert(strlen(d.c_str()) == 3);
          }
@@ -324,7 +324,14 @@ class TestData
             s += "\r\n";
             assert (s == "c=foo\r\nbar\r\n");
          }
-
+         
+         {
+            Data s;
+            s += 'c';
+            assert(s == "c");
+            assert(s.size() == 1);
+         }
+         
          {
             Data s;
             s = "c=";
@@ -376,8 +383,8 @@ class TestData
             assert(d.empty());
          }
          {
-            char* s = "userB@whistler.gloo.net:6062\r\nCo\031";
-            char* o = "S";
+            char s[] = "userB@whistler.gloo.net:6062\r\nCo\031";
+            char o[] = "S";
             Data d(s, strlen(s), false);
             Data c(o, strlen(o), false);
             
