@@ -107,6 +107,8 @@ class Helper
       static void processStrictRoute(SipMessage& request);
 
       static int getSentPort(SipMessage& request);
+
+      static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 };
  
 }
