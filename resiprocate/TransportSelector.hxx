@@ -8,13 +8,14 @@
 namespace Vocal2
 {
 
-class Message;
+class SipMessage;
 class UdpTransport;
-  
+class SipStack;
+
 class TransportSelector
 {
    public:
-      TransportSelector(int portNum);
+      TransportSelector(SipStack& stack);
       void process();
 
       void send( SipMessage* msg );
@@ -27,8 +28,8 @@ class TransportSelector
 
       // this eventually will have to allow for construction and management
       // of n of these guys
+      SipStack& mStack;
       UdpTransport* mUdp;
-      int mPortNum;
 };
 
 }

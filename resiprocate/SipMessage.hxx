@@ -141,6 +141,8 @@ class SipMessage : public Message
       void setFixedDest(const Data& dest);
       void clearFixedDest();
 
+      virtual ostream& dump(ostream& strm) const;
+
 
    private:
       void copyFrom(const SipMessage& message);
