@@ -18,7 +18,7 @@ class DataParameter : public Parameter
 
       DataParameter(ParameterTypes::Type, ParseBuffer& pb, 
 		    const char* terminators);
-      DataParameter(ParameterTypes::Type);
+      explicit DataParameter(ParameterTypes::Type);
 
       Data& value();            // does not return a quoted string
       bool isQuoted() const { return mQuoted; }
