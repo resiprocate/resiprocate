@@ -288,7 +288,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
 #elif defined( __MACH__ ) || defined (__FreeBSD__)
    result = gethostbyname( host.c_str() );
    herrno = h_errno;
-#elif defined(__QNX__) || defined(__SUNPRO_CC)
+#elif defined(__QNX__) || defined(__sun)
    struct hostent hostbuf; 
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
