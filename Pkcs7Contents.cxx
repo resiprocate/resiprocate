@@ -106,6 +106,8 @@ std::ostream&
 Pkcs7Contents::encodeParsed(std::ostream& str) const
 {
    //DebugLog(<< "Pkcs7Contents::encodeParsed " << mText);
+   encodeHeaders(str);
+
    str << mText;
    return str;
 }
