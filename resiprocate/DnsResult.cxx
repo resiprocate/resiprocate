@@ -232,7 +232,7 @@ void
 DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received A result for: " << thisp->mHandler << " for " << thisp->mTarget);
+   DebugLog (<< "Received A result for: " << thisp->mTarget);
    thisp->processHost(status, result);
 }
 
@@ -240,7 +240,7 @@ void
 DnsResult::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received NAPTR result for: " << thisp->mHandler << " for " << thisp->mTarget);
+   DebugLog (<< "Received NAPTR result for: " << thisp->mTarget);
    thisp->processNAPTR(status, abuf, alen);
 }
 
@@ -249,7 +249,7 @@ void
 DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received SRV result for: " << thisp->mHandler << " for " << thisp->mTarget);
+   DebugLog (<< "Received SRV result for: " << thisp->mTarget);
    thisp->processSRV(status, abuf, alen);
 }
 
@@ -257,7 +257,7 @@ void
 DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received AAAA result for: " << thisp->mHandler << " for " << thisp->mTarget);
+   DebugLog (<< "Received AAAA result for: " << thisp->mTarget);
    thisp->processAAAA(status, abuf, alen);
 }
 
@@ -562,12 +562,13 @@ DnsResult::processHost(int status, struct hostent* result)
    else
    {
       char* errmem=0;
-      DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      DebugLog (<< "Failed async A query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
    }
 
    if (mSRVCount == 0)
    {
+      bool changed = (mType == Pending);
       if (mResults.empty())
       {
          mType = Finished;
@@ -576,18 +577,13 @@ DnsResult::processHost(int status, struct hostent* result)
       {
          mType = Available;
       }
-      mHandler->handle(this);
+      if (changed) mHandler->handle(this);
    }
 }
 
 void
 DnsResult::primeResults()
 {
-   DebugLog (<< "primeResults() " << mType);
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-   DebugLog (<< "SRV: " << Inserter(mSRVResults));
-#endif
-
    //assert(mType != Pending);
    //assert(mType != Finished);
    assert(mResults.empty());
@@ -596,12 +592,11 @@ DnsResult::primeResults()
    {
       SRV next = retrieveSRV();
       DebugLog (<< "Primed with SRV=" << next);
-      
       if ( mARecords.count(next.target) 
 #ifdef USE_IPV6 
-			+ mAAAARecords.count(next.target)
+           + mAAAARecords.count(next.target)
 #endif
-			)
+         )
       {
 #ifdef USE_IPV6 
          std::list<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
@@ -622,8 +617,10 @@ DnsResult::primeResults()
          DebugLog (<< "Try: " << Inserter(mResults));
 #endif
 
+
+         bool changed = (mType == Pending);
          mType = Available;
-         mHandler->handle(this);
+         if (changed) mHandler->handle(this);
       }
       else
       {
@@ -635,7 +632,7 @@ DnsResult::primeResults()
          mType = Pending;
          mPort = next.port;
          mTransport = next.transport;
-         
+         DebugLog (<< "No A or AAAA record for " << next.target);
          lookupAAAARecords(next.target);
       }
 
@@ -649,7 +646,9 @@ DnsResult::primeResults()
    }
    else
    {
+      bool changed = (mType == Pending);
       mType = Finished;
+      if (changed) mHandler->handle(this);
    }
 
    // Either we are finished or there are results primed
@@ -678,9 +677,6 @@ DnsResult::retrieveSRV()
    int selected = Random::getRandom() % (mCumulativeWeight+1);
 
    DebugLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-   DebugLog (<< "SRV: " << Inserter(mSRVResults));
-#endif
 
    std::vector<SRV>::iterator i;
    for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
@@ -694,6 +690,10 @@ DnsResult::retrieveSRV()
    assert(i != mSRVResults.end());
    SRV next = *i;
    mSRVResults.erase(i);
+
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+   DebugLog (<< "SRV: " << Inserter(mSRVResults));
+#endif
 
    return next;
 }
