@@ -1,7 +1,7 @@
 #if !defined(Vocal2_Data_hxx)
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.56 2003/01/31 23:41:29 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.57 2003/02/07 02:49:17 jason Exp $";
 
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
@@ -115,9 +115,8 @@ class Data
       static const int npos;
 
    private:
-      friend class ::TestData;
-      friend class MD5Buffer;
-      friend class Contents;
+      char* initializeHack();
+      
       Data(const char* buffer, int length, bool);
       void resize(size_type newSize, bool copy);
       size_type mSize;
@@ -130,6 +129,9 @@ class Data
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
+      friend class ::TestData;
+      friend class MD5Buffer;
+      friend class Contents;
 };
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
