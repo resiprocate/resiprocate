@@ -80,7 +80,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
 {
    assert(request.isRequest());
    assert(request.isExternal());
-   mDum.mMergedRequests[mMergeKey] = this;
+   mDum.mMergedRequests.insert(mMergeKey);
    DebugLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
 }
 
