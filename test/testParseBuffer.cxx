@@ -13,10 +13,10 @@ main(int arc, char** argv)
       assert(!pb.eof());
       assert(pb.position() == buf);
 
-      pb.skipWhiteSpace();
+      pb.skipWhitespace();
       assert(pb.position() == buf);
 
-      pb.skipNonWhiteSpace();
+      pb.skipNonWhitespace();
       assert(*pb.position() == ' ');
    }
    
@@ -24,14 +24,14 @@ main(int arc, char** argv)
       char *buf = "    \t buffer with some stuff.";
       Vocal2::ParseBuffer pb(buf, strlen(buf));   
 
-      pb.skipWhiteSpace();
+      pb.skipWhitespace();
       assert(*pb.position() == 'b');
       
       pb.skipToChar('s');
       assert(*pb.position() == 's');
-      pb.skipNonWhiteSpace();
-      pb.skipWhiteSpace();
-      pb.skipNonWhiteSpace();
+      pb.skipNonWhitespace();
+      pb.skipWhitespace();
+      pb.skipNonWhitespace();
       assert(pb.eof());
    }
 
@@ -41,6 +41,17 @@ main(int arc, char** argv)
 
       pb.skipToOneOf(".|;");
       assert(*pb.position() == ';');
+   }
+   {
+      char *buf = "\"  \\\"Q \t buffer with some stuff.\"Z";
+      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      pb.skipWhitespace();
+      pb.skipToChar('"');
+      pb.skipChar();
+      pb.skipToEndQuote();
+      assert(*pb.position() == '"');
+      pb.skipChar();
+      assert(*pb.position() == 'Z');
    }
 }
 

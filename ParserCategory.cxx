@@ -66,6 +66,12 @@ ParserCategory::parseParameters(ParseBuffer& pb)
    }
 }
 
+void 
+ParserCategory::encodeParameters(std::ostream& str) const
+{
+   mHeaderField->encodeParameters(str);
+}   
+
 std::ostream&
 Vocal2::operator<<(std::ostream& stream, const ParserCategory& category)
 {
