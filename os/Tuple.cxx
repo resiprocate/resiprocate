@@ -137,23 +137,6 @@ Tuple::Tuple(const struct sockaddr& addr, TransportType ptype) :
 {
 }
 
-void
-Tuple::setAny()
-{
-   if (mSockaddr.sa_family == AF_INET) // v4   
-   {
-      m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY); 
-   }
-   else
-   {
-#ifdef USE_IPV6
-      m_anonv6.sin6_addr = in6addr_any;
-#else
-	  assert(0);
-#endif
-   }
-}
-
    
 void
 Tuple::setPort(int port)
