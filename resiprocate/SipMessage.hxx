@@ -37,6 +37,7 @@ class SipMessage : public Message
 
       virtual const Data& getTransactionId() const;
       void copyRFC2543TransactionId(const SipMessage& request);
+      const Data& updateRFC2543TransactionId();
       
       virtual ~SipMessage();
 
