@@ -19,8 +19,8 @@ class Helper
 
       static SipMessage makeInvite(const NameAddr& target,
                                    const NameAddr& from,
-                                   const NameAddr& contact, 
-                                   bool fromProxy = false);
+                                   const NameAddr& contact);
+
 
       static SipMessage makeForwardedInvite(const SipMessage& invite);
 
@@ -39,8 +39,7 @@ class Helper
       static SipMessage makeRequest(const NameAddr& target, 
                                     const NameAddr& from,
                                     const NameAddr& contact,
-                                    MethodTypes method, 
-                                    bool fromProxy = false);
+                                    MethodTypes method);
            
 
       //creates to, from with tag, cseq method set, cseq sequence is 1
@@ -50,8 +49,8 @@ class Helper
       //should default proto-version, anything else defaulted/passed in?
       static Via makeVia(NameAddr& source);
       
-      static SipMessage makeAck(const SipMessage& request, const SipMessage& response);
-
+      static SipMessage* makeFailureAck(const SipMessage& request, const SipMessage& response);
+      
       static Data computeUniqueBranch();
       static Data computeProxyBranch(const SipMessage& request);
 
