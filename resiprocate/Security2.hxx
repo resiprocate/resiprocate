@@ -56,8 +56,8 @@ class BaseSecurity
       virtual void preload();
       // name refers to the domainname or username which could be converted to a
       // filename by convention
-      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer)=0;
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const =0;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const =0;
 
       struct CertificateInfo
       {
@@ -133,16 +133,27 @@ class BaseSecurity
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);
-      
+
       // root cert list
       X509_STORE*    mRootCerts;
 
-      X509Map        mDomainCerts;
-      PrivateKeyMap  mDomainPrivateKeys;
+      mutable X509Map        mDomainCerts;
+      mutable PrivateKeyMap  mDomainPrivateKeys;
 
-      X509Map        mUserCerts;
-      PassPhraseMap  mUserPassPhrases;
-      PrivateKeyMap  mUserPrivateKeys;
+      mutable X509Map        mUserCerts;
+      mutable PassPhraseMap  mUserPassPhrases;
+      mutable PrivateKeyMap  mUserPrivateKeys;
+
+      void addCertPEM (PEMType type, const Data& key, const Data& certPEM, bool write);
+      void addCertDER (PEMType type, const Data& key, const Data& certDER, bool write);
+      bool hasCert (PEMType type, const Data& key, bool read) const;
+      bool removeCert (PEMType type, const Data& key);
+      Data getCertDER (PEMType type, const Data& key, bool read) const;
+
+      void addPrivateKeyPEM (PEMType type, const Data& key, const Data& privateKeyPEM, bool write);
+      bool hasPrivateKey (PEMType type, const Data& key, bool read) const;
+      bool removePrivateKey (PEMType type, const Data& key);
+      Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
 
       //===========================
       friend class SecuredTransportCtx;
@@ -157,8 +168,8 @@ class Security : public BaseSecurity
       Security( const Data& pathToCerts );
 
       virtual void preload(const Data& directory);
-      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer)=0;
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const=0;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const=0;
 };
 
 }
