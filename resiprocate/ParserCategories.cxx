@@ -188,6 +188,12 @@ Mime::operator==(const Mime& rhs) const
            isEqualNoCase(subType(), rhs.subType()));
 }
 
+bool
+Mime::operator!=(const Mime& rhs) const
+{
+   return !(*this == rhs);
+}
+
 Data& 
 Mime::type() const 
 {
