@@ -5,6 +5,8 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SipIMPSetup", "SipIMPSetup\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "resiprocate\resiprocate.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		ConfigName.0 = Debug
@@ -38,6 +40,14 @@ Global
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.SSL-Debug.Build.0 = SSL-Debug|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.SSL-Release.ActiveCfg = SSL-Release|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.SSL-Release.Build.0 = SSL-Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release.Build.0 = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Debug.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Debug.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
