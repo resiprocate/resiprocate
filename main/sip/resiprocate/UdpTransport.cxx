@@ -18,8 +18,6 @@
 using namespace std;
 using namespace resip;
 
-const int UdpTransport::MaxBufferSize = 8192;
-
 UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,  
                            IpVersion version,

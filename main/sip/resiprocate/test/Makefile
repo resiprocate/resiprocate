@@ -1,10 +1,21 @@
 # $Id: Makefile,v 1.70 2004/05/12 01:14:30 jason Exp $
 
 BUILD = ../../build
+CONTRIB = ../../contrib
+
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
-LDLIBS += -lncurses 
+
+ifeq ($(USE_DTLS),true)
+DTLS_DIR = $(CONTRIB)/dtls
+DTLS_LIBS = $(DTLS_DIR)/libssl.a $(DTLS_DIR)/libcrypto.a
+endif
+
+LDLIBS += -lncurses $(DTLS_LIBS)
+
+CXXFLAGS += -I/sw/include
+LDFLAGS  += -Ldtls -L/sw/lib
 
 # this is so that popt only works where there is popt
 # To enable popt, add USE_POPT=true to sip/build/Makefile.conf

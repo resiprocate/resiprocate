@@ -9,7 +9,11 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
-CXXFLAGS += -I/sw/include
+ifeq ($(USE_DTLS),true)
+DTLS_INCLUDES = -I../contrib/dtls/include
+endif
+
+CXXFLAGS += -I/sw/include $(DTLS_INCLUDES)
 LDFLAGS  += -L/sw/lib
 
 SRC = \
@@ -79,6 +83,7 @@ SRC = \
 	Dialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
+	DtlsTransport.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
 	FloatParameter.cxx \
