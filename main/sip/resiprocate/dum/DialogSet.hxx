@@ -17,7 +17,7 @@ class DialogSet
 {
    public:
       DialogSet( const BaseCreator* );
-      DialogSet( Dialog* );
+      DialogSet( const SipMessage& request );
       virtual ~DialogSet();
       
       DialogSetId getId();
@@ -32,6 +32,9 @@ class DialogSet
       Dialog* findDialog( SipMessage& msg );
       
       BaseCreator* getCreator();
+
+      void cancel(const SipMessage& cancelMsg);
+      void dispatch(const SipMessage& msg);
       
       static const DialogSet Empty;
 
