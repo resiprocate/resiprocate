@@ -14,6 +14,7 @@ namespace Vocal2
 
 class Message;
 class Preparse;
+class TlsConnection;
 
 class Connection
 {
@@ -39,6 +40,8 @@ class Connection
       std::list<SendData*> mOutstandingSends;
       SendData* mCurrent;
 
+      TlsConnection* mTlsConnection;
+      
       enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
    private:
             
@@ -65,7 +68,7 @@ class Connection
             
       State mState;
       Preparse mPreparse;
-
+      
       friend class ConnectionMap;
 };
 

@@ -28,6 +28,7 @@ using namespace Vocal2;
 const size_t TcpTransport::MaxWriteSize = 4096;
 const size_t TcpTransport::MaxReadSize = 4096;
 
+
 TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
@@ -51,7 +52,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 #endif
 
-   makeSocketNonBlocking(mFd);
+   //makeSocketNonBlocking(mFd);
 
    sockaddr_in addr;
    addr.sin_family = AF_INET;
@@ -63,22 +64,22 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
       int err = errno;
       if ( err == EADDRINUSE )
       {
-         InfoLog (<< "Address already in use");
+         ErrLog (<< "Address already in use");
       }
       else
       {
-         InfoLog (<< "Could not bind to port: " << portNum);
+         ErrLog (<< "Could not bind to port: " << portNum);
       }
       
       throw Exception("Address already in use", __FILE__,__LINE__);
    }
 
+   makeSocketNonBlocking(mFd);
+
    // do the listen, seting the maximum queue size for compeletly established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
    int e = listen(mFd,64 );
-
-   makeSocketNonBlocking(mFd);
 
    if (e != 0 )
    {
@@ -88,11 +89,13 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 }
 
+
 TcpTransport::~TcpTransport()
 {
-//   ::shutdown(mFd, SHUT_RDWR);
+   //   ::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
 }
+
 
 void 
 TcpTransport::buildFdSet( FdSet& fdset)
@@ -106,6 +109,7 @@ TcpTransport::buildFdSet( FdSet& fdset)
    fdset.setRead(mFd);
       
 }
+
 
 void 
 TcpTransport::processListen(FdSet& fdset)
@@ -133,6 +137,7 @@ TcpTransport::processListen(FdSet& fdset)
       mConnectionMap.add(who, sock);
    }
 }
+
 
 bool
 TcpTransport::processRead(Connection* c)
@@ -164,6 +169,7 @@ TcpTransport::processRead(Connection* c)
    }
 }
 
+
 void
 TcpTransport::processAllReads(FdSet& fdset)
 {
@@ -189,6 +195,7 @@ TcpTransport::processAllReads(FdSet& fdset)
    }
 }
 
+
 void
 TcpTransport::processAllWrites( FdSet& fdset )
 {
@@ -196,7 +203,48 @@ TcpTransport::processAllWrites( FdSet& fdset )
    {
       SendData* data = mTxFifo.getNext();
       Connection* conn = mConnectionMap.get(data->destination);
-      
+        
+      if (conn == 0)
+      { 
+         // attempt to open
+         Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
+
+         if ( sock == -1 ) // no socket found - try to free one up and try again
+         {
+            // !dlb! does the file descriptor become available immediately?
+            mConnectionMap.gc(ConnectionMap::MinLastUsed); // free one up 
+            sock = socket( AF_INET, SOCK_STREAM, 0 ); // try again 
+         }
+         
+         if ( sock == -1 )
+         { 
+            DebugLog( << "Error in TCP finding free socket to use" );
+         } 
+         else
+         {
+            struct sockaddr_in servaddr;
+            memset( &servaddr, sizeof(servaddr), 0 );
+            servaddr.sin_family = AF_INET;
+            servaddr.sin_port = htons( data->destination.port);
+            servaddr.sin_addr =  data->destination.ipv4;
+            
+            int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
+            if ( e == -1 ) 
+            {
+               int err = errno;
+               DebugLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+            }
+            else
+            {
+               // succeeded, add the connection
+               makeSocketNonBlocking(sock);
+               mConnectionMap.add( data->destination, sock);
+               conn = mConnectionMap.get(data->destination);
+               assert( conn );
+            }
+         }
+      }
+        
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
@@ -204,16 +252,20 @@ TcpTransport::processAllWrites( FdSet& fdset )
          delete data;
          return;
       }
+
       if (conn->mOutstandingSends.empty())
       {
          DebugLog (<< "Adding " << *conn << " to send roundrobin");
          mSendRoundRobin.push_back(conn);
          conn->mSendPos = 0;
       }
+
       conn->mOutstandingSends.push_back(data);
    }
+
    sendFromRoundRobin(fdset);
 }         
+
 
 void
 TcpTransport::sendFromRoundRobin(FdSet& fdset)
@@ -259,13 +311,18 @@ TcpTransport::sendFromRoundRobin(FdSet& fdset)
    }
 }
 
+
 bool
 TcpTransport::processWrite(Connection* c)
 {
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
    
-   size_t bytesToWrite = min(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
+   size_t bytesToWrite = data->data.size() - c->mSendPos;
+   if ( bytesToWrite > TcpTransport::MaxWriteSize)
+   { 
+      bytesToWrite = TcpTransport::MaxWriteSize;
+   }
    int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos, bytesToWrite);
    int err = errno;
    if (bytesWritten <= 0)
@@ -293,10 +350,14 @@ TcpTransport::processWrite(Connection* c)
    return true;
 }
 
+
 void 
 TcpTransport::process(FdSet& fdSet)
 {
-   if (mTxFifo.messageAvailable()) DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
+   if (mTxFifo.messageAvailable()) 
+   {
+      DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
+   }
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);

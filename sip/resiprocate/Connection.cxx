@@ -1,20 +1,22 @@
 
-#include <algorithm>
-
 #include "sip2/util/Socket.hxx"
-
+#include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/Connection.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/util/Logger.hxx"
-
+#include "sip2/sipstack/Security.hxx"
 
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
+char* 
+Connection::connectionStates[Connection::MAX] = { "NewMessage", "ReadingHeaders", "PartialBody" };
+
+
 Connection::Connection()
    : mYounger(0),
      mOlder(0),
+     mTlsConnection(0),
      mSocket(0),
      mLastUsed(0),
      mState(NewMessage)
@@ -26,6 +28,7 @@ Connection::Connection(const Transport::Tuple& who,
    : mYounger(0),
      mOlder(0),
      mWho(who),
+     mTlsConnection(0),
      mSocket(socket),
      mLastUsed(Timer::getTimeMs()),
      mState(NewMessage)
@@ -36,6 +39,12 @@ Connection::~Connection()
    remove();
 
    //shutdown(mSocket, SD_BOTH );
+
+   if ( mTlsConnection )
+   {
+      delete mTlsConnection; mTlsConnection=0;
+   }
+   
    closesocket(mSocket);
 }
 
@@ -70,9 +79,6 @@ Connection::getWriteBuffer()
    }
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
-
-char* 
-Connection::connectionStates[Connection::MAX] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
 bool
 Connection::process(size_t bytesRead, Fifo<Message>& fifo)
@@ -114,13 +120,13 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          {
             mMessage->addBuffer(mBuffer);
             int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
-			size_t size = overHang*3/2;
-			   if ( size < Connection::ChunkSize )
-			   {
-				   size = Connection::ChunkSize;
-			   }
+            size_t size = overHang*3/2;
+            if ( size < Connection::ChunkSize )
+            {
+               size = Connection::ChunkSize;
+            }
             char* newBuffer = new char[size];
-         
+            
             memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
             mBuffer = newBuffer;
             mBufferPos = overHang;
@@ -142,10 +148,10 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
                size_t size = overHang*3/2;
-			   if ( size < Connection::ChunkSize )
-			   {
-				   size = Connection::ChunkSize;
-			   }
+               if ( size < Connection::ChunkSize )
+               {
+                  size = Connection::ChunkSize;
+               }
                char* newBuffer = new char[size];
                memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
                mBuffer = newBuffer;
