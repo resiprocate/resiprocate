@@ -4,8 +4,21 @@
 #include <stdio.h>
 #include <util/RandomHex.hxx>
 
-#if !defined(WIN32) && !defined(__QNX__)
-#include <openssl/rand.h>
+
+#ifndef USE_OPENSSL
+#  if defined(WIN32) || defined(__QNX__) || ( __linux__ ) // archs where it defaults to off 
+#    define USE_OPENSSL 0
+#  endif
+#  if defined( __sun__ ) // arch where it defaults to on 
+#    define USE_OPENSSL 1
+#  endif
+#  ifndef USE_OPENSSL // default value for unkown archs
+#    define USE_OPENSSL 0
+#  endif
+#endif
+
+#if ( USE_OPENSSL == 1 )
+#  include <openssl/rand.h>
 #endif
 
 using namespace Vocal2;
@@ -13,7 +26,7 @@ using namespace Vocal2;
 void
 RandomHex::initialize()
 {
-#if defined(WIN32) || defined(__QNX__)
+#if ( USE_OPENSSL == 0 )
    // TODO FIX 
    unsigned int seed = 1;
    srandom(seed);
@@ -25,10 +38,12 @@ RandomHex::initialize()
 Data
 RandomHex::get(unsigned int len)
 {
-#if defined(WIN32) || defined(__QNX__)
+#if ( USE_OPENSSL == 0 )
    assert( len <= 16 );
    unsigned char buffer[16];
    int ret = random();
+   assert( sizeof(buffer) >= sizeof(ret) );
+   memcpy(buffer,&ret,sizeof(ret) );
    return convertToHex(buffer, len);
 #else
    unsigned char buffer[len];
@@ -45,6 +60,8 @@ RandomHex::get(unsigned int len)
 Data 
 RandomHex::convertToHex(const unsigned char* src, int len)
 {
+	// !cj! this is really a poor way to build - don't use sprintf, don't reallooc the data buffer size 
+
     Data data;
 
     unsigned char temp;
