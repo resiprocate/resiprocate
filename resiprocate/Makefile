@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.97 2002/12/18 00:26:13 jason Exp $
+# $Id: Makefile,v 1.98 2002/12/21 00:36:36 alan Exp $
 
 BUILD = ../../build
 
@@ -20,10 +20,8 @@ TESTPROGRAMS =
 parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories
 
-ifeq ($(ARCH),i686)
-CXXFLAGS += -mcpu=i686 -march=i686
-endif
-#CXXFLAGS += -DPP_DO_INLINES
+-include ../Makefile.opt
+
 SRC = \
 	MultipartMixedContents.cxx \
 	LazyParser.cxx \
