@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.48 2002/12/17 18:05:02 jason Exp $";
+// "$Id: Data.cxx,v 1.49 2003/01/03 07:31:08 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -348,7 +348,7 @@ Data::operator==(const char* rhs) const
 bool
 Data::operator<(const Data& rhs) const
 {
-   int res = strncmp(mBuf, rhs.mBuf, min(mSize, rhs.mSize));
+	int res = strncmp(mBuf, rhs.mBuf, vocal2Min(mSize, rhs.mSize));
 
    if (res < 0)
    {
@@ -368,7 +368,7 @@ bool
 Data::operator<(const char* rhs) const
 {
    size_type l = strlen(rhs);
-   int res = strncmp(mBuf, rhs, min(mSize, l));
+   int res = strncmp(mBuf, rhs, vocal2Min(mSize, l));
 
    if (res < 0)
    {
@@ -482,7 +482,7 @@ Data::operator^=(const Data& rhs)
    {
       *c1++ ^= *c2++;
    }
-   mSize = max(mSize, rhs.mSize);
+   mSize = vocal2Max(mSize, rhs.mSize);
    
    return *this;
 }
@@ -865,7 +865,7 @@ bool
 Vocal2::operator<(const char* s, const Data& d)
 {
    Data::size_type l = strlen(s);
-   int res = strncmp(s, d.data(), min(d.size(), l));
+   int res = strncmp(s, d.data(), vocal2Min(d.size(), l));
 
    if (res < 0)
    {
