@@ -1,41 +1,44 @@
-#if !defined(RESIP_TU_HXX)
-#define RESIP_TU_HXX 
+#ifndef RESIP_TransactionUserMessage_hxx
+#define RESIP_TransactionUserMessage_hxx 
 
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 
 namespace resip
 {
-class SipMessage;
 
-class TransactionUser
+class TransactionUserMessage : public TransactionMessage
 {
    public:
-      void post(Message *);
+      typedef enum 
+      {
+         RequestShutdown,
+         RemoveTransactionUser,
+         TransactionUserRemoved
+      } Type;
 
-   protected:
-      TransactionUser();
-      virtual ~TransactionUser()=0;
-      virtual bool isForMe(const SipMessage& msg) const=0;
+      TransactionUserMessage(Type type, TransactionUser* tu);
+      Type type() const { return mType; }
+      const TransactionUser* getTransactionUser() const { return mTU; }
+
+      virtual const Data& getTransactionId() const;
+      virtual bool isClientTransaction() const; 
       
-      TimeLimitFifo<Message> mFifo;
+      virtual Data brief() const;
+      virtual Message* clone() const { return new TransactionUserMessage(mType, mTU); }
+      virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
-      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
-      unsigned int size() const;
-      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
-
-      friend class TuSelector;      
+      Type mType;
+      TransactionUser* mTU;
 };
-
+ 
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
