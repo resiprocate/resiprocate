@@ -59,7 +59,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler)
 
 DnsResult::~DnsResult()
 {
-   DebugLog (<< "DnsResult::~DnsResult() " << *this);
+   //DebugLog (<< "DnsResult::~DnsResult() " << *this);
    assert(mType != Pending);
 }
 
@@ -67,7 +67,7 @@ void
 DnsResult::destroy()
 {
    assert(this);
-   DebugLog (<< "DnsResult::destroy() " << *this);
+   //DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)
    {
