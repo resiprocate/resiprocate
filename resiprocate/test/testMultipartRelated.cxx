@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/MultipartRelatedContents.hxx"
 #include "resiprocate/GenericContents.hxx"
 #include "resiprocate/Rlmi.hxx"
 #include "resiprocate/Pidf.hxx"
