@@ -252,9 +252,7 @@ Security::loadMyPublicCert( const Data&  filePath )
    if ( !fp )
    {
       ErrLog(<< "Could not read my public cert from " << filePath );
-      Data err( "Could not read my public cert from " );
-      err += filePath;
-      throw Exception(err, __FILE__,__LINE__);
+      throw Exception("Could not read public certificate", __FILE__,__LINE__);
       return false;
    }
    
@@ -280,16 +278,13 @@ Security::loadMyPublicCert( const Data&  filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
-      Data err( "Error reading contents of my public cert file " );
-      err += filePath;
-         DebugLog( << "bad" );
-      throw Exception(err, __FILE__,__LINE__);
+      ErrLog (<< "Error reading contents of my public cert file " << filePath );
+      throw Exception("Error reading contents of public cert file", __FILE__,__LINE__);
       
       return false;
    }
    
    InfoLog( << "Loaded my public cert from " << filePath );
-   
    return true;
 }
 
@@ -328,9 +323,7 @@ Security::loadRootCerts(  const Data& filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
-      Data err( "Error reading contents of root cert file  " );
-      err += filePath;
-      throw Exception(err, __FILE__,__LINE__);
+      throw Exception("Error reading contents of root certificate file", __FILE__,__LINE__);
       return false;
    }
    
@@ -352,9 +345,8 @@ Security::loadPublicCert(  const Data& filePath )
    hSearch = FindFirstFile( searchPath.c_str(), &FileData); 
    if (hSearch == INVALID_HANDLE_VALUE) 
    { 
-      Data err( "Error reading public cert directory " );
-      err += filePath;
-      throw Exception(err, __FILE__,__LINE__);
+      ErrLog (<< "Error reading public certificate directory: " << filePath);
+      throw Exception("Error reading public cert directory", __FILE__,__LINE__);
       return false;
    } 
 
@@ -372,9 +364,7 @@ Security::loadPublicCert(  const Data& filePath )
          if ( !fp )
          {
             ErrLog( << "Could not read public key from " << path );
-            Data err( "Could not read other persons public key from " );
-            err += path;
-            throw Exception(err, __FILE__,__LINE__);
+            throw Exception("Could not read other person's public key", __FILE__,__LINE__);
          }
          else
          {
@@ -399,11 +389,7 @@ Security::loadPublicCert(  const Data& filePath )
                   ErrLog( << buf  );
                   DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
                }
-      
-
-               Data err( "Error reading contents of other persons public key file " );
-               err += path;
-               throw Exception(err, __FILE__,__LINE__);
+               throw Exception("Error reading contents of other persons public key file ", __FILE__,__LINE__);
             }
             else
             {
@@ -421,9 +407,7 @@ Security::loadPublicCert(  const Data& filePath )
          } 
          else 
          { 
-            Data err( "Bizarre problem reading public certificate direcotyr" );
-            err += filePath;
-            throw Exception(err, __FILE__,__LINE__);
+            throw Exception("Bizarre problem reading public certificate directory", __FILE__,__LINE__);
             return false;
          } 
       }
@@ -524,11 +508,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    if ( !fp )
    {
       ErrLog( << "Could not read private key from " << filePath );
-
-      Data err( "Could not read private key from " );
-      err += filePath;
-      throw Exception(err, __FILE__,__LINE__);
-	  
+      throw Exception("Could not read private key", __FILE__,__LINE__);
       return false;
    }
    
@@ -554,12 +534,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
          ErrLog( << buf  );
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
-      
-
-      Data err( "Error reading contents of private key file " );
-      err += filePath;
-      throw Exception(err, __FILE__,__LINE__);
-
+      throw Exception("Error reading contents of private key file", __FILE__,__LINE__);
       return false;
    }
    

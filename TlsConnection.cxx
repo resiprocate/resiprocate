@@ -125,12 +125,12 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
                   char buf[256];
                   ERR_error_string_n(code,buf,sizeof(buf));
                   ErrLog( << buf  );
-                  DebugLog( << "Error code = " 
-                            << code << " file=" << file << " line=" << line );
+                  InfoLog( << "Error code = " 
+                           << code << " file=" << file << " line=" << line );
                }
                      
                bio = NULL;
-         DebugLog( << "bad" );
+               ErrLog (<< "Couldn't TLS connect");
                throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
          }
       }
@@ -165,11 +165,8 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
             default:
                ErrLog( << "TLS handshake failed "
                        << "ok=" << ok << " err=" << err << " " << buf );
-               
                bio = NULL;
-               
-         DebugLog( << "bad" );
-               throw Transport::Exception( Data("TLS handshake failed"), __FILE__, __LINE__ );   
+               throw Transport::Exception("TLS handshake failed", __FILE__, __LINE__ );   
          }
       }
    }
