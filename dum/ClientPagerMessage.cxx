@@ -30,6 +30,12 @@ ClientPagerMessage::~ClientPagerMessage()
    mDialogSet.mClientPagerMessage = 0;   
 }
 
+SipMessage& 
+ClientPagerMessage::getMessageRequest()
+{
+   return mRequest;
+}
+
 void 
 ClientPagerMessage::page(std::auto_ptr<Contents> contents)
 {
