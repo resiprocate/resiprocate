@@ -5,18 +5,19 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TransactionController.hxx"
 
 using namespace resip;
 using std::vector;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-StatisticsManager::StatisticsManager(Fifo<Message>& tuFifo,
+StatisticsManager::StatisticsManager(TransactionController& transController,
                                      unsigned long intervalSecs) 
    : StatisticsMessage::Payload(),
+     mTransactionController(transController),
      mInterval(intervalSecs*1000),
-     mNextPoll(Timer::getTimeMs() + mInterval),
-     mTuFifo(tuFifo)
+     mNextPoll(Timer::getTimeMs() + mInterval)
 {}
 
 void 
@@ -29,13 +30,16 @@ void
 StatisticsManager::poll()
 {
    // get snapshot data now..
-   tuFifoSize = mTuFifo.size();
+   tuFifoSize = mTransactionController.getTuFifoSize();
+   transportFifoSizeSum = mTransactionController.sumTransportFifoSizes();
+   transactionFifoSize = mTransactionController.getTransactionFifoSize();
+   activeTimers = mTransactionController.getTimerQueueSize();
 
    static StatisticsMessage::AtomicPayload appStats;
    appStats.loadIn(*this);
 
    // let the app do what it wants with it
-   mTuFifo.add(new StatisticsMessage(appStats));
+   mTransactionController.post(StatisticsMessage(appStats));
 }
 
 void 
