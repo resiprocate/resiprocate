@@ -24,7 +24,12 @@ using namespace std;
 
 void shutdown (SipStack *stack)
 {
-  // XXX Wait for transactions to complete and stuff
+  // Wait for all transactions to complete
+  FdSet fdset; 
+  stack.buildFdSet(fdset);
+  fdset.selectMilliSeconds(seltime); 
+  stack.process(fdset);
+  Message* msg = receiver.receiveAny();
 }
 
 int
