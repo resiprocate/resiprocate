@@ -160,30 +160,37 @@ class ParserContainer : public ParserContainerBase
 
       virtual std::ostream& encode(const Data& headerName, std::ostream& str) const
       {
-         if (!headerName.empty())
+         // !jf! this is not strictly correct since some headers are allowed to
+         // be empty: Supported, Accept-Encoding, Allow-Events, Allow,
+         // Accept,Accept-Language 
+         if (!mParsers.empty())
          {
-            str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
-         }
-         
-         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
-              i != mParsers.end(); i++)
-         {
-            if (i != mParsers.begin())
+            if (!headerName.empty())
             {
-               if (Headers::isCommaEncoding(mType))
+               str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+            }
+         
+            for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+                 i != mParsers.end(); i++)
+            {
+               if (i != mParsers.begin())
                {
-                  str << Symbols::COMMA[0] << Symbols::SPACE[0];
+                  if (Headers::isCommaEncoding(mType))
+                  {
+                     str << Symbols::COMMA[0] << Symbols::SPACE[0];
+                  }
+                  else
+                  {
+                     str << Symbols::CRLF << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+                  }
                }
-               else
-               {
-                  str << Symbols::CRLF << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
-               }
+
+               (*i)->encode(str);
             }
 
-            (*i)->encode(str);
+            str << Symbols::CRLF;
          }
-
-         str << Symbols::CRLF;
+         
          return str;
       }
 
@@ -191,26 +198,30 @@ class ParserContainer : public ParserContainerBase
       {
          assert(!headerName.empty());
 
-         bool first = true;
-         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
-              i != mParsers.end(); i++)
+         if (!mParsers.empty())
          {
-            if (first)
-            {
-               first = false;
-            }
-            else
-            {
-               str << Symbols::AMPERSAND;
-            }
 
-            str << headerName << Symbols::EQUALS;
-            Data buf;
+            bool first = true;
+            for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+                 i != mParsers.end(); i++)
             {
-               DataStream s(buf);
-               (*i)->encode(s);
+               if (first)
+               {
+                  first = false;
+               }
+               else
+               {
+                  str << Symbols::AMPERSAND;
+               }
+
+               str << headerName << Symbols::EQUALS;
+               Data buf;
+               {
+                  DataStream s(buf);
+                  (*i)->encode(s);
+               }
+               str << Embedded::encode(buf);
             }
-            str << Embedded::encode(buf);
          }
          return str;
       }
