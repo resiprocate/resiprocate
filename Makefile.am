@@ -34,6 +34,7 @@ libresiprocate_la_SOURCES = \
 	Connection.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
+	CpimContents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
 	Dialog2.cxx \
@@ -115,6 +116,7 @@ resiprocate_include_HEADERS = \
 	Connection.hxx \
 	ConnectionManager.hxx \
 	Contents.hxx \
+	CpimContents.hxx \
 	DataParameter.hxx \
 	Dialog.hxx \
 	Dialog2.hxx \
