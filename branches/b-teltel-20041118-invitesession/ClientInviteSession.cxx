@@ -161,6 +161,7 @@ ClientInviteSession::end()
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
+      case UAC_Canceled: // !jf! possibly incorrect to always BYE in UAC_Canceled
       {
          transition(Terminated);
          SipMessage bye;
@@ -170,7 +171,6 @@ ClientInviteSession::end()
       }
       
       case UAC_Start:
-      case UAC_Canceled:
          WarningLog (<< "Try to end when in state=" << toData(mState));
          assert(0);
          break;
@@ -559,6 +559,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnGeneralFailure:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         mDum.destroy(this);
          break;
 
       default:
@@ -938,21 +939,44 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 void
 ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
 {
+   assert(0);
 }
 
 void
 ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
 {
+   assert(0);
 }
 
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 {
+   assert(0);
 }
 
 void
 ClientInviteSession::dispatchCanceled (const SipMessage& msg)
 {
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case OnGeneralFailure:
+      case OnCancelFailure:
+      case On487Invite:
+      case OnRedirect:
+         mDum.destroy(this);
+         break;
+         
+      case On2xx:
+      case On2xxOffer:
+      case On2xxAnswer:
+         end();
+         break;
+
+      default:
+         break;
+   }
 }
 
 /* ====================================================================

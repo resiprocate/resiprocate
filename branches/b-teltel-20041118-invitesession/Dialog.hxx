@@ -69,6 +69,7 @@ class Dialog
       friend class DialogUsage;
       friend class DialogSet;
       friend class DialogUsageManager;
+      friend class DestroyUsage;
       
       friend class ClientSubscription;
       friend class InviteSession;

@@ -46,8 +46,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0),
-   mDestroyer(this)
+   mServerPagerMessage(0)
 {
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
@@ -69,8 +68,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0),
-   mDestroyer(this)
+   mServerPagerMessage(0)
 
 {
    assert(request.isRequest());
@@ -120,7 +118,6 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   Destroyer::Guard guard(mDestroyer);
    if (!mDestroying)
    {
       if(mDialogs.empty() && 
@@ -132,7 +129,7 @@ void DialogSet::possiblyDie()
            mClientRegistration ||
            mServerRegistration))
       {
-         guard.destroy();         
+         mDum.destroy(this);
       }   
    }
 }
@@ -203,8 +200,6 @@ DialogSet::empty() const
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
-   Destroyer::Guard guard(mDestroyer);
-
    assert(msg.isRequest() || msg.isResponse());
 
    if (msg.isResponse() && !mCancelled)
@@ -474,7 +469,7 @@ DialogSet::dispatch(const SipMessage& msg)
          //valid 200
          if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
          {
-            guard.destroy();            
+            mDum.destroy(this);
             return;            
          }
       }
@@ -535,7 +530,6 @@ DialogSet::findDialog(const DialogId id)
 void
 DialogSet::cancel()
 {   
-   Destroyer::Guard guard(mDestroyer);
    mCancelled = true;
    if (mReceivedProvisional && getCreator())
    {
@@ -547,14 +541,15 @@ DialogSet::cancel()
       auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
       mDum.send(*cancel);
 
-      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
+      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
       {
          // let the early dialogs know they are being canceled in case they get
          // a 200 to the INVITE which crossed the CANCEL so they will BYE them. 
          it->second->cancel();
       }
 
-      guard.destroy();         
+      // so it won't call me again
+      mCancelled = false;
    }
 }
 
