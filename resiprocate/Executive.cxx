@@ -1,8 +1,11 @@
 #include <sipstack/Executive.hxx>
 #include <sipstack/SipStack.hxx>
 #include <sipstack/TransactionState.hxx>
+#include <sipstack/Logger.hxx>
+
 
 using namespace Vocal2;
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 Executive::Executive( SipStack& stack)
   : mStack(stack)
@@ -16,6 +19,8 @@ Executive::process()
 {
   bool workToDo = true;
 
+  DebugLog (<< "Executive::process()");
+  
   while( workToDo )
     {
       workToDo = false;
