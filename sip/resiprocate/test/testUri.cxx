@@ -238,5 +238,11 @@ main(int argc, char* argv[])
 
      assert( encoded == original );
    }
+   {
+      // Test order irrelevance of unknown parameters
+      Uri sip1("sip:user@domain;foo=bar;baz=qux");
+      Uri sip2("sip:user@domain;baz=qux;foo=bar");
+      assert (sip1 == sip2);
+   }
    cerr << endl << "All OK" << endl;
 }
