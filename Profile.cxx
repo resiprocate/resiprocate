@@ -15,9 +15,9 @@ Profile::Profile() :
 }
 
 void
-Profile::setDefaultAor(const NameAddr& from)
+Profile::setDefaultFrom(const NameAddr& from)
 {
-   mAor = from;
+   mDefaultFrom = from;
 }
 
 void
@@ -64,9 +64,9 @@ Profile::addSupportedLanguage(const Token& lang)
 }
 
 NameAddr& 
-Profile::getDefaultAor()
+Profile::getDefaultFrom()
 {
-   return mAor;
+   return mDefaultFrom;
 }
 
 int 
@@ -224,9 +224,9 @@ Profile::disableGruu()
 }
 
 void 
-Profile::addDigestCredential( const Data& realm, const Data& user, const Data& password)
+Profile::addDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
 {
-   mDigestCredentials.insert(DigestCredential(realm, user, password));
+   mDigestCredentials.insert(DigestCredential(aor, realm, user, password));
 }
      
 Profile::DigestCredentialHandler* 
@@ -256,13 +256,12 @@ Profile::getDigestCredential( const Data& realm )
 const Profile::DigestCredential&
 Profile::getDigestCredential( const SipMessage& challenge )
 {
-   InfoLog (<< "Useing From header(effective realm: " <<  challenge.header(h_From).uri().host() << " ) to find credential");   
-   const Data& host = challenge.header(h_From).uri().host();
+   InfoLog (<< "Using From header(effective realm: " <<  challenge.header(h_From).uri().host() << " ) to find credential");   
+   const Data& aor = challenge.header(h_From).uri().getAor();
    for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
         it != mDigestCredentials.end(); it++)
    {
-      //should check username evetually
-      if (it->realm == host)
+      if (it->aor == aor)
       {
          return *it;
       }
@@ -271,7 +270,8 @@ Profile::getDigestCredential( const SipMessage& challenge )
    return empty;
 }
 
-Profile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& p) :
+Profile::DigestCredential::DigestCredential(const Data& a, const Data& r, const Data& u, const Data& p) :
+   aor(a),
    realm(r),
    user(u),
    password(p)
@@ -279,6 +279,7 @@ Profile::DigestCredential::DigestCredential(const Data& r, const Data& u, const 
 }
 
 Profile::DigestCredential::DigestCredential() : 
+   aor(Data::Empty),
    realm(Data::Empty),
    user(Data::Empty),
    password(Data::Empty)
@@ -289,12 +290,25 @@ Profile::DigestCredential::DigestCredential() :
 bool
 Profile::DigestCredential::operator<(const DigestCredential& rhs) const
 {
-   return (realm < rhs.realm);
+   if (realm < rhs.realm)
+   {
+      return true;
+   }
+   else if (realm == rhs.realm)
+   {
+      return aor < rhs.aor;
+   }
+   else
+   {
+      return false;
+   }
 }
 
 std::ostream&
 Profile::DigestCredential::operator<<(std::ostream& strm) const
 {
-   strm << realm << "," << user << "," << password;
+   strm << "realm=" << realm 
+        << " aor=" << aor
+        << " user=" << user ;
    return strm;
 }
