@@ -74,13 +74,14 @@ class Dialog
       SipMessage* makeOptions();
       SipMessage* makeAck(const SipMessage& request);
       SipMessage* makeCancel(const SipMessage& request);
+      SipMessage* makeRequest(MethodTypes method);
       CallId makeReplaces();
       
       // resets to an empty dialog with no state
       void clear();
       
    private:
-      SipMessage* makeRequest(MethodTypes method);
+      SipMessage* makeRequestInternal(MethodTypes method);
       void incrementCSeq(SipMessage& request);
       void copyCSeq(SipMessage& request);
 
