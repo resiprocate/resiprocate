@@ -66,6 +66,29 @@ SipMessage::SipMessage(const SipMessage& from)
    }
 }
 
+SipMessage::~SipMessage()
+{
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   {
+      delete mHeaders[i];
+   }
+
+   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+        i != mUnknownHeaders.end(); i++)
+   {
+      delete i->second;
+   }
+
+   for (vector<char*>::iterator i = mBufferList.begin();
+        i != mBufferList.end(); i++)
+   {
+      delete [] *i;
+   }
+   
+   delete mStartLine;
+   delete mBody;
+}
+
 const Data& 
 SipMessage::getTransactionId() const
 {
@@ -126,11 +149,6 @@ SipMessage::encode(std::ostream& str) const
    return str;
 }
 
-SipMessage::~SipMessage()
-{
-   cleanUp();
-}
-
 void
 SipMessage::addBuffer(char* buf)
 {
@@ -153,32 +171,6 @@ void
 SipMessage::setBody(char* start, int len)
 {
    mBody = new HeaderFieldValue(start, len);
-}
-
-void
-SipMessage::cleanUp()
-{
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      delete mHeaders[i];
-   }
-
-   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
-        i != mUnknownHeaders.end(); i++)
-   {
-      delete i->second;
-   }
-
-   for (vector<char*>::iterator i = mBufferList.begin();
-        i != mBufferList.end(); i++)
-   {
-      delete [] *i;
-   }
-   
-   if (mStartLine != 0)
-   {
-      delete mStartLine;
-   }
 }
 
 // unknown header interface

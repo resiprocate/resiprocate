@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/09/30 20:53:41 jason Exp $
+# $Id: Makefile,v 1.9 2002/10/02 23:08:16 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -19,6 +19,7 @@ SRC =	\
 	Subsystem.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
+	VException.cxx \
 
 OSRC =   *.hxx Makefile
 

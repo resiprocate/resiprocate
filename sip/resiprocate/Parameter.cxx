@@ -4,8 +4,7 @@ using namespace Vocal2;
 using namespace std;
 
 Parameter::Parameter(ParameterTypes::Type type)
-   : next(0),
-     mType(type)
+   : mType(type)
 {}
 
 
