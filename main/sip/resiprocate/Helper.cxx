@@ -191,6 +191,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
          case 182: response->header(h_StatusLine).reason() = "Queued"; break;
          case 183: response->header(h_StatusLine).reason() = "Session Progress"; break;
          case 200: response->header(h_StatusLine).reason() = "OK"; break;
+         case 202: response->header(h_StatusLine).reason() = "Accepted"; break;
          case 300: response->header(h_StatusLine).reason() = "Multiple Choices"; break;
          case 301: response->header(h_StatusLine).reason() = "Moved Permanently"; break;
          case 302: response->header(h_StatusLine).reason() = "Moved Temporarily"; break;
