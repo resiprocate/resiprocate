@@ -168,7 +168,8 @@ UdpTransport::process(FdSet& fdset)
    }
    else if (len > 0)
    {
-      
+      size_t ulen = static_cast<size_t>(len);
+       
       if (len == MaxBufferSize)
       {
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
@@ -205,12 +206,12 @@ UdpTransport::process(FdSet& fdset)
       size_t discard = 0;
       
 
-      BufferAction status = NONE;
+      Preparse::Action status = PreparseConst::stNone;
       
       mPreparse.process(*message,buffer, len, 0, used, discard, status);
       
 
-      if (status & ( ~headersComplete ))
+      if (status & ( ~PreparseConst::stHeadersComplete ))
       {
          InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
          delete message; 
@@ -218,7 +219,7 @@ UdpTransport::process(FdSet& fdset)
       else
       {
           // no pp error
-          if (used < len) // !ah! fix this warning
+          if (used < ulen)
           {
               // body is present .. add it up.
               // NB. The Sip Message uses an overlay (again)
