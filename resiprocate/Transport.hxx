@@ -3,7 +3,6 @@
 
 #include <exception>
 
-#include "resiprocate/Message.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
@@ -14,6 +13,7 @@
 namespace resip
 {
 
+class TransactionMessage;
 class SipMessage;
 class SendData;
 class Connection;
@@ -30,7 +30,7 @@ class Transport : public ThreadIf
       
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
+      Transport(Fifo<TransactionMessage>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       virtual ~Transport();
 
       bool isFinished() const;
@@ -88,7 +88,7 @@ class Transport : public ThreadIf
       Tuple mTuple;
       
       Fifo<SendData> mTxFifo; // owned by the transport
-      Fifo<Message>& mStateMachineFifo; // passed in
+      Fifo<TransactionMessage>& mStateMachineFifo; // passed in
       bool mShuttingDown;
       
    private:

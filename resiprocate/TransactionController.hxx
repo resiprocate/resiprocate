@@ -2,7 +2,6 @@
 #define RESIP_TRANSACTION_CONTROLLER_HXX
 
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
@@ -12,10 +11,16 @@
 namespace resip
 {
 
+class TransactionMessage;
+class ApplicationMessage;
+class StatisticsManager;
+
 class TransactionController
 {
    public:
-      TransactionController(bool multithreaded, Fifo<Message>& tufifo, bool stateless=false);
+      TransactionController(bool multithreaded, 
+                            Fifo<Message>& tufifo, 
+                            bool stateless=false);
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -35,10 +40,13 @@ class TransactionController
                             const Data& domainname,
                             IpVersion version,
                             const Data& ipInterface,
-                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
-                            );
+                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
       
       void send(SipMessage* msg);
+
+      // makes the message available to the TU later
+      void post(const ApplicationMessage& message);
+      void post(const ApplicationMessage& message, unsigned int milliseconds);
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
@@ -64,7 +72,7 @@ class TransactionController
       // For stateless stacks, this has a different behavior and does not create
       // a transaction for each request and does not do any special transaction
       // processing for requests or responses
-      Fifo<Message> mStateMacFifo;
+      Fifo<TransactionMessage> mStateMacFifo;
 
       // from the sipstack (for convenience)
       Fifo<Message>& mTUFifo;
@@ -87,6 +95,9 @@ class TransactionController
       unsigned long StatelessIdCounter;
       bool mShuttingDown;
       
+      StatisticsManager* mStatsManager;
+      StatisticsManager& getStatisticsManager() const;
+
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
@@ -104,7 +115,7 @@ class TransactionController
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -15,7 +15,7 @@
 using namespace std;
 using namespace resip;
 
-TcpTransport::TcpTransport(Fifo<Message>& fifo, int portNum, const Data& pinterface, bool ipv4)
+TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, const Data& pinterface, bool ipv4)
    : TcpBaseTransport(fifo, portNum, pinterface, ipv4)
 {
    mTuple.setType(transport());

@@ -10,12 +10,14 @@
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/Security.hxx"
+
 namespace resip 
 {
 
 class Data;
 class Message;
 class SipMessage;
+class ApplicationMessage;
 class Executive;
 class Security;
 class Tuple;
@@ -105,15 +107,16 @@ class SipStack
       void sendTo(const SipMessage& msg, const Tuple& tuple);
 
       // makes the message available to the TU later
-      void post(const Message& message,
+      void post(const ApplicationMessage& message);
+      void post(const ApplicationMessage& message,
                 unsigned int secondsLater);
+      void postMS(const ApplicationMessage& message, unsigned int ms);
 
-      void postMS(const Message& message, unsigned int ms);
-
+      // applications posting non-sip messages must use receive any.
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
 
-      // May return TransactionTerminated* or SipMessage*
+      // May return TransactionTerminated* or SipMessage* or derived ApplicationMessage*
       Message* receiveAny(); 
       
       // build the FD set to use in a select to find out when process bust be
@@ -148,7 +151,6 @@ class SipStack
       
       // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
-      TimerQueue mTUTimerQueue;
 
       // Controls the processing of the various stack elements
       Executive mExecutive;
