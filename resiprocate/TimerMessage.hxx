@@ -4,6 +4,7 @@
 #include <sipstack/Message.hxx>
 #include <sipstack/Data.hxx>
 #include <sipstack/Timer.hxx>
+#include <iostream>
 
 namespace Vocal2
 {
@@ -27,7 +28,7 @@ class TimerMessage : public Message
       }
 
       virtual Data brief() const;
-      virtual ostream& dump(ostream& strm) const;
+      virtual std::ostream& dump(std::ostream& strm) const;
       
    private:
       Data mTransactionId;
