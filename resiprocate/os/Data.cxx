@@ -1,9 +1,10 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.30 2002/11/12 05:16:39 jason Exp $";
+"$Id: Data.cxx,v 1.31 2002/11/12 17:18:37 ryker Exp $";
 
 #include <algorithm>
 #include <cassert>
 #include <ctype.h>
+#include <math.h>
 
 #include "sip2/util/Data.hxx"
 #include "sip2/util/vmd5.hxx"
