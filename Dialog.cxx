@@ -68,6 +68,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
+      response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
       assert (response->header(h_To).exists(p_tag));
       mLocalTag = response->header(h_To).param(p_tag); // from response 
       if (request.header(h_From).exists(p_tag))  // 2543 compat
