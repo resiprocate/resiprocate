@@ -415,6 +415,11 @@ Transport::operator==(const Transport& rhs) const
             ( memcmp(&boundInterface(),&rhs.boundInterface(),mTuple.length()) == 0) );
 }
 
+unsigned int 
+Transport::getFifoSize() const
+{
+   return mTxFifo.size();
+}
     
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Transport& rhs)

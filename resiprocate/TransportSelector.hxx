@@ -63,6 +63,8 @@ class TransportSelector
       // just resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
       
+      unsigned int sumTransportFifoSizes() const;
+
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
@@ -87,8 +89,9 @@ class TransportSelector
       // ANY port, ANY interface
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
-      
-      HashMap<Data, TlsTransport*> mTlsTransports;      // domain name -> Transport
+
+      typedef HashMap<Data, TlsTransport*> TlsTransportMap ;
+      TlsTransportMap mTlsTransports;      // domain name -> Transport
       
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
