@@ -25,7 +25,7 @@ class ClientInviteSession : public InviteSession
       virtual void setAnswer(const SdpContents* answer);
       virtual SipMessage& getOfferOrAnswer();
       virtual SipMessage& end();
-      virtual void rejectOffer(int statusCode);
+      virtual SipMessage& rejectOffer(int statusCode);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();

@@ -59,9 +59,10 @@ ClientInviteSession::end()
    }
 }
 
-void 
+SipMessage&
 ClientInviteSession::rejectOffer(int statusCode)
 {
+   return mLastRequest;
 }
 
 void
@@ -111,7 +112,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       if (mState == Initial || mState == Early)
       {
          mState = Early;
-         handler->onEarly(getHandle(), msg);
+         //handler->onEarly(getHandle(), msg);
             
          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
          bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
@@ -125,7 +126,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                   mCurrentLocalSdp = mProposedLocalSdp;
                   mProposedLocalSdp = 0;
 
-                  handler->onAnswer(getHandle(), msg);
+                  //handler->onAnswer(getHandle(), msg);
                }
                else
                {
@@ -181,7 +182,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                mCurrentLocalSdp = mProposedLocalSdp;
                mProposedLocalSdp = 0;
                   
-               handler->onAnswer(getHandle(), msg);
+               //handler->onAnswer(getHandle(), msg);
             }
             else  // got an offer
             {

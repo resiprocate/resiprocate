@@ -15,12 +15,6 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
 {
 }
 
-SipMessage& 
-InviteSession::getOfferOrAnswer()
-{
-   return mLastRequest;
-}
-
 const SdpContents* 
 InviteSession::getLocalSdp()
 {
