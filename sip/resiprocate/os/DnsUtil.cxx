@@ -71,13 +71,15 @@ DnsUtil::getLocalDomainName()
 Data
 DnsUtil::inet_ntop(const Tuple& tuple)
 {
-   if (tuple.v6)
+   if (!tuple.isV4())
    {
-      return DnsUtil::inet_ntop(tuple.ipv6);
+      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin6_addr);
    }
    else
    {
-      return DnsUtil::inet_ntop(tuple.ipv4);
+      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin_addr);
    }
 }
 
