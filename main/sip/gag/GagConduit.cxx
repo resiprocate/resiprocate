@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <stdlib.h>
+
 #include "resiprocate/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
@@ -144,27 +146,6 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
 
   // Figure out what out contact is
   Uri contact;
-
-/* Were going to leave all of this stuff to the stack now - RjS
-  contact.port() = udpPort;
-
-#ifdef WIN32
-  contact.host() = sipStack->getHostAddress();
-#else
-  {
-    char *contactHostOverride = getenv("GAGHOSTNAME");
-    if (contactHostOverride)
-    {
-      contact.host() = Data(contactHostOverride);
-    }
-    else
-    {
-      contact.host() = sipStack->getHostAddress();
-    }
-  }
-#endif
-*/
-
   contact.user() = aor->user();
 
   newTu = new TuIM(sipStack, *aor, contact, this );
@@ -178,6 +159,15 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   }
   newTu->setUAName(Data("gag/0.0.1 (gaim)"));
   newTu->registerAor(*aor, *password);
+
+  /* adam: This is a temporary hack until we get the
+     configuration plumbing working */
+
+  char *outboundProxy = getenv("DEFAULT_PROXY");
+  if (outboundProxy)
+  {
+    newTu->setOutboundProxy(Uri(outboundProxy));
+  }
 
   tuIM[*aor] = newTu;
 }
