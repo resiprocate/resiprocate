@@ -16,8 +16,8 @@ class InviteSessionCreator : public BaseCreator
       InviteSessionCreator(DialogUsageManager& dum, const Uri& aor, const SdpContents* initial);
       void end();
 
-      virtual void dispatch(SipMessage& msg);
-      
+      virtual void dispatch(const SipMessage& msg);
+
    private:
       typedef enum
       {

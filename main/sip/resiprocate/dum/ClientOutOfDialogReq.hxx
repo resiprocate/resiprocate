@@ -2,6 +2,7 @@
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
 #include "BaseUsage.hxx"
+#include "resiprocate/ParserCategories.hxx"
 
 namespace resip
 {
@@ -34,7 +35,7 @@ class ClientOutOfDialogReq : public BaseUsage
                            const SipMessage& req);
       
       ClientOutOfDialogReq::Handle mHandle;
-      H_CSeq::Type mCSeq;
+      CSeqCategory mCSeq;
       
       // disabled
       ClientOutOfDialogReq(const ClientOutOfDialogReq&);
