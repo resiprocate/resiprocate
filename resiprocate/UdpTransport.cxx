@@ -57,17 +57,7 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
       throw Exception("Address already in use", __FILE__,__LINE__);
    }
 
-   // make non blocking 
-#ifdef WIN32
-   unsigned long noBlock = 1;
-   int errNoBlock = ioctlsocket( mFd, FIONBIO , &noBlock );
-   assert( errNoBlock == 0 );
-#else
-   int flags  = fcntl( mFd, F_GETFL, 0);
-   int errNoBlock = fcntl(mFd,F_SETFL, flags| O_NONBLOCK );
-   assert( errNoBlock == 0 );
-#endif
-
+   makeSocketNonBlocking(mFd);
 }
 
 

@@ -244,13 +244,7 @@ DnsResolver::lookupARecords(const Data& transactionId,
             first = false;
          }
          
-#ifdef WIN32
-         //DebugLog (<< inet_ntoa(tuple.ipv4) << ":" << port);
-#else
-	 //char str[256];
-         //DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.s_addr, str, sizeof(str)) << ":" << port);
-#endif
-
+         DebugLog(<< tuple);
       }
       mStack.mStateMacFifo.add(new DnsMessage(entry, transactionId, start, entry->tupleList.end(), complete));
       return entry;
