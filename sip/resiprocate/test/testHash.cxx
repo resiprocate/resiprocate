@@ -35,7 +35,7 @@ struct {
 
 unsigned int  InitHeaderInfo()
 {
-   int i = static_cast<int>(Headers::UNKNOWN)+1;
+   int i = static_cast<int>(Headers::RESIP_UNKNOWN)+1;
    int max  = static_cast<int>(Headers::MAX_HEADERS);
    
    for( ;
@@ -60,7 +60,7 @@ unsigned int  InitHeaderInfo()
 
 bool checkMethods()
 {
-    int i = static_cast<int>(resip::UNKNOWN)+1;
+    int i = static_cast<int>(resip::RESIP_UNKNOWN)+1;
     int max = static_cast<int>(resip::MAX_METHODS);
     bool failure = false;
     for( ; i < max ; ++i)
@@ -84,7 +84,7 @@ bool checkMethods()
 bool
 checkParameters()
 {
-    int i = static_cast<int>(ParameterTypes::UNKNOWN)+1;
+    int i = static_cast<int>(ParameterTypes::RESIP_UNKNOWN)+1;
     int max = static_cast<int>(ParameterTypes::MAX_PARAMETER);
     bool failure = false;
     
