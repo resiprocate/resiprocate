@@ -9,13 +9,20 @@
 #include "repro/UserAbstractDb.hxx"
 #include "repro/HttpBase.hxx"
 
+namespace resip
+{
+class RegistrationPersistenceManager;
+}
+
+
 namespace repro
 {
 
 class WebAdmin: public HttpBase
 {
    public:
-      WebAdmin( UserAbstractDb& db,
+      WebAdmin( UserAbstractDb& userDb,
+                resip::RegistrationPersistenceManager& regDb,
                 int port=5080, 
                 resip::IpVersion version=resip::V4);
       
@@ -31,7 +38,8 @@ class WebAdmin: public HttpBase
       resip::Data buildShowRoutesPage();
       resip::Data buildShowUsersPage();
 
-      UserAbstractDb& mDb;
+      UserAbstractDb& mUserDb;
+      resip::RegistrationPersistenceManager& mRegDb;
 };
 
 
