@@ -133,7 +133,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);               
                mDialog.makeResponse(mLastResponse, msg, 200);
                mDum.send(mLastResponse);
-               mDialog.makeResponse(mLastResponse, msg, 487);         
+               mDialog.makeResponse(mLastResponse, mLastRequest, 487);         
                mDum.send(mLastResponse);
             }
             else
