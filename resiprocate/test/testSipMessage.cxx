@@ -1025,6 +1025,16 @@ main(int argc, char** argv)
    }
 
    {
+      InfoLog(<< "Test SipMessage::releaseContents; no contents");
+
+      SipMessage msg;
+      assert(msg.getContents() == 0);
+      auto_ptr<Contents> old = msg.releaseContents();
+      assert(old.get() == 0);
+      assert(msg.getContents() == 0);
+   }
+
+   {
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
