@@ -113,3 +113,17 @@ DialogSet::dispatch(const SipMessage& msg)
    }
    dialog->dispatch(msg);
 }
+
+bool
+DialogSet::mergeRequest(const SipMessage& request)
+{
+   for (DialogSet::const_iterator i = dialogs.begin(); i != dialogs.end(); ++i)
+   {
+      if (i->shouldMerge(request))
+      {
+         InfoLog (<< "Merging request for: " << request.brief());
+         return true;
+      }
+   }
+}
+
