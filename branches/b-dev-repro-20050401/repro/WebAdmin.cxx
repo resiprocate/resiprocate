@@ -303,43 +303,65 @@ WebAdmin::buildShowRegsPage()
       DataStream s(ret);
       
       s << 
- "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"<head>"
-"<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"<title>Repro Proxy Registrations</title>"
-"</head>"
-""
-"<body bgcolor=\"#ffffff\">"
-"<h1>Registrations</h1>"
-"<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
-""
-"<hr/>"
-"<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"<tr>"
-"<td>AOR</td>"
-"<td>Contact</td>"
-"<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
-"</tr>"
-/*
-"<tr>"
-"<td>fluffy@example.com</td>"
-"<td>192.168.0.1</td>"
-"<td><input type=\"checkbox\" name=\"removeUser\" value=\"fluffy@example.com\"/></td>"
-"</tr>"
-*/
-"</table>"
-"</form>"
-"</body>"
-""
-"</html>"
-""
-"</html>"
-        " ";
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy Registrations</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>Registrations</h1>"
+         "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+         "<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
+         ""
+         "<hr/>"
+         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>AOR</td>"
+         "<td>Contact</td>"
+         "<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
+         "</tr>";
+      
+      RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
+      for ( RegistrationPersistenceManager::UriList::const_iterator 
+               aor = aors.begin(); aor != aors.end(); aor++)
+      {
+         Uri uri = *aor;
+         RegistrationPersistenceManager::ContactPairList 
+            contacts = mRegDb.getContacts(uri);
+         
+         s << "<tr>"
+           << "<td>" << uri << "</td>"
+           << "<td>";
+
+         for ( RegistrationPersistenceManager::ContactPairList::const_iterator 
+                  cPair = contacts.begin();
+               cPair != contacts.end(); cPair++ );
+         {
+            //   const RegistrationPersistenceManager::ContactPair& p = *cPair;
+            //  Uri contact = p.first(); 
+            Uri contact = cPair->first;
+            // s << contact << " ";
+         }
+         
+         s <<"</td>"
+           << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+           << uri
+           << "\"/></td>"
+           << "</tr>";
+        
+      }
+      
+            
+      s << "</table>"
+         "</form>"
+         "</body>"
+         "</html>"
+         "</html>";
       
       s.flush();
    }
