@@ -80,6 +80,7 @@ SRC = \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	ExistsParameter.cxx \
+	ExternalBodyContents.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \

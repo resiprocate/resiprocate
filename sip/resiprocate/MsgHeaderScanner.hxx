@@ -51,80 +51,83 @@ class SipMessage;
 class MsgHeaderScanner
 {
       
-  public:
-    enum { MaxNumCharsChunkOverflow = 5 };
-    enum TextPropBitMaskEnum 
-    {
-      tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired
-      tpbmContainsWhiteSpace = 1 << 1,     // ' ' or '\t'
-      tpbmContainsBackSlash  = 1 << 2,     // '\\'
-      tpbmContainsPercent    = 1 << 3,     // '%'
-      tpbmContainsSemiColon  = 1 << 4,     // ';'
-      tpbmContainsParen      = 1 << 5      // '(' or ')', possibly mismatched
-    };
-    typedef unsigned char TextPropBitMask;
+   public:
+      enum { MaxNumCharsChunkOverflow = 5 };
+      enum TextPropBitMaskEnum 
+      {
+         tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired
+         tpbmContainsWhiteSpace = 1 << 1,     // ' ' or '\t'
+         tpbmContainsBackSlash  = 1 << 2,     // '\\'
+         tpbmContainsPercent    = 1 << 3,     // '%'
+         tpbmContainsSemiColon  = 1 << 4,     // ';'
+         tpbmContainsParen      = 1 << 5      // '(' or ')', possibly mismatched
+      };
+      typedef unsigned char TextPropBitMask;
     
-  private:
+   private:
     
-    // Fields:
-    SipMessage *                       mMsg;
-    /*State*/int                       mState;      // Type defined in .cxx file.
-    int                                mPrevScanChunkNumSavedTextChars;
-    MsgHeaderScanner::TextPropBitMask  mTextPropBitMask;
-    const char *                       mFieldName;
-    unsigned int                       mFieldNameLength;
-    int                                mFieldKind;
-    /*
-      "mState" and "mPrevScanChunkNumSavedTextChars" are meaningful only between
-      input chunks.
-      "mTextPropBitMask" is meaningful only between input chunks and only when
-      scanning a field name or value.
-      "mFieldName", "mFieldNameLength", and "mFieldKind" are meaningful only
-      between terminating a field name and finding the termination of its value.
-    */
+      // Fields:
+      SipMessage *                       mMsg;
+      /*State*/int                       mState;      // Type defined in .cxx file.
+      int                                mPrevScanChunkNumSavedTextChars;
+      MsgHeaderScanner::TextPropBitMask  mTextPropBitMask;
+      const char *                       mFieldName;
+      unsigned int                       mFieldNameLength;
+      int                                mFieldKind;
+      /*
+        "mState" and "mPrevScanChunkNumSavedTextChars" are meaningful only between
+        input chunks.
+        "mTextPropBitMask" is meaningful only between input chunks and only when
+        scanning a field name or value.
+        "mFieldName", "mFieldNameLength", and "mFieldKind" are meaningful only
+        between terminating a field name and finding the termination of its value.
+      */
     
-  public:
+   public:
     
-    MsgHeaderScanner();
+      MsgHeaderScanner();
     
-    // Destructor: defined implicitly
-    
-    void prepareForMessage(SipMessage *  msg);
-    
-    enum ScanChunkResult {
-      scrEnd,       // Message header scan ended.
-      scrNextChunk, // Another chunk is needed.
-      scrError      // The message header is in error.
-    };
+      // Destructor: defined implicitly
+      void prepareForMessage(SipMessage *  msg);
+      // allow proper parsing of message/sipfrag & msg/external
+      // presence of start line is determined in SipFrag
+      void prepareForFrag(SipMessage *  msg, bool hasStartLine);
+ 
+      
+      enum ScanChunkResult {
+         scrEnd,       // Message header scan ended.
+         scrNextChunk, // Another chunk is needed.
+         scrError      // The message header is in error.
+      };
     
 
-    //       The meaning of "*unprocessedCharPtr" depends on the result:
-    //       scrEnd:       The character that terminates the message header.
-    //       scrError:     The erroneous character.
-    //       scrNextChunk: The first character of some incomplete text unit.  The
-    //       remaining portion of the old chunk must be placed
-    //       in the beginning of the new chunk.
-    //       This method writes a sentinel in the chunk's terminal character.
-    MsgHeaderScanner::ScanChunkResult scanChunk(char * chunk,
-                                                unsigned int chunkLength,
-                                                char **unprocessedCharPtr); 
+      //       The meaning of "*unprocessedCharPtr" depends on the result:
+      //       scrEnd:       The character that terminates the message header.
+      //       scrError:     The erroneous character.
+      //       scrNextChunk: The first character of some incomplete text unit.  The
+      //       remaining portion of the old chunk must be placed
+      //       in the beginning of the new chunk.
+      //       This method writes a sentinel in the chunk's terminal character.
+      MsgHeaderScanner::ScanChunkResult scanChunk(char * chunk,
+                                                  unsigned int chunkLength,
+                                                  char **unprocessedCharPtr); 
     
-    // !ah! DEBUG only, write to fd.
-    // !ah! for documentation generation
-    static int dumpStateMachine(int fd); 
+      // !ah! DEBUG only, write to fd.
+      // !ah! for documentation generation
+      static int dumpStateMachine(int fd); 
 
-  private:
+   private:
 
 
-    // Copy constructor: declared but not defined
-    MsgHeaderScanner(const MsgHeaderScanner & from);
+      // Copy constructor: declared but not defined
+      MsgHeaderScanner(const MsgHeaderScanner & from);
 
-    // Assignment: declared but not defined
-    MsgHeaderScanner & operator=(const MsgHeaderScanner & from);
+      // Assignment: declared but not defined
+      MsgHeaderScanner & operator=(const MsgHeaderScanner & from);
 
-    // Automatically called when 1st MsgHeaderScanner constructed.
-    bool initialize();
-    static bool mInitialized;
+      // Automatically called when 1st MsgHeaderScanner constructed.
+      bool initialize();
+      static bool mInitialized;
 
 
 };

@@ -1,51 +1,53 @@
-#if !defined(RESIP_SIPFRAG_HXX)
-#define RESIP_SIPFRAG_HXX 
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
-#include <map>
+#include "resiprocate/ExternalBodyContents.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
+using namespace resip;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+
+bool 
+ExternalBodyContents::init()
 {
-
-class SipMessage;
-
-// Mostly works -- 
-// Preparse insists on a start line while SIP frag may not have one.
-class SipFrag : public Contents
-{
-   public:
-      SipFrag(const Mime& contentsType = getStaticType());
-      SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
-      SipFrag(const Data& data, const Mime& contentsType);
-      SipFrag(const SipFrag& rhs);
-      ~SipFrag();
-      SipFrag& operator=(const SipFrag& rhs);
-
-      virtual Contents* clone() const;
-
-      static const Mime& getStaticType() ;
-
-      SipMessage& message();
-      const SipMessage& message() const;
-
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      static bool init();
-
-   private:
-      bool hasStartLine(char* buffer, int size);      
-      SipMessage* mMessage;
-};
-
-static bool invokeSipFragInit = SipFrag::init();
-
+   static ContentsFactory<ExternalBodyContents> factory;
+   (void)factory;
+   return true;
 }
 
-#endif
+ExternalBodyContents::ExternalBodyContents()
+   : SipFrag(getStaticType())
+{}
+
+ExternalBodyContents::ExternalBodyContents(HeaderFieldValue* hfv, const Mime& contentsType)
+   : SipFrag(hfv, contentsType)
+{}
+
+ExternalBodyContents::ExternalBodyContents(const ExternalBodyContents& rhs)
+   : SipFrag(rhs)
+{}
+
+ExternalBodyContents&
+ExternalBodyContents::operator=(const ExternalBodyContents& rhs)
+{
+   SipFrag::operator=(rhs);
+   return *this;
+}
+
+Contents* 
+ExternalBodyContents::clone() const
+{
+   return new ExternalBodyContents(*this);
+}
+
+const Mime& 
+ExternalBodyContents::getStaticType() 
+{
+   static Mime type("message", "external-body");
+   return type;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -57,10 +59,10 @@ static bool invokeSipFragInit = SipFrag::init();
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this std::list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this std::list of conditions and the following disclaimer in
+ *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
