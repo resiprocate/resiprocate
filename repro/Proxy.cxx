@@ -13,7 +13,7 @@ using namespace repro;
 using namespace std;
 
 Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors,
-             UserDB &userDb) 
+             UserDb &userDb) 
    : mStack(stack), mRequestProcessorChain(requestProcessors), mUserDb(userDb)
 {
 }
@@ -36,7 +36,7 @@ Proxy::isShutDown() const
   return false;
 }
 
-UserDB &
+UserDb &
 Proxy::getUserDb()
 {
    return mUserDb;
