@@ -6,7 +6,6 @@
 #include "sip2/util/SysLogStream.hxx"
 #include "sip2/util/Lock.hxx"
 
-
 /**
    Defines a set of logging macros, one for each level of logging.
 
@@ -14,7 +13,7 @@
 #include Logger.hxx
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
    ...
-   DebugLog(<< "hi there " << mix << 5 << types);  // note leading << and no endl
+   DebugLog(<< "hi there " << mix << 4 << types);  // note leading << and no endl
 */
 
 // unconditionally output to cerr -- easily change back and forth
@@ -38,6 +37,19 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args_)
 #define InfoLog(args_) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args_)
 
+#define CHECK_RECURSIVE_LOG
+class AssertOnRecursiveLock
+{
+   public:
+      AssertOnRecursiveLock();
+      void set();
+      ~AssertOnRecursiveLock();
+   private:
+      // no object semantics
+      AssertOnRecursiveLock(const AssertOnRecursiveLock &);
+      const AssertOnRecursiveLock & operator=(const AssertOnRecursiveLock &);
+};
+
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)                                      \
 do                                                                              \
@@ -47,7 +59,9 @@ do                                                                              
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
+         AssertOnRecursiveLock check;                                           \
          Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         check.set();                                                           \
          Vocal2::Log::tags(level_, system_,                                     \
                            Vocal2::GenericLogImpl::Instance())                  \
                               << __FILE__ << ':' << __LINE__ << DELIM           \
@@ -58,7 +72,9 @@ do                                                                              
    {                                                                            \
       if (Vocal2::GenericLogImpl::isLogging(level_))                            \
       {                                                                         \
+         AssertOnRecursiveLock check;                                           \
          Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         check.set();                                                           \
          if (Vocal2::GenericLogImpl::isLogging(level_))                         \
          {                                                                      \
             Vocal2::Log::tags(level_, system_,                                  \
@@ -69,8 +85,6 @@ do                                                                              
       }                                                                         \
    }                                                                            \
 } while (0)
-
-
 
 #ifdef NO_DEBUG
 #undefine DebugLog
