@@ -4,8 +4,11 @@
 
 using namespace resip;
 
-SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const Data& event)
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const Data& event)
    : BaseCreator(dum)
 {
-   makeInitialRequest(mDum.getProfile()->getDefaultAor(), SUBSCRIBE);
+   makeInitialRequest(target, SUBSCRIBE);
+
+   mLastRequest.header(h_Event).value() = event; 
+   mLastRequest.header(h_Expires).value() =  mDum.getProfile()->getDefaultSubscriptionTime();
 }

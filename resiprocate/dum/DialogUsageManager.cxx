@@ -118,9 +118,9 @@ DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* init
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
+DialogUsageManager::makeSubscription(const Uri& aor, const NameAddr& target,const Data& eventType)
 {
-   return makeNewSession(new SubscriptionCreator(*this, eventType));
+   return makeNewSession(new SubscriptionCreator(*this, target, eventType));
 }
 
 SipMessage& 
