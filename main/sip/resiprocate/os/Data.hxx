@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.49 2003/01/15 20:54:12 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.50 2003/01/22 00:55:42 davidb Exp $";
 
 #include <iostream>
 #include <string>
@@ -74,7 +74,8 @@ class Data
 
       char& operator[](size_type p);
       char operator[](size_type p) const;
-      
+
+      void reserve(size_type capacity);
       Data& append(const char* str, size_type len);
 
       bool empty() const { return mSize == 0; }
@@ -96,7 +97,7 @@ class Data
       // return a HEX representation of binary data
       Data hex() const;
 	
-      // return a representation with any non pritable chracters escaped - very
+      // return a representation with any non printable chracters escaped - very
       // slow only use for debug stuff 
       Data escaped() const;
 	

@@ -35,13 +35,24 @@ ParseBuffer::reset(const char* pos) //should be renamed to set
    mTraversalPtr = pos;
 }
 
+const char* 
+ParseBuffer::skipChar()
+{
+   if (eof())
+   {
+      fail(__FILE__, __LINE__);
+   }
+   ++mTraversalPtr;
+   return mTraversalPtr;
+}
+
 const char*
 ParseBuffer::skipChar(char c)
 {
    if (*position() != c)
    {
       DebugLog (<< "Expected '" << c << "'");
-      throw Exception("parse error", __FILE__, __LINE__);
+      fail(__FILE__, __LINE__);
    }
    return ++mTraversalPtr;
 }
@@ -55,7 +66,7 @@ ParseBuffer::skipChars(const char* cs)
       if (eof() || (*match != *mTraversalPtr))
       {
          DebugLog (<< "Expected \"" << cs << "\"");
-         throw Exception("parse error", __FILE__, __LINE__);
+         fail(__FILE__, __LINE__);
       }
       match++;
       mTraversalPtr++;
@@ -72,7 +83,7 @@ ParseBuffer::skipChars(const Data& cs)
       if (eof() || (*match != *mTraversalPtr))
       {
          DebugLog (<< "Expected \"" << cs << "\"");
-         throw Exception("parse error", __FILE__, __LINE__);
+         fail(__FILE__, __LINE__);
       }
       match++;
       mTraversalPtr++;
@@ -376,7 +387,8 @@ ParseBuffer::skipToEndQuote(char quote)
    }
 
    DebugLog (<< "Missing '" << quote);
-   throw Exception("Missing quote", __FILE__,__LINE__);
+   fail(__FILE__,__LINE__);
+   return 0;
 }
 
 const char* 
@@ -428,7 +440,7 @@ ParseBuffer::integer()
    if ( this->eof() )
    {
       DebugLog(<< "Expected a digit, got eof ");
-      throw Exception("Expected a digit, got eof", __FILE__, __LINE__);
+      fail(__FILE__, __LINE__);
    }
 
    const char* p = position();
@@ -438,7 +450,7 @@ ParseBuffer::integer()
    if (!isdigit(c))
    {
       DebugLog(<< "Expected a digit, got: " << Data(position(), (mEnd - position())));
-      throw Exception("Expected a digit", __FILE__, __LINE__);
+      fail(__FILE__, __LINE__);
    }
    
    int num = 0;
@@ -476,33 +488,33 @@ ParseBuffer::floatVal()
    catch (Exception&)
    {
       DebugLog(<< "Expected a floating point value, got: " << Data(s, position() - s));
-      throw Exception("Expected a floating point value", __FILE__, __LINE__);
+      fail(__FILE__, __LINE__);
    }
 }
 
 void
-ParseBuffer::assertEof()
+ParseBuffer::assertEof() const
 {
    if (!eof())
    {
-      fail("Expected eof");
+      fail(__FILE__, __LINE__);
    }      
 }
 
 void
-ParseBuffer::assertNotEof()
+ParseBuffer::assertNotEof() const
 {
    if (eof())
    {
-      fail( "Expected not eof" );
+      fail(__FILE__, __LINE__);
    }      
 }
 
 void
-ParseBuffer::fail(const Data& message)
+ParseBuffer::fail(const char* file, unsigned int line) const
 {
-   InfoLog("Parse failed - exception - " << message );
-   throw Exception(message, __FILE__, __LINE__);
+   InfoLog("Parse failed " << file << ":" << line);
+   throw Exception(Data::Empty, file, line);
 }
 
 /* ====================================================================
