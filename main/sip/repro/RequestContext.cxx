@@ -92,6 +92,12 @@ RequestContext::getCandidates()
    return mCandidateTargets;
 }
 
+void
+RequestContext::sendResponse(const SipMessage& msg)
+{
+   assert (msg.isResponse());
+}
+
 //!RjS! This function assumes that if ;lr shows up in the
 //      RURI, that it's a URI we put in a Record-Route header
 //      earlier. It will do the wrong thing if some other 

@@ -3,6 +3,8 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/Helper.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
 
@@ -11,55 +13,310 @@ using namespace repro;
 using namespace std;
 
 ResponseContext::ResponseContext(RequestContext& context) : 
-   mRequestContext(context)
+   mRequestContext(context),
+   mForwardedFinalResponse(false),
+   mBestPriority(50),
+   mSecure(context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
+}
+
+void 
+ResponseContext::sendRequest(const resip::SipMessage& request)
+{
+   assert(0);
 }
 
 void
 ResponseContext::processCandidates()
 {
+   bool added=false;
    while (!mRequestContext.getCandidates().empty())
    {
       // purpose of this code is to copy the Uri from the candidate and to only
       // take the q value parameter from the candidate. 
       
       NameAddr& candidate = mRequestContext.getCandidates().back();
-      NameAddr uri(candidate.uri());
-      uri.param(p_q) = candidate.param(p_q);
-      mPendingTargetSet.insert(uri);
+      Uri target(candidate.uri());
+      // make sure each target is only inserted once
+      if (mSecure && target.scheme() == Symbols::Sips || !mSecure)
+      {
+         if (mTargetSet.insert(target).second)
+         {
+            added = true;
+            NameAddr pending(target);
+            pending.param(p_q) = candidate.param(p_q);
+         
+            mPendingTargetSet.insert(pending);
+            mRequestContext.getCandidates().pop_back();
+         }
+      }
       mRequestContext.getCandidates().pop_back();
    }
 
-   processPendingTargets();
+   if (added)
+   {
+      processPendingTargets();
+   }
 }
 
 void
 ResponseContext::processPendingTargets()
 {
-   
+   for (PendingTargetSet::iterator i=mPendingTargetSet.begin(); i != mPendingTargetSet.end(); ++i)
+   {
+      // see rfc 3261 section 16.6
+      SipMessage request(mRequestContext.getOriginalRequest());
+
+      Branch branch;
+      branch.status = Trying;
+      branch.uri = i->uri();
+      
+      request.header(h_RequestLine).uri() = branch.uri; 
+
+      if (request.exists(h_MaxForwards))
+      {
+         request.header(h_MaxForwards).value()--;
+      }
+      else
+      {
+         request.header(h_MaxForwards).value() = 70; // !jf! use Proxy to retrieve this
+      }
+      
+      // Record-Route addition
+      if (0 ) // not ACK
+      {
+         NameAddr rt;
+         // !jf! could put unique id for this instance of the proxy in user portion
+
+         if (request.exists(h_Routes) && request.header(h_Routes).size() != 0)
+         {
+            rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+         }
+         else
+         {
+            rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+         }
+         
+         rt.uri().host() = DnsUtil::getLocalHostName();
+         rt.uri().param(p_lr);
+         request.header(h_RecordRoutes).push_back(rt);
+      }
+      
+      // !jf! unleash the baboons here
+      // a baboon might adorn the message, record call logs or CDRs, might
+      // insert loose routes on the way to the next hop
+      
+      Helper::processStrictRoute(request);
+      request.header(h_Vias).push_front(branch.via);
+      
+      // add a Timer C if one hasn't already been added
+      
+      // the rest of 16.6 is implemented by the transaction layer of resip
+      // - determining the next hop (tuple)
+      // - adding a content-length if needed
+      // - sending the request
+      mClientTransactions[request.getTransactionId()] = branch;
+      sendRequest(request); 
+   }
 }
 
 void
-ResponseContext::processResponse(const SipMessage& response)
+ResponseContext::processCancel(const SipMessage& request)
+{
+   assert(request.isRequest());
+   assert(request.header(h_RequestLine).method() == CANCEL);
+
+   std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
+   mRequestContext.sendResponse(*ok);
+
+   if (!mForwardedFinalResponse)
+   {
+      cancelProceedingClientTransactions();
+   }
+}
+
+void
+ResponseContext::processResponse(SipMessage& response)
 {
    // for provisional responses, 
+   assert(response.isResponse());
+   assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
+   response.header(h_Vias).pop_front();
+
+   if (response.header(h_Vias).empty())
+   {
+      // ignore CANCEL/200
+      return;
+   }
+   
+   int code = response.header(h_StatusLine).statusCode();
+
+   switch (code / 100)
+   {
+      case 1:
+         // update Timer C
+         if  (code > 100 && !mForwardedFinalResponse)
+         {
+            mRequestContext.sendResponse(response);
+         }
+         
+         {
+            TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+            if (i->second.status == WaitingToCancel)
+            {
+               cancelClientTransaction(i->second);
+               mClientTransactions.erase(i);
+            }
+            else
+            {
+               i->second.status = Proceeding;
+            }
+         }
+         break;
+         
+      case 2:
+         removeClientTransaction(response);
+         if (response.header(h_CSeq).method() == INVITE)
+         {
+            cancelProceedingClientTransactions();
+            mForwardedFinalResponse = true;
+            mRequestContext.sendResponse(response);
+         }
+         else if (!mForwardedFinalResponse)
+         {
+            mForwardedFinalResponse = true;
+            mRequestContext.sendResponse(response);            
+         }
+         break;
+         
+      case 3:
+      case 4:
+      case 5:
+         removeClientTransaction(response);
+         if (!mForwardedFinalResponse)
+         {
+            int priority = getPriority(response);
+            if (priority == mBestPriority)
+            {
+               if (code == 401 || code == 407)
+               {
+                  if (response.exists(h_WWWAuthenticates))
+                  {
+                     for ( Auths::iterator i=response.header(h_WWWAuthenticates).begin(); 
+                           i != response.header(h_WWWAuthenticates).end() ; ++i)
+                     {                     
+                        mBestResponse.header(h_WWWAuthenticates).push_back(*i);
+                     }
+                  }
+                  
+                  if (response.exists(h_ProxyAuthenticates))
+                  {
+                     for ( Auths::iterator i=response.header(h_ProxyAuthenticates).begin(); 
+                           i != response.header(h_ProxyAuthenticates).end() ; ++i)
+                     {                     
+                        mBestResponse.header(h_ProxyAuthenticates).push_back(*i);
+                     }
+                     mBestResponse.header(h_StatusLine).statusCode() = 407;
+                  }
+               }
+               else if (code / 100 == 3) // merge 3xx
+               {
+                  for (NameAddrs::iterator i=response.header(h_Contacts).begin(); 
+                       i != response.header(h_Contacts).end(); ++i)
+                  {
+                     if (!i->isAllContacts())
+                     {
+                        mBestResponse.header(h_Contacts).push_back(*i);
+                     }
+                  }
+                  mBestResponse.header(h_StatusLine).statusCode() = 300;
+               }
+            }
+            else if (priority < mBestPriority)
+            {
+               mBestPriority = priority;
+               mBestResponse = response;
+            }
+            else if (mClientTransactions.empty())
+            {
+               mForwardedFinalResponse = true;
+               // don't forward 408 to NIT
+               if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
+                   response.header(h_CSeq).method() == INVITE)
+               {
+                  mRequestContext.sendResponse(mBestResponse);
+               }
+            }
+         }
+         break;
+         
+      case 6:
+         removeClientTransaction(response);
+         if (!mForwardedFinalResponse)
+         {
+            if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
+            {
+               mBestResponse = response;
+               if (response.header(h_CSeq).method() == INVITE)
+               {
+                  // CANCEL INVITE branches
+                  cancelProceedingClientTransactions();
+               }
+            }
+            
+            if (mClientTransactions.empty())
+            {
+               mForwardedFinalResponse = true;
+               mRequestContext.sendResponse(mBestResponse);
+            }
+         }
+         break;
+         
+      default:
+         assert(0);
+         break;
+   }
 }
 
-bool 
-ResponseContext::CompareQ::operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const
+void
+ResponseContext::cancelClientTransaction(const Branch& branch)
 {
-   return lhs.param(p_q) < rhs.param(p_q);
+   SipMessage request(mRequestContext.getOriginalRequest());
+   request.header(h_Vias).push_front(branch.via);
+   
+   std::auto_ptr<SipMessage> cancel(Helper::makeCancel(request));
+   sendRequest(*cancel);
 }
 
-bool 
-ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const
+void
+ResponseContext::cancelProceedingClientTransactions()
 {
-   assert(lhs.isResponse());
-   assert(rhs.isResponse());
-   
-   
-   // !rwm! replace with correct thingy here
-   return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
+   // CANCEL INVITE branches
+   for (TransactionMap::iterator i = mClientTransactions.begin(); 
+        i != mClientTransactions.end(); ++i)
+   {
+      if (i->second.status == Proceeding)
+      {
+         cancelClientTransaction(i->second);
+         TransactionMap::iterator c = i++;
+         mClientTransactions.erase(c);
+      }
+      else if (i->second.status == Trying)
+      {
+         i->second.status = WaitingToCancel;
+      }
+   }
+}
+
+void
+ResponseContext::removeClientTransaction(const SipMessage& response)
+{
+   assert(response.isResponse());
+   TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+   if (i != mClientTransactions.end())
+   {
+      mClientTransactions.erase(i);
+   }
 }
 
 int
@@ -195,6 +452,22 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
     return p;
 }
 
+bool 
+ResponseContext::CompareQ::operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const
+{
+   return lhs.param(p_q) < rhs.param(p_q);
+}
+
+bool 
+ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const
+{
+   assert(lhs.isResponse());
+   assert(rhs.isResponse());
+   
+   
+   // !rwm! replace with correct thingy here
+   return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
+}
 
 
 /* ====================================================================
