@@ -26,8 +26,10 @@ class Transport
          TLS,
          SCTP,
          DCCP,
+#if defined(USETESTTRANSPORT)
 	 TestReliable,
-	 TestUnreliable
+	 TestUnreliable,
+#endif
       } Type;
 
       class Tuple
