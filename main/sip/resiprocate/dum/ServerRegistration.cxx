@@ -15,6 +15,21 @@ ServerRegistration::~ServerRegistration()
    mDialog.mServerRegistration = 0;
 }
 
+void 
+ServerRegistration::end()
+{
+}
+
+void 
+ServerRegistration::dispatch(const SipMessage& msg)
+{
+}
+
+void
+ServerRegistration::dispatch(const DumTimeout& msg)
+{
+}
+
 ServerRegistration::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}
