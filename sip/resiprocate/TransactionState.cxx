@@ -117,7 +117,7 @@ TransactionState::process(SipStack& stack)
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
                    DebugLog(<<" adding T100 timer (INV)");
-                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
+                   TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                    // !rk! This might be needlessly created.  Design issue.
                    state->mMsgToRetransmit = state->make100(sip);
                    stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
@@ -950,15 +950,16 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          case Timer::TimerTrying:
-            if (mState == Proceeding)
+            if (mState == Trying)
             {
                DebugLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
+	       mState = Proceeding;
                delete msg;
             }
             else
             {
-               DebugLog (<< "TimerTrying fired. Not in Proceeding state. Ignoring");
+               DebugLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
                delete msg;
             }
             break;
