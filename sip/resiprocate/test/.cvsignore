@@ -6,7 +6,9 @@
 .libs
 Makefile.in
 SipTortureTests
+bar
 bin.*
+foo
 id.pem
 id_key.pem
 lg
