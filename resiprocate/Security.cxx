@@ -40,6 +40,8 @@
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/pkcs7.h>
+#include <openssl/ossl_typ.h>
+#include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
@@ -1108,9 +1110,95 @@ BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 }
 
 void
-BaseSecurity::generateUserCert (const Data& aor, const Data& passPhrase)
+BaseSecurity::generateUserCert (const Data& aor,  int keyLen )
 {
-   assert(0);
+   //   Data passphrase;
+   //   EVP_PKEY *privkey = NULL;
+   //   X509 *selfcert = NULL;
+   //   BUF_MEM *bptr = NULL;
+   
+   // initilization:  are these needed?
+   //   CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+   //   bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
+   
+   RSA* rsa = RSA_generate_key( keyLen, RSA_F4, NULL, NULL);
+   assert(rsa);    // couldn't make key pair
+   
+   EVP_PKEY* privkey = NULL;
+   EVP_PKEY_assign_RSA(privkey, rsa);
+   assert(privkey);
+   
+   X509* cert = X509_new();
+   
+    
+   // Setup the subjectAltName structure here with sip:, im:, and pres: URIs
+   // TODO:
+   
+   X509_set_version(cert, 2L);	// set version to X509v3 (starts from 0)
+   
+   int serial = Random::getRandom();  // get an int worth of randomness
+   assert(sizeof(serial)==4);
+   ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
+   
+   X509_NAME *subject = NULL;
+   X509_EXTENSION *ext = NULL;
+   Data domain("example.org");
+   Data userAtDomain("user@example.org");
+   X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
+                               (unsigned char *) domain.data(), domain.size(), -1, 0);
+   X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
+                               (unsigned char *) userAtDomain.data(), userAtDomain.size(), -1, 0);
+   
+   X509_set_issuer_name(cert, subject);
+   X509_set_subject_name(cert, subject);
+   
+   X509_gmtime_adj(X509_get_notBefore(cert),0);
+   const long duration = 60*60*24*30;   // make cert valid for 30 days
+   X509_gmtime_adj(X509_get_notAfter(cert), duration);
+   
+   X509_set_pubkey(cert, privkey);
+   
+   // need to fiddle with this to make this work with lists of IA5 URIs and UTF8
+   //ext = X509V3_EXT_conf_nid( NULL , NULL , NID_subject_alt_name, subjectAltNameStr.cstr() );
+   //X509_add_ext( cert, ext, -1);
+   //X509_EXTENSION_free(ext);
+   
+   ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
+   X509_add_ext( cert, ext, -1);
+   X509_EXTENSION_free(ext);
+   
+   // add extensions NID_subject_key_identifier and NID_authority_key_identifier
+   
+#if 0 // stuff to convert to DER and for bodies 
+   X509_sign(cert, privkey, EVP_sha1());
+   
+   unsigned char* buffer = NULL;     
+   int len = i2d_X509(cert, &buffer);   // if buffer is NULL, openssl
+   // assigns memory for buffer
+   assert(buffer);
+   Data derData((char *) buffer, len);
+   X509Contents *certpart = new X509Contents( derData );
+   assert(certpart);
+   
+   // make an in-memory BIO        [ see  BIO_s_mem(3) ]
+   BIO *mbio = BIO_new(BIO_s_mem());
+   
+   // encrypt the the private key with the passphrase and put it in the BIO in DER format
+   i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc(), 
+      (char *) passphrase.data(), 
+      passphrase.size(), NULL, NULL);
+
+   // dump the BIO into a Contents
+   BIO_get_mem_ptr(mbio, &bptr);
+   Pkcs8Contents *keypart = new Pkcs8Contents(Data(bptr->data, bptr->length));
+   assert(keypart);
+   BIO_free(mbio);
+
+   MultipartMixedContents *certsbody = new MultipartMixedContents;
+   certsbody->parts().push_back(certpart);
+   certsbody->parts().push_back(keypart);
+   assert(certsbody);
+#endif
 }
 
 MultipartSignedContents*
