@@ -36,7 +36,20 @@ class ClientRegistration: public NonDialogUsage
    
    protected:
       virtual ~ClientRegistration();
+
    private:
+      typedef enum
+      {
+         Querying,
+         Adding,
+         Refreshing,
+         Registered,
+         Removing,
+         None // for queued only
+      } State;
+
+      SipMessage& tryModification(ClientRegistration::State state);
+
       friend class DialogSet;
 
       SipMessage& mLastRequest;
@@ -44,15 +57,10 @@ class ClientRegistration: public NonDialogUsage
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
       int mTimerSeq; // expected timer seq (all < are stale)
 
-      typedef enum
-      {
-         Querying,
-         Adding,
-         Registered,
-         Removing,
-      } State;
       State mState;
       bool mEndWhenDone;
+      State mQueuedState;
+      SipMessage mQueuedRequest;
       
       // disabled
       ClientRegistration(const ClientRegistration&);

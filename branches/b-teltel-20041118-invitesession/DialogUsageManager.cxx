@@ -1066,10 +1066,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case REGISTER:
          {
-               SipMessage failure;
-               makeResponse(failure, request, 405);
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               sendResponse(failure);
+            SipMessage failure;
+            makeResponse(failure, request, 405);
+            failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+            sendResponse(failure);
          }
          break;         
          case RESPONSE:
@@ -1120,8 +1120,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
-   if (/*response.header(h_StatusLine).statusCode() > 100 && */
-      response.header(h_CSeq).method() != CANCEL)
+   if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   

@@ -15,64 +15,38 @@ class SdpContents;
 class InviteSession : public DialogUsage
 {
    public:
-
-      virtual void send(SipMessage& msg);
-
-      //call after setOffer. Will do the right thing w/ respect to an ACK to a
-      //200, eventually PRACK/UPDATE
-      virtual void send();
-
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
-      virtual void setOffer(const SdpContents* offer);
+      virtual void provideOffer(const SdpContents& offer);
       
       /// Called to set the answer that will be used in the next messages that
       /// sends an offer. Does not send an answer
-      virtual void setAnswer(const SdpContents* answer);
+      virtual void provideAnswer(const SdpContents& answer);
 
-      /// Makes the dialog end. Depending on the current state, this might
-      /// results in BYE or CANCEL being sent.
+      /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
-
-      /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
-      /// should be 488? to a reinvite INVITE or an UPDATE
-      virtual SipMessage& rejectDialogModification(int statusCode);
+      
+      /// Rejects an offer at the SIP level. So this can send a 488 to a
+      /// reINVITE or UPDATE
+      virtual void reject(int statusCode);
       
       //accept a re-invite, etc.  Always 200?
-      virtual SipMessage& acceptDialogModification(int statusCode = 200);
-
+      //this is only applicable to the UAS
+      //virtual void accept(int statusCode=200);
       
-      // If the app has called setOffer prior to targetRefresh, the reINVITE
-      // will contain the proposed offer. If the peer supports UPDATE, always
-      // prefer UPDATE over reINVITE (no 3-way handshake required)
-      // !jf! there are more things you could update in the targetRefresh 
-      //!dcm! -- the UPDATE rfc states that re-invite should be preferred on 
-      // established dialogs, in case user approval is required.
-      virtual SipMessage& targetRefresh(const NameAddr& localUri);
-
-      //always does re-invite for now...ACK is hidden
-      //call setOffer or setAnswer bfore calling these.
-      //calling answerModifySession /wout setAnswer is invalid
-      virtual SipMessage& modifySession();
+      // will resend the current sdp in an UPDATE or reINVITE
+      virtual void targetRefresh(const NameAddr& localUri);
  
-      virtual SipMessage& makeRefer(const NameAddr& referTo);
-      virtual SipMessage& makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-
+      // Following methods are for sending requests within a dialog
+      virtual void refer(const NameAddr& referTo);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      virtual void info(const Contents& contents);
+      
       const SdpContents* getLocalSdp() const;
       const SdpContents* getRemoteSdp() const;
+      bool peerSupportsUpdateMethod() const;
 
-      virtual SipMessage& makeInfo(auto_ptr<Contents> contents);
-
-   public:
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
-//      typedef Handle<InviteSession> InviteSessionHandle;
-      InviteSessionHandle getSessionHandle();
-
-      void handleSessionTimerResponse(const SipMessage& msg);
-      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
-
+   protected:
       typedef enum
       {
          None, // means no Offer or Answer (may have SDP)
@@ -80,14 +54,35 @@ class InviteSession : public DialogUsage
          Answer
       } OfferAnswerType;
 
-   protected:
       typedef enum
       {
-         Nothing,
-         Offerred,
-         Answered, // agreed
-         CounterOfferred
-      } OfferState;
+         Undefined,  // Not used
+         Connected,  
+         Updating, // Sent an UPDATE
+         Reinviting, // Sent a reINVITE
+         UpdatePending, // Received an UPDATE
+         ReinvitePending, // Received a reINVITE
+         ReinvitePendingNoOffer, // Received a reINVITE with no offer
+         Terminated // Ended. waiting to delete
+      } State;
+
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimeout& timer);
+
+      InviteSessionHandle getSessionHandle();
+
+      OfferState mOfferState;
+      SdpContents mCurrentLocalSdp;
+      SdpContents mCurrentRemoteSdp;
+      SdpContents mProposedLocalSdp;
+      SdpContents mProposedRemoteSdp;
+      SdpContents mNextOfferOrAnswerSdp;
+
+#if 0
+      void handleSessionTimerResponse(const SipMessage& msg);
+      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
+
+
 
       // If sdp==0, the offer was rejected
       void incomingSdp(const SipMessage& msg, const SdpContents* sdp);
@@ -97,16 +92,6 @@ class InviteSession : public DialogUsage
 
       std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
       
-      typedef enum
-      {
-         Initial,  // No session setup yet
-         Early,    
-         Proceeding,
-         Cancelled,
-         Connected,
-         Terminated,
-         ReInviting,
-      } State;
 
       State mState;
 
@@ -121,18 +106,12 @@ class InviteSession : public DialogUsage
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
       SipMessage& makeAck();
       SipMessage& makeFinalResponse(int code);      
+#endif
 
-      OfferState mOfferState;
-      SdpContents* mCurrentLocalSdp;
-      SdpContents* mCurrentRemoteSdp;
-      SdpContents* mProposedLocalSdp;
-      SdpContents* mProposedRemoteSdp;
-      SdpContents* mNextOfferOrAnswerSdp;
 
       SipMessage mLastRequest;
       SipMessage mLastIncomingRequest;
       SipMessage mLastResponse;
-      SipMessage mLastNit;      
 
       typedef map<int, SipMessage> CSeqToMessageMap;
       CSeqToMessageMap mAckMap;
@@ -161,6 +140,9 @@ class InviteSession : public DialogUsage
       // disabled
       InviteSession(const InviteSession&);
       InviteSession& operator=(const InviteSession&);
+
+      // Called by the DialogSet when the app has CANCELed the request
+      virtual void cancel();
 };
 
 }

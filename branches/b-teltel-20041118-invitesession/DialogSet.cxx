@@ -181,17 +181,16 @@ DialogSet::findDialog(const SipMessage& msg)
          }
       }
    }
-   else if (msg.exists(h_Contacts) && !msg.header(h_Contacts).empty()
+   else if (msg.exists(h_Contacts) && 
+            msg.header(h_Contacts).size() == 1 
             && msg.isResponse() 
             && mDum.getProfile()->looseToTagMatching()
             && msg.header(h_To).exists(p_tag))     
    {
-      const Uri& contact = msg.header(h_Contacts).front().uri();
-      
       //match by contact
       for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
-         if (it->second->mRemoteTarget.uri() == contact)
+         if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
          {
             //!dcm! in the vonage case, the to tag should be updated to match the fake
             //vonage tag introduced in the 200 which is also used for the BYE.
