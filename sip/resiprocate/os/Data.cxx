@@ -803,6 +803,19 @@ Data::data() const
    return mBuf;
 }
 
+const char* 
+Data::begin() const
+{
+   return mBuf;
+}
+
+const char* 
+Data::end() const
+{
+   return mBuf + mSize;
+}
+
+
 void
 Data::own() const
 {
