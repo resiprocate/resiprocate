@@ -37,55 +37,6 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 }
 
 
-// MOVEME !ah! this goes in a test_support package
-SipMessage*
-Helper::makeMessage(const Data& data, bool isExternal )
-{
-   using namespace PreparseConst;
-    
-   SipMessage* msg = new SipMessage(isExternal);
-
-   size_t size = data.size();
-   char *buffer = new char[size];
-
-   msg->addBuffer(buffer);
-
-   memcpy(buffer,data.data(),size);
-   
-   Preparse::Status status = stNone;
-   
-   Preparse pre;
-
-   size_t used = 0;
-   size_t discard = 0;
-   
-   pre.process(*msg, buffer, size, 0, used, discard, status);
-   if (status == stPreparseError ||
-       status == stFragmented)
-   {
-      delete msg;
-      msg = 0;
-   }
-   else
-   {
-       assert(used == discard);
-       // no pp error
-       if (status & stHeadersComplete &&
-           used < size)
-      {
-         // body is present .. add it up.
-         // NB. The Sip Message uses an overlay (again)
-         // for the body. It ALSO expects that the body
-         // will be contiguous (of course).
-         // it doesn't need a new buffer in UDP b/c there
-         // will only be one datagram per buffer. (1:1 strict)
-         msg->setBody(buffer+used,size-used);
-      }
-   }
-   return msg;
-}
-
-
 SipMessage*
 Helper::makeRegister(const NameAddr& registrar,
                      const NameAddr& aor)

@@ -21,8 +21,6 @@ class Helper
                                    const NameAddr& from,
                                    const NameAddr& contact);
 
-      static SipMessage* makeMessage(const Data& msg, bool isExternal = false);
-      // WARNING: For testing only. MOVEME !ah! test_support
 
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
       
