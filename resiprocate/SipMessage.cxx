@@ -15,6 +15,7 @@
 #include "resiprocate/os/vmd5.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 
 using namespace resip;

@@ -12,6 +12,7 @@
 #include "resiprocate/UnknownHeaderType.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;
@@ -23,7 +24,17 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Err, argv[0]);
-
+   
+   {
+      SipMessage empty;
+      cerr << empty.brief() << endl;
+      empty.header(h_CSeq);
+      cerr << empty.brief() << endl;
+      empty.header(h_Vias).push_back(Via());
+      cerr << empty.brief() << endl;
+      return 0;
+   }
+      
    {
       Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
                "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"

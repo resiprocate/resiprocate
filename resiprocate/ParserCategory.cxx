@@ -4,6 +4,7 @@
 
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/ParserCategory.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
