@@ -18,6 +18,7 @@ class Subsystem
       static const Subsystem UTIL;
       static const Subsystem BASE;
       static const Subsystem SIP;    // SIP Stack / Parser
+      static const Subsystem SDP;
       static const Subsystem TRANSACTION;
       static const Subsystem TRANSPORT;
       
