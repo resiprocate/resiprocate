@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <sip2/sipstack/UnknownSubComponent.hxx>
-#include <sip2/sipstack/HeaderFieldValue.hxx>
-#include <sip2/sipstack/ParserCategory.hxx>
+#include <sipstack/UnknownSubComponent.hxx>
+#include <sipstack/HeaderFieldValue.hxx>
+#include <sipstack/ParserCategory.hxx>
 
 using namespace std;
 using namespace Vocal2;
@@ -25,12 +25,11 @@ HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   : next(hfv.next),
-    mParserCategory(0),
+    mParserCategory(hfv.mParserCategory->clone(this)),
     mField(0),
     mFieldLength(hfv.mFieldLength),
     mSubComponentList(hfv.mSubComponentList),
     mUnknownSubComponentList(hfv.mUnknownSubComponentList),
-    mParserCategory(hfv.mParserCategory->clone(this)),
     mMine(true)
 {
 
@@ -84,7 +83,7 @@ HeaderFieldValue::isParsed() const
 
 
 bool 
-HeaderFieldValue::exists(const std::string& subcomponent)
+HeaderFieldValue::exists(const Data& subcomponent)
 {
   
   SubComponent* exists = mUnknownSubComponentList.find(subcomponent);
@@ -110,7 +109,7 @@ HeaderFieldValue::exists(const SubComponent::Type type)
 }
 
 UnknownSubComponent* 
-HeaderFieldValue::get(const std::string& type)
+HeaderFieldValue::get(const Data& type)
 {
   return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
@@ -123,7 +122,7 @@ ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
     }
   else
     {
-      stream << string(hfv.mField, hfv.mFieldLength);
+      stream << Data(hfv.mField, hfv.mFieldLength);
     }
   return stream;
 }

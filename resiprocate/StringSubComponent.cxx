@@ -11,12 +11,12 @@ StringSubComponent::StringSubComponent(Type type,
 {}
 
 
-StringSubComponent::StringSubComponent(Type type, const string& data)
+StringSubComponent::StringSubComponent(Type type, const Data& data)
    : SubComponent(type), 
      mData(data)
 {}
 
-string& 
+Data& 
 StringSubComponent::value()
 {
    return mData;

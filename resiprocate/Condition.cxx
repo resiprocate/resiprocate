@@ -50,14 +50,14 @@
 
 
 static const char* const Condition_cxx_Version =
-    "$Id: Condition.cxx,v 1.1 2002/09/21 05:57:28 jason Exp $";
+    "$Id: Condition.cxx,v 1.2 2002/09/21 20:15:50 dabryan Exp $";
 
 
 #include <cassert>
 
-#include <sip2/sipstack/Condition.hxx>
-#include <sip2/sipstack/Mutex.hxx>
-#include <sip2/sipstack/vthread.hxx>
+#include <sipstack/Condition.hxx>
+#include <sipstack/Mutex.hxx>
+#include <sipstack/vthread.hxx>
 
 using Vocal2::Condition;
 using Vocal2::Mutex;

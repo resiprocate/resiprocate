@@ -1,12 +1,12 @@
 #ifndef Subsystem_hxx
 #define Subsystem_hxx
 
-#include <string>
+#include <sipstack/Data.hxx>
 
 namespace Vocal2
 {
 
-class Subsystem : public std::string
+class Subsystem : public Data
 {
    public:
       // Add new systems below
@@ -16,7 +16,7 @@ class Subsystem : public std::string
       static const Subsystem SIP;    // SIP Stack / Parser
       
    private:
-      Subsystem(const std::string& str) : std::string(str) {};
+      Subsystem(const Data& str) : Data(str) {};
 };
  
 }

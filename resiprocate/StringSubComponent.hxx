@@ -1,8 +1,8 @@
 #ifndef STRINGSUBCOMPONENT_HXX
 #define STRINGSUBCOMPONENT_HXX
 
-#include <sip2/sipstack/SubComponent.hxx>
-#include <string>
+#include <sipstack/SubComponent.hxx>
+#include <sipstack/Data.hxx>
 #include <iostream>
 
 namespace Vocal2
@@ -14,12 +14,12 @@ class StringSubComponent : public SubComponent
       StringSubComponent(Type type,
                          const char* startData, unsigned int dataSize);
       
-      StringSubComponent(Type type, const std::string& data);
+      StringSubComponent(Type type, const Data& data);
       
-      std::string& value();
+      Data& value();
       virtual SubComponent* clone() const;
    private:
-      std::string mData;
+      Data mData;
 };
 
 std::ostream& Vocal2::operator<<(std::ostream& stream, StringSubComponent& comp);

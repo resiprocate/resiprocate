@@ -2,7 +2,7 @@
 #define HFVLIST_HXX
 
 #include <iostream>
-#include <sip2/sipstack/HeaderFieldValue.hxx>
+#include <sipstack/HeaderFieldValue.hxx>
 
 namespace Vocal2
 {
