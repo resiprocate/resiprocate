@@ -12,7 +12,7 @@ using namespace std;
 int
 main (int argc, char* argv[])
 {
-  Log::initialize(Log::COUT,Log::DEBUG,Data("PresSvr"));
+  Log::initialize(Log::Cout,Log::Debug,Data("PresSvr"));
 
   SipStack stack1;
 
