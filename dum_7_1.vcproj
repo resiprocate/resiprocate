@@ -219,6 +219,9 @@
 				RelativePath=".\SubscriptionCreator.cxx">
 			</File>
 			<File
+				RelativePath=".\SubscriptionState.cxx">
+			</File>
+			<File
 				RelativePath=".\UInt64Hash.cxx">
 			</File>
 		</Filter>
