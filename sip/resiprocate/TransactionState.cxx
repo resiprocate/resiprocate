@@ -401,6 +401,10 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
       }
    }
+   else if (isDns(msg))
+   {
+      processDns(msg);
+   }
 }
 
 
@@ -699,6 +703,10 @@ TransactionState::processServerNonInvite(  Message* msg )
       assert(dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ);
       delete msg;
       delete this;
+   }
+   else if (isDns(msg))
+   {
+      processDns(msg);
    }
 }
 
@@ -1027,6 +1035,11 @@ TransactionState::isTimer(Message* msg) const
    return dynamic_cast<TimerMessage*>(msg) != 0;
 }
 
+bool
+TransactionState::isDns(Message* msg) const
+{
+   return dynamic_cast<DnsMessage*>(msg) != 0;
+}
 
 bool
 TransactionState::isFromTU(Message* msg) const
@@ -1095,7 +1108,7 @@ TransactionState::resendToWire(Message* msg) const
 
    assert (mDnsState != DnsResolver::NotStarted);
    assert (mDnsState != DnsResolver::Waiting); // !jf!
-   
+
    mStack.mTransportSelector.send(sip, *mDnsListCurrent);
 }
 
