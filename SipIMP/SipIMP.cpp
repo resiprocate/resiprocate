@@ -322,8 +322,8 @@ SipImpApp::imInit()
 		// add the transports
 		if (port!=0)
 		{
-			sipStack->addTransport(Transport::UDP, port);
-			sipStack->addTransport(Transport::TCP, port);
+			sipStack->addTransport(UDP, port);
+			sipStack->addTransport(TCP, port);
 		}
 		if ( tlsPort != 0 )
 		{
