@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.95 2002/12/15 22:26:31 fluffy Exp $
+# $Id: Makefile,v 1.96 2002/12/16 19:59:10 jason Exp $
 
 BUILD = ../../build
 
@@ -28,6 +28,7 @@ SRC = \
 	MultipartMixedContents.cxx \
 	LazyParser.cxx \
 	BranchParameter.cxx \
+	Connection.cxx \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
 	QopParameter.cxx \
