@@ -18,6 +18,8 @@ class InvSessionCreator : public BaseCreator
       } State;
       
       State mState;
+
+      SdpContents* initialOffer;
       
 };
 
