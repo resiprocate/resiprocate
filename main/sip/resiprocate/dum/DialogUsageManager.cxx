@@ -207,16 +207,16 @@ void
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
    assert(handler);
-   assert(mClientSubscriptionHandler.count(eventType) == 0);
-   mClientSubscriptionHandler[eventType] = handler;
+   assert(mClientSubscriptionHandlers.count(eventType) == 0);
+   mClientSubscriptionHandlers[eventType] = handler;
 }
 
 void 
 DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler* handler)
 {
    assert(handler);
-   assert(mServerSubscriptionHandler.count(eventType) == 0);
-   mServerSubscriptionHandler[eventType] = handler;
+   assert(mServerSubscriptionHandlers.count(eventType) == 0);
+   mServerSubscriptionHandlers[eventType] = handler;
 }
 
 void 
@@ -748,6 +748,19 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 }
 
 
+ClientSubscriptionHandler* 
+DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
+{
+   map<Data, ClientSubscriptionHandler*>::iterator it = mClientSubscriptionHandlers.find(eventType);
+   if (it == mClientSubscriptionHandlers.end())
+   {
+      return 0;
+   }
+   else
+   {
+      return it->second;
+   }
+}
 
 
 /* ====================================================================
