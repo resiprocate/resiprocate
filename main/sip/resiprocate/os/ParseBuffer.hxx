@@ -1,6 +1,5 @@
 #ifndef ParseBuffer_hxx
 #define ParseBuffer_hxx
-#include <string.h>
 #include <util/Data.hxx>
 #include <util/VException.hxx>
 
