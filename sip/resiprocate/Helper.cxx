@@ -18,7 +18,7 @@
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Security2.hxx"
+#include "resiprocate/Security.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
@@ -1073,6 +1073,8 @@ extractFromPkcs7Recurse(Contents* tree,
                         SecurityAttributes* attributes,
                         Security& security)
 {
+   assert(0);
+#if 0 // TODO take out when we have security2
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
    {
@@ -1133,6 +1135,10 @@ extractFromPkcs7Recurse(Contents* tree,
    }
 
    return tree->clone();
+#else
+   return 0;
+#endif
+
 }
 
 Helper::ContentsSecAttrs
