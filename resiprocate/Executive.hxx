@@ -25,7 +25,7 @@ class Executive
       void buildFdSet(FdSet& fdset);
       
       /// returns time in milliseconds when process next needs to be called 
-      int getTimeTillNextProcessMS(); 
+      unsigned int getTimeTillNextProcessMS(); 
 
    private:
       SipStack& mStack;
