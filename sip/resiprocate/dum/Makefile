@@ -33,7 +33,7 @@ SRC =   \
 	ServerSubscription.cxx \
 	SubscriptionCreator.cxx \
 	UInt64Hash.cxx \
-
-#	DialogSet.cxx DialogSetId.cxx \
+	DialogSet.cxx \
+	DialogSetId.cxx \
 
 include $(BUILD)/Makefile.post
