@@ -15,16 +15,20 @@ class UnknownParameter;
 class ParserCategory
 {
    public:
-      
       ParserCategory(HeaderFieldValue* headerFieldValue)
          : mHeaderField(headerFieldValue) 
       {}
+
+      ParserCategory(const ParserCategory& rhs);
 
       //!dcm! -- will need to add different type of clones to HeaderFieldValue
       //in order to write copy constructor
 
       virtual ~ParserCategory() {}
-      virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
+
+      // called by HeaderFieldValue::clone()
+      ParserCategory* clone(HeaderFieldValue*) const;
+      virtual ParserCategory* clone() const = 0;
 
       virtual std::ostream& encode(std::ostream& str) const = 0;
 
@@ -49,8 +53,7 @@ class ParserCategory
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
-      ParserCategory() 
-      {}
+      ParserCategory();
 
       // call before every access 
       void checkParsed()

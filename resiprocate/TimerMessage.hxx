@@ -35,7 +35,7 @@ class TimerMessage : public Message
       
 
       virtual Data brief() const;
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual std::ostream& encode(std::ostream& strm) const;
       
    private:
       Data mTransactionId;
