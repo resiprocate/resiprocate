@@ -48,14 +48,14 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       if (!pb.eof() && *pb.position() == Symbols::DASH[0])
       {
          anchor = pb.skipChar(Symbols::DASH[0]);
-         pb.skipToEnd();
+         pb.skipToOneOf(" \t\r\n;=?>");       
          pb.data(mClientData, anchor);
       }
    }
    else
    {
       const char* anchor = pb.position();
-      pb.skipToEnd();
+      pb.skipToOneOf(" \t\r\n;=?>");       
       pb.data(mTransactionId, anchor);
    }
 }
