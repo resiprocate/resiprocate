@@ -29,7 +29,8 @@ TcpConnection::read( char* buf, int count )
 #endif
    if (bytesRead == INVALID_SOCKET)
    {
-      switch (errno)
+	   	int e = getErrno();
+      switch (e)
       {
          case EAGAIN:
             InfoLog (<< "No data ready to read");
@@ -54,7 +55,7 @@ TcpConnection::read( char* buf, int count )
             break;
       }
 
-      InfoLog (<< "Failed read on " << mSocket << " " << strerror(errno));
+      InfoLog (<< "Failed read on " << mSocket << " " << strerror(e));
    }
    else if (bytesRead == 0)
    {
@@ -80,7 +81,8 @@ TcpConnection::write( const char* buf, const int count )
 #endif
    if (bytesWritten == INVALID_SOCKET)
    {
-      InfoLog (<< "Failed write on " << mSocket << " " << strerror(errno));
+	   	int e = getErrno();
+      InfoLog (<< "Failed write on " << mSocket << " " << strerror(e));
    }
    
    return bytesWritten;

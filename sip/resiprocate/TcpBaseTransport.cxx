@@ -29,7 +29,8 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
    int on = 1;
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
    {
-      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(errno));
+	   int e = getErrno();
+      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
       throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
 #endif
@@ -44,7 +45,8 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
    if (e != 0 )
    {
-      InfoLog (<< "Failed listen " << strerror(errno));
+		int e = getErrno();
+      InfoLog (<< "Failed listen " << strerror(e));
 
       // !cj! deal with errors
 	  throw Exception("Address already in use", __FILE__,__LINE__);
@@ -88,10 +90,17 @@ TcpBaseTransport::processListen(FdSet& fdset)
       
       socklen_t peerLen = sizeof(peer);
       Socket sock = accept( mFd, &peer, &peerLen);
-      if ( sock == -1 )
+      if ( sock == SOCKET_ERROR )
       {
-         // !jf! this can not be ready in some cases 
-         Transport::error();
+		  int e = getErrno();
+		  switch (e)
+		  {
+		  case EWOULDBLOCK:
+	         // !jf! this can not be ready in some cases 
+			  return;
+		  default:
+	         Transport::error(e);
+		  }
          return;
       }
       makeSocketNonBlocking(sock);
@@ -166,13 +175,15 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
          {
-            InfoLog (<< "Failed to create a socket " << strerror(errno));
+				int e = getErrno();
+            InfoLog (<< "Failed to create a socket " << strerror(e));
             mConnectionManager.gc(ConnectionManager::MinLastUsed); // free one up
 
             sock = Transport::socket( TCP, mV4);
             if ( sock == INVALID_SOCKET )
             {
-               WarningLog( << "Error in finding free filedescriptor to use. " << strerror(errno));
+					int e = getErrno();
+               WarningLog( << "Error in finding free filedescriptor to use. " << strerror(e));
                fail(data->transactionId);
                delete data;
                return;
@@ -189,10 +200,11 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
          if (e == INVALID_SOCKET)
          {
-            if (errno != EINPROGRESS)
+			 	int err = getErrno();
+            if (err != EINPROGRESS)
             {
                // !jf! this has failed
-               InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(errno));
+               InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
                fdset.clear(sock);
                close(sock);
                fail(data->transactionId);
