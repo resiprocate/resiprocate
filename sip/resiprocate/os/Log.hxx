@@ -95,8 +95,8 @@ class Log
                              Level level,
                              const Data& appName,
                              const char * logFileName = 0);
-      static void initialize(const char* type,
-                             const char* level,
+      static void initialize(const Data& type,
+                             const Data& level,
                              const Data& appName,
                              const char * logFileName = 0);
       static void setLevel(Level level);
