@@ -1102,7 +1102,7 @@ extractFromPkcs7Recurse(Contents* tree,
       attributes->setSignatureStatus(sigStatus);
       return b->clone();
 #else
-      return multi->parts().front()->clone();
+      return mps->parts().front()->clone();
 #endif      
    }
    MultipartAlternativeContents* alt;
