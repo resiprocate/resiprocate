@@ -160,18 +160,30 @@ class ParserContainer : public ParserContainerBase
 
       virtual std::ostream& encode(const Data& headerName, std::ostream& str) const
       {
+         if (!headerName.empty())
+         {
+            str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+         }
+         
          for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
-            if (!headerName.empty())
+            if (i != mParsers.begin())
             {
-               str << headerName << Symbols::COLON << Symbols::SPACE;
+               if (Headers::isCommaEncoding(mType))
+               {
+                  str << Symbols::COMMA[0] << Symbols::SPACE[0];
+               }
+               else
+               {
+                  str << Symbols::CRLF << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
+               }
             }
 
             (*i)->encode(str);
-
-            str << Symbols::CRLF;
          }
+
+         str << Symbols::CRLF;
          return str;
       }
 
