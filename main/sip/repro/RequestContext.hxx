@@ -1,14 +1,33 @@
 #if !defined(RESIP_REQUEST_CONTEXT_HXX)
 #define RESIP_REQUEST_CONTEXT_HXX 
 
+#include <vector>
+#include "resiprocate/Uri.hxx"
+
+namespace resip
+{
+  class SipMessage;
+}
+
 namespace repro
 {
   class RequestProcessorChain;
 
   class RequestContext
   {
+    public:
+      void setSipRequest(resip::SipMessage *);
+      resip::SipMessage *getSipRequest();
+
+      void setDigestIdentity (std::string&);
+      const std::string& getDigestIdentity() const;
+
     private:
       RequestProcessorChain &mRequestProcessorChain;
+      std::string mDigestIdentity;
+      resip::SipMessage *mSipRequest;
+
+      std::vector<resip::Uri> mTargetSet;
   };
 }
 #endif

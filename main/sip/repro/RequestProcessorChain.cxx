@@ -15,6 +15,17 @@ repro::RequestProcessorChain::RequestProcessorChain()
 
 repro::RequestProcessorChain::~RequestProcessorChain()
 {
+  chain_t::iterator i;
+  for (i = chain.begin(); i != chain.end(); i++)
+  {
+    delete *i;
+  }
+}
+
+void
+repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
+{
+  chain.push_back(rp.release());
 }
 
 repro::RequestProcessor::processor_action_t
