@@ -1,10 +1,12 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #include "BaseCreator.hxx"
 #include "Dialog.hxx"
 #include "DialogUsageManager.hxx"
+#include "ClientOutOfDialogReq.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -23,8 +25,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
      mServerRegistration(0),
      mClientPublication(0),
      mServerPublication(0),
-     mClientOutOfDialogReq(0),
-     mServerOutOfDialogReq(0),
+     mClientOutOfDialogRequests(),
+     mServerOutOfDialogRequest(0),
      mType(Fake),
      mLocalTag(),
      mRemoteTag(),
@@ -185,185 +187,180 @@ Dialog::getId() const
 void
 Dialog::dispatch(const SipMessage& msg)
 {
-   BaseUsage* usage = findUsage(msg);
-   if (usage)
+   if (msg.isRequest())
    {
-      usage->dispatch(msg);
-   }
-   else // no matching usage
-   {
-      if (msg.isRequest())
+      const SipMessage& request = msg;
+      switch (request.header(h_CSeq).method())
       {
-         switch (msg.header(h_CSeq).method())
-         {
-            case INVITE:  // new INVITE
-               if (mInviteSession == 0)
-               {
-                  mInviteSession = mDum.makeServerInviteSession(*this, msg);
-               }
-               mInviteSession->dispatch(msg);
-               break;
+         case INVITE:  // new INVITE
+            if (mInviteSession == 0)
+            {
+               mInviteSession = mDum.makeServerInviteSession(*this, request);
+            }
+            mInviteSession->dispatch(request);
+            break;
                
-            case ACK:
-            case CANCEL:
-               if (mInviteSession == 0)
+         case ACK:
+         case CANCEL:
+            if (mInviteSession == 0)
+            {
+               InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
+               DebugLog (<< request);
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
+
+         case SUBSCRIBE:
+         case REFER: //!jf! does this create a server subs?
+            if (mServerSubscription == 0)
+            {
+               mServerSubscription = mDum.makeServerSubscription(*this, request);
+            }
+               
+            mServerSubscription->dispatch(request);
+            break;
+               
+         case NOTIFY:
+            if (request.header(h_To).exists(p_tag))
+            {
+               ClientSubscription* client = findMatchingClientSub(request);
+               if (client)
                {
-                  InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
-                  DebugLog (<< msg);
+                  client->dispatch(request);
                }
                else
                {
-                  mInviteSession->dispatch(msg);
-               }
-               break;
-
-            case SUBSCRIBE:
-            case REFER: //!jf! does this create a server subs?
-               if (mServerSubscription == 0)
-               {
-                  mServerSubscription = mDum.makeServerSubscription(*this, msg);
-               }
-               
-               mServerSubscription->dispatch(msg);
-               break;
-               
-            case NOTIFY:
-               if (msg.header(h_To).exists(p_tag))
-               {
-                  ClientSubscription* client = findMatchingClientSub(msg);
-                  if (client)
+                  BaseCreator* creator = mDum.findCreator(mId);
+                  if (creator)
                   {
-                     client->dispatch(msg);
+                     ClientSubscription* sub = mDum.makeClientSubscription(*this, request);
+                     mClientSubscriptions.push_back(sub);
+                     sub->dispatch(request);
                   }
                   else
                   {
-                     BaseCreator* creator = mDum.findCreator(mId);
-                     if (creator)
-                     {
-                        sub = mDum.makeClientSubscription(*this, msg);
-                        mClientSubscriptions.push_back(sub);
-                        sub->dispatch(msg);
-                     }
-                     else
-                     {
-                        std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
-                        mDum.send(*failure);
-                        return;
-                     }
+                     std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
+                     mDum.send(*failure);
+                     return;
                   }
                }
-               else // no to tag - unsolicited notify
-               {
-                  assert(mServerOutOfDialogReq == 0);
-                  mServerOutOfDialogReq = mDum.makeServerOutOfDialog(*this, msg);
-                  mServerOutOfDialogReq->dispatch(msg);
-               }
-               break;
-               
-            case PUBLISH:
-               if (mServerPublication == 0)
-               {
-                  mServerPublication = mDum.makeServerPublication(*this, msg);
-               }
-               mServerPublication->dispatch(msg);
-               break;
-
-            case REGISTER:
-               if (mServerRegistration == 0)
-               {
-                  mServerRegistration = mDum.makeServerRegistration(*this, msg);
-               }
-               mServerRegistration->dispatch(msg);
-               break;
-               
-            default: 
-               // only can be one ServerOutOfDialogReq at a time
-               assert(mServerOutOfDialogReq == 0);
-               mServerOutOfDialogReq = mDum.makeServerOutOfDialog(*this, msg);
-               mServerOutOfDialogReq->dispatch(msg);
-               break;
-         }
-      }
-      else if (msg.isResponse())
-      {
-         // !jf! should this only be for 2xx responses?
-         switch (msg.header(h_CSeq).method())
-         {
-            case INVITE:
-               if (mInviteSession == 0)
-               {
-                  BaseCreator* creator = mDum.findCreator(mId);
-                  assert (creator);
-                  creator->dispatch(msg);
-                  if (msg.header(h_StatusLine).statusCode() != 100)
-                  {
-                     mInviteSession = mDum.makeClientInviteSession(*this, msg);
-                     mInviteSession->dispatch(msg);
-                  }
-               }
-               else
-               {
-                  mInviteSession->dispatch(msg);
-               }
-               break;
-               
-            case ACK:
-            case CANCEL:
-               if (mInviteSession != 0)
-               {
-                  mInviteSession->dispatch(msg);
-               }
-               // else drop on the floor
-               break;
-               
-            case SUBSCRIBE:
-            case REFER: 
-            {
-               ClientSubscription* client = findMatchingClientSub(msg);
-               if (client)
-               {
-                  client->dispatch(msg);
-               }
-               else
-               {
-                  ClientSubscription* sub = mDum.makeClientSubscription(*this, msg);
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(msg);
-               }
-               break;
             }
-               
-            case PUBLISH:
-               if (mClientPublication == 0)
-               {
-                  mClientPublication = mDum.makeClientPublication(*this, msg);
-               }
-               mClientPublication->dispatch(msg);
-               break;
-               
-            case REGISTER:
-               if (mClientRegistration == 0)
-               {
-                  mClientRegistration = mDum.makeClientRegistration(*this, msg);
-               }
-               mClientRegistration->dispatch(msg);
-               break;
-               
-               // unsolicited - not allowed but commonly implemented
-               // by large companies with a bridge as their logo
-            case NOTIFY: 
-            case INFO:   
-               
-            default:
+            else // no to tag - unsolicited notify
             {
-               ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(msg);
-               if (req == 0)
+               assert(mServerOutOfDialogRequest == 0);
+               mServerOutOfDialogRequest = mDum.makeServerOutOfDialog(*this, request);
+               mServerOutOfDialogRequest->dispatch(request);
+            }
+            break;
+               
+         case PUBLISH:
+            if (mServerPublication == 0)
+            {
+               mServerPublication = mDum.makeServerPublication(*this, request);
+            }
+            mServerPublication->dispatch(request);
+            break;
+
+         case REGISTER:
+            if (mServerRegistration == 0)
+            {
+               mServerRegistration = mDum.makeServerRegistration(*this, request);
+            }
+            mServerRegistration->dispatch(request);
+            break;
+               
+         default: 
+            // only can be one ServerOutOfDialogReq at a time
+            assert(mServerOutOfDialogRequest == 0);
+            mServerOutOfDialogRequest = mDum.makeServerOutOfDialog(*this, request);
+            mServerOutOfDialogRequest->dispatch(request);
+            break;
+      }
+   }
+   else if (msg.isResponse())
+   {
+      const SipMessage& response = msg;
+      // !jf! should this only be for 2xx responses?
+      switch (response.header(h_CSeq).method())
+      {
+         case INVITE:
+            if (mInviteSession == 0)
+            {
+               BaseCreator* creator = mDum.findCreator(mId);
+               assert (creator);
+               creator->dispatch(response);
+               if (response.header(h_StatusLine).statusCode() != 100)
                {
-                  req = mDum.makeClientOutOfDialog(*this, msg);
-                  mClientOutOfDialogRequests.push_back(req);
+                  mInviteSession = mDum.makeClientInviteSession(*this, response);
+                  mInviteSession->dispatch(response);
                }
-               req->dispatch(msg);
-               break;
+            }
+            else
+            {
+               mInviteSession->dispatch(response);
+            }
+            break;
+               
+         case ACK:
+         case CANCEL:
+            if (mInviteSession != 0)
+            {
+               mInviteSession->dispatch(response);
+            }
+            // else drop on the floor
+            break;
+               
+         case SUBSCRIBE:
+         case REFER: 
+         {
+            ClientSubscription* client = findMatchingClientSub(response);
+            if (client)
+            {
+               client->dispatch(response);
+            }
+            else
+            {
+               ClientSubscription* sub = mDum.makeClientSubscription(*this, response);
+               mClientSubscriptions.push_back(sub);
+               sub->dispatch(response);
+            }
+            break;
+         }
+               
+         case PUBLISH:
+            if (mClientPublication == 0)
+            {
+               mClientPublication = mDum.makeClientPublication(*this, response);
+            }
+            mClientPublication->dispatch(response);
+            break;
+               
+         case REGISTER:
+            if (mClientRegistration == 0)
+            {
+               mClientRegistration = mDum.makeClientRegistration(*this, response);
+            }
+            mClientRegistration->dispatch(response);
+            break;
+               
+            // unsolicited - not allowed but commonly implemented
+            // by large companies with a bridge as their logo
+         case NOTIFY: 
+         case INFO:   
+               
+         default:
+         {
+            ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
+            if (req == 0)
+            {
+               req = mDum.makeClientOutOfDialog(*this, response);
+               mClientOutOfDialogRequests.push_back(req);
+            }
+            req->dispatch(response);
+            break;
          }
       }
    }
@@ -376,26 +373,26 @@ Dialog::findMatchingClientSub(const SipMessage& msg)
    for (std::vector<ClientSubscription*>::iterator i=mClientSubscriptions.begin(); 
         i != mClientSubscriptions.end(); ++i)
    {
-      if (i->matches(msg))
+      if ((*i)->matches(msg))
       {
-         i->dispatch(msg);
-         return;
+         return *i;
       }
    }
+   return 0;
 }
 
-ClientOutOfDialogRequest*
+ClientOutOfDialogReq*
 Dialog::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 {
-   for (std::vector<ClientOutOfDialogRequest*>::iterator i=mClientOutOfDialogRequests.begin(); 
+   for (std::vector<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin(); 
         i != mClientOutOfDialogRequests.end(); ++i)
    {
-      if (i->matches(msg))
+      if ((*i)->matches(msg))
       {
-         i->dispatch(msg);
-         return;
+         return *i;
       }
    }
+   return 0;
 }
 
 
@@ -483,10 +480,11 @@ Dialog::findServerPublication()
    }
 }
 
+#if 0
 ClientOutOfDialogReq::Handle 
 Dialog::findClientOutOfDialog()
 {
-   if (mClientOutOfDialogReq)
+   if (mClientOutOfDialogRequests)
    {
       return mClientOutOfDialogReq->getHandle();
    }
@@ -496,13 +494,14 @@ Dialog::findClientOutOfDialog()
                                  __FILE__, __LINE__);
    }
 }
+#endif
 
 ServerOutOfDialogReq::Handle
 Dialog::findServerOutOfDialog()
 {
-   if (mServerOutOfDialogReq)
+   if (mServerOutOfDialogRequest)
    {
-      return mServerOutOfDialogReq->getHandle();
+      return mServerOutOfDialogRequest->getHandle();
    }
    else
    {

@@ -10,6 +10,7 @@ namespace resip
 
 class DialogUsageManager;
 class Dialog;
+class DumTimer;
 class SipMessage;
 class NameAddr;
 
@@ -70,9 +71,10 @@ class BaseUsage
       
       virtual void end()=0;
       virtual void dispatch(const SipMessage& msg) = 0;
+      virtual void dispatch(const DumTimer& timer) = 0;
       virtual BaseUsage::Handle getBaseHandle() = 0;
 
-   private:
+   protected:
       DialogUsageManager& mDum;
       Dialog& mDialog;
 };
