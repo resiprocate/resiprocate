@@ -35,8 +35,8 @@ class Transport : public ThreadIf
 
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, bool ipv4);
-      static void bind(Socket fd, int portNum, const Data& netInterface, bool ipv4);
       static void error();
+      void bind();
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
@@ -52,6 +52,7 @@ class Transport : public ThreadIf
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
       virtual const Data& tlsDomain() const { return Data::Empty; }
+      const sockaddr& boundInterface() const { return mBoundInterface; }
       
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
@@ -66,6 +67,8 @@ class Transport : public ThreadIf
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       int mPort;
       Data mInterface;
+      sockaddr mBoundInterface;
+      
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 
