@@ -4,7 +4,6 @@
 #include <map>
 
 #include "resiprocate/Contents.hxx"
-#include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
 
 namespace resip
