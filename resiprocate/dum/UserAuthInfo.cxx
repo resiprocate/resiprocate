@@ -1,7 +1,7 @@
 
 #include <cassert>
 
-#include "repro/UserAuthInfo.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -12,8 +12,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user, const Data& transactionId ):
-   mTransactionId(transactionId),
+UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user, const Data& transactionToken ):
+   mTransactionToken(transactionToken),
    mA1(a1),
    mRealm(realm),
    mUser(user)
@@ -47,9 +47,9 @@ UserAuthInfo::getUser() const
 }
 
 const Data&
-UserAuthInfo::getTransactionId() const
+UserAuthInfo::getTransactionToken() const
 {
-   return mTransactionId;
+   return mTransactionToken;
 }
 
 Data 
