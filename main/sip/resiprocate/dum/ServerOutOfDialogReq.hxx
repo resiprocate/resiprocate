@@ -6,23 +6,12 @@
 namespace resip
 {
 
-/** @file ServerOutOfDialogReq.hxx
- *   @todo This file is empty
- */
-
 class ServerOutOfDialogReq : public BaseUsage
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ServerOutOfDialogReq* operator->();
-         private:
-            friend class ServerOutOfDialogReq;
-            Handle(DialogUsageManager& dum);
-      };
-      
+      typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
+      ServerOutOfDialogReqHandle getHandle();
+
       // !rm! do we need this?:    void accept(void);
       void accept(const SipMessage& ok);
       void reject(int statusCode);
@@ -30,8 +19,6 @@ class ServerOutOfDialogReq : public BaseUsage
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
-      ServerOutOfDialogReq::Handle& getHandle() { return static_cast<ServerOutOfDialogReq::Handle&>(mHandle); }
 
    protected:
       virtual ~ServerOutOfDialogReq();
