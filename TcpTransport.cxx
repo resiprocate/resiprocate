@@ -135,18 +135,17 @@ TcpTransport::processListen(FdSet& fdset)
 }
 
 bool
-TcpTransport::processRead(ConnectionMap::Connection* c)
+TcpTransport::processRead(Connection* c)
 {
    std::pair<char* const, size_t> writePair = c->getWriteBuffer();
-   size_t bytesToRead = min(writePair.second, TcpTransport::MaxReadSize);
+   size_t bytesToRead = std::min(writePair.second, TcpTransport::MaxReadSize);
 
    int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
+   DebugLog (<< "received " << bytesRead << " bytes on " << *c);
    if (bytesRead <= 0)
    {
       int err = errno;
-      DebugLog(<< "bytesRead: " << bytesRead);
-      DebugLog(<< "TcpTransport::processRead failed for " << *c 
-               << " " << strerror(err));
+      DebugLog(<< "TcpTransport::processRead failed for " << *c << " " << strerror(err));
       return false;
    }   
    if (c->process(bytesRead, mStateMachineFifo))
@@ -166,7 +165,7 @@ TcpTransport::processAllReads(FdSet& fdset)
 {
    if (!mConnectionMap.mConnections.empty())
    {
-      for (ConnectionMap::Connection* c = mConnectionMap.mPostOldest.mYounger;
+      for (Connection* c = mConnectionMap.mPostOldest.mYounger;
            c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
          if (fdset.readyToRead(c->getSocket()))
@@ -192,7 +191,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
-      ConnectionMap::Connection* conn = mConnectionMap.get(data->destination);
+      Connection* conn = mConnectionMap.get(data->destination);
       
       if (conn == 0)
       {
@@ -207,7 +206,6 @@ TcpTransport::processAllWrites( FdSet& fdset )
          mSendRoundRobin.push_back(conn);
          conn->mSendPos = 0;
       }
-      DebugLog (<< "Queuing " << data->transactionId << " : " << data->data);
       conn->mOutstandingSends.push_back(data);
    }
    sendFromRoundRobin(fdset);
@@ -258,7 +256,7 @@ TcpTransport::sendFromRoundRobin(FdSet& fdset)
 }
 
 bool
-TcpTransport::processWrite(ConnectionMap::Connection* c)
+TcpTransport::processWrite(Connection* c)
 {
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
@@ -280,7 +278,7 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
    else
    {
       DebugLog (<< "##Finished write " << bytesWritten << " to " << *c);
-      DebugLog (<< "Sent: " << data->data);
+      DebugLog (<< "Sent: " << endl << data->data);
       c->mOutstandingSends.pop_front();
       DebugLog (<< "mOutstandingSends.size() " << c->mOutstandingSends.size());
       c->mSendPos = 0;
@@ -298,7 +296,6 @@ TcpTransport::process(FdSet& fdSet)
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);
-   //DebugLog(<< "Finished TcpTransport::process");
 }
 
 
