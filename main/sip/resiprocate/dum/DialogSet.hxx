@@ -18,6 +18,7 @@ class Dialog;
 class DialogUsageManager;
 class AppDialogSet;
 class ClientOutOfDialogReq;
+class Identity;
 
 class DialogSet
 {
@@ -30,6 +31,9 @@ class DialogSet
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
+
+      Identity* getIdentity();
+      void setIdentity(Identity *identity);
 
       void cancel();
       void dispatch(const SipMessage& msg);
@@ -93,6 +97,8 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
+
+      Identity* mIdentity;
 
       typedef RefCountedDestroyer<DialogSet> Destroyer;
       Destroyer mDestroyer;
