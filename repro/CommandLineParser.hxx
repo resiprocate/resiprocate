@@ -22,8 +22,8 @@ class CommandLineParser
       int mTcpPort;
       int mTlsPort;
       int mDtlsPort;
-      bool mNoV4;
-      bool mNoV6;
+      //bool mNoV4;
+      bool mUseV6;
       std::vector<Uri> mDomains;
       Data mCertPath;
       bool mNoChallenge;
