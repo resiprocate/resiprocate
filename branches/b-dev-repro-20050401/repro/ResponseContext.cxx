@@ -326,6 +326,8 @@ ResponseContext::processResponse(SipMessage& response)
 void
 ResponseContext::cancelClientTransaction(const Branch& branch)
 {
+   InfoLog (<< "Cancel client transactions: " << branch);
+   
    SipMessage request(mRequestContext.getOriginalRequest());
    request.header(h_Vias).push_front(branch.via);
    
@@ -336,6 +338,8 @@ ResponseContext::cancelClientTransaction(const Branch& branch)
 void
 ResponseContext::cancelProceedingClientTransactions()
 {
+   InfoLog (<< "Cancel all proceeding client transactions: " << mClientTransactions.size());
+
    // CANCEL INVITE branches
    for (TransactionMap::iterator i = mClientTransactions.begin(); 
         i != mClientTransactions.end(); ++i)
@@ -357,8 +361,13 @@ ResponseContext::terminateClientTransaction(const Data& transactionId)
 {
    for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
    {
-      i->second.status = Terminated;
+      if (i->first == transactionId) 
+      {
+         i->second.status = Terminated;
+      }
    }
+   InfoLog (<< "Terminating client transaction: " << transactionId << " all = " << areAllTransactionsTerminated());
+   InfoLog (<< "client transactions: " << Inserter(mClientTransactions));
 }
 
 bool
@@ -540,7 +549,7 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
 std::ostream& 
 repro::operator<<(std::ostream& strm, const ResponseContext::Branch& b)
 {
-   strm << "Branch: " << b.uri << " " << b.via <<" status=" << b.status;
+   strm << "Branch: " << b.uri << " " <<" status=" << b.status;
    return strm;
 }
 
