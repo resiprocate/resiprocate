@@ -95,48 +95,48 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
             pb.skipChar('&');
          }
            
-         DebugLog (<< "  key=" << key << " value=" << value );
+         DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.charHttpUnencoded() );
 
          if ( key == Data("user") )
          {
-            user = value;
+            user = value.charHttpUnencoded();
          }
          if ( key == Data("password") )
          {
-            password = value;
+            password = value.charHttpUnencoded();
          }
          if ( key == Data("realm") )
          {
-            realm = value;
+            realm = value.charHttpUnencoded();
          }
          if ( key == Data("name") )
          {
-            name = value;
+            name = value.charHttpUnencoded();
          }
          if ( key == Data("email") )
          {
-            email = value;
+            email = value.charHttpUnencoded();
          }
          if ( key == Data("domain") )
          {
-            domain = value;
+            domain = value.charHttpUnencoded();
          }
 
            if ( key == Data("routeUri") )
            {
-              routeUri = value;
+              routeUri = value.charHttpUnencoded();
            }
            if ( key == Data("routeMethod") )
            {
-              routeMethod = value;
+              routeMethod = value.charHttpUnencoded();
            }
           if ( key == Data("routeEvent") )
            {
-              routeEvent = value;
+              routeEvent = value.charHttpUnencoded();
            }
            if ( key == Data("routeDestination") )
            {
-               routeDestination = value;
+               routeDestination = value.charHttpUnencoded();
            }
            if ( key == Data("routeOrder") )
            {
