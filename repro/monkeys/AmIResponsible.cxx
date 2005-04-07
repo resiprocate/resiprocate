@@ -40,11 +40,12 @@ AmIResponsible::handleRequest(RequestContext& context)
       // !RjS! - Jason - check the RURI to see if the domain is
       // something this request is responsible for. If yes, then
       // just return Continue. If no make this call below.
-#if 0
-      if (false) // the is isMyDomain does not seem to work
-#else                                             
-      if (!context.getProxy().isMyDomain(request.header(h_RequestLine).uri()))
-#endif
+      Uri& uri = request.header(h_RequestLine).uri();
+      if (uri.port() == 5060)
+      {
+         uri.port() = 0;
+      }
+      if (!context.getProxy().isMyDomain(uri))
       {
          // if this request is not for a domain for which the proxy is responsible,
          // send to the Request URI

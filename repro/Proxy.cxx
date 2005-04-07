@@ -96,10 +96,17 @@ Proxy::thread()
                      // unique transaction id. 
                      static Data ack("ack");
                      Data tid = sip->getTransactionId() + ack;
-                     assert (mServerRequestContexts.count(tid) == 0);
-                  
-                     RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
-                     mServerRequestContexts[tid] = context;
+                     //assert (mServerRequestContexts.count(tid) == 0);
+                     RequestContext* context=0;
+                     if (mServerRequestContexts.count(tid) == 0)
+                     {
+                        context = new RequestContext(*this, mRequestProcessorChain);
+                        mServerRequestContexts[tid] = context;
+                     }
+                     else
+                     {
+                        context = mServerRequestContexts[tid];
+                     }
 
                      // The stack will send TransactionTerminated messages for
                      // client and server transaction which will clean up this
