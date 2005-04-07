@@ -155,6 +155,8 @@ ConnectionManager::addConnection(Connection* connection)
    mReadHead->push_back(connection);
    mLRUHead->push_back(connection);
 
+   //DebugLog (<< "count=" << mAddrMap.count(connection->who()) << "who=" << connection->who() << " mAddrMap=" << Inserter(mAddrMap));
+   //assert(mAddrMap.begin()->first == connection->who());
    assert(mAddrMap.count(connection->who()) == 1);
 }
 

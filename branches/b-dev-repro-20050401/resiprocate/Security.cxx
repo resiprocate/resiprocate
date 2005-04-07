@@ -147,7 +147,7 @@ Security::preload()
       {
          Data fileName = mPath + name;
          
-         InfoLog(<< "Trying to load file " << name );
+         DebugLog(<< "Trying to load file " << name );
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))

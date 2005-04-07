@@ -959,17 +959,21 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       assert(!mPreferredNAPTR.key.empty());
       if (srv.key == mPreferredNAPTR.replacement && srv.target != Symbols::DOT)
       {
-         if (srv.key.find("_udp") != Data::npos)
+         if (srv.key.find("_sips._tcp") != Data::npos)
+         {
+            srv.transport = TLS;
+         }
+         else if (srv.key.find("_sips._udp") != Data::npos)
+         {
+            srv.transport = DTLS;
+         }
+         else if (srv.key.find("_udp") != Data::npos)
          {
             srv.transport = UDP;
          }
          else if (srv.key.find("_tcp") != Data::npos)
          {
             srv.transport = TCP;
-         }
-         else if (srv.key.find("_sips._tcp") != Data::npos)
-         {
-            srv.transport = TLS;
          }
          else
          {
