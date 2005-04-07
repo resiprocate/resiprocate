@@ -108,7 +108,7 @@ main(int argc, char** argv)
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
      
-#if 0 
+#if 1
       RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
 #endif
