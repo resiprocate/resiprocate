@@ -22,8 +22,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int tcpPort = 5060;
    int tlsPort = 5061;
    int dtlsPort = 0;
-   int noV4 = false;
-   int noV6 = false;
+   int v4 = false;
+   int v6 = false;
    char* domains = 0;
    char* certPath = "~/.sipCerts";
    int noChallenge = false;
@@ -40,8 +40,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"tcp",          0,   POPT_ARG_INT, &tcpPort, 0, "add TCP transport on specified port", "5060"},
       {"tls",          0,   POPT_ARG_INT, &tlsPort, 0, "add TLS transport on specified port", "5061"},
       {"dtls",         0,   POPT_ARG_INT, &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
-      {"disable-v6",   '6',   POPT_ARG_NONE, &noV6, 0, "disable IPV6", 0},
-      {"disable-v4",   '4',   POPT_ARG_NONE, &noV4, 0, "disable IPV4", 0},
+      {"v6",   '6',   POPT_ARG_NONE, &v6, 0, "disable IPV6", 0},
+//      {"v4",   '4',   POPT_ARG_NONE, &v4, 0, "disable IPV4", 0},
       {"disable-auth",  0,   POPT_ARG_NONE, &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-reg",  0,   POPT_ARG_NONE, &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server",  0,   POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
@@ -63,8 +63,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mTcpPort = tcpPort;
    mTlsPort = tlsPort;
    mDtlsPort = dtlsPort;
-   mNoV4 = noV4;
-   mNoV6 = noV6;
+   //mNoV4 = noV4;
+   mUseV6 = v6;
    mDomains = toUriVector(domains, "domains"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge;
