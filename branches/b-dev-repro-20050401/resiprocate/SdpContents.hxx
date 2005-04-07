@@ -25,13 +25,13 @@ class AttributeHelper
       AttributeHelper& operator=(const AttributeHelper& rhs);
 
       bool exists(const Data& key) const;
-      const std::vector<Data>& getValues(const Data& key) const;
+      const std::list<Data>& getValues(const Data& key) const;
       std::ostream& encode(std::ostream& s) const;
       void parse(ParseBuffer& pb);
       void addAttribute(const Data& key, const Data& value = Data::Empty);
       void clearAttribute(const Data& key);
    private:
-      HashMap< Data, std::vector<Data> > mAttributes;
+      HashMap< Data, std::list<Data> > mAttributes;
 };
 
 class SdpContents : public Contents
@@ -248,19 +248,19 @@ class SdpContents : public Contents
                      public:
                         Repeat(unsigned long interval,
                                unsigned long duration,
-                               std::vector<int> offsets);
+                               std::list<int> offsets);
                         void parse(ParseBuffer& pb);
                         std::ostream& encode(std::ostream&) const;
 
                         unsigned long getInterval() const {return mInterval;}
                         unsigned long getDuration() const {return mDuration;}
-                        const std::vector<int> getOffsets() const {return mOffsets;}
+                        const std::list<int> getOffsets() const {return mOffsets;}
 
                      private:
                         Repeat() {}
                         unsigned long mInterval;
                         unsigned long mDuration;
-                        std::vector<int> mOffsets;
+                        std::list<int> mOffsets;
 
                         friend class Time;
                   };
@@ -269,13 +269,13 @@ class SdpContents : public Contents
 
                   unsigned long getStart() const {return mStart;}
                   unsigned long getStop() const {return mStop;}
-                  const std::vector<Repeat>& getRepeats() const {return mRepeats;}
+                  const std::list<Repeat>& getRepeats() const {return mRepeats;}
 
                private:
                   Time() {}
                   unsigned long mStart;
                   unsigned long mStop;
-                  std::vector<Repeat> mRepeats;
+                  std::list<Repeat> mRepeats;
 
                   friend class Session;
             };
@@ -303,9 +303,9 @@ class SdpContents : public Contents
                   std::ostream& encode(std::ostream&) const;
 
                   void addAdjustment(const Adjustment& adjusment);
-                  const std::vector<Adjustment>& getAdjustments() const {return mAdjustments; }
+                  const std::list<Adjustment>& getAdjustments() const {return mAdjustments; }
                private:
-                  std::vector<Adjustment> mAdjustments;
+                  std::list<Adjustment> mAdjustments;
             };
 
             class Encryption
@@ -366,29 +366,29 @@ class SdpContents : public Contents
                   Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
-                  const std::vector<Codec>& codecs() const;
-                  std::vector<Codec>& codecs();
+                  const std::list<Codec>& codecs() const;
+                  std::list<Codec>& codecs();
                   void clearCodecs();
                   void addCodec(const Codec& codec);
 
-                  const std::vector<Data>& getFormats() const {return mFormats;}
+                  const std::list<Data>& getFormats() const {return mFormats;}
                   const Data& information() const {return mInformation;}
                   Data& information() {return mInformation;}
-                  const std::vector<Bandwidth>& bandwidths() const {return mBandwidths;}
-                  std::vector<Bandwidth>& bandwidths() {return mBandwidths;}
+                  const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
+                  std::list<Bandwidth>& bandwidths() {return mBandwidths;}
 
                   // from session if empty
-                  const std::vector<Connection> getConnections() const;
+                  const std::list<Connection> getConnections() const;
                   // does not include session connections
-                  std::vector<Connection>& getMediumConnections() {return mConnections;}
+                  std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
                   bool exists(const Data& key) const;
-                  const std::vector<Data>& getValues(const Data& key) const;
+                  const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
-                  const Codec& findFirstMatchingCodecs(const std::vector<Codec>& codecs) const;
+                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecs) const;
                   const Codec& findFirstMatchingCodecs(const Medium& medium) const
                   {
                      if (&medium == this)
@@ -408,12 +408,12 @@ class SdpContents : public Contents
                   unsigned long mPort;
                   unsigned long mMulticast;
                   Data mProtocol;
-                  mutable std::vector<Data> mFormats;
-                  mutable std::vector<Codec> mCodecs;
+                  mutable std::list<Data> mFormats;
+                  mutable std::list<Codec> mCodecs;
                   Data mTransport;
                   Data mInformation;
-                  std::vector<Connection> mConnections;
-                  std::vector<Bandwidth> mBandwidths;
+                  std::list<Connection> mConnections;
+                  std::list<Bandwidth> mBandwidths;
                   Encryption mEncryption;
                   mutable AttributeHelper mAttributeHelper;
 
@@ -445,20 +445,20 @@ class SdpContents : public Contents
             Data& information() {return mInformation;}
             const Uri& uri() const {return mUri;}
             Uri& uri() {return mUri;}
-            const std::vector<Email>& getEmails() const {return mEmails;}
-            const std::vector<Phone>& getPhones() const {return mPhones;}
+            const std::list<Email>& getEmails() const {return mEmails;}
+            const std::list<Phone>& getPhones() const {return mPhones;}
             const Connection& connection() const {return mConnection;}
             Connection& connection() {return mConnection;} // !dlb! optional?
             bool isConnection() { return mConnection.mAddress != Data::Empty; }
-            const std::vector<Bandwidth>& bandwidths() const {return mBandwidths;}
-            std::vector<Bandwidth>& bandwidths() {return mBandwidths;}
-            const std::vector<Time>& getTimes() const {return mTimes;}
+            const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
+            std::list<Bandwidth>& bandwidths() {return mBandwidths;}
+            const std::list<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
             Encryption& encryption() {return mEncryption;}
-            const std::vector<Medium>& media() const {return mMedia;}
-            std::vector<Medium>& media() {return mMedia;}
+            const std::list<Medium>& media() const {return mMedia;}
+            std::list<Medium>& media() {return mMedia;}
 
             void addEmail(const Email& email);
             void addPhone(const Phone& phone);
@@ -469,22 +469,22 @@ class SdpContents : public Contents
             void clearAttribute(const Data& key);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
-            const std::vector<Data>& getValues(const Data& key) const;
+            const std::list<Data>& getValues(const Data& key) const;
 
          private:
             int mVersion;
             Origin mOrigin;
             Data mName;
-            std::vector<Medium> mMedia;
+            std::list<Medium> mMedia;
 
             // applies to all Media where unspecified
             Data mInformation;
             Uri mUri;
-            std::vector<Email> mEmails;
-            std::vector<Phone> mPhones;
+            std::list<Email> mEmails;
+            std::list<Phone> mPhones;
             Connection mConnection;
-            std::vector<Bandwidth> mBandwidths;
-            std::vector<Time> mTimes;
+            std::list<Bandwidth> mBandwidths;
+            std::list<Time> mTimes;
             Timezones mTimezones;
             Encryption mEncryption;
             AttributeHelper mAttributeHelper;
