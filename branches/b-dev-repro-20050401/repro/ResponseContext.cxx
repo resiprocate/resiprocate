@@ -105,8 +105,9 @@ ResponseContext::processPendingTargets()
          request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
       }
       
-      // Record-Route addition
-      if (1) // not ACK
+      // Record-Route addition only for dialogs
+      if (request.header(h_RequestLine).method() == INVITE ||
+          request.header(h_RequestLine).method() == SUBSCRIBE)
       {
          NameAddr rt;
          // !jf! could put unique id for this instance of the proxy in user portion
