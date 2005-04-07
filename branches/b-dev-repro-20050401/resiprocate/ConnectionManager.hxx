@@ -1,6 +1,7 @@
 #if !defined(RESIP_ConnectionMgr_hxx)
 #define RESIP_ConnectionMgr_hxx 
 
+#include <map>
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/Connection.hxx"
 
@@ -33,8 +34,8 @@ class ConnectionManager
       // release excessively old connections (free up file descriptors)
       void gc(UInt64 threshhold = ConnectionManager::MaxLastUsed);
 
-      typedef HashMap<Tuple, Connection*> AddrMap;
-      typedef HashMap<ConnectionId, Connection*> IdMap;
+      typedef std::map<Tuple, Connection*> AddrMap;
+      typedef std::map<ConnectionId, Connection*> IdMap;
 
       void addConnection(Connection* connection);
       void removeConnection(Connection* connection);
