@@ -119,6 +119,11 @@ CommandLineParser::toUriVector(const char* input, const char* description)
                WarningLog (<< "Can't parse " << description << " : " << token);
                exit(-1);
             }
+            catch (...)
+            {
+               InfoLog (<< "Caught some exception" );
+               WarningLog (<< "Some problem parsing " << description << " : " << token);
+            }
          }
       }
    }
