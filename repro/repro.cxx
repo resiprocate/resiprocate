@@ -46,20 +46,20 @@ main(int argc, char** argv)
    {
       if (args.mUdpPort)
       {
-         stack.addTransport(UDP, args.mUdpPort);
+         stack.addTransport(UDP, args.mUdpPort, args.mUseV6 ? V6 : V4);
       }
       if (args.mTcpPort)
       {
-         stack.addTransport(TCP, args.mTcpPort);
-         stack.addTransport(TCP, args.mTcpPort-1);
+         stack.addTransport(TCP, args.mTcpPort, args.mUseV6 ? V6 : V4);
+         stack.addTransport(TCP, args.mTcpPort-1, args.mUseV6 ? V6 : V4);
       }
       if (args.mTlsPort)
       {
-         stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         stack.addTransport(TLS, args.mTlsPort, args.mUseV6 ? V6 : V4, Data::Empty, args.mTlsDomain);
       }
       if (args.mDtlsPort)
       {
-         stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         stack.addTransport(DTLS, args.mTlsPort, args.mUseV6 ? V6 : V4, Data::Empty, args.mTlsDomain);
       }
    }
    catch (Transport::Exception& e)
@@ -95,6 +95,11 @@ main(int argc, char** argv)
       RouteProcessor* rp = new RouteProcessor;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
       
+#if 0  // this is for request uri manipulation
+      ManipulationMonkey* manip = new ManipulationMonkey
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(manip));
+#endif
+
       AmIResponsible* isme = new AmIResponsible;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
       
@@ -102,8 +107,9 @@ main(int argc, char** argv)
       
       // [TODO] !rwm! put Tel URI monkey here 
       
-#if 0
       // TODO - remove next forwards all to 
+
+#if 1 // static routes here
       ConstantLocationMonkey* cls = new ConstantLocationMonkey;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
@@ -121,7 +127,7 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator();
-         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
