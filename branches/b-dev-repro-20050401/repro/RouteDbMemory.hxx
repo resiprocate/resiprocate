@@ -35,17 +35,8 @@ class RouteDbMemory : public RouteAbstractDb
    private:
       DB* mDb;
       
-      class RouteOperator : public Route 
-      {
-         public:
-            bool matches(const resip::Uri& ruri,
-                         const resip::Data& method, 
-                         const resip::Data& event);
-            resip::Uri transform(const resip::Uri& ruri);
-      };
-
-      typedef std::vector<RouteOperator> RouteOperatorList;
-      RouteOperatorList mRouteOperators;
+      typedef std::vector<Route> RouteList;
+      RouteList mRouteOperators;
 };
 
 }
