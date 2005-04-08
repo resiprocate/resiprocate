@@ -44,22 +44,28 @@ main(int argc, char** argv)
    SipStack stack(&security);
    try
    {
+      if (args.mUseV4) InfoLog (<< "V4 enabled");
+      if (args.mUseV6) InfoLog (<< "V6 enabled");         
+
       if (args.mUdpPort)
       {
-         stack.addTransport(UDP, args.mUdpPort, args.mUseV6 ? V6 : V4);
+         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4);
+         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6);
       }
       if (args.mTcpPort)
       {
-         stack.addTransport(TCP, args.mTcpPort, args.mUseV6 ? V6 : V4);
-         stack.addTransport(TCP, args.mTcpPort-1, args.mUseV6 ? V6 : V4);
+         if (args.mUseV4) stack.addTransport(TCP, args.mUdpPort, V4);
+         if (args.mUseV6) stack.addTransport(TCP, args.mUdpPort, V6);
       }
       if (args.mTlsPort)
       {
-         stack.addTransport(TLS, args.mTlsPort, args.mUseV6 ? V6 : V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
       }
       if (args.mDtlsPort)
       {
-         stack.addTransport(DTLS, args.mTlsPort, args.mUseV6 ? V6 : V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
       }
    }
    catch (Transport::Exception& e)
