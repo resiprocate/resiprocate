@@ -22,7 +22,7 @@ class CommandLineParser
       int mTcpPort;
       int mTlsPort;
       int mDtlsPort;
-      //bool mNoV4;
+      bool mUseV4;
       bool mUseV6;
       std::vector<Uri> mDomains;
       Data mCertPath;
