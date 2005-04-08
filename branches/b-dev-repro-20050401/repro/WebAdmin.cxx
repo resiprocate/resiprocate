@@ -27,6 +27,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
+// !cj! TODO - make all the removes on the web pages work 
+
 WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
                      RegistrationPersistenceManager& regDb,
                      RouteAbstractDb& routeDb,
@@ -96,6 +98,11 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
          }
            
          DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.charHttpUnencoded() );
+
+         if ( key == Data("routeTestUri") )
+         {
+            routeTestUri = value.charHttpUnencoded();
+         }
 
          if ( key == Data("user") )
          {
@@ -518,32 +525,34 @@ WebAdmin::buildShowRoutesPage()
    {
       DataStream s(ret);
       
-      s << 
-         "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
+      s << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
          "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
          "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
          "<head>"
          "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
          "<title>Repro Proxy Show Route</title>"
          "</head>"
-         ""
          "<body bgcolor=\"#ffffff\">"
-         "<h1>Routes</h1>"
-         "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-         "<button name=\"removeAllRoute\" value=\"\" type=\"button\">Remove All</button>"
-         ""
-         "<hr/>"
-         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td>URI</td>"
-         "<td>Method</td>"
-         "<td>Event</td>"
-         "<td>Destination</td>"
-         "<td>Order</td>"
-         "<td><button name=\"removeRoute\" type=\"button\">Remove</button></td>"
-         "</tr>";
+         "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "      <tr>"
+         "        <td>"
+         "          <h1>Routes</h1>"
+         "        </td>"
+         "      </tr>"
+         "      <tr>"
+         "        <td>"
+         "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+         "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>"
+         "            <hr/>"
+         "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "              <tr>"
+         "                <td>URI</td>"
+         "                <td>Method</td>"
+         "                <td>Event</td>"
+         "                <td>Destination</td>"
+         "                <td>Order</td>"
+         "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>"
+         "              </tr>";
       
       RouteAbstractDb::RouteList routes = mRouteDb.getRoutes();
       for ( RouteAbstractDb::RouteList::const_iterator i = routes.begin();
@@ -560,12 +569,74 @@ WebAdmin::buildShowRoutesPage()
             "</tr>";
       }
       
-      s << "</table>"
-         "</form>"
-         "</body>"
-         ""
-         "</html>"
-         " ";
+      s << 
+         "            </table>"
+         "          </form>"
+         "        </td>"
+         "      </tr>"
+         "      <tr><td>"
+         "          <hr noshade=\"noshade\"/>"
+         "          <br>"
+         "        </td></tr>";
+
+      Uri uri;
+      try 
+      {
+         uri = Uri(routeTestUri);
+      }
+      catch( BaseException& e )
+      {
+         try 
+         {
+            uri = Uri( Data("sip:")+routeTestUri );
+         }
+         catch( BaseException& e )
+         {
+         }
+      }
+
+      // !cj! - TODO - shoudl input method and envent type to test 
+      RouteAbstractDb::UriList routeList = mRouteDb.process( uri, Data("INVITE"), Data::Empty);
+      
+      s << 
+         "      <tr>"
+         "        <td>"
+         "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">"
+         "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "              "
+         "              <tr>"
+         "                <td align=\"right\">Input:</td>"
+         "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>"
+         "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>"
+         "              </tr>";
+      
+      bool first=true;
+      for ( RouteAbstractDb::UriList::const_iterator i=routeList.begin();
+            i != routeList.end(); i++)
+      {
+         s<<"              <tr>";
+         if (first)
+         {
+            first=false;
+            s<<"             <td align=\"right\">Targets:</td>";
+         }
+         else
+         {
+            s<<"             <td align=\"right\"></td>";
+         }
+         s<<"                <td><label>" << *i << "</label></td>";
+         s<<"                <td></td>";
+         s<<"              </tr>";
+      }
+      
+      s<<
+         "            </table>"
+         "          </form>"
+         "        </td>"
+         "      </tr>"
+         "    </table>"
+         "  </body>"
+         "</html>";
       
       s.flush();
    }

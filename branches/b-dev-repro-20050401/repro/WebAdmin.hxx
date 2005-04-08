@@ -47,6 +47,8 @@ class WebAdmin: public HttpBase
       resip::RegistrationPersistenceManager& mRegDb;
       RouteAbstractDb& mRouteDb;
       resip::Security& mSecurity;
+
+      resip::Data routeTestUri;
 };
 
 
