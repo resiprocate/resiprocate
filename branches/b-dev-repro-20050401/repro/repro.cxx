@@ -115,15 +115,13 @@ main(int argc, char** argv)
       
       // TODO - remove next forwards all to 
 
-#if 1 // static routes here
+#if 0 // static routes here
       ConstantLocationMonkey* cls = new ConstantLocationMonkey;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
      
-#if 1
       RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
-#endif
  
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
@@ -133,7 +131,8 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator();
-         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+//TODO NEEDD TO FIX THIS 
+//         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
