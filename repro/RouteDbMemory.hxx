@@ -2,6 +2,7 @@
 #define REPRO_ROUTEDBMEMORY_HXX
 
 #include <db4/db_185.h>
+#include <regex.h>
 
 #include <vector>
 
@@ -35,8 +36,14 @@ class RouteDbMemory : public RouteAbstractDb
    private:
       DB* mDb;
       
-      typedef std::vector<Route> RouteList;
-      RouteList mRouteOperators;
+      class RouteOp: public Route
+      {
+         public:
+            regex_t preq;
+      };
+               
+      typedef std::vector<RouteOp> RouteOpList;
+      RouteOpList mRouteOperators;
 };
 
 }
