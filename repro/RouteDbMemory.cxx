@@ -1,11 +1,12 @@
 
 #include <fcntl.h>
 #include <db4/db_185.h>
-#include <cassert>
-
 #include <regex.h>
 
+#include <cassert>
+
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "repro/RouteDbMemory.hxx"
@@ -69,7 +70,7 @@ RouteDbMemory::add(const resip::Data& method,
 {
    InfoLog( << "Add route" );
    
-   Route route;
+   RouteOp route;
    route.mVersion = 1;
    route.mMethod = method;
    route.mEvent = event;
@@ -104,7 +105,7 @@ RouteDbMemory::getRoutes() const
    RouteDbMemory::RouteList result;
    result.reserve(mRouteOperators.size());
    
-   for (RouteList::const_iterator it = mRouteOperators.begin();
+   for (RouteOpList::const_iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
       result.push_back(*it);
@@ -128,9 +129,9 @@ RouteDbMemory::process(const resip::Uri& ruri,
                        const resip::Data& method, 
                        const resip::Data& event )
 {
-   RouteAbstractDb::UriList ret;
+   RouteAbstractDb::UriList targetSet;
    
-   for (RouteList::iterator it = mRouteOperators.begin();
+   for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
       DebugLog( << "Consider route " // << *it
@@ -143,7 +144,7 @@ RouteDbMemory::process(const resip::Uri& ruri,
          if ( it->mMethod != method)
          {
             DebugLog( << "  Skipped - method did not match" );
-            break;
+            continue;
          }
          
       }
@@ -152,63 +153,113 @@ RouteDbMemory::process(const resip::Uri& ruri,
          if ( it->mEvent != event) 
          {
             DebugLog( << "  Skipped - event did not match" );
-            break;
+            continue;
          }
       }
-      if ( !it->mMatchingPattern.empty() ) 
+      Data& rewrite = it->mRewriteExpression;
+      Data& match = it->mMatchingPattern;
+
+      if ( !match.empty() ) 
       {
          // TODO - www.pcre.org looks like has better performance 
-         
+                  
          // TODO - !cj! - compile regex when create the route object instead of
          // doing it every time 
-         regex_t preq;
-         int ret = regcomp(&preq,it->mMatchingPattern.c_str(), REG_EXTENDED|REG_NOSUB );
+         int flags = REG_EXTENDED;
+         if ( rewrite.find("$") == Data::npos )
+         {
+            flags |= REG_NOSUB;
+         }
+         int ret = regcomp(&(it->preq),match.c_str(), flags );
          if ( ret != 0 )
          { 
             ErrLog( << "Routing rule has invalid match expression: " 
-                    << it->mMatchingPattern );
-            break;
+                    << match );
+            continue;
          }
          
-         ret = regexec(&preq, ruri.getAor().c_str(), 0, NULL, 0/*eflags*/);
+         Data uri;
+         {
+            DataStream s(uri);
+            s << ruri;
+            s.flush();
+         }
+         
+         const int nmatch=10;
+         regmatch_t pmatch[nmatch];
+         
+         ret = regexec(&(it->preq), uri.c_str(), nmatch, pmatch, 0/*eflags*/);
          if ( ret != 0 )
          {
             // did not match 
-            DebugLog( << "  Skipped - request URI did not match" );
-            break;
+            DebugLog( << "  Skipped - request URI "<< uri << " did not match " << match );
+            continue;
          }
-      }
-      DebugLog( << "  Route matched" );
-      
-      
-      Uri target;
-      
-// !cj! TODO - should form anbc check this URI with form route rule instead of
-// !doing ti every time 
-      
-      try
-      {
-         target = Uri(it->mRewriteExpression); //!dcm! -- bogus
-      }
-      catch( BaseException& e)
-      {
-         ErrLog( << "Routing rule has invalid transform: " << it->mRewriteExpression);
+
+         DebugLog( << "  Route matched" );
+         Data target = rewrite;
          
+         if ( rewrite.find("$") != Data::npos )
+         {
+            for ( int i=1; i<nmatch; i++)
+            {
+               if ( pmatch[i].rm_so != -1 )
+               {
+                  Data subExp(uri.substr(pmatch[i].rm_so,
+                                         pmatch[i].rm_eo-pmatch[i].rm_so));
+                  DebugLog( << "  subExpression[" <<i <<"]="<< subExp );
+
+                  Data result;
+                  {
+                     DataStream s(result);
+
+                     ParseBuffer pb(target);
+                     
+                     while (true)
+                     {
+                        const char* a = pb.position();
+                        pb.skipToChars( Data("$") + char('0'+i) );
+                        if ( pb.eof() )
+                        {
+                           s << pb.data(a);
+                           break;
+                        }
+                        else
+                        {
+                           s << pb.data(a);
+                           pb.skipN(2);
+                           s <<  subExp;
+                        }
+                     }
+                     s.flush();
+                  }
+                  target = result;
+               }
+            }
+         }
+         
+         Uri targetUri;
          try
          {
-            target = Uri( Data("sip:")+it->mRewriteExpression); //!dcm! -- bogus
+            targetUri = Uri(target);
          }
          catch( BaseException& e)
          {
-            ErrLog( << "Routing rule with sip: preprended has invalid transform: " 
-                    << it->mRewriteExpression);
+            ErrLog( << "Routing rule transform " << rewrite << " gave invalid URI " << target );
+            try
+            {
+               targetUri = Uri( Data("sip:")+target);
+            }
+            catch( BaseException& e)
+            {
+               ErrLog( << "Routing rule transform " << rewrite << " gave invalid URI sip:" << target );
+               continue;
+            }
          }
-         
+         targetSet.push_back( targetUri );
       }
-      
-      ret.push_back( target );
    }
-   return ret;
+   return targetSet;
 }
 
 
