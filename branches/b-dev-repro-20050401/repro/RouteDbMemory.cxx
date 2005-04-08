@@ -69,7 +69,7 @@ RouteDbMemory::add(const resip::Data& method,
 {
    InfoLog( << "Add route" );
    
-   RouteOperator route;
+   Route route;
    route.mVersion = 1;
    route.mMethod = method;
    route.mEvent = event;
@@ -104,7 +104,7 @@ RouteDbMemory::getRoutes() const
    RouteDbMemory::RouteList result;
    result.reserve(mRouteOperators.size());
    
-   for (RouteOperatorList::const_iterator it = mRouteOperators.begin();
+   for (RouteList::const_iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
       result.push_back(*it);
@@ -130,98 +130,84 @@ RouteDbMemory::process(const resip::Uri& ruri,
 {
    RouteAbstractDb::UriList ret;
    
-   for (RouteOperatorList::iterator it = mRouteOperators.begin();
+   for (RouteList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
-      if (it->matches(ruri, method, event))
-      {
-         ret.push_back( it->transform(ruri) );
-      }
-   }
-   return ret;
-}
-
-
-bool 
-RouteDbMemory::RouteOperator::matches(const resip::Uri& ruri, 
-                                      const resip::Data& method, 
-                                      const resip::Data& event)
-{
-   DebugLog( << "Consider route " << mMatchingPattern 
-             << " reqUri=" << ruri
-             << " method=" << method 
-             << " event=" << event );
-   
-   if ( !mMethod.empty() )
-   {
-      if ( mMethod != method)
-      {
-         DebugLog( << "  Skipped - method did not match" );
-         return false;
-      }
+      DebugLog( << "Consider route " // << *it
+                << " reqUri=" << ruri
+                << " method=" << method 
+                << " event=" << event );
       
-   }
-   if ( !mEvent.empty() )
-   {
-      if ( mEvent != event) 
+      if ( !it->mMethod.empty() )
       {
-         DebugLog( << "  Skipped - event did not match" );
-         return false;
+         if ( it->mMethod != method)
+         {
+            DebugLog( << "  Skipped - method did not match" );
+            break;
+         }
+         
       }
-   }
-   if ( !mMatchingPattern.empty() ) 
-   {
-      // TODO - !cj! - compile regex when create the route object instead of
-      // doing it every time 
-      regex_t preq;
-      int ret = regcomp(&preq,mMatchingPattern.c_str(), REG_EXTENDED|REG_NOSUB );
-      if ( ret != 0 )
-      { 
-         ErrLog( << "Routing rule has invalid match expression: " 
-                 << mMatchingPattern );
-         return false;
-      }
- 
-      ret = regexec(&preq, ruri.getAor().c_str(), 0, NULL, 0/*eflags*/);
-      if ( ret != 0 )
+      if ( !it->mEvent.empty() )
       {
-         // did not match 
-         DebugLog( << "  Skipped - request URI did not match" );
-         return false;
+         if ( it->mEvent != event) 
+         {
+            DebugLog( << "  Skipped - event did not match" );
+            break;
+         }
       }
-   }
-   DebugLog( << "  Route matched" );
-   return true;   
-}
-
-
-resip::Uri 
-RouteDbMemory::RouteOperator::transform(const resip::Uri& ruri)
-{
-   Uri ret;
-   
+      if ( !it->mMatchingPattern.empty() ) 
+      {
+         // TODO - www.pcre.org looks like has better performance 
+         
+         // TODO - !cj! - compile regex when create the route object instead of
+         // doing it every time 
+         regex_t preq;
+         int ret = regcomp(&preq,it->mMatchingPattern.c_str(), REG_EXTENDED|REG_NOSUB );
+         if ( ret != 0 )
+         { 
+            ErrLog( << "Routing rule has invalid match expression: " 
+                    << it->mMatchingPattern );
+            break;
+         }
+         
+         ret = regexec(&preq, ruri.getAor().c_str(), 0, NULL, 0/*eflags*/);
+         if ( ret != 0 )
+         {
+            // did not match 
+            DebugLog( << "  Skipped - request URI did not match" );
+            break;
+         }
+      }
+      DebugLog( << "  Route matched" );
+      
+      
+      Uri target;
+      
 // !cj! TODO - should form anbc check this URI with form route rule instead of
 // !doing ti every time 
-
-   try
-   {
-      ret = Uri(mRewriteExpression); //!dcm! -- bogus
-   }
-   catch( BaseException& e)
-   {
-      ErrLog( << "Routing rule has invalid transform: " << mRewriteExpression);
-
+      
       try
       {
-         ret = Uri( Data("sip:")+mRewriteExpression); //!dcm! -- bogus
+         target = Uri(it->mRewriteExpression); //!dcm! -- bogus
       }
       catch( BaseException& e)
       {
-         ErrLog( << "Routing rule with sip: preprended has invalid transform: " << mRewriteExpression);
+         ErrLog( << "Routing rule has invalid transform: " << it->mRewriteExpression);
+         
+         try
+         {
+            target = Uri( Data("sip:")+it->mRewriteExpression); //!dcm! -- bogus
+         }
+         catch( BaseException& e)
+         {
+            ErrLog( << "Routing rule with sip: preprended has invalid transform: " 
+                    << it->mRewriteExpression);
+         }
+         
       }
       
+      ret.push_back( target );
    }
-
    return ret;
 }
 
