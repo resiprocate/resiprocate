@@ -172,7 +172,7 @@ void
 ResponseContext::processResponse(SipMessage& response)
 {
    InfoLog (<< "processResponse: " << endl << response);
-   
+
    // store this before we pop the via and lose the branch tag
    const Data transactionId = response.getTransactionId();
    
@@ -180,6 +180,12 @@ ResponseContext::processResponse(SipMessage& response)
    assert(response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
    response.header(h_Vias).pop_front();
+
+   const Via& via = response.header(h_Vias).front();
+   if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
+   {
+      response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
+   }
 
    if (response.header(h_Vias).empty())
    {
