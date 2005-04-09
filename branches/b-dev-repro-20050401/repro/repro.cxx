@@ -143,13 +143,21 @@ main(int argc, char** argv)
    proxy.addDomain(DnsUtil::getLocalHostName());
    proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
 
-// TODO fix next line 
-//   Data foo = DnsUtil::getLocalIpAddress();
-#if !defined( __APPLE__ ) 
-   // TODO - this fails on mac  
-   proxy.addDomain(DnsUtil::getLocalIpAddress());
-   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
-#endif
+   list<Data> ips = DnsUtil::getLocalIpAddress();
+   if ( ips.empty() )
+   {
+      ErrLog( << "No IP address found to run on - adding localhost" );
+      proxy.addDomain("127.0.0.1");
+      proxy.addDomain("127.0.0.1", 5060);
+      proxy.addDomain("localhost");
+      proxy.addDomain("localhost",5060);
+   }
+   for ( list<Data>::const_iterator i=ips.begin(); i!=ips.end(); i++)
+   {
+      DebugLog( << "Adding domain for IP " << *i  );
+      proxy.addDomain(*i);
+      proxy.addDomain(*i, 5060);
+   }
 
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
