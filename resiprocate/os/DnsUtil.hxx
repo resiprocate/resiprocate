@@ -29,7 +29,7 @@ class DnsUtil
 
       static Data getLocalHostName();
       static Data getLocalDomainName();
-      static Data getLocalIpAddress(const Data& defaultInterface="eth0");
+      static std::list<Data> getLocalIpAddress(const Data& defaultInterface=Data::Empty) ;
 
       // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
       static Data inet_ntop(const struct in_addr& addr);
