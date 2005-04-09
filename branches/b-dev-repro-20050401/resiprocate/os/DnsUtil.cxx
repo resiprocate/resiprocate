@@ -69,26 +69,25 @@ DnsUtil::getLocalDomainName()
 #endif
 }
 
-Data
+std::list<Data>
 DnsUtil::getLocalIpAddress(const Data& myInterface)
 {
+   std::list<Data> ret;
+   
    std::list<std::pair<Data,Data> > ifs = DnsUtil::getInterfaces(myInterface);
+
    if (ifs.empty())
    {
-      throw Exception("No matching interface", __FILE__,__LINE__);
+      ErrLog( << "No interfaces matching "  << myInterface << " were found" );
    }
 
-   if (ifs.size() > 1)
+   for (std::list<std::pair<Data, Data> >::const_iterator i = ifs.begin();
+        i != ifs.end(); ++i)
    {
-      for (std::list<std::pair<Data, Data> >::const_iterator i = ifs.begin();
-           i != ifs.end(); ++i)
-      {
-         WarningLog(<< i->first << " -> " << i->second);
-      }
-      assert(0);
+      ret.push_back( i->second );
    }
 
-   return ifs.front().second;
+   return ret;
 }
 
 Data
@@ -256,9 +255,9 @@ DnsUtil::getInterfaces(const Data& matching)
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
    const int len = 100 * sizeof(struct ifreq);
+   int maxRet = 40;
 
    char buf[ len ];
-
    ifc.ifc_len = len;
    ifc.ifc_buf = buf;
 
@@ -267,28 +266,88 @@ DnsUtil::getInterfaces(const Data& matching)
    int tl = ifc.ifc_len;
    int count=0;
   
-   int maxRet = 10;
    while ( (tl > 0) && ( count < maxRet) )
    {
       struct ifreq* ifr = (struct ifreq *)ptr;
 
+      count++;
+      
       int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
       tl -= si;
       ptr += si;
-      //char* name = ifr->ifr_ifrn.ifrn_name;
+
       char* name = ifr->ifr_name;
 
       struct ifreq ifr2;
       ifr2 = *ifr;
 
       e = ioctl(s,SIOCGIFADDR,&ifr2);
-
+      if ( e == -1 )
+      {
+         // no valid address for this interface, skip it 
+         continue;
+      }
       struct sockaddr a = ifr2.ifr_addr;
-
       Data ip = DnsUtil::inet_ntop(a);
-      DebugLog (<< "Considering: " << name << " -> " << ip << " flags=" << ifr2.ifr_flags);
+      
+      e = ioctl(s,SIOCGIFFLAGS,&ifr2);
+      if ( e == -1 )
+      {
+         // no valid flags for this interface, skip it 
+         continue;
+      }
+      short flags = ifr2.ifr_flags;
+
+#if 0
+      // if this does not work on your OS, it is not used yet, 
+      // comment it out and put a note of what OS it does not work for 
+      struct ifmediareq media; 
+      e = ioctl(s,SIOCGIFMEDIA,&media);
+      int status = media.ifm_status;
+      int active = media.ifm_active;
+      DebugLog (<< "Media status=" << hex << status 
+                << " active=" << hex << active << dec );  
+#endif
+
+#if 0
+      // if this does not work on your OS, it is not used yet, 
+      // comment it out and put a note of what OS it does not work for 
+      e = ioctl(s,SIOCGIFPHYS,&ifr2);
+      int phys= ifr2.ifr_phys;
+      DebugLog (<< "Phys=" << hex << phys << dec );  
+#endif
+
+      DebugLog (<< "Considering: " << name << " -> " << ip
+                << " flags=0x" << hex << flags << dec );
+   
+      if (  (flags & IFF_UP) == 0 ) 
+      {  
+         DebugLog (<< "  ignore because: interface is not up");
+         continue;
+      }
+
+      if (  (flags & IFF_LOOPBACK) != 0 ) 
+      {
+         DebugLog (<< "  ignore because: interface is loopback");
+         continue;
+      }
+      
+      if (  (flags & IFF_RUNNING) == 0 ) 
+      {
+         DebugLog (<< "  ignore because: interface is not running");
+         continue;
+      }
+      
+      if (  (name[0]<'A') || (name[0]>'z') ) // should never happen
+      {  
+         DebugLog (<< "  ignore because: name looks bogus");
+         assert(0);
+         continue;
+      }
+
       if (matching == Data::Empty || matching == name)
       {
+         DebugLog (<< "  using this");
          results.push_back(std::make_pair(name, ip));
       }
    }
