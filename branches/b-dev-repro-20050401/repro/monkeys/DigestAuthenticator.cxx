@@ -84,7 +84,9 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
                static Data post(":5080/cert?domain=");
-               sipMessage->header(h_IdentityInfo).uri() = http + DnsUtil::getLocalIpAddress() + post + realm;
+               sipMessage->header(h_IdentityInfo).uri() = http 
+                  + DnsUtil::getLocalHostName() 
+                  + post + realm;
                InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
                InfoLog (<< *sipMessage);
             }
