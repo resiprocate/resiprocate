@@ -40,12 +40,16 @@ libresiprocate_la_SOURCES = \
 	ApiCheck.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
+	ConnectionBase.cxx \
 	ConnectionManager.cxx \
 	DataParameter.cxx \
+	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	Embedded.cxx \
 	ExistsParameter.cxx \
+	ExtensionHeader.cxx \
+	ExtensionParameter.cxx \
 	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
@@ -55,6 +59,8 @@ libresiprocate_la_SOURCES = \
 	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
+	InternalTransport.cxx \
+	KeepAliveMessage.cxx \
 	LazyParser.cxx \
 	Message.cxx \
 	MethodHash.cxx \
@@ -110,9 +116,11 @@ libresiprocate_la_SOURCES = \
 	TransactionController.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
+	TransactionUser.cxx \
 	Transport.cxx \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
+	TuSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
@@ -149,17 +157,21 @@ resiprocate_include_HEADERS = \
 	CSeqCategory.hxx \
 	CallId.hxx \
 	Connection.hxx \
+	ConnectionBase.hxx \
 	ConnectionManager.hxx \
 	Contents.hxx \
 	CpimContents.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
+	DeprecatedDialog.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsHandler.hxx \
 	Embedded.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExtensionHeader.hxx \
+	ExtensionParameter.hxx \
 	ExternalDnsFactory.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
@@ -172,6 +184,8 @@ resiprocate_include_HEADERS = \
 	Helper.hxx \
 	IntegerCategory.hxx \
 	IntegerParameter.hxx \
+	InternalTransport.hxx \
+	KeepAliveMessage.hxx \
 	LazyParser.hxx \
 	Message.hxx \
 	MessageWaitingContents.hxx \
@@ -234,10 +248,12 @@ resiprocate_include_HEADERS = \
 	TransactionMessage.hxx \
 	TransactionState.hxx \
 	TransactionTerminated.hxx \
+	TransactionUser.hxx \
 	Transport.hxx \
 	TransportMessage.hxx \
 	TransportSelector.hxx \
 	TuIM.hxx \
+	TuSelector.hxx \
 	UdpTransport.hxx \
 	UnknownParameter.hxx \
 	Uri.hxx \
