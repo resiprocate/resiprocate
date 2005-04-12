@@ -1,48 +1,35 @@
-#if !defined(RESIP_SERVERREGISTRATION_HXX)
-#define RESIP_SERVERREGISTRATION_HXX
+#include "resiprocate/dum/DumThread.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/SipMessage.hxx"
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-namespace resip
+using namespace resip;
+
+DumThread::DumThread(DialogUsageManager& dum)
+   : mDum(dum)
 {
-
-class ServerRegistration: public NonDialogUsage 
-{
-   public:
-      ServerRegistrationHandle getHandle();
-      
-      /// accept a SIP registration with a specific response
-      void accept(SipMessage& ok);
-
-      /// accept a SIP registration with the contacts known to the DUM
-      void accept(int statusCode = 200);
-
-      /// reject a SIP registration 
-      void reject(int statusCode);
-
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   protected:
-      virtual ~ServerRegistration();
-   private:
-      friend class DialogSet;
-      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
-
-      SipMessage mRequest;
-      Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
-
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
-};
- 
 }
 
-#endif
+void
+DumThread::thread()
+{
+   while (!isShutdown())
+   {
+      try
+      {
+         std::auto_ptr<Message> msg(mDum.mFifo.getNext(100));
+         if (msg.get())
+         {
+            mDum.internalProcess(msg);
+         }
+      }
+      catch (BaseException& e)
+      {
+         WarningLog (<< "Unhandled exception: " << e);
+      }
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -59,7 +46,6 @@ class ServerRegistration: public NonDialogUsage
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
