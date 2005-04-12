@@ -1,47 +1,44 @@
-#if !defined(RESIP_SERVERREGISTRATION_HXX)
-#define RESIP_SERVERREGISTRATION_HXX
+#if !defined(RESIP_USER_AUTH_INFO_HXX)
+#define RESIP_USER_AUTH_INFO_HXX 
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 
 namespace resip
 {
 
-class ServerRegistration: public NonDialogUsage 
+class UserAuthInfo : public resip::ApplicationMessage
 {
    public:
-      ServerRegistrationHandle getHandle();
-      
-      /// accept a SIP registration with a specific response
-      void accept(SipMessage& ok);
+      UserAuthInfo( const resip::Data& user,
+                    const resip::Data& realm,
+                    const resip::Data& a1,
+                    const resip::Data& transactionID);
+      ~UserAuthInfo();
+         
+      virtual const Data& getTransactionId() const;
 
-      /// accept a SIP registration with the contacts known to the DUM
-      void accept(int statusCode = 200);
+      const resip::Data& getA1() const;
+      const resip::Data& getRealm() const;
+      const resip::Data& getUser() const;
 
-      /// reject a SIP registration 
-      void reject(int statusCode);
+      virtual resip::Data brief() const;
+      virtual resip::Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
 
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   protected:
-      virtual ~ServerRegistration();
    private:
-      friend class DialogSet;
-      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
-
-      SipMessage mRequest;
-      Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
-
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
+      resip::Data mTransactionId;
+      resip::Data mA1;
+      resip::Data mRealm;
+      resip::Data mUser;
+      
 };
- 
-}
 
+std::ostream& 
+operator<<(std::ostream& strm, const UserAuthInfo& msg);
+
+}
 #endif
 
 /* ====================================================================
@@ -59,7 +56,6 @@ class ServerRegistration: public NonDialogUsage
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",

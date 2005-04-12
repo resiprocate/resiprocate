@@ -1,53 +1,44 @@
-#if !defined(RESIP_SERVERREGISTRATION_HXX)
-#define RESIP_SERVERREGISTRATION_HXX
+#ifndef RESIP_TransactionUserMessage_hxx
+#define RESIP_TransactionUserMessage_hxx 
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 
 namespace resip
 {
 
-class ServerRegistration: public NonDialogUsage 
+class TransactionUserMessage : public TransactionMessage
 {
    public:
-      ServerRegistrationHandle getHandle();
+      typedef enum 
+      {
+         RequestShutdown,
+         RemoveTransactionUser,
+         TransactionUserRemoved
+      } Type;
+
+      TransactionUserMessage(Type type, TransactionUser* tu);
+      Type type() const { return mType; }
+      const TransactionUser* getTransactionUser() const { return mTU; }
+
+      virtual const Data& getTransactionId() const;
+      virtual bool isClientTransaction() const; 
       
-      /// accept a SIP registration with a specific response
-      void accept(SipMessage& ok);
+      virtual Data brief() const;
+      virtual Message* clone() const { return new TransactionUserMessage(mType, mTU); }
+      virtual std::ostream& encode(std::ostream& strm) const;
 
-      /// accept a SIP registration with the contacts known to the DUM
-      void accept(int statusCode = 200);
-
-      /// reject a SIP registration 
-      void reject(int statusCode);
-
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   protected:
-      virtual ~ServerRegistration();
    private:
-      friend class DialogSet;
-      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
-
-      SipMessage mRequest;
-      Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
-
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
+      Type mType;
+      TransactionUser* mTU;
 };
  
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -59,7 +50,6 @@ class ServerRegistration: public NonDialogUsage
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",

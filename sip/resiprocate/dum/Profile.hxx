@@ -81,15 +81,15 @@ class Profile
       virtual bool hasOverrideHostAndPort() const;
       virtual const Uri& getOverrideHostAndPort() const;      
       
-	  //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
-	  //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
-	  //Note:  Default is to advertise Headers::Allow and Headers::Supported, use clearAdvertisedCapabilities to remove these
-	  //       Currently implemented header values are: Headers::Allow, 
-	  //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
-	  virtual void addAdvertisedCapability(const Headers::Type header);
+      //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
+      //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
+      //Note:  Default is to advertise Headers::Allow and Headers::Supported, use clearAdvertisedCapabilities to remove these
+      //       Currently implemented header values are: Headers::Allow, 
+      //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
+      virtual void addAdvertisedCapability(const Headers::Type header);
       virtual bool isAdvertisedCapability(const Headers::Type header) const;
-	  virtual void clearAdvertisedCapabilities();
-
+      virtual void clearAdvertisedCapabilities();
+      
       // Use to route all outbound requests through a particular proxy
       virtual void setOutboundProxy( const Uri& uri );
       virtual const NameAddr& getOutboundProxy() const;
@@ -99,7 +99,7 @@ class Profile
       virtual void setRportEnabled(bool enabled);
       virtual bool getRportEnabled() const;      
 
-	  //if set then UserAgent header is added to outbound messages
+      //if set then UserAgent header is added to outbound messages
       virtual void setUserAgent( const Data& userAgent );
       virtual const Data& getUserAgent() const;
       virtual bool hasUserAgent() const;
@@ -111,9 +111,9 @@ class Profile
 
    private:
       // !slg! - should we provide a mechanism to clear the mHasxxxxx members to re-enable fall through after setting?
-	  bool mHasDefaultRegistrationExpires;
+      bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
-
+      
       bool mHasDefaultMaxRegistrationExpires;
       int mDefaultMaxRegistrationExpires;
 
@@ -140,23 +140,23 @@ class Profile
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
-
-	  bool mHasAdvertisedCapabilities;
-	  std::set<Headers::Type> mAdvertisedCapabilities;
-
-	  bool mHasRportEnabled;
+      
+      bool mHasAdvertisedCapabilities;
+      std::set<Headers::Type> mAdvertisedCapabilities;
+      
+      bool mHasRportEnabled;
       bool mRportEnabled;
-
+      
       bool mHasUserAgent;            
       Data mUserAgent;
-
+      
       bool mHasOverrideHostPort;
       Uri  mOverrideHostPort;
-
+      
       bool mHasKeepAliveTime;
       int  mKeepAliveTime;
-
-	  Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
+      
+      Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
 
 }
