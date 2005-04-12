@@ -4,6 +4,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/MD5Stream.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -83,133 +84,83 @@ UserProfile::clearDigestCredentials()
 }
 
 void 
-UserProfile::setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
+UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password)
 {
-   DigestCredential cred(aor, realm, user, password);
+   DigestCredential cred( realm, user, password );
+
    DebugLog (<< "Adding credential: " << cred);
    mDigestCredentials.erase(cred);
    mDigestCredentials.insert(cred);
 }
      
 const UserProfile::DigestCredential&
-UserProfile::getDigestCredential( const Data& realm, const SipMessage& challenge )
+UserProfile::getDigestCredential( const Data& realm  )
 {
-   if(mDigestCredentials.size() == 0)
+   if(mDigestCredentials.empty())
    {
       // !jf! why not just throw here? 
       static const DigestCredential empty;
       return empty;
    }
 
-   DigestCredential dc;
-   dc.realm = realm;
-   dc.aor = challenge.header(h_From).uri().getAor();
-
-   StackLog (<< Inserter(mDigestCredentials));
-   DebugLog (<< "Using From header: " <<  dc.aor << " to find credential");   
-
-   // 1.  Look for any credential whose AOR matches the From field and with a matching realm. 
-   DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
-   if (i != mDigestCredentials.end())
+   DigestCredentials::const_iterator it = mDigestCredentials.find(DigestCredential(realm));
+   if (it == mDigestCredentials.end())
    {
-      return *i;
+      DebugLog(<< "Didn't find credential for realm: " << realm << " " << *mDigestCredentials.begin());
+      return *mDigestCredentials.begin();
    }
-      
-   // 2.  Look for any credential whose user matches the User in the From field and with a matching realm. 
-   // 3.  Look for any credential with a matching realm.  (required before 4 - since there could be the same AOR in 2 different realms???) 
-   // 4.  Look for any credential whose AOR matches the From field. 
-   // 5.  Look for any credential whose user matches the User in the From field. 
-   const Data& user = challenge.header(h_From).uri().user();
-   DigestCredentials::const_iterator RealmOnlyMatch = mDigestCredentials.end();
-   DigestCredentials::const_iterator AOROnlyMatch = mDigestCredentials.end();
-   DigestCredentials::const_iterator UserOnlyMatch = mDigestCredentials.end();
-   for (i = mDigestCredentials.begin(); i != mDigestCredentials.end(); i++)
+   else      
    {
-      bool fUserMatches=false;
-      bool fRealmMatches=false;
-      if (i->user == user)
-      {
-         fUserMatches = true;
-      }
-      if(i->realm == realm)
-      {
-         fRealmMatches = true;
-      }
-      if(fUserMatches && fRealmMatches)  // If both user and realm match (# 2) - no need to look further
-      {
-         return *i;
-      }
-      if(fRealmMatches && RealmOnlyMatch == mDigestCredentials.end())
-      {
-         RealmOnlyMatch = i;  // Store first Realm only match
-      }
-      else if(i->aor == dc.aor && AOROnlyMatch == mDigestCredentials.end())
-      {
-         AOROnlyMatch = i;    // Store first AOR only match
-      }
-      else if(fUserMatches && UserOnlyMatch == mDigestCredentials.end())
-      {
-         UserOnlyMatch = i;   // Store first User only match
-      }
-   }
-
-   if(RealmOnlyMatch != mDigestCredentials.end())
-   {
-       return *RealmOnlyMatch;
-   }
-   else if(AOROnlyMatch != mDigestCredentials.end())
-   {
-       return *AOROnlyMatch;
-   }
-   else if(UserOnlyMatch != mDigestCredentials.end())
-   {
-       return *UserOnlyMatch;
-   }
-   // 6.  Any (first) Digest Credential 
-   else
-   {
-       return *mDigestCredentials.begin();
+      DebugLog(<< "Found credential for realm: " << *it << realm);      
+      return *it;
    }
 }
 
-UserProfile::DigestCredential::DigestCredential(const Data& a, const Data& r, const Data& u, const Data& p) :
-   aor(a),
+UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& password) :
    realm(r),
-   user(u),
-   password(p)
-{
+   user(u)
+{  
+   MD5Stream a1;
+   a1 << user
+      << Symbols::COLON
+      << realm
+      << Symbols::COLON
+      << password;
+   passwordHashA1 = a1.getHex();
 }
 
 UserProfile::DigestCredential::DigestCredential() : 
-   aor(Data::Empty),
    realm(Data::Empty),
    user(Data::Empty),
-   password(Data::Empty)
+   passwordHashA1(Data::Empty)
+{
+}  
+
+UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
+   realm(pRealm),
+   user(Data::Empty),
+   passwordHashA1(Data::Empty) 
 {
 }  
 
 bool
 UserProfile::DigestCredential::operator<(const DigestCredential& rhs) const
 {
-   if (realm < rhs.realm)
-   {
-      return true;
-   }
-   else if (realm == rhs.realm)
-   {
-      return aor < rhs.aor;
-   }
-   else
-   {
-      return false;
-   }
+   return realm < rhs.realm;
+}
+
+std::ostream&
+resip::operator<<(std::ostream& strm, const UserProfile& profile)
+{
+   strm << "UserProfile: " << profile.mDefaultFrom << Inserter(profile.mDigestCredentials);
+   return strm;
 }
 
 std::ostream&
 resip::operator<<(std::ostream& strm, const UserProfile::DigestCredential& cred)
 {
-   strm << "realm=" << cred.realm 
-        << " aor=" << cred.aor
+   strm << "credential: "
+        << " realm=" << cred.realm 
         << " user=" << cred.user ;
    return strm;
 }

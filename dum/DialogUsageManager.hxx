@@ -14,8 +14,8 @@
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/StackThread.hxx"
 #include "resiprocate/StatisticsMessage.hxx"
+#include "resiprocate/TransactionUser.hxx"
 
 namespace resip 
 {
@@ -51,7 +51,7 @@ class DumShutdownHandler;
 
 class KeepAliveManager;
 
-class DialogUsageManager : public HandleManager
+class DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
       class Exception : public BaseException
@@ -65,14 +65,10 @@ class DialogUsageManager : public HandleManager
             
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
-      
-      DialogUsageManager(Security* security, AsyncProcessHandler* handler = 0);
 
-      // deprecated interface
-      DialogUsageManager(std::auto_ptr<SipStack> stack = std::auto_ptr<SipStack>(new SipStack(false)));
-
+      DialogUsageManager(SipStack& stack);
       virtual ~DialogUsageManager();
-      
+            
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void forceShutdown(DumShutdownHandler*);
@@ -88,7 +84,7 @@ class DialogUsageManager : public HandleManager
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
 
       SipStack& getSipStack();
-      Security& getSecurity();
+      Security* getSecurity();
       
       Data getHostAddress();
 
@@ -195,21 +191,18 @@ class DialogUsageManager : public HandleManager
       void end(DialogSetId invSessionId);
       void send(SipMessage& request); 
       
-      void buildFdSet(FdSet& fdset);
-
-      // Runs the SipStack in its own StackThread. call process() from the application
-      void run(); 
 
       // Call this version of process if you are running the sipstack in its own
       // thread. you must call run() before calling process()
       bool process();
 
+      //void buildFdSet(FdSet& fdset);
       // Call this version of process if you want to run the stack in the
       // application's thread
-      void process(FdSet& fdset);
+      //void process(FdSet& fdset);
       
       /// returns time in milliseconds when process next needs to be called 
-      int getTimeTillNextProcessMS(); 
+      //int getTimeTillNextProcessMS(); 
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
@@ -232,7 +225,11 @@ class DialogUsageManager : public HandleManager
 
    protected:
       virtual void shutdown();      
-
+      //TransactionUser virtuals
+      virtual const Data& name() const;
+      bool internalProcess(std::auto_ptr<Message> msg);
+      friend class DumThread;
+      
    private:
       friend class Dialog;
       friend class DialogSet;
@@ -308,7 +305,7 @@ class DialogUsageManager : public HandleManager
       void destroy(const BaseUsage* usage);
       void destroy(DialogSet*);
       void destroy(Dialog*);
-      
+
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
@@ -347,8 +344,7 @@ class DialogUsageManager : public HandleManager
 
       StatisticsMessage::Payload mStatsPayload;
 
-      std::auto_ptr<SipStack> mStack;
-      StackThread mStackThread;
+      SipStack& mStack;
       DumShutdownHandler* mDumShutdownHandler;
       typedef enum 
       {

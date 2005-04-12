@@ -46,8 +46,11 @@ class TransactionState : public DnsHandler
          Bogus
       } State;
 
-      TransactionState(TransactionController& controller, Machine m, State s, 
-                       const Data& tid, TransactionUser* tu);
+      TransactionState(TransactionController& controller, 
+                       Machine m, 
+                       State s, 
+                       const Data& tid, 
+                       TransactionUser* tu=0);
       
       void handle(DnsResult*);
 
@@ -78,7 +81,7 @@ class TransactionState : public DnsHandler
       bool isReliabilityIndication(TransactionMessage* msg) const;
       bool isSentIndication(TransactionMessage* msg) const;
       void sendToTU(TransactionMessage* msg) const;
-      static void sendToTU(TransactionController& controller, TransactionMessage* msg);
+      static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
       void sendToWire(TransactionMessage* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
