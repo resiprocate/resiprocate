@@ -33,11 +33,6 @@ DtlsTimerQueue::DtlsTimerQueue( Fifo<DtlsMessage>& fifo )
 
 #endif
 
-TimeLimitTimerQueue::TimeLimitTimerQueue(TuSelector& fifoSelector)
-   : mFifoSelector(fifoSelector)
-{
-}
-
 BaseTimerQueue::~BaseTimerQueue()
 {
    //xkd-2004-11-4
@@ -104,7 +99,7 @@ DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 #endif
 
 void
-TimeLimitTimerQueue::add(const Timer& timer)
+BaseTimeLimitTimerQueue::add(const Timer& timer)
 {
    assert(timer.getMessage());
    DebugLog(<< "Adding application timer: " << timer.getMessage()->brief());
@@ -124,7 +119,7 @@ BaseTimerQueue::empty() const
 }
 
 void
-TimeLimitTimerQueue::process()
+BaseTimeLimitTimerQueue::process()
 {
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
@@ -136,7 +131,7 @@ TimeLimitTimerQueue::process()
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
          assert(i->getMessage());
-         mFifoSelector.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
+         addToFifo(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
       }
       mTimers.erase(mTimers.begin(), end);
    }
@@ -159,6 +154,25 @@ TimerQueue::process()
       mTimers.erase(mTimers.begin(), end);
    }
 }
+
+TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo) : mFifo(fifo)
+{}
+
+void
+TimeLimitTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
+{
+   mFifo.add(msg, d);
+}
+
+TuSelectorTimerQueue::TuSelectorTimerQueue(TuSelector& sel) : mFifoSelector(sel)
+{}
+
+void
+TuSelectorTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
+{
+   mFifoSelector.add(msg, d);
+}
+   
 
 #ifdef USE_DTLS
 
