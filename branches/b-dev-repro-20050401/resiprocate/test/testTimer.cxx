@@ -26,7 +26,7 @@ main()
    TuSelector sel(f);   
    
    TimerQueue timer(r);
-   TimeLimitTimerQueue timer2(sel);
+   TuSelectorTimerQueue timer2(sel);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);
