@@ -2,9 +2,11 @@
 #define RESIP_PUBLICATIONHANDLER_HXX
 
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/Mime.hxx"
 
 namespace resip
 {
+
 class ClientPublication;
 class ServerPublication;
 class SipMessage;

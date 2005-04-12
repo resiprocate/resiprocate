@@ -399,8 +399,10 @@ class TestShutdownHandler : public DumShutdownHandler
 {
    public:
       TestShutdownHandler(const Data& n) : name(n), dumShutDown(false) { }
-      bool dumShutDown;
+      virtual ~TestShutdownHandler(){}
+
       Data name;
+      bool dumShutDown;
       virtual void onDumCanBeDeleted() 
       {
          cout << name << ": onDumCanBeDeleted." << endl;
@@ -417,7 +419,8 @@ main (int argc, char** argv)
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
 
    //set up UAC
-   DialogUsageManager* dumUac = new DialogUsageManager();
+   SipStack stack;
+   DialogUsageManager* dumUac = new DialogUsageManager(stack);
    dumUac->addTransport(UDP, 12005);
 
    MasterProfile uacMasterProfile;      
@@ -446,7 +449,8 @@ main (int argc, char** argv)
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
-   DialogUsageManager* dumUas = new DialogUsageManager();
+   SipStack stack2;
+   DialogUsageManager* dumUas = new DialogUsageManager(stack2);
    dumUas->addTransport(UDP, 12010);
    
    MasterProfile uasMasterProfile;   
