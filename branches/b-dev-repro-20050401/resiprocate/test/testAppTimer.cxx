@@ -49,7 +49,7 @@ main(int argc, char** argv)
 
    TimeLimitFifo<Message> f(0, 0);
    TuSelector sel(f);   
-   TimeLimitTimerQueue timer(sel);
+   TuSelectorTimerQueue timer(sel);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);
