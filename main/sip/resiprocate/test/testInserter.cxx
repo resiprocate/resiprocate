@@ -37,9 +37,39 @@ struct Foo
 	 return value < rhs.value;
       }
 
+      bool operator==(const Foo& rhs) const
+      {
+         return (!(*this < rhs) && !(rhs < *this));
+      }
+
       int count;
       Data value;
 };
+
+#if  defined(__INTEL_COMPILER )
+namespace std
+{
+size_t hash_value(const Foo& foo)
+{
+   return foo.value.hash();
+}
+}
+
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
+{
+
+template<>
+struct hash<Foo>
+{
+      size_t operator()(const Foo& foo) const
+      {
+         return foo.value.hash();
+      }
+};
+
+}
+#endif // HASHMAP
 
 ostream& operator<<(ostream& str, const Foo& foo)
 {
@@ -81,6 +111,24 @@ main(int argc, char** argv)
       container[3] = Foo(3, "baz");
 
       cerr << Inserter(container) << endl;
+   }
+
+   {
+      HashMap<int, Foo> container;
+      container[1] = Foo(1, "foo");
+      container[2] = Foo(2, "bar");
+      container[3] = Foo(3, "baz");
+
+      cerr << Inserter(container) << endl;      
+   }
+
+   {
+      HashSet<Foo> container;
+      container.insert(Foo(1, "foo"));
+      container.insert(Foo(2, "bar"));
+      container.insert(Foo(3, "baz"));
+
+      cerr << Inserter(container) << endl;      
    }
 
    cerr << "All Ok" << endl;

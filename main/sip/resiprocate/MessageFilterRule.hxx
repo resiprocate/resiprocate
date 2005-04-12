@@ -1,47 +1,53 @@
-#if !defined(RESIP_SERVERREGISTRATION_HXX)
-#define RESIP_SERVERREGISTRATION_HXX
+#if !defined(RESIP_MESSAGE_FILTER_RULE_HXX)
+#define RESIP_MESSAGE_FILTER_RULE_HXX 
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include <vector>
 #include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
-
-class ServerRegistration: public NonDialogUsage 
+class MessageFilterRule
 {
    public:
-      ServerRegistrationHandle getHandle();
-      
-      /// accept a SIP registration with a specific response
-      void accept(SipMessage& ok);
+      typedef std::vector<Data> SchemeList;
+      typedef std::vector<Data> HostpartList;
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
+      typedef std::vector<Data> EventList;
+      typedef std::vector<MethodTypes> MethodList;
 
-      /// accept a SIP registration with the contacts known to the DUM
-      void accept(int statusCode = 200);
+      MessageFilterRule(SchemeList    schemeList     = SchemeList(),
+                        HostpartTypes hostpartType   = Any,
+                        MethodList    methodList     = MethodList(),
+                        EventList eventTypeList      = EventList());
 
-      /// reject a SIP registration 
-      void reject(int statusCode);
+      MessageFilterRule(SchemeList    schemeList,
+                        HostpartList  hostpartList,
+                        MethodList    methodList     = MethodList(),
+                        EventList     eventList      = EventList());
 
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   protected:
-      virtual ~ServerRegistration();
+
+      bool matches(const SipMessage &) const;
+
+
    private:
-      friend class DialogSet;
-      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
+      bool schemeIsInList(const Data &scheme) const;
+      bool hostIsInList(const Data &hostpart) const;
+      bool methodIsInList(MethodTypes method) const;
+      bool eventIsInList(const Data &event) const;
 
-      SipMessage mRequest;
-      Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
+      SchemeList mSchemeList;
+      HostpartTypes mHostpartMatches;
+      HostpartList mHostpartList;
+      MethodList mMethodList;
+      EventList mEventList;
 
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
+      bool mAnyEventType;
+      bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
 };
- 
-}
 
+typedef std::vector<MessageFilterRule> MessageFilterRuleList;
+
+}
 #endif
 
 /* ====================================================================
@@ -59,7 +65,6 @@ class ServerRegistration: public NonDialogUsage
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",

@@ -89,7 +89,6 @@ class UserAgent : public CommandLineParser,
       void addTransport(TransportType type, int port);
 
    private:
-      Security* mSecurity;
       MasterProfile mProfile;
       DialogUsageManager mDum;
 };
