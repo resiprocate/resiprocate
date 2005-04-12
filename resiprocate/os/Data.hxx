@@ -141,6 +141,7 @@ class Data
       /// encodes with %hex for special characters
       Data charEncoded() const;
       Data charUnencoded() const;
+	  Data charHttpUnencoded() const;
       Data trunc(size_type trunc) const;
 	
       // resize to zero without changing capacity

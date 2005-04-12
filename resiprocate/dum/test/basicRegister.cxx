@@ -33,61 +33,68 @@ class Client : public ClientRegistrationHandler
 
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {
-          InfoLog( << "Client::Success: " << endl << response );
-          if (removing)
-          {
-             removing = false;             
+         InfoLog( << "Client::Success: " << endl << response );
+         if (removing)
+         {
+            removing = false;             
 #ifdef WIN32
-         Sleep(2000);
+            Sleep(2000);
 #else
-         sleep(5);
+            sleep(5);
 #endif
-         ClientRegistration* foo = h.get();          
-          h->removeAll();
-          }
-          else
-          {             
-             done = true;
-          }          
+            //ClientRegistration* foo = h.get();          
+            h->removeAll();
+         }
+         else
+         {             
+            done = true;
+         }          
       }
 
       virtual void onRemoved(ClientRegistrationHandle)
       {
-          InfoLog ( << "Client::onRemoved ");
+         InfoLog ( << "Client::onRemoved ");
       }
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
       {
-          InfoLog ( << "Client::onFailure: " << response );
-          done = true;
+         InfoLog ( << "Client::onFailure: " << response );
+         done = true;
       }
+
+      virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
+      {
+         return 0;
+      }
+      
 
       bool done;
       bool removing;      
 };
 
 /*
-class RegistrationServer : public ServerRegistrationHandler
-{
-   public:
-      RegistrationServer() : done(false) {}
-      virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
+  class RegistrationServer : public ServerRegistrationHandler
+  {
+  public:
+  RegistrationServer() : done(false) {}
+  virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// called when one of the contacts is removed
-      virtual void onRemoveOne(ServerRegistrationHandle, const SipMessage& reg)=0;
+  /// called when one of the contacts is removed
+  virtual void onRemoveOne(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// Called when all the contacts are removed 
-      virtual void onRemoveAll(ServerRegistrationHandle, const SipMessage& reg)=0;
+  /// Called when all the contacts are removed 
+  virtual void onRemoveAll(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// Called when a new contact is added. This is after authentication has
-      /// all sucseeded
-      virtual void onAdd(ServerRegistrationHandle, const SipMessage& reg)=0;
+  /// Called when a new contact is added. This is after authentication has
+  /// all sucseeded
+  virtual void onAdd(ServerRegistrationHandle, const SipMessage& reg)=0;
 
-      /// Called when an registration expires 
-      virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
-   private:
-      bool done;
-};
+  /// Called when an registration expires 
+  virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
+      
+  private:
+  bool done;
+  };
 */
 
 int 
@@ -102,7 +109,8 @@ main (int argc, char** argv)
    MasterProfile profile;   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
 
-   DialogUsageManager clientDum;
+   SipStack stack;
+   DialogUsageManager clientDum(stack);
    clientDum.addTransport(UDP, 15060);
    clientDum.setMasterProfile(&profile);
 
@@ -129,15 +137,15 @@ main (int argc, char** argv)
    while ( !client.done )
 
    {
-     FdSet fdset;
+      FdSet fdset;
 
-     // Should these be buildFdSet on the DUM?
-     clientDum.buildFdSet(fdset);
-     int err = fdset.selectMilliSeconds(100);
-     assert ( err != -1 );
+      // Should these be buildFdSet on the DUM?
+      clientDum.buildFdSet(fdset);
+      int err = fdset.selectMilliSeconds(100);
+      assert ( err != -1 );
 
-     clientDum.process(fdset);
-     if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
+      clientDum.process(fdset);
+      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
 
    }   
    return 0;

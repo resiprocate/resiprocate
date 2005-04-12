@@ -1,7 +1,11 @@
 #include "resiprocate/TuSelector.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 using namespace resip;
 
@@ -9,6 +13,23 @@ TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
    mFallBackFifo(fallBackFifo) ,
    mTuSelectorMode(false)
 {
+}
+
+void
+TuSelector::process(TransactionUserMessage* msg)
+{
+   switch (msg->type() )
+   {
+      case TransactionUserMessage::RequestShutdown:
+         markShuttingDown(msg->tu);
+         break;
+      case TransactionUserMessage::RemoveTransactionUser:
+         remove(msg->tu);
+         break;
+      default:
+         assert(0);
+         break;
+   }
 }
 
 void
@@ -28,14 +49,17 @@ bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
    if (mTuSelectorMode)
+   //InfoLog(<< "TuSelector::wouldAccept " << mTuSelectorMode);   
    {
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
-         if ((*it)->wouldAccept(usage))
+         if (!it->shuttingDown && it->tu->wouldAccept(usage))
          {
+            //InfoLog(<< "TuSelector::wouldAccept returning true");   
             return true;
          }
       }
+      //InfoLog(<< "TuSelector::wouldAccept returning false");   
       return false;
    }
    else
@@ -52,7 +76,7 @@ TuSelector::size() const
       unsigned int total=0;   
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
-         total += (*it)->size();
+         total += it->tu->size();
       }
       return total;
    }
@@ -66,7 +90,7 @@ void
 TuSelector::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelectorMode = true;
-   mTuList.push_back(&tu);
+   mTuList.push_back(Item(&tu));
 }
 
 TransactionUser* 
@@ -74,12 +98,42 @@ TuSelector::selectTransactionUser(const SipMessage& msg)
 {
    for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
-      if ((*it)->isForMe(msg))
+      if (it->tu->isForMe(msg))
       {
-         return (*it);
+         return it->tu;
       }
    }
    return 0;
+}
+
+void
+TuSelector::markShuttingDown(TransactionUser* tu)
+{
+   for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   {
+      if (it->tu == tu)
+      {
+         it->shuttingDown = true;
+         return;
+      }
+   }
+   assert(0);
+}
+
+void
+TuSelector::remove(TransactionUser* tu)
+{
+   for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   {
+      if (it->tu == tu)
+      {
+         TransactionUserMessage* done = new TransactionUserMessage(TransactionUserMessage::TransactionUserRemoved, tu);
+         tu->postToTransactionUser(done, TimeLimitFifo<resip::Message>::InternalElement);
+         mTuList.erase(it);
+         return;
+      }
+   }
+   assert(0);
 }
 
 bool
@@ -87,7 +141,7 @@ TuSelector::exists(TransactionUser* tu)
 {
    for(TuList::iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
-      if ((*it) == tu)
+      if (it->tu == tu)
       {
          return true;
       }
