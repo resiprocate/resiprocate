@@ -73,6 +73,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          }
          if (!stale)
          {
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             it->second.state = Failed;         
 //         mAttemptedAuths.erase(it);
             return false;
@@ -85,6 +86,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       else if (it->second.state == Failed)
       {
          it->second.state = Failed;         
+         InfoLog (<< "Failed client auth for " << userProfile << endl << response);
 //         mAttemptedAuths.erase(it);
          return false;
       }
@@ -107,6 +109,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
    if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
    {
       it->second.state = Failed;
+      InfoLog (<< "Failed client auth for " << userProfile << endl << response);
       return false;
    }
 
@@ -118,6 +121,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          if (!handleAuthHeader(userProfile, *i, it, origRequest, response, false))
          {
             it->second.state = Failed;   
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             return false;
          }
       }
@@ -130,27 +134,31 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          if (!handleAuthHeader(userProfile, *i, it, origRequest, response, true))
          {
             it->second.state = Failed;   
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             return false;
          }
       }
    }
    assert(origRequest.header(h_Vias).size() == 1);
    origRequest.header(h_CSeq).sequence()++;
+   InfoLog (<< "Produced response to digest challenge for " 
+            << userProfile << endl << response << endl << origRequest);
    return true;
 }
 
-bool ClientAuthManager::handleAuthHeader(UserProfile& userProfile, 
-                                         const Auth& auth, 
-                                         AttemptedAuthMap::iterator authState,
-                                         SipMessage& origRequest, 
-                                         const SipMessage& response, 
-                                         bool proxy)
+bool 
+ClientAuthManager::handleAuthHeader(UserProfile& userProfile, 
+                                    const Auth& auth, 
+                                    AttemptedAuthMap::iterator authState,
+                                    SipMessage& origRequest, 
+                                    const SipMessage& response, 
+                                    bool proxy)
 {
    const Data& realm = auth.param(p_realm);                   
    
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
-   UserProfile::DigestCredential credential = userProfile.getDigestCredential(realm, response);
-   if ( credential.password.empty() )                       
+   UserProfile::DigestCredential credential = userProfile.getDigestCredential(realm);
+   if ( credential.realm.empty() )                       
    {                                        
       InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
       DebugLog (<< auth);
@@ -168,7 +176,8 @@ bool ClientAuthManager::handleAuthHeader(UserProfile& userProfile,
    return true;   
 }
 
-void ClientAuthManager::addAuthentication(SipMessage& request)
+void 
+ClientAuthManager::addAuthentication(SipMessage& request)
 {
    DialogSetId id(request);
    AttemptedAuthMap::iterator itState = mAttemptedAuths.find(id);
@@ -191,25 +200,25 @@ void ClientAuthManager::addAuthentication(SipMessage& request)
            it != authState.wwwCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
-         request.header(h_Authorizations).push_back(Helper::makeChallengeResponseAuth(request,
-                                                                                      it->second.user,
-                                                                                      it->second.password,
-                                                                                      it->first,
-                                                                                      authState.cnonce, 
-                                                                                      authState.cnonceCount,
-                                                                                      authState.cnonceCountString));
+         request.header(h_Authorizations).push_back( Helper::makeChallengeResponseAuthWithA1(request,
+                                                                                             it->second.user,
+                                                                                             it->second.passwordHashA1,
+                                                                                             it->first,
+                                                                                             authState.cnonce, 
+                                                                                             authState.cnonceCount,
+                                                                                             authState.cnonceCountString) );
       }
       for (AuthState::CredentialMap::iterator it = authState.proxyCredentials.begin(); 
            it != authState.proxyCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
-         request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuth(request,
-                                                                                           it->second.user,
-                                                                                           it->second.password,
-                                                                                           it->first,
-                                                                                           authState.cnonce, 
-                                                                                           authState.cnonceCount,
-                                                                                           authState.cnonceCountString));
+         request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuthWithA1(request,
+                                                                                                 it->second.user,
+                                                                                                 it->second.passwordHashA1,
+                                                                                                 it->first,
+                                                                                                 authState.cnonce, 
+                                                                                                 authState.cnonceCount,
+                                                                                                 authState.cnonceCountString));
       }
 
    }

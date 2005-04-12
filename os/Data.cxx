@@ -35,6 +35,140 @@ const bool Data::isCharHex[256] =
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false   //f
 };
 
+int 
+hexpair2int(char high, char low)
+{
+    char val;
+
+	switch(high)
+	{
+	   case '0':
+		  val = 0x00;
+		  break;
+	   case '1':
+		  val = 0x10;
+		  break;
+	   case '2':
+		  val = 0x20;
+		  break;
+	   case '3':
+		  val =  0x30;
+		  break;
+	   case '4':
+		  val =  0x40;
+		  break;
+	   case '5':
+		  val =  0x50;
+		  break;
+	   case '6':
+		  val =  0x60;
+		  break;
+	   case '7':
+		  val =  0x70;
+		  break;
+	   case '8':
+		  val =  0x80;
+		  break;
+	   case '9':
+		  val =  0x90;
+		  break;
+	   case 'A':
+	   case 'a':
+		  val =  0xA0;
+		  break;
+	   case 'B':
+	   case 'b':
+		  val =  0xB0;
+		  break;
+	   case 'C':
+	   case 'c':
+		  val =  0xC0;
+		  break;
+	   case 'D':
+	   case 'd':
+		  val =  0xD0;
+		  break;
+	   case 'E':
+	   case 'e':
+		  val =  0xE0;
+		  break;
+	   case 'F':
+	   case 'f':
+		  val =  0xF0;
+		  break;
+	  default:
+		  return '?';
+		  break;
+	}
+
+	switch(low)
+	{
+	   case '0':
+		  if (!val)
+		  {
+			 return '?';
+		  }
+		  break;
+	   case '1':
+		  val += 0x01;
+		  break;
+	   case '2':
+		  val += 0x02;
+		  break;
+	   case '3':
+		  val +=  0x03;
+		  break;
+	   case '4':
+		  val +=  0x04;
+		  break;
+	   case '5':
+		  val +=  0x05;
+		  break;
+	   case '6':
+		  val +=  0x06;
+		  break;
+	   case '7':
+		  val +=  0x07;
+		  break;
+	   case '8':
+		  val +=  0x08;
+		  break;
+	   case '9':
+		  val +=  0x09;
+		  break;
+	   case 'A':
+	   case 'a':
+		  val +=  0x0A;
+		  break;
+	   case 'B':
+	   case 'b':
+		  val +=  0x0B;
+		  break;
+	   case 'C':
+	   case 'c':
+		  val +=  0x0C;
+		  break;
+	   case 'D':
+	   case 'd':
+		  val +=  0x0D;
+		  break;
+	   case 'E':
+	   case 'e':
+		  val +=  0x0E;
+		  break;
+	   case 'F':
+	   case 'f':
+		  val +=  0x0F;
+		  break;
+	  default:
+		  return '?';
+		  break;
+	}
+	return val;
+}
+
+
+
 bool
 Data::init()
 {
@@ -988,7 +1122,8 @@ Data::charUnencoded() const
             char* high = strchr(hexmap, *p++);
             char* low = strchr(hexmap, *p++);
 
-            if (high == 0 || low == 0)
+			// !rwm! changed from high==0 || low==0
+            if (high == 0 && low == 0)
             {
                assert(0);
                // ugh
@@ -1012,6 +1147,54 @@ Data::charUnencoded() const
    }
    return ret;
 }
+
+Data
+Data::charHttpUnencoded() const
+{
+   Data ret(size(), true);
+
+   const char* p = data();
+   for (size_type i = 0; i < size(); ++i)
+   {
+      unsigned char c = *p++;
+      if (c == '%')
+      {
+         if ( i+2 < size())
+         {
+		    ret += hexpair2int( *p++, *p++);
+//            char* high = strchr(hexmap, *p++);
+//            char* low = strchr(hexmap, *p++);
+
+			// !rwm! changed from high==0 || low==0
+//            if (high == 0 && low == 0)
+//            {
+//               assert(0);
+//               // ugh
+//               return ret;
+//            }
+            
+//            int highInt = high - hexmap;
+//            int lowInt = low - hexmap;
+//            ret += char(highInt<<4 | lowInt);
+            i += 2;
+         }
+         else
+         {
+            break;
+         }
+      }
+	  else if (c == '+')
+	  {
+	     ret += ' ';
+	  }
+      else
+      {
+         ret += c;
+      }
+   }
+   return ret;
+}
+
 
 Data
 Data::trunc(size_t s) const
