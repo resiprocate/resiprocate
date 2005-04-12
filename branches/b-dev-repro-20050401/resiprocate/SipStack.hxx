@@ -184,7 +184,7 @@ class SipStack
       // timers associated with the application. When a timer fires, it is
       // placed in the mTUFifo
       mutable Mutex mAppTimerMutex;
-      TimeLimitTimerQueue  mAppTimers;
+      TuSelectorTimerQueue  mAppTimers;
       
       // Track stack statistics
       StatisticsManager mStatsManager;
