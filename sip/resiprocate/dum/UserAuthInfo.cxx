@@ -1,48 +1,87 @@
-#if !defined(RESIP_SERVERREGISTRATION_HXX)
-#define RESIP_SERVERREGISTRATION_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include <cassert>
 
-namespace resip
+#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+
+UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user, 
+                           const Data& transactionId ):
+   mTransactionId(transactionId),
+   mA1(a1),
+   mRealm(realm),
+   mUser(user)
 {
-
-class ServerRegistration: public NonDialogUsage 
-{
-   public:
-      ServerRegistrationHandle getHandle();
-      
-      /// accept a SIP registration with a specific response
-      void accept(SipMessage& ok);
-
-      /// accept a SIP registration with the contacts known to the DUM
-      void accept(int statusCode = 200);
-
-      /// reject a SIP registration 
-      void reject(int statusCode);
-
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-   protected:
-      virtual ~ServerRegistration();
-   private:
-      friend class DialogSet;
-      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
-
-      SipMessage mRequest;
-      Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
-
-      // disabled
-      ServerRegistration(const ServerRegistration&);
-      ServerRegistration& operator=(const ServerRegistration&);
-};
- 
 }
 
-#endif
+
+UserAuthInfo::~UserAuthInfo()
+{
+}
+
+
+const Data&
+UserAuthInfo::getA1() const
+{
+   return mA1;
+}
+
+
+const Data& 
+UserAuthInfo::getRealm() const
+{
+   return mRealm;
+}
+
+
+const Data&
+UserAuthInfo::getUser() const
+{
+   return mUser;
+}
+
+const Data&
+UserAuthInfo::getTransactionId() const
+{
+   return mTransactionId;
+}
+
+Data 
+UserAuthInfo::brief() const
+{  
+   return Data("UserAuthInto: ") 
+      + mUser + Data(" ")  
+      + mRealm + Data(" ")  
+      + mA1;
+}
+
+resip::Message* 
+UserAuthInfo::clone() const
+{
+   assert(false); return NULL;
+}
+
+
+std::ostream& 
+UserAuthInfo::encode(std::ostream& strm) const
+{
+   strm << brief();
+   return strm;
+}
+
+
+std::ostream& 
+operator<<(std::ostream& strm, const UserAuthInfo& msg)
+{
+   return msg.encode(strm);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -59,7 +98,6 @@ class ServerRegistration: public NonDialogUsage
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
