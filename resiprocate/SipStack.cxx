@@ -269,7 +269,10 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
-   if (tu) toSend->setTransactionUser(tu);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   }         
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
