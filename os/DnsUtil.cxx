@@ -69,25 +69,21 @@ DnsUtil::getLocalDomainName()
 #endif
 }
 
-std::list<Data>
+Data
 DnsUtil::getLocalIpAddress(const Data& myInterface)
 {
-   std::list<Data> ret;
-   
+   Data result;
    std::list<std::pair<Data,Data> > ifs = DnsUtil::getInterfaces(myInterface);
 
    if (ifs.empty())
    {
       ErrLog( << "No interfaces matching "  << myInterface << " were found" );
+      throw Exception("No interfaces matching", __FILE__, __LINE__);
    }
-
-   for (std::list<std::pair<Data, Data> >::const_iterator i = ifs.begin();
-        i != ifs.end(); ++i)
+   else
    {
-      ret.push_back( i->second );
+      return ifs.begin()->second;
    }
-
-   return ret;
 }
 
 Data
