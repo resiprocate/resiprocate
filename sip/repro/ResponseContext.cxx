@@ -2,11 +2,18 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <iostream>
+
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -16,14 +23,21 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mRequestContext(context),
    mForwardedFinalResponse(false),
    mBestPriority(50),
-   mSecure(context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
 }
 
 void 
 ResponseContext::sendRequest(const resip::SipMessage& request)
 {
-   assert(0);
+   assert (request.isRequest());
+   mRequestContext.mProxy.send(request);
+   if (request.header(h_RequestLine).method() != CANCEL && 
+       request.header(h_RequestLine).method() != ACK)
+   {
+      mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
+      mRequestContext.mTransactionCount++;
+   }
 }
 
 void
@@ -36,6 +50,7 @@ ResponseContext::processCandidates()
       // take the q value parameter from the candidate. 
       
       NameAddr& candidate = mRequestContext.getCandidates().back();
+      InfoLog (<< "Considering " << candidate);
       Uri target(candidate.uri());
       // make sure each target is only inserted once
       if (mSecure && target.scheme() == Symbols::Sips || !mSecure)
@@ -47,7 +62,7 @@ ResponseContext::processCandidates()
             pending.param(p_q) = candidate.param(p_q);
          
             mPendingTargetSet.insert(pending);
-            mRequestContext.getCandidates().pop_back();
+            InfoLog (<< "Added " << pending);
          }
       }
       mRequestContext.getCandidates().pop_back();
@@ -55,6 +70,7 @@ ResponseContext::processCandidates()
 
    if (added)
    {
+      //InfoLog (<< *this);
       processPendingTargets();
    }
 }
@@ -75,15 +91,23 @@ ResponseContext::processPendingTargets()
 
       if (request.exists(h_MaxForwards))
       {
-         request.header(h_MaxForwards).value()--;
+         if (request.header(h_MaxForwards).value() <= 20)
+         {
+            request.header(h_MaxForwards).value()--;
+         }
+         else
+         {
+            request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
+         }
       }
       else
       {
-         request.header(h_MaxForwards).value() = 70; // !jf! use Proxy to retrieve this
+         request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
       }
       
-      // Record-Route addition
-      if (0 ) // not ACK
+      // Record-Route addition only for dialogs
+      if (request.header(h_RequestLine).method() == INVITE ||
+          request.header(h_RequestLine).method() == SUBSCRIBE)
       {
          NameAddr rt;
          // !jf! could put unique id for this instance of the proxy in user portion
@@ -97,9 +121,17 @@ ResponseContext::processPendingTargets()
             rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
          }
          
+         const Data& sentTransport = request.header(h_Vias).front().transport();
+         if (sentTransport != Symbols::UDP)
+         {
+            rt.uri().param(p_transport) = sentTransport;
+         }
+
+         // !jf! This should be the domain of "this" proxy instead of local
+         // hostname. 
          rt.uri().host() = DnsUtil::getLocalHostName();
          rt.uri().param(p_lr);
-         request.header(h_RecordRoutes).push_back(rt);
+         request.header(h_RecordRoutes).push_front(rt);
       }
       
       // !jf! unleash the baboons here
@@ -116,6 +148,7 @@ ResponseContext::processPendingTargets()
       // - adding a content-length if needed
       // - sending the request
       mClientTransactions[request.getTransactionId()] = branch;
+      InfoLog (<< "Creating new client transaction " << request.getTransactionId() << " -> " << branch.uri);
       sendRequest(request); 
    }
 }
@@ -138,10 +171,21 @@ ResponseContext::processCancel(const SipMessage& request)
 void
 ResponseContext::processResponse(SipMessage& response)
 {
+   InfoLog (<< "processResponse: " << endl << response);
+
+   // store this before we pop the via and lose the branch tag
+   const Data transactionId = response.getTransactionId();
+   
    // for provisional responses, 
    assert(response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
    response.header(h_Vias).pop_front();
+
+   const Via& via = response.header(h_Vias).front();
+   if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
+   {
+      response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
+   }
 
    if (response.header(h_Vias).empty())
    {
@@ -161,7 +205,10 @@ ResponseContext::processResponse(SipMessage& response)
          }
          
          {
-            TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+            InfoLog (<< "Search for " << transactionId << " in " << Inserter(mClientTransactions));
+            
+            TransactionMap::iterator i = mClientTransactions.find(transactionId);
+            assert (i != mClientTransactions.end());
             if (i->second.status == WaitingToCancel)
             {
                cancelClientTransaction(i->second);
@@ -175,7 +222,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         removeClientTransaction(response);
+         terminateClientTransaction(transactionId);
          if (response.header(h_CSeq).method() == INVITE)
          {
             cancelProceedingClientTransactions();
@@ -192,7 +239,9 @@ ResponseContext::processResponse(SipMessage& response)
       case 3:
       case 4:
       case 5:
-         removeClientTransaction(response);
+         DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
+                   << " outstanding client transactions: " << Inserter(mClientTransactions));
+         terminateClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             int priority = getPriority(response);
@@ -237,8 +286,11 @@ ResponseContext::processResponse(SipMessage& response)
                mBestPriority = priority;
                mBestResponse = response;
             }
-            else if (mClientTransactions.empty())
+            
+            if (areAllTransactionsTerminated())
             {
+               InfoLog (<< "Forwarding best response: " << response.brief());
+               
                mForwardedFinalResponse = true;
                // don't forward 408 to NIT
                if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
@@ -251,7 +303,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         removeClientTransaction(response);
+         terminateClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
@@ -281,6 +333,8 @@ ResponseContext::processResponse(SipMessage& response)
 void
 ResponseContext::cancelClientTransaction(const Branch& branch)
 {
+   InfoLog (<< "Cancel client transactions: " << branch);
+   
    SipMessage request(mRequestContext.getOriginalRequest());
    request.header(h_Vias).push_front(branch.via);
    
@@ -291,6 +345,8 @@ ResponseContext::cancelClientTransaction(const Branch& branch)
 void
 ResponseContext::cancelProceedingClientTransactions()
 {
+   InfoLog (<< "Cancel all proceeding client transactions: " << mClientTransactions.size());
+
    // CANCEL INVITE branches
    for (TransactionMap::iterator i = mClientTransactions.begin(); 
         i != mClientTransactions.end(); ++i)
@@ -298,8 +354,7 @@ ResponseContext::cancelProceedingClientTransactions()
       if (i->second.status == Proceeding)
       {
          cancelClientTransaction(i->second);
-         TransactionMap::iterator c = i++;
-         mClientTransactions.erase(c);
+         i->second.status = Terminated;
       }
       else if (i->second.status == Trying)
       {
@@ -309,13 +364,41 @@ ResponseContext::cancelProceedingClientTransactions()
 }
 
 void
-ResponseContext::removeClientTransaction(const SipMessage& response)
+ResponseContext::terminateClientTransaction(const Data& transactionId)
 {
-   assert(response.isResponse());
-   TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
+   {
+      if (i->first == transactionId) 
+      {
+         i->second.status = Terminated;
+      }
+   }
+   InfoLog (<< "Terminating client transaction: " << transactionId << " all = " << areAllTransactionsTerminated());
+   InfoLog (<< "client transactions: " << Inserter(mClientTransactions));
+}
+
+bool
+ResponseContext::areAllTransactionsTerminated()
+{
+   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
+   {
+      if (i->second.status != Terminated) return false;
+   }
+   return true;
+}
+
+bool
+ResponseContext::removeClientTransaction(const Data& transactionId)
+{
+   TransactionMap::iterator i = mClientTransactions.find(transactionId);
    if (i != mClientTransactions.end())
    {
       mClientTransactions.erase(i);
+      return true;
+   }
+   else
+   {
+      return false;
    }
 }
 
@@ -467,6 +550,28 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
    
    // !rwm! replace with correct thingy here
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
+}
+
+
+std::ostream& 
+repro::operator<<(std::ostream& strm, const ResponseContext::Branch& b)
+{
+   strm << "Branch: " << b.uri << " " <<" status=" << b.status;
+   return strm;
+}
+
+std::ostream&
+repro::operator<<(std::ostream& strm, const ResponseContext& rc)
+{
+   strm << "ResponseContext: "
+        << " identity=" << rc.mRequestContext.getDigestIdentity()
+        << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
+        << " forwarded=" << rc.mForwardedFinalResponse
+        << " pending=" << Inserter(rc.mPendingTargetSet);
+      //<< " targets=" << Inserter(rc.mTargetSet)
+      //<< " clients=" << Inserter(rc.mClientTransactions);
+
+   return strm;
 }
 
 

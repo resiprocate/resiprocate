@@ -1,30 +1,33 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#ifndef REPRO_WebAdminThread__hxx
+#define REPRO_WebAdminThread__hxx
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
+
+class WebAdmin;
+
+class WebAdminThread : public resip::ThreadIf
 {
    public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
+      WebAdminThread(WebAdmin& web);
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
+      virtual void thread();
 
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
+   protected:
+      //  virtual void buildFdSet(FdSet& fdset);
+      //  virtual unsigned int getTimeTillNextProcessMS() const;
 
    private:
-      Chain chain;
+      WebAdmin& mWeb;
 };
+
 }
+
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

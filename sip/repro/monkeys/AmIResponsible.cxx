@@ -1,30 +1,69 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
-
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
-
-namespace repro
-{
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
-
-      void addProcessor(std::auto_ptr<RequestProcessor>);
-
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
-
-   private:
-      Chain chain;
-};
-}
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
 #endif
+
+#include "resiprocate/SipMessage.hxx"
+#include "repro/monkeys/AmIResponsible.hxx"
+#include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
+#include <ostream>
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+AmIResponsible::AmIResponsible()
+{}
+
+AmIResponsible::~AmIResponsible()
+{}
+
+RequestProcessor::processor_action_t
+AmIResponsible::handleRequest(RequestContext& context)
+{
+   DebugLog(<< "Monkey handling request: " << *this 
+            << "; reqcontext = " << context);
+
+   resip::SipMessage& request = context.getOriginalRequest();
+
+   assert (!request.exists(h_Routes) || 
+           request.header(h_Routes).empty());
+  
+   // this if is just to be safe
+   if (!request.exists(h_Routes) || 
+       request.header(h_Routes).empty())
+   {
+      assert(context.getCandidates().empty());
+      // !RjS! - Jason - check the RURI to see if the domain is
+      // something this request is responsible for. If yes, then
+      // just return Continue. If no make this call below.
+      Uri& uri = request.header(h_RequestLine).uri();
+      if (uri.port() == 5060)
+      {
+         uri.port() = 0;
+      }
+      if (!context.getProxy().isMyDomain(uri))
+      {
+         // if this request is not for a domain for which the proxy is responsible,
+         // send to the Request URI
+         context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+         InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
+         // skip the rest of the monkeys
+         return RequestProcessor::SkipThisChain;	
+      }
+   }
+   return RequestProcessor::Continue;
+}
+
+void
+AmIResponsible::dump(std::ostream &os) const
+{
+  os << "AmIResponsible monkey" << std::endl;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

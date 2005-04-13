@@ -24,28 +24,29 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       Proxy(resip::SipStack&, RequestProcessorChain&, UserDb &);
       virtual ~Proxy();
 
-      virtual bool isMyDomain(resip::Uri& uri) const;
-      virtual bool isForMe(const resip::SipMessage& msg) const ;
       virtual bool isShutDown() const ;
       virtual void thread();
       
       UserDb &getUserDb();
-      
+      void send(const resip::SipMessage& msg);
+      void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
+
+   protected:
+      virtual const resip::Data& name() const;
+
    private:
       resip::SipStack& mStack;
 
       RequestProcessorChain mRequestProcessorChain;
-      
-      /// the sip stack will hand events up to the proxy through this fifo
-      resip::Fifo<resip::Message> mFifo; 
       
       /** a map from transaction id to RequestContext. Store the server
           transaction and client transactions in this map. The
           TransactionTerminated events from the stack will be passed to the
           RequestContext
       */
-      HashMap<resip::Data, RequestContext*> mRequestContexts;
-
+      HashMap<resip::Data, RequestContext*> mClientRequestContexts;
+      HashMap<resip::Data, RequestContext*> mServerRequestContexts;
+      
       UserDb &mUserDb;
 };
 }

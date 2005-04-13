@@ -3,59 +3,53 @@
 #endif
 
 #include "repro/Registrar.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-Registrar::Registrar(SipStack& stack, InMemoryRegistrationDatabase& db) : 
-   mDum(stack),
-   mDb(db)
+Registrar::Registrar()
 {
-   mProfile.clearSupportedMethods();
-   mProfile.addSupportedMethod(resip::REGISTER);
-
-   mDum.setServerRegistrationHandler(this);
-   mDum.setRegistrationPersistenceManager(mDb);
-   mDum.setMasterProfile(&mProfile);
 }
 
-void
-Registrar::thread()
+Registrar::~Registrar()
 {
-   // !jf! should really block on condition in the fifo
-   while(!waitForShutdown(10))
-   {
-      process();
-   }
 }
 
 void 
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onRefresh " << reg.brief());
+   sr->accept();
 }
 
 void 
 Registrar::onRemove(resip::ServerRegistrationHandle sr,
                     const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onRemove " << reg.brief());
+   sr->accept();
 }
       
 void 
 Registrar::onRemoveAll(resip::ServerRegistrationHandle sr,
                        const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onRemoveAll " << reg.brief());
+   sr->accept();
 }
       
 void 
 Registrar::onAdd(resip::ServerRegistrationHandle sr,
                  const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onAdd " << reg.brief());
+   sr->accept();
 }
       
 void 

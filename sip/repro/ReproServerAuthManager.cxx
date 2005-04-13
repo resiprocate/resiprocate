@@ -1,31 +1,40 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
+#include <cassert>
 
-#include "resiprocate/SipMessage.hxx"
-#include "ConstantLocationMonkey.hxx"
-#include "../RequestContext.hxx"
+
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "repro/ReproServerAuthManager.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "repro/UserAbstractDb.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace repro;
-using namespace std;
 
 
-ConstantLocationMonkey::ConstantLocationMonkey()
-{}
-
-ConstantLocationMonkey::~ConstantLocationMonkey()
-{}
-
-RequestProcessor::processor_action_t
-ConstantLocationMonkey::handleRequest(RequestContext& context)
+ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
+                                               UserAbstractDb& db):
+   ServerAuthManager(dum),
+   mDum(dum),
+   mDb(db)
 {
-  context.addTarget(NameAddr("<sip:monkey1@localhost>"));
-  context.addTarget(NameAddr("<sip:monkey2@localhost>"));
-  context.addTarget(NameAddr("<sip:monkey3@localhost>"));
-  return RequestProcessor::Continue;
 }
 
+
+ReproServerAuthManager::~ReproServerAuthManager()
+{
+}
+
+  
+void 
+ReproServerAuthManager::requestCredential(const Data& user, 
+                                          const Data& realm, 
+                                          const Data& transactionId )
+{
+   mDb.requestUserAuthInfo(user,realm,transactionId,mDum);
+}
+ 
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
