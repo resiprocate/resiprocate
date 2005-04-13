@@ -1,30 +1,44 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-namespace repro
+#include "repro/WebAdmin.hxx"
+#include "repro/WebAdminThread.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+WebAdminThread::WebAdminThread(WebAdmin& web)
+   : mWeb(web)
 {
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
-
-      void addProcessor(std::auto_ptr<RequestProcessor>);
-
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
-
-   private:
-      Chain chain;
-};
 }
-#endif
+
+
+void
+WebAdminThread::thread()
+{
+   while (!isShutdown())
+   {
+      try
+      {
+           FdSet fdset; 
+     
+           mWeb.buildFdSet(fdset);
+           fdset.selectMilliSeconds( 10*1000 );
+           
+           mWeb.process(fdset);
+      }
+      catch (...)
+      {
+         InfoLog (<< "Unhandled exception: " );
+      }
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

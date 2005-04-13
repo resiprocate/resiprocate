@@ -3,35 +3,46 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD POPT
 
-CODE_SUBDIRS = monkeys
+CODE_SUBDIRS = monkeys stateAgents
 TARGET_LIBRARY = librepro
-
 
 TESTPROGRAMS = \
 	repro.cxx \
-	userAdmin.cxx 
-
-CXXFLAGS += -I/sw/include
-LDFLAGS  += -L/sw/lib 
-LDLIBS   += -ldb-4.2
-
+#	userAdmin.cxx 
 
 SRC =   \
-        monkeys/DigestAuthenticator.cxx \
-	monkeys/RouteProcessor.cxx \
-	monkeys/LocationServer.cxx \
+	CommandLineParser.cxx \
+	HttpBase.cxx \
+	HttpConnection.cxx \
+	\
 	Proxy.cxx \
-	UserDb.cxx \
-	WebAdmin.cxx \
+	Registrar.cxx \
+	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
+	RouteDbMemory.cxx \
+	UserAbstractDb.cxx \
+	UserDb.cxx \
+	WebAdmin.cxx \
+	RouteAbstractDb.cxx \
+	WebAdminThread.cxx \
         RequestProcessor.cxx \
-	Registrar.cxx \
-        RequestProcessorChain.cxx
-
-
+        RequestProcessorChain.cxx \
+	\
+        monkeys/DigestAuthenticator.cxx \
+	monkeys/RouteProcessor.cxx \
+	monkeys/AmIResponsible.cxx \
+	monkeys/LocationServer.cxx \
+	monkeys/ConstantLocationMonkey.cxx \
+	monkeys/RouteMonkey.cxx \
+	\
+	stateAgents/CertServer.cxx \
+	stateAgents/CertPublicationHandler.cxx \
+	stateAgents/CertSubscriptionHandler.cxx \
+	stateAgents/PrivateKeyPublicationHandler.cxx \
+	stateAgents/PrivateKeySubscriptionHandler.cxx
 
 include $(BUILD)/Makefile.post
 

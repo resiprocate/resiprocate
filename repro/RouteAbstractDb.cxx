@@ -1,79 +1,119 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
-
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
-#include "repro/monkeys/LocationServer.hxx"
-#include "repro/RequestContext.hxx"
 
 #include "resiprocate/os/Logger.hxx"
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
+#include "repro/RouteAbstractDb.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
 
-RequestProcessor::processor_action_t
-LocationServer::handleRequest(RequestContext& context)
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+RouteAbstractDb::RouteAbstractDb() 
 {
-   DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
+}
 
-  resip::Uri& inputUri
-    = context.getOriginalRequest().header(h_RequestLine).uri();
 
-  //!RjS! This doesn't look exception safe - need guards
-  mStore.lockRecord(inputUri);
-  
-  if (true) // TODO fix mStore.aorExists(inputUri))
-  {  
-	 RegistrationPersistenceManager::ContactPairList contacts = mStore.getContacts(inputUri);
+RouteAbstractDb::~RouteAbstractDb()
+{
+}
 
-     mStore.unlockRecord(inputUri);
 
-     for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
-             ; i != contacts.end()    ; ++i)
-     {
-	    RegistrationPersistenceManager::ContactPair contact = *i;
-        if (contact.second>=time(NULL))
-        {
-           InfoLog (<< *this << " adding target " << contact.first);
-           context.addTarget(NameAddr(contact.first));
-        }
-     }
-	 // if target list is empty return a 480
-	 if (context.getCandidates().empty())
-	 {
-	    // make 480, send, dispose of memory
-		resip::SipMessage response;
-        InfoLog (<< *this << ": no registered target for " << inputUri << " send 480");
-		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
-		context.sendResponse(response);
-	    return RequestProcessor::SkipThisChain;
-	 }
-	 else
-	 {
-        InfoLog (<< *this << " there are " << context.getCandidates().size() << " candidates -> continue");
-	    return RequestProcessor::Continue;
-	 }
+Data 
+RouteAbstractDb::serialize( const Route& rec )
+{  
+   Data data;
+   oDataStream s(data);
+   short len;
+   assert( sizeof(len) == 2 );
+   
+   assert( rec.mVersion == 1 );
+   assert( sizeof( rec.mVersion) == 2 );
+   s.write( (char*)(&rec.mVersion) , sizeof( rec.mVersion ) );
+   
+   len = rec.mMethod.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mMethod.data(), len );
+    
+   len = rec.mEvent.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mEvent.data(), len );
+   
+   len = rec.mMatchingPattern.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mMatchingPattern.data(), len );
+   
+   len = rec.mRewriteExpression.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mRewriteExpression.data(), len );
+   
+   s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
+   
+   return data;
+}
+
+
+RouteAbstractDb::Route
+RouteAbstractDb::deSerialize( const Data& pData )
+{  
+   RouteAbstractDb::Route rec;
+   
+   Data data = pData;
+   
+   iDataStream s(data);
+   short len;
+   assert( sizeof(len) == 2 );
+
+   s.read( (char*)(&len), sizeof(len) );
+   rec.mVersion = len;
+   
+   if (  rec.mVersion == 1 )
+   {
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mMethod = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mEvent = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mMatchingPattern = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mRewriteExpression = data;
+      }
+
+      {
+         s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
+      }
    }
    else
    {
-      mStore.unlockRecord(inputUri);
-	  
-	  // make 404, send, dispose of memory 
-	  resip::SipMessage response;
-	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
-	  context.sendResponse(response);
-	  return RequestProcessor::SkipThisChain;
+      // unkonwn version 
+      ErrLog( <<"Data in route database with unknown version " << rec.mVersion );
+      assert(0);
    }
-}
-
-void
-LocationServer::dump(std::ostream &os) const
-{
-  os << "LocationServer monkey" << std::endl;
+      
+   return rec;
 }
 
 
