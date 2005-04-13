@@ -35,11 +35,11 @@ ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
 
-	CXXFLAGS += -D_REENTRANT -DHAVE_POPT_H
-	CFLAGS   += -D_REENTRANT -DHAVE_POPT_H
+	CXXFLAGS += -D_REENTRANT 
+	CFLAGS   += -D_REENTRANT 
 	DISTCC   = distcc 
 	CCACHE   = ccache
-        LDFLAGS  += -lpopt 
+        LDLIBS_LAST   += -lpopt
 endif
 
 
@@ -90,6 +90,9 @@ endif
 # the 
 
 ifeq ($(OSTYPE),Darwin)
+    CXXFLAGS += -D_REENTRANT -I/sw/include
+    CFLAGS   += -D_REENTRANT -I/sw/include
+    LDFLAGS  += -L/sw/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
@@ -102,6 +105,7 @@ ifeq ($(OSTYPE),cygwin)
     USE_LIBGETOPT = 1
     CFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
     CXXFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
+    LDLIBS_LAST   += -lpopt
 endif
 
 
@@ -153,7 +157,7 @@ VOCAL_COMPILE_TYPE := small
 endif
 
 ifdef LIB_DYNAMIC
-VOCAL_BUILD_SHARED_LIBS := yes
+BUILD_SHARED_LIBS := yes
 endif
 
 TARGET_TYPE := $(VOCAL_COMPILE_TYPE)
