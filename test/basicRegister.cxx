@@ -139,14 +139,14 @@ main (int argc, char** argv)
    {
       FdSet fdset;
 
-      // Should these be buildFdSet on the DUM?
-      clientDum.buildFdSet(fdset);
+      stack.buildFdSet(fdset);
       int err = fdset.selectMilliSeconds(100);
       assert ( err != -1 );
 
-      clientDum.process(fdset);
-      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
+      stack.process(fdset);
+      while(clientDum.process());
 
+      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
    }   
    return 0;
 }
