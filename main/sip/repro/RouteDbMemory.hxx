@@ -1,30 +1,53 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#if !defined(REPRO_ROUTEDBMEMORY_HXX)
+#define REPRO_ROUTEDBMEMORY_HXX
 
-#include <memory>
+#include <db4/db_185.h>
+#include <regex.h>
+
 #include <vector>
-#include "RequestProcessor.hxx"
+
+#include "repro/RouteAbstractDb.hxx"
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
+
+class RouteDbMemory : public RouteAbstractDb
 {
    public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
+      RouteDbMemory( char* dbName="route_database");
+      ~RouteDbMemory();
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
+      virtual void add(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern,
+                       const resip::Data& rewriteExpression,
+                       const int order);
+      
+      virtual RouteList getRoutes() const;
 
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
+      virtual void erase(const resip::Data& method,
+                         const resip::Data& event,
+                         const resip::Data& matchingPattern );
+      
+      virtual UriList process(const resip::Uri& ruri, 
+                              const resip::Data& method, 
+                              const resip::Data& event );
 
    private:
-      Chain chain;
+      DB* mDb;
+      
+      class RouteOp: public Route
+      {
+         public:
+            regex_t preq;
+      };
+               
+      typedef std::vector<RouteOp> RouteOpList;
+      RouteOpList mRouteOperators;
 };
+
 }
-#endif
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

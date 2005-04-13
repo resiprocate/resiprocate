@@ -1,6 +1,8 @@
 #if !defined(RESIP_REQUEST_PROCESSOR_HXX)
 #define RESIP_REQUEST_PROCESSOR_HXX 
 
+#include <iosfwd>
+
 namespace repro
 {
   class RequestContext;
@@ -20,9 +22,14 @@ namespace repro
       }
       processor_action_t;
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t handleRequest(RequestContext &)=0;
+      virtual void dump(std::ostream &os) const = 0;
   };
+
+std::ostream &operator<<(std::ostream &os, const repro::RequestProcessor &rp);
 }
+
+
 #endif
 
 /* ====================================================================

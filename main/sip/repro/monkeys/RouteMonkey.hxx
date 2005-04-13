@@ -1,28 +1,24 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#if !defined(RESIP_ROUTEMONKEY_HXX)
+#define RESIP_ROUTEMONKEY_HXX 
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include "repro/RequestProcessor.hxx"
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
+class RouteAbstractDb;
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
+  class RouteMonkey: public RequestProcessor
+  {
+    public:
+      RouteMonkey(RouteAbstractDb& db);
+      virtual ~RouteMonkey();
 
       virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
       virtual void dump(std::ostream &os) const;
 
-   private:
-      Chain chain;
-};
+     private:
+        RouteAbstractDb& mDb;
+  };
 }
 #endif
 

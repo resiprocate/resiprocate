@@ -1,28 +1,21 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#if !defined(RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX)
+#define RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX 
+#include "repro/RequestProcessor.hxx"
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include <iosfwd>
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
+  class AmIResponsible: public RequestProcessor
+  {
+    public:
+      AmIResponsible();
+      virtual ~AmIResponsible();
 
       virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
       virtual void dump(std::ostream &os) const;
-
-   private:
-      Chain chain;
-};
+  };
 }
 #endif
 

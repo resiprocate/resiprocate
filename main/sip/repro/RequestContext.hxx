@@ -2,9 +2,12 @@
 #define RESIP_REQUEST_CONTEXT_HXX 
 
 #include <vector>
+#include <iosfwd>
 #include "resiprocate/Uri.hxx"
 #include "repro/RequestProcessorChain.hxx"
+#include "repro/ResponseContext.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "repro/ResponseContext.hxx"
 
 namespace resip
 {
@@ -20,7 +23,6 @@ class RequestContext
 {
    public:
       RequestContext(Proxy& proxy,
-                     std::auto_ptr<resip::SipMessage> sipMsg,
                      RequestProcessorChain& chain);
       virtual ~RequestContext();
 
@@ -30,8 +32,10 @@ class RequestContext
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
-
-      /// Returns the event that we are currently working on
+      const resip::Data& getTransactionId() const;
+      
+      /** Returns the event that we are currently working on. Use a pointer
+          since users need to check for null */
       resip::Message* getCurrentEvent();
       const resip::Message* getCurrentEvent() const;
       
@@ -49,27 +53,34 @@ class RequestContext
       std::vector<resip::NameAddr>& getCandidates();
       
    private:
-      std::auto_ptr<resip::SipMessage> mOriginalRequest;
-      std::auto_ptr<resip::Message> mCurrentEvent;
+      resip::SipMessage*  mOriginalRequest;
+      resip::Message*  mCurrentEvent;
       RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
       Proxy& mProxy;
+      bool mHaveSentFinalResponse;
+      ResponseContext mResponseContext;
 
       typedef std::vector<RequestProcessorChain::Chain::iterator>
 
       /** Stack of iterators used to keep track of where
           we are in the request processor chain(s) for
           async processing */
-        ChainIteratorStack;
+      ChainIteratorStack;
       ChainIteratorStack mChainIteratorStack;
-
+      
       void fixStrictRouterDamage();
-      void checkTopRouteForSelf();
-
+      void removeTopRouteIfSelf();
+      
       friend class ResponseContext;
+      friend std::ostream& operator<<(std::ostream& strm, const repro::RequestContext& rc);
 };
+
+std::ostream&
+operator<<(std::ostream& strm, const repro::RequestContext& rc);
+
 
 }
 
