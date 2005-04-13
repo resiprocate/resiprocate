@@ -72,13 +72,16 @@ HandleManager::remove(Handled::Id id)
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
    mHandleMap.erase(i);
-   if (mShuttingDown && mHandleMap.empty())
+   if (mShuttingDown)
    {
-      shutdown();      
-   }
-   else
-   {
-      DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");      
+      if(mHandleMap.empty())
+      {
+         shutdown();      
+      }
+      else
+      {
+         DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");      
+      }
    }
 }
 
