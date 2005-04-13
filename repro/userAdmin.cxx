@@ -42,7 +42,9 @@ remove( char* pAor )
 void
 web(int port)
 {
-   WebAdmin webAdmin( port );
+   UserDb db;
+   
+   WebAdmin webAdmin( db, port );
    
    while (1)
    {

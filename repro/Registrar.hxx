@@ -3,20 +3,17 @@
 
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 
 namespace repro
 {
 
-class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
+class Registrar: public resip::ServerRegistrationHandler
 {
    public:
-      Registrar(resip::SipStack& stack, 
-                resip::InMemoryRegistrationDatabase& db);
+      Registrar();
       virtual ~Registrar();
-      virtual void thread();
       
       virtual void onRefresh(resip::ServerRegistrationHandle,
                              const resip::SipMessage& reg);
@@ -34,9 +31,6 @@ class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
                            const resip::SipMessage& reg);
 
    private:
-      resip::DialogUsageManager mDum;
-      resip::MasterProfile mProfile;
-      resip::InMemoryRegistrationDatabase& mDb;
 };
 }
 #endif

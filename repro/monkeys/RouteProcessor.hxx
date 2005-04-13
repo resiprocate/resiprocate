@@ -1,5 +1,5 @@
-#if !defined(RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX)
-#define RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX 
+#if !defined(RESIP_ROUTE_PROCESSOR_HXX)
+#define RESIP_ROUTE_PROCESSOR_HXX 
 #include "repro/RequestProcessor.hxx"
 
 namespace repro
@@ -12,6 +12,7 @@ namespace repro
       virtual ~RouteProcessor();
 
       virtual processor_action_t handleRequest(RequestContext &);
+      virtual void dump(std::ostream &os) const;
   };
 }
 #endif

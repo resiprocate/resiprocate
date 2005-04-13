@@ -13,6 +13,7 @@ namespace repro
       ~DigestAuthenticator();
 
       virtual processor_action_t handleRequest(RequestContext &);
+      virtual void dump(std::ostream &os) const;
 
     private:
       void challengeRequest(RequestContext &, bool stale = false);

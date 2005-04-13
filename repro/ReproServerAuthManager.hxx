@@ -1,29 +1,45 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#if !defined(REPRO_SERVERAUTHMANAGER_HXX)
+#define REPRO_SERVERAUTHMANAGER_HXX
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include <map>
+
+#include "resiprocate/Message.hxx"
+#include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "repro/UserDb.hxx"
+
+namespace resip
+{
+class Profile;
+class DialogUsageManager;
+}
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
+class UserAbstractDb;
+
+class ReproServerAuthManager: public resip::ServerAuthManager
 {
    public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
-
-      void addProcessor(std::auto_ptr<RequestProcessor>);
-
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
-
+      ReproServerAuthManager(resip::DialogUsageManager& dum, 
+                             UserAbstractDb& db );
+      
+      ~ReproServerAuthManager();
+      
+   protected:
+      // this call back should async cause a post of UserAuthInfo
+      virtual void requestCredential(const resip::Data& user, 
+                                     const resip::Data& realm, 
+                                     const resip::Data& transactionId );
+      
    private:
-      Chain chain;
+      resip::DialogUsageManager& mDum;
+      UserAbstractDb& mDb;
 };
+
+ 
 }
+
 #endif
 
 /* ====================================================================
