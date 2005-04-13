@@ -1,45 +1,60 @@
+#if !defined(REPRO_ROUTEABSTRACTDB_HXX)
+#define REPRO_ROUTEABSTRACTDB_HXX
 
-#include <cassert>
+#include <vector>
 
-#include "repro/UserAuthInfo.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
-
-using namespace resip;
-using namespace repro;
-using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+#include "resiprocate/Uri.hxx"
 
 
-UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user ):
-   mA1(a1),
-   mRealm(realm),
-   mUser(user)
+namespace repro
 {
-}
 
+class RouteAbstractDb
+{
+   public:
+      class Route
+      {
+         public:
+            //!dcm! -- cleanse
+            short mVersion;
+            
+            resip::Data mMethod;
+            resip::Data mEvent;
+            resip::Data mMatchingPattern;
+            resip::Data mRewriteExpression;
+
+            int mOrder;
+      };
       
-const Data 
-UserAuthInfo::getA1() const
-{
-   return mA1;
-}
+      typedef std::vector<Route> RouteList;
+      typedef std::vector<resip::Uri> UriList;
+   
+      RouteAbstractDb();
+      virtual ~RouteAbstractDb();
+      
+      virtual void add(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern,
+                       const resip::Data& rewriteExpression,
+                       const int order )=0;
+      
+      virtual RouteList getRoutes() const=0;
 
+      virtual void erase(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern )=0;
+      
+      virtual UriList process(const resip::Uri& ruri, 
+                              const resip::Data& method, 
+                              const resip::Data& event ) =0;
+   protected:
+      resip::Data serialize( const Route& route );
+      Route deSerialize( const resip::Data& data );
+};
 
-const Data 
-UserAuthInfo::getRealm() const
-{
-   return mRealm;
-}
-
-
-const Data 
-UserAuthInfo::getUser() const
-{
-   return mUser;
-}
-
+ }
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

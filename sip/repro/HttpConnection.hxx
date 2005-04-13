@@ -1,29 +1,47 @@
-#if !defined(RESIP_USER_AUTH_INFO_HXX)
-#define RESIP_USER_AUTH_INFO_HXX 
+#if !defined(REPRO_HTTPCONNECTION_HXX)
+#define REPRO_HTTPCONNECTION_HXX 
 
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "repro/UserDb.hxx"
+#include "repro/HttpBase.hxx"
 
 namespace repro
 {
 
-class UserAuthInfo : public resip::Message
+class HttpConnection
 {
+      friend class HttpBase;
+      
    public:
-      UserAuthInfo(const resip::Data& a1, const resip::Data& realm, const resip::Data& user );
+      HttpConnection( HttpBase& webAdmin, resip::Socket pSock );
+      ~HttpConnection();
       
-      const resip::Data getA1() const;
-      const resip::Data getRealm() const;
-      const resip::Data getUser() const;
+      void buildFdSet(resip::FdSet& fdset);
+      bool process(resip::FdSet& fdset);
+
+      void setPage(const resip::Data& page);
+
    private:
-      resip::Data mA1;
-      resip::Data mRealm;
-      resip::Data mUser;
-      
+      bool processSomeReads();
+      bool processSomeWrites();
+      void tryParse();
+            
+      HttpBase& mHttpBase;
+      const int mPageNumber;
+      static int nextPageNumber;
+            
+      resip::Socket mSock;
+      resip::Data mRxBuffer;
+      resip::Data mTxBuffer;
+      bool mParsedRequest;
 };
 
 }
-#endif
+
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

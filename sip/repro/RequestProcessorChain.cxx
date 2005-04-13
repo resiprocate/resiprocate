@@ -2,9 +2,14 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <iostream>
+
 #include "resiprocate/SipMessage.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/RequestContext.hxx"
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -12,60 +17,77 @@ using namespace std;
 
 repro::RequestProcessorChain::RequestProcessorChain()
 {
+   DebugLog(<< "Instantiating new monkey chain");
 }
 
 repro::RequestProcessorChain::~RequestProcessorChain()
 {
-  Chain::iterator i;
-  for (i = chain.begin(); i != chain.end(); i++)
-  {
-    delete *i;
-  }
+   Chain::iterator i;
+   for (i = chain.begin(); i != chain.end(); i++)
+   {
+      delete *i;
+   }
 }
 
 void
 repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
 {
-  chain.push_back(rp.release());
+   DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
+   chain.push_back(rp.release());
 }
 
 repro::RequestProcessor::processor_action_t
 repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 {
-  Chain::iterator i;
-  processor_action_t action;
+   //DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << rc);
 
-  if (rc.chainIteratorStackIsEmpty())
-  {
-    i = chain.begin();
-  }
-  else
-  {
-    i = rc.popChainIterator();
-  }
+   Chain::iterator i;
+   processor_action_t action;
 
-  for (; i != chain.end(); i++)
-  {
-    action = (**i).handleRequest(rc);
+   if (rc.chainIteratorStackIsEmpty())
+   {
+      i = chain.begin();
+   }
+   else
+   {
+      i = rc.popChainIterator();
+   }
 
-    if (action == SkipAllChains)
-    {
-      return SkipAllChains;
-    }
+   for (; i != chain.end(); i++)
+   {
+      DebugLog(<< "Chain invoking monkey: " << **i);
 
-    if (action == WaitingForEvent)
-    {
-      rc.pushChainIterator(i);
-      return WaitingForEvent;
-    }
+      action = (**i).handleRequest(rc);
 
-    if (action == SkipThisChain)
-    {
-      return Continue;
-    }
+      if (action == SkipAllChains)
+      {
+         DebugLog(<< "Monkey aborted all chains: " << **i);
+         return SkipAllChains;
+      }
 
-  }
-  return Continue;
+      if (action == WaitingForEvent)
+      {
+         DebugLog(<< "Monkey waiting for async response: " << **i);
+         rc.pushChainIterator(i);
+         return WaitingForEvent;
+      }
+
+      if (action == SkipThisChain)
+      {
+         DebugLog(<< "Monkey skipping current chain: " << **i);
+         return Continue;
+      }
+
+   }
+   //DebugLog(<< "Monkey done processing: " << **i);
+   return Continue;
+}
+
+void
+RequestProcessorChain::dump(std::ostream &os) const
+{
+   os << "Monkey Chain!" << std::endl;
+   // !abr! Dump monkey chain here
 }
 
 /* ====================================================================

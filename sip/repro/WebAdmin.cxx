@@ -1,15 +1,24 @@
 
 #include <cassert>
 
-#include "repro/WebAdmin.hxx"
+#include "resiprocate/Symbols.hxx"
+
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+
+//#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+
+#include "repro/HttpBase.hxx"
+#include "repro/HttpConnection.hxx"
+#include "repro/WebAdmin.hxx"
+#include "repro/RouteAbstractDb.hxx"
+
 
 using namespace resip;
 using namespace repro;
@@ -17,416 +26,20 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-int HttpConnection::nextPageNumber=1;
 
+// !cj! TODO - make all the removes on the web pages work 
 
-#if 0
-int
-main(int argc, char* argv[])
-{
-   Log::initialize(Log::Cerr, Log::Err, argv[0]);
-   Log::setLevel(Log::Debug);
-
-   WebAdmin web( 5080 );
-   
-   while (1)
-   {
-      FdSet fdset; 
-     
-      web.buildFdSet(fdset);
-      fdset.selectMilliSeconds( 10*1000 );
-
-      web.process(fdset);
-   }
-   
-}
-#endif
-
-
-HttpBase::~HttpBase()
-{
-   close(mFd); mFd=0;
-   for( int i=0; i<MaxConnections; i++)
-   {
-      if ( mConnection[i] )
-      {
-         delete mConnection[i] ; mConnection[i]=0;
-      }
-   }
-}
-
-
-
-HttpBase::HttpBase( int port, IpVersion ipVer):
-   nextConnection(0),
-   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
-{
-   assert( ipVer == V4 );
-   
-   for ( int i=0 ; i<MaxConnections; i++)
-   {
-      mConnection[i]=0;
-   }
-   
-#ifdef USE_IPV6
-   mFd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_STREAM, 0);
-#else
-   mFd = ::socket(PF_INET, SOCK_STREAM, 0);
-#endif
-   
-   if ( mFd == INVALID_SOCKET )
-   {
-      int e = getErrno();
-      InfoLog (<< "Failed to create socket: " << strerror(e));
-      assert(0); // TODO 
-      //throw Exception("Can't create HttpBase listner socket", __FILE__,__LINE__);
-   }
-
-   DebugLog (<< "Creating fd=" << mFd 
-             << (ipVer == V4 ? " V4/" : " V6/") );
-      
-#if !defined(WIN32)
-   int on = 1;
-   if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
-   {
-      int e = getErrno();
-      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
-      assert(0); //throw Exception("Failed setsockopt", __FILE__,__LINE__);
-   }
-#endif
-   
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
-   
-   if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
-   {
-      int e = getErrno();
-      if ( e == EADDRINUSE )
-      {
-         ErrLog (<< mTuple << " already in use ");
-         assert(0); // throw Transport::Exception("port already in use", __FILE__,__LINE__);
-      }
-      else
-      {
-         ErrLog (<< "Could not bind to " << mTuple);
-         assert(0); //throw Transport::Exception("Could not use port", __FILE__,__LINE__);
-      }
-   }
-   
-   bool ok = makeSocketNonBlocking(mFd);
-   if ( !ok )
-   {
-      ErrLog (<< "Could not make HTTP socket non-blocking " << port );
-       assert(0); // tthrow Transport::Exception("Failed making socket non-blocking", __FILE__,__LINE__);
-   }
-   
-   // do the listen, seting the maximum queue size for compeletly established
-   // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
-   // queue size(see man listen)
-   int e = listen(mFd,5 );
-
-   if (e != 0 )
-   {
-      int e = getErrno();
-      InfoLog (<< "Failed listen " << strerror(e));
-      // !cj! deal with errors
-	   assert(0); // tthrow Transport::Exception("Address already in use", __FILE__,__LINE__);
-   }
-}
-
-
-void 
-HttpBase::buildFdSet(FdSet& fdset)
-{ 
-   fdset.setRead( mFd );
-   
-   for( int i=0; i<MaxConnections; i++)
-   {
-      if ( mConnection[i] )
-      {
-         mConnection[i]->buildFdSet(fdset);
-      }
-   }
-}
-
-
-void 
-HttpBase::process(FdSet& fdset)
-{
-   if (fdset.readyToRead(mFd))
-   {
-      Tuple tuple(mTuple);
-      struct sockaddr& peer = tuple.getMutableSockaddr();
-      socklen_t peerLen = tuple.length();
-      Socket sock = accept( mFd, &peer, &peerLen);
-      if ( sock == SOCKET_ERROR )
-      {
-         int e = getErrno();
-         switch (e)
-         {
-            case EWOULDBLOCK:
-               // !jf! this can not be ready in some cases 
-               return;
-            default:
-               assert(0); // Transport::error(e);
-         }
-         return;
-      }
-      makeSocketNonBlocking(sock);
-      
-      int c = nextConnection;
-      nextConnection = ( nextConnection+1 ) % MaxConnections;
-      
-      if ( mConnection[c] )
-      {
-         delete mConnection[c]; mConnection[c] = 0;
-      }
-      
-      mConnection[c] = new HttpConnection(*this,sock);
-      
-      DebugLog (<< "Received TCP connection as connection=" << c << " fd=" << sock);
-   }
-    
-   for( int i=0; i<MaxConnections; i++)
-   {
-      if ( mConnection[i] )
-      {
-         bool ok = mConnection[i]->process(fdset);
-         if ( !ok )
-         {
-            delete mConnection[i]; mConnection[i]=0;
-         }
-      }
-   }
-}
-
-
-void HttpBase::setPage( const Data& page, int pageNumber )
-{
-   for ( int i=0 ; i<MaxConnections; i++)
-   {
-      if ( mConnection[i] )
-      {
-         if ( mConnection[i]->mPageNumber == pageNumber )
-         {
-            mConnection[i]->setPage( page );
-         }
-      }
-   }
-}
-
-
-HttpConnection::HttpConnection( HttpBase& base, Socket pSock ):
-   mHttpBase( base ),
-   mPageNumber(nextPageNumber++),
-   mSock(pSock),
-   mParsedRequest(false)
-{
-}
-
-
-HttpConnection::~HttpConnection()
-{
-   close(mSock); mSock=0;
-}
-
-      
-void 
-HttpConnection::buildFdSet(FdSet& fdset)
-{
-   if ( !mTxBuffer.empty() )
-   {
-      fdset.setWrite(mSock);
-   }
-   fdset.setRead(mSock);
-}
-
-
-bool 
-HttpConnection::process(FdSet& fdset)
-{
-   if ( fdset.hasException(mSock) )
-   {
-      int errNum = 0;
-      int errNumSize = sizeof(errNum);
-      getsockopt(mSock,SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-      InfoLog (<< "Exception reading from socket " << mSock << " code: " << errNum << "; closing connection");
-      return false;
-   }
-   
-   if ( fdset.readyToRead( mSock ) )
-   {
-      bool ok = processSomeReads();
-      if ( !ok )
-      {
-         return false;
-      }
-   }
-   if ( (!mTxBuffer.empty()) && fdset.readyToWrite( mSock ) )
-   {
-      bool ok = processSomeWrites();
-      if ( !ok )
-      {
-         return false;
-      }
-   }
-
-   return true;
-}
-
-
-void 
-HttpConnection::setPage(const Data& page)
-{
-   Data len;
-   {
-      DataStream s(len);
-      s << page.size();
-      s.flush();
-   }
-      
-   mTxBuffer += "HTTP/1.1 200 OK" ; mTxBuffer += Symbols::CRLF;
-   mTxBuffer += "Server: Repro Proxy " ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "Date: Fri, 01 Apr 2005 08:08:15 GMT" ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "Last-Modified: Fri, 01 Apr 2005 08:07:15 GMT" ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "ETag: \"4c622d-8ee-424d0133\" " ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "Accept-Ranges: bytes" ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "Keep-Alive: timeout=15, max=100" ; mTxBuffer += Symbols::CRLF;
-   //mTxBuffer += "Connection: Keep-Alive" ; mTxBuffer += Symbols::CRLF;
-   mTxBuffer += "Content-Length: "; mTxBuffer += len; mTxBuffer += Symbols::CRLF;
-   mTxBuffer += "Content-Type: text/html" ; mTxBuffer += Symbols::CRLF;
-   mTxBuffer += Symbols::CRLF;
-   
-   mTxBuffer += page;
-}
-
-
-bool
-HttpConnection::processSomeReads()
-{
-   const int bufSize = 8000;
-   char buf[bufSize];
-   
- 
-#if defined(WIN32)
-   int bytesRead = ::recv(mSock, buf, bufSize, 0);
-#else
-   int bytesRead = ::read(mSock, buf, bufSize);
-#endif
-
-   if (bytesRead == INVALID_SOCKET)
-   {
-      int e = getErrno();
-      switch (e)
-      {
-         case EAGAIN:
-            InfoLog (<< "No data ready to read");
-            return true;
-         case EINTR:
-            InfoLog (<< "The call was interrupted by a signal before any data was read.");
-            break;
-         case EIO:
-            InfoLog (<< "I/O error");
-            break;
-         case EBADF:
-            InfoLog (<< "fd is not a valid file descriptor or is not open for reading.");
-            break;
-         case EINVAL:
-            InfoLog (<< "fd is attached to an object which is unsuitable for reading.");
-            break;
-         case EFAULT:
-            InfoLog (<< "buf is outside your accessible address space.");
-            break;
-         default:
-            InfoLog (<< "Some other error");
-            break;
-      }
-      InfoLog (<< "Failed read on " << mSock << " " << strerror(e));
-      return false;
-   }
-   else if (bytesRead == 0)
-   {
-      InfoLog (<< "Connection closed by remote " );
-      return false;
-   }
-
-   //DebugLog (<< "HttpConnection::processSomeReads() " 
-   //          << " read=" << bytesRead);            
-
-   mRxBuffer += Data( buf, bytesRead );
-   
-   tryParse();
-   
-   return true;
-}
-
-
-void 
-HttpConnection::tryParse()
-{
-   //DebugLog (<< "parse " << mRxBuffer );
-   
-   ParseBuffer pb(mRxBuffer);
-   
-   pb.skipToChar(Symbols::SPACE[0]);
-   const char* start = pb.skipWhitespace();
-   pb.skipToChar(Symbols::SPACE[0]);
-   
-   if (pb.eof())
-   {
-      // parse failed - just return 
-      return;
-   }
-   
-   Data uri;
-   pb.data( uri, start );
- 
-   DebugLog (<< "parse found URI " << uri );
-  
-   mHttpBase.buildPage(uri,mPageNumber);
-}
-
-
-bool
-HttpConnection::processSomeWrites()
-{
-   if ( mTxBuffer.empty() )
-   {
-      return true;
-   }
-   
-   //DebugLog (<< "Writing " << mTxBuffer );
-
-#if defined(WIN32)
-   int bytesWritten = ::send( mSock, mTxBuffer.data(), mTxBuffer.size(), 0);
-#else
-   int bytesWritten = ::write(mSock, mTxBuffer.data(), mTxBuffer.size() );
-#endif
-
-   if (bytesWritten == INVALID_SOCKET)
-   {
-      int e = getErrno();
-      InfoLog (<< "HttpConnection failed write on " << mSock << " " << strerror(e));
-      return false;
-   }
-   
-   if (bytesWritten == (int)mTxBuffer.size() )
-   {
-      DebugLog (<< "Wrote it all" );
-      mTxBuffer = Data::Empty;
-   }
-   else
-   {
-      Data rest = mTxBuffer.substr(bytesWritten);
-      mTxBuffer = rest;
-      DebugLog( << "Wrote " << bytesWritten << " bytes - still need to do " << mTxBuffer );
-   }
-   
-   return true;
-}
-
-
-WebAdmin::WebAdmin( int port, IpVersion version):
-   HttpBase( port, version )
+WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
+                     RegistrationPersistenceManager& regDb,
+                     RouteAbstractDb& routeDb,
+                     Security& security,
+                     int port, 
+                     IpVersion version):
+   HttpBase( port, version ),
+   mUserDb(userDb),
+   mRegDb(regDb),
+   mRouteDb( routeDb ),
+   mSecurity(security)
 {
 }
 
@@ -443,129 +56,635 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    Data pageName;
    pb.data(pageName,anchor);
    
+   Data domain;
    if (pb.eof())
    {
-         DebugLog (<< "  got page name " << pageName );
+      DebugLog (<< "  got page name " << pageName );
    }
    else
    {
       pb.skipChar('?');
+      
+      // keys to add user
+      Data user;
+      Data realm;
+      Data password;
+      Data name;
+      Data email;
 
+      // keys to add route 
+      Data routeUri; // TODO !cj! name suck - this should be route match pattern 
+      Data routeMethod;
+      Data routeEvent;
+      Data routeDestination; // name suck - this should be route rewrite
+                             // expression 
+      int routeOrder;
+      
       while ( !pb.eof() )
       {
-           const char* anchor1 = pb.position();
-           pb.skipToChar('=');
-           Data key;
-           pb.data(key,anchor1);
+         const char* anchor1 = pb.position();
+         pb.skipToChar('=');
+         Data key;
+         pb.data(key,anchor1);
  
-           const char* anchor2 = pb.skipChar('=');
-           pb.skipToChar('&');
-           Data value;
-           pb.data(value,anchor2); 
+         const char* anchor2 = pb.skipChar('=');
+         pb.skipToChar('&');
+         Data value;
+         pb.data(value,anchor2); 
            
-           if ( !pb.eof() )
+         if ( !pb.eof() )
+         {
+            pb.skipChar('&');
+         }
+           
+         DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.charHttpUnencoded() );
+
+         if ( key == Data("routeTestUri") )
+         {
+            routeTestUri = value.charHttpUnencoded();
+         }
+
+         if ( key == Data("user") )
+         {
+            user = value.charHttpUnencoded();
+         }
+         if ( key == Data("password") )
+         {
+            password = value.charHttpUnencoded();
+         }
+         if ( key == Data("realm") )
+         {
+            realm = value.charHttpUnencoded();
+         }
+         if ( key == Data("name") )
+         {
+            name = value.charHttpUnencoded();
+         }
+         if ( key == Data("email") )
+         {
+            email = value.charHttpUnencoded();
+         }
+         if ( key == Data("domain") )
+         {
+            domain = value.charHttpUnencoded();
+         }
+
+           if ( key == Data("routeUri") )
            {
-              pb.skipChar('&');
+              routeUri = value.charHttpUnencoded();
+           }
+           if ( key == Data("routeMethod") )
+           {
+              routeMethod = value.charHttpUnencoded();
+           }
+          if ( key == Data("routeEvent") )
+           {
+              routeEvent = value.charHttpUnencoded();
+           }
+           if ( key == Data("routeDestination") )
+           {
+               routeDestination = value.charHttpUnencoded();
+           }
+           if ( key == Data("routeOrder") )
+           {
+              routeOrder = value.convertInt();
            }
            
-           DebugLog (<< "  key=" << key << " value=" << value );
+      }
+
+      if ( !user.empty() )
+      {
+         if ( realm.empty() )
+         {
+            realm = domain;
+         }
+         
+         mUserDb.addUser(user,domain,realm,password,name,email);
+      }
+
+      if ( !routeDestination.empty() )
+      {
+         mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
       }
    }
    
-   Data page = buildUserPage();
+   Data page;
+   if ( pageName == Data("addUser.html") ) page=buildAddUserPage();
+   if ( pageName == Data("addRoute.html") ) page=buildAddRoutePage();
+   if ( pageName == Data("showRegs.html") ) page=buildShowRegsPage();
+   if ( pageName == Data("showRoutes.html") ) page=buildShowRoutesPage();
+   if ( pageName == Data("showUsers.html") ) page=buildShowUsersPage();
+   if ( pageName == Data("cert") && !domain.empty()) page=buildCertPage(domain);
+   if ( pageName == Data("index.html") ) page=buildDefaultPage();
+
    setPage( page, pageNumber );
 }
   
 
-Data
-WebAdmin::buildUserPage()
+Data 
+WebAdmin::buildAddRoutePage()
 {
    Data ret;
    {
       DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
+         "<title>Repro Proxy Add Route</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<p>Add Route</p>"
+         "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
+         "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>URI</td>"
+         "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td>Method</td>"
+         "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
+         "</tr>"
 
-      s << "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-""
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-""
-"	<head>"
-"		<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-"		<title>Repo Proxy</title>"
-"	</head>"
-""
-"	<body bgcolor=\"#ffffff\">"
-"		<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-"			<tr>"
-"				<td>"
-"					<h1>Repro Proxy</h1>"
-"				</td>"
-"			</tr>"
-"			<tr>"
-"				<td>"
-"					<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"						<tr>"
-"							<td>"
-"								<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"									<tr>"
-"										<td>"
-"											<h3>Add User</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Users</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Config</h3>"
-"										</td>"
-"									</tr>"
-"									<tr>"
-"										<td>"
-"											<h3>Stats</h3>"
-"										</td>"
-"									</tr>"
-"								</table>"
-"							</td>"
-"							<td align=\"left\" valign=\"top\" width=\"85%\">"
-"								<form id=\"addUserForm\" action=\"\" method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
-"									<table width=\"90%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">User Name:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Password:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Full Name:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
-"										</tr>"
-"										<tr>"
-"											<td align=\"right\" valign=\"middle\" width=\"30%\">Email:</td>"
-"											<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
-"										</tr>"
-"									</table>"
-"									<input type=\"reset\" value=\"Reset\"/>"
-"								<input type=\"submit\" name=\"submit\" value=\"OK\"/>"
-"								</form>"
-"								</td>"
-"						</tr>"
-"					</table>"
-"				</td>"
-"			</tr>"
-"		</table>"
-"	</body>"
-""
-"</html>";
+         "<tr>"
+         "<td>Event</td>"
+         "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td>Destination</td>"
+         "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td>Order</td>"
+         "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
+         "</tr>"
+
+         "</table>"
+         "<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
+         "</form>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
       
       s.flush();
    }
    return ret;
 }
+
+
+Data 
+WebAdmin::buildAddUserPage()
+{
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repo Proxy Add User</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>"
+         "<h1>Repro Proxy</h1>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td valign=\"top\">"
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>"
+         "<p><b><a href=\"addUser.html\">Add User</a></b></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showUsers.html\">Show </a><a href=\"showUsers.html\">Users</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showRegs.html\">Registrations</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"addRoute.html\">Add Route</a></p>"
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "<p><a href=\"showRoutes.html\">Show Routes</a></p>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</td>"
+         "<td align=\"left\" valign=\"top\" width=\"85%\">"
+         "<table width=\"64\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "<tr>"
+         "<td>"
+
+
+         "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\">User Name:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Realm:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Domain:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"domain\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Password:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
+         "</tr>"
+
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Full Name:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
+         "</tr>"
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Email:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
+         "</tr>"
+         "</table>"
+
+         " <input type=\"reset\" value=\"Reset\"/>"
+         "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
+
+
+         "</form>"
+
+
+         "</td>"
+         "</tr>"
+         "<tr>"
+         "<td>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "<hr/>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</td>"
+         "</tr>"
+         "</table>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
+      
+      s.flush();
+   }
+   return ret;
+}
+
+
+Data 
+WebAdmin::buildShowRegsPage()
+{
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy Registrations</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>Registrations</h1>"
+         "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+         "<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
+         ""
+         "<hr/>"
+         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>AOR</td>"
+         "<td>Contact</td>"
+         "<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
+         "</tr>";
+      
+      RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
+      for ( RegistrationPersistenceManager::UriList::const_iterator 
+               aor = aors.begin(); aor != aors.end(); ++aor )
+      {
+         Uri uri = *aor;
+         RegistrationPersistenceManager::ContactPairList 
+            contacts = mRegDb.getContacts(uri);
+         
+         bool first = true;
+         for (RegistrationPersistenceManager::ContactPairList::const_iterator i 
+                 = contacts.begin();
+              i != contacts.end(); ++i )
+         {
+            s << "<tr>"
+              << "<td>";
+            if (first) 
+            { 
+               s << uri;
+               first = false;
+            }
+            s << "</td>"
+              << "<td>";
+            
+            const RegistrationPersistenceManager::ContactPair& p = *i;
+            const Uri& contact = p.first; 
+         
+            s << contact << " ";
+            s <<"</td>"
+              << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+              << uri
+              << "\"/></td>"
+              << "</tr>";
+         }
+      }
+                  
+      s << "</table>"
+         "</form>"
+         "</body>"
+         "</html>"
+         "</html>";
+      
+      s.flush();
+   }
+   return ret;
+}
+
+
+Data 
+WebAdmin::buildShowUsersPage()
+{
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy Users</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>Users</h1>"
+         "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
+         "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "<tr>"
+         "<td>User</td>"
+         "<td>Realm</td>"
+         "<td>Name</td>"
+         "<td>Email</td>"
+         "<td><button name=\"buttonName\" type=\"button\">Remove</button></td>"
+         "</tr>" ;
+      
+/*
+  "<tr>"
+  "<td>fluffy</td>"
+  "<td>example.com</td>"
+  "<td>Cullen Jennings</td>"
+  "<td>fluffy@example.com</td>"
+  "<td><input type=\"checkbox\" name=\"removeUser\" value=\"removeUser\"/></td>"
+  "</tr>"
+*/
+      s << endl;
+      
+      Data key = mUserDb.getFirstKey();
+      while ( !key.empty() )
+      {
+         s << "<tr>"
+           << "<td>" << key << "</td>"
+           << "<td> </td>"
+           << "<td> </td>"
+           << "<td> </td>"
+           << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+           << key
+           << "\"/></td>"
+           << "</tr>"
+           << endl;
+         
+         key = mUserDb.getNextKey();
+      }
+      
+      s << 
+         "</table>"
+         "</form>"
+         "</body>"
+         ""
+         "</html>";
+            
+      s.flush();
+   }
+   return ret;
+}
+
+
+Data 
+WebAdmin::buildShowRoutesPage()
+{ 
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
+         "<title>Repro Proxy Show Route</title>"
+         "</head>"
+         "<body bgcolor=\"#ffffff\">"
+         "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "      <tr>"
+         "        <td>"
+         "          <h1>Routes</h1>"
+         "        </td>"
+         "      </tr>"
+         "      <tr>"
+         "        <td>"
+         "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+         "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>"
+         "            <hr/>"
+         "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         "              <tr>"
+         "                <td>URI</td>"
+         "                <td>Method</td>"
+         "                <td>Event</td>"
+         "                <td>Destination</td>"
+         "                <td>Order</td>"
+         "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>"
+         "              </tr>";
+      
+      RouteAbstractDb::RouteList routes = mRouteDb.getRoutes();
+      for ( RouteAbstractDb::RouteList::const_iterator i = routes.begin();
+            i != routes.end();
+            i++ )
+      {
+         s <<  "<tr>"
+            "<td>" << i->mMatchingPattern << "</td>"
+            "<td>" << i->mMethod << "</td>"
+            "<td>" << i->mEvent << "</td>"
+            "<td>" << i->mRewriteExpression << "</td>"
+            "<td>" << i->mOrder << "</td>"
+            "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>"
+            "</tr>";
+      }
+      
+      s << 
+         "            </table>"
+         "          </form>"
+         "        </td>"
+         "      </tr>"
+         "      <tr><td>"
+         "          <hr noshade=\"noshade\"/>"
+         "          <br>"
+         "        </td></tr>";
+
+      Uri uri;
+      try 
+      {
+         uri = Uri(routeTestUri);
+      }
+      catch( BaseException& e )
+      {
+         try 
+         {
+            uri = Uri( Data("sip:")+routeTestUri );
+         }
+         catch( BaseException& e )
+         {
+         }
+      }
+
+      // !cj! - TODO - shoudl input method and envent type to test 
+      RouteAbstractDb::UriList routeList = mRouteDb.process( uri, Data("INVITE"), Data::Empty);
+      
+      s << 
+         "      <tr>"
+         "        <td>"
+         "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">"
+         "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "              "
+         "              <tr>"
+         "                <td align=\"right\">Input:</td>"
+         "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>"
+         "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>"
+         "              </tr>";
+      
+      bool first=true;
+      for ( RouteAbstractDb::UriList::const_iterator i=routeList.begin();
+            i != routeList.end(); i++)
+      {
+         s<<"              <tr>";
+         if (first)
+         {
+            first=false;
+            s<<"             <td align=\"right\">Targets:</td>";
+         }
+         else
+         {
+            s<<"             <td align=\"right\"></td>";
+         }
+         s<<"                <td><label>" << *i << "</label></td>";
+         s<<"                <td></td>";
+         s<<"              </tr>";
+      }
+      
+      s<<
+         "            </table>"
+         "          </form>"
+         "        </td>"
+         "      </tr>"
+         "    </table>"
+         "  </body>"
+         "</html>";
+      
+      s.flush();
+   }
+   return ret;
+}
+
+Data
+WebAdmin::buildCertPage(const Data& domain)
+{
+   assert(!domain.empty());
+   return mSecurity.getDomainCertDER(domain);
+}
+
+
+Data 
+WebAdmin::buildDefaultPage()
+{ 
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<p><a href=\"addUser.html\">add users</a></p>"
+         "<p><a href=\"showRegs.html\">show registrations</a></p>"
+         "<p><a href=\"showUsers.html\">show users</a></p>"
+         "<p><a href=\"addRoute.html\">add route</a></p>"
+         "<p><a href=\"showRoutes.html\">show routes</a></p>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
+      
+      s.flush();
+   }
+   return ret;
+}
+
 
 
 /* ====================================================================

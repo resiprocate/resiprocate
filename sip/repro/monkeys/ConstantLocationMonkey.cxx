@@ -1,30 +1,49 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
-
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
-
-namespace repro
-{
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
-
-      void addProcessor(std::auto_ptr<RequestProcessor>);
-
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
-
-   private:
-      Chain chain;
-};
-}
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
 #endif
+
+#include "resiprocate/SipMessage.hxx"
+#include "repro/monkeys/ConstantLocationMonkey.hxx"
+#include "repro/RequestContext.hxx"
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+ConstantLocationMonkey::ConstantLocationMonkey()
+{}
+
+ConstantLocationMonkey::~ConstantLocationMonkey()
+{}
+
+RequestProcessor::processor_action_t
+ConstantLocationMonkey::handleRequest(RequestContext& context)
+{
+  DebugLog(<< "Monkey handling request: " << *this 
+           << "; reqcontext = " << context);
+
+  if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "inner")
+  {
+     context.addTarget(NameAddr("<sip:inner@72.29.230.162>"));
+  }
+  else if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "outer")
+  {
+     context.addTarget(NameAddr("<sip:101@sipedge.sipit.net>"));     
+  }
+  
+  return RequestProcessor::Continue;
+}
+
+void
+ConstantLocationMonkey::dump(std::ostream &os) const
+{
+  os << "ConstantLocation Monkey" << std::endl;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
