@@ -1,30 +1,45 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
+#if !defined(REPRO_HTTPBASE_HXX)
+#define REPRO_HTTPBASE_HXX 
 
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Tuple.hxx"
+
+#include "repro/HttpBase.hxx"
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
+class HttpConnection;
+
+class HttpBase
 {
+      friend class HttpConnection;
+      
    public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
+      HttpBase( int port, resip::IpVersion version);
+      virtual ~HttpBase();
+      
+      void buildFdSet(resip::FdSet& fdset);
+      void process(resip::FdSet& fdset);
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
-
-      virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
-      virtual void dump(std::ostream &os) const;
-
+   protected:
+      virtual void buildPage( const resip::Data& uri, int pageNumber )=0;
+      void setPage( const resip::Data& page, int pageNumber );
+      
    private:
-      Chain chain;
+      static const int MaxConnections = 10;
+      
+      resip::Socket mFd;
+      int nextConnection;
+      resip::Tuple mTuple;
+
+      HttpConnection* mConnection[MaxConnections];
 };
+
 }
-#endif
+
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

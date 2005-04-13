@@ -1,28 +1,19 @@
-#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
-#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
-
-#include <memory>
-#include <vector>
-#include "RequestProcessor.hxx"
+#if !defined(RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX)
+#define RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX 
+#include "repro/RequestProcessor.hxx"
 
 namespace repro
 {
-class RequestProcessorChain : public RequestProcessor
-{
-   public:
-      RequestProcessorChain();
-      virtual ~RequestProcessorChain();
 
-      void addProcessor(std::auto_ptr<RequestProcessor>);
+  class ConstantLocationMonkey: public RequestProcessor
+  {
+    public:
+      ConstantLocationMonkey();
+      virtual ~ConstantLocationMonkey();
 
       virtual processor_action_t handleRequest(RequestContext &);
-
-      typedef std::vector<RequestProcessor*> Chain;
       virtual void dump(std::ostream &os) const;
-
-   private:
-      Chain chain;
-};
+  };
 }
 #endif
 

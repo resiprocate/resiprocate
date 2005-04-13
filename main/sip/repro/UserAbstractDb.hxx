@@ -1,13 +1,10 @@
-#if !defined(RESIP_USERDB_HXX)
-#define RESIP_USERDB_HXX 
+#if !defined(REPRO_USERABSTRACTDB_HXX)
+#define REPRO_USERABSTRACTDB_HXX
 
-#include <db4/db_185.h>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Message.hxx"
-
-#include "repro/UserAbstractDb.hxx"
 
 namespace resip
 {
@@ -17,27 +14,69 @@ namespace resip
 namespace repro
 {
 
-class UserDb: public UserAbstractDb
+typedef resip::Fifo<resip::Message> MessageFifo;
+
+class UserAbstractDb
 {
    public:
-      UserDb( char* dbName="user_database" );
+      UserAbstractDb();
       
-      virtual ~UserDb();
+      virtual ~UserAbstractDb();
       
-   private:
-      DB* mDb;
+      void requestUserAuthInfo( const resip::Data& user, 
+                                const resip::Data& realm,
+                                const resip::Data& transactionId,
+                                resip::TransactionUser& transactionUser) const;
+
+      resip::Data getUserAuthInfo( const resip::Data& key ) const;
       
+      void addUser( const resip::Data& user, 
+                    const resip::Data& domain, 
+                    const resip::Data& realm, 
+                    const resip::Data& password, 
+                    const resip::Data& fullName,
+                    const resip::Data& emailAddress  );
+      
+      void removeUser( const resip::Data& user,
+                       const resip::Data& realm );
+      
+      void removeUser( const resip::Data& key );
+      
+      //Data getForward( Data& key);
+      //void requestForwardAuth( user, realm );
+      //void setForward( Data& key, Data& forwardAddress );
+
+      resip::Data getFirstKey();// return empty if no more
+      resip::Data getNextKey(); // return empty if no more 
+      
+   protected:
+      resip::Data buildKey( const resip::Data& user, 
+                            const resip::Data& realm) const;
+      
+      class UserRecord
+      {
+         public:
+            short version;
+            resip::Data user;
+            resip::Data domain;
+            resip::Data realm;
+            resip::Data passwordHash;
+            resip::Data name;
+            resip::Data email;
+            resip::Data forwardAddress;
+      };
+      
+      resip::Data encodeUserRecord( const UserRecord& userRec ) const;
+      UserRecord decodeUserRecord( const resip::Data& data ) const;
+
       // Db manipulation routines
-      virtual void dbWriteRecord( const resip::Data& key, 
-                                  const resip::Data& data );
-      virtual bool dbReadRecord(  const resip::Data& key, 
-                                  resip::Data& data ) const; // return false if not found
-      virtual void dbRemoveRecord(const resip::Data& key );
-      virtual resip::Data dbFirstKey();
-      virtual resip::Data dbNextKey(); // return empty if no more  
+      virtual void dbWriteRecord( const resip::Data& key, const resip::Data& data ) =0;
+      virtual bool dbReadRecord( const resip::Data& key, resip::Data& data ) const =0 ; // return false if not found
+      virtual void dbRemoveRecord( const resip::Data& key ) = 0 ;
+
+      virtual resip::Data dbFirstKey()=0;// return empty if no more
+      virtual resip::Data dbNextKey()=0; // return empty if no more 
 };
-
-
 
  }
 #endif  

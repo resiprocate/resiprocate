@@ -1,8 +1,12 @@
 #if !defined(RESIP_RESPONSE_CONTEXT_HXX)
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
+#include <iosfwd>
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Via.hxx"
+#include "resiprocate/Uri.hxx"
 
 namespace resip
 {
@@ -32,7 +36,8 @@ class ResponseContext
       {
          Trying,
          Proceeding,
-         WaitingToCancel
+         WaitingToCancel,
+         Terminated
       } Status;
 
       struct Branch
@@ -43,25 +48,34 @@ class ResponseContext
       };
 
 
+   private:
+      // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
-      /// Called by RequestContext after every event other than a response
-      void processEvent();
+      // call this after the monkey chain runs on an event
       void processCandidates();
-      void processPendingTargets();
-      
-   private:
-      void sendRequest(const resip::SipMessage& request);
+
+      // call this from RequestContext when a CANCEL comes in 
       void processCancel(const resip::SipMessage& request);
+
+      // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
+
+   private:
+      // These methods are really private
+      void processPendingTargets();
+      void sendRequest(const resip::SipMessage& request);
       void cancelClientTransaction(const Branch& branch);
+      void terminateClientTransaction(const resip::Data& transactionId);
       void cancelProceedingClientTransactions();
-      void removeClientTransaction(const resip::SipMessage& response);
+      bool areAllTransactionsTerminated();
+      // return true if the transaction was found
+      bool removeClientTransaction(const resip::Data& transactionId); 
       int getPriority(const resip::SipMessage& msg);
 
       RequestContext& mRequestContext;
       
-      typedef std::set<resip::NameAddr, CompareQ> PendingTargetSet;
+      typedef std::multiset<resip::NameAddr, CompareQ> PendingTargetSet;
       PendingTargetSet mPendingTargetSet;
 
       HashSet<resip::Uri> mTargetSet;
@@ -73,7 +87,16 @@ class ResponseContext
       bool mForwardedFinalResponse;
       int mBestPriority;
       bool mSecure;
+
+      friend class RequestContext;
+      friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 };
+
+std::ostream&
+operator<<(std::ostream& strm, const repro::ResponseContext& rc);
+
+std::ostream& 
+operator<<(std::ostream& strm, const repro::ResponseContext::Branch& b);
 
 }
 #endif
