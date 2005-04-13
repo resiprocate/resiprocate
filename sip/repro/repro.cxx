@@ -143,7 +143,7 @@ main(int argc, char** argv)
    proxy.addDomain(DnsUtil::getLocalHostName());
    proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
 
-   list<Data> ips = DnsUtil::getLocalIpAddress();
+   list<pair<Data,Data>> ips = DnsUtil::getInterfaces();
    if ( ips.empty() )
    {
       ErrLog( << "No IP address found to run on - adding localhost" );
@@ -155,8 +155,8 @@ main(int argc, char** argv)
    for ( list<Data>::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
       DebugLog( << "Adding domain for IP " << *i  );
-      proxy.addDomain(*i);
-      proxy.addDomain(*i, 5060);
+      proxy.addDomain(i->second);
+      proxy.addDomain(i->second, 5060);
    }
 
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
