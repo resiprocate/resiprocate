@@ -171,6 +171,12 @@
 				RelativePath=".\DialogUsageManager.cxx">
 			</File>
 			<File
+				RelativePath=".\DumProcessHandler.cxx">
+			</File>
+			<File
+				RelativePath=".\DumThread.cxx">
+			</File>
+			<File
 				RelativePath=".\DumTimeout.cxx">
 			</File>
 			<File
@@ -267,6 +273,9 @@
 				RelativePath=".\UInt64Hash.cxx">
 			</File>
 			<File
+				RelativePath=".\UserAuthInfo.cxx">
+			</File>
+			<File
 				RelativePath=".\UserProfile.cxx">
 			</File>
 		</Filter>
@@ -344,7 +353,13 @@
 				RelativePath=".\DumException.hxx">
 			</File>
 			<File
+				RelativePath=".\DumProcessHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\DumShutdownHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\DumThread.hxx">
 			</File>
 			<File
 				RelativePath=".\DumTimeout.hxx">
@@ -471,6 +486,9 @@
 			</File>
 			<File
 				RelativePath=".\UsageUseException.hxx">
+			</File>
+			<File
+				RelativePath=".\UserAuthInfo.hxx">
 			</File>
 			<File
 				RelativePath=".\UserProfile.hxx">
