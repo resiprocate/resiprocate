@@ -110,7 +110,7 @@
 				InlineFunctionExpansion="1"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				MinimalRebuild="FALSE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 			/>
@@ -152,100 +152,70 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath="ares__close_sockets.c"
-				>
+				RelativePath="ares__close_sockets.c">
 			</File>
 			<File
-				RelativePath="ares__get_hostent.c"
-				>
+				RelativePath="ares__get_hostent.c">
 			</File>
 			<File
-				RelativePath="ares__read_line.c"
-				>
+				RelativePath="ares__read_line.c">
 			</File>
 			<File
-				RelativePath="ares_compat.h"
-				>
+				RelativePath="ares_destroy.c">
 			</File>
 			<File
-				RelativePath="ares_destroy.c"
-				>
+				RelativePath="ares_expand_name.c">
 			</File>
 			<File
-				RelativePath="ares_expand_name.c"
-				>
+				RelativePath="ares_fds.c">
 			</File>
 			<File
-				RelativePath="ares_fds.c"
-				>
+				RelativePath="ares_free_errmem.c">
 			</File>
 			<File
-				RelativePath="ares_free_errmem.c"
-				>
+				RelativePath="ares_free_hostent.c">
 			</File>
 			<File
-				RelativePath="ares_free_hostent.c"
-				>
+				RelativePath="ares_free_string.c">
 			</File>
 			<File
-				RelativePath="ares_free_string.c"
-				>
+				RelativePath="ares_gethostbyaddr.c">
 			</File>
 			<File
-				RelativePath="ares_gethostbyaddr.c"
-				>
+				RelativePath="ares_gethostbyname.c">
 			</File>
 			<File
-				RelativePath="ares_gethostbyname.c"
-				>
+				RelativePath="ares_init.c">
 			</File>
 			<File
-				RelativePath="ares_init.c"
-				>
+				RelativePath="ares_local.c">
 			</File>
 			<File
-				RelativePath=".\ares_local.c"
-				>
+				RelativePath="ares_mkquery.c">
 			</File>
 			<File
-				RelativePath=".\ares_local.h"
-				>
+				RelativePath="ares_parse_a_reply.c">
 			</File>
 			<File
-				RelativePath="ares_mkquery.c"
-				>
+				RelativePath="ares_parse_ptr_reply.c">
 			</File>
 			<File
-				RelativePath="ares_parse_a_reply.c"
-				>
+				RelativePath="ares_process.c">
 			</File>
 			<File
-				RelativePath="ares_parse_ptr_reply.c"
-				>
+				RelativePath="ares_query.c">
 			</File>
 			<File
-				RelativePath="ares_process.c"
-				>
+				RelativePath="ares_search.c">
 			</File>
 			<File
-				RelativePath="ares_query.c"
-				>
+				RelativePath="ares_send.c">
 			</File>
 			<File
-				RelativePath="ares_search.c"
-				>
+				RelativePath="ares_strerror.c">
 			</File>
 			<File
-				RelativePath="ares_send.c"
-				>
-			</File>
-			<File
-				RelativePath="ares_strerror.c"
-				>
-			</File>
-			<File
-				RelativePath="ares_timeout.c"
-				>
+				RelativePath="ares_timeout.c">
 			</File>
 		</Filter>
 		<Filter
@@ -253,16 +223,19 @@
 			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
-				RelativePath="ares.h"
-				>
+				RelativePath="ares.h">
 			</File>
 			<File
-				RelativePath="ares_dns.h"
-				>
+				RelativePath="ares_compat.h">
 			</File>
 			<File
-				RelativePath="ares_private.h"
-				>
+				RelativePath="ares_dns.h">
+			</File>
+			<File
+				RelativePath=".\ares_local.h">
+			</File>
+			<File
+				RelativePath="ares_private.h">
 			</File>
 		</Filter>
 		<Filter
@@ -270,10 +243,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;r"
 			>
 		</Filter>
-		<File
-			RelativePath="ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
