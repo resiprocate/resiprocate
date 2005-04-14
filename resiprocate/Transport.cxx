@@ -12,7 +12,6 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
@@ -216,31 +215,23 @@ Transport::basicCheck(const SipMessage& msg)
 {
    if (msg.isExternal())
    {
-      try
+      if (!Helper::validateMessage(msg))
       {
-         if (!Helper::validateMessage(msg))
+         InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+         if (msg.isRequest())
          {
-            InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-            if (msg.isRequest())
-            {
-               // this is VERY low-level b/c we don't have a transaction...
-               // here we make a response to warn the offending party.
-               makeFailedResponse(msg);
-            }
-            return false;
-         }
-         else if (mShuttingDown && msg.isRequest())
-         {
-            InfoLog (<< "Server has been shutdown, reject message with 503");
             // this is VERY low-level b/c we don't have a transaction...
             // here we make a response to warn the offending party.
-            makeFailedResponse(msg, 503, "Server has been shutdown");
+            makeFailedResponse(msg);
          }
+         return false;
       }
-      catch (ParseBuffer::Exception& e)
+      else if (mShuttingDown && msg.isRequest())
       {
-         InfoLog (<< "Parse exception in basic check: " << e);
-         makeFailedResponse(msg);
+         InfoLog (<< "Server has been shutdown, reject message with 503");
+         // this is VERY low-level b/c we don't have a transaction...
+         // here we make a response to warn the offending party.
+         makeFailedResponse(msg, 503, "Server has been shutdown");
       }
    }
    return true;

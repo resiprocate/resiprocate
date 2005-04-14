@@ -138,13 +138,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       break;
       case TLS:
       {
-         mTlsTransports[transport->tlsDomain()] = transport;
+         mTlsTransports[transport->interfaceName()] = transport;
       }
       break;
 #ifdef USE_DTLS
       case DTLS:
       {
-         mDtlsTransports[transport->tlsDomain()] = transport;
+         mDtlsTransports[transport->interfaceName()] = transport;
       }
       break;
 #endif
@@ -544,13 +544,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             if (target.getType() == TLS)
             {
                target.transport = findTlsTransport(msg->getTlsDomain());
-               //target.transport = findTlsTransport(msg->header(h_From).uri().host());
             }
 #if defined( USE_DTLS )
             else if (target.getType() == DTLS)
             {
-               target.transport = findDTlsTransport(msg->getTlsDomain());
-               //target.transport = findDtlsTransport(msg->header(h_From).uri().host());
+                target.transport = findDtlsTransport(msg->getTlsDomain());
             }
 #endif
             else
@@ -633,7 +631,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #if defined(USE_SSL)
             try
             {
-               const Data& domain = msg->header(h_From).uri().host();
+               Data domain = msg->header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
                                                                              msg->getCanonicalIdentityString());
             }
@@ -798,7 +796,7 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname)
 
 {
-   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'" << " have " << mTlsTransports.size());
+   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'");
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {

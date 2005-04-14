@@ -4,7 +4,6 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -84,83 +83,97 @@ UserProfile::clearDigestCredentials()
 }
 
 void 
-UserProfile::setDigestCredential( const Data& realm, const Data& user, const Data& password)
+UserProfile::setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
 {
-   DigestCredential cred( realm, user, password );
-
+   DigestCredential cred(aor, realm, user, password);
    DebugLog (<< "Adding credential: " << cred);
    mDigestCredentials.erase(cred);
    mDigestCredentials.insert(cred);
 }
      
 const UserProfile::DigestCredential&
-UserProfile::getDigestCredential( const Data& realm  )
+UserProfile::getDigestCredential( const Data& realm )
 {
-   if(mDigestCredentials.empty())
+   DigestCredential dc;
+   dc.realm = realm;
+   
+   DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
+   if (i != mDigestCredentials.end())
    {
-      // !jf! why not just throw here? 
-      static const DigestCredential empty;
-      return empty;
+      return *i;
    }
-
-   DigestCredentials::const_iterator it = mDigestCredentials.find(DigestCredential(realm));
-   if (it == mDigestCredentials.end())
-   {
-      DebugLog(<< "Didn't find credential for realm: " << realm << " " << *mDigestCredentials.begin());
-      return *mDigestCredentials.begin();
-   }
-   else      
-   {
-      DebugLog(<< "Found credential for realm: " << *it << realm);      
-      return *it;
-   }
+   
+   static const DigestCredential empty;
+   return empty;
 }
 
-UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& password) :
+const UserProfile::DigestCredential&
+UserProfile::getDigestCredential( const SipMessage& challenge )
+{
+   StackLog (<< Inserter(mDigestCredentials));
+   DebugLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
+   const Data& aor = challenge.header(h_From).uri().getAor();
+   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
+        it != mDigestCredentials.end(); it++)
+   {
+      if (it->aor == aor)
+      {
+         return *it;
+      }
+   }
+   const Data& user = challenge.header(h_From).uri().user();
+   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
+        it != mDigestCredentials.end(); it++)
+   {
+      if (it->user == user)
+      {
+         return *it;
+      }
+   }
+
+   // !jf! why not just throw here? 
+   static const DigestCredential empty;
+   return empty;
+}
+
+UserProfile::DigestCredential::DigestCredential(const Data& a, const Data& r, const Data& u, const Data& p) :
+   aor(a),
    realm(r),
-   user(u)
-{  
-   MD5Stream a1;
-   a1 << user
-      << Symbols::COLON
-      << realm
-      << Symbols::COLON
-      << password;
-   passwordHashA1 = a1.getHex();
+   user(u),
+   password(p)
+{
 }
 
 UserProfile::DigestCredential::DigestCredential() : 
+   aor(Data::Empty),
    realm(Data::Empty),
    user(Data::Empty),
-   passwordHashA1(Data::Empty)
-{
-}  
-
-UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
-   realm(pRealm),
-   user(Data::Empty),
-   passwordHashA1(Data::Empty) 
+   password(Data::Empty)
 {
 }  
 
 bool
 UserProfile::DigestCredential::operator<(const DigestCredential& rhs) const
 {
-   return realm < rhs.realm;
-}
-
-std::ostream&
-resip::operator<<(std::ostream& strm, const UserProfile& profile)
-{
-   strm << "UserProfile: " << profile.mDefaultFrom << Inserter(profile.mDigestCredentials);
-   return strm;
+   if (realm < rhs.realm)
+   {
+      return true;
+   }
+   else if (realm == rhs.realm)
+   {
+      return aor < rhs.aor;
+   }
+   else
+   {
+      return false;
+   }
 }
 
 std::ostream&
 resip::operator<<(std::ostream& strm, const UserProfile::DigestCredential& cred)
 {
-   strm << "credential: "
-        << " realm=" << cred.realm 
+   strm << "realm=" << cred.realm 
+        << " aor=" << cred.aor
         << " user=" << cred.user ;
    return strm;
 }

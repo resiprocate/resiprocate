@@ -82,7 +82,7 @@ LDLIBS   += $(LDLIBS_LAST)
 DEPEND_FILES += $(foreach pkg,$(PACKAGES), $($(pkg)_DEPENDS))
 DEPEND_TARGETS += $(foreach pkg,$(PACKAGES), $($(pkg)_TARGETS))
 
-ifeq ($(BUILD_SHARED_LIBS),yes)
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 .dependlibs: $(patsubst %.a,%.so,$(DEPEND_FILES))
 else
 .dependlibs: $(DEPEND_FILES)
@@ -114,7 +114,7 @@ DEPENDENCIES = $(patsubst %.cpp,$(OBJ)/%.d,$(patsubst %.c,$(OBJ)/%.d,$(patsubst 
 SHARED_LIB = $(patsubst %,$(OBJ)/%.so,$(strip $(TARGET_LIBRARY)))
 STATIC_LIB = $(patsubst %,$(OBJ)/%.a,$(strip $(TARGET_LIBRARY)))
 
-ifeq ($(BUILD_SHARED_LIBS),yes)
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 LIBTARGETS += $(SHARED_LIB)
 else
 LIBTARGETS += $(STATIC_LIB)

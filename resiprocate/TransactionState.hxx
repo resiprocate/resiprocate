@@ -14,7 +14,6 @@ class TransactionMessage;
 class SipMessage;
 class TransactionMap;
 class TransactionController;
-class TransactionUser;
 
 class TransactionState : public DnsHandler
 {
@@ -46,11 +45,7 @@ class TransactionState : public DnsHandler
          Bogus
       } State;
 
-      TransactionState(TransactionController& controller, 
-                       Machine m, 
-                       State s, 
-                       const Data& tid, 
-                       TransactionUser* tu=0);
+      TransactionState(TransactionController& controller, Machine m, State s, const Data& tid);
       
       void handle(DnsResult*);
 
@@ -81,7 +76,7 @@ class TransactionState : public DnsHandler
       bool isReliabilityIndication(TransactionMessage* msg) const;
       bool isSentIndication(TransactionMessage* msg) const;
       void sendToTU(TransactionMessage* msg) const;
-      static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
+      static void sendToTU(TransactionController& controller, TransactionMessage* msg);
       void sendToWire(TransactionMessage* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
@@ -113,7 +108,6 @@ class TransactionState : public DnsHandler
 
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
-      TransactionUser* mTransactionUser;      
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;

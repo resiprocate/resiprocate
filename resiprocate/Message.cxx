@@ -8,10 +8,6 @@
 
 using namespace resip;
 
-
-Message::Message() : tu(0) 
-{}
-
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {

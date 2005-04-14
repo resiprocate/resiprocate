@@ -27,8 +27,7 @@ class StringCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      const Data& value() const;
-      Data& value();
+      Data& value() const;
 
    private:
       mutable Data mValue;

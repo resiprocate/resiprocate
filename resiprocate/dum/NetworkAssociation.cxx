@@ -7,7 +7,7 @@
 using namespace resip;
 
 void 
-NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
+NetworkAssociation::update(const SipMessage& msg)
 {
    if (mDum && mDum->mKeepAliveManager.get())
    {
@@ -15,7 +15,7 @@ NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
       {
          mDum->mKeepAliveManager->remove(mTarget);
          mTarget = msg.getSource();
-         mDum->mKeepAliveManager->add(mTarget, keepAliveInterval);
+         mDum->mKeepAliveManager->add(mTarget);
       }
    }
 }

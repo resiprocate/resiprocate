@@ -36,35 +36,6 @@ main(int argc, char* argv[])
     
     Log::initialize(Log::Cout, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-    
-    {
-       Data txt("v=0\r\n"
-                "o=ViPr 1 1 IN IP4 72.29.231.47\r\n"
-                "s=eyeBeam\r\n"
-                "i=\"q2\"<sip:q2@host1.marc.sipit.net>\r\n"
-                "e=NoEmail@NoEmail.com\r\n"
-                "t=0 0\r\n"
-                "a=X-app:ViPr 11 ViPrTerminal\r\n"
-                "a=X-GUID:4a8f41cc8a50_72.29.231.47_\r\n"
-                "a=X-CollabStatus: CollabState_Idle\r\n"
-                "m=audio 50958 RTP/AVP 0\r\n"
-                "i=\"q2\"<sip:q2@host1.marc.sipit.net>\r\n"
-                "c=IN IP4 72.29.231.47\r\n"
-                "a=rtpmap:0 PCMU/8000/1\r\n"
-                "a=sendrecv\r\n"
-                "a=X-app:ViPr 11 ViPrTerminal\r\n"
-                "m=video 0 RTP/AVP 32\r\n"
-                "c=IN IP4 72.29.231.47\r\n");
-       
-
-       HeaderFieldValue hfv(txt.data(), txt.size());
-       Mime type("application", "sdp");
-       SdpContents sdp(&hfv, type);
-       CritLog ( << sdp.session().media().size());       
-       assert(sdp.session().media().size() == 2);
-       
-       CritLog(<< "Marconi Test Ok");
-    }
 
     {
        Data txt("v=0\r\n"

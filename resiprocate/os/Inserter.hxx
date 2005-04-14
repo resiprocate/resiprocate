@@ -184,26 +184,6 @@ insert(std::ostream& s, const HashMap<K,V,H>& c)
 }
 #endif
 
-#if defined(HASH_MAP_NAMESPACE)
-template <class V, class H>
-std::ostream&
-insert(std::ostream& s, const HashSet<V,H>& c)
-{
-   s << "[";
-   for (typename HashSet<V,H>::const_iterator i = c.begin();
-        i != c.end(); i++) 
-   {
-      if (i != c.begin()) 
-      {
-         s << ", ";
-      }
-      insert(s, *i);
-   }
-   s << "]";
-   return s;
-}
-#endif
-
 // map
 template <class K, class V, class H>
 std::ostream&

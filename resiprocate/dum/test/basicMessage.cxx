@@ -58,12 +58,6 @@ public:
     	cout << "client regListener::onFailure\n";
 	    exit(-1);
     }
-    virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
-    {
-    	cout << "client regListener::onRequestRetry\n";
-	    exit(-1);
-    }
-
 protected:
 	bool _registered;
 
@@ -141,8 +135,7 @@ int main(int argc, char *argv[]) {
 	MasterProfile profile;   
 	auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
 
-    SipStack clientStack;
-	DialogUsageManager clientDum(clientStack);
+	DialogUsageManager clientDum;
 	clientDum.addTransport(UDP, port);
 	clientDum.setMasterProfile(&profile);
 
@@ -159,7 +152,7 @@ int main(int argc, char *argv[]) {
 	/////
 	NameAddr naFrom(from.c_str());
 	profile.setDefaultFrom(naFrom);
-	profile.setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
+	profile.setDigestCredential(from.c_str(), realm.c_str(), user.c_str(), passwd.c_str());
 	
 	MessageAppDialogSet *mads = new MessageAppDialogSet(clientDum);
 	SipMessage & regMessage = clientDum.makeRegistration(naFrom, mads);
@@ -175,12 +168,11 @@ int main(int argc, char *argv[]) {
 		FdSet fdset;
 
 		// Should these be buildFdSet on the DUM?
-		clientStack.buildFdSet(fdset);
+		clientDum.buildFdSet(fdset);
 		int err = fdset.selectMilliSeconds(100);
 		assert ( err != -1 );
 		
-		clientStack.process(fdset);
-        while(clientDum.process());
+		clientDum.process(fdset);
 		//if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
 		
 		if(first && client.isRegistered()) {
