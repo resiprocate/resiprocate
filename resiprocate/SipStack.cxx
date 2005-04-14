@@ -328,7 +328,7 @@ SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
                TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   postMS(message, secondsLater*1000);
+   postMS(message, secondsLater*1000, tu);
 }
 
 void
