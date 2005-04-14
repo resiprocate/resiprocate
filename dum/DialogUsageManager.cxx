@@ -221,7 +221,7 @@ void DialogUsageManager::setMasterProfile(MasterProfile* masterProfile)
 void DialogUsageManager::setKeepAliveManager(std::auto_ptr<KeepAliveManager> manager)
 {
    mKeepAliveManager = manager;
-   mKeepAliveManager->setStack(&mStack);
+   mKeepAliveManager->setDialogUsageManager(this);
 }
 
 void DialogUsageManager::setRedirectManager(std::auto_ptr<RedirectManager> manager)
@@ -291,7 +291,7 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
                              BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack.post(t, duration);
+   mStack.post(t, duration, this);
 }
 
 void
@@ -299,7 +299,7 @@ DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
                                BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack.postMS(t, duration);
+   mStack.postMS(t, duration, this);
 }
 
 void
@@ -681,8 +681,7 @@ DialogUsageManager::destroy(const BaseUsage* usage)
 {
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
-      DestroyUsage destroy(usage->mHandle);
-      mStack.post(destroy);
+      post(new DestroyUsage(usage->mHandle));
    }
    else
    {
@@ -695,8 +694,7 @@ DialogUsageManager::destroy(DialogSet* dset)
 {
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
-      DestroyUsage destroy(dset);
-      mStack.post(destroy);
+      post(new DestroyUsage(dset));
    }
    else
    {
@@ -709,8 +707,7 @@ DialogUsageManager::destroy(Dialog* d)
 {
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
-      DestroyUsage destroy(d);
-      mStack.post(destroy);
+      post(new DestroyUsage(d));
    }
    else
    {
