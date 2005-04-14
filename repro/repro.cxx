@@ -7,6 +7,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -143,7 +144,7 @@ main(int argc, char** argv)
    proxy.addDomain(DnsUtil::getLocalHostName());
    proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
 
-   list<pair<Data,Data>> ips = DnsUtil::getInterfaces();
+   list< pair<Data,Data> > ips = DnsUtil::getInterfaces();
    if ( ips.empty() )
    {
       ErrLog( << "No IP address found to run on - adding localhost" );
@@ -152,9 +153,9 @@ main(int argc, char** argv)
       proxy.addDomain("localhost");
       proxy.addDomain("localhost",5060);
    }
-   for ( list<Data>::const_iterator i=ips.begin(); i!=ips.end(); i++)
+   for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      DebugLog( << "Adding domain for IP " << *i  );
+      DebugLog( << "Adding domain for IP " << Inserter(*i)  );
       proxy.addDomain(i->second);
       proxy.addDomain(i->second, 5060);
    }
