@@ -115,7 +115,7 @@
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
 				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
@@ -185,7 +185,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -253,7 +253,7 @@
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES"
 				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
@@ -322,9 +322,6 @@
 				RelativePath="BranchParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\CSeqCategory.cxx">
-			</File>
-			<File
 				RelativePath=".\CallId.cxx">
 			</File>
 			<File
@@ -350,6 +347,9 @@
 			</File>
 			<File
 				RelativePath="CpimContents.cxx">
+			</File>
+			<File
+				RelativePath="CSeqCategory.cxx">
 			</File>
 			<File
 				RelativePath="os\Data.cxx">
@@ -466,6 +466,9 @@
 				RelativePath="Message.cxx">
 			</File>
 			<File
+				RelativePath=".\MessageFilterRule.cxx">
+			</File>
+			<File
 				RelativePath="MessageWaitingContents.cxx">
 			</File>
 			<File
@@ -562,7 +565,7 @@
 				RelativePath="SdpContents.cxx">
 			</File>
 			<File
-				RelativePath=".\Security.cxx">
+				RelativePath="Security.cxx">
 			</File>
 			<File
 				RelativePath=".\SecurityAttributes.cxx">
@@ -653,6 +656,9 @@
 			</File>
 			<File
 				RelativePath=".\TransactionUser.cxx">
+			</File>
+			<File
+				RelativePath=".\TransactionUserMessage.cxx">
 			</File>
 			<File
 				RelativePath="Transport.cxx">
@@ -914,6 +920,9 @@
 				RelativePath="Message.hxx">
 			</File>
 			<File
+				RelativePath=".\MessageFilterRule.hxx">
+			</File>
+			<File
 				RelativePath="MessageWaitingContents.hxx">
 			</File>
 			<File
@@ -1137,6 +1146,9 @@
 			</File>
 			<File
 				RelativePath=".\TransactionUser.hxx">
+			</File>
+			<File
+				RelativePath=".\TransactionUserMessage.hxx">
 			</File>
 			<File
 				RelativePath="Transport.hxx">
