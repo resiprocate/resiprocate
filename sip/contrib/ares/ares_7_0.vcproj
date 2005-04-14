@@ -15,7 +15,7 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2"
 			ManagedExtensions="FALSE">
 			<Tool
@@ -25,7 +25,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -54,14 +54,14 @@
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
 			CharacterSet="2"
-			ManagedExtensions="TRUE">
+			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				MinimalRebuild="FALSE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"/>
 			<Tool
@@ -95,9 +95,6 @@
 			</File>
 			<File
 				RelativePath="ares__read_line.c">
-			</File>
-			<File
-				RelativePath="ares_compat.h">
 			</File>
 			<File
 				RelativePath="ares_destroy.c">
@@ -164,7 +161,13 @@
 				RelativePath="ares.h">
 			</File>
 			<File
+				RelativePath="ares_compat.h">
+			</File>
+			<File
 				RelativePath="ares_dns.h">
+			</File>
+			<File
+				RelativePath=".\ares_local.h">
 			</File>
 			<File
 				RelativePath="ares_private.h">
@@ -174,9 +177,6 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;r">
 		</Filter>
-		<File
-			RelativePath="ReadMe.txt">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

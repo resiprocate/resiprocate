@@ -112,9 +112,6 @@
 				RelativePath="ares__read_line.c">
 			</File>
 			<File
-				RelativePath="ares_compat.h">
-			</File>
-			<File
 				RelativePath="ares_destroy.c">
 			</File>
 			<File
@@ -142,10 +139,7 @@
 				RelativePath="ares_init.c">
 			</File>
 			<File
-				RelativePath=".\ares_local.c">
-			</File>
-			<File
-				RelativePath=".\ares_local.h">
+				RelativePath="ares_local.c">
 			</File>
 			<File
 				RelativePath="ares_mkquery.c">
@@ -182,7 +176,13 @@
 				RelativePath="ares.h">
 			</File>
 			<File
+				RelativePath="ares_compat.h">
+			</File>
+			<File
 				RelativePath="ares_dns.h">
+			</File>
+			<File
+				RelativePath=".\ares_local.h">
 			</File>
 			<File
 				RelativePath="ares_private.h">
@@ -192,9 +192,6 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;r">
 		</Filter>
-		<File
-			RelativePath="ReadMe.txt">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
