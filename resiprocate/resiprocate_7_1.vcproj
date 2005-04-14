@@ -567,9 +567,6 @@
 				RelativePath="TransactionState.cxx">
 			</File>
 			<File
-				RelativePath=".\TransactionUser.cxx">
-			</File>
-			<File
 				RelativePath="Transport.cxx">
 			</File>
 			<File
@@ -583,9 +580,6 @@
 			</File>
 			<File
 				RelativePath="os\Tuple.cxx">
-			</File>
-			<File
-				RelativePath="TuSelector.cxx">
 			</File>
 			<File
 				RelativePath="UdpTransport.cxx">
@@ -1034,9 +1028,6 @@
 			</File>
 			<File
 				RelativePath="TransactionTerminated.hxx">
-			</File>
-			<File
-				RelativePath=".\TransactionUser.hxx">
 			</File>
 			<File
 				RelativePath="Transport.hxx">

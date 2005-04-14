@@ -272,7 +272,6 @@ ServerInviteSession::end()
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
-      case UAS_AcceptedWaitingAnswer:
          reject(480);
          break;         
          

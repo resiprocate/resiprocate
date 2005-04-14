@@ -1141,94 +1141,73 @@ SipMessage::header(const H_##_header##s& headerType)                            
    return *dynamic_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                     \
 }
 
-defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
-defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
-defineHeader(MIMEVersion, "Mime-Version", Token, "RFC 3261");
-defineHeader(Priority, "Priority", Token, "RFC 3261");
-defineHeader(Event, "Event", Token, "RFC 3265");
-defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
-defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
-defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
+defineHeader(CSeq, "CSeq", CSeqCategory, "RFC ????");
+defineHeader(CallID, "Call-ID", CallId, "RFC ????");
+defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC ????");
+defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
-defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
-defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
-defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
-defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
-defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC 3261");
-defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261");
-defineMultiHeader(Require, "Require", Token, "RFC 3261");
-defineMultiHeader(Supported, "Supported", Token, "RFC 3261");
-defineMultiHeader(Unsupported, "Unsupported", Token, "RFC 3261");
-defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329");
-defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329");
-defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
-defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
-defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
-defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
-defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
-
-defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
-defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
-
-defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC 3261");
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC 3261");
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
-
-defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
-defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");
-defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261");
-defineHeader(From, "From", NameAddr, "RFC 3261");
-defineHeader(To, "To", NameAddr, "RFC 3261");
-defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261");
-defineHeader(ReferTo, "Refer-To", NameAddr, "RFC 3515");
-defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC 3892");
-defineMultiHeader(Path, "Path", NameAddr, "RFC 3327");
-defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
-defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
-defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
-defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
-defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
-defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
-defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
-
-defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
-defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
-defineHeader(Server, "Server", StringCategory, "RFC 3261");
-defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
-defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
-defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
-
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
-
-// !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
-
-defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
+defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????"); // !dlb! defineMultiHeader
+defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
+defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC ????");
+defineHeader(ContentType, "Content-Type", Mime, "RFC ????");
+defineHeader(Date, "Date", DateCategory, "RFC ????");
+defineHeader(Event, "Event", Token, "RFC ????");
+defineHeader(Expires, "Expires", ExpiresCategory, "RFC ????");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft");
+defineHeader(From, "From", NameAddr, "RFC ????");
+defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????");
+defineHeader(MIMEVersion, "MIME-Version", Token, "RFC ????");
+defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????");
+defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????");
+defineHeader(Organization, "Organization", StringCategory, "RFC ????");
+defineHeader(Priority, "Priority", Token, "RFC ????");
+defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????");
+defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????");
+defineHeader(Replaces, "Replaces", CallId, "RFC ????");
+defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC ????");
+defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????");
+defineHeader(Server, "Server", StringCategory, "RFC ????");
+defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
+defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
+defineHeader(Subject, "Subject", StringCategory, "RFC ????");
+defineHeader(SubscriptionState, "Subscription-State", Token, "RFC ????");
+defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????");
+defineHeader(To, "To", NameAddr, "RFC ????"); 
+defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????");
+defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????");
 
-defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
-defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
-defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
-defineHeader(Join, "Join", CallId, "RFC 3911");
-defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????");
+defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????");
+defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????");
 
-defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261");
-defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261");
-defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261");
-defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261");
-defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth, "RFC 3261");
+defineMultiHeader(Authorization, "Authorization", Auth, "RFC ????");
+defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC ????");
+defineMultiHeader(WWWAuthenticate, "WWW-Authenticate", Auth, "RFC ????");
+defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC ????");
 
-defineHeader(CSeq, "CSeq", CSeqCategory, "RFC 3261");
-defineHeader(Date, "Date", DateCategory, "RFC 3261");
-defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
-defineMultiHeader(Via, "Via", Via, "RFC 3261");
+defineMultiHeader(Accept, "Accept", Mime, "RFC ????");
+defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC ????");
+defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????");
+defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????");
+defineMultiHeader(Allow, "Allow", Token, "RFC ????");
+defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC ????");
+defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????");
+defineMultiHeader(Contact, "Contact", NameAddr, "RFC ????");
+defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????");
+defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????");
+defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC ????");
+defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC ????");
+defineMultiHeader(Require, "Require", Token, "RFC ????");
+defineMultiHeader(Route, "Route", NameAddr, "RFC ????");
+defineMultiHeader(Supported, "Supported", Token, "RFC ????");
+defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????");
+defineMultiHeader(Via, "Via", Via, "RFC ????");
+
+defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262");
 defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
+defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
+defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
 
 #endif
 

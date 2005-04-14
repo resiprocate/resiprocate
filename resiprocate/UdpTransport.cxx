@@ -25,7 +25,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            const Data& pinterface) 
    : InternalTransport(fifo, portNum, version, pinterface)
 {
-   InfoLog (<< "Creating UDP transport host=" << pinterface 
+   InfoLog (<< "Creating udp transport host=" << pinterface 
             << " port=" << portNum
             << " ipv4=" << bool(version==V4) );
 
@@ -163,8 +163,8 @@ UdpTransport::process(FdSet& fdset)
                                       &unprocessedCharPtr) !=
           MsgHeaderScanner::scrEnd)
       {
-         StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         StackLog(<< Data(buffer, len));
+         DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+         DebugLog(<< Data(buffer, len));
          delete message; 
          message=0; 
          return;

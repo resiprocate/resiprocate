@@ -7,7 +7,7 @@
 
 ######################################################################
 
-ifeq ($(BUILD_SHARED_LIBS),yes)
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 LIBSUFFIX := so
 else
 LIBSUFFIX := a
@@ -47,8 +47,6 @@ ARES_LIBDIRS := $(ROOT)/contrib/ares
 ARES_LIBNAME := ares
 ARES_DEFINES := 
 
-DB42_LIBNAME := db-4.2
-
 RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
 RESIPROCATE_LIBNAME := resiprocate
@@ -73,7 +71,3 @@ ifeq ($(USE_IPV6),true)
 DEFINES += USE_IPV6
 endif
 
-ifeq ($(USE_POPT),true)
-POPT_DEFINES := HAVE_POPT_H
-POPT_LIBNAME  := popt
-endif

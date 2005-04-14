@@ -717,7 +717,7 @@ ParseBuffer::unsignedInteger()
       fail(__FILE__, __LINE__,msg);
    }
    
-   unsigned long num = 0;
+   unsigned int num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');
@@ -747,7 +747,7 @@ ParseBuffer::unsignedLongLong()
       fail(__FILE__, __LINE__,msg);
    }
    
-   UInt64 num = 0;
+   unsigned int num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');

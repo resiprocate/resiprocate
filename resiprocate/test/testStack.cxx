@@ -73,29 +73,29 @@ main(int argc, char* argv[])
    IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
    SipStack sender;
-//   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
-//   sender.addTransport(TCP, 25060, version);
+//   sender.addTransport(UDP, 5060, version); // !ah! just for debugging TransportSelector
+//   sender.addTransport(TCP, 5060, version);
    if (bindAddr)
    {
       InfoLog(<<"Binding to address: " << bindAddr);
-      sender.addTransport(UDP, 25070,version,bindAddr);
-      sender.addTransport(TCP, 25070,version,bindAddr);
+      sender.addTransport(UDP, 5070,version,bindAddr);
+      sender.addTransport(TCP, 5070,version,bindAddr);
    }
    else
    {
-      sender.addTransport(UDP, 25070, version);
-      sender.addTransport(TCP, 25070, version);
+      sender.addTransport(UDP, 5070, version);
+      sender.addTransport(TCP, 5070, version);
    }
 
-   receiver.addTransport(UDP, 25080, version);
-   receiver.addTransport(TCP, 25080, version);
+   receiver.addTransport(UDP, 5080, version);
+   receiver.addTransport(TCP, 5080, version);
 
 
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
    target.uri().host() = bindAddr?bindAddr:DnsUtil::getLocalHostName();
-   target.uri().port() = 25080;
+   target.uri().port() = 5080;
    target.uri().param(p_transport) = proto;
   
    NameAddr contact;
@@ -109,7 +109,7 @@ main(int argc, char* argv[])
 #endif
 
    NameAddr from = target;
-   from.uri().port() = 25070;
+   from.uri().port() = 5070;
    
 
    UInt64 startTime = Timer::getTimeMs();
@@ -124,9 +124,9 @@ main(int argc, char* argv[])
       while (sent < runs && outstanding < window)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = 25080; // +(sent%window);
+         target.uri().port() = 5080; // +(sent%window);
          SipMessage* next = Helper::makeRegister( target, from, contact);
-         next->header(h_Vias).front().sentPort() = 25070;
+         next->header(h_Vias).front().sentPort() = 5070;
          sender.send(*next);
          outstanding++;
          sent++;
@@ -157,7 +157,6 @@ main(int argc, char* argv[])
       {
          assert(response->isResponse());
          assert(response->header(h_CSeq).method() == REGISTER);
-         assert(response->header(h_StatusLine).statusCode() == 200);
          outstanding--;
          count++;
          delete response;

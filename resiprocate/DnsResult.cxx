@@ -176,8 +176,7 @@ DnsResult::lookup(const Uri& uri)
             }
             else
             {
-               mTransport = TLS;
-               if (!mInterface.isSupported(mTransport))
+               if (!mInterface.isSupported(TLS))
                {
                   transition(Finished);
                   mHandler->handle(this);
@@ -199,13 +198,6 @@ DnsResult::lookup(const Uri& uri)
             switch(mTransport)
             {
                case TLS: //deprecated, mean TLS over TCP
-                  mSRVCount++;
-                  lookupSRV("_sip._tls." + mTarget);
-                  break;
-               case DTLS: //deprecated, mean TLS over TCP
-                  mSRVCount++;
-                  lookupSRV("_sip._dtls." + mTarget);
-                  break;
                case TCP:
                   mSRVCount++;
                   lookupSRV("_sip._tcp." + mTarget);
@@ -468,15 +460,9 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
       else
       {
          //.dcm. assumes udp is supported
-         if (mInterface.isSupported(TLS))
-         {
-            mSRVCount += 1;
-            lookupSRV("_sips._tcp." + mTarget);
-         }
-         
          if (mInterface.isSupported(TCP))
          {
-            mSRVCount += 2;
+            mSRVCount+=2;         
             lookupSRV("_sip._tcp." + mTarget);
             lookupSRV("_sip._udp." + mTarget);
          }
@@ -524,29 +510,17 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
          
          if (aptr)
          {
-            if (srv.key.find("_sips._udp") != Data::npos)
-            {
-               srv.transport = DTLS;
-            }
-            else if (srv.key.find("_sips._tcp") != Data::npos)
-            {
-               srv.transport = TLS;
-            }
-            else if (srv.key.find("_udp") != Data::npos)
+            if (srv.key.find("_udp") != Data::npos)
             {
                srv.transport = UDP;
-            }
-            else if (srv.key.find("_dtls") != Data::npos)
-            {
-               srv.transport = DTLS;
-            }
-            else if (srv.key.find("_tls") != Data::npos)
-            {
-               srv.transport = TLS;
             }
             else if (srv.key.find("_tcp") != Data::npos)
             {
                srv.transport = TCP;
+            }
+            else if (srv.key.find("_sips._tcp") != Data::npos)
+            {
+               srv.transport = TLS;
             }
             else
             {
@@ -959,21 +933,17 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       assert(!mPreferredNAPTR.key.empty());
       if (srv.key == mPreferredNAPTR.replacement && srv.target != Symbols::DOT)
       {
-         if (srv.key.find("_sips._tcp") != Data::npos)
-         {
-            srv.transport = TLS;
-         }
-         else if (srv.key.find("_sips._udp") != Data::npos)
-         {
-            srv.transport = DTLS;
-         }
-         else if (srv.key.find("_udp") != Data::npos)
+         if (srv.key.find("_udp") != Data::npos)
          {
             srv.transport = UDP;
          }
          else if (srv.key.find("_tcp") != Data::npos)
          {
             srv.transport = TCP;
+         }
+         else if (srv.key.find("_sips._tcp") != Data::npos)
+         {
+            srv.transport = TLS;
          }
          else
          {

@@ -1,7 +1,6 @@
 #include <iostream>
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/TuSelector.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include <unistd.h>

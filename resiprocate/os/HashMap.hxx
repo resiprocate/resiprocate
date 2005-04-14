@@ -5,7 +5,6 @@
 
 #  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #    include <ext/hash_map>
-#    include <ext/hash_set>
 #    define HASH_MAP_NAMESPACE __gnu_cxx
 #    define HashMap __gnu_cxx::hash_map
 #    define HashSet __gnu_cxx::hash_set

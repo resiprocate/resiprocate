@@ -18,7 +18,6 @@ namespace resip
 
 class Message;
 class TransactionMessage;
-class TuSelector;
 
 class BaseTimerQueue
 {
@@ -37,35 +36,15 @@ class BaseTimerQueue
       std::multiset<Timer> mTimers;
 };
 
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
-{
-   public:
-      void add(const Timer& timer);
-      virtual void process();
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
-};
-
-
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
+class TimeLimitTimerQueue : public BaseTimerQueue
 {
    public:
       TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      void add(const Timer& timer);
+      virtual void process();
+      
    private:
       TimeLimitFifo<Message>& mFifo;
-};
-
-
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TuSelector& mFifoSelector;
 };
 
 
@@ -75,6 +54,7 @@ class TimerQueue : public BaseTimerQueue
       TimerQueue(Fifo<TransactionMessage>& fifo);
       Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       virtual void process();
+      
    private:
       Fifo<TransactionMessage>& mFifo;
 };

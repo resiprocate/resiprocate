@@ -12,50 +12,28 @@ InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 
 void 
 InMemoryRegistrationDatabase::addAor(Uri &aor,
-    RegistrationPersistenceManager::ContactPairList contacts)
+    RegistrationPersistenceManager::contact_list_t contacts)
 {
-  Lock g(mDatabaseMutex);
-  mDatabase[aor] = new ContactPairList(contacts);
+  mDatabase[aor] = contacts;
 }
 
 void 
 InMemoryRegistrationDatabase::removeAor(Uri &aor)
 {
   database_map_t::iterator i;
-
-  Lock g(mDatabaseMutex);
   i = mDatabase.find(aor);
   if (i != mDatabase.end())
   {
-    delete i->second;
-
-    // Setting this to 0 causes it to be removed when we unlock the AOR.
-    i->second = 0;
+    mDatabase.erase(i);
   }
 }
-
-
-InMemoryRegistrationDatabase::UriList 
-InMemoryRegistrationDatabase::getAors()
-{
-   UriList retList;   
-   for( database_map_t::const_iterator it = mDatabase.begin();
-        it != mDatabase.end(); it++)
-   {
-      retList.push_back(it->first);
-   }
-   return retList;
-}
-
 
 bool 
 InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
 {
   database_map_t::iterator i;
-
-  Lock g(mDatabaseMutex);
   i = mDatabase.find(aor);
-  if (i == mDatabase.end() || i->second == 0)
+  if (i == mDatabase.end())
   {
     return false;
   }
@@ -65,73 +43,32 @@ InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
 void
 InMemoryRegistrationDatabase::lockRecord(Uri &aor)
 {
-  Lock g2(mLockedRecordsMutex);
-
-  {
-    Lock g1(mDatabaseMutex);
-    // This forces insertion if the record does not yet exist.
-    mDatabase[aor];
-  }
-
-  while (mLockedRecords.count(aor))
-  {
-    mRecordUnlocked.wait(mLockedRecordsMutex);
-  }
-
-  mLockedRecords.insert(aor);
+  // Currently doesn't do any locking.
 }
 
 void
 InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
 {
-  Lock g2(mLockedRecordsMutex);
-
-  {
-    Lock g1(mDatabaseMutex);
-    // If the pointer is null, we remove the record from the map.
-    database_map_t::iterator i = mDatabase.find(aor);
-
-    // The record must have been inserted when we locked it in the first place
-    assert (i != mDatabase.end());
-
-    if (i->second == 0)
-    {
-      mDatabase.erase(i);
-    }
-  }
-
-  mLockedRecords.erase(aor);
-  mRecordUnlocked.broadcast();
+  // Currently doesn't do any locking.
 }
 
 RegistrationPersistenceManager::update_status_t 
 InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expires)
 {
-  ContactPairList *contactList = 0;
-
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
   {
-    Lock g(mDatabaseMutex);
-
-    database_map_t::iterator i;
+    addAor(aor);
     i = mDatabase.find(aor);
-    if (i == mDatabase.end() || i->second == 0)
-    {
-      contactList = new ContactPairList();
-      mDatabase[aor] = contactList;
-    }
-    else
-    {
-      contactList = i->second;
-    }
-
   }
 
-  assert(contactList);
+  assert(i != mDatabase.end());
 
-  ContactPairList::iterator j;
+  contact_list_t::iterator j;
 
   // See if the contact is already present. We use URI matching rules here.
-  for (j = contactList->begin(); j != contactList->end(); j++)
+  for (j = i->second.begin(); j != i->second.end(); j++)
   {
     if ((*j).first == contact)
     {
@@ -142,36 +79,29 @@ InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expir
   }
 
   // This is a new contact, so we add it to the list.
-  contactList->push_back(std::make_pair<Uri,time_t>(contact,expires));
+  i->second.push_back(std::make_pair<Uri,time_t>(contact,expires));
   return CONTACT_CREATED;
 }
 
 void 
 InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
 {
-  ContactPairList *contactList = 0;
-
+  database_map_t::iterator i;
+  i = mDatabase.find(aor);
+  if (i == mDatabase.end())
   {
-    Lock g(mDatabaseMutex);
-
-    database_map_t::iterator i;
-    i = mDatabase.find(aor);
-    if (i == mDatabase.end() || i->second == 0)
-    {
-      return;
-    }
-    contactList = i->second;
+    return;
   }
 
-  ContactPairList::iterator j;
+  contact_list_t::iterator j;
 
   // See if the contact is present. We use URI matching rules here.
-  for (j = contactList->begin(); j != contactList->end(); j++)
+  for (j = i->second.begin(); j != i->second.end(); j++)
   {
     if ((*j).first == contact)
     {
-      contactList->erase(j);
-      if (contactList->empty())
+      i->second.erase(j);
+      if (i->second.empty())
       {
         removeAor(aor);
       }
@@ -180,18 +110,16 @@ InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
   }
 }
 
-RegistrationPersistenceManager::ContactPairList
+RegistrationPersistenceManager::contact_list_t
 InMemoryRegistrationDatabase::getContacts(Uri &aor)
 {
-  Lock g(mDatabaseMutex);
-
   database_map_t::iterator i;
   i = mDatabase.find(aor);
-  if (i == mDatabase.end() || i->second == 0)
+  if (i == mDatabase.end())
   {
-    return ContactPairList();
+    return contact_list_t();
   }
-  return *(i->second);
+  return i->second;
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -15,9 +15,7 @@
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/TransportMessage.hxx"
-#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
@@ -30,8 +28,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-TransactionState::TransactionState(TransactionController& controller, Machine m, 
-                                   State s, const Data& id, TransactionUser* tu) : 
+TransactionState::TransactionState(TransactionController& controller, Machine m, State s, const Data& id) : 
    mController(controller),
    mMachine(m), 
    mState(s),
@@ -39,8 +36,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mIsReliable(true), // !jf! 
    mMsgToRetransmit(0),
    mDnsResult(0),
-   mId(id),
-   mTransactionUser(tu)
+   mId(id)
 {
    StackLog (<< "Creating new TransactionState: " << *this);
 }
@@ -49,8 +45,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
 TransactionState* 
 TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine, const Data& tid)
 {
-   TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, 
-                                                   tid, tr->mTransactionUser);
+   TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, tid);
    // !jf! don't set this since it will be set by TransactionState::processReliability()
    //cancel->mIsReliable = tr->mIsReliable;  
    cancel->mResponseTarget = tr->mResponseTarget;
@@ -85,28 +80,25 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
+#if(0)
+   Message* msg = controller.mStateMacFifo.getNext();
+   assert(msg);
+   
+   TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
+#else
+   // !kh! don't need the above cast (the type is right).
+   // !kh! don't need the above assert (It would've failed in AbstractFifo).
    TransactionMessage* message = controller.mStateMacFifo.getNext();
+#endif
+   KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
+   if (keepAlive)
    {
-      TransactionUserMessage* tuser = dynamic_cast<TransactionUserMessage*>(message);
-      if (tuser)
-      {
-         controller.mTuSelector.process(tuser);
-         delete tuser;
-         return;
-      }
+      InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
+      controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
+      delete keepAlive;
+      return;      
    }
-   
-   {
-      KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
-      if (keepAlive)
-      {
-         InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
-         controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
-         delete keepAlive;
-         return;      
-      }
-   }
-   
+
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
    RESIP_STATISTICS(sip && sip->isExternal() && controller.mStatsManager.received(sip));
@@ -198,38 +190,7 @@ TransactionState::process(TransactionController& controller)
    else if (sip)  // new transaction
    {
       StackLog (<< "No matching transaction for " << sip->brief());
-      TransactionUser* tu = 0;      
-      if (sip->isExternal())
-      {
-         if (controller.mTuSelector.haveTransactionUsers() && sip->isRequest())
-         {
-            tu = controller.mTuSelector.selectTransactionUser(*sip);
-            if (!tu)
-            {
-               //InfoLog (<< "Didn't find a TU for " << sip->brief());
-
-               InfoLog( << "No TU found for message: " << sip->brief());               
-               SipMessage* noMatch = Helper::makeResponse(*sip, 500);
-               Tuple target(sip->getSource());
-               delete sip;
-               controller.mTransportSelector.transmit(noMatch, target);
-               return;
-            }
-            else
-            {
-               //InfoLog (<< "Found TU for " << sip->brief());
-            }
-         }
-      }
-      else
-      {
-         tu = sip->getTransactionUser();
-         if (!tu)
-         {
-            //InfoLog (<< "No TU associated with " << sip->brief());
-         }
-      }
-               
+      
       if (sip->isRequest())
       {
          // create a new state object and insert in the TransactionMap
@@ -239,7 +200,7 @@ TransactionState::process(TransactionController& controller)
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
                // !rk! This might be needlessly created.  Design issue.
-               TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
+               TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
                state->mMsgToRetransmit = state->make100(sip);
                state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
@@ -260,12 +221,11 @@ TransactionState::process(TransactionController& controller)
             }
             else if (sip->header(h_RequestLine).getMethod() == CANCEL)
             {
-               TransactionState* matchingInvite = 
-                  controller.mServerTransactionMap.find(sip->getTransactionId());
+               TransactionState* matchingInvite = controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
@@ -277,7 +237,7 @@ TransactionState::process(TransactionController& controller)
             }
             else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
-               TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid, tu);
+               TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
                state->mResponseTarget = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
@@ -288,20 +248,20 @@ TransactionState::process(TransactionController& controller)
 
             // Incoming ACK just gets passed to the TU
             //StackLog(<< "Adding incoming message to TU fifo " << tid);
-            TransactionState::sendToTU(tu, controller, sip);
+            TransactionState::sendToTU(controller, sip);
          }
          else // new sip msg from the TU
          {
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
-               TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid, tu);
+               TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid);
                state->add(state->mId);
                state->processClientInvite(sip);
             }
             else if (sip->header(h_RequestLine).getMethod() == ACK)
             {
                //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(controller.StatelessIdCounter++));
-               TransactionState* state = new TransactionState(controller, Stateless, Calling, tid, tu);
+               TransactionState* state = new TransactionState(controller, Stateless, Calling, tid);
                state->add(state->mId);
                state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
                state->processStateless(sip);
@@ -312,7 +272,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip,481));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip,481));
                   delete sip;
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
@@ -327,7 +287,7 @@ TransactionState::process(TransactionController& controller)
                   // The CANCEL was received before the INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 200));
                   matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
 
                   delete matchingInvite;
@@ -353,8 +313,7 @@ TransactionState::process(TransactionController& controller)
             }
             else 
             {
-               TransactionState* state = new TransactionState(controller, ClientNonInvite, 
-                                                              Trying, tid, tu);
+               TransactionState* state = new TransactionState(controller, ClientNonInvite, Trying, tid);
                state->add(tid);
                state->processClientNonInvite(sip);
             }
@@ -370,9 +329,7 @@ TransactionState::process(TransactionController& controller)
          else
          {
             StackLog (<< "forwarding stateless response: " << sip->brief());
-            TransactionState* state = 
-               new TransactionState(controller, Stateless, Calling, 
-                                    Data(controller.StatelessIdCounter++), tu);
+            TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(controller.StatelessIdCounter++));
             state->add(state->mId);
             state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
             state->processStateless(sip);
@@ -1527,23 +1484,14 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 void
 TransactionState::sendToTU(TransactionMessage* msg) const
 {
-   TransactionState::sendToTU(mTransactionUser, mController, msg);
+   TransactionState::sendToTU(mController, msg);
 }
 
 void
-TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg) 
+TransactionState::sendToTU(TransactionController& controller, TransactionMessage* msg) 
 {
-   if (!tu)
-   {
-      DebugLog(<< "Send to default TU: " << *msg);
-   }
-   else
-   {
-      DebugLog (<< "Send to TU: " << *tu << " " << *msg);
-   }
-   
-   msg->setTransactionUser(tu);   
-   controller.mTuSelector.add(msg, TimeLimitFifo<Message>::InternalElement);
+   StackLog(<< "Send to TU: " << *msg);
+   controller.mTUFifo.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
 
 SipMessage*
@@ -1651,7 +1599,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
    if (mController.mRegisteredForTransactionTermination)
    {
       //StackLog (<< "Terminate client transaction " << tid);
-      sendToTU(new TransactionTerminated(tid, true, mTransactionUser));
+      sendToTU(new TransactionTerminated(tid, true));
    }
 }
 
@@ -1662,7 +1610,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
    if (mController.mRegisteredForTransactionTermination)
    {
       //StackLog (<< "Terminate server transaction " << tid);
-      sendToTU(new TransactionTerminated(tid, false, mTransactionUser));
+      sendToTU(new TransactionTerminated(tid, false));
    }
 }
 
@@ -1723,8 +1671,6 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    strm << " target=" << state.mResponseTarget;
-   if (state.mTransactionUser) strm << " tu=" << *state.mTransactionUser;
-   else strm << "default TU";
    strm << "]";
    return strm;
 }

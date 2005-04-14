@@ -42,7 +42,6 @@ getMethodType(const Data& name);
 MethodTypes
 getMethodType(const char* name, int len);
 
-// TODO -- !dcm! -- fix to return unknown method as a string
 const Data&
 getMethodName(MethodTypes t);
 

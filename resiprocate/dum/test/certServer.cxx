@@ -275,8 +275,8 @@ class PrivateKeySubscriptionHandler : public ServerSubscriptionHandler
 class CertServer : public OutOfDialogHandler,  public DialogUsageManager
 {
    public:
-      CertServer(const resip::NameAddr& me, SipStack& stack) : 
-         DialogUsageManager(stack),
+      CertServer(const resip::NameAddr& me) : 
+         DialogUsageManager(),
          mCertServer(getSecurity()),
          mPrivateKeyServer(getSecurity()),
          mCertUpdater(getSecurity()),
@@ -396,8 +396,7 @@ main (int argc, char** argv)
 #endif
 
    NameAddr domain(myUrl);
-   SipStack stack;
-   CertServer server(domain, stack);
+   CertServer server(domain);
    server.run();
    return 0;
 }

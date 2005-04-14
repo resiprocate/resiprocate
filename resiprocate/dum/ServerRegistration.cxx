@@ -4,9 +4,6 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/os/Logger.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -36,12 +33,10 @@ ServerRegistration::accept(SipMessage& ok)
 {
   ok.remove(h_Contacts);
 
-  InfoLog( << "accepted a registration " << mAor );
-  
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  RegistrationPersistenceManager::ContactPairList contacts;
-  RegistrationPersistenceManager::ContactPairList::iterator i;
+  RegistrationPersistenceManager::contact_list_t contacts;
+  RegistrationPersistenceManager::contact_list_t::iterator i;
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
@@ -67,16 +62,14 @@ ServerRegistration::accept(SipMessage& ok)
 void
 ServerRegistration::accept(int statusCode)
 {
-   SipMessage success;
-   mDum.makeResponse(success, mRequest, statusCode);
-   accept(success);
+  SipMessage success;
+  mDum.makeResponse(success, mRequest, statusCode);
+  accept(success);
 }
 
 void
 ServerRegistration::reject(int statusCode)
 {
-   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
-
   // First, we roll back the contact database to
   // the state it was before the registration request.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
@@ -94,18 +87,14 @@ ServerRegistration::reject(int statusCode)
 void 
 ServerRegistration::dispatch(const SipMessage& msg)
 {
-   DebugLog( << "got a registration" );
-   
-   assert(msg.isRequest());
-   ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
-   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+    assert(msg.isRequest());
+    ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
+    RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
 
     enum {ADD, REMOVE, REFRESH} operation = REFRESH;
 
     if (!handler || !database)
     {
-       DebugLog( << "No handler or DB - sending 405" );
-       
        SipMessage failure;
        mDum.makeResponse(failure, msg, 405);
        mDum.send(failure);

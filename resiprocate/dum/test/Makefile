@@ -3,12 +3,16 @@
 BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
+ifdef USE_POPT
+LDLIBS += -lpopt
+endif
+
 PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
+#TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
 
 ifeq ($(USE_SSL),true)
 TESTPROGRAMS += certServer.cxx

@@ -129,7 +129,7 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath=".\testStack.cxx">
+				RelativePath=".\testSpeed.cxx">
 			</File>
 		</Filter>
 		<Filter

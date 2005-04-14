@@ -113,7 +113,7 @@ ServerPublication::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
-      mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
       if (msg.getContents())
       {
          handler->onUpdate(getHandle(), mEtag, msg, 
@@ -131,7 +131,7 @@ ServerPublication::dispatch(const SipMessage& msg)
    }
    else
    {
-      mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
       handler->onInitial(getHandle(), mEtag, msg, 
                          mLastBody.mContents.get(), 
                          mLastBody.mAttributes.get(), 

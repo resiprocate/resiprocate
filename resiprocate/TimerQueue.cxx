@@ -9,7 +9,6 @@
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/TuSelector.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -32,6 +31,11 @@ DtlsTimerQueue::DtlsTimerQueue( Fifo<DtlsMessage>& fifo )
 }
 
 #endif
+
+TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo)
+   : mFifo(fifo)
+{
+}
 
 BaseTimerQueue::~BaseTimerQueue()
 {
@@ -99,7 +103,7 @@ DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
 #endif
 
 void
-BaseTimeLimitTimerQueue::add(const Timer& timer)
+TimeLimitTimerQueue::add(const Timer& timer)
 {
    assert(timer.getMessage());
    DebugLog(<< "Adding application timer: " << timer.getMessage()->brief());
@@ -119,7 +123,7 @@ BaseTimerQueue::empty() const
 }
 
 void
-BaseTimeLimitTimerQueue::process()
+TimeLimitTimerQueue::process()
 {
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
@@ -131,7 +135,7 @@ BaseTimeLimitTimerQueue::process()
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
          assert(i->getMessage());
-         addToFifo(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
+         mFifo.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
       }
       mTimers.erase(mTimers.begin(), end);
    }
@@ -154,25 +158,6 @@ TimerQueue::process()
       mTimers.erase(mTimers.begin(), end);
    }
 }
-
-TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo) : mFifo(fifo)
-{}
-
-void
-TimeLimitTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
-{
-   mFifo.add(msg, d);
-}
-
-TuSelectorTimerQueue::TuSelectorTimerQueue(TuSelector& sel) : mFifoSelector(sel)
-{}
-
-void
-TuSelectorTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
-{
-   mFifoSelector.add(msg, d);
-}
-   
 
 #ifdef USE_DTLS
 

@@ -9,6 +9,9 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
+#CXXFLAGS += -I/sw/include 
+#LDFLAGS  += -L/sw/lib
+
 SRC = \
 	os/HeapInstanceCounter.cxx \
 	\
@@ -138,16 +141,12 @@ SRC = \
 	TlsTransport.cxx \
 	TlsTransport.cxx \
 	TransactionController.cxx \
-	MessageFilterRule.cxx \
-	TransactionUser.cxx \
-	TransactionUserMessage.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
-	TuSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \

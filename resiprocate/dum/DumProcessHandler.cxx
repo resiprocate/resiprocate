@@ -27,7 +27,6 @@ DumProcessHandler::start(DialogUsageManager* dum)
 void
 DumProcessHandler::handleProcessNotification()
 {
-#if 0 // !dcm! this needs to be fixed in the new model
    //only works when there is exactly one thread causing notifications; could be
    //made thread safecancelled
    if (!mCurrentlyProcessing && !mStopped)
@@ -63,7 +62,6 @@ DumProcessHandler::handleProcessNotification()
       }
       mCurrentlyProcessing = false;
    }   
-#endif
 }
 
 void 
@@ -73,7 +71,6 @@ DumProcessHandler::handleTimeout(AsyncID timerID)
    mHaveActiveTimer = false;   
    handleProcessNotification();
 }
-
 
 void 
 DumProcessHandler::stop()

@@ -21,10 +21,6 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
    : TcpBaseTransport(fifo, portNum, version, pinterface )
 {
    mTuple.setType(transport());
-
-   InfoLog (<< "Creating TCP transport host=" << pinterface 
-            << " port=" << portNum
-            << " ipv4=" << bool(version==V4) );
 }
 
 TcpTransport::~TcpTransport()

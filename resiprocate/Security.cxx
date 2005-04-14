@@ -124,12 +124,6 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
 
 Security::Security(const Data& directory) : mPath(directory)
 {
-   // since the preloader won't work otherwise and VERY difficult to figure
-   // out. 
-   if ( mPath[mPath.size()-1] != Symbols::SLASH[0] )
-   {
-      mPath += Symbols::SLASH;
-   }
 }
 
 
@@ -148,6 +142,7 @@ Security::preload()
          Data fileName = mPath + name;
          
          DebugLog(<< "Trying to load file " << name );
+
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
@@ -589,11 +584,10 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       assert(0);
    }
 
-   //assert(0); // the code following this has no hope of working 
+   assert(0); // the code following this has no hope of working 
    
    X509* x = where->second;
-   unsigned char* buffer=0;
-   int len = i2d_X509(x, &buffer);
+   int len = i2d_X509(x, NULL);
 
    // !kh!
    // Although len == 0 is not an error, I am not sure what quite to do.
@@ -604,7 +598,8 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   return   Data(Data::Take, (char*)buffer, len);
+   char*    out = new char[len];
+  return   Data(Data::Take, out, len);
 }
 
 
@@ -967,12 +962,8 @@ BaseSecurity::BaseSecurity () :
    mRootCerts = X509_STORE_new();
    assert(mRootCerts);
 
-   // static char* cipher="RSA+SHA+AES+3DES";
-   // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
-   //static char* cipher="ALL";
-   //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
-   static char* cipher="TLSv1";
-     
+   static char* cipher="RSA+SHA+AES+3DES";
+
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);

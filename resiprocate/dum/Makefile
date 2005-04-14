@@ -15,7 +15,6 @@ SRC =   \
 	AppDialogSetFactory.cxx \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
-	UserAuthInfo.cxx \
 	BaseSubscription.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
@@ -33,7 +32,6 @@ SRC =   \
 	DialogUsage.cxx \
 	DialogUsageManager.cxx \
 	DumProcessHandler.cxx \
-	DumThread.cxx \
 	DumTimeout.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
