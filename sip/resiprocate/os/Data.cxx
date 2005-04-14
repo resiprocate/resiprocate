@@ -38,7 +38,7 @@ const bool Data::isCharHex[256] =
 int 
 hexpair2int(char high, char low)
 {
-    char val;
+    int val;
 
 	switch(high)
 	{
