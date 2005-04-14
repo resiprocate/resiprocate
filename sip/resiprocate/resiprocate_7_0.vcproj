@@ -100,7 +100,7 @@
 			OutputDirectory="SSL-Debug"
 			IntermediateDirectory="SSL-Debug"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -140,7 +140,7 @@
 			OutputDirectory="SSL-Release"
 			IntermediateDirectory="SSL-Release"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
