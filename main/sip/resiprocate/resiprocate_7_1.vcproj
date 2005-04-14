@@ -79,7 +79,7 @@
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				RuntimeTypeInfo="TRUE"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="0"/>
@@ -113,7 +113,7 @@
 			OutputDirectory="SSL-Debug"
 			IntermediateDirectory="SSL-Debug"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -159,7 +159,7 @@
 			OutputDirectory="SSL-Release"
 			IntermediateDirectory="SSL-Release"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
