@@ -141,33 +141,7 @@ main(int argc, char** argv)
    
    Proxy proxy(stack, requestProcessors, userDb);
    
-   proxy.addDomain(DnsUtil::getLocalHostName());
-   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
-
-   list< pair<Data,Data> > ips = DnsUtil::getInterfaces();
-   if ( ips.empty() )
-   {
-      ErrLog( << "No IP address found to run on - adding localhost" );
-      proxy.addDomain("127.0.0.1");
-      proxy.addDomain("127.0.0.1", 5060);
-      proxy.addDomain("localhost");
-      proxy.addDomain("localhost",5060);
-   }
-   for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
-   {
-      DebugLog( << "Adding domain for IP " << Inserter(*i)  );
-      proxy.addDomain(i->second);
-      proxy.addDomain(i->second, 5060);
-   }
-
-   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
-        i != args.mDomains.end(); ++i)
-   {
-      //InfoLog (<< "Adding domain " << i->host() << " " << i->port());
-      proxy.addDomain(i->host(), i->port());
-   }
-   
-   WebAdmin admin(userDb, regData, routeDb, security);
+    WebAdmin admin(userDb, regData, routeDb, security);
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();
@@ -221,6 +195,44 @@ main(int argc, char** argv)
       }
       dum->setMessageFilterRuleList(ruleList);
       dumThread = new DumThread(*dum);
+   }
+
+   // go add all the domains that this proxy is responsible for 
+   list< pair<Data,Data> > ips = DnsUtil::getInterfaces();
+   if ( ips.empty() )
+   {
+      ErrLog( << "No IP address found to run on" );
+   } 
+   if (true)
+   {
+      proxy.addDomain(DnsUtil::getLocalHostName());
+      proxy.addDomain("127.0.0.1");
+      proxy.addDomain("127.0.0.1");
+ 
+      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
+      {
+         proxy.addDomain(i->second);
+      }
+      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+           i != args.mDomains.end(); ++i)
+      {
+         proxy.addDomain(i->host());
+      }   
+   }
+   if (dum)
+   {
+      dum->addDomain(DnsUtil::getLocalHostName());
+      dum->addDomain("localhost"); 
+      dum->addDomain("localhost");
+      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
+      {
+         dum->addDomain(i->second);
+      }
+      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+           i != args.mDomains.end(); ++i)
+      {
+         dum->addDomain(i->host());
+      }
    }
 
    stack.registerTransactionUser(proxy);
