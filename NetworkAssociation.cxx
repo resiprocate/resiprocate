@@ -11,7 +11,7 @@ NetworkAssociation::update(const SipMessage& msg, int keepAliveInterval)
 {
    if (mDum && mDum->mKeepAliveManager.get())
    {
-      if (!(msg.getSource() == mTarget))
+      if (msg.getSource().getType() != 0 && !(msg.getSource() == mTarget))
       {
          mDum->mKeepAliveManager->remove(mTarget);
          mTarget = msg.getSource();
