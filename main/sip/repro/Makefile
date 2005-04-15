@@ -8,6 +8,8 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD POPT
 CODE_SUBDIRS = monkeys stateAgents
 TARGET_LIBRARY = librepro
 
+ifeq ($(USE_SSL), true)
+
 TESTPROGRAMS = \
 	repro.cxx \
 #	userAdmin.cxx 
@@ -37,12 +39,14 @@ SRC =   \
 	monkeys/LocationServer.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/RouteMonkey.cxx \
-	\
-	stateAgents/CertServer.cxx \
+
+SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/CertPublicationHandler.cxx \
 	stateAgents/CertSubscriptionHandler.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
+endif
+
 
 include $(BUILD)/Makefile.post
 

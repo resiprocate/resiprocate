@@ -45,7 +45,7 @@ AmIResponsible::handleRequest(RequestContext& context)
       {
          uri.port() = 0;
       }
-      if (!context.getProxy().isMyDomain(uri))
+      if (!context.getProxy().isMyDomain(uri.host()))
       {
          // if this request is not for a domain for which the proxy is responsible,
          // send to the Request URI
