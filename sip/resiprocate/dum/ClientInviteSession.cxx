@@ -969,7 +969,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
 
-      case OnUpdate:
+      case OnUpdateOffer:
          transition(UAC_ReceivedUpdateEarly);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;

@@ -526,6 +526,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;            
 
          case INFO:   
+         case UPDATE:
             if (dialog)
             {
                break;
