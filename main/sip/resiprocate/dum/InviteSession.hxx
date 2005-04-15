@@ -155,6 +155,7 @@ class InviteSession : public DialogUsage
          On200Cancel, // UAC
          OnCancelFailure, // UAC
          OnUpdate,
+         OnUpdateOffer,
          OnUpdateRejected,
          On491Update,
          On489Update,
@@ -191,6 +192,8 @@ class InviteSession : public DialogUsage
       void startRetransmit200Timer();
       void start491Timer();
 
+      void setSessionTimerHeaders(SipMessage& msg);
+      void sessionRefresh();
       void handleSessionTimerResponse(const SipMessage& msg);
       void handleSessionTimerRequest(SipMessage &response, const SipMessage& request);
 
