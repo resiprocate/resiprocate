@@ -205,7 +205,7 @@ RequestContext::removeTopRouteIfSelf()
 {
    if (    mOriginalRequest->exists(h_Routes)
            && !mOriginalRequest->header(h_Routes).empty()
-           &&  mProxy.isMyDomain(mOriginalRequest->header(h_Routes).front().uri()) 
+           &&  mProxy.isMyDomain(mOriginalRequest->header(h_Routes).front().uri().host()) 
       )
    {
       mOriginalRequest->header(h_Routes).pop_front();
