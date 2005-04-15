@@ -186,7 +186,7 @@ $(OBJ):
 	-@ $(TOOLS)/mkbuildlinks $(OBJ) $(ROOT)/.make_prefs
 
 
-ifeq ($(CXXFLAGS),$(shell cat $(OBJ)/cxxflags))
+ifeq ($(CXXFLAGS),$(shell test -f $(OBJ)/cxxflags && cat $(OBJ)/cxxflags))
 else
 .PHONY: $(OBJ)/cflags $(OBJ)/cxxflags
 
@@ -194,10 +194,10 @@ endif
 
 
 $(OBJ)/cflags:
-	echo '$(CFLAGS)' > $@
+	@echo '$(CFLAGS)' > $@
 
 $(OBJ)/cxxflags:
-	echo '$(CXXFLAGS)' > $@
+	@echo '$(CXXFLAGS)' > $@
 
 ifeq ($(OSTYPE),cygwin)
 OUTPUT_FLAG=-Fo
@@ -220,8 +220,8 @@ endif
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-	-@ /bin/rm -f $(patsubst $(BIN)/%,%,$@)
-	-@ ln -s $@ $(patsubst $(BIN)/%,%,$@)
+	-@ test -f $(patsubst $(BIN)/%,%,$@) && /bin/rm -f $(patsubst $(BIN)/%,%,$@)
+	-@ test -h $(patsubst $(BIN)/%,%,$@) || ln -s $@ $(patsubst $(BIN)/%,%,$@)
 
 # these rules build dependency files in the cases that need them.
 
@@ -272,15 +272,15 @@ endif
 
 ifdef TARGET_LIBRARY
 $(OBJ)/$(strip $(TARGET_LIBRARY)).a: $(OBJS) $(OTHERLIBS)
-	-@ /bin/rm $@
+	-@ test -f $@ && /bin/rm $@
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
 $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
-	-@ /bin/rm $@
+	-@ test -f $@ && /bin/rm $@
 	$(MKSHLIB) -o $@ $^
 	-@ mkdir -p $(ROOT)/lib.$(TARGET_NAME)
-	-@ ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
+	@ test -h $(ROOT)/lib.$(TARGET_NAME)/$(strip $(TARGET_LIBRARY)).so || ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
 endif
 
 -include $(DEPENDENCIES)
