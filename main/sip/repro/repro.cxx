@@ -40,13 +40,13 @@ static void
 addDomains(TransactionUser& tu, CommandLineParser& args)
 {
    tu.addDomain(DnsUtil::getLocalHostName());
-   list<Data> ips = DnsUtil::getLocalIpAddress();
+   list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    tu.addDomain("127.0.0.1");
    tu.addDomain("localhost");
-   for ( list<Data>::const_iterator i=ips.begin(); i!=ips.end(); i++)
+   for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      DebugLog( << "Adding domain for IP " << *i  );
-      tu.addDomain(*i);
+      DebugLog( << "Adding domain for IP " << i->second  );
+      tu.addDomain(i->second);
    }
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
