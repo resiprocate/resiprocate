@@ -1,8 +1,0 @@
-.dependlibs
-bin.debug.Darwin.ppc
-bin.debug.Linux.i686
-html
-obj.*
-bin.*
-.gdb_history
-Makefile.in

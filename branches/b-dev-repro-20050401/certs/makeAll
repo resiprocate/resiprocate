@@ -1,8 +1,0 @@
-#/bin/csh
-
-foreach nm ( ` cat hosts.txt ` )
-        ./makeCert $nm
-end
-
-tar cvfz allCerts.tgz *_cert.pem *_key.pem *.p12
-
