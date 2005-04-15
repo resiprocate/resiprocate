@@ -24,8 +24,10 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/RouteMonkey.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
-#include "repro/stateAgents/CertServer.hxx"
 
+#if defined(USE_SSL)
+#include "repro/stateAgents/CertServer.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
@@ -62,6 +64,7 @@ main(int argc, char** argv)
 
    Security security(args.mCertPath);
    SipStack stack(&security);
+
    try
    {
       if (args.mUseV4) InfoLog (<< "V4 enabled");
@@ -150,9 +153,9 @@ main(int argc, char** argv)
       
       if (!args.mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator();
-//TODO NEEDD TO FIX THIS 
-//         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         //TODO NEEDD TO FIX THIS 
+         //DigestAuthenticator* da = new DigestAuthenticator;
+         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
@@ -170,7 +173,10 @@ main(int argc, char** argv)
    
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
+
+#if defined(USE_SSL)
    CertServer* certServer = 0;
+#endif
 
    resip::MessageFilterRuleList ruleList;
    if (!args.mNoRegistrar || args.mCertServer)
@@ -196,6 +202,7 @@ main(int argc, char** argv)
    
    if (args.mCertServer)
    {
+#if defined(USE_SSL)
       certServer = new CertServer(*dum);
 
       // Install rules so that the registrar only gets REGISTERs
@@ -205,6 +212,7 @@ main(int argc, char** argv)
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
                                            methodList) );
+#endif
    }
 
    if (dum)
