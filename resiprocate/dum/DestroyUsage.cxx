@@ -96,7 +96,10 @@ DestroyUsage::destroy()
    }
    else
    {
-      delete mHandle.get();
+      if(mHandle.isValid())
+      {
+         delete mHandle.get();
+      }
    }
 }
 
