@@ -25,14 +25,36 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/RouteMonkey.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
-#include "repro/stateAgents/CertServer.hxx"
 
+#if defined(USE_SSL)
+#include "repro/stateAgents/CertServer.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace repro;
 using namespace resip;
 using namespace std;
+
+static void
+addDomains(TransactionUser& tu, CommandLineParser& args)
+{
+   tu.addDomain(DnsUtil::getLocalHostName());
+   list<Data> ips = DnsUtil::getLocalIpAddress();
+   tu.addDomain("127.0.0.1");
+   tu.addDomain("localhost");
+   for ( list<Data>::const_iterator i=ips.begin(); i!=ips.end(); i++)
+   {
+      DebugLog( << "Adding domain for IP " << *i  );
+      tu.addDomain(*i);
+   }
+   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+        i != args.mDomains.end(); ++i)
+   {
+      InfoLog (<< "Adding domain " << i->host() << " " << i->port());
+      tu.addDomain(i->host());
+   }
+}
 
 int
 main(int argc, char** argv)
@@ -43,6 +65,7 @@ main(int argc, char** argv)
 
    Security security(args.mCertPath);
    SipStack stack(&security);
+
    try
    {
       if (args.mUseV4) InfoLog (<< "V4 enabled");
@@ -131,17 +154,18 @@ main(int argc, char** argv)
       
       if (!args.mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator();
-//TODO NEEDD TO FIX THIS 
-//         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         //TODO NEEDD TO FIX THIS 
+         //DigestAuthenticator* da = new DigestAuthenticator;
+         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
    UserDb userDb;
    
    Proxy proxy(stack, requestProcessors, userDb);
+   addDomains(proxy, args);
    
-    WebAdmin admin(userDb, regData, routeDb, security);
+   WebAdmin admin(userDb, regData, routeDb, security);
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();
@@ -150,13 +174,17 @@ main(int argc, char** argv)
    
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
+
+#if defined(USE_SSL)
    CertServer* certServer = 0;
+#endif
 
    resip::MessageFilterRuleList ruleList;
    if (!args.mNoRegistrar || args.mCertServer)
    {
       dum = new DialogUsageManager(stack);
       dum->setMasterProfile(&profile);
+      addDomains(*dum, args);
    }
 
    if (!args.mNoRegistrar)
@@ -175,6 +203,7 @@ main(int argc, char** argv)
    
    if (args.mCertServer)
    {
+#if defined(USE_SSL)
       certServer = new CertServer(*dum);
 
       // Install rules so that the registrar only gets REGISTERs
@@ -184,6 +213,7 @@ main(int argc, char** argv)
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
                                            methodList) );
+#endif
    }
 
    if (dum)
@@ -203,37 +233,6 @@ main(int argc, char** argv)
    {
       ErrLog( << "No IP address found to run on" );
    } 
-   if (true)
-   {
-      proxy.addDomain(DnsUtil::getLocalHostName());
-      proxy.addDomain("127.0.0.1");
-      proxy.addDomain("127.0.0.1");
- 
-      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
-      {
-         proxy.addDomain(i->second);
-      }
-      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
-           i != args.mDomains.end(); ++i)
-      {
-         proxy.addDomain(i->host());
-      }   
-   }
-   if (dum)
-   {
-      dum->addDomain(DnsUtil::getLocalHostName());
-      dum->addDomain("localhost"); 
-      dum->addDomain("localhost");
-      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
-      {
-         dum->addDomain(i->second);
-      }
-      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
-           i != args.mDomains.end(); ++i)
-      {
-         dum->addDomain(i->host());
-      }
-   }
 
    stack.registerTransactionUser(proxy);
 

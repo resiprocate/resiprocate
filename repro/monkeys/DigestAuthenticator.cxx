@@ -186,7 +186,7 @@ DigestAuthenticator::getRealm(RequestContext &rc)
    }
 
    // (2) Check From domain
-   if (proxy.isMyDomain(sipMessage->header(h_From).uri()))
+   if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
    {
       return sipMessage->header(h_From).uri().host();
    }
