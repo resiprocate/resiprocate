@@ -201,7 +201,6 @@ InviteSession::dump(std::ostream& strm) const
    return strm;
 }
 
-
 void
 InviteSession::provideOffer(const SdpContents& offer)
 {
@@ -220,17 +219,7 @@ InviteSession::provideOffer(const SdpContents& offer)
             transition(SentReinvite);
             mDialog.makeRequest(mLastSessionModification, INVITE);
          }
-
-         if(mSessionInterval >= 90)  // If mSessionInterval is 0 then SessionTimers are considered disabled
-         {
-            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
-            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
-         }
-         else
-         {
-            mLastSessionModification.remove(h_SessionExpires);
-            mLastSessionModification.remove(h_MinSE);
-         }
+         setSessionTimerHeaders(mLastSessionModification);
 
          InfoLog (<< "Sending " << mLastSessionModification.brief());
          InviteSession::setSdp(mLastSessionModification, offer);
@@ -592,8 +581,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          if(mState == Connected)  // Note:  If not connected then we must be issueing a reinvite/update or receiving one - in either case the session timer stuff will get reset/renegotiated - thus just ignore this referesh
          {
-            // Note:  If UPDATE is supported then UPDATE request should probably not contain an SDP, since it is not changing - changes are required for this (and to the QueuedUpdate state)
-            provideOffer(*mCurrentLocalSdp);
+            sessionRefresh();
          }
       }
    }
@@ -632,7 +620,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          sendAck();
          break;
 
-      case OnUpdate:
+      case OnUpdateOffer:
          transition(ReceivedUpdate);
 
          //  !kh!
@@ -641,6 +629,17 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mLastSessionModification = msg;
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
+
+      case OnUpdate:
+      {
+         // !slg! no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
+         SipMessage response;
+         mLastSessionModification = msg;
+         mDialog.makeResponse(response, mLastSessionModification, 200);
+         handleSessionTimerRequest(response, mLastSessionModification);
+         send(response);
+         break;
+      }
 
       case OnUpdateRejected:
       case On200Update:
@@ -673,6 +672,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case OnInviteOffer:
       case OnInviteReliableOffer:
       case OnUpdate:
+      case OnUpdateOffer:
       {
          // glare
          SipMessage response;
@@ -690,20 +690,23 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
             handler->onAnswer(getSessionHandle(), msg, *sdp);
          }
-         else
+         else if(mProposedLocalSdp.get()) 
          {
+            // If we sent an offer in the Update Request and no answer is received
             handler->onIllegalNegotiation(getSessionHandle(), msg);
+            mProposedLocalSdp.release();
          }
          break;
 
       case On491Update:
-         transition(SentReinviteGlare);
+         transition(SentUpdateGlare);
          start491Timer();
          break;
 
       case OnUpdateRejected:
-         // !jf!
-         assert(0);
+         // !jf! - callback?
+         mProposedLocalSdp.release();
+         transition(Connected);
          break;
 
       case OnGeneralFailure:
@@ -731,6 +734,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case OnInviteOffer:
       case OnInviteReliableOffer:
       case OnUpdate:
+      case OnUpdateOffer:
       {
          SipMessage response;
          mDialog.makeResponse(response, msg, 491);
@@ -765,10 +769,11 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
+         mProposedLocalSdp.release();
          break;
 
       case On491Invite:
-         transition(SentUpdateGlare);
+         transition(SentReinviteGlare);
          start491Timer();
          break;
 
@@ -780,6 +785,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnInviteFailure:
          transition(Connected);
+         mProposedLocalSdp.release();
          handler->onOfferRejected(getSessionHandle(), msg);
          break;
 
@@ -1083,6 +1089,43 @@ InviteSession::start491Timer()
    int seq = mLastSessionModification.header(h_CSeq).sequence();
    int timer = Random::getRandom() % 4000;
    mDum.addTimerMs(DumTimeout::Glare, timer, getBaseHandle(), seq);
+}
+
+void 
+InviteSession::setSessionTimerHeaders(SipMessage &msg)
+{
+   if(mSessionInterval >= 90)  // If mSessionInterval is 0 then SessionTimers are considered disabled
+   {
+      msg.header(h_SessionExpires).value() = mSessionInterval;
+      msg.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+   }
+   else
+   {
+      msg.remove(h_SessionExpires);
+      msg.remove(h_MinSE);
+   }
+}
+
+void
+InviteSession::sessionRefresh()
+{
+   if (updateMethodSupported())
+   {
+      transition(SentUpdate);
+      mDialog.makeRequest(mLastSessionModification, UPDATE);
+      mLastSessionModification.releaseContents();  // Don't send SDP
+   }
+   else
+   {
+      transition(SentReinvite);
+      mDialog.makeRequest(mLastSessionModification, INVITE);
+      InviteSession::setSdp(mLastSessionModification, *mCurrentLocalSdp);
+      mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp);
+   }
+   setSessionTimerHeaders(mLastSessionModification);
+
+   InfoLog (<< "Sending " << mLastSessionModification.brief());
+   mDialog.send(mLastSessionModification);
 }
 
 void
@@ -1545,7 +1588,14 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
    else if (method == UPDATE && code == 0)
    {
-      return OnUpdate;
+      if (sdp)
+      {
+          return OnUpdateOffer;
+      }
+      else
+      {
+          return OnUpdate;
+      }
    }
    else if (method == UPDATE && code / 200 == 1)
    {
