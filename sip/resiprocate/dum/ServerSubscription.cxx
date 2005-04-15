@@ -136,7 +136,6 @@ ServerSubscription::send(SipMessage& msg)
    else
    {
       mDum.send(msg);
-      msg.releaseContents();
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -244,7 +243,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
       }
    }
    else
-   {
+   {     
+      //.dcm. - will need to change if retry-afters are reaching here
+      mLastNotify.releaseContents();
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 300)
       { 
