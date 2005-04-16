@@ -21,10 +21,10 @@ class HandleManager
       virtual void shutdownWhenEmpty();
       //subclasses(for now DUM) overload this method to handle shutdown
    protected:
-      virtual void shutdown();      
+      virtual void onAllHandlesDestroyed()=0;      
       virtual void dumpHandles() const;
       
-   private:
+      //private:
       friend class Handled;
       
       Handled::Id create(Handled* handled);

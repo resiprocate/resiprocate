@@ -2,10 +2,11 @@
 
 using namespace resip;
 
-TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* tu) :
-   mType(type),
-   mTU(tu)
+TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) :
+   mType(type)
 {
+   tu = ptu;
+   assert(tu);
 }
 
 Data 

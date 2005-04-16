@@ -32,6 +32,7 @@
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/DtlsTransport.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -71,6 +72,7 @@ SipStack::SipStack(Security* pSecurity,
 
 SipStack::~SipStack()
 {
+   DebugLog (<< "SipStack::~SipStack()");
 #ifdef USE_SSL
    delete mSecurity;
 #endif
@@ -414,8 +416,9 @@ SipStack::process(FdSet& fdset)
       RESIP_STATISTICS(mStatsManager.process());
    }
    mTransactionController.process(fdset);
-
-   Lock lock(mAppTimerMutex);
+   mTuSelector.process();
+   
+   Lock lock(mAppTimerMutex); 
    mAppTimers.process();   
 }
 
@@ -456,6 +459,18 @@ void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelector.registerTransactionUser(tu);
+}
+
+void 
+SipStack::requestTransactionUserShutdown(TransactionUser& tu)
+{
+   mTuSelector.requestTransactionUserShutdown(tu);
+}
+
+void 
+SipStack::unregisterTransactionUser(TransactionUser& tu)
+{
+   mTuSelector.unregisterTransactionUser(tu);
 }
 
 std::ostream& 
