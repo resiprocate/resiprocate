@@ -32,12 +32,12 @@ repro::RequestProcessor::processor_action_t
 DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << rc);
-
+   
    Message *message = rc.getCurrentEvent();
-
+   
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
-
+   
    if (sipMessage)
    {
       if (!sipMessage->exists(h_ProxyAuthorizations))
@@ -54,9 +54,9 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
    {
       // Handle response from user authentication database
       sipMessage = &rc.getOriginalRequest();
-      Data a1 = userAuthInfo->getA1();
-      Data realm = userAuthInfo->getRealm();
-      Data user = userAuthInfo->getUser();
+      const Data& a1 = userAuthInfo->getA1();
+      const Data& realm = userAuthInfo->getRealm();
+      const Data& user = userAuthInfo->getUser();
       InfoLog (<< "Received user auth info for " << user << " at realm " << realm);
 
       pair<Helper::AuthResult,Data> result =

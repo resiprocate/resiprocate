@@ -56,7 +56,8 @@ UserAbstractDb::getUserAuthInfo( const Data& key ) const
    }
    
    UserRecord rec = decodeUserRecord( record );
-
+   InfoLog (<< "getUserAuthInfo A1[" << key << "] = " << rec.passwordHash);
+   
    return rec.passwordHash;
 }
 
@@ -77,6 +78,7 @@ UserAbstractDb::addUser( const Data& username,
       << realm
       << Symbols::COLON
       << password;
+   a1.flush();
 
    UserAbstractDb::UserRecord rec;
    rec.version = 2;

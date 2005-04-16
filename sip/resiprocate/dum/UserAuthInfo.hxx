@@ -28,11 +28,10 @@ class UserAuthInfo : public resip::ApplicationMessage
       virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
-      resip::Data mTransactionId;
-      resip::Data mA1;
-      resip::Data mRealm;
       resip::Data mUser;
-      
+      resip::Data mRealm;
+      resip::Data mA1;
+      resip::Data mTransactionId;
 };
 
 std::ostream& 
