@@ -13,7 +13,8 @@ class StackThread : public ThreadIf
 {
    public:
       StackThread(SipStack& stack);
-
+      virtual ~StackThread();
+      
       virtual void thread();
 
    protected:

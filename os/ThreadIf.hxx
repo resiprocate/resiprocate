@@ -48,7 +48,7 @@ class ThreadIf
       virtual void run();
 
       // joins to the thread running thread()
-      virtual void join();
+      void join();
 
       // request the thread running thread() to return, by setting  mShutdown
       void shutdown();
