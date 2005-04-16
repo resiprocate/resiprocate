@@ -87,16 +87,6 @@ TransactionState::process(TransactionController& controller)
 {
    TransactionMessage* message = controller.mStateMacFifo.getNext();
    {
-      TransactionUserMessage* tuser = dynamic_cast<TransactionUserMessage*>(message);
-      if (tuser)
-      {
-         controller.mTuSelector.process(tuser);
-         delete tuser;
-         return;
-      }
-   }
-   
-   {
       KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
       if (keepAlive)
       {
@@ -1723,8 +1713,8 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    strm << " target=" << state.mResponseTarget;
-   if (state.mTransactionUser) strm << " tu=" << *state.mTransactionUser;
-   else strm << "default TU";
+   //if (state.mTransactionUser) strm << " tu=" << *state.mTransactionUser;
+   //else strm << "default TU";
    strm << "]";
    return strm;
 }

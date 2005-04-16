@@ -15,33 +15,62 @@ TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
 {
 }
 
-void
-TuSelector::process(TransactionUserMessage* msg)
+TuSelector::~TuSelector()
 {
-   switch (msg->type() )
+   assert(mTuList.empty());
+}
+
+void
+TuSelector::process()
+{
+   if (mShutdownFifo.messageAvailable())
    {
-      case TransactionUserMessage::RequestShutdown:
-         markShuttingDown(msg->tu);
-         break;
-      case TransactionUserMessage::RemoveTransactionUser:
-         remove(msg->tu);
-         break;
-      default:
-         assert(0);
-         break;
+      TransactionUserMessage* msg = mShutdownFifo.getNext();
+      
+      switch (msg->type() )
+      {
+         case TransactionUserMessage::RequestShutdown:
+            InfoLog (<< "TransactionUserMessage::RequestShutdown " << *(msg->tu));
+            markShuttingDown(msg->tu);
+            break;
+         case TransactionUserMessage::RemoveTransactionUser:
+            InfoLog (<< "TransactionUserMessage::RemoveTransactionUser " << *(msg->tu));
+            remove(msg->tu);
+            break;
+         default:
+            assert(0);
+            break;
+      }
    }
 }
 
 void
 TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
-   if (msg->hasTransactionUser() && exists(msg->getTransactionUser()))
+   if (msg->hasTransactionUser())
    {
-      msg->getTransactionUser()->postToTransactionUser(msg, usage);
+      if (exists(msg->getTransactionUser()))
+      {
+         msg->getTransactionUser()->postToTransactionUser(msg, usage);
+      }
+      else
+      {
+         delete msg;
+      }
    }
    else
    {
-      mFallBackFifo.add(msg, usage);
+      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg);
+      if (stats)
+      {
+         InfoLog(<< "Stats message " );
+         stats->loadOut(mStatsPayload);
+         stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
+      }
+      else
+      {
+         mFallBackFifo.add(msg, usage);
+      }
    }
 }
 
@@ -91,6 +120,20 @@ TuSelector::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelectorMode = true;
    mTuList.push_back(Item(&tu));
+}
+
+void
+TuSelector::requestTransactionUserShutdown(TransactionUser& tu)
+{
+   TransactionUserMessage* msg = new TransactionUserMessage(TransactionUserMessage::RequestShutdown, &tu);
+   mShutdownFifo.add(msg);
+}
+
+void
+TuSelector::unregisterTransactionUser(TransactionUser& tu)
+{
+   TransactionUserMessage* msg = new TransactionUserMessage(TransactionUserMessage::RemoveTransactionUser, &tu);
+   mShutdownFifo.add(msg);
 }
 
 TransactionUser* 

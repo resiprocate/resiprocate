@@ -6,7 +6,8 @@
 
 using namespace resip;
 
-TransactionUser::TransactionUser() : mFifo(0, 0)
+TransactionUser::TransactionUser() 
+   : mFifo(0, 0)
 {
   // This creates a default message filter rule, which
   // handles all sip: and sips: requests.
@@ -14,10 +15,10 @@ TransactionUser::TransactionUser() : mFifo(0, 0)
 }
 
 TransactionUser::TransactionUser(MessageFilterRuleList &mfrl) 
-  : mFifo(0, 0), mRuleList(mfrl)
+  : mFifo(0, 0), 
+    mRuleList(mfrl)
 {
 }
-
 
 TransactionUser::~TransactionUser()
 {
@@ -68,47 +69,15 @@ TransactionUser::isForMe(const SipMessage& msg) const
 }
 
 bool 
-TransactionUser::isMyDomain(const Uri& uri) const
-{
-   for (DomainList::const_iterator it = mDomainList.begin(); 
-        it != mDomainList.end(); it++)
-   {
-      if(uri.host() == it->host() && uri.port() == it->port())
-      {
-         return true;
-      }
-   }
-   return false;
-}
-
-bool 
 TransactionUser::isMyDomain(const Data& domain) const
 {
-   for (DomainList::const_iterator it = mDomainList.begin(); 
-        it != mDomainList.end(); it++)
-   {
-      if(domain == it->host())
-      {
-         return true;
-      }
-   }
-   return false;
+   return mDomainList.count(domain);
 }
 
 void TransactionUser::addDomain(const Data& domain)
 {
-   Uri u;
-   u.host() = domain;
-   mDomainList.push_back(u);
+   mDomainList.insert(domain);
 }
-
-void TransactionUser::addDomain(const Data& domain, int port)
-{
-   Uri u;
-   u.host() = domain;
-   u.port() = port;
-   mDomainList.push_back(u);
-} 
 
 std::ostream& 
 TransactionUser::encode(std::ostream& strm) const
