@@ -5,6 +5,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
@@ -144,22 +145,17 @@ DialogUsageManager::getHostAddress()
 }
 
 void
-DialogUsageManager::shutdown()
+DialogUsageManager::onAllHandlesDestroyed()
 {
    if (mDumShutdownHandler)
    {
       switch (mShutdownState)
       {
          case ShutdownRequested:
-            //assert(mHandleMap.empty());
-            mShutdownState = ShuttingDownStack;
-            InfoLog (<< "shutdown SipStack");
-            mStack.shutdown();
-            break;
-         case ShuttingDownStack:
-            InfoLog (<< "Finished dum shutdown");
-            mShutdownState = Shutdown;
-            mDumShutdownHandler->onDumCanBeDeleted();
+            InfoLog (<< "DialogUsageManager::onAllHandlesDestroyed: removing TU");
+            assert(mHandleMap.empty());
+            mShutdownState = RemovingTransactionUser;
+            mStack.unregisterTransactionUser(*this);
             break;
          default:
             break;
@@ -172,9 +168,10 @@ void
 DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
    InfoLog (<< "shutdown giveup=" << giveUpSeconds << " dialogSets=" << mDialogSetMap.size());
-
+   
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
+   mStack.requestTransactionUserShutdown(*this);
    shutdownWhenEmpty();
 }
 
@@ -197,7 +194,7 @@ DialogUsageManager::forceShutdown(DumShutdownHandler* h)
    mDumShutdownHandler = h;
    //HandleManager::shutdown();  // clear out usages
    mShutdownState = ShutdownRequested;
-   DialogUsageManager::shutdown();
+   DialogUsageManager::onAllHandlesDestroyed();
 }
 
 void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
@@ -679,7 +676,7 @@ DialogUsageManager::end(DialogSetId setid)
 void
 DialogUsageManager::destroy(const BaseUsage* usage)
 {
-   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   if (mShutdownState != Destroying)
    {
       post(new DestroyUsage(usage->mHandle));
    }
@@ -692,7 +689,7 @@ DialogUsageManager::destroy(const BaseUsage* usage)
 void
 DialogUsageManager::destroy(DialogSet* dset)
 {
-   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   if (mShutdownState != Destroying)
    {
       post(new DestroyUsage(dset));
    }
@@ -705,7 +702,7 @@ DialogUsageManager::destroy(DialogSet* dset)
 void
 DialogUsageManager::destroy(Dialog* d)
 {
-   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   if (mShutdownState != Destroying)
    {
       post(new DestroyUsage(d));
    }
@@ -787,10 +784,10 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
+// !jf! When should this function return false?
 bool
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
-   //!dcm! -- shutdown stuff probably completely wrong
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
@@ -857,7 +854,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             {
                if ( mServerAuthManager->handle(msg) )
                {
-                  InfoLog(<< "ServerAuth ate message " << msg->brief() );
+                  InfoLog(<< "ServerAuth ate message");
                   return true;
                }
             }
@@ -877,6 +874,20 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             {
                processResponse(*sipMsg);
             }
+         }
+         return true;
+      }
+
+      TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
+      if (tuMsg)
+      {
+         InfoLog (<< "TU unregistered ");
+         assert(mShutdownState == RemovingTransactionUser);
+         assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
+         mShutdownState = Shutdown;
+         if (mDumShutdownHandler)
+         {
+            mDumShutdownHandler->onDumCanBeDeleted();
          }
          return true;
       }
@@ -911,14 +922,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             mKeepAliveManager->process(*keepAliveMsg);
          }
          return true;
-      }
-
-      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
-      if (stats)
-      {
-         InfoLog(<< "Stats message " );
-         stats->loadOut(mStatsPayload);
-         stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
       }
 
       return true;

@@ -40,7 +40,7 @@ void HandleManager::shutdownWhenEmpty()
    mShuttingDown = true;
    if (mHandleMap.empty())
    {
-      shutdown();      
+      onAllHandlesDestroyed();      
    }
    else
    {
@@ -54,8 +54,9 @@ void HandleManager::shutdownWhenEmpty()
    }
 }
 
+#if 0
 // !jf! this will leak if there are active usages
-void HandleManager::shutdown()
+void HandleManager::onAllHandlesDestroyed()
 {
    WarningLog(<< "Forcing shutdown " << mHandleMap.size() << " active usages");
    for (HandleMap::const_iterator i = mHandleMap.begin();
@@ -65,6 +66,7 @@ void HandleManager::shutdown()
    }
    mHandleMap.clear();
 }
+#endif
 
 void
 HandleManager::remove(Handled::Id id)
@@ -76,7 +78,7 @@ HandleManager::remove(Handled::Id id)
    {
       if(mHandleMap.empty())
       {
-         shutdown();      
+         onAllHandlesDestroyed();      
       }
       else
       {
