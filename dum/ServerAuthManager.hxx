@@ -16,12 +16,27 @@ class DialogUsageManager;
 class ServerAuthManager
 {
    public:
+      typedef enum Result
+      {
+         //Authorized,
+         RequestedCredentials,
+         Challenged,
+         Skipped,
+         Rejected
+      };
+      
       ServerAuthManager(DialogUsageManager& dum);
       virtual ~ServerAuthManager();
       
-      // return true if request is authorized
-      bool handle(std::auto_ptr<Message>& msg);
-      bool handleUserAuthInfo(std::auto_ptr<Message>& msg);
+      // can return Authorized, Rejected or Skipped
+      //Result handleUserAuthInfo(Message* msg);
+
+      // returns the SipMessage that was authorized if succeeded or returns 0 if
+      // rejected. 
+      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
+
+      // can return Challenged, RequestedCredentials, Rejected, Skipped
+      Result handle(const SipMessage& msg);
       
    protected:
       // this call back should async cause a post of UserAuthInfo
