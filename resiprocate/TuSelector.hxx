@@ -2,6 +2,7 @@
 #define RESIP_TuSelector_HXX 
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 
 namespace resip
@@ -14,6 +15,7 @@ class TuSelector
 {
    public:
       TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;      
@@ -22,7 +24,9 @@ class TuSelector
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return mTuSelectorMode; }
       void registerTransactionUser(TransactionUser&);
-      void process(TransactionUserMessage* msg);
+      void requestTransactionUserShutdown(TransactionUser&);
+      void unregisterTransactionUser(TransactionUser&);
+      void process();
       
    private:
       void remove(TransactionUser* tu);
@@ -41,7 +45,9 @@ class TuSelector
       typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
+      StatisticsMessage::Payload mStatsPayload;
 };
 }
 

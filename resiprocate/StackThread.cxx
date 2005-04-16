@@ -11,6 +11,11 @@ StackThread::StackThread(SipStack& stack)
    : mStack(stack)
 {}
 
+StackThread::~StackThread()
+{
+   //InfoLog (<< "StackThread::~StackThread()");
+}
+
 void
 StackThread::thread()
 {
@@ -35,6 +40,7 @@ StackThread::thread()
          InfoLog (<< "Unhandled exception: " << e);
       }
    }
+   WarningLog (<< "Shutting down stack thread");
 }
 
 void
