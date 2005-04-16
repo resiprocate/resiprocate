@@ -20,30 +20,27 @@ ServerAuthManager::~ServerAuthManager()
 {
 }
 
-bool 
-ServerAuthManager::handleUserAuthInfo(std::auto_ptr<Message>& msg)
+SipMessage*
+ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 {
-   InfoLog( << "Checking for auth result" );
-
-   std::auto_ptr<UserAuthInfo> userAuth(dynamic_cast<UserAuthInfo*>(msg.get()));
-   
-   if (!userAuth.get())
-   {
-      return false;
-   }
+   assert(userAuth);
 
    MessageMap::iterator it = mMessages.find(userAuth->getTransactionId());
    assert(it != mMessages.end());
    SipMessage* requestWithAuth = it->second;
    mMessages.erase(it);
+
+   InfoLog( << "Checking for auth result in realm=" << userAuth->getRealm() 
+            << " A1=" << userAuth->getA1());
+         
    if (userAuth->getA1().empty())
    {
       InfoLog (<< "Account does not exist " << userAuth->getUser() << " in " << userAuth->getRealm());
       SipMessage response;
-      Helper::makeResponse(*requestWithAuth, 404, "Account does not exist.");
+      Helper::makeResponse(response, *requestWithAuth, 404, "Account does not exist.");
       mDum.send(response);
       delete requestWithAuth;
-      return true;
+      return 0;
    }
    else
    {
@@ -54,78 +51,78 @@ ServerAuthManager::handleUserAuthInfo(std::auto_ptr<Message>& msg)
                                              userAuth->getRealm(),
                                              userAuth->getA1(),
                                              3000);
-      
       if (resPair.first == Helper::Authenticated)
       {
-         InfoLog (<< "Retrieved stored message with challenge and passed on to dum");
-         msg = std::auto_ptr<Message>(requestWithAuth);
-         return false;
+         InfoLog (<< "Authorized request for " << userAuth->getRealm());
+         return requestWithAuth;
       }
       else
       {
          InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
 
          SipMessage response;
-         Helper::makeResponse(*requestWithAuth, 403, "Invalid password provided");
+         Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
          mDum.send(response);
          delete requestWithAuth;
-         return true;
+         return 0;
       }
    }
 }
       
 // return true if request has been consumed 
-bool 
-ServerAuthManager::handle(std::auto_ptr<Message>& msg)
+ServerAuthManager::Result
+ServerAuthManager::handle(const SipMessage& sipMsg)
 {
    //InfoLog( << "trying to do auth" );
-
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-   assert(sipMsg);
-   
-   if (sipMsg->isResponse())
+   if (sipMsg.isRequest())
    {
-      return false;
-   }
-
-   if (!sipMsg->exists(h_ProxyAuthorizations))
-   {
-      //assume TransactionUser has matched/repaired a realm
-      SipMessage* challenge = 
-         Helper::makeProxyChallenge(*sipMsg, 
-                                    sipMsg->header(h_RequestLine).uri().host(),
-                                    true,
-                                    false);
-      mDum.send(*challenge);
-      delete challenge;
-      return true;
-   }
- 
-   try
-   {
-      for(Auths::iterator it = sipMsg->header(h_ProxyAuthorizations).begin();
-          it  != sipMsg->header(h_ProxyAuthorizations).end(); it++)
+      if (!sipMsg.exists(h_ProxyAuthorizations))
       {
-         if (mDum.isMyDomain(it->param(p_realm)))
-         {
-            requestCredential(it->param(p_username),
-                              it->param(p_realm), 
-                              sipMsg->getTransactionId());
-            mMessages[sipMsg->getTransactionId()] = sipMsg;
-            msg.release();
-            return true;
-         }
+         //assume TransactionUser has matched/repaired a realm
+         SipMessage* challenge = Helper::makeProxyChallenge(sipMsg, 
+                                                            sipMsg.header(h_RequestLine).uri().host(),
+                                                            true,
+                                                            false);
+         InfoLog (<< "Sending challenge to " << sipMsg.brief());
+         mDum.send(*challenge);
+         delete challenge;
+         return Challenged;
       }
-      return false;
+ 
+      try
+      {
+         for(Auths::const_iterator it = sipMsg.header(h_ProxyAuthorizations).begin();
+             it  != sipMsg.header(h_ProxyAuthorizations).end(); it++)
+         {
+            if (mDum.isMyDomain(it->param(p_realm)))
+            {
+               InfoLog (<< "Requesting credential for " 
+                        << it->param(p_username) << " @ " << it->param(p_realm));
+               
+               requestCredential(it->param(p_username),
+                                 it->param(p_realm), 
+                                 sipMsg.getTransactionId());
+               mMessages[sipMsg.getTransactionId()] = static_cast<SipMessage*>(sipMsg.clone());
+               return RequestedCredentials;
+            }
+         }
+
+         InfoLog (<< "Didn't find matching realm ");
+         SipMessage response;
+         Helper::makeResponse(response, sipMsg, 404, "Account does not exist");
+         mDum.send(response);
+         return Rejected;
+      }
+      catch(BaseException& e)
+      {
+         InfoLog (<< "Invalid auth header provided " << e);
+         SipMessage response;
+         Helper::makeResponse(response, sipMsg, 400, "Invalid auth header");
+         mDum.send(response);
+         return Rejected;
+      }
    }
-   catch(BaseException& e)
-   {
-      InfoLog (<< "Invalid auth header provided " << e);
-      SipMessage response;
-      Helper::makeResponse(*sipMsg, 400, "Invalid auth header");
-      mDum.send(response);
-      return true;
-   }
+   return Skipped;
 }
 
 
