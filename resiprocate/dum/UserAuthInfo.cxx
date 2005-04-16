@@ -11,12 +11,14 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user, 
+UserAuthInfo::UserAuthInfo(const Data& user, 
+                           const Data& realm, 
+                           const Data& a1, 
                            const Data& transactionId ):
-   mTransactionId(transactionId),
-   mA1(a1),
+   mUser(user),
    mRealm(realm),
-   mUser(user)
+   mA1(a1),
+   mTransactionId(transactionId)
 {
 }
 
@@ -55,10 +57,11 @@ UserAuthInfo::getTransactionId() const
 Data 
 UserAuthInfo::brief() const
 {  
-   return Data("UserAuthInto: ") 
-      + mUser + Data(" ")  
-      + mRealm + Data(" ")  
-      + mA1;
+   Data buffer;
+   DataStream strm(buffer);
+   strm << "UserAuthInfo " << mUser << " @ " << mRealm << " A1=" << mA1;
+   strm.flush();
+   return buffer;
 }
 
 resip::Message* 
@@ -77,7 +80,7 @@ UserAuthInfo::encode(std::ostream& strm) const
 
 
 std::ostream& 
-operator<<(std::ostream& strm, const UserAuthInfo& msg)
+resip::operator<<(std::ostream& strm, const UserAuthInfo& msg)
 {
    return msg.encode(strm);
 }
