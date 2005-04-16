@@ -39,6 +39,7 @@
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -794,12 +795,23 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       return false;
    }
 
+   bool authorized = false;
    if (mServerAuthManager.get())
    {
-      if ( mServerAuthManager->handleUserAuthInfo(msg) )
+      UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg.get());
+      if (userAuth)
       {
-         InfoLog(<< "ServerAuth rejected/didn't find secret " << msg->brief() );
-         return true;
+         Message* result = mServerAuthManager->handleUserAuthInfo(userAuth);
+         if (result)
+         {
+            authorized = true;
+            msg = std::auto_ptr<Message>(result);
+         }
+         else
+         {
+            InfoLog(<< "ServerAuth rejected request " << *userAuth);
+            return true;
+         }
       }
    }
 
@@ -850,12 +862,21 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                }
             }
 
-            if (mServerAuthManager.get())
+            if (mServerAuthManager.get() && !authorized)
             {
-               if ( mServerAuthManager->handle(msg) )
+               switch ( mServerAuthManager->handle(*sipMsg) )
                {
-                  InfoLog(<< "ServerAuth ate message");
-                  return true;
+                  case ServerAuthManager::Challenged:
+                     InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
+                     return true;
+                  case ServerAuthManager::RequestedCredentials:
+                     InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
+                     return true;
+                  case ServerAuthManager::Rejected:
+                     InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
+                     return true;
+                  default:
+                     break;
                }
             }
       
