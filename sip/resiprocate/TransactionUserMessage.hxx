@@ -18,18 +18,17 @@ class TransactionUserMessage : public TransactionMessage
 
       TransactionUserMessage(Type type, TransactionUser* tu);
       Type type() const { return mType; }
-      const TransactionUser* getTransactionUser() const { return mTU; }
+      const TransactionUser* getTransactionUser() const { return tu; }
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const; 
       
       virtual Data brief() const;
-      virtual Message* clone() const { return new TransactionUserMessage(mType, mTU); }
+      virtual Message* clone() const { return new TransactionUserMessage(mType, tu); }
       virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
       Type mType;
-      TransactionUser* mTU;
 };
  
 }

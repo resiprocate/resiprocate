@@ -224,7 +224,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
    protected:
-      virtual void shutdown();      
+      virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
       virtual const Data& name() const;
       bool internalProcess(std::auto_ptr<Message> msg);
@@ -349,10 +349,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef enum 
       {
          Running,
-         ShutdownRequested,
-         ShuttingDownStack,
-         Shutdown,
-         Destroying
+         ShutdownRequested, // while ending usages
+         RemovingTransactionUser, // while removing TU from stack
+         Shutdown,  // after TU has been removed from stack
+         Destroying // while calling destructor
       } ShutdownState;
       ShutdownState mShutdownState;
 

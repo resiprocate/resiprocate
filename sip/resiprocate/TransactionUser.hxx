@@ -2,7 +2,7 @@
 #define RESIP_TU_HXX 
 
 #include <iosfwd>
-#include <vector>
+#include <set>
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
@@ -17,11 +17,8 @@ class TransactionUser
 {
    public:
       void post(Message *);
-      bool isMyDomain(const Uri& uri) const;
       bool isMyDomain(const Data& domain) const;
-
       void addDomain(const Data& domain);
-      void addDomain(const Data& domain, int port);      
 
       virtual const Data& name() const=0;
       virtual std::ostream& encode(std::ostream& strm) const;
@@ -37,7 +34,7 @@ class TransactionUser
       TimeLimitFifo<Message> mFifo;
 
    private:
-      typedef std::vector<Uri> DomainList;
+      typedef std::set<Data> DomainList;
       DomainList mDomainList;
       
       void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
