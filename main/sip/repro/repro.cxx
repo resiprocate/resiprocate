@@ -165,7 +165,7 @@ main(int argc, char** argv)
    Proxy proxy(stack, requestProcessors, userDb);
    addDomains(proxy, args);
    
-   WebAdmin admin(userDb, regData, routeDb, security);
+   WebAdmin admin(userDb, regData, routeDb, security, args.mNoWebChallenge );
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();

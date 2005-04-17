@@ -27,6 +27,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* domains = 0;
    char* certPath = "~/.sipCerts";
    int noChallenge = false;
+   int noWebChallenge = false;
    int noRegistrar = false;
    int certServer = false;
    char* reqChainName = "default";
@@ -43,6 +44,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-v6",   0,   POPT_ARG_NONE, &disableV6, 0, "disable IPV6", 0},
       {"disable-v4",   0,   POPT_ARG_NONE, &disableV4, 0, "disable IPV4", 0},
       {"disable-auth",  0,   POPT_ARG_NONE, &noChallenge, 0, "disable DIGEST challenges", 0},
+      {"disable-web-auth",  0,   POPT_ARG_NONE, &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",  0,   POPT_ARG_NONE, &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server",  0,   POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
       {"domains",     'd',  POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
@@ -54,6 +56,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+#endif
+
+#if 0 // !cj! stuff in ther does to work TODO 
+   if ( argc > 1 )
+   {
+      ErrLog( << "Bad comment line: use --help to get more information" );
+      exit(1);
+   }
 #endif
 
    mLogType = logType;
@@ -68,6 +78,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mDomains = toUriVector(domains, "domains"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge;
+   mNoWebChallenge = noWebChallenge;
    mNoRegistrar = noRegistrar;
    mCertServer = certServer;
    mRequestProcessorChainName=reqChainName;
