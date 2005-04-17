@@ -86,25 +86,61 @@ HttpConnection::process(FdSet& fdset)
 
 
 void 
-HttpConnection::setPage(const Data& ppage)
+HttpConnection::setPage(const Data& pPage,int response)
 {
-   Data page(ppage);
-   if ( page.empty() )
-   {
-      mTxBuffer += "HTTP/1.0 301 Moved Permanently"; mTxBuffer += Symbols::CRLF;
-      mTxBuffer += "Location: http:/index.html"; mTxBuffer += Symbols::CRLF;
+   Data page(pPage);
 
-      page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-              "<html><head>"
-              "<title>301 Moved Permanently</title>"
-              "</head><body>"
-              "<h1>Moved</h1>"
-              "</body></html>" );
-      
-   }
-   else
+   switch (response)
    {
-      mTxBuffer += "HTTP/1.0 200 OK" ; mTxBuffer += Symbols::CRLF;
+      case 401:
+      {  
+         mTxBuffer += "HTTP/1.0 401 Unauthorized"; mTxBuffer += Symbols::CRLF;
+         
+         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+                 "<html><head>"
+                 "<title>301 Unauthorized</title>"
+                 "</head><body>"
+                 "<h1>Unauthorized</h1>"
+                 "</body></html>" );
+      }
+      break;
+      
+      case 301:
+      {
+         mTxBuffer += "HTTP/1.0 301 Moved Permanently"; mTxBuffer += Symbols::CRLF;
+         mTxBuffer += "Location: http:/index.html"; mTxBuffer += Symbols::CRLF;
+         
+         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+                 "<html><head>"
+                 "<title>301 Moved Permanently</title>"
+                 "</head><body>"
+                 "<h1>Moved</h1>"
+                 "</body></html>" );
+      }
+      break;
+      
+      case 200:
+      {
+         mTxBuffer += "HTTP/1.0 200 OK" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
+
+      default:
+      {
+         assert(0);  
+
+         Data resp;
+         { 
+            DataStream s(resp);
+            s << response;
+            s.flush();
+         }
+         
+         mTxBuffer += "HTTP/1.0 ";
+         mTxBuffer += resp;
+         mTxBuffer += "OK" ; mTxBuffer += Symbols::CRLF;
+      }
+      break;
    }
    
    Data len;
@@ -113,8 +149,22 @@ HttpConnection::setPage(const Data& ppage)
       s << page.size();
       s.flush();
    }
-   
+    
+   mTxBuffer += "WWW-Authenticate: Basic realm=\"";
+   if ( mHttpBase.mRealm.empty() )
+   {
+      mTxBuffer += resip::DnsUtil::getLocalHostName();
+   }
+   else
+   {
+      mTxBuffer += mHttpBase.mRealm;
+   }
+   mTxBuffer += "\" ";
+   mTxBuffer += Symbols::CRLF;
+ 
    mTxBuffer += "Server: Repro Proxy " ; mTxBuffer += Symbols::CRLF;
+   mTxBuffer += "Mime-version: 1.0 " ; mTxBuffer += Symbols::CRLF;
+   mTxBuffer += "Pragma: no-cache " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Content-Length: "; mTxBuffer += len; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Content-Type: text/html" ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += Symbols::CRLF;
@@ -205,8 +255,51 @@ HttpConnection::tryParse()
  
    DebugLog (<< "parse found URI " << uri );
    mParsedRequest = true;
-      
-   mHttpBase.buildPage(uri,mPageNumber);
+     
+   
+   Data user;
+   Data password;
+
+   try
+   {
+      pb.skipToChars( "Authorization" );
+      if ( !pb.eof() )
+      {
+         if ( pb.eof() ) DebugLog( << "Did not find Authorization header" );
+         pb.skipToChars( "Basic" ); pb.skipN(6);
+         if ( pb.eof() ) DebugLog( << "Did not find Authorization basic " );
+         pb.skipWhitespace();
+         if ( pb.eof() ) DebugLog( << "Something wierd in Auhtorization header " );
+         if ( !pb.eof() )
+         {
+            const char* a = pb.position();
+            pb.skipNonWhitespace();
+            Data buf = pb.data(a);
+            
+            DebugLog (<< "parse found basic base64 auth data of " << buf );
+            Data auth = buf.base64decode();
+            
+            //DebugLog (<< "parse found basic auth data of " << auth );
+            
+            ParseBuffer p(auth);
+            const char* a1 = p.position();
+            p.skipToChar(':');
+            user = p.data(a1);
+            const char* a2 = p.skipChar(':');
+            p.skipToEnd();
+            password = p.data(a2);
+            
+            //DebugLog (<< "parse found basic auth data with user=" << user
+            //          << " password=" << password );
+         }
+      }
+   }
+   catch ( ... )
+   { 
+      InfoLog (<< "Some problem finding Authorizatin header in HTTP request" );
+   }
+   
+   mHttpBase.buildPage(uri,mPageNumber,user,password);
 }
 
 
