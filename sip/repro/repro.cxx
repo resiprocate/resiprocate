@@ -234,6 +234,37 @@ main(int argc, char** argv)
       ErrLog( << "No IP address found to run on" );
    } 
 
+   if (true)
+   {
+      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+           i != args.mDomains.end(); ++i)
+      {
+         proxy.addDomain(i->host());
+      }   
+      proxy.addDomain(DnsUtil::getLocalHostName());
+      proxy.addDomain("localhost");
+      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
+      {
+         proxy.addDomain(i->second);
+      }
+      proxy.addDomain("127.0.0.1");
+   }
+   if (dum)
+   {
+      for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+           i != args.mDomains.end(); ++i)
+      {
+         dum->addDomain(i->host());
+      }
+      dum->addDomain(DnsUtil::getLocalHostName());
+      dum->addDomain("localhost"); 
+      for ( list< pair<Data, Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
+      {
+         dum->addDomain(i->second);
+      }
+      dum->addDomain("127.0.0.1");
+   }
+
    stack.registerTransactionUser(proxy);
 
    /* Make it all go */
