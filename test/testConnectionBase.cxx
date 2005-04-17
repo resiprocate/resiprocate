@@ -60,12 +60,12 @@ class TestConnection : public ConnectionBase
          mRxFifo(fifo)
       {}
       
-      bool read(int minChunkSize, int maxChunkSize)
+      bool read(unsigned int minChunkSize, unsigned int maxChunkSize)
       {
-         int chunk = Random::getRandom() % maxChunkSize;
+         unsigned int chunk = Random::getRandom() % maxChunkSize;
          chunk = chunk < minChunkSize ? minChunkSize : chunk;
          chunk = chunk > maxChunkSize ? maxChunkSize : chunk;
-         chunk = chunk > mTestStream.size() - mStreamPos ? mTestStream.size() - mStreamPos : chunk;
+         chunk = (chunk > (mTestStream.size() - mStreamPos) ) ? (mTestStream.size() - mStreamPos) : chunk;
          assert(chunk > 0);
          std::pair<char*, size_t> writePair = getWriteBuffer();
          memcpy(writePair.first, mTestStream.data() + mStreamPos, chunk);
@@ -78,7 +78,7 @@ class TestConnection : public ConnectionBase
       
    private:
       Data mTestStream;
-      int mStreamPos;
+      unsigned int mStreamPos;
       Fifo<TransactionMessage>& mRxFifo;
 };
 
@@ -132,9 +132,9 @@ main(int argc, char** argv)
    who.transport = &fake;
   
    int chunkRange = 700;
-   int runs = 100;
+   unsigned int runs = 100;
 
-   for (int i=0; i < runs; i++)
+   for (unsigned int i=0; i < runs; i++)
    {
       TestConnection cBase(who, bytes, testRxFifo);
       int minChunk = Random::getRandom() % chunkRange;
