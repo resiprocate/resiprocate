@@ -22,7 +22,7 @@ class HttpConnection
       void buildFdSet(resip::FdSet& fdset);
       bool process(resip::FdSet& fdset);
 
-      void setPage(const resip::Data& page);
+      void setPage(const resip::Data& page, int response);
 
    private:
       bool processSomeReads();

@@ -35,9 +35,10 @@ HttpBase::~HttpBase()
 }
 
 
-HttpBase::HttpBase( int port, IpVersion ipVer):
+HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    nextConnection(0),
-   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
+   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty),
+   mRealm(realm)
 {
    assert( ipVer == V4 );
    
@@ -178,7 +179,7 @@ HttpBase::process(FdSet& fdset)
 }
 
 
-void HttpBase::setPage( const Data& page, int pageNumber )
+void HttpBase::setPage( const Data& page, int pageNumber, int response )
 {
    for ( int i=0 ; i<MaxConnections; i++)
    {
@@ -186,7 +187,7 @@ void HttpBase::setPage( const Data& page, int pageNumber )
       {
          if ( mConnection[i]->mPageNumber == pageNumber )
          {
-            mConnection[i]->setPage( page );
+            mConnection[i]->setPage( page,response );
          }
       }
    }
