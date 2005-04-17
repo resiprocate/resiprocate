@@ -36,9 +36,9 @@ HttpBase::~HttpBase()
 
 
 HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
+   mRealm(realm),
    nextConnection(0),
-   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty),
-   mRealm(realm)
+   mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
 {
    assert( ipVer == V4 );
    
