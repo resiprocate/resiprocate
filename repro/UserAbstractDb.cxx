@@ -46,6 +46,14 @@ UserAbstractDb::requestUserAuthInfo( const resip::Data& user,
 
 
 Data 
+UserAbstractDb::getUserAuthInfo(  const resip::Data& user, 
+                                  const resip::Data& realm ) const
+{
+   return getUserAuthInfo( buildKey(user,realm) );
+}
+
+
+Data 
 UserAbstractDb::getUserAuthInfo( const Data& key ) const
 {
    Data record;

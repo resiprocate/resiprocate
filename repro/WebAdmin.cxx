@@ -10,6 +10,7 @@
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/MD5Stream.hxx"
 
 //#include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
@@ -33,19 +34,25 @@ WebAdmin::WebAdmin(  UserAbstractDb& userDb,
                      RegistrationPersistenceManager& regDb,
                      RouteAbstractDb& routeDb,
                      Security& security,
+                     bool noChal, 
                      int port, 
-                     IpVersion version):
-   HttpBase( port, version ),
+                     IpVersion version,
+                     const Data& realm ):
+   HttpBase( port, version, realm ),
    mUserDb(userDb),
    mRegDb(regDb),
    mRouteDb( routeDb ),
-   mSecurity(security)
+   mSecurity(security),
+   mNoWebChallenges( noChal ) 
 {
 }
 
 
 void 
-WebAdmin::buildPage( const Data& uri, int pageNumber )
+WebAdmin::buildPage( const Data& uri,
+                     int pageNumber, 
+                     const resip::Data& pUser,
+                     const resip::Data& pPassword )
 {
    ParseBuffer pb(uri);
    
@@ -56,12 +63,97 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    Data pageName;
    pb.data(pageName,anchor);
    
-   Data domain;
-   if (pb.eof())
+   DebugLog (<< "  got page name: " << pageName );
+   
+
+   // if this is not a valid page, redirect it
+   if (
+      ( pageName != Data("index.html") ) && 
+      ( pageName != Data("input") ) && 
+      ( pageName != Data("certs") ) && 
+      ( pageName != Data("addUser.html") ) && 
+      ( pageName != Data("addRoute.html") ) && 
+      ( pageName != Data("showRegs.html") ) &&  
+      ( pageName != Data("showRoutes.html") )&& 
+      ( pageName != Data("showUsers.html")  ) &&
+      ( pageName != Data("user.html")  ) )
+   { 
+      setPage( resip::Data::Empty, pageNumber, 301 );
+      return; 
+   }
+   
+   // pages anyone can use 
+   if ( pageName == Data("index.html") ) 
    {
-      DebugLog (<< "  got page name " << pageName );
+      setPage( buildDefaultPage(), pageNumber, 200); 
+      return;
+   }
+   if ( pageName == Data("cert") )
+   {
+      if ( !mRealm.empty() ) // !cj! this is goofy using the realm 
+      {
+         setPage( buildCertPage(mRealm), pageNumber, 200 );
+         return;
+      }
+      else
+      {
+         setPage( resip::Data::Empty, pageNumber, 404 );
+         return;
+      }
+   }
+  
+   Data authenticatedUser;
+   if (mNoWebChallenges)
+   {
+      // do't do authentication - give everyone admin privilages
+      authenticatedUser = Data("admin");
    }
    else
+   {
+      // all pages after this, user must authenticate  
+      if ( pUser.empty() )
+      {  
+         setPage( resip::Data::Empty, pageNumber,401 );
+         return;
+      }
+      
+      // check that authentication is correct 
+      Data dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
+      
+      if ( dbA1.empty() ) // if the admin user does not exist, add it 
+      { 
+         mUserDb.addUser( pUser, // user
+                          Data("localhost"), // domain 
+                          Data::Empty, // realm 
+                          Data("admin"), // password 
+                          Data::Empty, // name 
+                          Data::Empty ); // email 
+         dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
+      }
+      
+      MD5Stream a1;
+      a1 << pUser // username
+         << Symbols::COLON
+         << Data::Empty // realm
+         << Symbols::COLON
+         << pPassword;
+      Data compA1 = a1.getHex();
+      
+      if ( dbA1 == compA1 )
+      {
+               authenticatedUser = pUser;
+      }
+      else
+      {
+         InfoLog( << "user " << pUser << " failed to authneticate to web server" );
+         setPage( resip::Data::Empty, pageNumber,401 );
+         return;
+      }
+   }
+   
+   // parse any URI tags from form entry 
+   Data domain;
+   if (!pb.eof())
    {
       pb.skipChar('?');
       
@@ -152,32 +244,55 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
            
       }
 
-      if ( !user.empty() )
+      // must be admin to do this 
+      if ( authenticatedUser == "admin")
       {
-         if ( realm.empty() )
+         if ( !user.empty() )
          {
-            realm = domain;
+            if ( realm.empty() )
+            {
+               realm = domain;
+            }
+            
+            mUserDb.addUser(user,domain,realm,password,name,email);
          }
          
-         mUserDb.addUser(user,domain,realm,password,name,email);
-      }
-
-      if ( !routeDestination.empty() )
-      {
-         mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
+         if ( !routeDestination.empty() )
+         {
+            mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
+         }
       }
    }
    
-   Data page;
-   if ( pageName == Data("addUser.html") ) page=buildAddUserPage();
-   if ( pageName == Data("addRoute.html") ) page=buildAddRoutePage();
-   if ( pageName == Data("showRegs.html") ) page=buildShowRegsPage();
-   if ( pageName == Data("showRoutes.html") ) page=buildShowRoutesPage();
-   if ( pageName == Data("showUsers.html") ) page=buildShowUsersPage();
-   if ( pageName == Data("cert") && !domain.empty()) page=buildCertPage(domain);
-   if ( pageName == Data("index.html") ) page=buildDefaultPage();
+   if (  pageName == Data("input")  )
+   {
+      setPage( resip::Data::Empty, pageNumber, 301 );
+      return;
+   }
 
-   setPage( page, pageNumber );
+   DebugLog( << "building page for user=" << authenticatedUser  );
+
+   Data page;
+   if ( authenticatedUser == Data("admin") )
+   {
+         // admin only pages 
+         if ( pageName == Data("addUser.html") ) page=buildAddUserPage();
+         if ( pageName == Data("addRoute.html") ) page=buildAddRoutePage();
+         if ( pageName == Data("showRegs.html") ) page=buildShowRegsPage();
+         if ( pageName == Data("showRoutes.html") ) page=buildShowRoutesPage();
+         if ( pageName == Data("showUsers.html") ) page=buildShowUsersPage();
+   }
+   
+   if ( !authenticatedUser.empty() )
+   {
+      // user only pages 
+      if ( pageName == Data("user.html") ) page=buildUserPage();
+   }
+
+   assert( !authenticatedUser.empty() );
+   assert( !page.empty() );
+   
+   setPage( page, pageNumber,200 );
 }
   
 
@@ -670,6 +785,56 @@ WebAdmin::buildDefaultPage()
          "</head>"
          ""
          "<body bgcolor=\"#ffffff\">"
+         "<h1>The default account is 'admin' with password 'admin'</h1>"
+         "<p><a href=\"addUser.html\">add users</a></p>"
+         "<p><a href=\"showRegs.html\">show registrations</a></p>"
+         "<p><a href=\"showUsers.html\">show users</a></p>"
+         "<p><a href=\"addRoute.html\">add route</a></p>"
+         "<p><a href=\"showRoutes.html\">show routes</a></p>"
+         "</body>"
+         ""
+         "</html>"
+         " ";
+      
+      s.flush();
+   }
+   return ret;
+}
+
+
+resip::Data 
+WebAdmin::buildPageOutlinePre()
+{
+   return resip::Data::Empty;
+}
+
+
+resip::Data 
+WebAdmin::buildPageOutlinePost()
+{
+   return resip::Data::Empty;
+}
+
+Data 
+WebAdmin::buildUserPage()
+{ 
+   Data ret;
+   {
+      DataStream s(ret);
+      
+      s << 
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+         ""
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+         ""
+         "<head>"
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
+         "<title>Repro Proxy</title>"
+         "</head>"
+         ""
+         "<body bgcolor=\"#ffffff\">"
+         "<h1>user page </h1>"
          "<p><a href=\"addUser.html\">add users</a></p>"
          "<p><a href=\"showRegs.html\">show registrations</a></p>"
          "<p><a href=\"showUsers.html\">show users</a></p>"
