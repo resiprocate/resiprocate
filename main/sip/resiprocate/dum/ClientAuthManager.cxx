@@ -141,8 +141,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
    }
    assert(origRequest.header(h_Vias).size() == 1);
    origRequest.header(h_CSeq).sequence()++;
-   InfoLog (<< "Produced response to digest challenge for " 
-            << userProfile << endl << response << endl << origRequest);
+   InfoLog (<< "Produced response to digest challenge for " << userProfile );
    return true;
 }
 
