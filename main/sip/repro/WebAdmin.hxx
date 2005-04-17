@@ -27,20 +27,30 @@ class WebAdmin: public HttpBase
                 resip::RegistrationPersistenceManager& regDb,
                 RouteAbstractDb& routeDb,
                 resip::Security& security,
+                bool noWebChallenges,
                 int port=5080, 
-                resip::IpVersion version=resip::V4);
+                resip::IpVersion version=resip::V4,
+                const resip::Data& realm = resip::Data::Empty );
       
    protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
+      virtual void buildPage( const resip::Data& uri, 
+                              int pageNumber,
+                              const resip::Data& user,
+                              const resip::Data& password);
 
    private: 
+      resip::Data buildPageOutlinePre();
+      resip::Data buildPageOutlinePost();
+
       resip::Data buildDefaultPage();
+      resip::Data buildUserPage();
 
       resip::Data buildAddRoutePage();
       resip::Data buildAddUserPage();
       resip::Data buildShowRegsPage();
       resip::Data buildShowRoutesPage();
       resip::Data buildShowUsersPage();
+
       resip::Data buildCertPage(const resip::Data& domain);
       
       UserAbstractDb& mUserDb;
@@ -49,6 +59,8 @@ class WebAdmin: public HttpBase
       resip::Security& mSecurity;
 
       resip::Data routeTestUri;
+
+      bool mNoWebChallenges;
 };
 
 
