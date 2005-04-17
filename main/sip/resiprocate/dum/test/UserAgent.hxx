@@ -3,7 +3,7 @@
 
 #include "CommandLineParser.hxx"
 
-#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/StackThread.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
@@ -20,8 +20,7 @@ class UserAgent : public CommandLineParser,
                   public ClientSubscriptionHandler, 
                   public ClientPublicationHandler,
                   public OutOfDialogHandler, 
-                  public InviteSessionHandler,
-                  public ThreadIf
+                  public InviteSessionHandler
 {
    public:
       UserAgent(int argc, char** argv);
@@ -30,9 +29,7 @@ class UserAgent : public CommandLineParser,
       void startup();
       void shutdown();
 
-      virtual void thread();
       void process();
-
       
    public:
       // Invite Session Handler /////////////////////////////////////////////////////
@@ -90,7 +87,10 @@ class UserAgent : public CommandLineParser,
 
    private:
       MasterProfile mProfile;
+      Security* mSecurity;
+      SipStack mStack;
       DialogUsageManager mDum;
+      StackThread mStackThread;
 };
  
 }

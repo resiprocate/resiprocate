@@ -20,13 +20,16 @@ using namespace std;
 
 UserAgent::UserAgent(int argc, char** argv) : 
    CommandLineParser(argc, argv),
+   mProfile(),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
-   mDum(mSecurity)
+   mStack(mSecurity),
 #else
    mSecurity(0),
-   mDum(mSecurity)
+   mStack(mSecurity),
 #endif
+   mDum(mStack),
+   mStackThread(mStack)
 {
    Log::initialize(mLogType, mLogLevel, argv[0]);
 
@@ -39,8 +42,12 @@ UserAgent::UserAgent(int argc, char** argv) :
 
    addTransport(UDP, mUdpPort);
    addTransport(TCP, mTcpPort);
+#if defined(USE_SSL)
    addTransport(TLS, mTlsPort);
+#endif
+#if defined(USED_DTLS)
    addTransport(DTLS, mDtlsPort);
+#endif
 
    mProfile.setDefaultRegistrationTime(mRegisterDuration);
    mProfile.addSupportedMethod(NOTIFY);
@@ -48,6 +55,8 @@ UserAgent::UserAgent(int argc, char** argv) :
    mProfile.validateContentEnabled() = false;
    mProfile.addSupportedMimeType(NOTIFY, Pidf::getStaticType());
    mProfile.setDefaultFrom(NameAddr(mAor));
+   mProfile.setDigestCredential(mAor.host(), mAor.user(), mPassword);
+   
    if (!mContact.host().empty())
    {
       mProfile.setOverrideHostAndPort(mContact);
@@ -56,7 +65,7 @@ UserAgent::UserAgent(int argc, char** argv) :
    {
       mProfile.setOutboundProxy(Uri(mOutboundProxy));
    }
-   mProfile.setUserAgent("limpc/0.3");
+   mProfile.setUserAgent("limpc/1.0");
    
    mDum.setMasterProfile(&mProfile);
    mDum.setClientRegistrationHandler(this);
@@ -66,13 +75,13 @@ UserAgent::UserAgent(int argc, char** argv) :
    mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
    mDum.setInviteSessionHandler(this);
    
-   mDum.run(); // starts a StackThread
+   mStackThread.run(); 
 }
 
 UserAgent::~UserAgent()
 {
-   shutdown();
-   join();
+   mStackThread.shutdown();
+   mStackThread.join();
 }
 
 void
@@ -80,6 +89,7 @@ UserAgent::startup()
 {
    if (mRegisterDuration)
    {
+      InfoLog (<< "register for " << mAor);
       mDum.send(mDum.makeRegistration(NameAddr(mAor)));
    }
 
@@ -107,44 +117,38 @@ UserAgent::shutdown()
 void
 UserAgent::process()
 {
-   mDum.process();
+   while (mDum.process());
 }
-
-void
-UserAgent::thread()
-{
-   while(!waitForShutdown(1000))
-   {
-      process();
-   }
-}
-
 
 void
 UserAgent::addTransport(TransportType type, int port)
 {
-   try
+   for (; port < port+10; ++port)
    {
-      if (port)
+      try
       {
-         if (!mNoV4)
+         if (port)
          {
-            mDum.addTransport(type, port, V4, Data::Empty, mTlsDomain);
-         }
+            if (!mNoV4)
+            {
+               mDum.addTransport(type, port, V4, Data::Empty, mTlsDomain);
+               return;
+            }
 
-         if (!mNoV6)
-         {
-            mDum.addTransport(type, port, V6, Data::Empty, mTlsDomain);
+            if (!mNoV6)
+            {
+               mDum.addTransport(type, port, V6, Data::Empty, mTlsDomain);
+               return;
+            }
          }
       }
+      catch (BaseException& e)
+      {
+         InfoLog (<< "Caught: " << e);
+         WarningLog (<< "Failed to add " << Tuple::toData(type) << " transport on " << port);
+      }
    }
-   catch (BaseException& e)
-   {
-      InfoLog (<< "Caught: " << e);
-      WarningLog (<< "Failed to add " << Tuple::toData(type) << " transport on " << port);
-      throw;
-   }
-   
+   throw Transport::Exception("Port already in use", __FILE__, __LINE__);
 }
 
 
@@ -307,7 +311,7 @@ UserAgent::onRemoved(ClientRegistrationHandle h)
 int 
 UserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg)
 {
-   assert(false);
+   //assert(false);
    return -1;
 }
 
