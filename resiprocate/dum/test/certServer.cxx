@@ -277,10 +277,10 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
    public:
       CertServer(const resip::NameAddr& me, SipStack& stack) : 
          DialogUsageManager(stack),
-         mCertServer(getSecurity()),
-         mPrivateKeyServer(getSecurity()),
-         mCertUpdater(getSecurity()),
-         mPrivateKeyUpdater(getSecurity()),
+         mCertServer(*getSecurity()),
+         mPrivateKeyServer(*getSecurity()),
+         mCertUpdater(*getSecurity()),
+         mPrivateKeyUpdater(*getSecurity()),
          mDone(false)
       {
          addTransport(UDP, 5100);

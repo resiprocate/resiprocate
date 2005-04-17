@@ -19,10 +19,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int genUserCert = false;
    char* tlsDomain = 0;
    
-   int udpPort = 5060;
-   int tcpPort = 5060;
-   int tlsPort = 5061;
-   int dtlsPort = 5061;
+   int udpPort = 5160;
+   int tcpPort = 5160;
+   int tlsPort = 5161;
+   int dtlsPort = 5161;
    
    mRegisterDuration = 3600;
    int noV4 = false;
@@ -36,8 +36,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* inputBuddies = 0;
    char* inputTarget = 0;
    char* passPhrase = 0;
-   char* certPath = "~/.sipCerts";
-
+   char* certPath = 0;
+   Data basePath(getenv("HOME"));
 
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -92,7 +92,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
    else
    {
-      mAor.user() = "user";
+      mAor.user() = "test";
       mAor.host() = DnsUtil::getLocalHostName();
    }
    
@@ -102,7 +102,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mBuddies = toUriVector(inputBuddies, "buddies"); // was addList   
    mTarget = toUri(inputTarget, "target"); // was dest
    if (passPhrase) mPassPhrase = passPhrase;
-   mCertPath = certPath;
+   if (certPath) mCertPath = certPath;
+   else mCertPath = basePath + "/.sipCerts";
    
    // pubList for publish targets
 }
@@ -134,12 +135,12 @@ CommandLineParser::toUri(const char* input, const char* description)
 std::vector<resip::Uri> 
 CommandLineParser::toUriVector(const char* input, const char* description)
 {
-   char buffer[2048];
-   strcpy(buffer, input);
-   
    std::vector<Uri> uris; 
    if (input)
    {
+      char buffer[2048];
+      strcpy(buffer, input);
+
       for (char* token = strtok(buffer, ","); token != 0; token = strtok(0, ","))
       {
          try
