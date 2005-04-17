@@ -55,9 +55,9 @@ class TestDns : public DnsInterface, public ThreadIf
    public:
       TestDns()
       {
-          addTransportType(TCP);
-          addTransportType(UDP);
-          addTransportType(TLS);
+         addTransportType(TCP, V4);
+         addTransportType(UDP, V4);
+         addTransportType(TLS, V4);
       }
 
       void thread()
