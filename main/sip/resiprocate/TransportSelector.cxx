@@ -60,14 +60,14 @@ TransportSelector::~TransportSelector()
       delete t;
    }
 
-   InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
+   //InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
    
    while (!mAnyInterfaceTransports.empty())
    {
       AnyInterfaceTupleMap::iterator i = mAnyInterfaceTransports.begin();
       Transport* t = i->second;
       mAnyInterfaceTransports.erase(i);
-      InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
+      //InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
       delete t;
    }
 }
@@ -107,7 +107,7 @@ void
 TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
    Transport* transport = tAuto.release();   
-   mDns.addTransportType(transport->transport());
+   mDns.addTransportType(transport->transport(), transport->ipVersion());
    switch (transport->transport())
    {
       case UDP:

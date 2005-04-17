@@ -11,13 +11,14 @@ using namespace resip;
 
 TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
    mFallBackFifo(fallBackFifo) ,
-   mTuSelectorMode(false)
+   mTuSelectorMode(false),
+   mStatsPayload()
 {
 }
 
 TuSelector::~TuSelector()
 {
-   assert(mTuList.empty());
+   //assert(mTuList.empty());
 }
 
 void
