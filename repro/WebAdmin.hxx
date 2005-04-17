@@ -14,6 +14,7 @@
 namespace resip
 {
 class RegistrationPersistenceManager;
+class DataStream;
 }
 
 
@@ -39,18 +40,18 @@ class WebAdmin: public HttpBase
                               const resip::Data& password);
 
    private: 
-      resip::Data buildPageOutlinePre();
-      resip::Data buildPageOutlinePost();
-
       resip::Data buildDefaultPage();
       resip::Data buildUserPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-
+      
+      void buildPageOutlinePre(resip::DataStream& s);
+      void buildPageOutlinePost(resip::DataStream& s);
+      
+      void buildAddRouteSubPage(resip::DataStream& s);
+      void buildAddUserSubPage(resip::DataStream& s);
+      void buildShowRegsSubPage(resip::DataStream& s);
+      void buildShowRoutesSubPage(resip::DataStream& s);
+      void buildShowUsersSubPage(resip::DataStream& s);
+                                  
       resip::Data buildCertPage(const resip::Data& domain);
       
       UserAbstractDb& mUserDb;
