@@ -27,6 +27,7 @@ class CommandLineParser
       std::vector<Uri> mDomains;
       Data mCertPath;
       bool mNoChallenge;
+      bool mNoWebChallenge;
       bool mNoRegistrar;
       bool mCertServer;
       Data mRequestProcessorChainName;

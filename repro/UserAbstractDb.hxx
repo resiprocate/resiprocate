@@ -19,6 +19,8 @@ typedef resip::Fifo<resip::Message> MessageFifo;
 class UserAbstractDb
 {
    public:
+      typedef resip::Data Key;
+      
       UserAbstractDb();
       
       virtual ~UserAbstractDb();
@@ -28,7 +30,9 @@ class UserAbstractDb
                                 const resip::Data& transactionId,
                                 resip::TransactionUser& transactionUser) const;
 
-      resip::Data getUserAuthInfo( const resip::Data& key ) const;
+      resip::Data getUserAuthInfo( const Key& key ) const;
+      resip::Data getUserAuthInfo( const resip::Data& user,
+                                   const resip::Data& realm ) const;
       
       void addUser( const resip::Data& user, 
                     const resip::Data& domain, 
@@ -40,18 +44,18 @@ class UserAbstractDb
       void removeUser( const resip::Data& user,
                        const resip::Data& realm );
       
-      void removeUser( const resip::Data& key );
+      void removeUser( const Key& key );
       
       //Data getForward( Data& key);
       //void requestForwardAuth( user, realm );
       //void setForward( Data& key, Data& forwardAddress );
 
-      resip::Data getFirstKey();// return empty if no more
-      resip::Data getNextKey(); // return empty if no more 
+      Key getFirstKey();// return empty if no more
+      Key getNextKey(); // return empty if no more 
       
    protected:
-      resip::Data buildKey( const resip::Data& user, 
-                            const resip::Data& realm) const;
+      Key buildKey( const resip::Data& user, 
+                    const resip::Data& realm) const;
       
       class UserRecord
       {
@@ -70,12 +74,12 @@ class UserAbstractDb
       UserRecord decodeUserRecord( const resip::Data& data ) const;
 
       // Db manipulation routines
-      virtual void dbWriteRecord( const resip::Data& key, const resip::Data& data ) =0;
-      virtual bool dbReadRecord( const resip::Data& key, resip::Data& data ) const =0 ; // return false if not found
-      virtual void dbRemoveRecord( const resip::Data& key ) = 0 ;
+      virtual void dbWriteRecord( const Key& key, const resip::Data& data ) =0;
+      virtual bool dbReadRecord( const Key& key, resip::Data& data ) const =0 ; // return false if not found
+      virtual void dbRemoveRecord( const Key& key ) = 0 ;
 
-      virtual resip::Data dbFirstKey()=0;// return empty if no more
-      virtual resip::Data dbNextKey()=0; // return empty if no more 
+      virtual Key dbFirstKey()=0;// return empty if no more
+      virtual Key dbNextKey()=0; // return empty if no more 
 };
 
  }

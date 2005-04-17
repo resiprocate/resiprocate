@@ -17,23 +17,28 @@ class HttpBase
       friend class HttpConnection;
       
    public:
-      HttpBase( int port, resip::IpVersion version);
+      HttpBase( int port, resip::IpVersion version, const resip::Data& realm );
       virtual ~HttpBase();
       
       void buildFdSet(resip::FdSet& fdset);
       void process(resip::FdSet& fdset);
 
    protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber )=0;
-      void setPage( const resip::Data& page, int pageNumber );
+      virtual void buildPage( const resip::Data& uri, 
+                              int pageNumber, 
+                              const resip::Data& user,
+                              const resip::Data& password )=0;
+      void setPage( const resip::Data& page, int pageNumber, int response );
       
+      const resip::Data mRealm;
+
    private:
-      static const int MaxConnections = 10;
+      static const int MaxConnections = 30;
       
       resip::Socket mFd;
       int nextConnection;
       resip::Tuple mTuple;
-
+      
       HttpConnection* mConnection[MaxConnections];
 };
 
