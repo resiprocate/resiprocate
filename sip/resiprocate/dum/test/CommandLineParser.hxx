@@ -28,7 +28,7 @@ class CommandLineParser
       int mTlsPort;
       int mDtlsPort;
       
-      bool mRegisterDuration;
+      int mRegisterDuration;
       bool mNoV4;
       bool mNoV6;
       
