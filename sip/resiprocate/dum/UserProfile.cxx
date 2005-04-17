@@ -159,9 +159,7 @@ resip::operator<<(std::ostream& strm, const UserProfile& profile)
 std::ostream&
 resip::operator<<(std::ostream& strm, const UserProfile::DigestCredential& cred)
 {
-   strm << "credential: "
-        << " realm=" << cred.realm 
-        << " user=" << cred.user ;
+   strm << "realm=" << cred.realm << " user=" << cred.user ;
    return strm;
 }
 
