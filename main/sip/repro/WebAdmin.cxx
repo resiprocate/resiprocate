@@ -275,12 +275,18 @@ WebAdmin::buildPage( const Data& uri,
    Data page;
    if ( authenticatedUser == Data("admin") )
    {
+            DataStream s(page);
+            buildPageOutlinePre(s);
+
          // admin only pages 
-         if ( pageName == Data("addUser.html") ) page=buildAddUserPage();
-         if ( pageName == Data("addRoute.html") ) page=buildAddRoutePage();
-         if ( pageName == Data("showRegs.html") ) page=buildShowRegsPage();
-         if ( pageName == Data("showRoutes.html") ) page=buildShowRoutesPage();
-         if ( pageName == Data("showUsers.html") ) page=buildShowUsersPage();
+         if ( pageName == Data("addUser.html")    ) buildAddUserSubPage(s);
+         if ( pageName == Data("addRoute.html")   ) buildAddRouteSubPage(s);
+         if ( pageName == Data("showRegs.html")   ) buildShowRegsSubPage(s);
+         if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
+         if ( pageName == Data("showUsers.html")  ) buildShowUsersSubPage(s);
+
+            buildPageOutlinePost(s);
+            s.flush();
    }
    
    if ( !authenticatedUser.empty() )
@@ -296,130 +302,47 @@ WebAdmin::buildPage( const Data& uri,
 }
   
 
-Data 
-WebAdmin::buildAddRoutePage()
+void
+WebAdmin::buildAddRouteSubPage(DataStream& s)
 {
-   Data ret;
-   {
-      DataStream s(ret);
+   s << 
+      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
+      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
+      "<tr>"
+      "<td>URI</td>"
+      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
+      "</tr>"
+      "<tr>"
+      "<td>Method</td>"
+      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
+      "</tr>"
       
-      s << 
-         "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
-         "<title>Repro Proxy Add Route</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
-         "<p>Add Route</p>"
-         "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
-         "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
-         "<tr>"
-         "<td>URI</td>"
-         "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
-         "</tr>"
-         "<tr>"
-         "<td>Method</td>"
-         "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
-         "</tr>"
-
-         "<tr>"
-         "<td>Event</td>"
-         "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
-         "</tr>"
-
-         "<tr>"
-         "<td>Destination</td>"
-         "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
-         "</tr>"
-
-         "<tr>"
-         "<td>Order</td>"
-         "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
-         "</tr>"
-
-         "</table>"
-         "<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
-         "</form>"
-         "</body>"
-         ""
-         "</html>"
-         " ";
+      "<tr>"
+      "<td>Event</td>"
+      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
+      "</tr>"
       
-      s.flush();
-   }
-   return ret;
+      "<tr>"
+      "<td>Destination</td>"
+      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
+      "</tr>"
+      
+      "<tr>"
+      "<td>Order</td>"
+      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
+      "</tr>"
+      
+      "</table>"
+      "<p><input type=\"reset\"/ value=\"Cancel\" > <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
+      "</form>"
+      ;
 }
 
 
-Data 
-WebAdmin::buildAddUserPage()
+void
+WebAdmin::buildAddUserSubPage( DataStream& s)
 {
-   Data ret;
-   {
-      DataStream s(ret);
-      
       s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-         "<title>Repo Proxy Add User</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
-         "<table width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td>"
-         "<h1>Repro Proxy</h1>"
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "<table width=\"95%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td valign=\"top\">"
-         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-         "<tr>"
-         "<td>"
-         "<p><b><a href=\"addUser.html\">Add User</a></b></p>"
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "<p><a href=\"showUsers.html\">Show </a><a href=\"showUsers.html\">Users</a></p>"
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "<p><a href=\"showRegs.html\">Registrations</a></p>"
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "<p><a href=\"addRoute.html\">Add Route</a></p>"
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "<p><a href=\"showRoutes.html\">Show Routes</a></p>"
-         "</td>"
-         "</tr>"
-         "</table>"
-         "</td>"
-         "<td align=\"left\" valign=\"top\" width=\"85%\">"
-         "<table width=\"64\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-         "<tr>"
-         "<td>"
-
-
          "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
          "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
          "<tr>"
@@ -452,57 +375,19 @@ WebAdmin::buildAddUserPage()
          "</tr>"
          "</table>"
 
-         " <input type=\"reset\" value=\"Reset\"/>"
+         " <input type=\"reset\" value=\"Cancel\"/>"
          "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
 
 
          "</form>"
-
-
-         "</td>"
-         "</tr>"
-         "<tr>"
-         "<td>"
-         "</td>"
-         "</tr>"
-         "</table>"
-         "<hr/>"
-         "</td>"
-         "</tr>"
-         "</table>"
-         "</td>"
-         "</tr>"
-         "</table>"
-         "</body>"
-         ""
-         "</html>"
          " ";
-      
-      s.flush();
-   }
-   return ret;
 }
 
 
-Data 
-WebAdmin::buildShowRegsPage()
+void
+WebAdmin::buildShowRegsSubPage(DataStream& s)
 {
-   Data ret;
-   {
-      DataStream s(ret);
-      
       s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-         "<title>Repro Proxy Registrations</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
          "<h1>Registrations</h1>"
          "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
          "<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
@@ -552,35 +437,15 @@ WebAdmin::buildShowRegsPage()
                   
       s << "</table>"
          "</form>"
-         "</body>"
-         "</html>"
-         "</html>";
-      
-      s.flush();
-   }
-   return ret;
+         ;
 }
 
 
-Data 
-WebAdmin::buildShowUsersPage()
+void 
+WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
-   Data ret;
-   {
-      DataStream s(ret);
       
       s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-         "<title>Repro Proxy Users</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
          "<h1>Users</h1>"
          "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
          "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
@@ -623,31 +488,15 @@ WebAdmin::buildShowUsersPage()
       s << 
          "</table>"
          "</form>"
-         "</body>"
-         ""
-         "</html>";
-            
-      s.flush();
-   }
-   return ret;
+         ;
 }
 
 
-Data 
-WebAdmin::buildShowRoutesPage()
+void
+WebAdmin::buildShowRoutesSubPage(DataStream& s)
 { 
-   Data ret;
-   {
-      DataStream s(ret);
       
-      s << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
-         "<title>Repro Proxy Show Route</title>"
-         "</head>"
-         "<body bgcolor=\"#ffffff\">"
+      s <<
          "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
          "      <tr>"
          "        <td>"
@@ -750,12 +599,8 @@ WebAdmin::buildShowRoutesPage()
          "        </td>"
          "      </tr>"
          "    </table>"
-         "  </body>"
-         "</html>";
+         ;
       
-      s.flush();
-   }
-   return ret;
 }
 
 Data
@@ -802,18 +647,103 @@ WebAdmin::buildDefaultPage()
 }
 
 
-resip::Data 
-WebAdmin::buildPageOutlinePre()
+void
+WebAdmin::buildPageOutlinePre(DataStream& s)
 {
-   return resip::Data::Empty;
+   s << 
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+      ""
+      "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+      ""
+      "	<head>"
+      "		<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
+      "		<meta name=\"generator\" content=\"Adobe GoLive\"/>"
+      "		<title>Repro Proxy</title>"
+      "		<style type=\"text/css\" media=\"screen\"><!--"
+      "p    {  color: black; background-color: white; }"
+      "h1        { font-size: 28px; font-weight: bold; margin: 5px 0 }"
+      "h2        { font-size: 14px; font-weight: bold; margin: 5px 0 }"
+      "h3        { font-size: 14px; font-weight: normal; margin: 2px 0 }"
+      "h4     { font-size: 14px; font-style: oblique; font-weight: bold; margin: 2px 0; position: relative }"
+      "body  { font-size: 14px; font-family: Arial, Helvetica, sans-serif }"
+      "--></style>"
+      "	</head>"
+      ""
+      "	<body>"
+      "		<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"left\">"
+      "			<tr height=\"42\">"
+      "				<td colspan=\"3\" bgcolor=\"#395af6\" >"
+      "					<h1><font color=\"white\">Repro</font></h1>"
+      "				</td>"
+      "			</tr>"
+      "			<tr height=\"10\">"
+      "				<td colspan=\"3\" ></td>"
+      "			</tr>"
+      "			<tr>"
+      "				<td>"
+      "					<table border=\"0\" cellspacing=\"0\" cellpadding=\"1\" bgcolor=\"#ff8d09\">"
+      "						<tr>"
+      "							<td>"
+      "								<h2>&nbsp;Users&nbsp;</h2>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"addUser.html\">Add&nbsp;Users</a>&nbsp;</h3>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showUsers.html\">Show&nbsp;Users</a>&nbsp;</h3>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showRegs.html\">Registrations</a>&nbsp;</h3>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h2>&nbsp;Routes&nbsp;</h2>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"addRoute.html\">Add&nbsp;Route</a>&nbsp;</h3>"
+      "							</td>"
+      "						</tr>"
+      "						<tr>"
+      "							<td>"
+      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showRoutes.html\">Show&nbsp;Routes</a>&nbsp;</h3>"
+      "							</td>"
+      "						</tr>"
+      "					</table>"
+      "				</td>"
+      "				<td width=\"10\"></td>"
+      "				<td align=\"left\" valign=\"top\">"
+      ;
 }
 
 
-resip::Data 
-WebAdmin::buildPageOutlinePost()
+void
+WebAdmin::buildPageOutlinePost(DataStream& s)
 {
-   return resip::Data::Empty;
+   s << 
+      "				</td>"
+      "			</tr>"
+      "		</table>"
+      "	</body>"
+      ""
+      "</html>"
+      ;
 }
+
 
 Data 
 WebAdmin::buildUserPage()
