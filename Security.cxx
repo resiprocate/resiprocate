@@ -246,6 +246,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
+   InfoLog (<< "Reading PEM file " << filename << " into " << name);
    // .dlb. extra copy
    buffer = readIntoData(filename);
 }
@@ -255,9 +256,22 @@ void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
-
+   InfoLog (<< "Writing PEM file " << filename << " for " << name);
    ofstream str(filename.c_str(), ios::binary);
-   str.write(buffer.data(), buffer.size());
+   if (!str)
+   {
+      ErrLog (<< "Can't write to " << filename);
+      throw BaseSecurity::Exception("Failed opening PEM file", __FILE__,__LINE__);
+   }
+   else
+   {
+      str.write(buffer.data(), buffer.size());
+      if (!str)
+      {
+         ErrLog (<< "Failed writing to " << filename << " " << buffer.size() << " bytes");
+         throw BaseSecurity::Exception("Failed writing PEM file", __FILE__,__LINE__);
+      }
+   }
 }
 
 
@@ -267,148 +281,6 @@ Security::onRemovePEM(const Data& name, PEMType type) const
    assert(0);
    // TODO - should delete file 
 }
-
-
-#if 0
-namespace
-{
-FILE* 
-fopenHelper (const char* pathname, const char* option)
-{
-   FILE* fp = fopen(pathname, option);
-
-   if ( !fp )
-   {
-      Data msg;
-      DataStream strm(msg);
-
-      strm << "fopen(" << pathname << ", " << option << ")" << "failed";
-
-      ErrLog(<< msg);
-      throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-   }
-
-   return   fp;
-}
-
-
-void 
-clearError ()
-{
-    while (ERR_get_error())
-    {
-    }
-}
-
-
-void 
-onReadError (bool do_throw = false)
-{
-    Data msg;
-    while (true)
-    {
-        const char* file;
-        int line;
-
-        unsigned long code = ERR_get_error_line(&file,&line);
-        if ( code == 0 )
-        {
-            break;
-        }
-
-        msg.clear();
-        DataStream strm(msg);
-        char err_str[256];
-        ERR_error_string_n(code, err_str, sizeof(err_str));
-        strm << err_str << ", file=" << file 
-             << ", line= " << line << ", error code=" << code;
-
-        ErrLog(<< msg);
-    }
-    if (do_throw)
-    {
-       throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-    }
-}
-
-
-void 
-logReadError ()
-{
-   onReadError(false);
-}
-
-
-void 
-throwReadError ()
-{
-   onReadError(true);
-}
-
-
-struct FileGuard
-{
-    FileGuard (FILE* fp)
-    :   mFp(fp) {}
-    ~FileGuard ()
-    {
-        fclose(mFp);
-    }
-
-    FILE* mFp;
-};
-
-
-#if defined(WIN32)
-
-struct FindGuard
-{
-    FindGuard (HANDLE findHandle)
-    :   mHandle(findHandle) {}
-    ~FindGuard ()
-    {
-        FindClose(mHandle);
-    }
-
-    HANDLE  mHandle;
-};
-
-#else
-
-struct DirGuard
-{
-    DirGuard (DIR* dir)
-    :   mDir(dir) {}
-    ~DirGuard ()
-    {
-        closedir(mDir);
-    }
-
-    DIR*  mDir;
-};
-#endif
-
-
-void
-setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, 
-              const Data& key, 
-              const Data& passPhrase)
-{
-   passPhrases.insert(std::make_pair(key, passPhrase));
-}
-
-
-bool
-hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
-{
-   BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
-   return (iter != passPhrases.end());
-}
-
-
-}  // namespace
-#endif
-
 
 
 void
