@@ -1,6 +1,7 @@
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 
@@ -71,7 +72,7 @@ TransactionUser::isForMe(const SipMessage& msg) const
 bool 
 TransactionUser::isMyDomain(const Data& domain) const
 {
-   return mDomainList.count(domain);
+   return mDomainList.count(domain) > 0;
 }
 
 void TransactionUser::addDomain(const Data& domain)

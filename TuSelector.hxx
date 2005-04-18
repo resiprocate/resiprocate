@@ -3,13 +3,13 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/StatisticsMessage.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 
 namespace resip
 {
 class Message;
 class TransactionUser;
-class TransactionUserMessage;
 
 class TuSelector
 {
