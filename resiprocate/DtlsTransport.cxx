@@ -47,6 +47,8 @@
 #include "resiprocate/DtlsTransport.hxx"
 #endif
 
+#include "resiprocate/os/WinLeakCheck.hxx"
+
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
