@@ -165,19 +165,19 @@ DnsResult::lookup(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
-               if (!mInterface.isSupported(mTransport))
+               if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
                   mHandler->handle(this);
                   return;
                }
                mSRVCount++;
-               lookupSRV("_sips._udp." + mTarget);
+               lookupSRV("_sips._udp." + mTarget); 
             }
             else
             {
                mTransport = TLS;
-               if (!mInterface.isSupported(mTransport))
+               if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
                   mHandler->handle(this);
@@ -189,7 +189,7 @@ DnsResult::lookup(const Uri& uri)
          }
          else
          {
-            if (!mInterface.isSupported(mTransport))
+            if (!mInterface.isSupportedProtocol(mTransport))
             {
                transition(Finished);
                mHandler->handle(this);
@@ -245,7 +245,19 @@ DnsResult::lookup(const Uri& uri)
          else // port specified so we know the transport
          {
             mPort = uri.port();
-            lookupAAAARecords(mTarget); // for current target and port         
+            if (mInterface.isSupported(mTransport, V6))
+            {
+               lookupAAAARecords(mTarget); // for current target and port        
+            }
+            else if (mInterface.isSupported(mTransport, V4))
+            {
+               lookupARecords(mTarget); // for current target and port                       
+            }
+            else
+            {
+               assert(0);
+               mHandler->handle(this);
+            }
          }
       }
       else // do NAPTR
@@ -455,7 +467,7 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
      NAPTRFail:
       if (mSips)
       {
-         if (!mInterface.isSupported(TLS))
+         if (!mInterface.isSupportedProtocol(TLS))
          {
             transition(Finished);
             mHandler->handle(this);
@@ -468,13 +480,13 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
       else
       {
          //.dcm. assumes udp is supported
-         if (mInterface.isSupported(TLS))
+         if (mInterface.isSupportedProtocol(TLS))
          {
             mSRVCount += 1;
             lookupSRV("_sips._tcp." + mTarget);
          }
          
-         if (mInterface.isSupported(TCP))
+         if (mInterface.isSupportedProtocol(TCP))
          {
             mSRVCount += 2;
             lookupSRV("_sip._tcp." + mTarget);
@@ -603,8 +615,19 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
             mPort = getDefaultPort(mTransport, 0);
          }
          
-         StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
-         lookupAAAARecords(mTarget);
+         StackLog (<< "No SRV records for " << mTarget << ". Trying A/AAAA records");
+         if (mInterface.isSupported(mTransport, V6))
+         {
+            lookupAAAARecords(mTarget);
+         }
+         else if (mInterface.isSupported(mTransport, V4))
+         {
+            lookupARecords(mTarget);
+         }
+         else
+         {
+            primeResults();
+         }
       }
       else
       {
@@ -618,6 +641,12 @@ void
 DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 {
    StackLog (<< "Received AAAA result for: " << mTarget);
+   if (!mInterface.isSupported(mTransport, V6))
+   {
+      return;
+   }
+   
+   
 #if defined(USE_IPV6)
    StackLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
@@ -667,8 +696,14 @@ DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 void
 DnsResult::processHost(int status, const struct hostent* result)
 {
+   if (!mInterface.isSupported(mTransport, V4))
+   {
+      return;
+   }
+
    StackLog (<< "Received A result for: " << mTarget);
    StackLog (<< "DnsResult::processHost() " << status);
+   assert(mInterface.isSupported(mTransport, V4));
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -783,8 +818,11 @@ DnsResult::primeResults()
 	         i!=aaaarecs.end(); i++)
          {
             Tuple tuple(*i, next.port,next.transport, mTarget);
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            if (mInterface.isSupported(next.transport, V6))
+            {
+               StackLog (<< "Adding " << tuple << " to result set");
+               mResults.push_back(tuple);
+            }
          }
 #endif
          std::vector<struct in_addr>& arecs = mARecords[next.target];
@@ -792,7 +830,10 @@ DnsResult::primeResults()
          {
             Tuple tuple(*i, next.port, next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            if (mInterface.isSupported(next.transport, V4))
+            {
+               mResults.push_back(tuple);
+            }
          }
          StackLog (<< "Try: " << Inserter(mResults));
 
