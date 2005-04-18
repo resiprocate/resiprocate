@@ -38,11 +38,6 @@ DnsInterface::DnsInterface() :
       delete errmem;
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
-//   addTransportType(UDP);
-//   addTransportType(TCP);
-#if defined(USE_SSL)
-   //addTransportType(TLS);   
-#endif
 }
 
 DnsInterface::~DnsInterface()
@@ -81,28 +76,27 @@ DnsInterface::errorMessage(int status)
 }
 
 void 
-DnsInterface::addTransportType(TransportType type)
+DnsInterface::addTransportType(TransportType type, IpVersion version)
 {
-   static Data udp("SIP+D2U");
-   static Data tcp("SIP+D2T");
-   static Data tls("SIPS+D2T");
-   static Data dtls("SIPS+D2U");
+   static Data Udp("SIP+D2U");
+   static Data Tcp("SIP+D2T");
+   static Data Tls("SIPS+D2T");
+   static Data Dtls("SIPS+D2U");
 
-   mSupportedTransportTypes.insert(type);
-   
+   mSupportedTransports.push_back(std::make_pair(type, version));
    switch (type)
    {
       case UDP:
-         mSupportedTransports.insert(udp);
+         mSupportedNaptrs.insert(Udp);
          break;
       case TCP:
-         mSupportedTransports.insert(tcp);
+         mSupportedNaptrs.insert(Tcp);
          break;
       case TLS:
-         mSupportedTransports.insert(tls);
+         mSupportedNaptrs.insert(Tls);
          break;
       case DTLS:
-         mSupportedTransports.insert(dtls);
+         mSupportedNaptrs.insert(Dtls);
          break;         
       default:
          assert(0);
@@ -113,13 +107,26 @@ DnsInterface::addTransportType(TransportType type)
 bool
 DnsInterface::isSupported(const Data& service)
 {
-   return mSupportedTransports.count(service) != 0;
+   return mSupportedNaptrs.count(service) != 0;
 }
 
 bool
-DnsInterface::isSupported(TransportType t)
+DnsInterface::isSupported(TransportType t, IpVersion version)
 {
-   return mSupportedTransportTypes.count(t) != 0;
+   return std::find(mSupportedTransports.begin(), mSupportedTransports.end(), std::make_pair(t, version)) != mSupportedTransports.end();
+}
+
+bool
+DnsInterface::isSupportedProtocol(TransportType t)
+{
+   for (TransportMap::const_iterator i=mSupportedTransports.begin(); i != mSupportedTransports.end(); ++i)
+   {
+      if (i->first == t)
+      {
+         return true;
+      }
+   }
+   return false;
 }
 
 bool 
