@@ -3,6 +3,7 @@
 #include "resiprocate/dum/KeepAliveTimeout.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
