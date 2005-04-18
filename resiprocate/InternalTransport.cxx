@@ -16,6 +16,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
