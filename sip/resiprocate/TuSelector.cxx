@@ -3,6 +3,7 @@
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
@@ -42,6 +43,7 @@ TuSelector::process()
             assert(0);
             break;
       }
+      delete msg;
    }
 }
 
@@ -67,6 +69,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
          InfoLog(<< "Stats message " );
          stats->loadOut(mStatsPayload);
          stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
+         delete msg;
       }
       else
       {

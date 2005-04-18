@@ -25,7 +25,6 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"
@@ -33,6 +32,7 @@
 #include "resiprocate/DtlsTransport.hxx"
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -318,7 +318,8 @@ SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
-   mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
    if (mAsyncProcessHandler)
    {
       mAsyncProcessHandler->handleProcessNotification();
