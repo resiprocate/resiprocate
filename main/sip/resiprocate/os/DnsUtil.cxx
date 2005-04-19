@@ -16,6 +16,7 @@
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
