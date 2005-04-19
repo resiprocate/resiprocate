@@ -273,7 +273,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
       }
 
       default:
-         WarningLog (<< "Can't provideOffer when not in Connected state");
+         WarningLog (<< "Can't provideAnswer when not in Connected state");
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
    }
 }
@@ -703,6 +703,22 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          start491Timer();
          break;
 
+      case On422Update:
+         if(msg.exists(h_MinSE))
+         {
+            // Change interval to min from 422 response
+            mSessionInterval = msg.header(h_MinSE).value();
+            sessionRefresh();
+         }
+         else
+         {
+            // Response must contact Min_SE - if not - just ignore
+            // !slg! callback?
+            transition(Connected);
+            mProposedLocalSdp.release();
+         }
+         break;
+
       case OnUpdateRejected:
          // !jf! - callback?
          mProposedLocalSdp.release();
@@ -770,6 +786,22 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
          mProposedLocalSdp.release();
+         break;
+
+      case On422Invite:
+         if(msg.exists(h_MinSE))
+         {
+            // Change interval to min from 422 response
+            mSessionInterval = msg.header(h_MinSE).value();
+            sessionRefresh();
+         }
+         else
+         {
+            // Response must contact Min_SE - if not - just ignore
+            // !slg! callback?
+            transition(Connected);
+            mProposedLocalSdp.release();
+         }
          break;
 
       case On491Invite:
@@ -1531,6 +1563,10 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          return On2xx;
       }
    }
+   else if (method == INVITE && code == 422)
+   {
+      return On422Invite;
+   }
    else if (method == INVITE && code == 487)
    {
       return On487Invite;
@@ -1600,6 +1636,10 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else if (method == UPDATE && code / 200 == 1)
    {
       return On200Update;
+   }
+   else if (method == UPDATE && code == 422)
+   {
+      return On422Update;
    }
    else if (method == UPDATE && code == 489)
    {

@@ -366,8 +366,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
-      default:
          assert(0);
+         break;
+
+      default:
+         InviteSession::reject(code);
          break;
    }
 }
