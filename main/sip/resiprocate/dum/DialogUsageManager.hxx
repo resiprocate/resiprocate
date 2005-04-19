@@ -14,7 +14,6 @@
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/TransactionUser.hxx"
 
 namespace resip 
@@ -341,8 +340,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ServerPagerMessageHandler* mServerPagerMessageHandler;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
-
-      StatisticsMessage::Payload mStatsPayload;
 
       SipStack& mStack;
       DumShutdownHandler* mDumShutdownHandler;
