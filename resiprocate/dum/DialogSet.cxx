@@ -277,6 +277,19 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                mDum.send(getCreator()->getLastRequest());
                return true;                     
             }
+
+            // Check if a 422 response to initial Invite (sessionTimer draft)
+            if(msg.header(h_StatusLine).statusCode() == 422 && msg.exists(h_MinSE))
+            {
+               // Change interval to min from 422 response
+               getCreator()->getLastRequest().header(h_SessionExpires).value() = msg.header(h_MinSE).value();
+
+               InfoLog( << "about to re-send request with new session expiration time" );
+               DebugLog( << getCreator()->getLastRequest() );
+               
+               mDum.send(getCreator()->getLastRequest());
+               return true;                     
+            }
          }
       }
    }
@@ -584,7 +597,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
          }
       }
-      
+
       DebugLog ( << "Creating a new Dialog from msg: " << msg);
       try
       {
