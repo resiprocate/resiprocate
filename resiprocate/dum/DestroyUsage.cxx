@@ -94,7 +94,7 @@ DestroyUsage::destroy()
    {
       delete mDialog;
    }
-   else
+   else if (mHandle.isValid())
    {
       delete mHandle.get();
    }
