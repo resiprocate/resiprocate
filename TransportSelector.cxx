@@ -41,12 +41,12 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket6( INVALID_SOCKET ),
    mWindowsVersion(WinCompat::getVersion())
 {
-   memset(&mUnspecified, 0, sizeof(sockaddr_in));
-   mUnspecified.sin_family = AF_UNSPEC;
+   memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
+   mUnspecified.v4Address.sin_family = AF_UNSPEC;
 
 #ifdef USE_IPV6
-   memset(&mUnspecified6, 0, sizeof(sockaddr_in6));
-   mUnspecified6.sin6_family = AF_UNSPEC;
+   memset(&mUnspecified6.v6Address, 0, sizeof(sockaddr_in6));
+   mUnspecified6.v6Address.sin6_family = AF_UNSPEC;
 #endif
 }
 
@@ -456,12 +456,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             // fails. I'm not sure the stack can recover from this error condition.
             if (target.isV4())
             {
-               ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+               ret = connect(mSocket,
+                             (struct sockaddr*)&mUnspecified.v4Address,
+                             sizeof(mUnspecified.v4Address));
             }
 #ifdef USE_IPV6
             else
             {
-               ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+               ret = connect(mSocket6,
+                             (struct sockaddr*)&mUnspecified6.v6Address,
+                             sizeof(mUnspecified6.v6Address));
             }
 #else
             else
