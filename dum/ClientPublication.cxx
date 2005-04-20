@@ -140,6 +140,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             if (retry < 0)
             {
                DebugLog(<< "Application requested failure on Retry-After");
+               handler->onFailure(getHandle(), msg);
                delete this;
                return;
             }
