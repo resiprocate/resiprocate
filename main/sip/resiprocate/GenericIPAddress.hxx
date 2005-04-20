@@ -1,7 +1,9 @@
 #if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
 #define RESIP_GENERIC_IP_ADDRESS_HXX
-  
+
+#ifndef WIN32  
 #include <netinet/in.h>
+#endif
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
