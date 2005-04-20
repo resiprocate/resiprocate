@@ -127,6 +127,15 @@ class BaseSecurity
       Contents* checkSignature( MultipartSignedContents*, 
                                 Data* signedBy, SignatureStatus* sigStat );
 
+      //returns SubjectAltName or commonName, if subjectAltName does not exist
+      Data getCetName(X509 *cert);
+
+      //compares (with wildcards) the hostname with the subjectAltName/commonName from the 'cert' certificate
+      bool compareCertName(X509 *cert, const Data& hostname);
+
+      //extracts peer certificate form SSL object and calls compareCertName to check certificate name
+      bool validatePeerCertName(SSL *sslContext, const Data& hostname);
+
       // allow particular classes to acces the fucntions below 
       // friend class TlsConnection;
    public:
