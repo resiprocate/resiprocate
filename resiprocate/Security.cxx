@@ -2169,6 +2169,130 @@ BaseSecurity::getSslCtx ()
    return   mSslCtx;
 }
 
+Data 
+BaseSecurity::getCetName(X509 *cert)
+{
+    X509_NAME *subj;
+    int       extcount;
+
+    assert(cert);
+
+    if ((extcount = X509_get_ext_count(cert)) > 0)
+    {
+        for (int i = 0;  i < extcount;  i++)
+        {
+            char              *extstr;
+            X509_EXTENSION    *ext;
+ 
+            ext = X509_get_ext(cert, i);
+            extstr = (char*) OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
+ 
+            if (!strcmp(extstr, "subjectAltName"))
+            {
+                int                  j;
+                unsigned char        *data;
+                STACK_OF(CONF_VALUE) *val;
+                CONF_VALUE           *nval;
+                X509V3_EXT_METHOD    *meth;
+                void                 *ext_str = NULL;
+ 
+                if (!(meth = X509V3_EXT_get(ext)))
+                    break;
+                data = ext->value->data;
+
+#if (OPENSSL_VERSION_NUMBER > 0x00907000L)
+                if (meth->it)
+                  ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
+                                          ASN1_ITEM_ptr(meth->it));
+                else
+                  ext_str = meth->d2i(NULL, &data, ext->value->length);
+#else
+                ext_str = meth->d2i(NULL, &data, ext->value->length);
+#endif
+                val = meth->i2v(meth, ext_str, NULL);
+                for (j = 0;  j < sk_CONF_VALUE_num(val);  j++)
+                {
+                    nval = sk_CONF_VALUE_value(val, j);
+                    if (!strcmp(nval->name, "DNS"))
+                    {
+                        //retrieve name, from nval->value                        
+                        return Data(nval->value);
+                    }
+                }
+            }
+        }
+    }
+ 
+    char cname[256];
+    memset(cname, 0, sizeof cname);
+
+    if ((subj = X509_get_subject_name(cert)) &&
+        X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
+    {        
+        return Data(cname);
+    }
+
+    ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
+    return Data::Empty;
+}
+
+static int 
+matchHostName(char *certName, const char *domainName)
+{
+    const char *dot;
+    dot = strchr(domainName, '.');
+    if (dot == NULL)
+    {
+	    char *pnt = strchr(certName, '.');
+	    /* hostname is not fully-qualified; unqualify the certName. */
+	    if (pnt != NULL) 
+        {
+	        *pnt = '\0';
+	    }
+    }
+    else 
+    {
+        if (strncmp(certName, "*.", 2) == 0) 
+        {
+	        domainName = dot + 1;
+	        certName += 2;
+        }
+    }
+    return !strcasecmp(certName, domainName);
+}
+
+bool 
+BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
+{
+    assert(cert);
+
+    Data certName = getCetName(cert);
+    if(Data::Empty == certName)
+        return false;
+
+    bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
+
+    return isMatching;
+}
+
+bool 
+BaseSecurity::validatePeerCertName(SSL *sslContext, const Data& domainName)
+{
+    bool bResult = false;
+    assert(sslContext);
+
+    X509* cert = SSL_get_peer_certificate(sslContext);
+    if ( !cert )
+    {
+        DebugLog(<< "No peer certificate in TLS connection" );
+        return false;
+    }
+    bResult = compareCertName(cert, domainName);
+    X509_free(cert); 
+    cert=NULL;
+
+    return bResult;
+}
 
 void
 BaseSecurity::dumpAsn( char* name, Data data)
