@@ -265,11 +265,21 @@ TlsConnection::checkState()
             return mState;
       }
    }
-   
+   //post-connection verification: check that certificate name matches domain name
+   bool bResult = mSecurity->validatePeerCertName(mSsl, who().getTargetDomain());
+   if(!bResult)
+   {
+       mState = Broken;
+       mBio = 0;
+       ErrLog (<< "Certificate name mismatch ");
+       return mState;
+   }
+
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
-   
+
    computePeerName(); // force peer name to get checked and perhaps cert loaded
+
 #endif // USE_SSL   
    return mState;
 }
