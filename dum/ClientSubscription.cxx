@@ -182,8 +182,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_StatusLine).statusCode() == 408)
       {
-         InfoLog (<< "Received 408 to SUBSCRIBE "
-                  << mLastRequest.header(h_To));
+         DebugLog (<< "Received 408 to SUBSCRIBE " << mLastRequest.header(h_To));
 
          int retry = handler->onRequestRetry(getHandle(), 0, msg);
          if (retry < 0)
