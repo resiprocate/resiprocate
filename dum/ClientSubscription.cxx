@@ -189,6 +189,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
          if (retry < 0)
          {
             DebugLog(<< "Application requested failure on Retry-After");
+            handler->onTerminated(getHandle(), msg);            
+            delete this;
+            return;
          }
          else if (retry == 0)
          {

@@ -344,8 +344,6 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (retry < 0)
             {
                DebugLog(<< "Application requested failure on Retry-After");
-               //delete this;
-               //return;  // !slg! let fallthrough to give profile retry check a chance to run - Note: onFailure will be called
             }
             else if (retry == 0)
             {
