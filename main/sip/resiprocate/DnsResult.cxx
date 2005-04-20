@@ -126,6 +126,7 @@ DnsResult::next()
    Tuple next = mResults.front();
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
+
    return next;
 }
 
@@ -303,7 +304,7 @@ DnsResult::lookupAAAARecords(const Data& target)
    DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
    mInterface.lookupAAAARecords(target, this);
-#else // !USE_IPV6
+#else // IPV4
    lookupARecords(target);
 #endif
 }
@@ -813,11 +814,11 @@ DnsResult::primeResults()
          )
       {
 #if defined(USE_IPV6)
-         std::vector<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
-         for (std::vector<struct in6_addr>::const_iterator i=aaaarecs.begin();
+         In6AddrList& aaaarecs = mAAAARecords[next.target];
+         for (In6AddrList::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
          {
-            Tuple tuple(*i, next.port,next.transport, mTarget);
+            Tuple tuple(i->addr, next.port,next.transport, mTarget);
             if (mInterface.isSupported(next.transport, V6))
             {
                StackLog (<< "Adding " << tuple << " to result set");
@@ -825,10 +826,10 @@ DnsResult::primeResults()
             }
          }
 #endif
-         std::vector<struct in_addr>& arecs = mARecords[next.target];
-         for (std::vector<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
+         In4AddrList& arecs = mARecords[next.target];
+         for (In4AddrList::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Tuple tuple(*i, next.port, next.transport, mTarget);
+            Tuple tuple(i->addr, next.port, next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");
             if (mInterface.isSupported(next.transport, V4))
             {
@@ -1046,7 +1047,9 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // another query
       if (mARecords.count(key) == 0)
       {
-         mARecords[key].push_back(addr);
+         IpV4Addr a;
+         a.addr = addr;
+         mARecords[key].push_back(a);
       }
       return aptr + dlen;
    }
@@ -1065,7 +1068,9 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // another query
       if (mAAAARecords.count(key) == 0)
       {
-         mAAAARecords[key].push_back(addr);
+         IpV6Addr a;
+         a.addr = addr;
+         mAAAARecords[key].push_back(a);
       }
       return aptr + dlen;
    }
