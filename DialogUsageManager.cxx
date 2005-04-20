@@ -916,7 +916,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
       if (destroyUsage)
       {
-         InfoLog(<< "Destroying usage" );
+         DebugLog(<< "Destroying usage" << *destroyUsage);
          destroyUsage->destroy();
          return true;
       }
