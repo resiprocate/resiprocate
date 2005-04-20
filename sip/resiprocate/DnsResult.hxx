@@ -201,14 +201,24 @@ class DnsResult
       std::vector<SRV> mSRVResults;
       
       // All cached A records associated with this query/queries
-	  typedef std::vector<struct in_addr> InAddrList;
-      std::map<Data,InAddrList > mARecords;
-
+      typedef union
+      {
+            struct in_addr addr;
+            char pad[4];
+      } IpV4Addr;
+      typedef std::vector<IpV4Addr> In4AddrList;
+      std::map<Data,In4AddrList> mARecords;
+      
+      typedef union 
+      {
 #ifdef USE_IPV6
-      // All cached AAAA records associated with this query/queries
-	  typedef std::vector<struct in6_addr> InAddr6List;
-      std::map<Data,InAddr6List> mAAAARecords;
+            struct in6_addr addr;
 #endif
+            char pad[16];
+      } IpV6Addr;
+      // All cached AAAA records associated with this query/queries
+      typedef std::vector<IpV6Addr> In6AddrList;
+      std::map<Data,In6AddrList> mAAAARecords;
 
       friend class DnsInterface;
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
