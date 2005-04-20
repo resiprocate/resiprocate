@@ -31,15 +31,38 @@ class Tuple
 {
    public:
       RESIP_HeapCount(Tuple);
+
       Tuple();
-      explicit Tuple(const GenericIPAddress& genericAddress, TransportType type=UNKNOWN_TRANSPORT, 
+
+      explicit Tuple(const GenericIPAddress& genericAddress, 
+                     TransportType type=UNKNOWN_TRANSPORT, 
                      const Data& targetDomain = Data::Empty);
-      Tuple(const Data& printableAddress, int port, IpVersion ipVer, TransportType type=UNKNOWN_TRANSPORT, const Data& targetDomain = Data::Empty);
-      Tuple(const Data& printableAddress, int port, TransportType type, const Data& targetDomain = Data::Empty);
-      Tuple(const in_addr& pipv4, int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
-      Tuple(const sockaddr& addr, TransportType ptype, const Data& targetDomain = Data::Empty);
+
+      Tuple(const Data& printableAddress, 
+            int port, 
+            IpVersion ipVer, 
+            TransportType type=UNKNOWN_TRANSPORT, 
+            const Data& targetDomain = Data::Empty);
+
+      Tuple(const Data& printableAddress, 
+            int port, 
+            TransportType type, 
+            const Data& targetDomain = Data::Empty);
+
+      Tuple(const in_addr& pipv4, 
+            int pport,
+            TransportType ptype, 
+            const Data& targetDomain = Data::Empty);
+
+      Tuple(const sockaddr& addr, 
+            TransportType ptype, 
+            const Data& targetDomain = Data::Empty);
+
 #ifdef USE_IPV6
-      Tuple(const in6_addr& pipv6,  int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
+      Tuple(const in6_addr& pipv6,  
+            int pport, 
+            TransportType ptype, 
+            const Data& targetDomain = Data::Empty);
 #endif
       
       // convert from a tuple to a sockaddr structure
@@ -99,13 +122,14 @@ class Tuple
       }
       
    private:
-      // !ah! needs to big enough for the IPv6 address.
-      union {
+      union 
+      {
             sockaddr mSockaddr;
             sockaddr_in m_anonv4;
 #ifdef USE_IPV6
             sockaddr_in6 m_anonv6;
 #endif
+            char pad[28]; // this make union same size if v6 is in or out
       };
       TransportType mTransportType;
       Data mTargetDomain; 
