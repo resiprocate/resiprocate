@@ -190,9 +190,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void end(DialogSetId invSessionId);
       void send(SipMessage& request); 
       
-
-      // Call this version of process if you are running the sipstack in its own
-      // thread. you must call run() before calling process()
+      // give dum an opportunity to handle its events. If process() returns true
+      // there are more events to process. 
       bool process();
 
       //void buildFdSet(FdSet& fdset);
