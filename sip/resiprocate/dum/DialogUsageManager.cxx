@@ -1029,7 +1029,7 @@ DialogUsageManager::process()
    {
       internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
-   return !mFifo.messageAvailable();
+   return mFifo.messageAvailable();
 }
 
 bool
