@@ -9,7 +9,9 @@
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 #include "resiprocate/os/Data.hxx"
 
-#if !defined(WIN32)
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
 #include <netinet/in.h>
 #endif
 
