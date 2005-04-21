@@ -786,13 +786,13 @@ DialogUsageManager::findInviteSession(CallId replaces)
 }
 
 // !jf! When should this function return false?
-bool
+void
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
-      return false;
+      return;
    }
 
    bool authorized = false;
@@ -810,7 +810,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          else
          {
             InfoLog(<< "ServerAuth rejected request " << *userAuth);
-            return true;
+            return;
          }
       }
    }
@@ -830,7 +830,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             if( !validateRequestURI(*sipMsg) )
             {
                DebugLog (<< "Failed RequestURI validation " << *sipMsg);
-               return true;
+               return;
             }
 
             // Continue validation on all requests, except ACK and CANCEL
@@ -840,17 +840,17 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                if( !validateRequiredOptions(*sipMsg) )
                {
                   DebugLog (<< "Failed required options validation " << *sipMsg);
-                  return true;
+                  return;
                }
                if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
                {
                   DebugLog (<< "Failed content validation " << *sipMsg);
-                  return true;
+                  return;
                }
                if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
                {
                   DebugLog (<< "Failed accept validation " << *sipMsg);
-                  return true;
+                  return;
                }
             }
             if (sipMsg->header(h_From).exists(p_tag))
@@ -858,7 +858,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                if (mergeRequest(*sipMsg) )
                {
                   InfoLog (<< "Merged request: " << *sipMsg);
-                  return true;
+                  return;
                }
             }
 
@@ -868,13 +868,13 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                {
                   case ServerAuthManager::Challenged:
                      InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
-                     return true;
+                     return;
                   case ServerAuthManager::RequestedCredentials:
                      InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
-                     return true;
+                     return;
                   case ServerAuthManager::Rejected:
                      InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
-                     return true;
+                     return;
                   default:
                      break;
                }
@@ -896,7 +896,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                processResponse(*sipMsg);
             }
          }
-         return true;
+         return;
       }
 
       TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
@@ -910,7 +910,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          {
             mDumShutdownHandler->onDumCanBeDeleted();
          }
-         return true;
+         return;
       }
 
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
@@ -918,7 +918,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          DebugLog(<< "Destroying usage" << *destroyUsage);
          destroyUsage->destroy();
-         return true;
+         return;
       }
 
       DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
@@ -927,11 +927,11 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          InfoLog(<< "Timeout Message" );
          if (!dumMsg->getBaseUsage().isValid())
          {
-            return true;
+            return;
          }
 
          dumMsg->getBaseUsage()->dispatch(*dumMsg);
-         return true;
+         return;
       }
 
       KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
@@ -942,17 +942,13 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          {
             mKeepAliveManager->process(*keepAliveMsg);
          }
-         return true;
       }
-
-      return true;
    }
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
-   return false;
 }
 
 bool
@@ -1025,40 +1021,16 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
    return false;
 }
 
+// return false if there is more to do
 bool 
 DialogUsageManager::process()
 {
-   return (mFifo.messageAvailable() && internalProcess(std::auto_ptr<Message>(mFifo.getNext())));
-}
-
-#if 0
-void
-DialogUsageManager::buildFdSet(FdSet& fdset)
-{
-   mStack.buildFdSet(fdset);
-}
-
-int
-DialogUsageManager::getTimeTillNextProcessMS()
-{
-   return mStack.getTimeTillNextProcessMS();
-}
-
-void
-DialogUsageManager::process(FdSet& fdset)
-{
-   try
+   if (mFifo.messageAvailable())
    {
-      mStack.process(fdset);
-      while(process());
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
-   catch(BaseException& e)
-   {
-      //unparseable, bad 403 w/ 2543 trans it from FWD, etc
-	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
-   }
+   return !mFifo.messageAvailable();
 }
-#endif
 
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
