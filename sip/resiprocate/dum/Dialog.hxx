@@ -38,7 +38,7 @@ class Dialog
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
 
-      DialogId getId() const;
+      const DialogId& getId() const;
       
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests

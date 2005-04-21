@@ -125,7 +125,10 @@ DialogSet::~DialogSet()
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
    mDum.removeDialogSet(this->getId());
-   mAppDialogSet->destroy();
+   if (mAppDialogSet) 
+   {
+      mAppDialogSet->destroy();
+   }
 }
 
 void DialogSet::possiblyDie()
@@ -145,7 +148,7 @@ void DialogSet::possiblyDie()
 }
 
 DialogSetId
-DialogSet::getId()
+DialogSet::getId() const
 {
    return mId;
 }
