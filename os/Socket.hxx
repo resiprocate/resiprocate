@@ -20,8 +20,6 @@
 typedef int socklen_t;
 inline int getErrno() { return WSAGetLastError(); }
 
-typedef SOCKET Socket;
-
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
@@ -81,6 +79,8 @@ typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
 inline int getErrno() { return errno; }
+#else
+typedef SOCKET Socket;
 #endif
 
 bool makeSocketNonBlocking(Socket fd);
