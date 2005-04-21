@@ -226,7 +226,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
       virtual const Data& name() const;
-      bool internalProcess(std::auto_ptr<Message> msg);
+      void internalProcess(std::auto_ptr<Message> msg);
       friend class DumThread;
       
    private:
