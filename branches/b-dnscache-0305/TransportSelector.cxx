@@ -41,12 +41,12 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket6( INVALID_SOCKET ),
    mWindowsVersion(WinCompat::getVersion())
 {
-   memset(&mUnspecified, 0, sizeof(sockaddr_in));
-   mUnspecified.sin_family = AF_UNSPEC;
+   memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
+   mUnspecified.v4Address.sin_family = AF_UNSPEC;
 
 #ifdef USE_IPV6
-   memset(&mUnspecified6, 0, sizeof(sockaddr_in6));
-   mUnspecified6.sin6_family = AF_UNSPEC;
+   memset(&mUnspecified6.v6Address, 0, sizeof(sockaddr_in6));
+   mUnspecified6.v6Address.sin6_family = AF_UNSPEC;
 #endif
 }
 
@@ -60,14 +60,14 @@ TransportSelector::~TransportSelector()
       delete t;
    }
 
-   InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
+   //InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
    
    while (!mAnyInterfaceTransports.empty())
    {
       AnyInterfaceTupleMap::iterator i = mAnyInterfaceTransports.begin();
       Transport* t = i->second;
       mAnyInterfaceTransports.erase(i);
-      InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
+      //InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
       delete t;
    }
 }
@@ -107,7 +107,7 @@ void
 TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
    Transport* transport = tAuto.release();   
-   mDns.addTransportType(transport->transport());
+   mDns.addTransportType(transport->transport(), transport->ipVersion());
    switch (transport->transport())
    {
       case UDP:
@@ -138,13 +138,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       break;
       case TLS:
       {
-         mTlsTransports[transport->interfaceName()] = transport;
+         mTlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #ifdef USE_DTLS
       case DTLS:
       {
-         mDtlsTransports[transport->interfaceName()] = transport;
+         mDtlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #endif
@@ -456,12 +456,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             // fails. I'm not sure the stack can recover from this error condition.
             if (target.isV4())
             {
-               ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+               ret = connect(mSocket,
+                             (struct sockaddr*)&mUnspecified.v4Address,
+                             sizeof(mUnspecified.v4Address));
             }
 #ifdef USE_IPV6
             else
             {
-               ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+               ret = connect(mSocket6,
+                             (struct sockaddr*)&mUnspecified6.v6Address,
+                             sizeof(mUnspecified6.v6Address));
             }
 #else
             else
@@ -544,11 +548,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             if (target.getType() == TLS)
             {
                target.transport = findTlsTransport(msg->getTlsDomain());
+               //target.transport = findTlsTransport(msg->header(h_From).uri().host());
             }
 #if defined( USE_DTLS )
             else if (target.getType() == DTLS)
             {
-                target.transport = findDtlsTransport(msg->getTlsDomain());
+               target.transport = findDTlsTransport(msg->getTlsDomain());
+               //target.transport = findDtlsTransport(msg->header(h_From).uri().host());
             }
 #endif
             else
@@ -631,7 +637,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #if defined(USE_SSL)
             try
             {
-               Data domain = msg->header(h_From).uri().host();
+               const Data& domain = msg->header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
                                                                              msg->getCanonicalIdentityString());
             }
@@ -796,7 +802,7 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname)
 
 {
-   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'");
+   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'" << " have " << mTlsTransports.size());
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {

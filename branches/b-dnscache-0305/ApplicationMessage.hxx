@@ -1,6 +1,7 @@
 #ifndef RESIP_ApplicationMessage_hxx
 #define RESIP_ApplicationMessage_hxx 
 
+#include "assert.h"
 #include "resiprocate/Message.hxx"
 
 namespace resip
@@ -11,6 +12,7 @@ class ApplicationMessage : public Message
    public:
       ApplicationMessage() {};
 
+      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; } 
       virtual Data brief() const=0;
       virtual Message* clone() const=0;
 };

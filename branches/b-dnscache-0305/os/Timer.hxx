@@ -95,10 +95,12 @@ class Timer
       friend bool operator<(const Timer& t1, const Timer& t2);
       friend bool operator>(const Timer& t1, const Timer& t2);
       friend std::ostream& operator<<(std::ostream&, const Timer&);
+      friend class BaseTimeLimitTimerQueue;
       friend class BaseTimerQueue;
-      friend class TimerQueue;
       friend class DtlsTimerQueue;
       friend class TimeLimitTimerQueue;
+      friend class TimerQueue;
+      friend class TuSelectorTimerQueue;
 };
  
 std::ostream& operator<<(std::ostream&, const Timer&);

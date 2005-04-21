@@ -13,6 +13,7 @@
 #include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
+#include "resiprocate/GenericIPAddress.hxx"
 
 
 #include "resiprocate/SecurityTypes.hxx"
@@ -100,10 +101,8 @@ class TransportSelector
       WinCompat::Version mWindowsVersion;
       
       // An AF_UNSPEC addr_in for rapid unconnect
-      struct sockaddr_in mUnspecified;
-#ifdef USE_IPV6
-	  struct sockaddr_in6 mUnspecified6;
-#endif
+      GenericIPAddress mUnspecified;
+      GenericIPAddress mUnspecified6;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

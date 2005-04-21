@@ -1,11 +1,16 @@
 #if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
 #define RESIP_GENERIC_IP_ADDRESS_HXX
 
+#ifndef WIN32  
+#include <netinet/in.h>
+#endif
+
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
 
 namespace resip
 {
+/** This class is missnamed - it is really an IP address and port */
 struct GenericIPAddress
 {
    public:   
@@ -26,6 +31,7 @@ struct GenericIPAddress
       {
       }
 #endif
+      
       size_t length() const
       {
          if (address.sa_family == AF_INET) // v4
@@ -37,22 +43,24 @@ struct GenericIPAddress
          {
             return sizeof(sockaddr_in6);
          }
+#endif
          assert(0);
          return 0;
-#endif
-	  }
+      }
+      
       bool isVersion4() const
       {
          return address.sa_family == AF_INET;
       }
-#ifdef USE_IPV6
+
       bool isVersion6() const 
       { 
-         return address.sa_family == AF_INET6; 
-      }
-#else
-      bool isVersion6() const { return false; }
+#ifdef USE_IPV6
+         if (address.sa_family == AF_INET6) return true; 
 #endif
+         return false;
+      }
+
       union
       {
             sockaddr address;
@@ -60,9 +68,9 @@ struct GenericIPAddress
 #ifdef USE_IPV6
             sockaddr_in6 v6Address;
 #endif
+            char pad[28]; // this make union same size if v6 is in or out
       };
-   private:
-      bool mIsVersion4;
+
 };
 
 }
