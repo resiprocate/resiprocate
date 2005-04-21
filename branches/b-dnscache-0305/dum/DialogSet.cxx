@@ -263,14 +263,28 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                   it->second->redirected(msg);         
                }
                
+			   /* !slg! this won't allow any redirections - since Dialog destruction is delayed by queueing a destroy event
                if (!mDialogs.empty())
                {
                   //a dialog is refusing this 3xx(only implemented for INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
                   return true; //(toss 3xx) !dcm! -- might leak dialog
-               }
+               }*/
 
                InfoLog( << "about to re-send request to redirect destination" );
+               DebugLog( << getCreator()->getLastRequest() );
+               
+               mDum.send(getCreator()->getLastRequest());
+               return true;                     
+            }
+
+            // Check if a 422 response to initial Invite (sessionTimer draft)
+            if(msg.header(h_StatusLine).statusCode() == 422 && msg.exists(h_MinSE))
+            {
+               // Change interval to min from 422 response
+               getCreator()->getLastRequest().header(h_SessionExpires).value() = msg.header(h_MinSE).value();
+
+               InfoLog( << "about to re-send request with new session expiration time" );
                DebugLog( << getCreator()->getLastRequest() );
                
                mDum.send(getCreator()->getLastRequest());
@@ -345,11 +359,11 @@ DialogSet::dispatch(const SipMessage& msg)
 
    if (dialog)
    {
-      InfoLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
    }
    else
    {
-      InfoLog (<< "No matching dialog for " << endl << msg);
+      StackLog (<< "No matching dialog for " << endl << msg);
    }
    
    if (msg.isRequest())
@@ -525,6 +539,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;            
 
          case INFO:   
+         case UPDATE:
             if (dialog)
             {
                break;
@@ -582,7 +597,7 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
          }
       }
-      
+
       DebugLog ( << "Creating a new Dialog from msg: " << msg);
       try
       {
