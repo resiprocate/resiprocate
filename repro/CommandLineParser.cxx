@@ -77,10 +77,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mUseV6 = !disableV6;
    mDomains = toUriVector(domains, "domains"); 
    mCertPath = certPath;
-   mNoChallenge = noChallenge;
-   mNoWebChallenge = noWebChallenge;
-   mNoRegistrar = noRegistrar;
-   mCertServer = certServer;
+   mNoChallenge = noChallenge != 0;
+   mNoWebChallenge = noWebChallenge != 0;
+   mNoRegistrar = noRegistrar != 0 ;
+   mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
 }
 
