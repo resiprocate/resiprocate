@@ -9,6 +9,8 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 
+#include "resiprocate/dum/AppDialogSet.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -174,7 +176,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
          // !kh!
          // why not absorb this error if DUM reSUBs for user?
          handler->onTerminated(getHandle(), msg);
-         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
+
+         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
          mDum.send(sub);
 
          delete this;
@@ -195,7 +198,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          else if (retry == 0)
          {
             DebugLog(<< "Application requested immediate retry on Retry-After");
-            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             return;
          }
@@ -239,7 +242,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             delete this;
          }
