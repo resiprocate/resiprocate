@@ -5,26 +5,14 @@ CONTRIB = ../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD
-
-
-#LDLIBS += -lncurses 
-#CXXFLAGS += -I/sw/include
-#LDFLAGS  += -L/sw/lib
-
-
-# this is so that popt only works where there is popt
-# To enable popt, add USE_POPT=true to sip/build/Makefile.conf
-# This only applies to the non-autotools build system
-ifdef USE_POPT
-LDLIBS += -lpopt
-endif
+PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), true)
 TESTPROGRAMS += makeSelfCert.cxx 
 endif
 
-TESTPROGRAMS += test503Generator.cxx \
+TESTPROGRAMS += testTuple.cxx \
+		test503Generator.cxx \
 		limpc.cxx \
 		testConnectionBase.cxx \
 		SipTortureTests.cxx \
