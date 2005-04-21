@@ -2,33 +2,52 @@
 #define RESIP_TuSelector_HXX 
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 
 namespace resip
 {
 class Message;
 class TransactionUser;
-class TransactionUserMessage;
 
 class TuSelector
 {
    public:
       TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;      
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
-      bool haveTransactionUsers() const { return !mTuList.empty(); }
+      bool haveTransactionUsers() const { return mTuSelectorMode; }
       void registerTransactionUser(TransactionUser&);
+      void requestTransactionUserShutdown(TransactionUser&);
+      void unregisterTransactionUser(TransactionUser&);
+      void process();
+      
+   private:
+      void remove(TransactionUser* tu);
+      void markShuttingDown(TransactionUser* tu);
       bool exists(TransactionUser* tu);
 
- private:
-      typedef std::vector<TransactionUser*> TuList;
+   private:
+      struct Item
+      {
+            Item(TransactionUser* ptu) : tu(ptu), shuttingDown(false) {}
+            TransactionUser* tu;
+            bool shuttingDown;
+            bool operator==(const Item& rhs) { return tu == rhs.tu; }
+      };
+      
+      typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      Fifo<TransactionUserMessage> mShutdownFifo;
       bool mTuSelectorMode;
+      StatisticsMessage::Payload mStatsPayload;
 };
 }
 

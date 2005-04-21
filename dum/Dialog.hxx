@@ -11,6 +11,7 @@
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/CallId.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/NetworkAssociation.hxx"
 
 namespace resip

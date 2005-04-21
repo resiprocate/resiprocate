@@ -1,6 +1,7 @@
 #include "resiprocate/KeepAliveMessage.hxx"
 #include "resiprocate/dum/KeepAliveManager.hxx"
 #include "resiprocate/dum/KeepAliveTimeout.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipStack.hxx"
 
@@ -11,7 +12,7 @@ using namespace std;
 
 void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
 {
-   assert(mStack);
+   assert(mDum);
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
@@ -21,7 +22,8 @@ void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
       info.keepAliveInterval = keepAliveInterval;
       mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, info));
       KeepAliveTimeout t(target);
-      mStack->post(t, keepAliveInterval);
+      SipStack &stack = mDum->getSipStack();
+      stack.post(t, keepAliveInterval, mDum);
    }
    else
    {
@@ -47,14 +49,15 @@ void KeepAliveManager::remove(const Tuple& target)
 
 void KeepAliveManager::process(KeepAliveTimeout& timeout)
 {
-   assert(mStack);
+   assert(mDum);
    static KeepAliveMessage msg;
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
    if (it != mNetworkAssociations.end())
    {
-      mStack->sendTo(msg, timeout.target());
+      SipStack &stack = mDum->getSipStack();
+      stack.sendTo(msg, timeout.target(), mDum);
       KeepAliveTimeout t(it->first);
-      mStack->post(t, it->second.keepAliveInterval);
+      stack.post(t, it->second.keepAliveInterval, mDum);
       InfoLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
    }
 }

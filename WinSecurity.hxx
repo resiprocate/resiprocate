@@ -2,6 +2,7 @@
 #define RESIP_WINSECURITY_HXX
 
 #include "resiprocate/Security.hxx"
+#include <wincrypt.h>
 
 namespace resip
 {

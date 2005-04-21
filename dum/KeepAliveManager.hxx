@@ -8,7 +8,7 @@ namespace resip
 {
 
 class KeepAliveTimeout;
-class SipStack;
+class DialogUsageManager;
 
 class KeepAliveManager
 {
@@ -21,13 +21,13 @@ class KeepAliveManager
       typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
       KeepAliveManager() {}
-      void setStack(SipStack* stack) { mStack = stack; }
+      void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
       void add(const Tuple& target, int keepAliveInterval);
       void remove(const Tuple& target);
       void process(KeepAliveTimeout& timeout);
 
    protected:
-      SipStack* mStack;
+      DialogUsageManager* mDum;
       NetworkAssociationMap mNetworkAssociations;
       
 };

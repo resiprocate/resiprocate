@@ -37,13 +37,33 @@ class BaseTimerQueue
       std::multiset<Timer> mTimers;
 };
 
-class TimeLimitTimerQueue : public BaseTimerQueue
+class BaseTimeLimitTimerQueue : public BaseTimerQueue
 {
    public:
-      TimeLimitTimerQueue(TuSelector& fifoSelector);
       void add(const Timer& timer);
       virtual void process();
-      
+   protected:
+      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
+};
+
+
+class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
+{
+   public:
+      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
+   protected:
+      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+   private:
+      TimeLimitFifo<Message>& mFifo;
+};
+
+
+class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
+{
+   public:
+      TuSelectorTimerQueue(TuSelector& sel);
+   protected:
+      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
    private:
       TuSelector& mFifoSelector;
 };
@@ -55,7 +75,6 @@ class TimerQueue : public BaseTimerQueue
       TimerQueue(Fifo<TransactionMessage>& fifo);
       Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       virtual void process();
-      
    private:
       Fifo<TransactionMessage>& mFifo;
 };

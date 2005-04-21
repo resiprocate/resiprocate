@@ -2,6 +2,7 @@
 #define RESIP_DNSINTERFACE_HXX 
 
 #include <set>
+#include <vector>
 
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -48,12 +49,16 @@ class DnsInterface : public ExternalDnsHandler
       Data errorMessage(int status);
 
       // set the supported set of types that a UAC wishes to use
-      void addTransportType(TransportType type);
+      void addTransportType(TransportType type, IpVersion version);
       
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
+      bool isSupported(TransportType t, IpVersion version);
 
-      bool isSupported(TransportType t);
+      // this is used if NAPTR doesn't return anything to decide which SRV
+      // records to query
+      bool isSupportedProtocol(TransportType t);
+
       
       //only call buildFdSet and process if requiresProcess is true.  
       bool requiresProcess();
@@ -101,8 +106,10 @@ class DnsInterface : public ExternalDnsHandler
       // For synchronous DnsInterface, set to 0
       friend class DnsResult;
       DnsHandler* mHandler;
-      std::set<Data> mSupportedTransports;
-      std::set<TransportType> mSupportedTransportTypes;
+      std::set<Data> mSupportedNaptrs;
+      typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
+      TransportMap mSupportedTransports;
+      //std::set<TransportType> mSupportedTransportTypes;
 
       ExternalDns* mDnsProvider;
       int mActiveQueryCount;      

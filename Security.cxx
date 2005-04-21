@@ -124,6 +124,12 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
 
 Security::Security(const Data& directory) : mPath(directory)
 {
+   // since the preloader won't work otherwise and VERY difficult to figure
+   // out. 
+   if ( mPath[mPath.size()-1] != Symbols::SLASH[0] )
+   {
+      mPath += Symbols::SLASH;
+   }
 }
 
 
@@ -142,7 +148,6 @@ Security::preload()
          Data fileName = mPath + name;
          
          DebugLog(<< "Trying to load file " << name );
-
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
@@ -241,6 +246,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
+   InfoLog (<< "Reading PEM file " << filename << " into " << name);
    // .dlb. extra copy
    buffer = readIntoData(filename);
 }
@@ -250,9 +256,22 @@ void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
-
+   InfoLog (<< "Writing PEM file " << filename << " for " << name);
    ofstream str(filename.c_str(), ios::binary);
-   str.write(buffer.data(), buffer.size());
+   if (!str)
+   {
+      ErrLog (<< "Can't write to " << filename);
+      throw BaseSecurity::Exception("Failed opening PEM file", __FILE__,__LINE__);
+   }
+   else
+   {
+      str.write(buffer.data(), buffer.size());
+      if (!str)
+      {
+         ErrLog (<< "Failed writing to " << filename << " " << buffer.size() << " bytes");
+         throw BaseSecurity::Exception("Failed writing PEM file", __FILE__,__LINE__);
+      }
+   }
 }
 
 
@@ -262,148 +281,6 @@ Security::onRemovePEM(const Data& name, PEMType type) const
    assert(0);
    // TODO - should delete file 
 }
-
-
-#if 0
-namespace
-{
-FILE* 
-fopenHelper (const char* pathname, const char* option)
-{
-   FILE* fp = fopen(pathname, option);
-
-   if ( !fp )
-   {
-      Data msg;
-      DataStream strm(msg);
-
-      strm << "fopen(" << pathname << ", " << option << ")" << "failed";
-
-      ErrLog(<< msg);
-      throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-   }
-
-   return   fp;
-}
-
-
-void 
-clearError ()
-{
-    while (ERR_get_error())
-    {
-    }
-}
-
-
-void 
-onReadError (bool do_throw = false)
-{
-    Data msg;
-    while (true)
-    {
-        const char* file;
-        int line;
-
-        unsigned long code = ERR_get_error_line(&file,&line);
-        if ( code == 0 )
-        {
-            break;
-        }
-
-        msg.clear();
-        DataStream strm(msg);
-        char err_str[256];
-        ERR_error_string_n(code, err_str, sizeof(err_str));
-        strm << err_str << ", file=" << file 
-             << ", line= " << line << ", error code=" << code;
-
-        ErrLog(<< msg);
-    }
-    if (do_throw)
-    {
-       throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-    }
-}
-
-
-void 
-logReadError ()
-{
-   onReadError(false);
-}
-
-
-void 
-throwReadError ()
-{
-   onReadError(true);
-}
-
-
-struct FileGuard
-{
-    FileGuard (FILE* fp)
-    :   mFp(fp) {}
-    ~FileGuard ()
-    {
-        fclose(mFp);
-    }
-
-    FILE* mFp;
-};
-
-
-#if defined(WIN32)
-
-struct FindGuard
-{
-    FindGuard (HANDLE findHandle)
-    :   mHandle(findHandle) {}
-    ~FindGuard ()
-    {
-        FindClose(mHandle);
-    }
-
-    HANDLE  mHandle;
-};
-
-#else
-
-struct DirGuard
-{
-    DirGuard (DIR* dir)
-    :   mDir(dir) {}
-    ~DirGuard ()
-    {
-        closedir(mDir);
-    }
-
-    DIR*  mDir;
-};
-#endif
-
-
-void
-setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, 
-              const Data& key, 
-              const Data& passPhrase)
-{
-   passPhrases.insert(std::make_pair(key, passPhrase));
-}
-
-
-bool
-hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
-{
-   BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
-   return (iter != passPhrases.end());
-}
-
-
-}  // namespace
-#endif
-
 
 
 void
@@ -584,10 +461,11 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       assert(0);
    }
 
-   assert(0); // the code following this has no hope of working 
+   //assert(0); // the code following this has no hope of working 
    
    X509* x = where->second;
-   int len = i2d_X509(x, NULL);
+   unsigned char* buffer=0;
+   int len = i2d_X509(x, &buffer);
 
    // !kh!
    // Although len == 0 is not an error, I am not sure what quite to do.
@@ -598,8 +476,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   char*    out = new char[len];
-  return   Data(Data::Take, out, len);
+   return   Data(Data::Take, (char*)buffer, len);
 }
 
 
@@ -962,9 +839,12 @@ BaseSecurity::BaseSecurity () :
    mRootCerts = X509_STORE_new();
    assert(mRootCerts);
 
-   static char* cipher="RSA+SHA+AES+3DES";
+   // static char* cipher="RSA+SHA+AES+3DES";
    // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
-
+   //static char* cipher="ALL";
+   //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
+   static char* cipher="TLSv1";
+     
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
@@ -2289,6 +2169,130 @@ BaseSecurity::getSslCtx ()
    return   mSslCtx;
 }
 
+Data 
+BaseSecurity::getCetName(X509 *cert)
+{
+    X509_NAME *subj;
+    int       extcount;
+
+    assert(cert);
+
+    if ((extcount = X509_get_ext_count(cert)) > 0)
+    {
+        for (int i = 0;  i < extcount;  i++)
+        {
+            char              *extstr;
+            X509_EXTENSION    *ext;
+ 
+            ext = X509_get_ext(cert, i);
+            extstr = (char*) OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
+ 
+            if (!strcmp(extstr, "subjectAltName"))
+            {
+                int                  j;
+                unsigned char        *data;
+                STACK_OF(CONF_VALUE) *val;
+                CONF_VALUE           *nval;
+                X509V3_EXT_METHOD    *meth;
+                void                 *ext_str = NULL;
+ 
+                if (!(meth = X509V3_EXT_get(ext)))
+                    break;
+                data = ext->value->data;
+
+#if (OPENSSL_VERSION_NUMBER > 0x00907000L)
+                if (meth->it)
+                  ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
+                                          ASN1_ITEM_ptr(meth->it));
+                else
+                  ext_str = meth->d2i(NULL, &data, ext->value->length);
+#else
+                ext_str = meth->d2i(NULL, &data, ext->value->length);
+#endif
+                val = meth->i2v(meth, ext_str, NULL);
+                for (j = 0;  j < sk_CONF_VALUE_num(val);  j++)
+                {
+                    nval = sk_CONF_VALUE_value(val, j);
+                    if (!strcmp(nval->name, "DNS"))
+                    {
+                        //retrieve name, from nval->value                        
+                        return Data(nval->value);
+                    }
+                }
+            }
+        }
+    }
+ 
+    char cname[256];
+    memset(cname, 0, sizeof cname);
+
+    if ((subj = X509_get_subject_name(cert)) &&
+        X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
+    {        
+        return Data(cname);
+    }
+
+    ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
+    return Data::Empty;
+}
+
+static int 
+matchHostName(char *certName, const char *domainName)
+{
+    const char *dot;
+    dot = strchr(domainName, '.');
+    if (dot == NULL)
+    {
+	    char *pnt = strchr(certName, '.');
+	    /* hostname is not fully-qualified; unqualify the certName. */
+	    if (pnt != NULL) 
+        {
+	        *pnt = '\0';
+	    }
+    }
+    else 
+    {
+        if (strncmp(certName, "*.", 2) == 0) 
+        {
+	        domainName = dot + 1;
+	        certName += 2;
+        }
+    }
+    return !strcasecmp(certName, domainName);
+}
+
+bool 
+BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
+{
+    assert(cert);
+
+    Data certName = getCetName(cert);
+    if(Data::Empty == certName)
+        return false;
+
+    bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
+
+    return isMatching;
+}
+
+bool 
+BaseSecurity::validatePeerCertName(SSL *sslContext, const Data& domainName)
+{
+    bool bResult = false;
+    assert(sslContext);
+
+    X509* cert = SSL_get_peer_certificate(sslContext);
+    if ( !cert )
+    {
+        DebugLog(<< "No peer certificate in TLS connection" );
+        return false;
+    }
+    bResult = compareCertName(cert, domainName);
+    X509_free(cert); 
+    cert=NULL;
+
+    return bResult;
+}
 
 void
 BaseSecurity::dumpAsn( char* name, Data data)

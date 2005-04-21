@@ -272,6 +272,7 @@ ServerInviteSession::end()
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
+      case UAS_AcceptedWaitingAnswer:
          reject(480);
          break;         
          
@@ -365,8 +366,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
-      default:
          assert(0);
+         break;
+
+      default:
+         InviteSession::reject(code);
          break;
    }
 }
