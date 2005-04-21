@@ -400,8 +400,10 @@ class TestShutdownHandler : public DumShutdownHandler
 {
    public:
       TestShutdownHandler(const Data& n) : name(n), dumShutDown(false) { }
-      bool dumShutDown;
+      virtual ~TestShutdownHandler(){}
+
       Data name;
+      bool dumShutDown;
       virtual void onDumCanBeDeleted() 
       {
          cout << name << ": onDumCanBeDeleted." << endl;
@@ -415,10 +417,12 @@ int
 main (int argc, char** argv)
 {
    Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
 
    //set up UAC
-   DialogUsageManager* dumUac = new DialogUsageManager();
+   SipStack stackUac;
+   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
    dumUac->addTransport(UDP, 12005);
 
    MasterProfile uacMasterProfile;      
@@ -450,7 +454,8 @@ main (int argc, char** argv)
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
-   DialogUsageManager* dumUas = new DialogUsageManager();
+   SipStack stackUas;
+   DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    dumUas->addTransport(UDP, 12010);
    
    MasterProfile uasMasterProfile;   
@@ -510,18 +515,20 @@ main (int argc, char** argv)
      if (!uacShutdownHandler.dumShutDown)
      {
         FdSet fdset;
-        dumUac->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin(dumUac->getTimeTillNextProcessMS(), 50));
+        stackUac.buildFdSet(fdset);
+        int err = fdset.selectMilliSeconds(resipMin((int)stackUac.getTimeTillNextProcessMS(), 50));
         assert ( err != -1 );
-        dumUac->process(fdset);
+        stackUac.process(fdset);
+        while(dumUac->process());
      }
      if (!uasShutdownHandler.dumShutDown)
      {
         FdSet fdset;
-        dumUas->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(resipMin(dumUas->getTimeTillNextProcessMS(), 50));
+        stackUas.buildFdSet(fdset);
+        int err = fdset.selectMilliSeconds(resipMin((int)stackUas.getTimeTillNextProcessMS(), 50));
         assert ( err != -1 );
-        dumUas->process(fdset);
+        stackUas.process(fdset);
+        while(dumUas->process());
      }
 
      if (!(uas.done && uac.done))

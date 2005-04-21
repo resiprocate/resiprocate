@@ -1,16 +1,133 @@
-#include "ServerAuthManager.hxx"
 #include <cassert>
+
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/Helper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-bool 
-ServerAuthManager::handle(UserProfile& userProfile, const SipMessage& response)
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum) :
+   mDum(dum)
 {
-   assert(0);
-   return true;
 }
+
+
+ServerAuthManager::~ServerAuthManager()
+{
+}
+
+SipMessage*
+ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
+{
+   assert(userAuth);
+
+   MessageMap::iterator it = mMessages.find(userAuth->getTransactionId());
+   assert(it != mMessages.end());
+   SipMessage* requestWithAuth = it->second;
+   mMessages.erase(it);
+
+   InfoLog( << "Checking for auth result in realm=" << userAuth->getRealm() 
+            << " A1=" << userAuth->getA1());
+         
+   if (userAuth->getA1().empty())
+   {
+      InfoLog (<< "Account does not exist " << userAuth->getUser() << " in " << userAuth->getRealm());
+      SipMessage response;
+      Helper::makeResponse(response, *requestWithAuth, 404, "Account does not exist.");
+      mDum.send(response);
+      delete requestWithAuth;
+      return 0;
+   }
+   else
+   {
+      //!dcm! -- need to handle stale/unit test advancedAuthenticateRequest
+      //!dcm! -- delta? deal with.
+      std::pair<Helper::AuthResult,Data> resPair = 
+         Helper::advancedAuthenticateRequest(*requestWithAuth, 
+                                             userAuth->getRealm(),
+                                             userAuth->getA1(),
+                                             3000);
+      if (resPair.first == Helper::Authenticated)
+      {
+         InfoLog (<< "Authorized request for " << userAuth->getRealm());
+         return requestWithAuth;
+      }
+      else
+      {
+         InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+
+         SipMessage response;
+         Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
+         mDum.send(response);
+         delete requestWithAuth;
+         return 0;
+      }
+   }
+}
+      
+// return true if request has been consumed 
+ServerAuthManager::Result
+ServerAuthManager::handle(const SipMessage& sipMsg)
+{
+   //InfoLog( << "trying to do auth" );
+   if (sipMsg.isRequest())
+   {
+      if (!sipMsg.exists(h_ProxyAuthorizations))
+      {
+         //assume TransactionUser has matched/repaired a realm
+         SipMessage* challenge = Helper::makeProxyChallenge(sipMsg, 
+                                                            sipMsg.header(h_RequestLine).uri().host(),
+                                                            true,
+                                                            false);
+         InfoLog (<< "Sending challenge to " << sipMsg.brief());
+         mDum.send(*challenge);
+         delete challenge;
+         return Challenged;
+      }
+ 
+      try
+      {
+         for(Auths::const_iterator it = sipMsg.header(h_ProxyAuthorizations).begin();
+             it  != sipMsg.header(h_ProxyAuthorizations).end(); it++)
+         {
+            if (mDum.isMyDomain(it->param(p_realm)))
+            {
+               InfoLog (<< "Requesting credential for " 
+                        << it->param(p_username) << " @ " << it->param(p_realm));
+               
+               requestCredential(it->param(p_username),
+                                 it->param(p_realm), 
+                                 sipMsg.getTransactionId());
+               mMessages[sipMsg.getTransactionId()] = static_cast<SipMessage*>(sipMsg.clone());
+               return RequestedCredentials;
+            }
+         }
+
+         InfoLog (<< "Didn't find matching realm ");
+         SipMessage response;
+         Helper::makeResponse(response, sipMsg, 404, "Account does not exist");
+         mDum.send(response);
+         return Rejected;
+      }
+      catch(BaseException& e)
+      {
+         InfoLog (<< "Invalid auth header provided " << e);
+         SipMessage response;
+         Helper::makeResponse(response, sipMsg, 400, "Invalid auth header");
+         mDum.send(response);
+         return Rejected;
+      }
+   }
+   return Skipped;
+}
+
+
+
+
 
 
 /* ====================================================================

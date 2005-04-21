@@ -23,10 +23,9 @@ main()
 
    TimeLimitFifo<Message> f(0, 0);
    Fifo<TransactionMessage> r;
-   TuSelector sel(f);   
    
    TimerQueue timer(r);
-   TimeLimitTimerQueue timer2(sel);
+   TimeLimitTimerQueue timer2(f);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);

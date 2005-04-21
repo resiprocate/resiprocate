@@ -3,6 +3,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
@@ -717,7 +718,7 @@ ParseBuffer::unsignedInteger()
       fail(__FILE__, __LINE__,msg);
    }
    
-   unsigned int num = 0;
+   unsigned long num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');
@@ -747,7 +748,7 @@ ParseBuffer::unsignedLongLong()
       fail(__FILE__, __LINE__,msg);
    }
    
-   unsigned int num = 0;
+   UInt64 num = 0;
    while (!eof() && isdigit(*mPosition))
    {
       num = num*10 + (*mPosition-'0');

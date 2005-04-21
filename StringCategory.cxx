@@ -66,12 +66,20 @@ StringCategory::encodeParsed(std::ostream& str) const
    return str;
 }
 
-Data& 
+const Data& 
 StringCategory::value() const 
 {
    checkParsed(); 
    return mValue;
 }
+
+Data& 
+StringCategory::value()
+{
+   checkParsed(); 
+   return mValue;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

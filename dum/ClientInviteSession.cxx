@@ -625,6 +625,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -707,6 +708,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -748,6 +750,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
+      case On422Invite:
       {
          sendBye();
          InfoLog (<< "Failure:  error response: " << msg.brief());
@@ -794,6 +797,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -849,6 +853,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -921,6 +926,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -969,7 +975,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
 
-      case OnUpdate:
+      case OnUpdateOffer:
          transition(UAC_ReceivedUpdateEarly);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
@@ -977,6 +983,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+      case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -1023,6 +1030,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case OnCancelFailure:
       case On487Invite:
       case OnRedirect:
+      case On422Invite:
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mDum.destroy(this);

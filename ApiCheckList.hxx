@@ -9,6 +9,7 @@
 
 #include "resiprocate/Connection.hxx"
 #include "resiprocate/DnsResult.hxx"
+#include "resiprocate/GenericIPAddress.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/TlsConnection.hxx"
@@ -32,7 +33,8 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
     RESIP_TENT(TlsConnection,"USE_SSL"),
     RESIP_TENT(TransportSelector,"USE_IPV6"),
     RESIP_TENT(Tuple,"USE_IPV6"),
-    RESIP_TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER")
+    RESIP_TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER"),
+    RESIP_TENT(GenericIPAddress,"USE_IPV6")
 };
 
 #undef RESIP_TENT

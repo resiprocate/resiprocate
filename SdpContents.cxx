@@ -69,12 +69,12 @@ AttributeHelper::exists(const Data& key) const
    return mAttributes.find(key) != mAttributes.end();
 }
 
-const vector<Data>&
+const list<Data>&
 AttributeHelper::getValues(const Data& key) const
 {
    if (!exists(key))
    {
-      static const vector<Data> emptyList;
+      static const list<Data> emptyList;
       return emptyList;
    }
    return mAttributes.find(key)->second;
@@ -83,10 +83,10 @@ AttributeHelper::getValues(const Data& key) const
 ostream&
 AttributeHelper::encode(ostream& s) const
 {
-   for (HashMap< Data, vector<Data> >::const_iterator i = mAttributes.begin();
+   for (HashMap< Data, list<Data> >::const_iterator i = mAttributes.begin();
         i != mAttributes.end(); ++i)
    {
-      for (vector<Data>::const_iterator j = i->second.begin();
+      for (list<Data>::const_iterator j = i->second.begin();
            j != i->second.end(); ++j)
       {
          s << "a="
@@ -350,48 +350,42 @@ void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
 
    const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
 
-   pb.skipToChar(Symbols::LPAREN[0]);
-   if (!pb.eof())
+   pb.skipToOneOf("<(\n\r");  // find a left angle bracket "<", a left paren "(", or a CR 
+   switch (*pb.position())
    {
-      // mjh@isi.edu (Mark Handley)
-      //             ^
-      pb.data(eOrp, anchor);
+      case '\n':					// Symbols::CR[0]
+      case '\r':					// Symbols::LF[0]
+         // mjh@isi.edu
+         //            ^
+         pb.data(eOrp, anchor);
+         break;
 
-      anchor = pb.skipChar();
-      pb.skipToEndQuote(Symbols::RPAREN[0]);
-      pb.data(freeText, anchor);
-      pb.skipChar(Symbols::RPAREN[0]);
-   }
-   else
-   {
-      pb.reset(anchor);
-      pb.skipToChar(Symbols::LA_QUOTE[0]);
-      if (!pb.eof())
-      {
+      case '<':					// Symbols::LA_QUOTE[0]
          // Mark Handley <mjh@isi.edu>
          //              ^
-         pb.data(freeText, anchor);
-         pb.skipChar();
-
          // <mjh@isi.edu>
          // ^
+		  
+         pb.data(freeText, anchor);
          anchor = pb.skipChar();
          pb.skipToEndQuote(Symbols::RA_QUOTE[0]);
          pb.data(eOrp, anchor);
          pb.skipChar(Symbols::RA_QUOTE[0]);
-      }
-      else
-      {
-         pb.reset(anchor);
-         pb.skipToOneOf(Symbols::CRLF);
-
-         // mjh@isi.edu
-         //            ^
+         break;
+		  
+      case '(':					// Symbols::LPAREN[0]
+         // mjh@isi.edu (Mark Handley)
+         //             ^
+		  
          pb.data(eOrp, anchor);
-      }
+         anchor = pb.skipChar();
+         pb.skipToEndQuote(Symbols::RPAREN[0]);
+         pb.data(freeText, anchor);
+         pb.skipChar(Symbols::RPAREN[0]);
+         break;
+      default:
+         assert(0);
    }
-
-   skipEol(pb);
 }
 
 void
@@ -399,6 +393,7 @@ SdpContents::Session::Email::parse(ParseBuffer& pb)
 {
    pb.skipChar('e');
    parseEorP(pb, mAddress, mFreeText);
+   skipEol(pb);
 }
 
 SdpContents::Session::Phone::Phone(const Data& number,
@@ -624,7 +619,7 @@ SdpContents::Session::Time::encode(ostream& s) const
      << mStop
      << Symbols::CRLF;
 
-   for (vector<Repeat>::const_iterator i = mRepeats.begin();
+   for (list<Repeat>::const_iterator i = mRepeats.begin();
         i != mRepeats.end(); ++i)
    {
       i->encode(s);
@@ -659,7 +654,7 @@ SdpContents::Session::Time::addRepeat(const Repeat& repeat)
 
 SdpContents::Session::Time::Repeat::Repeat(unsigned long interval,
                                            unsigned long duration,
-                                           vector<int> offsets)
+                                           list<int> offsets)
    : mInterval(interval),
      mDuration(duration),
      mOffsets(offsets)
@@ -671,7 +666,7 @@ SdpContents::Session::Time::Repeat::encode(ostream& s) const
    s << "r="
      << mInterval << Symbols::SPACE[0]
      << mDuration << 's';
-   for (vector<int>::const_iterator i = mOffsets.begin();
+   for (list<int>::const_iterator i = mOffsets.begin();
         i != mOffsets.end(); ++i)
    {
       s << Symbols::SPACE[0] << *i << 's';
@@ -775,7 +770,7 @@ SdpContents::Session::Timezones::encode(ostream& s) const
    {
       s << "z=";
       bool first = true;
-      for (vector<Adjustment>::const_iterator i = mAdjustments.begin();
+      for (list<Adjustment>::const_iterator i = mAdjustments.begin();
            i != mAdjustments.end(); ++i)
       {
          if (!first)
@@ -941,7 +936,7 @@ SdpContents::Session::operator=(const Session& rhs)
       mEncryption = rhs.mEncryption;
       mAttributeHelper = rhs.mAttributeHelper;
 
-      for (std::vector<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
+      for (std::list<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
       {
          i->setSession(this);
       }
@@ -1046,13 +1041,13 @@ SdpContents::Session::encode(ostream& s) const
       s << Symbols::CRLF;
    }
 
-   for (vector<Email>::const_iterator i = mEmails.begin();
+   for (list<Email>::const_iterator i = mEmails.begin();
         i != mEmails.end(); ++i)
    {
       i->encode(s);
    }
 
-   for (vector<Phone>::const_iterator i = mPhones.begin();
+   for (list<Phone>::const_iterator i = mPhones.begin();
         i != mPhones.end(); ++i)
    {
       i->encode(s);
@@ -1063,7 +1058,7 @@ SdpContents::Session::encode(ostream& s) const
       mConnection.encode(s);
    }
 
-   for (vector<Bandwidth>::const_iterator i = mBandwidths.begin();
+   for (list<Bandwidth>::const_iterator i = mBandwidths.begin();
         i != mBandwidths.end(); ++i)
    {
       i->encode(s);
@@ -1075,7 +1070,7 @@ SdpContents::Session::encode(ostream& s) const
    }
    else
    {
-      for (vector<Time>::const_iterator i = mTimes.begin();
+      for (list<Time>::const_iterator i = mTimes.begin();
            i != mTimes.end(); ++i)
       {
          i->encode(s);
@@ -1091,7 +1086,7 @@ SdpContents::Session::encode(ostream& s) const
 
    mAttributeHelper.encode(s);
 
-   for (vector<Medium>::const_iterator i = mMedia.begin();
+   for (list<Medium>::const_iterator i = mMedia.begin();
         i != mMedia.end(); ++i)
    {
       i->encode(s);
@@ -1138,7 +1133,7 @@ SdpContents::Session::addAttribute(const Data& key, const Data& value)
 
    if (key == rtpmap)
    {
-      for (vector<Medium>::iterator i = mMedia.begin();
+      for (list<Medium>::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1153,7 +1148,7 @@ SdpContents::Session::clearAttribute(const Data& key)
 
    if (key == rtpmap)
    {
-      for (vector<Medium>::iterator i = mMedia.begin();
+      for (list<Medium>::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1167,7 +1162,7 @@ SdpContents::Session::exists(const Data& key) const
    return mAttributeHelper.exists(key);
 }
 
-const vector<Data>&
+const list<Data>&
 SdpContents::Session::getValues(const Data& key) const
 {
    return mAttributeHelper.getValues(key);
@@ -1351,7 +1346,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    s << Symbols::SPACE[0]
      << mProtocol;
 
-   for (vector<Data>::const_iterator i = mFormats.begin();
+   for (list<Data>::const_iterator i = mFormats.begin();
         i != mFormats.end(); ++i)
    {
       s << Symbols::SPACE[0] << *i;
@@ -1359,7 +1354,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
 
    if (!mCodecs.empty())
    {
-      for (vector<Codec>::const_iterator i = mCodecs.begin();
+      for (list<Codec>::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
          s << Symbols::SPACE[0] << i->payloadType();
@@ -1373,13 +1368,13 @@ SdpContents::Session::Medium::encode(ostream& s) const
       s << "i=" << mInformation << Symbols::CRLF;
    }
 
-   for (vector<Connection>::const_iterator i = mConnections.begin();
+   for (list<Connection>::const_iterator i = mConnections.begin();
         i != mConnections.end(); ++i)
    {
       i->encode(s);
    }
 
-   for (vector<Bandwidth>::const_iterator i = mBandwidths.begin();
+   for (list<Bandwidth>::const_iterator i = mBandwidths.begin();
         i != mBandwidths.end(); ++i)
    {
       i->encode(s);
@@ -1393,7 +1388,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    if (!mCodecs.empty())
    {
       // add codecs to information and attributes
-      for (vector<Codec>::const_iterator i = mCodecs.begin();
+      for (list<Codec>::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
           // If codec is static (defined in RFC 3551) we probably shouldn't
@@ -1463,10 +1458,10 @@ SdpContents::Session::Medium::addAttribute(const Data& key, const Data& value)
    }
 }
 
-const vector<SdpContents::Session::Connection>
+const list<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
-   vector<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
+   list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
    if (mSession)
    {
       connections.push_back(mSession->connection());
@@ -1485,7 +1480,7 @@ SdpContents::Session::Medium::exists(const Data& key) const
    return mSession && mSession->exists(key);
 }
 
-const vector<Data>&
+const list<Data>&
 SdpContents::Session::Medium::getValues(const Data& key) const
 {
    if (exists(key))
@@ -1495,8 +1490,8 @@ SdpContents::Session::Medium::getValues(const Data& key) const
    if (!mSession)
    {
       assert(false);
-      static vector<Data> errorVector;
-      return errorVector;
+      static list<Data> error;
+      return error;
    }
    return mSession->getValues(key);
 }
@@ -1528,13 +1523,13 @@ SdpContents::Session::Medium::addCodec(const Codec& codec)
 }
 
 
-const vector<Codec>&
+const list<Codec>&
 SdpContents::Session::Medium::codecs() const
 {
    return const_cast<Medium*>(this)->codecs();
 }
 
-vector<Codec>&
+list<Codec>&
 SdpContents::Session::Medium::codecs()
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
@@ -1547,7 +1542,7 @@ SdpContents::Session::Medium::codecs()
 
       if (exists(rtpmap))
       {
-         for (vector<Data>::const_iterator i = getValues(rtpmap).begin();
+         for (list<Data>::const_iterator i = getValues(rtpmap).begin();
               i != getValues(rtpmap).end(); ++i)
          {
             //DebugLog(<< "SdpContents::Session::Medium::getCodec(" << *i << ")");
@@ -1566,7 +1561,7 @@ SdpContents::Session::Medium::codecs()
          }
       }
 
-      for (vector<Data>::const_iterator i = mFormats.begin();
+      for (list<Data>::const_iterator i = mFormats.begin();
            i != mFormats.end(); ++i)
       {
          int mapKey = i->convertInt();
@@ -1599,13 +1594,13 @@ SdpContents::Session::Medium::codecs()
 }
 
 const Codec& 
-SdpContents::Session::Medium::findFirstMatchingCodecs(const std::vector<Codec>& codecs) const
+SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecs) const
 {
    static Codec emptyCodec;
-   std::vector<resip::SdpContents::Session::Codec>::const_iterator sIter;
-   std::vector<resip::SdpContents::Session::Codec>::const_iterator sEnd = mCodecs.end();
-   std::vector<resip::SdpContents::Session::Codec>::const_iterator eIter;
-   std::vector<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecs.end();
+   std::list<resip::SdpContents::Session::Codec>::const_iterator sIter;
+   std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = mCodecs.end();
+   std::list<resip::SdpContents::Session::Codec>::const_iterator eIter;
+   std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecs.end();
    bool found = false;
    for (eIter = codecs.begin(); eIter != eEnd ; ++eIter)
    {
@@ -1624,7 +1619,7 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::vector<Codec>& 
 int
 SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 {
-   for (std::vector<Codec>::const_iterator i = mCodecs.begin(); i != mCodecs.end(); i++)
+   for (std::list<Codec>::const_iterator i = mCodecs.begin(); i != mCodecs.end(); i++)
    {
       if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
       {
@@ -1688,7 +1683,7 @@ Codec::parse(ParseBuffer& pb,
    // get parameters if they exist
    if (medium.exists(fmtp))
    {
-      for (vector<Data>::const_iterator i = medium.getValues(fmtp).begin();
+      for (list<Data>::const_iterator i = medium.getValues(fmtp).begin();
            i != medium.getValues(fmtp).end(); ++i)
       {
          ParseBuffer pb(i->data(), i->size());

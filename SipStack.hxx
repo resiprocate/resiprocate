@@ -168,6 +168,8 @@ class SipStack
       //receiveAny, the SipStack will call postToTu on the appropriate
       //Tu. Messages no associated with a registered TU go into SipStack::mTuFifo
       void registerTransactionUser(TransactionUser&);
+      void requestTransactionUserShutdown(TransactionUser&);
+      void unregisterTransactionUser(TransactionUser&);
       
    private:
       /// if this object exists, it manages advanced security featues
@@ -183,7 +185,7 @@ class SipStack
       // timers associated with the application. When a timer fires, it is
       // placed in the mTUFifo
       mutable Mutex mAppTimerMutex;
-      TimeLimitTimerQueue  mAppTimers;
+      TuSelectorTimerQueue  mAppTimers;
       
       // Track stack statistics
       StatisticsManager mStatsManager;

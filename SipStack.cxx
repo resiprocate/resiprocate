@@ -25,13 +25,14 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/DtlsTransport.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -71,6 +72,7 @@ SipStack::SipStack(Security* pSecurity,
 
 SipStack::~SipStack()
 {
+   DebugLog (<< "SipStack::~SipStack()");
 #ifdef USE_SSL
    delete mSecurity;
 #endif
@@ -269,7 +271,10 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
-   if (tu) toSend->setTransactionUser(tu);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   }         
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
@@ -313,7 +318,8 @@ SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
-   mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
    if (mAsyncProcessHandler)
    {
       mAsyncProcessHandler->handleProcessNotification();
@@ -325,7 +331,7 @@ SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
                TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   postMS(message, secondsLater*1000);
+   postMS(message, secondsLater*1000, tu);
 }
 
 void
@@ -411,8 +417,9 @@ SipStack::process(FdSet& fdset)
       RESIP_STATISTICS(mStatsManager.process());
    }
    mTransactionController.process(fdset);
-
-   Lock lock(mAppTimerMutex);
+   mTuSelector.process();
+   
+   Lock lock(mAppTimerMutex); 
    mAppTimers.process();   
 }
 
@@ -453,6 +460,18 @@ void
 SipStack::registerTransactionUser(TransactionUser& tu)
 {
    mTuSelector.registerTransactionUser(tu);
+}
+
+void 
+SipStack::requestTransactionUserShutdown(TransactionUser& tu)
+{
+   mTuSelector.requestTransactionUserShutdown(tu);
+}
+
+void 
+SipStack::unregisterTransactionUser(TransactionUser& tu)
+{
+   mTuSelector.unregisterTransactionUser(tu);
 }
 
 std::ostream& 

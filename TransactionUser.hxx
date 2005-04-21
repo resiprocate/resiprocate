@@ -1,9 +1,13 @@
 #if !defined(RESIP_TU_HXX)
 #define RESIP_TU_HXX 
 
+#include <iosfwd>
+#include <set>
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
+
 
 namespace resip
 {
@@ -13,21 +17,37 @@ class TransactionUser
 {
    public:
       void post(Message *);
+      bool isMyDomain(const Data& domain) const;
+      void addDomain(const Data& domain);
+
+      virtual const Data& name() const=0;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      void setMessageFilterRuleList(MessageFilterRuleList &rules);
 
    protected:
       TransactionUser();
+      TransactionUser(MessageFilterRuleList &rules);
+
       virtual ~TransactionUser()=0;
-      virtual bool isForMe(const SipMessage& msg) const=0;
+      virtual bool isForMe(const SipMessage& msg) const;
       
       TimeLimitFifo<Message> mFifo;
 
    private:
+      typedef std::set<Data> DomainList;
+      DomainList mDomainList;
+      
       void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
 
       friend class TuSelector;      
+
+      MessageFilterRuleList mRuleList;
 };
+
+std::ostream& 
+operator<<(std::ostream& strm, const TransactionUser& tu);
 
 }
 

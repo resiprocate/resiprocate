@@ -48,8 +48,7 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    TimeLimitFifo<Message> f(0, 0);
-   TuSelector sel(f);   
-   TimeLimitTimerQueue timer(sel);
+   TimeLimitTimerQueue timer(f);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);

@@ -130,6 +130,7 @@ DnsResult::next()
    Tuple next = mResults.front();
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
+
    return next;
 }
 
@@ -169,7 +170,7 @@ DnsResult::lookup(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
-               if (!mInterface.isSupported(mTransport))
+               if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
                   mHandler->handle(this);
@@ -180,7 +181,8 @@ DnsResult::lookup(const Uri& uri)
             }
             else
             {
-               if (!mInterface.isSupported(TLS))
+               mTransport = TLS;
+               if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
                   mHandler->handle(this);
@@ -192,7 +194,7 @@ DnsResult::lookup(const Uri& uri)
          }
          else
          {
-            if (!mInterface.isSupported(mTransport))
+            if (!mInterface.isSupportedProtocol(mTransport))
             {
                transition(Finished);
                mHandler->handle(this);
@@ -202,6 +204,13 @@ DnsResult::lookup(const Uri& uri)
             switch(mTransport)
             {
                case TLS: //deprecated, mean TLS over TCP
+                  mSRVCount++;
+                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._tls." + mTarget, this);
+                  break;
+               case DTLS: //deprecated, mean TLS over TCP
+                  mSRVCount++;
+                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._dtls." + mTarget, this);
+                  break;
                case TCP:
                   mSRVCount++;
                   mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
@@ -241,7 +250,15 @@ DnsResult::lookup(const Uri& uri)
          else // port specified so we know the transport
          {
             mPort = uri.port();
-            lookupHost(mTarget);
+            if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
+            {
+               lookupHost(mTarget);
+            }
+            else
+            {
+               assert(0);
+               mHandler->handle(this);
+            }
          }
       }
       else // do NAPTR
@@ -298,7 +315,7 @@ DnsResult::lookupAAAARecords(const Data& target)
    DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
    mInterface.lookupAAAARecords(target, this);
-#else // !USE_IPV6
+#else // IPV4
    lookupARecords(target);
 #endif
 }
@@ -463,7 +480,7 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
      NAPTRFail:
       if (mSips)
       {
-         if (!mInterface.isSupported(TLS))
+         if (!mInterface.isSupportedProtocol(TLS))
          {
             transition(Finished);
             mHandler->handle(this);
@@ -476,9 +493,15 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
       else
       {
          //.dcm. assumes udp is supported
-         if (mInterface.isSupported(TCP))
+         if (mInterface.isSupportedProtocol(TLS))
          {
-            mSRVCount+=2;         
+            mSRVCount += 1;
+            lookupSRV("_sips._tcp." + mTarget);
+         }
+         
+         if (mInterface.isSupportedProtocol(TCP))
+         {
+            mSRVCount += 2;
             lookupSRV("_sip._tcp." + mTarget);
             lookupSRV("_sip._udp." + mTarget);
          }
@@ -526,17 +549,29 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
          
          if (aptr)
          {
-            if (srv.key.find("_udp") != Data::npos)
+            if (srv.key.find("_sips._udp") != Data::npos)
             {
-               srv.transport = UDP;
-            }
-            else if (srv.key.find("_tcp") != Data::npos)
-            {
-               srv.transport = TCP;
+               srv.transport = DTLS;
             }
             else if (srv.key.find("_sips._tcp") != Data::npos)
             {
                srv.transport = TLS;
+            }
+            else if (srv.key.find("_udp") != Data::npos)
+            {
+               srv.transport = UDP;
+            }
+            else if (srv.key.find("_dtls") != Data::npos)
+            {
+               srv.transport = DTLS;
+            }
+            else if (srv.key.find("_tls") != Data::npos)
+            {
+               srv.transport = TLS;
+            }
+            else if (srv.key.find("_tcp") != Data::npos)
+            {
+               srv.transport = TCP;
             }
             else
             {
@@ -593,8 +628,19 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
             mPort = getDefaultPort(mTransport, 0);
          }
          
-         StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
-         lookupAAAARecords(mTarget);
+         StackLog (<< "No SRV records for " << mTarget << ". Trying A/AAAA records");
+         if (mInterface.isSupported(mTransport, V6))
+         {
+            lookupAAAARecords(mTarget);
+         }
+         else if (mInterface.isSupported(mTransport, V4))
+         {
+            lookupARecords(mTarget);
+         }
+         else
+         {
+            primeResults();
+         }
       }
       else
       {
@@ -608,6 +654,12 @@ void
 DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 {
    StackLog (<< "Received AAAA result for: " << mTarget);
+   if (!mInterface.isSupported(mTransport, V6))
+   {
+      return;
+   }
+   
+   
 #if defined(USE_IPV6)
    StackLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
@@ -657,8 +709,14 @@ DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
 void
 DnsResult::processHost(int status, const struct hostent* result)
 {
+   if (!mInterface.isSupported(mTransport, V4))
+   {
+      return;
+   }
+
    StackLog (<< "Received A result for: " << mTarget);
    StackLog (<< "DnsResult::processHost() " << status);
+   assert(mInterface.isSupported(mTransport, V4));
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -768,21 +826,27 @@ DnsResult::primeResults()
          )
       {
 #if defined(USE_IPV6)
-         std::vector<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
-         for (std::vector<struct in6_addr>::const_iterator i=aaaarecs.begin();
+         In6AddrList& aaaarecs = mAAAARecords[next.target];
+         for (In6AddrList::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
          {
-            Tuple tuple(*i, next.port,next.transport, mTarget);
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            Tuple tuple(i->addr, next.port,next.transport, mTarget);
+            if (mInterface.isSupported(next.transport, V6))
+            {
+               StackLog (<< "Adding " << tuple << " to result set");
+               mResults.push_back(tuple);
+            }
          }
 #endif
-         std::vector<struct in_addr>& arecs = mARecords[next.target];
-         for (std::vector<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
+         In4AddrList& arecs = mARecords[next.target];
+         for (In4AddrList::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Tuple tuple(*i, next.port, next.transport, mTarget);
+            Tuple tuple(i->addr, next.port, next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            if (mInterface.isSupported(next.transport, V4))
+            {
+               mResults.push_back(tuple);
+            }
          }
          StackLog (<< "Try: " << Inserter(mResults));
 
@@ -950,17 +1014,21 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       assert(!mPreferredNAPTR.key.empty());
       if (srv.key == mPreferredNAPTR.replacement && srv.target != Symbols::DOT)
       {
-         if (srv.key.find("_udp") != Data::npos)
+         if (srv.key.find("_sips._tcp") != Data::npos)
+         {
+            srv.transport = TLS;
+         }
+         else if (srv.key.find("_sips._udp") != Data::npos)
+         {
+            srv.transport = DTLS;
+         }
+         else if (srv.key.find("_udp") != Data::npos)
          {
             srv.transport = UDP;
          }
          else if (srv.key.find("_tcp") != Data::npos)
          {
             srv.transport = TCP;
-         }
-         else if (srv.key.find("_sips._tcp") != Data::npos)
-         {
-            srv.transport = TLS;
          }
          else
          {
@@ -992,7 +1060,9 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // another query
       if (mARecords.count(key) == 0)
       {
-         mARecords[key].push_back(addr);
+         IpV4Addr a;
+         a.addr = addr;
+         mARecords[key].push_back(a);
       }
       return aptr + dlen;
    }
@@ -1011,7 +1081,9 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // another query
       if (mAAAARecords.count(key) == 0)
       {
-         mAAAARecords[key].push_back(addr);
+         IpV6Addr a;
+         a.addr = addr;
+         mAAAARecords[key].push_back(a);
       }
       return aptr + dlen;
    }
@@ -1438,8 +1510,13 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 
 void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 {
+  if (!mInterface.isSupported(mTransport, V4))
+   {
+      return;
+   }
    StackLog (<< "Received A result for: " << mTarget);
    StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   assert(mInterface.isSupported(mTransport, V4));
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -1538,6 +1615,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
    StackLog (<< "Received AAAA result for: " << mTarget);
+   if (!mInterface.isSupported(mTransport, V6))
+   {
+      return;
+   }
 #ifdef USE_IPV6
    StackLog (<< "DnsResult::onDnsResult() " << result.status);
    // This function assumes that the AAAA query that caused this callback
@@ -1593,17 +1674,34 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
          srv.weight = (*it).weight();
          srv.port = (*it).port();
          srv.target = (*it).target();
-         if (srv.key.find("_udp") != Data::npos)
+         if (srv.key.find("_sips._udp") != Data::npos)
+         {
+            srv.transport = DTLS;
+         }
+         else if (srv.key.find("_sips._tcp") != Data::npos)
+         {
+            srv.transport = TLS;
+         }
+         else if (srv.key.find("_udp") != Data::npos)
          {
             srv.transport = UDP;
+         }
+         else if (srv.key.find("_dtls") != Data::npos)
+         {
+            srv.transport = DTLS;
+         }
+         else if (srv.key.find("_tls") != Data::npos)
+         {
+            srv.transport = TLS;
          }
          else if (srv.key.find("_tcp") != Data::npos)
          {
             srv.transport = TCP;
          }
-         else if (srv.key.find("_sips._tcp") != Data::npos)
+         else
          {
-            srv.transport = TLS;
+            StackLog (<< "Skipping SRV " << srv.key);
+            continue;
          }
          mSRVResults.push_back(srv);
       }
@@ -1637,7 +1735,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
          }
          
          StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
-         lookupHost(mTarget);
+         if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
+         {
+            lookupHost(mTarget);
+         }
+         else
+         {
+            primeResults();
+         }
       }
       else
       {
@@ -1730,7 +1835,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
    {
       if (mSips)
       {
-         if (!mInterface.isSupported(TLS))
+         if (!mInterface.isSupportedProtocol(TLS))
          {
             transition(Finished);
             mHandler->handle(this);
@@ -1742,8 +1847,13 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       }
       else
       {
-         //.dcm. assumes udp is supported
-         if (mInterface.isSupported(TCP))
+         if (mInterface.isSupportedProtocol(TLS))
+         {
+            mSRVCount += 1;
+            mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
+         }
+         
+         if (mInterface.isSupportedProtocol(TCP))
          {
             mSRVCount+=2;
             mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
