@@ -27,7 +27,7 @@ class DialogSet
       DialogSet(const SipMessage& request, DialogUsageManager& dum);
       virtual ~DialogSet();
       
-      DialogSetId getId();
+      DialogSetId getId() const;
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
@@ -72,6 +72,14 @@ class DialogSet
 
       void onForkAccepted();
       bool handledByAuthOrRedirect(const SipMessage& msg);
+
+      /// Abandon this dialog set, but keep the AppDialogSet around
+      void appDissociate()
+      {
+         assert(mAppDialogSet);
+         mAppDialogSet = 0;
+      }
+      friend class AppDialogSet;
 
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
