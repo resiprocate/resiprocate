@@ -68,21 +68,33 @@ ConnectionManager::findConnection(const Tuple& addr)
 }
 
 Connection*
-ConnectionManager::getNextRead()
+ConnectionManager::getNextRead(FdSet &fdset)
 {
-   if (mReadHead->empty())
+   if (mReadHead->empty() || fdset.read.fd_count == 0)
    {
       return 0;
    }
    else 
    {
-      if (++mReadIter == mReadHead->end())
-      {
-         mReadIter = mReadHead->begin();
-      }
+      ConnectionReadList::iterator startIter = ++mReadIter;
 
-      Connection* ret = *mReadIter;
-      return ret;
+      // loop through all connections looking for signalled ones only
+      do
+      {
+         if (mReadIter == mReadHead->end())
+         {
+            mReadIter = mReadHead->begin();
+            if(mReadIter == startIter) break;
+         }
+
+         if(fdset.readyToRead((*mReadIter)->getSocket()))
+         {
+            Connection* ret = *mReadIter;
+            return ret;
+         }
+      } while(++mReadIter != startIter);
+
+      return 0;
    }
 }
 
