@@ -19,7 +19,8 @@ using namespace resip;
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
-     mEnded(false)
+     mEnded(false),
+     mExpires(0)
 {
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
@@ -59,15 +60,16 @@ ClientSubscription::dispatch(const SipMessage& msg)
          mOnNewSubscriptionCalled = true;
       }         
       int expires = 0;      
-      //default to 60 seconds so non-compliant endpoints don't result in leaked usages
+      //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
       {
          expires = msg.header(h_SubscriptionState).param(p_expires);
       }
       else
       {
-         expires = 60;
+         expires = 3600;
       }
+
       if (!mLastRequest.exists(h_Expires))
       {
          mLastRequest.header(h_Expires).value() = expires;
@@ -115,39 +117,32 @@ ClientSubscription::dispatch(const SipMessage& msg)
          return;
       }
 
-      SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*> (mDialog.mDialogSet.getCreator());
-
-      int refreshInterval = 0;
-      if (expires)
+      assert(expires);
+      unsigned long refreshInterval = 0;
+      UInt64 now = Timer::getTimeMs() / 1000;
+      
+      if (mExpires == 0 || now + expires < mExpires)
       {
-         if (creator && creator->hasRefreshInterval() && creator->getRefreshInterval() <  expires)
-         {
-            refreshInterval = creator->getRefreshInterval();
-         }
-         else
-         {
-            refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
-         }
+         refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
+         mExpires = now + refreshInterval;
       }
 
       if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
          {
-            unsigned long t = refreshInterval;
-            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
+            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
          }
-
+         
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
       {
          if (refreshInterval)
          {
-            unsigned long t = refreshInterval;
-            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
+            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
          }
 
          handler->onUpdatePending(getHandle(), msg);
@@ -266,6 +261,7 @@ ClientSubscription::requestRefresh(int expires)
       {
          mLastRequest.header(h_Expires).value() = expires;
       }
+      mExpires = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
       send(mLastRequest);
    }
