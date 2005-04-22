@@ -90,6 +90,9 @@ ClientPublication::dispatch(const SipMessage& msg)
          }
          else
          {
+            // Any PUBLISH/200 must have an ETag. This should not happen. Not
+            // sure what the app can do in this case. 
+            WarningLog (<< "PUBLISH/200 received with no ETag " << mPublish.header(h_From).uri());
             handler->onFailure(getHandle(), msg);
             delete this;
             return;
