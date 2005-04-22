@@ -37,6 +37,7 @@ class ClientSubscription: public BaseSubscription
       bool mOnNewSubscriptionCalled;
       SipMessage mLastNotify;      
       bool mEnded;
+      UInt64 mExpires;
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
