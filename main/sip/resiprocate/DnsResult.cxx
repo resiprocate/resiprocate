@@ -157,7 +157,19 @@ DnsResult::lookup(const Uri& uri)
       else if (uri.port() != 0)
       {
          mPort = uri.port();
-         lookupAAAARecords(mTarget); // for current target and port         
+         if (mInterface.isSupported(mTransport, V6))
+         {
+            lookupAAAARecords(mTarget); // for current target and port        
+         }
+         else if (mInterface.isSupported(mTransport, V4))
+         {
+            lookupARecords(mTarget); // for current target and port                       
+         }
+         else
+         {
+            assert(0);
+            mHandler->handle(this);
+         }
       }
       else 
       { 
@@ -300,11 +312,13 @@ DnsResult::getDefaultPort(TransportType transport, int port)
 void
 DnsResult::lookupAAAARecords(const Data& target)
 {
+   assert(mInterface.isSupported(mTransport, V6));   
 #if defined(USE_IPV6)
    DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
    mInterface.lookupAAAARecords(target, this);
 #else // IPV4
+   assert(0);
    lookupARecords(target);
 #endif
 }
@@ -312,6 +326,7 @@ DnsResult::lookupAAAARecords(const Data& target)
 void
 DnsResult::lookupARecords(const Data& target)
 {
+   assert(mInterface.isSupported(mTransport, V4));   
    DebugLog (<< "Doing Host (A) lookup: " << target);
    mInterface.lookupARecords(target, this);
 }
@@ -688,7 +703,10 @@ DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
    {
       StackLog (<< "Failed async dns query: " << mInterface.errorMessage(status));
    }
-   lookupARecords(mPassHostFromAAAAtoA);
+   if (mInterface.isSupported(mTransport, V4))
+   {
+      lookupARecords(mPassHostFromAAAAtoA);
+   }
 #else
 	assert(0);
 #endif
@@ -861,7 +879,19 @@ DnsResult::primeResults()
          mPort = next.port;
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
-         lookupAAAARecords(next.target);
+         if (mInterface.isSupported(mTransport, V6))
+         {
+            lookupAAAARecords(next.target); // for current target and port        
+         }
+         else if (mInterface.isSupported(mTransport, V4))
+         {
+            lookupARecords(next.target); // for current target and port                       
+         }
+         else
+         {
+            assert(0);
+            mHandler->handle(this);
+         }
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
       }
