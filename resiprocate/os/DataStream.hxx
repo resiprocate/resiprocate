@@ -20,6 +20,8 @@ class DataBuffer : public std::streambuf
 
    private:
       Data& mStr;
+      DataBuffer(const DataBuffer&);
+      DataBuffer& operator=(const DataBuffer&);
 };
 
 // To use:
@@ -39,7 +41,8 @@ class DataStream : private DataBuffer, public std::iostream
       ~DataStream();
 
    private:
-      //DataBuffer mStreambuf;
+      DataStream(const DataStream&);
+      DataStream& operator=(const DataStream&);
 };
 
 class iDataStream : private DataBuffer, public std::istream
@@ -49,7 +52,9 @@ class iDataStream : private DataBuffer, public std::istream
       ~iDataStream();
       
    private:
-      //DataBuffer mStreambuf;
+      iDataStream(const iDataStream&);
+      iDataStream& operator=(const iDataStream&);
+
 };
 
 class oDataStream : private DataBuffer, public std::ostream {
@@ -58,7 +63,8 @@ class oDataStream : private DataBuffer, public std::ostream {
       ~oDataStream();
 
    private:
-      //DataBuffer mStreambuf;
+      oDataStream(const oDataStream&);
+      oDataStream& operator=(const oDataStream&);
 };
 
 }
