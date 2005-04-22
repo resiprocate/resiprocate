@@ -34,6 +34,7 @@ TcpConnection::read( char* buf, int count )
       switch (e)
       {
          case EAGAIN:
+         case EWOULDBLOCK:  
             InfoLog (<< "No data ready to read");
             return 0;
          case EINTR:

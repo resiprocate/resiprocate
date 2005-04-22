@@ -134,7 +134,7 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
 void
 TcpBaseTransport::processSomeReads(FdSet& fdset)
 {
-   Connection* currConnection = mConnectionManager.getNextRead(); 
+   Connection* currConnection = mConnectionManager.getNextRead(fdset); 
    if (currConnection)
    {
       if ( fdset.readyToRead(currConnection->getSocket()) ||
