@@ -23,7 +23,7 @@ class ConnectionManager
       Connection* findConnection(const Tuple& tuple);
 
       // Return 0 if nothing to do
-      Connection* getNextRead();
+      Connection* getNextRead(FdSet &fdset);
       Connection* getNextWrite();
       void buildFdSet(FdSet& fdset);
       
