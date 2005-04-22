@@ -34,11 +34,14 @@ TcpConnection::read( char* buf, int count )
       switch (e)
       {
          case EAGAIN:
+#ifdef WIN32 //EWOULDBLOCK is not returned from recv on *nix/*bsd
          case EWOULDBLOCK:  
+#endif
             InfoLog (<< "No data ready to read");
             return 0;
          case EINTR:
             InfoLog (<< "The call was interrupted by a signal before any data was read.");
+            return 0;            
             break;
          case EIO:
             InfoLog (<< "I/O error");
