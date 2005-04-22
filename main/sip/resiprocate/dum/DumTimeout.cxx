@@ -1,6 +1,7 @@
 #include <cassert>
 #include "DumTimeout.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 
 using namespace resip;
 
@@ -139,7 +140,15 @@ DumTimeout::encode(std::ostream& strm) const
          break;
 
    }
-
+   if (mUsageHandle.isValid()) 
+   {
+      strm << " " << *mUsageHandle;
+   }
+   else 
+   {
+      strm << " defunct";
+   }
+   
    strm << ": duration=" << mDuration << " seq=" << mSeq;
    return strm;
 }
