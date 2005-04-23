@@ -31,7 +31,8 @@ class ClientRegistration: public NonDialogUsage
       
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
-
+      int whenExpires() const; // relative in seconds
+      
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -63,6 +64,7 @@ class ClientRegistration: public NonDialogUsage
 
       State mState;
       bool mEndWhenDone;
+      UInt64 mExpires;
       State mQueuedState;
       SipMessage mQueuedRequest;
 
