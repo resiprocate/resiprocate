@@ -29,6 +29,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mTimerSeq(0),
      mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
+     mExpires(0),
      mQueuedState(None)
 {
    // If no Contacts header, this is a query
@@ -214,6 +215,13 @@ ClientRegistration::allContacts()
    return mAllContacts;
 }
 
+int
+ClientRegistration::whenExpires() const
+{
+   int now = Timer::getTimeMs() / 1000;
+   return mExpires - now;
+}
+
 void
 ClientRegistration::end()
 {
@@ -275,8 +283,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
             if (expiry != INT_MAX)
             {
+               int exp = Helper::aBitSmallerThan(expiry);
+               mExpires = exp + Timer::getTimeMs() / 1000;
                mDum.addTimer(DumTimeout::Registration,
-                             Helper::aBitSmallerThan(expiry),
+                             exp,
                              getBaseHandle(),
                              ++mTimerSeq);
             }
@@ -356,6 +366,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             else
             {
                DebugLog(<< "Application requested delayed retry on 408: " << retry);
+               mExpires = 0;
                mDum.addTimer(DumTimeout::RegistrationRetry, 
                              retry, 
                              getBaseHandle(),
@@ -377,6 +388,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                  // Use retry interval from error response
                  retryInterval = msg.header(h_RetryAfter).value();
              }
+             mExpires = 0;
              mDum.addTimer(DumTimeout::RegistrationRetry,
                            retryInterval,
                            getBaseHandle(),
