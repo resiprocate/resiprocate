@@ -40,6 +40,15 @@ endif
 	DISTCC   = distcc 
 	CCACHE   = ccache
         LDLIBS_LAST   += -lpopt
+
+ifeq ($(USE_GOOGLE_MALLOC),true)
+LDLIBS_LAST += -lprofiler
+endif
+
+ifeq ($(USE_GOOGLE_CPUPERF),true)
+LDLIBS_LAST += -ltcmalloc
+endif
+
 endif
 
 
