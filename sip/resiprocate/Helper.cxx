@@ -233,6 +233,13 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    return request;
 }
 
+int
+Helper::jitterValue(int input, int lowerPercentage, int upperPercentage)
+{
+   int rnd = Random::getRandom() % (upperPercentage-lowerPercentage) + lowerPercentage;
+   return input * rnd / 100;
+}
+
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from)
 {
