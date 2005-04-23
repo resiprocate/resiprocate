@@ -5,7 +5,6 @@
 #include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/TransactionUserMessage.hxx"
 
 namespace resip
 {
