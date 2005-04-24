@@ -1,4 +1,10 @@
 
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
+
 #include <cassert>
 
 #include "resiprocate/os/Data.hxx"
@@ -31,12 +37,18 @@ HttpConnection::HttpConnection( HttpBase& base, Socket pSock ):
    mSock(pSock),
    mParsedRequest(false)
 {
+	assert( mSock > 0 );
 }
 
 
 HttpConnection::~HttpConnection()
 {
+	assert( mSock > 0 );
+#ifdef WIN32
+	 closesocket(mSock); mSock=0;
+#else
    close(mSock); mSock=0;
+#endif
 }
 
       
