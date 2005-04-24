@@ -1,5 +1,11 @@
-#include <cassert>
 
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
+
+#include <cassert>
 
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"

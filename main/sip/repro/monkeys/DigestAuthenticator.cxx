@@ -1,3 +1,10 @@
+
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
+
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif

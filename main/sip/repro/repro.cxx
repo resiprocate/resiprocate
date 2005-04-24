@@ -1,3 +1,10 @@
+
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
+
 #include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -51,12 +58,14 @@ addDomains(TransactionUser& tu, CommandLineParser& args)
 
    tu.addDomain("localhost");
 
+#ifndef WIN32 // !cj! TODO 
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
       DebugLog( << "Adding domain for IP " << i->second  );
       tu.addDomain(i->second);
    }
+#endif 
 
    tu.addDomain("127.0.0.1");
 }
@@ -69,8 +78,12 @@ main(int argc, char** argv)
    CommandLineParser args(argc, argv);
    Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
 
+#ifdef USE_SSL
    Security security(args.mCertPath);
    SipStack stack(&security);
+#else
+    SipStack stack;
+#endif
 
    try
    {
@@ -80,23 +93,33 @@ main(int argc, char** argv)
       if (args.mUdpPort)
       {
          if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4);
+#ifdef USE_IPV6
          if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6);
+#endif
       }
       if (args.mTcpPort)
       {
          if (args.mUseV4) stack.addTransport(TCP, args.mUdpPort, V4);
+#ifdef USE_IPV6
          if (args.mUseV6) stack.addTransport(TCP, args.mUdpPort, V6);
+#endif
       }
+#ifdef USE_SSL
       if (args.mTlsPort)
       {
          if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+#ifdef USE_IPV6
          if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+#endif
       }
       if (args.mDtlsPort)
       {
          if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+#ifdef USE_IPV6
          if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+#endif
       }
+#endif
    }
    catch (Transport::Exception& e)
    {
@@ -171,7 +194,11 @@ main(int argc, char** argv)
    Proxy proxy(stack, requestProcessors, userDb);
    addDomains(proxy, args);
    
+#ifdef USE_SSL
    WebAdmin admin(userDb, regData, routeDb, security, args.mNoWebChallenge );
+#else
+   WebAdmin admin(userDb, regData, routeDb, NULL, args.mNoWebChallenge );
+#endif
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();
@@ -233,12 +260,14 @@ main(int argc, char** argv)
       dumThread = new DumThread(*dum);
    }
 
+#ifndef WIN32 // !cj! TODO 
    // go add all the domains that this proxy is responsible for 
    list< pair<Data,Data> > ips = DnsUtil::getInterfaces();
    if ( ips.empty() )
    {
       ErrLog( << "No IP address found to run on" );
    } 
+#endif
 
    stack.registerTransactionUser(proxy);
 
