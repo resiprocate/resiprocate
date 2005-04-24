@@ -79,7 +79,7 @@ class UserAbstractDb
       virtual void dbRemoveRecord( const Key& key ) = 0 ;
 
       virtual Key dbFirstKey()=0;// return empty if no more
-      virtual Key dbNextKey()=0; // return empty if no more 
+      virtual Key dbNextKey(bool first=false)=0; // return empty if no more 
 };
 
  }

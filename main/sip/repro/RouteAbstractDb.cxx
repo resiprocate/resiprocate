@@ -20,6 +20,15 @@ RouteAbstractDb::~RouteAbstractDb()
 }
 
 
+static void 
+encodeString( oDataStream& s, const Data& data )
+{
+   short len = data.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( data.data(), len );
+}
+
+
 Data 
 RouteAbstractDb::serialize( const Route& rec )
 {  
@@ -32,27 +41,31 @@ RouteAbstractDb::serialize( const Route& rec )
    assert( sizeof( rec.mVersion) == 2 );
    s.write( (char*)(&rec.mVersion) , sizeof( rec.mVersion ) );
    
-   len = rec.mMethod.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.mMethod.data(), len );
-    
-   len = rec.mEvent.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.mEvent.data(), len );
-   
-   len = rec.mMatchingPattern.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.mMatchingPattern.data(), len );
-   
-   len = rec.mRewriteExpression.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.mRewriteExpression.data(), len );
+   encodeString( s, rec.mMethod );
+   encodeString( s, rec.mEvent );
+   encodeString( s, rec.mMatchingPattern );
+   encodeString( s, rec.mRewriteExpression );
    
    s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
    
    return data;
 }
 
+
+static Data
+decodeString( iDataStream& s)
+{
+	short len;
+	s.read( (char*)(&len), sizeof(len) ); 
+
+	char buf[2048];
+	assert( len < 2048 ); // !cj! TODO fix 
+
+	s.read( buf, len );
+       
+	Data data( buf, len );
+	return data;
+}
 
 RouteAbstractDb::Route
 RouteAbstractDb::deSerialize( const Data& pData )
@@ -70,41 +83,13 @@ RouteAbstractDb::deSerialize( const Data& pData )
    
    if (  rec.mVersion == 1 )
    {
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.mMethod = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.mEvent = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.mMatchingPattern = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.mRewriteExpression = data;
-      }
+     
+         rec.mMethod = decodeString( s );
+         rec.mEvent  = decodeString( s );
+         rec.mMatchingPattern = decodeString( s );
+         rec.mRewriteExpression  = decodeString( s );
 
-      {
          s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
-      }
    }
    else
    {

@@ -1,3 +1,8 @@
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
 
 #include <cassert>
 
@@ -33,7 +38,7 @@ using namespace std;
 WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
                      RegistrationPersistenceManager& regDb,
                      RouteAbstractDb& routeDb,
-                     Security& security,
+                     Security* security,
                      bool noChal, 
                      int port, 
                      IpVersion version,
@@ -603,11 +608,18 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       
 }
 
+
 Data
 WebAdmin::buildCertPage(const Data& domain)
 {
-   assert(!domain.empty());
-   return mSecurity.getDomainCertDER(domain);
+	assert(!domain.empty());
+#ifdef USE_SSL
+	assert( mSecurity );
+	return mSecurity->getDomainCertDER(domain);
+#else
+	ErrLog( << "Proxy not build with support for certificates" );
+	return Data::Empty;
+#endif
 }
 
 

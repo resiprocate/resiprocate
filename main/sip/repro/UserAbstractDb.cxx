@@ -10,7 +10,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TransactionUser.hxx"
 
-#include "repro/UserDb.hxx"
+#include "repro/UserAbstractDb.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
 
 using namespace resip;
@@ -112,6 +112,15 @@ UserAbstractDb::removeUser( const Data& aor )
 }
 
 
+static void 
+encodeString( oDataStream& s, const Data& data )
+{
+   short len = data.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( data.data(), len );
+}
+
+
 Data 
 UserAbstractDb::encodeUserRecord( const UserRecord& rec ) const
 {
@@ -125,35 +134,31 @@ UserAbstractDb::encodeUserRecord( const UserRecord& rec ) const
    assert( sizeof( rec.version) == 2 );
    s.write( (char*)(&rec.version) , sizeof( rec.version ) );
    
-   len = rec.user.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.passwordHash.data(), len );
-   
-   len = rec.domain.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.passwordHash.data(), len );
-   
-   len = rec.realm.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.passwordHash.data(), len );
-   
-   len = rec.passwordHash.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.passwordHash.data(), len );
-   
-   len = rec.name.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.name.data(), len );
-   
-   len = rec.email.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.email.data(), len );
-   
-   len = rec.forwardAddress.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.forwardAddress.data(), len );
-      
+   encodeString( s, rec.user );
+   encodeString( s, rec.domain);
+   encodeString( s, rec.realm);
+   encodeString( s, rec.passwordHash);
+   encodeString( s, rec.name);
+   encodeString( s, rec.email);
+   encodeString( s, rec.forwardAddress);
+
    return data;
+}
+
+
+static Data
+decodeString( iDataStream& s)
+{
+	short len;
+	s.read( (char*)(&len), sizeof(len) ); 
+
+	char buf[2048];
+	assert( len < 2048 ); // !cj! TODO fix 
+
+	s.read( buf, len );
+       
+	Data data( buf, len );
+	return data;
 }
 
 
@@ -171,63 +176,15 @@ UserAbstractDb::decodeUserRecord( const Data& pData ) const
    s.read( (char*)(&len), sizeof(len) );
    rec.version =  len;
    
-   if (  rec.version == 2 )
+   if ( rec.version == 2 )
    {
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.user = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.domain = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.realm = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.passwordHash = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.name = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.email = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.forwardAddress = data;
-      }
+	   rec.user = decodeString( s );
+	   rec.domain  = decodeString( s );
+	   rec.realm = decodeString( s );
+	   rec.passwordHash = decodeString( s );
+	   rec.name = decodeString( s );
+	   rec.email = decodeString( s );
+	   rec.forwardAddress = decodeString( s );
    }
    else
    {
