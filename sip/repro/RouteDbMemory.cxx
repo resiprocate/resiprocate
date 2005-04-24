@@ -1,7 +1,15 @@
 
 #include <fcntl.h>
+#ifdef WIN32
+#include <db.h>
+#else 
 #include <db4/db_185.h>
+#endif
+
+#ifdef WIN32
+#else
 #include <regex.h>
+#endif
 
 #include <cassert>
 
@@ -22,7 +30,10 @@ using namespace std;
 RouteDbMemory::RouteDbMemory(char* dbName)
 {  
    InfoLog( << "Loading route database" );
-   
+  
+#ifdef WIN32
+	// !cj! TODO FIX 
+#else
    mDb = dbopen(dbName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
    if ( !mDb )
    {
@@ -51,13 +62,18 @@ RouteDbMemory::RouteDbMemory(char* dbName)
       assert( ret != -1 );
       assert( ret != 2 );
    }
+#endif
 }
 
 
 RouteDbMemory::~RouteDbMemory()
 { 
+#ifdef WIN32
+	// !cj! TODO FIX 
+#else
    int ret = mDb->close(mDb);
    assert( ret == 0 );
+#endif
 }
 
 
@@ -70,6 +86,9 @@ RouteDbMemory::add(const resip::Data& method,
 {
    InfoLog( << "Add route" );
    
+#ifdef WIN32
+	// !cj! TODO FIX 
+#else
    RouteOp route;
    route.mVersion = 1;
    route.mMethod = method;
@@ -96,6 +115,7 @@ RouteDbMemory::add(const resip::Data& method,
    // need sync for if program gets ^C without shutdown
    ret = mDb->sync(mDb,0);
    assert( ret == 0 );
+#endif
 }
 
 
@@ -131,6 +151,9 @@ RouteDbMemory::process(const resip::Uri& ruri,
 {
    RouteAbstractDb::UriList targetSet;
    
+#ifdef WIN32
+	// !cj! TODO FIX 
+#else
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
@@ -259,6 +282,8 @@ RouteDbMemory::process(const resip::Uri& ruri,
          targetSet.push_back( targetUri );
       }
    }
+#endif
+
    return targetSet;
 }
 

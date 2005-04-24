@@ -1,7 +1,11 @@
 #if !defined(RESIP_USERDB_HXX)
 #define RESIP_USERDB_HXX 
 
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
 #include <db4/db_185.h>
+#endif
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
@@ -25,8 +29,13 @@ class UserDb: public UserAbstractDb
       virtual ~UserDb();
       
    private:
+#ifdef WIN32
+	  Db*  mDb;
+	  Dbc* mCursor;
+#else
       DB* mDb;
-      
+#endif
+
       // Db manipulation routines
       virtual void dbWriteRecord( const resip::Data& key, 
                                   const resip::Data& data );
@@ -34,7 +43,7 @@ class UserDb: public UserAbstractDb
                                   resip::Data& data ) const; // return false if not found
       virtual void dbRemoveRecord(const resip::Data& key );
       virtual resip::Data dbFirstKey();
-      virtual resip::Data dbNextKey(); // return empty if no more  
+      virtual resip::Data dbNextKey(bool first=true); // return empty if no more  
 };
 
 
