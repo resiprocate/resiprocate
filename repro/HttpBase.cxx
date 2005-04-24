@@ -1,3 +1,8 @@
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_185.h>
+#endif
 
 #include <cassert>
 

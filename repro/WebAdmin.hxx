@@ -27,7 +27,7 @@ class WebAdmin: public HttpBase
       WebAdmin( UserAbstractDb& userDb,
                 resip::RegistrationPersistenceManager& regDb,
                 RouteAbstractDb& routeDb,
-                resip::Security& security,
+                resip::Security* security,
                 bool noWebChallenges,
                 int port=5080, 
                 resip::IpVersion version=resip::V4,
@@ -57,7 +57,7 @@ class WebAdmin: public HttpBase
       UserAbstractDb& mUserDb;
       resip::RegistrationPersistenceManager& mRegDb;
       RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
+      resip::Security* mSecurity;
 
       resip::Data routeTestUri;
 
