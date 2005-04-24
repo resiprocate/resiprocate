@@ -1,8 +1,16 @@
 #if !defined(REPRO_ROUTEDBMEMORY_HXX)
 #define REPRO_ROUTEDBMEMORY_HXX
 
+#ifdef WIN32
+#include <db.h>
+#else 
 #include <db4/db_185.h>
+#endif
+
+#ifdef WIN32
+#else
 #include <regex.h>
+#endif
 
 #include <vector>
 
@@ -39,7 +47,11 @@ class RouteDbMemory : public RouteAbstractDb
       class RouteOp: public Route
       {
          public:
+#ifdef WIN32
+			 int foo;
+#else
             regex_t preq;
+#endif
       };
                
       typedef std::vector<RouteOp> RouteOpList;
