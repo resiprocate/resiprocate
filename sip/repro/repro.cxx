@@ -195,7 +195,7 @@ main(int argc, char** argv)
    addDomains(proxy, args);
    
 #ifdef USE_SSL
-   WebAdmin admin(userDb, regData, routeDb, security, args.mNoWebChallenge );
+   WebAdmin admin(userDb, regData, routeDb, &security, args.mNoWebChallenge );
 #else
    WebAdmin admin(userDb, regData, routeDb, NULL, args.mNoWebChallenge );
 #endif
