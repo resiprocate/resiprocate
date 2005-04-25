@@ -2,9 +2,9 @@
 #define REPRO_ROUTEDBMEMORY_HXX
 
 #ifdef WIN32
-#include <db.h>
+#include <db_cxx.h>
 #else 
-#include <db4/db_185.h>
+#include <db4/db_cxx.h>
 #endif
 
 #ifdef WIN32
@@ -22,7 +22,7 @@ namespace repro
 class RouteDbMemory : public RouteAbstractDb
 {
    public:
-      RouteDbMemory( char* dbName="route_database");
+      RouteDbMemory( char* dbName="route_database.db");
       ~RouteDbMemory();
 
       virtual void add(const resip::Data& method,
@@ -42,13 +42,13 @@ class RouteDbMemory : public RouteAbstractDb
                               const resip::Data& event );
 
    private:
-      DB* mDb;
+      Db* mDb;
       
       class RouteOp: public Route
       {
          public:
 #ifdef WIN32
-			 int foo;
+            int foo;
 #else
             regex_t preq;
 #endif
