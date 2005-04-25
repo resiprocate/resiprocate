@@ -1,6 +1,8 @@
 #if !defined(Repro_CertPublicationHandler_hxx)
 #define Repro_CertPublicationHandler_hxx
 
+#if defined(USE_SSL)
+
 #include "resiprocate/dum/PublicationHandler.hxx"
 
 namespace resip
@@ -48,4 +50,5 @@ class CertPublicationHandler : public resip::ServerPublicationHandler
  
 }
 
+#endif 
 #endif

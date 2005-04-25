@@ -1,3 +1,5 @@
+#if defined(USE_SSL)
+
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/X509Contents.hxx"
@@ -36,3 +38,4 @@ CertServer::~CertServer()
 {
 }
 
+#endif
