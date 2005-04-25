@@ -36,7 +36,11 @@ RouteDbMemory::RouteDbMemory(char* dbName)
    mDb = new Db( NULL , 0 );
    assert( mDb );
    
+#ifdef WIN32
+   int ret = mDb->open(NULL,dbName,NULL,DB_BTREE,DB_CREATE,0);
+#else
    int ret = mDb->open(dbName,NULL,DB_BTREE,DB_CREATE,0);
+#endif
    if ( ret != 0 )
    {
       ErrLog( <<"Could not open route database at " << dbName );
