@@ -66,7 +66,8 @@ UserAbstractDb::getUserAuthInfo( const Data& key ) const
    {
       return  Data::Empty;
    }
-   
+
+   assert( !record.empty() );
    UserRecord rec = decodeUserRecord( record );
    DebugLog (<< "getUserAuthInfo A1[" << key << "] = " << rec.passwordHash);
    
@@ -171,6 +172,7 @@ UserAbstractDb::decodeUserRecord( const Data& pData ) const
 {
    UserAbstractDb::UserRecord rec;
 
+	assert( !pData.empty() );
    Data data = pData;
    
    iDataStream s(data);
@@ -194,6 +196,7 @@ UserAbstractDb::decodeUserRecord( const Data& pData ) const
    {
       // unkonwn version 
       ErrLog( <<"Data in user database with unknown version " << rec.version );
+      ErrLog( <<"record size is " << pData.size() );
       assert(0);
    }
       
