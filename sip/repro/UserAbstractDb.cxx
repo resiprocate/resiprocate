@@ -1,6 +1,10 @@
 
-//#include <fcntl.h>
-//#include <db4/db_185.h>
+#ifdef WIN32
+#include <db_cxx.h>
+#else
+#include <db4/db_cxx.h>
+#endif
+
 #include <cassert>
 
 #include "resiprocate/os/Data.hxx"
@@ -64,7 +68,7 @@ UserAbstractDb::getUserAuthInfo( const Data& key ) const
    }
    
    UserRecord rec = decodeUserRecord( record );
-   InfoLog (<< "getUserAuthInfo A1[" << key << "] = " << rec.passwordHash);
+   DebugLog (<< "getUserAuthInfo A1[" << key << "] = " << rec.passwordHash);
    
    return rec.passwordHash;
 }
