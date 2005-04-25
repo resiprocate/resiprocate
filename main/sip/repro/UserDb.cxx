@@ -27,8 +27,13 @@ UserDb::UserDb( char* fileName )
 { 
    mDb = new Db( NULL, 0 );
    assert( mDb );
-   
+
+#ifdef WIN32
+   int ret =mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
+#else 
    int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
+#endif
+
    if ( ret!=0 )
    {
       ErrLog( <<"Could not open user database at " << fileName );
