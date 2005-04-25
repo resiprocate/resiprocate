@@ -1,3 +1,5 @@
+#if defined(USE_SSL)
+
 #include "resiprocate/Security.hxx"
 #include "resiprocate/X509Contents.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
@@ -69,3 +71,5 @@ CertPublicationHandler::add(ServerPublicationHandle h, const Contents* contents)
       h->send(h->accept(403)); // !jf! is this the correct code? 
    }
 }
+
+#endif

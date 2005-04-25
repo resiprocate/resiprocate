@@ -1,6 +1,8 @@
 #if !defined(Repro_CertSubscriptionHandler_hxx)
 #define Repro_CertSubscriptionHandler_hxx
 
+#if defined(USE_SSL)
+
 #include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
@@ -35,4 +37,5 @@ class CertSubscriptionHandler : public resip::ServerSubscriptionHandler
  
 }
 
+#endif
 #endif
