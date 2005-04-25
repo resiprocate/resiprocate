@@ -28,16 +28,15 @@ UserDb::UserDb( char* fileName )
    mDb = new Db( NULL, 0 );
    assert( mDb );
    
-   mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
-   
-   mDb->cursor(NULL,&mCursor,0);
-   assert( mCursor );
-   
-   if ( !mDb )
+   int ret =mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
+    if ( ret!=0 )
    {
       ErrLog( <<"Could not open user database at " << fileName );
+	  assert(0);
    }
-   assert(mDb);
+
+   mDb->cursor(NULL,&mCursor,0);
+   assert( mCursor );
 }
 
 
@@ -83,9 +82,17 @@ UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
       // key not found 
       return false;
    }
+   assert( ret != DB_KEYEMPTY );
    assert( ret == 0 );
    Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
    
+	if (result.empty())
+	{
+		// this should never happen
+		return false;
+	}
+
+   assert( !result.empty() );
    pData = result;
    
    return true;
