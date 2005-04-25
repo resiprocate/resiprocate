@@ -70,7 +70,11 @@ ConnectionManager::findConnection(const Tuple& addr)
 Connection*
 ConnectionManager::getNextRead(FdSet &fdset)
 {
+#ifdef WIN32
+    if (mReadHead->empty() || fdset.read.fd_count == 0)
+#else
    if (mReadHead->empty())
+#endif
    {
       return 0;
    }
