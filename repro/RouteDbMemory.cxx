@@ -34,20 +34,21 @@ RouteDbMemory::RouteDbMemory(char* dbName)
    mDb = new Db( NULL , 0 );
    assert( mDb );
    
-   mDb->open(NULL,dbName,NULL,DB_BTREE,DB_CREATE,0);
-   if ( !mDb )
+   int ret = mDb->open(NULL,dbName,NULL,DB_BTREE,DB_CREATE,0);
+   if ( ret != 0 )
    {
-      ErrLog( <<"Could not open user database at " << dbName );
+      ErrLog( <<"Could not open route database at " << dbName );
+	  assert(0);
    }
    assert(mDb);
 
-   Dbt key,data;
-   int ret;
-   
+   Dbt key;
+   Dbt data;   
    Dbc* cursor;
    
-    mDb->cursor(NULL,&cursor,0);
+    ret = mDb->cursor(NULL,&cursor,0);
     assert( cursor );
+	assert( ret == 0 );
 
    assert( mDb );
    ret = cursor->get(&key,&data, DB_FIRST);
@@ -56,6 +57,14 @@ RouteDbMemory::RouteDbMemory(char* dbName)
    {
       Data d(reinterpret_cast<const char*>(data.get_data()), data.get_size() );
       DebugLog( << "loaded route " << d);
+
+	  if ( d.empty() )
+	  {
+		// this should never happen 
+		  ErrLog( <<"got an empty route record" );
+		 // !cj! TODO assert(0);
+		break;
+	  }
 
       Route r = deSerialize( d );
       add( r.mMethod, r.mEvent, r.mMatchingPattern, r.mRewriteExpression, r.mOrder );
@@ -142,7 +151,8 @@ RouteDbMemory::process(const resip::Uri& ruri,
                        const resip::Data& event )
 {
    RouteAbstractDb::UriList targetSet;
-   
+
+#ifndef WIN32 // !cj! TODO fix 
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
@@ -173,7 +183,7 @@ RouteDbMemory::process(const resip::Uri& ruri,
 
       if ( !match.empty() ) 
       {
-         // TODO - www.pcre.org looks like has better performance 
+         // TODO - www.pcre.org looks like it has better performance 
                   
          // TODO - !cj! - compile regex when create the route object instead of
          // doing it every time 
@@ -271,6 +281,7 @@ RouteDbMemory::process(const resip::Uri& ruri,
          targetSet.push_back( targetUri );
       }
    }
+#endif
 
    return targetSet;
 }

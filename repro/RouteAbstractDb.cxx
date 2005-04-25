@@ -72,6 +72,8 @@ RouteAbstractDb::deSerialize( const Data& pData )
 {  
    RouteAbstractDb::Route rec;
    
+   assert( !pData.empty() );
+
    Data data = pData;
    
    iDataStream s(data);
@@ -82,8 +84,7 @@ RouteAbstractDb::deSerialize( const Data& pData )
    rec.mVersion = len;
    
    if (  rec.mVersion == 1 )
-   {
-     
+   {  
          rec.mMethod = decodeString( s );
          rec.mEvent  = decodeString( s );
          rec.mMatchingPattern = decodeString( s );
