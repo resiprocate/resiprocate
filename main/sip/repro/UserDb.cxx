@@ -28,8 +28,8 @@ UserDb::UserDb( char* fileName )
    mDb = new Db( NULL, 0 );
    assert( mDb );
    
-   int ret =mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
-    if ( ret!=0 )
+   int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
+   if ( ret!=0 )
    {
       ErrLog( <<"Could not open user database at " << fileName );
 	  assert(0);
