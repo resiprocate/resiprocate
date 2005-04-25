@@ -3,7 +3,7 @@
 #ifdef WIN32
 #include <db_cxx.h>
 #else 
-#include <db4/db_185.h>
+#include <db4/db_cxx.h>
 #endif
 #include <cassert>
 
@@ -25,17 +25,14 @@ using namespace std;
 
 UserDb::UserDb( char* fileName )
 { 
-#ifdef WIN32
    mDb = new Db( NULL, 0 );
-assert( mDb );
-
-mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
-
- mDb->cursor(NULL,&mCursor,0);
- assert( mCursor );
-#else
-   mDb = dbopen(fileName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
-#endif
+   assert( mDb );
+   
+   mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
+   
+   mDb->cursor(NULL,&mCursor,0);
+   assert( mCursor );
+   
    if ( !mDb )
    {
       ErrLog( <<"Could not open user database at " << fileName );
@@ -46,25 +43,19 @@ mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
 
 UserDb::~UserDb()
 { 
-#ifdef WIN32
-	assert( mCursor );
-	mCursor->close();
-	mCursor = 0;
-
-	assert( mDb );
-	mDb->close(0);
-	delete mDb; mDb=0;
-#else
-   int ret = mDb->close(mDb);
-   assert( ret == 0 );
-#endif
+   assert( mCursor );
+   mCursor->close();
+   mCursor = 0;
+   
+   assert( mDb );
+   mDb->close(0);
+   delete mDb; mDb=0;
 }
 
 
 void 
 UserDb::dbWriteRecord( const Data& pKey, const Data& pData )
 { 
-#ifdef WIN32
    Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
    Dbt data( (void*)pData.data(), (u_int32_t)pData.size() );
    int ret;
@@ -72,69 +63,28 @@ UserDb::dbWriteRecord( const Data& pKey, const Data& pData )
    assert( mDb );
    ret = mDb->put(NULL,&key,&data,0);
    assert( ret == 0 );
-#else
-   DBT key,data;
-   int ret;
 
-   key.data = const_cast<char*>( pKey.data() );
-   key.size = pKey.size();
-   data.data = const_cast<char*>( pData.data() );
-   data.size = pData.size();
-   
-   assert( mDb );
-   ret = mDb->put(mDb,&key,&data,0);
-   assert( ret == 0 );
-#endif 
-
-#ifdef WIN32
-	mDb->sync(0);
-#else
-   ret = mDb->sync(mDb,0);
-   assert( ret == 0 );
-#endif
+   mDb->sync(0);
 }
 
 
 bool 
 UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
 { 
-#ifdef WIN32
-	   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
-	Dbt data;
-#else
-   DBT key,data;
-     key.data = const_cast<char*>( pKey.data() );
-   key.size = pKey.size();
-   data.data = 0;
-   data.size = 0;
-#endif
+   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
+   Dbt data;
    int ret;
    
    assert( mDb );
-#ifdef WIN32
    ret = mDb->get(NULL,&key,&data, 0);
-#else
-     ret = mDb->get(mDb,&key,&data, 0);
-#endif
-   if ( ret ==  -1 )
-   {
-      assert(0);
-      // TODO 
-   }
-   if ( ret == 1 )
+
+   if ( ret == DB_NOTFOUND )
    {
       // key not found 
       return false;
    }
-   
    assert( ret == 0 );
-   // key was found 
-  
-#ifdef WIN32
-	Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
-#else
-   Data result( reinterpret_cast<const char*>(data.data), data.size );
-#endif
+   Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
    
    pData = result;
    
@@ -145,21 +95,10 @@ UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
 void 
 UserDb::dbRemoveRecord( const Data& pKey )
 { 
-#ifdef WIN32
-	   Dbt key( (void*) pKey.data(), (u_int32_t)pKey.size() );
+   Dbt key( (void*) pKey.data(), (u_int32_t)pKey.size() );
 
    assert( mDb );
    mDb->del(NULL,&key, 0);
-#else
-	   DBT key;
-
-   key.data = const_cast<char*>( pKey.data() );
-   key.size = pKey.size();
-
-   assert( mDb );
-   mDb->del(mDb,&key, 0);
-#endif
-
 }
 
 
@@ -173,34 +112,18 @@ UserDb::dbFirstKey()
 resip::Data 
 UserDb::dbNextKey(bool first )
 { 
-#ifdef WIN32
-	  Dbt key,data;
-#else
-   DBT key,data;
-#endif
+   Dbt key,data;
    int ret;
    
    assert( mDb );
-#ifdef WIN32
    ret = mCursor->get(&key,&data, first ? DB_FIRST : DB_NEXT);
-#else
-   ret = mDb->seq(mDb,&key,&data,  first ? R_FIRST : R_NEXT);
-#endif
-   assert( ret != -1 );
-   assert( ret != 2 );
-   if ( ret == 1 )
+   if ( ret == DB_NOTFOUND )
    {
-      // key not found 
       return Data::Empty;
    }
    assert ( ret == 0 );
    
-#ifdef WIN32
    Data d( reinterpret_cast<const char*>(key.get_data()), key.get_size() );
-#else
-      Data d( reinterpret_cast<const char*>(key.data), key.size );
-#endif
-   //clog << "got  key of " << d << endl;
    
    return d;
 }

@@ -3,7 +3,7 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD POPT
+PACKAGES += DUM RESIPROCATE OPENSSL ARES DB4CXX PTHREAD POPT
 
 CODE_SUBDIRS = monkeys stateAgents
 TARGET_LIBRARY = librepro
@@ -12,7 +12,7 @@ ifeq ($(USE_SSL), true)
 
 TESTPROGRAMS = \
 	repro.cxx \
-#	userAdmin.cxx 
+	userAdmin.cxx 
 
 SRC =   \
 	CommandLineParser.cxx \

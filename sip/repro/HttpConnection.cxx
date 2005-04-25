@@ -2,7 +2,7 @@
 #ifdef WIN32
 #include <db_cxx.h>
 #else 
-#include <db4/db_185.h>
+#include <db4/db_cxx.h>
 #endif
 
 #include <cassert>
@@ -43,9 +43,9 @@ HttpConnection::HttpConnection( HttpBase& base, Socket pSock ):
 
 HttpConnection::~HttpConnection()
 {
-	assert( mSock > 0 );
+   assert( mSock > 0 );
 #ifdef WIN32
-	 closesocket(mSock); mSock=0;
+   closesocket(mSock); mSock=0;
 #else
    close(mSock); mSock=0;
 #endif
