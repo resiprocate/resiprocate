@@ -128,14 +128,17 @@ WebAdmin::buildPage( const Data& uri,
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
          mUserDb.addUser( pUser, // user
-                          Data("localhost"), // domain 
+						 Data::Empty, // domain 
                           Data::Empty, // realm 
                           Data("admin"), // password 
                           Data::Empty, // name 
                           Data::Empty ); // email 
          dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
       }
-      
+  // !cj! TODO -    assert( !dbA1.empty() );
+
+	if ( !dbA1.empty() )
+	{
       MD5Stream a1;
       a1 << pUser // username
          << Symbols::COLON
@@ -154,6 +157,10 @@ WebAdmin::buildPage( const Data& uri,
          setPage( resip::Data::Empty, pageNumber,401 );
          return;
       }
+	}
+	{
+		   ErrLog( << "user " << pUser << " failed to add to user db" );
+	}
    }
    
    // parse any URI tags from form entry 
