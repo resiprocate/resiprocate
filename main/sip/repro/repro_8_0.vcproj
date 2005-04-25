@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;$(SolutionDir)\contrib\pcre&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Ws2_32.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Dnsapi.lib&quot; $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\contrib\db\build_win32\Debug_static\libdb43sd.lib &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Iphlpapi.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Advapi32.lib&quot; $(SolutionDir)\contrib\pcre\Debug\pcre.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib $(ProjectDir)..\resiprocate\Debug\resiprocate.lib $(ProjectDir)..\contrib\ares\Debug\ares.lib $(ProjectDir)..\resiprocate\dum\Debug\dum.lib $(ProjectDir)..\contrib\db\build_win32\debug_static\libdb43sd.lib $(ProjectDir)..\contrib\pcre\Debug\pcre.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
@@ -124,10 +124,10 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="0"
@@ -147,8 +147,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib"
-				OutputFile="$(OutDir)/test.exe"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib $(ProjectDir)..\resiprocate\Release\resiprocate.lib $(ProjectDir)..\contrib\ares\Release\ares.lib $(ProjectDir)..\resiprocate\dum\Release\dum.lib $(ProjectDir)..\contrib\db\build_win32\release_static\libdb43s.lib $(ProjectDir)..\contrib\pcre\release\pcre.lib"
+				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
