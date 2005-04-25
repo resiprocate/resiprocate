@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;C:\Program Files\Microsoft Platform SDK for Windows XP SP2\Include&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
