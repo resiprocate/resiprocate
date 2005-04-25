@@ -266,9 +266,12 @@ void
 TcpBaseTransport::process(FdSet& fdSet)
 {
    processAllWriteRequests(fdSet);
-   processSomeWrites(fdSet);
-   processSomeReads(fdSet);
-   processListen(fdSet);
+   if(fdSet.numReady > 0)
+   {
+      processSomeWrites(fdSet);
+      processSomeReads(fdSet);
+      processListen(fdSet);
+   }
 }
 
 
