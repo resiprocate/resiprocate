@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="pcre"
-	ProjectGUID="{2EFA4941-9535-4A0D-9166-45C236A84298}"
+	ProjectGUID="{9F9747E3-0919-4FD4-903A-D0895E9BAF42}"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
