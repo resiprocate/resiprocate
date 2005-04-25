@@ -21,6 +21,7 @@
 			ConfigurationType="1"
 			UseOfMFC="0"
 			CharacterSet="2"
+			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -40,10 +41,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;$(SolutionDir)\contrib\pcre&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
-				MinimalRebuild="TRUE"
-				BasicRuntimeChecks="3"
+				MinimalRebuild="FALSE"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				UsePrecompiledHeader="0"
@@ -62,11 +63,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Ws2_32.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Dnsapi.lib&quot; $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\contrib\db\build_win32\Debug_static\libdb43sd.lib &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Iphlpapi.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Advapi32.lib&quot;"
+				AdditionalDependencies="&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Ws2_32.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Dnsapi.lib&quot; $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\contrib\db\build_win32\Debug_static\libdb43sd.lib &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Iphlpapi.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Advapi32.lib&quot; $(SolutionDir)\contrib\pcre\Debug\pcre.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
+				AssemblyDebug="1"
 				ProgramDatabaseFile="$(OutDir)/test.pdb"
 				SubSystem="1"
 				TargetMachine="1"

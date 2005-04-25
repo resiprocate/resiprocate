@@ -8,6 +8,7 @@
 #endif
 
 #ifdef WIN32
+#include <pcreposix.h>
 #else
 #include <regex.h>
 #endif
@@ -47,11 +48,7 @@ class RouteDbMemory : public RouteAbstractDb
       class RouteOp: public Route
       {
          public:
-#ifdef WIN32
-            int foo;
-#else
             regex_t preq;
-#endif
       };
                
       typedef std::vector<RouteOp> RouteOpList;

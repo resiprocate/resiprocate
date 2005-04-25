@@ -1,5 +1,6 @@
 
 #include <fcntl.h>
+
 #ifdef WIN32
 #include <db.h>
 #else 
@@ -7,6 +8,7 @@
 #endif
 
 #ifdef WIN32
+#include <pcreposix.h>
 #else
 #include <regex.h>
 #endif
@@ -152,7 +154,10 @@ RouteDbMemory::process(const resip::Uri& ruri,
 {
    RouteAbstractDb::UriList targetSet;
 
-#ifndef WIN32 // !cj! TODO fix 
+#if 0
+   Regex r;
+#endif
+
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
@@ -281,7 +286,6 @@ RouteDbMemory::process(const resip::Uri& ruri,
          targetSet.push_back( targetUri );
       }
    }
-#endif
 
    return targetSet;
 }
