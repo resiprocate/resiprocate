@@ -565,7 +565,10 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On1xx:
          transition(UAC_Early);
          handler->onNewSession(getHandle(), None, msg);
-         handleProvisional(msg);
+         if(!isTerminated())  
+         {
+            handleProvisional(msg);
+         }
          break;
 
       case On1xxEarly:
@@ -574,20 +577,32 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
-         handleProvisional(msg);
-         handler->onEarlyMedia(getHandle(), msg, *sdp);
+         if(!isTerminated())  
+         {
+            handleProvisional(msg);
+            if(!isTerminated())  
+            {
+               handler->onEarlyMedia(getHandle(), msg, *sdp);
+            }
+         }
          break;
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
          handler->onNewSession(getHandle(), Offer, msg);
-         handleOffer(msg, *sdp);
+         if(!isTerminated())  
+         {
+            handleOffer(msg, *sdp);
+         }
          break;
 
       case On1xxAnswer:
          transition(UAC_EarlyWithAnswer);
          handler->onNewSession(getHandle(), Answer, msg);
-         handleAnswer(msg, *sdp);
+         if(!isTerminated())  
+         {
+            handleAnswer(msg, *sdp);
+         }
          break;
 
       case On2xxOffer:
@@ -596,8 +611,14 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
-         handler->onConnected(getHandle(), msg);
+         if(!isTerminated())  
+         {
+            handler->onOffer(getSessionHandle(), msg, *sdp);
+            if(!isTerminated())  
+            {
+               handler->onConnected(getHandle(), msg);
+            }
+         }
          break;
 
       case On2xxAnswer:
@@ -607,8 +628,14 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
-         handler->onConnected(getHandle(), msg);
+         if(!isTerminated())  // onNewSession callback may call end() or reject()
+         {
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            if(!isTerminated())  // onAnswer callback may call end() or reject()
+            {
+               handler->onConnected(getHandle(), msg);
+            }
+         }
          break;
 
       case On2xx:
@@ -658,14 +685,20 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On1xxEarly: // only unreliable
          transition(UAC_Early);
          handleProvisional(msg);
-         mEarlyMedia = InviteSession::makeSdp(*sdp);
-         handler->onEarlyMedia(getHandle(), msg, *sdp);
+         if(!isTerminated())  
+         {
+            mEarlyMedia = InviteSession::makeSdp(*sdp);
+            handler->onEarlyMedia(getHandle(), msg, *sdp);
+         }
          break;
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
          handler->onNewSession(getHandle(), Offer, msg);
-         handleOffer(msg, *sdp);
+         if(!isTerminated())  
+         {
+            handleOffer(msg, *sdp);
+         }
          break;
 
       case On1xxAnswer:
@@ -681,7 +714,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
 
          handler->onOffer(getSessionHandle(), msg, *sdp);
-         handler->onConnected(getHandle(), msg);
+         if(!isTerminated())  
+         {
+            handler->onConnected(getHandle(), msg);
+         }
          break;
 
       case On2xxAnswer:
@@ -691,7 +727,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
-         handler->onConnected(getHandle(), msg);
+         if(!isTerminated())  // onNewSession callback may call end() or reject()
+         {
+            handler->onConnected(getHandle(), msg);
+         }
          break;
 
       case On2xx:
