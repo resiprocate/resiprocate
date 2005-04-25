@@ -14,6 +14,10 @@
 #endif
 
 #ifdef WIN32
+
+// !cj! TODO would be nice to remove this 
+#pragma warning(disable : 4996)
+
 #include <errno.h>
 #include <winsock2.h>
 #include <io.h>
@@ -35,8 +39,12 @@
 # include <errno.h>
 # include <winsock2.h>
 # include <io.h>
+
+#ifndef __BIT_TYPES_DEFINED__ /* sleepcat DB uses this */ 
 typedef unsigned long int u_int32_t;
 typedef long int ssize_t;
+#endif
+
 #endif
 
 #if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
