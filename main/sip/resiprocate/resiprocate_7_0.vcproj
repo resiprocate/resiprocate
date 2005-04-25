@@ -321,6 +321,9 @@
 				RelativePath="Helper.cxx">
 			</File>
 			<File
+				RelativePath=".\os\Id.cxx">
+			</File>
+			<File
 				RelativePath="IntegerCategory.cxx">
 			</File>
 			<File
@@ -375,6 +378,9 @@
 				RelativePath="MultipartMixedContents.cxx">
 			</File>
 			<File
+				RelativePath=".\MultipartRelatedContents.cxx">
+			</File>
+			<File
 				RelativePath="MultipartSignedContents.cxx">
 			</File>
 			<File
@@ -414,7 +420,13 @@
 				RelativePath="Pkcs7Contents.cxx">
 			</File>
 			<File
+				RelativePath=".\Pkcs8Contents.cxx">
+			</File>
+			<File
 				RelativePath="PlainContents.cxx">
+			</File>
+			<File
+				RelativePath=".\os\Poll.cxx">
 			</File>
 			<File
 				RelativePath="QopParameter.cxx">
@@ -583,6 +595,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinCompat.cxx">
+			</File>
+			<File
+				RelativePath=".\X509Contents.cxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.cxx">
@@ -766,6 +781,9 @@
 				RelativePath="Helper.hxx">
 			</File>
 			<File
+				RelativePath=".\os\Id.hxx">
+			</File>
+			<File
 				RelativePath="os\Inserter.hxx">
 			</File>
 			<File
@@ -829,6 +847,9 @@
 				RelativePath="MultipartMixedContents.hxx">
 			</File>
 			<File
+				RelativePath=".\MultipartRelatedContents.hxx">
+			</File>
+			<File
 				RelativePath="MultipartSignedContents.hxx">
 			</File>
 			<File
@@ -880,7 +901,13 @@
 				RelativePath="Pkcs7Contents.hxx">
 			</File>
 			<File
+				RelativePath=".\Pkcs8Contents.hxx">
+			</File>
+			<File
 				RelativePath="PlainContents.hxx">
+			</File>
+			<File
+				RelativePath=".\os\Poll.hxx">
 			</File>
 			<File
 				RelativePath="QopParameter.hxx">
@@ -1054,6 +1081,9 @@
 				RelativePath="os\Tuple.hxx">
 			</File>
 			<File
+				RelativePath=".\TuSelector.hxx">
+			</File>
+			<File
 				RelativePath="UdpTransport.hxx">
 			</File>
 			<File
@@ -1079,6 +1109,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\X509Contents.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
