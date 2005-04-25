@@ -1,3 +1,5 @@
+#if defined(USE_SSL)
+
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
@@ -68,3 +70,5 @@ PrivateKeyPublicationHandler::add(ServerPublicationHandle h, const Contents* con
       h->send(h->accept(403)); // !jf! is this the correct code? 
    }
 }
+
+#endif

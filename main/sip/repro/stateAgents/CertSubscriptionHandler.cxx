@@ -1,3 +1,5 @@
+#if defined(USE_SSL)
+
 #include "resiprocate/Security.hxx"
 #include "resiprocate/X509Contents.hxx"
 #include "repro/stateAgents/CertSubscriptionHandler.hxx"
@@ -49,3 +51,5 @@ void
 CertSubscriptionHandler::onError(ServerSubscriptionHandle, const SipMessage& msg)
 {
 }
+
+#endif
