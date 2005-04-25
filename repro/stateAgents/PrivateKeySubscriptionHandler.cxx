@@ -1,3 +1,5 @@
+#if defined(USE_SSL)
+
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
@@ -47,3 +49,5 @@ void
 PrivateKeySubscriptionHandler::onError(ServerSubscriptionHandle, const SipMessage& msg)
 {
 }
+
+#endif
