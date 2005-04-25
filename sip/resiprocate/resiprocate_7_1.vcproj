@@ -22,7 +22,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -72,7 +72,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -97,8 +97,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\Jason Fischl\My Documents\Visual Studio Projects\sip&quot;"/>
+				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -120,7 +119,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -168,7 +167,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
