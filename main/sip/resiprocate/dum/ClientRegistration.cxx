@@ -218,8 +218,10 @@ ClientRegistration::allContacts()
 int
 ClientRegistration::whenExpires() const
 {
-   int now = Timer::getTimeMs() / 1000;
-   return mExpires - now;
+// !cj! - TODO - I'm supisious these time are getting confused on what units they are in 
+   UInt64 now = Timer::getTimeMs() / 1000;
+   UInt64 ret = mExpires - now;
+   return (int)ret;
 }
 
 void
