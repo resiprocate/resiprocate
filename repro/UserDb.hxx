@@ -4,7 +4,7 @@
 #ifdef WIN32
 #include <db_cxx.h>
 #else 
-#include <db4/db_185.h>
+#include <db4/db_cxx.h>
 #endif
 
 #include "resiprocate/os/Data.hxx"
@@ -24,18 +24,14 @@ namespace repro
 class UserDb: public UserAbstractDb
 {
    public:
-      UserDb( char* dbName="user_database" );
+      UserDb( char* dbName="user_database.db" );
       
       virtual ~UserDb();
       
    private:
-#ifdef WIN32
-	  Db*  mDb;
-	  Dbc* mCursor;
-#else
-      DB* mDb;
-#endif
-
+      Db*  mDb;
+      Dbc* mCursor;
+      
       // Db manipulation routines
       virtual void dbWriteRecord( const resip::Data& key, 
                                   const resip::Data& data );
@@ -46,9 +42,7 @@ class UserDb: public UserAbstractDb
       virtual resip::Data dbNextKey(bool first=true); // return empty if no more  
 };
 
-
-
- }
+}
 #endif  
 
 /* ====================================================================

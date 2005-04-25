@@ -24,6 +24,7 @@ add( char* pUsername, char* pRealm, char* pPasswd )
    
    db.addUser( Data(pUsername), 
                Data(pRealm), 
+               Data(pRealm), 
                Data(pPasswd),
                fullName, 
                email );
@@ -42,6 +43,8 @@ remove( char* pAor )
 void
 web(int port)
 {
+   assert(0);
+#if 0
    UserDb db;
    
    WebAdmin webAdmin( db, port );
@@ -55,6 +58,7 @@ web(int port)
 
       webAdmin.process(fdset);
    }
+#endif
 }
 
 
@@ -66,8 +70,10 @@ list()
    Data key = db.getFirstKey();
    while ( !key.empty() )
    {
+      Data hash = db.getUserAuthInfo(key);
+      
       clog << "Key: " << key << endl;
-      clog << "  passwordHash = " << db.getUserAuthInfo(key) << endl;
+      clog << "  passwordHash = " << hash << endl;
       
       key = db.getNextKey();
    } 
@@ -89,7 +95,7 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::Cerr, Log::Err, argv[0]);
-   Log::setLevel(Log::Debug);
+   Log::setLevel(Log::Info);
 
    for ( int i=1; i<argc; i++ )
    {

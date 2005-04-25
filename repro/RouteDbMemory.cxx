@@ -3,7 +3,7 @@
 #ifdef WIN32
 #include <db.h>
 #else 
-#include <db4/db_185.h>
+#include <db4/db.h>
 #endif
 
 #ifdef WIN32
@@ -31,49 +31,46 @@ RouteDbMemory::RouteDbMemory(char* dbName)
 {  
    InfoLog( << "Loading route database" );
   
-#ifdef WIN32
-	// !cj! TODO FIX 
-#else
-   mDb = dbopen(dbName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
+   mDb = new Db( NULL , 0 );
+   assert( mDb );
+   
+   mDb->open(NULL,dbName,NULL,DB_BTREE,DB_CREATE,0);
    if ( !mDb )
    {
       ErrLog( <<"Could not open user database at " << dbName );
    }
    assert(mDb);
 
-   DBT key,data;
+   Dbt key,data;
    int ret;
    
+   Dbc* cursor;
+   
+    mDb->cursor(NULL,&cursor,0);
+    assert( cursor );
+
    assert( mDb );
-   ret = mDb->seq(mDb,&key,&data, R_FIRST);
-   assert( ret != -1 );
-   assert( ret != 2 );
+   ret = cursor->get(&key,&data, DB_FIRST);
 
    while( ret == 0 ) // while key is being found 
    {
-      Data d(reinterpret_cast<const char*>(data.data), data.size );
+      Data d(reinterpret_cast<const char*>(data.get_data()), data.get_size() );
       DebugLog( << "loaded route " << d);
 
       Route r = deSerialize( d );
       add( r.mMethod, r.mEvent, r.mMatchingPattern, r.mRewriteExpression, r.mOrder );
       
-      // get the next key 
-      ret = mDb->seq(mDb,&key,&data, R_NEXT);
-      assert( ret != -1 );
-      assert( ret != 2 );
+      ret = cursor->get(&key,&data, DB_NEXT);
    }
-#endif
+   cursor->close();
 }
 
 
 RouteDbMemory::~RouteDbMemory()
 { 
-#ifdef WIN32
-	// !cj! TODO FIX 
-#else
-   int ret = mDb->close(mDb);
+   int ret = mDb->close(0); 
    assert( ret == 0 );
-#endif
+   mDb = 0;
 }
 
 
@@ -86,9 +83,6 @@ RouteDbMemory::add(const resip::Data& method,
 {
    InfoLog( << "Add route" );
    
-#ifdef WIN32
-	// !cj! TODO FIX 
-#else
    RouteOp route;
    route.mVersion = 1;
    route.mMethod = method;
@@ -102,20 +96,18 @@ RouteDbMemory::add(const resip::Data& method,
    Data pKey = method+" "+event+" "+matchingPattern; 
    Data pData = serialize(route);
       
-   DBT key,data;
+   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
+   Dbt data( (void*)pData.data(), (u_int32_t)pData.size() );
+ 
    int ret;
-   key.data = const_cast<char*>( pKey.data() );
-   key.size = pKey.size();
-   data.data = const_cast<char*>( pData.data() );
-   data.size = pData.size();
+ 
    assert( mDb );
-   ret = mDb->put(mDb,&key,&data,0);
+   ret = mDb->put(NULL,&key,&data,0);
    assert( ret == 0 );
 
    // need sync for if program gets ^C without shutdown
-   ret = mDb->sync(mDb,0);
+   ret = mDb->sync(0);
    assert( ret == 0 );
-#endif
 }
 
 
@@ -151,9 +143,6 @@ RouteDbMemory::process(const resip::Uri& ruri,
 {
    RouteAbstractDb::UriList targetSet;
    
-#ifdef WIN32
-	// !cj! TODO FIX 
-#else
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
@@ -282,7 +271,6 @@ RouteDbMemory::process(const resip::Uri& ruri,
          targetSet.push_back( targetUri );
       }
    }
-#endif
 
    return targetSet;
 }
