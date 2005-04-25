@@ -26,10 +26,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int disableV6 = false;
    char* domains = 0;
    char* certPath = "~/.sipCerts";
-   int noChallenge = false;
 #ifdef WIN32
+      int noChallenge = true;
    int noWebChallenge = true;
 #else
+      int noChallenge = false;
    int noWebChallenge = false;
 #endif
    int noRegistrar = false;
