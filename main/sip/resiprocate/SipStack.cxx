@@ -313,6 +313,15 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    mTransactionController.send(toSend);
 }
 
+void 
+SipStack::checkAsyncProcessHandler()
+{
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
+}
+
 void
 SipStack::post(const ApplicationMessage& message)
 {
@@ -320,10 +329,6 @@ SipStack::post(const ApplicationMessage& message)
    Message* toPost = message.clone();
    //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
    mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
 }
 
 void
@@ -345,10 +350,7 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    mAppTimers.add(Timer(ms, toPost));
    //.dcm. timer update rather than process cycle...optimize by checking if sooner
    //than current timeTillNextProcess?
-   if (mAsyncProcessHandler)
-   {
-      mAsyncProcessHandler->handleProcessNotification();
-   }
+   checkAsyncProcessHandler();
 }
 
 bool

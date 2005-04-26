@@ -172,6 +172,8 @@ class SipStack
       void unregisterTransactionUser(TransactionUser&);
       
    private:
+      void checkAsyncProcessHandler();
+
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
       AsyncProcessHandler* mAsyncProcessHandler;
