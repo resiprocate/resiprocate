@@ -7,7 +7,6 @@
 # be here (or they should be wrapped in if code that is controllable
 # in Makefile.pre (now - moved from Makefile.opt)
 
-
 ############################## FreeBSD ##############################
 
 # recent FreeBSDs (as of 6/1999) should have a sufficiently modern
@@ -19,6 +18,28 @@ ifeq ($(OSTYPE),FreeBSD)
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
+endif
+
+############################## NetBSD ##############################
+
+# sounds like BSD
+# toolchain is closer to Solaris
+
+ifeq ($(OSTYPE),NetBSD)
+
+ifeq ($(ARCH),i686)
+	CXXFLAGS += -march=i686
+endif
+ifeq ($(ARCH),i486)
+	CXXFLAGS += -march=i486
+endif
+ifeq ($(ARCH),i386)
+	CXXFLAGS += -march=i386
+endif
+	CXXFLAGS += -D_REENTRANT
+	CFLAGS   += -D_REENTRANT
+        INCDIRS  += /usr/local/include
+        LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
 endif
 
 ############################## Linux ##############################
