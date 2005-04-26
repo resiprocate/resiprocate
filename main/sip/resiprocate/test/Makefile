@@ -71,6 +71,7 @@ TESTPROGRAMS += testTuple.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
 	        test503Generator.cxx \
+		testSelectInterruptor.cxx \
 #		testTransportSelector.cxx
 
 
