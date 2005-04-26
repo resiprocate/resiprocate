@@ -28,11 +28,13 @@ UserDb::UserDb( char* fileName )
    mDb = new Db( NULL, 0 );
    assert( mDb );
 
-#ifdef WIN32
+   // if the line bellow seems wrong, you need to check which version 
+   // of db you have - it is likely an very out of date version 
+   // still trying to figure this out so email fluffy if you have 
+   // problems and include your version the DB_VERSION_STRING found 
+   // in your db4/db.h file. 
    int ret =mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
-#else 
-   int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
-#endif
+   //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
 
    if ( ret!=0 )
    {
