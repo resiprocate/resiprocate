@@ -31,6 +31,7 @@ SRC = \
 	os/ParseBuffer.cxx \
 	os/RWMutex.cxx \
 	os/Random.cxx \
+	os/SelectInterruptor.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
 	os/SysLogBuf.cxx \
