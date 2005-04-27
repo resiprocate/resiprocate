@@ -79,7 +79,7 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    
    if (status != ARES_SUCCESS)
    {
-      return ExternalDnsRawResult(status, userArg);
+      return ExternalDnsRawResult(status, abuf, alen, userArg);
    }
    else
    {
