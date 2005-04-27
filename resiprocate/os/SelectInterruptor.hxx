@@ -31,10 +31,7 @@ class SelectInterruptor : public AsyncProcessHandler
       int mPipe[2];
 #else
       Socket mSocket;
-      sockaddr mWakeupAddr
-      fd = ::socket(ipVer == V4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-
-      //TODO
+      sockaddr mWakeupAddr;
 #endif
          
 };
