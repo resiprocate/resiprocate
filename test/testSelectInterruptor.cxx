@@ -44,7 +44,11 @@ void FakeApp::thread()
     {
        InfoLog( << "Wakeup in: " << wakeups[n] << ", " << n+1 << " of " 
                 << sizeof(wakeups)/sizeof(long));
-       sleep(wakeups[n]);
+#ifdef WIN32
+	   Sleep(wakeups[n]*1000);
+#else
+	   sleep(wakeups[n]);
+#endif
        InfoLog(<< "Waking up select");
        mSi.interrupt();
     }
@@ -55,6 +59,10 @@ void FakeApp::thread()
 int
 main(int argc, char* argv[])
 {
+#ifdef WIN32
+	initNetwork();
+#endif
+
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
    
    SelectInterruptor si;

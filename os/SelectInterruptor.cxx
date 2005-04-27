@@ -22,12 +22,12 @@ SelectInterruptor::SelectInterruptor()
    loopback.sin_port = 0;
    loopback.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
    
-   ::bind( mSocket, &loopback, sizeof(loopback));
-   memset(mWakeupAddr, 0, sizeof(mWakeupAddr));   
+   ::bind( mSocket, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+   memset(&mWakeupAddr, 0, sizeof(mWakeupAddr));   
    int len = sizeof(mWakeupAddr);
-   int error = getsockname(mWakeupAddr, (sockaddr *)&mWakeupAddr, len);
+   int error = getsockname(mSocket, (sockaddr *)&mWakeupAddr, &len);
    assert(error == 0);
-   error= connect(mSocket, mWakeupAddr, sizeof(mWakeupAddr)); 
+   error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
    assert(error == 0);
 #else
    pipe(mPipe);
@@ -53,7 +53,11 @@ SelectInterruptor::handleProcessNotification()
 void 
 SelectInterruptor::buildFdSet(FdSet& fdset)
 {
+#ifdef WIN32
+	fdset.setRead(mSocket);
+#else
    fdset.setRead(mPipe[0]);
+#endif
 }
 
 void 
@@ -81,7 +85,7 @@ SelectInterruptor::interrupt()
 {
    static char* wakeUp = "w";
 #ifdef WIN32
-   int count = sendto(recv, wakeUp, sizeof(wakeUp), 0);
+   int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
    assert(count = 1);
 #else
    size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
