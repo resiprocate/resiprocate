@@ -52,6 +52,7 @@ extern "C"
 #endif
 
 using namespace resip;
+using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
