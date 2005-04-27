@@ -18,9 +18,20 @@ class RRList : public IntrusiveListElement<RRList*>
    public:      
       typedef std::vector<DnsResourceRecord*> Records;
       typedef IntrusiveListElement<RRList*> LruList;
+      typedef std::vector<RROverlay>::const_iterator Itr;
 
 
-      RRList() {}
+      RRList() : mStatus(0), mRRType(0), mAbsoluteExpiry(ULONG_MAX) {}
+
+      explicit RRList(const Data& key, const int rrtype, int ttl, int status)
+         : mKey(key), mStatus(status), mRRType(rrtype)
+      {
+         mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
+      }
+
+      explicit RRList(const Data& key, int rrtype)
+         : mKey(key), mRRType(rrtype), mAbsoluteExpiry(ULONG_MAX)
+      {}
 
       ~RRList()
       {
@@ -31,32 +42,32 @@ class RRList : public IntrusiveListElement<RRList*>
          mRecords.clear();
       }
 
-      template<typename Iter> RRList(const RRFactoryBase* factory, typename Iter begin, typename Iter end, int ttl)
+      RRList(const RRFactoryBase* factory, 
+             const Data& key,
+             const int rrType,
+             Itr begin,
+             Itr end, 
+             int ttl)
+             : mKey(key), mRRType(rrType)
       {
          update(factory, begin, end, ttl);
       }
-
-      RRList(int ttl)
-      {
-         mAbsoluteExpiry = ttl;
-      }
       
-      template<class Iter> 
-      void update(const RRFactoryBase* factory, typename Iter begin, typename Iter end, int ttl)
+      void update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
       {
          mRecords.clear();
          if (ttl >= 0)
          {
-            mAbsoluteExpiry = ttl * 60; // convert from minutes to seconds.
+            mAbsoluteExpiry = ttl * MIN_TO_SEC;
          }
          else
          {
             mAbsoluteExpiry = ULONG_MAX;
          }
-         for (Iter it = begin; it != end; it++)
+         for (Itr it = begin; it != end; it++)
          {
             mRecords.push_back(factory->create(*it));
-            if ((unsigned long)it->ttl() < mAbsoluteExpiry)
+            if ((UInt64)it->ttl() < mAbsoluteExpiry)
             {
                mAbsoluteExpiry = it->ttl();
             }
@@ -64,18 +75,20 @@ class RRList : public IntrusiveListElement<RRList*>
          mAbsoluteExpiry += Timer::getTimeMs()/1000;
       }
 
-      const Records& records() const
-      {
-         return mRecords;
-      }
-
+      const Records& records() const { return mRecords; }
+      const Data& key() const { return mKey; }
+      int status() const { return mStatus; }
+      int rrType() const { return mRRType; }
       UInt64 absoluteExpiry() const { return mAbsoluteExpiry; }
       UInt64& absoluteExpiry() { return mAbsoluteExpiry; }
-   protected:
 
    private:
+      static const int MIN_TO_SEC = 60;
+      Data mKey;
+      int mRRType;
       UInt64 mAbsoluteExpiry;
       Records mRecords;
+      int mStatus; // dns query status.
 
 };
 

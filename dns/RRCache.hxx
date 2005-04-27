@@ -18,7 +18,6 @@ extern "C"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
 
-using namespace std;
 
 namespace resip
 {
@@ -31,7 +30,8 @@ class RRCache
       RRCache() :
          mHead(),
          mLruHead(LruListType::makeList(&mHead)),
-         mUserDefinedTTL(-1)
+         mUserDefinedTTL(-1),
+         mSize(DEFAULT_SIZE)
       {
          mFactoryMap[T_CNAME] = &mCnameRecordFactory;
          mFactoryMap[T_NAPTR] = &mNaptrRecordFacotry;
@@ -48,49 +48,115 @@ class RRCache
       }
 
       void setTTL(int ttl) { mUserDefinedTTL = ttl; }
+
+      void setSize(int size) { mSize = size; }
       
       void updateCache(const Data& target,
                        const int rrType,
                        std::vector<RROverlay>::const_iterator begin, 
                        std::vector<RROverlay>::const_iterator end)
       {
-         FactoryMap::iterator itf = mFactoryMap.find(rrType);
-         assert(itf != mFactoryMap.end());
-         MapKey key;
-         key.rrType = rrType;
-         key.target = target;
-         RRMap::iterator itr = mRRMap.find(key);
-         if (itr !=  mRRMap.end())
+         FactoryMap::iterator it = mFactoryMap.find(rrType);
+         assert(it != mFactoryMap.end());
+         RRList* key = new RRList(target, rrType);
+         RRSet::iterator lb = mRRSet.lower_bound(key);
+         if (lb != mRRSet.end() &&
+             !(mRRSet.key_comp()(key, *lb)))
          {
-            itr->second->update(itf->second, begin, end, mUserDefinedTTL);
-            touch(itr->second);
+            (*lb)->update(it->second, begin, end, mUserDefinedTTL);
+            touch(*lb);
          }
          else
-         {
-            RRList* val = new RRList(itf->second, begin, end, mUserDefinedTTL);
-            mRRMap[key] = val;
+         {            
+            RRList* val = new RRList(it->second, target, rrType, begin, end, mUserDefinedTTL);
+            mRRSet.insert(lb, val);
             mLruHead->push_back(val);
+            purge();
          }
+         delete key;
       }
 
-      void cacheTTL(const Data& target,
+      void cacheTTL(const Data& target,                    
                     const int rrType,
+                    const int status,
                     RROverlay overlay)
       {
-         static int seconds = 60;
-         MapKey key;
-         key.rrType = rrType;
-         key.target = target;
-         assert(mRRMap.find(key)==mRRMap.end());
          int ttl = getTTL(overlay);
          if (ttl < 0) return; // not soa.
          if (mUserDefinedTTL > 0)
          {
             ttl = ttl < mUserDefinedTTL? ttl : mUserDefinedTTL;
          }
-         RRList* val = new RRList(ttl);
-         mRRMap[key] = val;
+         RRList* val = new RRList(target, rrType, ttl, status);
+         mRRSet.insert(val);
          mLruHead->push_back(val);
+         purge();
+      }
+
+      bool lookup(const Data& target, const int type, Result& records, int& status)
+      {
+         records.empty();
+         status = 0;
+         RRList* key = new RRList(target, type);
+         RRSet::iterator it = mRRSet.find(key);
+         delete key;
+         if (it == mRRSet.end())
+         {
+            return false;
+         }
+         else
+         {
+            if (Timer::getTimeMs()/1000 >= (*it)->absoluteExpiry())
+            {
+               delete *it;
+               mRRSet.erase(it);
+               return false;
+            }
+            else
+            {
+               touch(*it);
+               records = (*it)->records();
+               status = (*it)->status();
+               return true;
+            }
+         }
+      }
+
+   private:
+      static const int DEFAULT_SIZE = 512;
+       class CompareT  : public std::binary_function<const RRList*, const RRList*, bool>
+      {
+         public:
+            bool operator()(RRList* lhs, RRList* rhs) const
+            {
+               if (lhs->rrType() < rhs->rrType())
+               {
+                  return true;
+               }
+               else if (lhs->rrType() > rhs->rrType())
+               {
+                  return false;
+               }
+               else
+               {
+                  return lhs->key() < rhs->key();
+               }
+            }
+      };
+
+      void touch(RRList* node)
+      {
+         node->remove();
+         mLruHead->push_back(node);
+      }
+
+      void cleanup()
+      {
+         for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
+         {
+            delete *it;
+         }
+         mRRSet.clear();
       }
 
       int getTTL(const RROverlay& overlay)
@@ -109,66 +175,23 @@ class RRCache
          return DNS__32BIT(pPos);         
       }
 
-      Result lookup(const Data& target, const int type)
+      void purge()
       {
-         MapKey key;
-         key.rrType = type;
-         key.target = target;
-         RRMap::iterator it = mRRMap.find(key);
-         if (it == mRRMap.end())
-         {
-            return Empty;
-         }
-         else
-         {
-            if (Timer::getTimeMs()/1000 >= it->second->absoluteExpiry())
-            {
-               delete it->second;
-               mRRMap.erase(it);
-               return Empty;
-            }
-            else
-            {
-               touch(it->second);
-               return it->second->records();
-            }
-         }
-      }
-
-      void touch(RRList* node)
-      {
-         node->remove();
-         mLruHead->push_back(node);
-      }
-
-
-   private:
-      typedef struct _MapKey
-      {
-         int rrType;
-         Data target;
-         bool operator<(const struct _MapKey& rhs) const
-         {
-            return rrType < rhs.rrType || target < rhs.target;
-         }
-      } MapKey;
-
-      void cleanup()
-      {
-         for (map<MapKey, RRList*>::iterator it = mRRMap.begin(); it != mRRMap.end(); it++)
-         {
-            delete it->second;
-         }
-         mRRMap.clear();
+         if (mRRSet.size() < mSize) return;
+         RRList* lst = *(mLruHead->begin());
+         RRSet::iterator it = mRRSet.find(lst);
+         assert(it != mRRSet.end());
+         lst->remove();
+         delete *it;
+         mRRSet.erase(it);
       }
 
       RRList mHead;
-      LruListType* mLruHead;
-                  
+      LruListType* mLruHead;                     
       Result Empty;
 
-      typedef std::map<MapKey, RRList*> RRMap;
-      RRMap mRRMap;
+      typedef std::set<RRList*, CompareT> RRSet;
+      RRSet mRRSet;
 
       RRFactory<DnsHostRecord> mHostRecordFactory;
       RRFactory<DnsSrvRecord> mSrvRecordFactory;
@@ -182,6 +205,7 @@ class RRCache
       FactoryMap  mFactoryMap;
 
       int mUserDefinedTTL; // in minutes
+      unsigned int mSize;
 };
 
 }
