@@ -135,6 +135,11 @@ DnsInterface::isSupportedProtocol(TransportType t)
    return false;
 }
 
+int DnsInterface::supportedProtocols()
+{
+   return mSupportedTransports.size();
+}
+
 bool 
 DnsInterface::requiresProcess()
 {
