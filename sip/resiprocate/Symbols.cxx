@@ -62,6 +62,7 @@ const char* Symbols::Isub = "isub=";
 const char* Symbols::Postd = "postd=";
 
 const char* Symbols::auth = "auth";
+const char* Symbols::authInt = "auth-int";
 const char* Symbols::Digest = "Digest";
 const char* Symbols::Basic = "Basic";
 

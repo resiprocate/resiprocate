@@ -549,12 +549,28 @@ Helper::makeNonce(const SipMessage& request, const Data& timestamp)
 Data 
 Helper::makeResponseMD5WithA1(const Data& a1,
                               const Data& method, const Data& digestUri, const Data& nonce,
-                              const Data& qop, const Data& cnonce, const Data& cnonceCount)
+                              const Data& qop, const Data& cnonce, const Data& cnonceCount,
+                              const Contents* entityBody)
 {
    MD5Stream a2;
    a2 << method
       << Symbols::COLON
       << digestUri;
+
+   if (qop == Symbols::authInt)
+   {
+      if (entityBody)
+      {
+         MD5Stream eStream;
+         eStream << *entityBody;
+         a2 << Symbols::COLON << eStream.getHex();
+      }
+      else
+      {
+         static Data noBody = MD5Stream().getHex();
+         a2 << Symbols::COLON << noBody;
+      }
+   }
    
    MD5Stream r;
    r << a1
@@ -562,7 +578,7 @@ Helper::makeResponseMD5WithA1(const Data& a1,
      << nonce
      << Symbols::COLON;
 
-   if (!qop.empty()) 
+   if (!qop.empty())
    {
       r << cnonceCount
         << Symbols::COLON
@@ -580,7 +596,8 @@ Helper::makeResponseMD5WithA1(const Data& a1,
 Data 
 Helper::makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                         const Data& method, const Data& digestUri, const Data& nonce,
-                        const Data& qop, const Data& cnonce, const Data& cnonceCount)
+                        const Data& qop, const Data& cnonce, const Data& cnonceCount,
+                        const Contents *entity)
 {
    MD5Stream a1;
    a1 << username
@@ -591,7 +608,7 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
    a1.flush();
    
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
-                                cnonce, cnonceCount);
+                                cnonce, cnonceCount, entity);
 }
 
 std::pair<Helper::AuthResult,Data>
@@ -648,7 +665,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
          
             if (i->exists(p_qop))
             {
-               if (i->param(p_qop) == Symbols::auth)
+               if (i->param(p_qop) == Symbols::auth || i->param(p_qop)  == Symbols::authInt)
                {
                   if (i->param(p_response) == makeResponseMD5WithA1(a1,
                                                               getMethodName(request.header(h_RequestLine).getMethod()),
@@ -656,7 +673,8 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                                                               i->param(p_nonce),
                                                               i->param(p_qop),
                                                               i->param(p_cnonce),
-                                                              i->param(p_nc)))
+                                                              i->param(p_nc),
+                                                              request.getContents()))
                   {
                      if(i->exists(p_username))
                      {
@@ -764,7 +782,7 @@ Helper::authenticateRequest(const SipMessage& request,
             
             if (i->exists(p_qop))
             {
-               if (i->param(p_qop) == Symbols::auth)
+               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
                {
                   if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
                                                               password,
@@ -774,7 +792,8 @@ Helper::authenticateRequest(const SipMessage& request,
                                                               i->param(p_nonce),
                                                               i->param(p_qop),
                                                               i->param(p_cnonce),
-                                                              i->param(p_nc)))
+                                                              i->param(p_nc)),
+                                                              request.getContents())
                   {
                      return Authenticated;
                   }
@@ -914,25 +933,8 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    }
    auth.param(p_uri) = digestUri;
 
-   bool useAuthQop = false;
-   if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
-   {
-      ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
-      do
-      {
-         const char* anchor = pb.skipWhitespace();
-         pb.skipToChar(Symbols::COMMA[0]);
-         Data q;
-         pb.data(q, anchor);
-         if (q == Symbols::auth)
-         {
-            useAuthQop = true;
-            break;
-         }
-      }
-      while(!pb.eof());
-   }
-   if (useAuthQop)
+   Data authQop = qopOption(challenge);
+   if (!authQop.empty())
    {
       updateNonceCount(nonceCount, nonceCountString);
       auth.param(p_response) = Helper::makeResponseMD5(username, 
@@ -941,12 +943,13 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
                                                        getMethodName(request.header(h_RequestLine).getMethod()), 
                                                        digestUri, 
                                                        challenge.param(p_nonce),
-                                                       Symbols::auth,
+                                                       authQop,
                                                        cnonce,
-                                                       nonceCountString);
+                                                       nonceCountString,
+                                                       request.getContents());
       auth.param(p_cnonce) = cnonce;
       auth.param(p_nc) = nonceCountString;
-      auth.param(p_qop) = Symbols::auth;
+      auth.param(p_qop) = authQop;
    }
    else
    {
@@ -976,6 +979,50 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    return auth;
 }
 
+Data
+Helper::qopOption(const Auth& challenge)
+{
+   static Data preferredTokens[] = 
+   {
+      Symbols::authInt,
+      Symbols::auth
+   };
+   bool found = false;
+   size_t index;
+
+   if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
+   {
+      ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
+      do
+      {
+         const char* anchor = pb.skipWhitespace();
+         pb.skipToChar(Symbols::COMMA[0]);
+         if (!pb.eof())
+            pb.skipChar();
+         Data q;
+         pb.data(q, anchor);
+         for (size_t i=0; i < sizeof(preferredTokens)/sizeof(*preferredTokens); i++) 
+         {
+            if (q == preferredTokens[i]) {
+               if (!found || i < index) {
+                  found = true;
+                  index = i;
+               }
+               return(q);
+            }
+         }
+      }
+      while(!pb.eof());
+   }
+
+   if (found)
+      return preferredTokens[index];
+
+   return Data::Empty;
+   
+}
+   
+
 Auth 
 Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
                                         const Data& username,
@@ -1000,37 +1047,21 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    }
    auth.param(p_uri) = digestUri;
 
-   bool useAuthQop = false;
-   if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
-   {
-      ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
-      do
-      {
-         const char* anchor = pb.skipWhitespace();
-         pb.skipToChar(Symbols::COMMA[0]);
-         Data q;
-         pb.data(q, anchor);
-         if (q == Symbols::auth)
-         {
-            useAuthQop = true;
-            break;
-         }
-      }
-      while(!pb.eof());
-   }
-   if (useAuthQop)
+   Data authQop = qopOption(challenge);
+   if (!authQop.empty())
    {
       updateNonceCount(nonceCount, nonceCountString);
       auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()), 
                                                              digestUri, 
                                                              challenge.param(p_nonce),
-                                                             Symbols::auth,
+                                                             authQop,
                                                              cnonce,
-                                                             nonceCountString);
+                                                             nonceCountString,
+                                                             request.getContents());
       auth.param(p_cnonce) = cnonce;
       auth.param(p_nc) = nonceCountString;
-      auth.param(p_qop) = Symbols::auth;
+      auth.param(p_qop) = authQop;
    }
    else
    {
