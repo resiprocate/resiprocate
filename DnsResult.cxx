@@ -130,7 +130,7 @@ DnsResult::next()
    Tuple next = mResults.front();
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
-
+   if (mResults.empty()) transition(Finished);
    return next;
 }
 
@@ -138,6 +138,7 @@ void
 DnsResult::lookup(const Uri& uri)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
+   int type = this->mType;
    
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mSips = (uri.scheme() == Symbols::Sips);
@@ -177,7 +178,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               mDns.lookup<RR_SRV, DnsResultSink>("_sips._udp." + mTarget, this);
+               mDns.lookup<RR_SRV>("_sips._udp." + mTarget, this);
             }
             else
             {
@@ -189,7 +190,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
+               mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
             }
          }
          else
@@ -205,22 +206,22 @@ DnsResult::lookup(const Uri& uri)
             {
                case TLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
-                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._tls." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._tls." + mTarget, this);
                   break;
                case DTLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
-                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._dtls." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._dtls." + mTarget, this);
                   break;
                case TCP:
                   mSRVCount++;
-                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, this);
                   break;
                case SCTP:
                case DCCP:
                case UDP:
                default: //fall through to UDP for unimplemented & unknown
                   mSRVCount++;
-                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._udp." + mTarget, this);
             }
          }
       }
@@ -263,20 +264,32 @@ DnsResult::lookup(const Uri& uri)
       }
       else // do NAPTR
       {
-         mDns.lookup<RR_NAPTR, DnsResultSink>(mTarget, this); // for current target
+         mDns.lookup<RR_NAPTR>(mTarget, this); // for current target
       }
    }
 }
 
 void DnsResult::lookupHost(const Data& target)
 {
-#if defined(USE_IPV6)
-   DebugLog(<< "Doing host (AAAA) lookup: " << target);
-   mPassHostFromAAAAtoA = target; // hackage
-   mDns.lookup<RR_AAAA, DnsResultSink>(target, this);   
-#else // !USE_IPV6
-   mDns.lookup<RR_A, DnsResultSink>(target, this);
+   if (mInterface.isSupported(mTransport, V6))
+   {
+#ifdef USE_IPV6
+      DebugLog(<< "Doing host (AAAA) lookup: " << target);
+      mPassHostFromAAAAtoA = target;
+      mDns.lookup<RR_AAAA>(target, this);
+#else
+      assert(0);
+      mDns.lookup<RR_A>(target, this);
 #endif
+   }
+   else if (mInterface.isSupported(mTransport, V4))
+   {
+      mDns.lookup<RR_A>(target, this);
+   }
+   else
+   {
+      assert(0);
+   }
 }
 
 int
@@ -700,7 +713,10 @@ DnsResult::processAAAA(int status, const unsigned char* abuf, int alen)
    {
       StackLog (<< "Failed async dns query: " << mInterface.errorMessage(status));
    }
-   lookupARecords(mPassHostFromAAAAtoA);
+   if (mInterface.isSupported(mTransport, V4))
+   {
+      lookupARecords(mPassHostFromAAAAtoA);
+   }
 #else
 	assert(0);
 #endif
@@ -873,7 +889,15 @@ DnsResult::primeResults()
          mPort = next.port;
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
-         lookupHost(next.target);
+         if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
+         {
+            lookupHost(next.target);
+         }
+         else
+         {
+            assert(0);
+            mHandler->handle(this);
+         }
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
       }
@@ -881,8 +905,7 @@ DnsResult::primeResults()
    else
    {
       bool changed = (mType == Pending);
-      //transition(Finished);
-      mType = Finished;
+      transition(Finished);
       if (changed) mHandler->handle(this);
    }
 
@@ -1598,14 +1621,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       }
       else 
       {
-         if (this->mSRVResults.empty())
-         {
-            transition(Available);
-         }
-         else
-         {
-            mType = Available;
-         }
+         transition(Available);
       }
       if (changed) mHandler->handle(this);
    }
@@ -1641,7 +1657,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    {
       StackLog (<< "Failed async dns query: " << result.msg);
    }
-   mDns.lookup<RR_A, DnsResultSink>(mPassHostFromAAAAtoA, this);
+   mDns.lookup<RR_A>(mPassHostFromAAAAtoA, this);
 #else
 	assert(0);
 #endif
@@ -1815,7 +1831,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       {
          transition(Pending);
          mSRVCount++;
-         mDns.lookup<RR_SRV, DnsResultSink>(mPreferredNAPTR.replacement, this);
+         mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, this);
       }
    }
    else
@@ -1843,27 +1859,28 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          }
 
          mSRVCount++;
-         mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
+         mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
       }
       else
       {
+         mSRVCount = mInterface.supportedProtocols();
+         int count = mSRVCount;
          if (mInterface.isSupportedProtocol(TLS))
          {
-            mSRVCount += 1;
-            mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
+            --count;
          }
-         
          if (mInterface.isSupportedProtocol(TCP))
          {
-            mSRVCount+=2;
-            mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
-            mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, this);
+            --count;
          }
-         else
+         if (mInterface.isSupportedProtocol(UDP))
          {
-            mSRVCount++;
-            mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sip._udp." + mTarget, this);
+            --count;
          }
+         assert(0==count);
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }

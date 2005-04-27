@@ -7,39 +7,56 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/IntrusiveListElement.hxx"
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+#include "resiprocate/dns/RRFactory.hxx"
 
 
 namespace resip
 {
-
-template<class T>
-class RRList : public IntrusiveListElement<RRList<T>*> 
+class RRList : public IntrusiveListElement<RRList*>
 {
    public:      
-      typedef std::vector<T> Records;
-      typedef IntrusiveListElement<RRList<T>*> LruList;
+      typedef std::vector<DnsResourceRecord*> Records;
+      typedef IntrusiveListElement<RRList*> LruList;
+
 
       RRList() {}
 
-      explicit RRList(const Data& key)
-         : mKey(key)
-      {}
-
-      template<class Iter> RRList(const Data& key, Iter begin, Iter end)
-         : mKey(key)
+      ~RRList()
       {
-         update(begin, end);
+         for (Records::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
+         {
+            delete (*it);
+         }
+         mRecords.clear();
+      }
+
+      template<typename Iter> RRList(const RRFactoryBase* factory, typename Iter begin, typename Iter end, int ttl)
+      {
+         update(factory, begin, end, ttl);
+      }
+
+      RRList(int ttl)
+      {
+         mAbsoluteExpiry = ttl;
       }
       
       template<class Iter> 
-      void update(Iter begin, Iter end)
+      void update(const RRFactoryBase* factory, typename Iter begin, typename Iter end, int ttl)
       {
          mRecords.clear();
-         mAbsoluteExpiry = ULONG_MAX;
+         if (ttl >= 0)
+         {
+            mAbsoluteExpiry = ttl * 60; // convert from minutes to seconds.
+         }
+         else
+         {
+            mAbsoluteExpiry = ULONG_MAX;
+         }
          for (Iter it = begin; it != end; it++)
-         {            
-            mRecords.push_back(T(*it));
-            if ((unsigned long)it->ttl() < mAbsoluteExpiry) 
+         {
+            mRecords.push_back(factory->create(*it));
+            if ((unsigned long)it->ttl() < mAbsoluteExpiry)
             {
                mAbsoluteExpiry = it->ttl();
             }
@@ -52,21 +69,17 @@ class RRList : public IntrusiveListElement<RRList<T>*>
          return mRecords;
       }
 
-      const Data& key() { return mKey; } const
-      
       UInt64 absoluteExpiry() const { return mAbsoluteExpiry; }
       UInt64& absoluteExpiry() { return mAbsoluteExpiry; }
    protected:
 
    private:
-      Data mKey;
-      //unsigned long mAbsoluteExpiry;
       UInt64 mAbsoluteExpiry;
       Records mRecords;
 
 };
 
-}
+};
 
 
 #endif

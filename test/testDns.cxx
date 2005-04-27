@@ -137,7 +137,7 @@ main(int argc, const char** argv)
       }
       else
       {
-          std::cout << rf << "Waiting for " << *(results.front()) << ub << std::endl;
+          //std::cout << rf << "Waiting for " << *(results.front()) << ub << std::endl;
           sleep(1);
       }
    }

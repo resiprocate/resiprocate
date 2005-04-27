@@ -65,7 +65,11 @@ class ExternalDnsRawResult : public ExternalDnsResult
          abuf(buf),
          alen(len) 
       {}
-      ExternalDnsRawResult(long errorCode, void* uData) : ExternalDnsResult(errorCode, uData) {}
+      ExternalDnsRawResult(long errorCode, unsigned char* buf, int len, void* uData) : 
+         ExternalDnsResult(errorCode, uData),
+         abuf(buf),
+         alen(len)
+         {}
          
       unsigned char* abuf;
       int alen;

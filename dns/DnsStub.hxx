@@ -12,6 +12,7 @@ extern "C"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#include "resiprocate/dns/RROverlay.hxx"
 #include "resiprocate/dns/RRList.hxx"
 #include "resiprocate/dns/RRCache.hxx"
 #include "resiprocate/dns/DnsResourceRecord.hxx"
@@ -21,7 +22,6 @@ extern "C"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/DnsHostRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/dns/RROverlay.hxx"
 
 namespace resip
 {
@@ -76,15 +76,21 @@ class DnsStub
       DnsStub(DnsInterface* dns);
       ~DnsStub();
 
-      template<class QueryType, class Sink> void lookup(const Data& target, Sink* s)
+      template<class QueryType> void lookup(const Data& target, DnsResultSink* s)
       {
-         Query<QueryType, Sink>* query = new Query<QueryType, Sink>(*this, target, s);
+         Query<QueryType>* query = new Query<QueryType>(*this, target, s);
          mQueries.insert(query);
          query->go(mDns);
       }
 
+      void setTTL(int ttl) 
+      {
+         mCache.setTTL(ttl);
+      }
+      
    protected:
       void cache(const Data& key, const unsigned char* abuf, int alen);
+      void cacheTTL(const Data& key, int rrType, const unsigned char* abuf, int alen);
 
    private:
 
@@ -94,53 +100,33 @@ class DnsStub
          virtual ~QueryBase() {}
       };
 
-      template<class QueryType, class Sink> 
+      template<class QueryType> 
       class Query : public DnsRawSink, public QueryBase
       {
          public:
-            Query(DnsStub& stub, const Data& target, Sink* s)
+            Query(DnsStub& stub, const Data& target, DnsResultSink* s)
                : QueryBase(), 
                  mStub(stub), 
                  mTarget(target),
                  mReQuery(0),
-                 mCache(0),
                  mSink(s),
                  mDns(0)
             {
-               mCache = getOrCreateCache();
             }
 
             ~Query() {}
-             
-            typedef RRCache<typename QueryType::Type> Cache;
 
             enum {MAX_REQUERIES = 5};
 
-            Cache* getOrCreateCache()
-            {
-               short type = QueryType::getRRType();
-               std::map<short, RRCacheBase*>::iterator it = mStub.mCacheMap.find(type);
-               if (it != mStub.mCacheMap.end())
-               {
-                  return static_cast<Cache*>(it->second);
-               }
-               else
-               {
-                  Cache* cache = new RRCache<typename QueryType::Type>;
-                  mStub.mCacheMap.insert(CacheMap::value_type(QueryType::getRRType(), cache));
-                  return cache;
-               }
-             }
-
             void go(DnsInterface* dns)
             {
-               if (mCache->lookup(mTarget).empty())
+               if (mStub.mCache.lookup(mTarget, QueryType::getRRType()).empty())
                {
                   Data targetToQuery = mTarget;
                   if (QueryType::getRRType() != T_CNAME)
                   {
-                     std::vector<DnsCnameRecord> cnames = mStub.mCnameCache.lookup(mTarget);
-                     if (!cnames.empty()) targetToQuery = cnames[0].cname();
+                     std::vector<DnsResourceRecord*> cnames = mStub.mCache.lookup(mTarget, T_CNAME);
+                     if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
                   }
 
                   mDns = dns;
@@ -149,13 +135,22 @@ class DnsStub
                }
                else
                {
+                  if (!mSink) return;
                   DNSResult<typename QueryType::Type> result;
                   result.domain = mTarget;
                   result.status = 0;
-                  result.records = mCache->lookup(mTarget);
+                  cloneRecords(result.records, mStub.mCache.lookup(mTarget, QueryType::getRRType()));
                   mSink->onDnsResult(result);
                   mStub.removeQuery(this);
                   delete this;
+               }
+            }
+
+            void cloneRecords(vector<typename QueryType::Type>& records, const vector<DnsResourceRecord*>& src)
+            {
+               for (unsigned int i = 0; i < src.size(); ++i)
+               {
+                  records.push_back(*(dynamic_cast<typename QueryType::Type*>(src[i])));
                }
             }
 
@@ -163,6 +158,10 @@ class DnsStub
             {
                if (status != 0)
                {
+                  if (status == 4) // domain name not found.
+                  {
+                     mStub.cacheTTL(mTarget, QueryType::getRRType(), abuf, alen);
+                  }
                   std::vector<typename QueryType::Type> Empty;
                   notifyUser(status, Empty);
                   mReQuery = 0;
@@ -201,7 +200,7 @@ class DnsStub
                      mStub.cache(mTarget, abuf, alen);
                      mReQuery = 0;
                      std::vector<typename QueryType::Type> records;
-                     records = mCache->lookup(mTarget);
+                     cloneRecords(records, mStub.mCache.lookup(mTarget, QueryType::getRRType()));
                      notifyUser(0, records);
                   }
                }
@@ -220,6 +219,8 @@ class DnsStub
 
             void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis)
             {
+               bGotAnswers = true;
+               bDeleteThis = true;
                std::vector<typename QueryType::Type> Empty;
                if (QueryType::getRRType() != T_CNAME)
                {
@@ -237,8 +238,8 @@ class DnsStub
                      {
                         mStub.cache(mTarget, abuf, alen);
                         ++mReQuery;
-                        std::vector<DnsCnameRecord> cnames = mStub.mCnameCache.lookup(mTarget);
-                        mDns->lookupRecords(cnames[0].cname(), QueryType::getRRType(), this);
+                        std::vector<DnsResourceRecord*> cnames = mStub.mCache.lookup(mTarget, T_CNAME);
+                        mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), QueryType::getRRType(), this);
                         bDeleteThis = false;
                      }
                      else
@@ -253,6 +254,7 @@ class DnsStub
 
             void notifyUser(int status, std::vector<typename QueryType::Type>& records)
             {
+               if (!mSink) return;
                DNSResult<typename QueryType::Type>  result;
                result.domain = mTarget;
                result.status = status;
@@ -265,20 +267,14 @@ class DnsStub
             DnsStub& mStub;
             Data mTarget;
             int mReQuery;
-            Cache* mCache;
-            Sink* mSink;
+            DnsResultSink* mSink;
             DnsInterface* mDns;
       };
 
    private:
       DnsStub(const DnsStub&);   // disable copy ctor.
 
-      // add in constructor, always required.
-      RRCache<DnsCnameRecord> mCnameCache;
-
-      typedef std::map<short, RRCacheBase*> CacheMap;
-      CacheMap mCacheMap;
-
+      RRCache mCache;
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                            const unsigned char *abuf,
                                            int alen);
@@ -288,7 +284,6 @@ class DnsStub
                                          const unsigned char* aptr, 
                                          std::vector<RROverlay>&);
 
-      void setupCache();
       void removeQuery(QueryBase*);
 
       DnsInterface* mDns;

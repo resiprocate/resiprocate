@@ -2,6 +2,25 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#ifndef __CYGWIN__
+#  include <netinet/in.h>
+#  include <arpa/nameser.h>
+#  include <resolv.h>
+#endif
+#include <netdb.h>
+#include <netinet/in.h>
+#else
+#include <Winsock2.h>
+#include <svcguid.h>
+#ifdef USE_IPV6
+#include <ws2tcpip.h>
+#endif
+#endif
+
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 
