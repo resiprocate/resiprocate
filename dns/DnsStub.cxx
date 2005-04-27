@@ -29,19 +29,11 @@ using namespace std;
 
 DnsStub::DnsStub(DnsInterface* dns) : mDns(dns)
 {
-   setupCache();
+   //setupCache();
 }
 
 DnsStub::~DnsStub()
 {
-   for (map<short, RRCacheBase*>::iterator it = mCacheMap.begin(); it != mCacheMap.end(); ++it)
-   {
-      if (it->first != T_CNAME)
-      {
-         delete it->second;
-      }
-   }
-
    for (set<QueryBase*>::iterator it = mQueries.begin(); it != mQueries.end(); ++it)
    {
       delete *it;
@@ -91,18 +83,45 @@ void DnsStub::cache(const Data& key,
    vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
    while (itLow != overlays.end())
    {
-      map<short, RRCacheBase*>::iterator it = mCacheMap.find((*itLow).type());
-      if (it != mCacheMap.end())
-      {
-         it->second->updateCache(key, itLow, itHigh);
-      }
-
+      mCache.updateCache(key, (*itLow).type(), itLow, itHigh);
       itLow = itHigh;
       if (itHigh != overlays.end())
       {
          itHigh = upper_bound(itLow, overlays.end(), *itLow);
       }
    }   
+}
+
+void DnsStub::cacheTTL(const Data& key,
+                       int rrType,
+                       const unsigned char* abuf, 
+                       int alen)
+{
+   // skip header
+   const unsigned char* aptr = abuf + HFIXEDSZ;
+
+   int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
+   for (int i = 0; i < qdcount && aptr; ++i)
+   {
+      aptr = skipDNSQuestion(aptr, abuf, alen);
+   }
+
+   vector<RROverlay> overlays;
+
+   // answers.
+   int ancount = DNS_HEADER_ANCOUNT(abuf);
+   if (ancount != 0) return;
+   for (int i = 0; i < ancount; i++)
+   {
+      aptr = createOverlay(abuf, alen, aptr, overlays);
+   }
+   
+   // name server records.
+   int nscount = DNS_HEADER_NSCOUNT(abuf);
+   if (nscount == 0) return;
+   vector<RROverlay> soa;
+   aptr = createOverlay(abuf, alen, aptr, soa);
+   mCache.cacheTTL(key, rrType, soa[0]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +163,8 @@ DnsStub::supportedType(int type)
            T_AAAA == type ||
            T_NAPTR == type ||
            T_SRV == type ||
-           T_CNAME == type);
+           T_CNAME == type ||
+           T_SOA == type);
 }
 
 const unsigned char*
@@ -176,12 +196,6 @@ DnsStub::createOverlay(const unsigned char* abuf,
    RROverlay overlay(aptr, abuf, alen);
    overlays.push_back(overlay);
    return rptr + len + RRFIXEDSZ + dlen;
-}
-
-void
-DnsStub::setupCache()
-{
-   mCacheMap.insert(CacheMap::value_type(T_CNAME, &mCnameCache));
 }
 
 void

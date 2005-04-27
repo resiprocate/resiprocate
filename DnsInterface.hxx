@@ -58,6 +58,7 @@ class DnsInterface : public ExternalDnsHandler
       // this is used if NAPTR doesn't return anything to decide which SRV
       // records to query
       bool isSupportedProtocol(TransportType t);
+      int supportedProtocols();
 
       
       //only call buildFdSet and process if requiresProcess is true.  
