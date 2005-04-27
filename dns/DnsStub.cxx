@@ -29,7 +29,6 @@ using namespace std;
 
 DnsStub::DnsStub(DnsInterface* dns) : mDns(dns)
 {
-   //setupCache();
 }
 
 DnsStub::~DnsStub()
@@ -94,6 +93,7 @@ void DnsStub::cache(const Data& key,
 
 void DnsStub::cacheTTL(const Data& key,
                        int rrType,
+                       int status,
                        const unsigned char* abuf, 
                        int alen)
 {
@@ -121,7 +121,7 @@ void DnsStub::cacheTTL(const Data& key,
    if (nscount == 0) return;
    vector<RROverlay> soa;
    aptr = createOverlay(abuf, alen, aptr, soa);
-   mCache.cacheTTL(key, rrType, soa[0]);
+   mCache.cacheTTL(key, rrType, status, soa[0]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

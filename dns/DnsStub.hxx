@@ -83,14 +83,19 @@ class DnsStub
          query->go(mDns);
       }
 
-      void setTTL(int ttl) 
+      void setTTL(int ttl) // in minute. 
       {
          mCache.setTTL(ttl);
+      }
+
+      void setCacheSize(int size)
+      {
+         if (size > 0) mCache.setSize(size);
       }
       
    protected:
       void cache(const Data& key, const unsigned char* abuf, int alen);
-      void cacheTTL(const Data& key, int rrType, const unsigned char* abuf, int alen);
+      void cacheTTL(const Data& key, int rrType, int status, const unsigned char* abuf, int alen);
 
    private:
 
@@ -120,17 +125,20 @@ class DnsStub
 
             void go(DnsInterface* dns)
             {
-               if (mStub.mCache.lookup(mTarget, QueryType::getRRType()).empty())
+               mDns = dns;
+               assert(mDns!=0);
+               vector<DnsResourceRecord*> records;
+               int status = 0;
+               if (!mStub.mCache.lookup(mTarget, QueryType::getRRType(), records, status))
                {
                   Data targetToQuery = mTarget;
                   if (QueryType::getRRType() != T_CNAME)
                   {
-                     std::vector<DnsResourceRecord*> cnames = mStub.mCache.lookup(mTarget, T_CNAME);
+                     std::vector<DnsResourceRecord*> cnames;
+                     mStub.mCache.lookup(mTarget, T_CNAME, cnames, status);
                      if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
                   }
-
-                  mDns = dns;
-                  if (mDns) mDns->lookupRecords(targetToQuery, QueryType::getRRType(), this);
+                  mDns->lookupRecords(targetToQuery, QueryType::getRRType(), this);
 
                }
                else
@@ -138,15 +146,23 @@ class DnsStub
                   if (!mSink) return;
                   DNSResult<typename QueryType::Type> result;
                   result.domain = mTarget;
-                  result.status = 0;
-                  cloneRecords(result.records, mStub.mCache.lookup(mTarget, QueryType::getRRType()));
+                  if (records.empty())
+                  {
+                     result.status = status;
+                     result.msg = mDns->errorMessage(status);
+                  }
+                  else
+                  {
+                     result.status = 0;
+                     cloneRecords(result.records, records);
+                  }
                   mSink->onDnsResult(result);
                   mStub.removeQuery(this);
                   delete this;
                }
             }
 
-            void cloneRecords(vector<typename QueryType::Type>& records, const vector<DnsResourceRecord*>& src)
+            void cloneRecords(std::vector<typename QueryType::Type>& records, const std::vector<DnsResourceRecord*>& src)
             {
                for (unsigned int i = 0; i < src.size(); ++i)
                {
@@ -158,9 +174,9 @@ class DnsStub
             {
                if (status != 0)
                {
-                  if (status == 4) // domain name not found.
+                  if (status == 4 || status == 1) // domain name not found or no answer.
                   {
-                     mStub.cacheTTL(mTarget, QueryType::getRRType(), abuf, alen);
+                     mStub.cacheTTL(mTarget, QueryType::getRRType(), status, abuf, alen);
                   }
                   std::vector<typename QueryType::Type> Empty;
                   notifyUser(status, Empty);
@@ -200,7 +216,11 @@ class DnsStub
                      mStub.cache(mTarget, abuf, alen);
                      mReQuery = 0;
                      std::vector<typename QueryType::Type> records;
-                     cloneRecords(records, mStub.mCache.lookup(mTarget, QueryType::getRRType()));
+                     std::vector<DnsResourceRecord*> result;
+                     int status = 0;
+                     mStub.mCache.lookup(mTarget, QueryType::getRRType(), result, status);
+                     assert(!result.empty());
+                     cloneRecords(records, result);
                      notifyUser(0, records);
                   }
                }
@@ -238,7 +258,10 @@ class DnsStub
                      {
                         mStub.cache(mTarget, abuf, alen);
                         ++mReQuery;
-                        std::vector<DnsResourceRecord*> cnames = mStub.mCache.lookup(mTarget, T_CNAME);
+                        std::vector<DnsResourceRecord*> cnames;
+                        int status = 0;
+                        mStub.mCache.lookup(mTarget, T_CNAME, cnames, status);
+                        assert(!cnames.empty());
                         mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), QueryType::getRRType(), this);
                         bDeleteThis = false;
                      }
