@@ -3,12 +3,12 @@
 BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD POPT
 
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx
 
 TESTPROGRAMS += limpc.cxx
 SRC = CommandLineParser.cxx UserAgent.cxx 
