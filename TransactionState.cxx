@@ -1261,7 +1261,10 @@ TransactionState::processNoDnsResults()
 
    sendToTU(response); // !jf! should be 480? 
    terminateClientTransaction(mId);
-   delete this; 
+   if (mMachine != Stateless)
+   {
+	   delete this; 
+   }
 }
 
 void
