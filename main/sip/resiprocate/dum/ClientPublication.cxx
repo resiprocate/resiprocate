@@ -62,7 +62,7 @@ ClientPublication::dispatch(const SipMessage& msg)
    }
    else
    {
-      const int& code = msg.header(h_StatusLine).statusCode();
+      const int code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
          return;
@@ -206,12 +206,18 @@ void
 ClientPublication::update(const Contents* body)
 {
    InfoLog (<< "Updating presence document: " << mPublish.header(h_To).uri());
-   assert(body);
 
    if (mDocument != body)
    {
       delete mDocument;
-      mDocument = body->clone();
+      if (body)
+      {
+         mDocument = body->clone();
+      }
+      else
+      {
+         mDocument = body;
+      }
    }
 
    mPublish.header(h_CSeq).sequence()++;
