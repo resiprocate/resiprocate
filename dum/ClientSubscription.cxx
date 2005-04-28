@@ -178,15 +178,35 @@ ClientSubscription::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
-      else if (msg.header(h_StatusLine).statusCode() == 408)
+      else if (msg.header(h_StatusLine).statusCode() == 408 ||
+               ((msg.header(h_StatusLine).statusCode() == 413 ||
+                 msg.header(h_StatusLine).statusCode() == 480 ||
+                 msg.header(h_StatusLine).statusCode() == 486 ||
+                 msg.header(h_StatusLine).statusCode() == 500 ||
+                 msg.header(h_StatusLine).statusCode() == 503 ||
+                 msg.header(h_StatusLine).statusCode() == 600 ||
+                 msg.header(h_StatusLine).statusCode() == 603) &&
+                msg.exists(h_RetryAfter)))
       {
-         DebugLog (<< "Received 408 to SUBSCRIBE " << mLastRequest.header(h_To));
+         int retry;
 
-         int retry = handler->onRequestRetry(getHandle(), 0, msg);
+         if (msg.header(h_StatusLine).statusCode() == 408)
+         {
+            InfoLog (<< "Received 408 to SUBSCRIBE "
+                     << mLastRequest.header(h_To));
+            retry = handler->onRequestRetry(getHandle(), 0, msg);
+         }
+         else
+         {
+            InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
+                     << mLastRequest.header(h_To));
+            retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
+         }
+
          if (retry < 0)
          {
             DebugLog(<< "Application requested failure on Retry-After");
-            handler->onTerminated(getHandle(), msg);            
+            handler->onTerminated(getHandle(), msg);
             delete this;
             return;
          }
