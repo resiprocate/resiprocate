@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
@@ -665,6 +665,12 @@
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRCache.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRList.cxx">
 			</File>
 			<File
 				RelativePath=".\dns\RROverlay.cxx">
