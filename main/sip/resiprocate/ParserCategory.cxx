@@ -377,34 +377,34 @@ ParserCategory::removeParameterByData(const Data& data)
    }
 }
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                              \
-_enum##_Param::DType&                                                                                   \
-ParserCategory::param(const _enum##_Param& paramType)                                                   \
-{                                                                                                       \
-   checkParsed();                                                                                       \
-   _enum##_Param::Type* p =                                                                             \
-      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
-   if (!p)                                                                                              \
-   {                                                                                                    \
-      p = new _enum##_Param::Type(paramType.getTypeNum());                                              \
-      mParameters.push_back(p);                                                                         \
-   }                                                                                                    \
-   return p->value();                                                                                   \
-}                                                                                                       \
-                                                                                                        \
-const _enum##_Param::DType&                                                                             \
-ParserCategory::param(const _enum##_Param& paramType) const                                             \
-{                                                                                                       \
-   checkParsed();                                                                                       \
-   _enum##_Param::Type* p =                                                                             \
-      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
-   if (!p)                                                                                              \
-   {                                                                                                    \
-      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);       \
-      DebugLog(<< *this);                                                                               \
-      throw Exception("Missing parameter", __FILE__, __LINE__);                                         \
-   }                                                                                                    \
-   return p->value();                                                                                   \
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+ParserCategory::param(const _enum##_Param& paramType)                                                           \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+                                                                                                                \
+const _enum##_Param::DType&                                                                                     \
+ParserCategory::param(const _enum##_Param& paramType) const                                                     \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p =                                                                                     \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                            \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " _name " " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);     \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter " _name, __FILE__, __LINE__);                                          \
+   }                                                                                                            \
+   return p->value();                                                                                           \
 }
 
 defineParam(data, "data", ExistsParameter, "callee-caps");
@@ -441,6 +441,7 @@ defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
 defineParam(duration, "duration", IntegerParameter, "RFC ????");
 defineParam(expiration, "expiration", IntegerParameter, "RFC 2046");
 defineParam(expires, "expires", IntegerParameter, "RFC ????");
+
 defineParam(filename, "filename", DataParameter, "RFC ????");
 defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
 defineParam(handling, "handling", DataParameter, "RFC ????");
