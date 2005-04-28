@@ -11,6 +11,31 @@ int
 main(int argc, char** argv)
 {
    //Log::initialize(Log::Cout, Log::Debug, argv[0]);
+
+   {
+      cerr << "test truncated contents" << endl;
+      const Data txt("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                     "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" CRLF
+                     "          entity=\"sip:qqqqll99200_AT_163.com@teltel.com\">" CRLF
+                     "  <tuple id=\"qqqqll99200@163.com\" callstatus=\"0\" displayName=\"éæ\" status=\"1\">" CRLF
+                     "     <status><basic>open</basic></status>" CRLF
+                     "     <contact priority=\"0\">sip:qqqqll99200_AT_163.com@teltel.com</contact>" CRLF
+                     "     <");
+
+      try
+      {
+         HeaderFieldValue hfv(txt.data(), txt.size());
+         Mime type("application", "pidf+xml");
+         Pidf pc(&hfv, type);
+         assert(pc.getNumTuples() == 1);
+         assert(false);
+      }
+      catch (BaseException& e)
+      {
+         cerr << "Caught: " << e << endl;
+      }
+   }
+
    {
       //resip::Pidf::Tuple tuple;
       //tuple.status = true;
@@ -51,7 +76,7 @@ main(int argc, char** argv)
                      "        </status>" CRLF
                      "        <contact priority=\"2\">im:someone@mobilecarrier.net</contact>" CRLF
                      "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
-                     "        <note xml:lang=\"fr\">Ne d�rangez pas, s'il vous plait</note>" CRLF
+                     "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                      "        <timestamp>2001-10-27T16:49:29Z</timestamp>" CRLF
                      "    </tuple>" CRLF
                      "    <tuple id=\"email\">" CRLF
@@ -76,7 +101,7 @@ main(int argc, char** argv)
       assert(pc.getTuples()[0].status);
       assert(pc.getTuples()[0].contact == "im:someone@mobilecarrier.net");
       assert(pc.getTuples()[0].contactPriority == 2);
-      assert(pc.getTuples()[0].note == "Ne d�rangez pas, s'il vous plait");
+      assert(pc.getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(pc.getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
       pc.encodeParsed(cerr);
@@ -98,7 +123,7 @@ main(int argc, char** argv)
                       "        </status>" CRLF
                       "        <contact priority=\"2\">im:someone@mobilecarrier.net</contact>" CRLF
                       "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
-                      "        <note xml:lang=\"fr\">Ne d�rangez pas, s'il vous plait</note>" CRLF
+                      "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                       "        <timestamp>2001-10-27T16:49:29Z</timestamp>" CRLF
                       "    </tuple>" CRLF
                       "    <tuple id=\"email1\">" CRLF
@@ -128,7 +153,7 @@ main(int argc, char** argv)
                       "        </status>" CRLF
                       "        <contact priority=\"4\">im:someone@mobilecarrier.net</contact>" CRLF
                       "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
-                      "        <note xml:lang=\"fr\">Ne d�rangez pas, s'il vous plait</note>" CRLF
+                      "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                       "        <timestamp>2002-10-27T16:49:29Z</timestamp>" CRLF
                       "    </tuple>" CRLF
                       "    <tuple id=\"email2\">" CRLF
@@ -156,7 +181,7 @@ main(int argc, char** argv)
       assert(n->getTuples()[0].status);
       assert(n->getTuples()[0].contact == "im:someone@mobilecarrier.net");
       assert(n->getTuples()[0].contactPriority == 2);
-      assert(n->getTuples()[0].note == "Ne d�rangez pas, s'il vous plait");
+      assert(n->getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
       n->encodeParsed(cerr);
@@ -169,7 +194,7 @@ main(int argc, char** argv)
       assert(n->getTuples()[2].status);
       assert(n->getTuples()[2].contact == "im:someone@mobilecarrier.net");
       assert(n->getTuples()[2].contactPriority == 4);
-      assert(n->getTuples()[2].note == "Ne d�rangez pas, s'il vous plait");
+      assert(n->getTuples()[2].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[2].timeStamp == "2002-10-27T16:49:29Z");
 
       n->encodeParsed(cerr);
