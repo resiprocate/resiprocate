@@ -81,8 +81,6 @@ DestroyUsage::encode(std::ostream& strm) const
    return strm;
 }
 
-
-
 void
 DestroyUsage::destroy()
 {
@@ -96,15 +94,17 @@ DestroyUsage::destroy()
    }
    else if (mHandle.isValid())
    {
-      delete mHandle.get();
+      if (mHandle.isValid())
+      {
+         delete mHandle.get();
+      }
    }
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
