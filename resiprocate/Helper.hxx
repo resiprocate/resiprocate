@@ -40,7 +40,7 @@ class Helper
       }
 
       // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
-      static int jitterValue(int input, int lowerPercentage, int upperPercentage);
+      static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
 
       //in general content length handled automatically by SipMessage?
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
