@@ -94,10 +94,7 @@ DestroyUsage::destroy()
    }
    else if (mHandle.isValid())
    {
-      if (mHandle.isValid())
-      {
-         delete mHandle.get();
-      }
+      delete mHandle.get();
    }
 }
 
