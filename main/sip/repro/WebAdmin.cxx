@@ -343,9 +343,15 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
       "<td>Order</td>"
       "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
       "</tr>"
-      
+
+      "<tr>"
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">"
+      "    <input type=\"reset\"  value=\"Cancel\"/>"
+      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>"
+      "  </td>"
+      "</tr>"
+
       "</table>"
-      "<p><input type=\"reset\"/ value=\"Cancel\" > <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
       "</form>"
       ;
 }
@@ -385,12 +391,15 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "<td align=\"right\" valign=\"middle\" >Email:</td>"
          "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
          "</tr>"
-         "</table>"
 
-         " <input type=\"reset\" value=\"Cancel\"/>"
+         "<tr>"
+         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">"
+         "    <input type=\"reset\" value=\"Cancel\"/>"
          "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
-
-
+         "  </td>"
+         "</tr>"
+         
+         "</table>"
          "</form>"
          " ";
 }
@@ -399,19 +408,18 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 void
 WebAdmin::buildShowRegsSubPage(DataStream& s)
 {
-      s << 
-         "<h1>Registrations</h1>"
-         "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-         "<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
-         ""
-         "<hr/>"
-         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td>AOR</td>"
-         "<td>Contact</td>"
-         "<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
-         "</tr>";
-      
+   s << 
+      // "<h1>Registrations</h1>"
+      "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+      //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
+      //"<hr/>"
+      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+      "<tr>"
+      "<td>AOR</td>"
+      "<td>Contact</td>"
+      "<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
+      "</tr>";
+   
       RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
       for ( RegistrationPersistenceManager::UriList::const_iterator 
                aor = aors.begin(); aor != aors.end(); ++aor )
@@ -458,7 +466,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
       
       s << 
-         "<h1>Users</h1>"
+         //"<h1>Users</h1>"
          "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
          "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
          "<tr>"
@@ -510,13 +518,13 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       
       s <<
          "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
+         //"      <tr>"
+         // "        <td>"
+         //"          <h1>Routes</h1>"
+         //"        </td>"
+         //"      </tr>" 
          "      <tr>"
-         "        <td>"
-         "          <h1>Routes</h1>"
-         "        </td>"
-         "      </tr>"
-         "      <tr>"
-         "        <td>"
+         "        <td>" 
          "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
          "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>"
          "            <hr/>"
@@ -671,82 +679,51 @@ WebAdmin::buildPageOutlinePre(DataStream& s)
 {
    s << 
       "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-      ""
+      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
       "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-      ""
       "	<head>"
-      "		<meta http-equiv=\"content-type\" content=\"text/html;charset=iso-8859-1\"/>"
-      "		<meta name=\"generator\" content=\"Adobe GoLive\"/>"
+      "		<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
       "		<title>Repro Proxy</title>"
-      "		<style type=\"text/css\" media=\"screen\"><!--"
-      "p    {  color: black; background-color: white; }"
-      "h1        { font-size: 28px; font-weight: bold; margin: 5px 0 }"
-      "h2        { font-size: 14px; font-weight: bold; margin: 5px 0 }"
-      "h3        { font-size: 14px; font-weight: normal; margin: 2px 0 }"
-      "h4     { font-size: 14px; font-style: oblique; font-weight: bold; margin: 2px 0; position: relative }"
-      "body  { font-size: 14px; font-family: Arial, Helvetica, sans-serif }"
-      "--></style>"
       "	</head>"
+      "	<style>"
+      "body         { font-size: 90%; font-family: Arial, Helvetica, sans-serif }"
+      "h1           { font-size: 200%; font-weight: bold }"
+      "h2           { font-size: 100%; font-weight: bold; text-transform: uppercase }"
+      "h3           { font-size: 100%; font-weight: normal }"
+      "h4           { font-size: 100%; font-style: oblique; font-weight: normal }          "
+      "hr           { line-height: 2px; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; height: 10px }"
+      "div.title    { color: black; background-color: #395af6;  padding-top: 10px; padding-bottom: 10px; padding-left: 10px }"
+      "div.title h1 { text-transform: uppercase; margin-top: 0; margin-bottom: 0 }	"
+      "div.menu     { color: black; background-color: #ff8d09;  padding: 0 10px 10px; width: 9em; float: left; clear: none; overflow: hidden }"
+      "div.menu p   { font-weight: bold; text-transform: uppercase; list-style-type: none; margin-top: 0; margin-bottom: 0; margin-left: 10px }"
+      "div.menu h2  { margin-top: 10px; margin-bottom: 0 ; text-transform: uppercase; }"
+      "div.main     { color: black; background-color: #395af6; margin-left: 11em }"
+      "div.space    { font-size: 5px; height: 10px }"
+      "	</style>"
       ""
-      "	<body>"
-      "		<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"left\">"
-      "			<tr height=\"42\">"
-      "				<td colspan=\"3\" bgcolor=\"#395af6\" >"
-      "					<h1><font color=\"white\">Repro</font></h1>"
-      "				</td>"
-      "			</tr>"
-      "			<tr height=\"10\">"
-      "				<td colspan=\"3\" ></td>"
-      "			</tr>"
-      "			<tr>"
-      "				<td>"
-      "					<table border=\"0\" cellspacing=\"0\" cellpadding=\"1\" bgcolor=\"#ff8d09\">"
-      "						<tr>"
-      "							<td>"
-      "								<h2>&nbsp;Users&nbsp;</h2>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"addUser.html\">Add&nbsp;Users</a>&nbsp;</h3>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showUsers.html\">Show&nbsp;Users</a>&nbsp;</h3>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showRegs.html\">Registrations</a>&nbsp;</h3>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h2>&nbsp;Routes&nbsp;</h2>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"addRoute.html\">Add&nbsp;Route</a>&nbsp;</h3>"
-      "							</td>"
-      "						</tr>"
-      "						<tr>"
-      "							<td>"
-      "								<h3>&nbsp;&nbsp;&nbsp;<a href=\"showRoutes.html\">Show&nbsp;Routes</a>&nbsp;</h3>"
-      "							</td>"
-      "						</tr>"
-      "					</table>"
-      "				</td>"
-      "				<td width=\"10\"></td>"
-      "				<td align=\"left\" valign=\"top\">"
-      ;
+      "	<body bgcolor=\"#ffffff\">"
+      "		<div class=\"title\" >"
+      "			<h1>Repro</h1>"
+      "		</div>"
+      "		<div class=\"space\">"
+      "			<br />"
+      "		</div>"
+      "		<div class=\"menu\" >"
+//      "			<h2>Domains</h2>"
+//      "			<p><a href=\"addDomain.html\">Add Domain</a></p>"
+//      "			<p><a href=\"showDomains.html\">Show Domains</a></p>"
+      "			<h2>Users</h2>"
+      "			<p><a href=\"addUser.html\">Add Users</a></p>"
+      "			<p><a href=\"showUsers.html\">Show Users</a></p>"
+      "			<p><a href=\"showRegs.html\">Registrations</a></p>"
+      "			<h2>Routes</h2>"
+      "			<p><a href=\"addRoute.html\">Add Route</a></p>"
+      "			<p><a href=\"showRoutes.html\">Show Routes</a></p>"
+//      "			<h2>ACLs</h2>"
+//      "			<p><a href=\"addAcl.html\">Add ACL</a></p>"
+//      "			<p><a href=\"showAcls.html\">Show ACLs</a></p>"
+      "		</div>"
+      "		<div class=\"main\">";
 }
 
 
@@ -754,11 +731,8 @@ void
 WebAdmin::buildPageOutlinePost(DataStream& s)
 {
    s << 
-      "				</td>"
-      "			</tr>"
-      "		</table>"
-      "	</body>"
-      ""
+      "         </div>"
+      "	    </body>"
       "</html>"
       ;
 }
