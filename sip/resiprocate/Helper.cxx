@@ -234,10 +234,17 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
 }
 
 int
-Helper::jitterValue(int input, int lowerPercentage, int upperPercentage)
+Helper::jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum)
 {
-   int rnd = Random::getRandom() % (upperPercentage-lowerPercentage) + lowerPercentage;
-   return input * rnd / 100;
+   if (input < minimum)
+   {
+      return input;
+   }
+   else
+   {
+      const int rnd = Random::getRandom() % (upperPercentage-lowerPercentage) + lowerPercentage;
+      return (input * rnd) / 100; // !dlb! rounding...
+   }
 }
 
 SipMessage*
