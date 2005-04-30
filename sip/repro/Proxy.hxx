@@ -15,19 +15,19 @@ class SipStack;
 namespace repro
 {
 
-class UserDb;
+class UserStore;
 class RequestProcessorChain;
 
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&, UserDb &);
+      Proxy(resip::SipStack&, RequestProcessorChain&, UserStore& );
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      UserDb &getUserDb();
+      UserStore& getUserStore();
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
@@ -47,7 +47,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       HashMap<resip::Data, RequestContext*> mClientRequestContexts;
       HashMap<resip::Data, RequestContext*> mServerRequestContexts;
       
-      UserDb &mUserDb;
+      UserStore &mUserStore;
 };
 }
 #endif

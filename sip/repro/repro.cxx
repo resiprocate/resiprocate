@@ -22,8 +22,11 @@
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/RequestProcessorChain.hxx"
-#include "repro/RouteDbMemory.hxx"
-#include "repro/UserDb.hxx"
+#include "repro/Store.hxx"
+#include "repro/UserStore.hxx"
+#include "repro/RouteStore.hxx"
+#include "repro/AbstractDb.hxx"
+#include "repro/BerkleyDb.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
@@ -133,9 +136,10 @@ main(int argc, char** argv)
    Registrar registrar;
    InMemoryRegistrationDatabase regData;
    MasterProfile profile;
-   
-   RouteDbMemory routeDb;
-   
+ 
+   BerkleyDb db;
+   Store store(db);
+      
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
    
@@ -173,7 +177,7 @@ main(int argc, char** argv)
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
      
-      RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
+      RouteMonkey* routeMonkey = new RouteMonkey(store.mRouteStore);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
  
       LocationServer* ls = new LocationServer(regData);
@@ -189,15 +193,14 @@ main(int argc, char** argv)
       }
    }
    
-   UserDb userDb;
-   
-   Proxy proxy(stack, requestProcessors, userDb);
+
+   Proxy proxy(stack, requestProcessors, store.mUserStore );
    addDomains(proxy, args);
    
 #ifdef USE_SSL
-   WebAdmin admin(userDb, regData, routeDb, &security, args.mNoWebChallenge );
+   WebAdmin admin( store, regData, &security, args.mNoWebChallenge );
 #else
-   WebAdmin admin(userDb, regData, routeDb, NULL, args.mNoWebChallenge );
+   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge );
 #endif
    WebAdminThread adminThread(admin);
 
@@ -253,7 +256,9 @@ main(int argc, char** argv)
    {
       if (!args.mNoChallenge)
       {
-         auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
+         auto_ptr<ServerAuthManager> 
+            uasAuth( new ReproServerAuthManager(*dum,
+                                                store.mUserStore ));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);

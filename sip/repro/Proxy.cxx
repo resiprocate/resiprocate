@@ -18,11 +18,17 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors, UserDb &userDb) 
-   : mStack(stack), mRequestProcessorChain(requestProcessors), mUserDb(userDb)
+
+Proxy::Proxy(SipStack& stack, 
+             RequestProcessorChain& requestProcessors, 
+             UserStore& userStore) 
+   : mStack(stack), 
+     mRequestProcessorChain(requestProcessors), 
+     mUserStore(userStore)
 {
    mStack.registerForTransactionTermination();
 }
+
 
 Proxy::~Proxy()
 {
@@ -30,17 +36,20 @@ Proxy::~Proxy()
    join();
 }
 
+
 bool
 Proxy::isShutDown() const
 {
   return false;
 }
 
-UserDb &
-Proxy::getUserDb()
+
+UserStore&
+Proxy::getUserStore()
 {
-   return mUserDb;
+   return mUserStore;
 }
+
 
 void
 Proxy::thread()
@@ -257,10 +266,4 @@ Proxy::name() const
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

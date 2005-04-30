@@ -1,46 +1,50 @@
-#if !defined(REPRO_SERVERAUTHMANAGER_HXX)
-#define REPRO_SERVERAUTHMANAGER_HXX
+#if !defined(RESIP_BERKLEYDB_HXX)
+#define RESIP_BERKLEYDB_HXX 
 
-#include <map>
+#ifdef WIN32
+#include <db_cxx.h>
+#else 
+#include <db4/db_cxx.h>
+#endif
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
-//#include "repro/UserStore.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "repro/AbstractDb.hxx"
 
 namespace resip
 {
-class Profile;
-class DialogUsageManager;
+  class TransactionUser;
 }
 
 namespace repro
 {
-class UserStore;
 
-class ReproServerAuthManager: public resip::ServerAuthManager
+class BerkleyDb: public AbstractDb
 {
    public:
-      ReproServerAuthManager(resip::DialogUsageManager& dum, 
-                             UserStore& db );
+      BerkleyDb( char* dbName="repro" );
       
-      ~ReproServerAuthManager();
-      
-   protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const resip::Data& user, 
-                                     const resip::Data& realm, 
-                                     const resip::Data& transactionId );
+      virtual ~BerkleyDb();
       
    private:
-      resip::DialogUsageManager& mDum;
-      UserStore& mDb;
+      //DbEnv mEnv; // !cj! TODO - move to using envoronments
+      Db*   mDb[4];
+      Dbc*  mCursor[4];
+      
+      // Db manipulation routines
+      virtual void dbWriteRecord( const Table table, 
+                                  const resip::Data& key, 
+                                  const resip::Data& data );
+      virtual bool dbReadRecord( const Table table, 
+                                 const resip::Data& key, 
+                                 resip::Data& data ) const; // return false if not found
+      virtual void dbEraseRecord( const Table table, 
+                                  const resip::Data& key );
+      virtual resip::Data dbNextKey( const Table table, 
+                                     bool first=true); // return empty if no more  
 };
 
- 
 }
-
-#endif
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -84,4 +88,10 @@ class ReproServerAuthManager: public resip::ServerAuthManager
  * DAMAGE.
  * 
  * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
  */

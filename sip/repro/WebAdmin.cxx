@@ -23,7 +23,9 @@
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
-#include "repro/RouteAbstractDb.hxx"
+#include "repro/RouteStore.hxx"
+#include "repro/UserStore.hxx"
+#include "repro/Store.hxx"
 
 
 using namespace resip;
@@ -35,18 +37,17 @@ using namespace std;
 
 // !cj! TODO - make all the removes on the web pages work 
 
-WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
+WebAdmin::WebAdmin(  Store& store,
                      RegistrationPersistenceManager& regDb,
-                     RouteAbstractDb& routeDb,
                      Security* security,
                      bool noChal, 
                      int port, 
                      IpVersion version,
                      const Data& realm ):
    HttpBase( port, version, realm ),
-   mUserDb(userDb),
+   mUserStore(store.mUserStore),
+   mRouteStore(store.mRouteStore),
    mRegDb(regDb),
-   mRouteDb( routeDb ),
    mSecurity(security),
    mNoWebChallenges( noChal ) 
 {
@@ -126,17 +127,17 @@ WebAdmin::buildPage( const Data& uri,
       }
       
       // check that authentication is correct 
-      Data dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
+      Data dbA1 = mUserStore.getUserAuthInfo( pUser, Data::Empty );
       
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
-         mUserDb.addUser( pUser, // user
+         mUserStore.addUser( pUser, // user
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           Data("admin"), // password 
                           Data::Empty, // name 
                           Data::Empty ); // email 
-         dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
+         dbA1 = mUserStore.getUserAuthInfo( pUser, Data::Empty );
       }
       // !cj! TODO -    assert( !dbA1.empty() );
 
@@ -162,7 +163,8 @@ WebAdmin::buildPage( const Data& uri,
          }
       }
       {
-         ErrLog( << "user " << pUser << " failed to add to user db" );
+         // !cj! TODO - fix this one up 
+         ErrLog( << "user " << pUser << " failed creation of inital account" );
       }
    }
    
@@ -269,12 +271,12 @@ WebAdmin::buildPage( const Data& uri,
                realm = domain;
             }
             
-            mUserDb.addUser(user,domain,realm,password,name,email);
+            mUserStore.addUser(user,domain,realm,password,name,email);
          }
          
          if ( !routeDestination.empty() )
          {
-            mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
+            mRouteStore.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
          }
       }
    }
@@ -576,7 +578,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 */
       s << endl;
       
-      Data key = mUserDb.getFirstKey();
+      Data key = mUserStore.getFirstKey();
       while ( !key.empty() )
       {
          s << "<tr>" << endl 
@@ -589,7 +591,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
            << "\"/></td>" << endl 
            << "</tr>" << endl;
          
-         key = mUserDb.getNextKey();
+         key = mUserStore.getNextKey();
       }
       
       s << 
@@ -626,8 +628,8 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          "              </tr></thead>" << endl << 
          "              <tbody>" << endl;
       
-      RouteAbstractDb::RouteList routes = mRouteDb.getRoutes();
-      for ( RouteAbstractDb::RouteList::const_iterator i = routes.begin();
+      AbstractDb::RouteRecordList routes = mRouteStore.getRoutes();
+      for ( AbstractDb::RouteRecordList::const_iterator i = routes.begin();
             i != routes.end();
             i++ )
       {
@@ -669,7 +671,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       }
 
       // !cj! - TODO - shoudl input method and envent type to test 
-      RouteAbstractDb::UriList routeList = mRouteDb.process( uri, Data("INVITE"), Data::Empty);
+      RouteStore::UriList routeList = mRouteStore.process( uri, Data("INVITE"), Data::Empty);
       
       s << 
          "      <tr>" << endl << 
@@ -684,7 +686,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          "              </tr>" << endl;
       
       bool first=true;
-      for ( RouteAbstractDb::UriList::const_iterator i=routeList.begin();
+      for ( RouteStore::UriList::const_iterator i=routeList.begin();
             i != routeList.end(); i++)
       {
          s<<"              <tr>" << endl;

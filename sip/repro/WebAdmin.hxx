@@ -3,12 +3,11 @@
 
 #include "resiprocate/Security.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
+//#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
 
-#include "repro/UserAbstractDb.hxx"
-#include "repro/RouteAbstractDb.hxx"
+//#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
 
 namespace resip
@@ -20,13 +19,15 @@ class DataStream;
 
 namespace repro
 {
+class Store;
+class UserStore;
+class RouteStore;
 
 class WebAdmin: public HttpBase
 {
    public:
-      WebAdmin( UserAbstractDb& userDb,
+      WebAdmin( Store& store,
                 resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
                 resip::Security* security,
                 bool noWebChallenges,
                 int port=5080, 
@@ -56,9 +57,11 @@ class WebAdmin: public HttpBase
                                   
       resip::Data buildCertPage(const resip::Data& domain);
       
-      UserAbstractDb& mUserDb;
+      // !cj! todo replac next two with Store
+      UserStore& mUserStore;
+      RouteStore& mRouteStore;
+
       resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
       resip::Security* mSecurity;
 
       resip::Data routeTestUri;

@@ -1,25 +1,10 @@
 
-#include <fcntl.h>
-
-#ifdef WIN32
-#include <db.h>
-#else 
-#include <db4/db.h>
-#endif
-
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
-
-#include <cassert>
-
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/Uri.hxx"
 
-#include "repro/RouteDbMemory.hxx"
+#include "repro/RouteStore.hxx"
+
 
 using namespace resip;
 using namespace repro;
@@ -29,141 +14,86 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-RouteDbMemory::RouteDbMemory(char* dbName)
+RouteStore::RouteStore(AbstractDb& db):
+   mDb(db)
 {  
-   InfoLog( << "Loading route database" );
-  
-   mDb = new Db( NULL , 0 );
-   assert( mDb );
-   
-   // if the line bellow seems wrong, you need to check which version 
-   // of db you have - it is likely an very out of date version 
-   // still trying to figure this out so email fluffy if you have 
-   // problems and include your version the DB_VERSION_STRING found 
-   // in your db4/db.h file. 
-   int ret = mDb->open(NULL,dbName,NULL,DB_BTREE,DB_CREATE,0);
-   //int ret = mDb->open(   dbName,NULL,DB_BTREE,DB_CREATE,0);
-
-   if ( ret != 0 )
+   Key key = mDb.firstRouteKey();
+   while ( !key.empty() )
    {
-      ErrLog( <<"Could not open route database at " << dbName );
-	  assert(0);
-   }
-   assert(mDb);
+      RouteOp route;
+      route.routeRecord =  mDb.getRoute(key);
 
-   Dbt key;
-   Dbt data;   
-   Dbc* cursor;
-   
-    ret = mDb->cursor(NULL,&cursor,0);
-    assert( cursor );
-	assert( ret == 0 );
-
-   assert( mDb );
-   ret = cursor->get(&key,&data, DB_FIRST);
-
-   while( ret == 0 ) // while key is being found 
-   {
-      Data d(reinterpret_cast<const char*>(data.get_data()), data.get_size() );
-      DebugLog( << "loaded route " << d);
-
-	  if ( d.empty() )
-	  {
-		// this should never happen 
-		  ErrLog( <<"got an empty route record" );
-		 // !cj! TODO assert(0);
-		break;
-	  }
-
-      Route r = deSerialize( d );
-      add( r.mMethod, r.mEvent, r.mMatchingPattern, r.mRewriteExpression, r.mOrder );
+      // TODO - !cj! - compile regex when create the route object instead of
+      // doing it every time 
       
-      ret = cursor->get(&key,&data, DB_NEXT);
+      mRouteOperators.push_back( route ); 
+
+      key = mDb.nextRouteKey();
    }
-   cursor->close();
 }
 
 
-RouteDbMemory::~RouteDbMemory()
-{ 
-   int ret = mDb->close(0); 
-   assert( ret == 0 );
-   mDb = 0;
-}
-
-
-void 
-RouteDbMemory::add(const resip::Data& method,
-                   const resip::Data& event,
-                   const resip::Data& matchingPattern,
-                   const resip::Data& rewriteExpression,
-                   const int order )
+RouteStore::~RouteStore()
 {
+}
+
+      
+void 
+RouteStore::add(const resip::Data& method,
+                const resip::Data& event,
+                const resip::Data& matchingPattern,
+                const resip::Data& rewriteExpression,
+                const int order )
+{ 
    InfoLog( << "Add route" );
    
    RouteOp route;
-   route.mVersion = 1;
-   route.mMethod = method;
-   route.mEvent = event;
-   route.mMatchingPattern = matchingPattern;
-   route.mRewriteExpression =  rewriteExpression;
-   route.mOrder = order;
-   
-   mRouteOperators.push_back( route );  
-   
-   Data pKey = method+" "+event+" "+matchingPattern; 
-   Data pData = serialize(route);
-      
-   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
-   Dbt data( (void*)pData.data(), (u_int32_t)pData.size() );
+   route.routeRecord.mMethod = method;
+   route.routeRecord.mEvent = event;
+   route.routeRecord.mMatchingPattern = matchingPattern;
+   route.routeRecord.mRewriteExpression =  rewriteExpression;
+   route.routeRecord.mOrder = order;
  
-   int ret;
- 
-   assert( mDb );
-   ret = mDb->put(NULL,&key,&data,0);
-   assert( ret == 0 );
+   // TODO - !cj! - compile regex when create the route object instead of
+   // doing it every time 
+   
+   mRouteOperators.push_back( route ); 
 
-   // need sync for if program gets ^C without shutdown
-   ret = mDb->sync(0);
-   assert( ret == 0 );
+   mDb.add( buildKey(method,event,matchingPattern), route.routeRecord );
 }
 
-
-RouteDbMemory::RouteList 
-RouteDbMemory::getRoutes() const
-{
-   RouteDbMemory::RouteList result;
+      
+AbstractDb::RouteRecordList 
+RouteStore::getRoutes() const
+{ 
+   AbstractDb::RouteRecordList result;
    result.reserve(mRouteOperators.size());
    
    for (RouteOpList::const_iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
-      result.push_back(*it);
+      result.push_back(it->routeRecord);
    }
    return result;   
 }
 
 
 void 
-RouteDbMemory::erase(const resip::Data& method,
-                       const resip::Data& event,
-                       const resip::Data& matchingPattern )
-{
-   // TODO 
+RouteStore::erase(const resip::Data& method,
+                  const resip::Data& event,
+                  const resip::Data& matchingPattern )
+{  
+   // !cj! TODO 
    assert(0);
 }
 
-      
-RouteAbstractDb::UriList
-RouteDbMemory::process(const resip::Uri& ruri, 
-                       const resip::Data& method, 
-                       const resip::Data& event )
-{
-   RouteAbstractDb::UriList targetSet;
 
-#if 0
-   Regex r;
-#endif
+RouteStore::UriList 
+RouteStore::process(const resip::Uri& ruri, 
+                    const resip::Data& method, 
+                    const resip::Data& event )
+{
+   RouteStore::UriList targetSet;
 
    for (RouteOpList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
@@ -172,26 +102,28 @@ RouteDbMemory::process(const resip::Uri& ruri,
                 << " reqUri=" << ruri
                 << " method=" << method 
                 << " event=" << event );
+
+      AbstractDb::RouteRecord& rec = it->routeRecord;
       
-      if ( !it->mMethod.empty() )
+      if ( !rec.mMethod.empty() )
       {
-         if ( it->mMethod != method)
+         if ( rec.mMethod != method)
          {
             DebugLog( << "  Skipped - method did not match" );
             continue;
          }
          
       }
-      if ( !it->mEvent.empty() )
+      if ( !rec.mEvent.empty() )
       {
-         if ( it->mEvent != event) 
+         if ( rec.mEvent != event) 
          {
             DebugLog( << "  Skipped - event did not match" );
             continue;
          }
       }
-      Data& rewrite = it->mRewriteExpression;
-      Data& match = it->mMatchingPattern;
+      Data& rewrite = rec.mRewriteExpression;
+      Data& match = rec.mMatchingPattern;
 
       if ( !match.empty() ) 
       {
@@ -296,6 +228,16 @@ RouteDbMemory::process(const resip::Uri& ruri,
 
    return targetSet;
 }
+  
+
+RouteStore::Key 
+RouteStore::buildKey(const resip::Data& method,
+                     const resip::Data& event,
+                     const resip::Data& matchingPattern ) const
+{  
+   Data pKey = method+":"+event+":"+matchingPattern; 
+   return pKey;
+}
 
 
 /* ====================================================================
@@ -340,10 +282,4 @@ RouteDbMemory::process(const resip::Uri& ruri,
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
