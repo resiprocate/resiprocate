@@ -1,21 +1,21 @@
 
 #include <fcntl.h>
+
 #ifdef WIN32
 #include <db_cxx.h>
 #else 
 #include <db4/db_cxx.h>
 #endif
+
 #include <cassert>
 
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TransactionUser.hxx"
 
-#include "repro/UserDb.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "repro/AbstractDb.hxx"
+#include "repro/BerkleyDb.hxx"
+
 
 using namespace resip;
 using namespace repro;
@@ -23,66 +23,95 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-UserDb::UserDb( char* fileName )
+
+
+BerkleyDb::BerkleyDb( char* dbName )
 { 
-   mDb = new Db( NULL, 0 );
-   assert( mDb );
-
-   // if the line bellow seems wrong, you need to check which version 
-   // of db you have - it is likely an very out of date version 
-   // still trying to figure this out so email fluffy if you have 
-   // problems and include your version the DB_VERSION_STRING found 
-   // in your db4/db.h file. 
-   int ret =mDb->open(NULL,fileName,NULL,DB_BTREE,DB_CREATE,0);
-   //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
-
-   if ( ret!=0 )
+   assert( MaxTable <= 4 );
+   
+   for (int i=0;i<MaxTable;i++)
    {
-      ErrLog( <<"Could not open user database at " << fileName );
-	  assert(0);
+      mDb[i] = new Db( NULL, 0 );
+      assert( mDb[i] );
+      
+      // if the line bellow seems wrong, you need to check which version 
+      // of db you have - it is likely an very out of date version 
+      // still trying to figure this out so email fluffy if you have 
+      // problems and include your version the DB_VERSION_STRING found 
+      // in your db4/db.h file. 
+      Data fileName( dbName );
+      switch (i)
+      {
+         case 0:
+            fileName += "_user.db"; break;
+         case 1:
+            fileName += "_route.db"; break;
+         case 2:
+            fileName += "_acl.db"; break;
+         case 3:
+            fileName += "_config.db"; break;
+         default:
+            assert(0);
+      }
+      
+      int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE,0);
+      //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
+      
+      if ( ret!=0 )
+      {
+         ErrLog( <<"Could not open user database at " << fileName );
+         assert(0);
+      }
+      
+      mDb[i]->cursor(NULL,&mCursor[i],0);
+      assert( mCursor );
    }
-
-   mDb->cursor(NULL,&mCursor,0);
-   assert( mCursor );
 }
 
 
-UserDb::~UserDb()
-{ 
-   assert( mCursor );
-   mCursor->close();
-   mCursor = 0;
-   
-   assert( mDb );
-   mDb->close(0);
-   delete mDb; mDb=0;
+BerkleyDb::~BerkleyDb()
+{  
+   for (int i=0;i<MaxTable;i++)
+   {
+      assert( mCursor[i] );
+      mCursor[i]->close();
+      mCursor[i] = 0;
+      
+      assert( mDb[i] );
+      mDb[i]->close(0);
+      delete mDb[i]; mDb[i]=0;
+   }
 }
 
 
 void 
-UserDb::dbWriteRecord( const Data& pKey, const Data& pData )
-{ 
+BerkleyDb::dbWriteRecord( const Table table, 
+                          const resip::Data& pKey, 
+                          const resip::Data& pData )
+{
    Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
    Dbt data( (void*)pData.data(), (u_int32_t)pData.size() );
    int ret;
    
    assert( mDb );
-   ret = mDb->put(NULL,&key,&data,0);
+   ret = mDb[table]->put(NULL,&key,&data,0);
    assert( ret == 0 );
 
-   mDb->sync(0);
+   mDb[table]->sync(0);
 }
 
 
 bool 
-UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
+BerkleyDb::dbReadRecord( const Table table, 
+                         const resip::Data& pKey, 
+                         resip::Data& pData ) const
 { 
    Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
    Dbt data;
    int ret;
    
    assert( mDb );
-   ret = mDb->get(NULL,&key,&data, 0);
+   ret = mDb[table]->get(NULL,&key,&data, 0);
 
    if ( ret == DB_NOTFOUND )
    {
@@ -93,12 +122,12 @@ UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
    assert( ret == 0 );
    Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
    
-	if (result.empty())
-	{
-		// this should never happen
-		return false;
-	}
-
+   if (result.empty())
+   {
+      // this should never happen
+      return false;
+   }
+   
    assert( !result.empty() );
    pData = result;
    
@@ -107,30 +136,25 @@ UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
 
 
 void 
-UserDb::dbRemoveRecord( const Data& pKey )
+BerkleyDb::dbEraseRecord( const Table table, 
+                          const resip::Data& pKey )
 { 
    Dbt key( (void*) pKey.data(), (u_int32_t)pKey.size() );
 
    assert( mDb );
-   mDb->del(NULL,&key, 0);
+   mDb[table]->del(NULL,&key, 0);
 }
 
 
 resip::Data 
-UserDb::dbFirstKey()
-{ 
-   return dbNextKey( true );
-}
-
-
-resip::Data 
-UserDb::dbNextKey(bool first )
+BerkleyDb::dbNextKey( const Table table, 
+                      bool first)
 { 
    Dbt key,data;
    int ret;
    
    assert( mDb );
-   ret = mCursor->get(&key,&data, first ? DB_FIRST : DB_NEXT);
+   ret = mCursor[table]->get(&key,&data, first ? DB_FIRST : DB_NEXT);
    if ( ret == DB_NOTFOUND )
    {
       return Data::Empty;
@@ -141,6 +165,7 @@ UserDb::dbNextKey(bool first )
    
    return d;
 }
+
 
 
 /* ====================================================================
@@ -185,10 +210,4 @@ UserDb::dbNextKey(bool first )
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

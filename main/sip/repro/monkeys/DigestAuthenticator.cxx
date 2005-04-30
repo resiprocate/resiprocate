@@ -14,13 +14,15 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Auth.hxx"
 #include "resiprocate/Helper.hxx"
-#include "repro/Proxy.hxx"
-#include "repro/RequestContext.hxx"
-#include "repro/UserDb.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
-#include "repro/monkeys/DigestAuthenticator.hxx"
-
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
+
+#include "repro/UserStore.hxx"
+#include "repro/monkeys/DigestAuthenticator.hxx"
+#include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
+
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -134,6 +136,7 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
    delete challenge;
 }
 
+
 repro::RequestProcessor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
 {
@@ -141,7 +144,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
-   UserDb &database = rc.getProxy().getUserDb();
+   UserStore& database = rc.getProxy().getUserStore();
    Data realm = getRealm(rc);
 
    // Extract the user from the appropriate Proxy-Authorization header

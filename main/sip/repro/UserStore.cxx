@@ -1,106 +1,127 @@
 
-#include "resiprocate/os/Logger.hxx"
 
-#include "repro/RouteAbstractDb.hxx"
+#include <cassert>
+
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/MD5Stream.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
+
+#include "repro/UserStore.hxx"
+#include "repro/AbstractDb.hxx"
+
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-RouteAbstractDb::RouteAbstractDb() 
-{
+UserStore::UserStore(AbstractDb& db ):
+   mDb(db)
+{ 
+}
+
+UserStore::~UserStore()
+{ 
 }
 
 
-RouteAbstractDb::~RouteAbstractDb()
+void 
+UserStore::requestUserAuthInfo( const resip::Data& user, 
+                                const resip::Data& domain,
+                                const resip::Data& transactionToken,
+                                resip::TransactionUser& transactionUser ) const
 {
+   // TODO - this should put a message on a local queue then a thread should
+   // read that and then do the stuff in the rest of this fucntion
+   
+   Data key = buildKey(user,domain);
+   Data a1 = mDb.getUserAuthInfo(key);
+    
+   UserAuthInfo* msg = new UserAuthInfo(user,domain,a1,transactionToken);
+   transactionUser.post( msg );
 }
 
 
-static void 
-encodeString( oDataStream& s, const Data& data )
+AbstractDb::UserRecord
+UserStore::getUserInfo( const Key& key ) const
 {
-   short len = data.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( data.data(), len );
+   return mDb.getUser(key);
 }
 
 
 Data 
-RouteAbstractDb::serialize( const Route& rec )
-{  
-   Data data;
-   oDataStream s(data);
-   short len;
-   assert( sizeof(len) == 2 );
-   
-   assert( rec.mVersion == 1 );
-   assert( sizeof( rec.mVersion) == 2 );
-   s.write( (char*)(&rec.mVersion) , sizeof( rec.mVersion ) );
-   
-   encodeString( s, rec.mMethod );
-   encodeString( s, rec.mEvent );
-   encodeString( s, rec.mMatchingPattern );
-   encodeString( s, rec.mRewriteExpression );
-   
-   s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
-   
-   return data;
-}
-
-
-static Data
-decodeString( iDataStream& s)
+UserStore::getUserAuthInfo(  const resip::Data& user, 
+                             const resip::Data& domain ) const
 {
-	short len;
-	s.read( (char*)(&len), sizeof(len) ); 
-
-	char buf[2048];
-	assert( len < 2048 ); // !cj! TODO fix 
-
-	s.read( buf, len );
-       
-	Data data( buf, len );
-	return data;
+   Key key =  buildKey(user, domain);
+   return mDb.getUserAuthInfo( key );
 }
 
-RouteAbstractDb::Route
-RouteAbstractDb::deSerialize( const Data& pData )
-{  
-   RouteAbstractDb::Route rec;
-   
-   assert( !pData.empty() );
 
-   Data data = pData;
-   
-   iDataStream s(data);
-   short len;
-   assert( sizeof(len) == 2 );
+void 
+UserStore::addUser( const Data& username,
+                         const Data& domain,
+                         const Data& realm,
+                         const Data& password, 
+                         const Data& fullName, 
+                         const Data& emailAddress )
+{
+   MD5Stream a1;
+   a1 << username
+      << Symbols::COLON
+      << realm
+      << Symbols::COLON
+      << password;
+   a1.flush();
 
-   s.read( (char*)(&len), sizeof(len) );
-   rec.mVersion = len;
-   
-   if (  rec.mVersion == 1 )
-   {  
-         rec.mMethod = decodeString( s );
-         rec.mEvent  = decodeString( s );
-         rec.mMatchingPattern = decodeString( s );
-         rec.mRewriteExpression  = decodeString( s );
+   AbstractDb::UserRecord rec;
+   rec.user = username;
+   rec.domain = domain;
+   rec.realm = realm;
+   rec.passwordHash = a1.getHex();
+   rec.name = fullName;
+   rec.email = emailAddress;
+   rec.forwardAddress = Data::Empty;
 
-         s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
-   }
-   else
-   {
-      // unkonwn version 
-      ErrLog( <<"Data in route database with unknown version " << rec.mVersion );
-      assert(0);
-   }
-      
-   return rec;
+   mDb.add( buildKey(username,domain), rec);
 }
+
+
+void 
+UserStore::eraseUser( const Key& key )
+{ 
+   mDb.eraseUser( key );
+}
+
+
+UserStore::Key
+UserStore::getFirstKey()
+{
+   return mDb.firstUserKey();
+}
+
+
+UserStore::Key
+UserStore::getNextKey()
+{
+   return mDb.nextUserKey();
+}
+
+
+UserStore::Key
+UserStore::buildKey( const resip::Data& user, 
+                     const resip::Data& realm) const
+{
+   Data ret = user + Data("@") + realm;
+   return ret;
+}
+
+
 
 
 /* ====================================================================

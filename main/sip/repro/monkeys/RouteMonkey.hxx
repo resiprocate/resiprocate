@@ -5,20 +5,21 @@
 
 namespace repro
 {
-class RouteAbstractDb;
+class RouteStore;
 
-  class RouteMonkey: public RequestProcessor
-  {
-    public:
-      RouteMonkey(RouteAbstractDb& db);
+class RouteMonkey: public RequestProcessor
+{
+   public:
+      RouteMonkey(RouteStore& store);
       virtual ~RouteMonkey();
-
+      
       virtual processor_action_t handleRequest(RequestContext &);
       virtual void dump(std::ostream &os) const;
+      
+   private:
+      RouteStore& mRouteStore;
+};
 
-     private:
-        RouteAbstractDb& mDb;
-  };
 }
 #endif
 
