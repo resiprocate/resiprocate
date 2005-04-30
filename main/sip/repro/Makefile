@@ -17,6 +17,8 @@ TESTPROGRAMS = \
 SRC =   \
 	RouteStore.cxx \
 	UserStore.cxx \
+	ConfigStore.cxx \
+	AclStore.cxx \
 	Store.cxx \
 	AbstractDb.cxx \
 	BerkleyDb.cxx \
