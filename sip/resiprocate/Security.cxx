@@ -2239,59 +2239,40 @@ BaseSecurity::getCetName(X509 *cert)
 static int 
 matchHostName(char *certName, const char *domainName)
 {
-    const char *dot;
-    dot = strchr(domainName, '.');
-    if (dot == NULL)
-    {
-	    char *pnt = strchr(certName, '.');
-	    /* hostname is not fully-qualified; unqualify the certName. */
-	    if (pnt != NULL) 
-        {
-	        *pnt = '\0';
-	    }
-    }
-    else 
-    {
-        if (strncmp(certName, "*.", 2) == 0) 
-        {
-	        domainName = dot + 1;
-	        certName += 2;
-        }
-    }
-    return !strcasecmp(certName, domainName);
+   const char *dot;
+   dot = strchr(domainName, '.');
+   if (dot == NULL)
+   {
+      char *pnt = strchr(certName, '.');
+      /* hostname is not fully-qualified; unqualify the certName. */
+      if (pnt != NULL) 
+      {
+	 *pnt = '\0';
+      }
+   }
+   else 
+   {
+      if (strncmp(certName, "*.", 2) == 0) 
+      {
+	 domainName = dot + 1;
+	 certName += 2;
+      }
+   }
+   return !strcasecmp(certName, domainName);
 }
 
 bool 
 BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
 {
-    assert(cert);
+   assert(cert);
 
-    Data certName = getCetName(cert);
-    if(Data::Empty == certName)
-        return false;
+   Data certName = getCetName(cert);
+   if(Data::Empty == certName)
+      return false;
 
-    bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
+   bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
 
-    return isMatching;
-}
-
-bool 
-BaseSecurity::validatePeerCertName(SSL *sslContext, const Data& domainName)
-{
-    bool bResult = false;
-    assert(sslContext);
-
-    X509* cert = SSL_get_peer_certificate(sslContext);
-    if ( !cert )
-    {
-        DebugLog(<< "No peer certificate in TLS connection" );
-        return false;
-    }
-    bResult = compareCertName(cert, domainName);
-    X509_free(cert); 
-    cert=NULL;
-
-    return bResult;
+   return isMatching;
 }
 
 void
