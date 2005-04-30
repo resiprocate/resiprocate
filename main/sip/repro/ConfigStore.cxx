@@ -1,77 +1,81 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-//#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/Uri.hxx"
 
-//#include "repro/Store.hxx"
-#include "repro/HttpBase.hxx"
+#include "repro/ConfigStore.hxx"
 
-namespace resip
-{
-class RegistrationPersistenceManager;
-class DataStream;
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+
+ConfigStore::ConfigStore(AbstractDb& db):
+   mDb(db)
+{  
 }
 
 
-namespace repro
+ConfigStore::~ConfigStore()
 {
-class Store;
-class UserStore;
-class RouteStore;
-
-class WebAdmin: public HttpBase
-{
-   public:
-      WebAdmin( Store& store,
-                resip::RegistrationPersistenceManager& regDb,
-                resip::Security* security,
-                bool noWebChallenges,
-                int port=5080, 
-                resip::IpVersion version=resip::V4,
-                const resip::Data& realm = resip::Data::Empty );
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, 
-                              int pageNumber,
-                              const resip::Data& user,
-                              const resip::Data& password);
-
-   private: 
-      resip::Data buildDefaultPage();
-      resip::Data buildUserPage();
-      
-      void buildPageOutlinePre(resip::DataStream& s);
-      void buildPageOutlinePost(resip::DataStream& s);
-      
-      void buildDomainsSubPage(resip::DataStream& s);
-      void buildAclsSubPage(resip::DataStream& s);
-      void buildAddUserSubPage(resip::DataStream& s);
-      void buildShowUsersSubPage(resip::DataStream& s);
-      void buildAddRouteSubPage(resip::DataStream& s);
-      void buildShowRoutesSubPage(resip::DataStream& s);
-      void buildRegistrationsSubPage(resip::DataStream& s);
-                                  
-      resip::Data buildCertPage(const resip::Data& domain);
-      
-      Store& mStore;
-
-      resip::RegistrationPersistenceManager& mRegDb;
-      resip::Security* mSecurity;
-
-      resip::Data routeTestUri;
-
-      bool mNoWebChallenges;
-};
-
-
-
 }
 
-#endif  
+      
+void 
+ConfigStore::add(const resip::Data& domain,
+               const int tlsPort )
+{ 
+   InfoLog( << "Add config" );
+   
+   AbstractDb::ConfigRecord rec;
+   rec.mDomain = domain;
+   rec.mTlsPort = tlsPort;
+   
+   mDb.add( buildKey(domain), rec );
+}
+
+      
+AbstractDb::ConfigRecordList 
+ConfigStore::getConfigs() const
+{ 
+   return mDb.getAllConfigs();
+}
+
+
+ConfigStore::DataList 
+ConfigStore::getDomains() const
+{  
+   AbstractDb::ConfigRecordList input = getConfigs();
+   
+   DataList result;
+   result.reserve( input.size() );
+   
+   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
+        it != input.end(); it++)
+   {
+      result.push_back(it->mDomain);
+   }
+   return result;   
+}
+
+
+void 
+ConfigStore::erase(const resip::Data& domain)
+{  
+   mDb.eraseConfig( buildKey(domain) );
+}
+
+
+AbstractDb::Key 
+ConfigStore::buildKey(const resip::Data& domain ) const
+{  
+   return domain;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -115,10 +119,4 @@ class WebAdmin: public HttpBase
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
