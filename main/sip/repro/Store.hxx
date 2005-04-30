@@ -1,58 +1,30 @@
-#if !defined(REPRO_ROUTEDBMEMORY_HXX)
-#define REPRO_ROUTEDBMEMORY_HXX
+#if !defined(REPRO_STORE_HXX)
+#define REPRO_STORE_HXX
 
-#ifdef WIN32
-#include <db_cxx.h>
-#else 
-#include <db4/db_cxx.h>
-#endif
+#include "repro/AbstractDb.hxx"
+#include "repro/UserStore.hxx"
+#include "repro/RouteStore.hxx"
+//#include "repro/AclStore.hxx"
+//#include "repro/ConfigStore.hxx"
 
-#ifdef WIN32
-#include <pcreposix.h>
-#else
-#include <regex.h>
-#endif
-
-#include <vector>
-
-#include "repro/RouteAbstractDb.hxx"
 
 namespace repro
 {
+class  AbstractDb;
 
-class RouteDbMemory : public RouteAbstractDb
+/** The Store contains differnt types of sores such as user, route, etc. These
+ * use the AbstractDb to persist their data. */
+class Store
 {
    public:
-      RouteDbMemory( char* dbName="route_database.db");
-      ~RouteDbMemory();
-
-      virtual void add(const resip::Data& method,
-                       const resip::Data& event,
-                       const resip::Data& matchingPattern,
-                       const resip::Data& rewriteExpression,
-                       const int order);
+      Store( AbstractDb& db );
+      ~Store();
       
-      virtual RouteList getRoutes() const;
-
-      virtual void erase(const resip::Data& method,
-                         const resip::Data& event,
-                         const resip::Data& matchingPattern );
-      
-      virtual UriList process(const resip::Uri& ruri, 
-                              const resip::Data& method, 
-                              const resip::Data& event );
-
-   private:
-      Db* mDb;
-      
-      class RouteOp: public Route
-      {
-         public:
-            regex_t preq;
-      };
-               
-      typedef std::vector<RouteOp> RouteOpList;
-      RouteOpList mRouteOperators;
+      UserStore mUserStore;
+      RouteStore mRouteStore; 
+      //AclStore mAclStore; 
+      //ConfigStore mConfigStore;
+    private:
 };
 
 }
@@ -100,10 +72,4 @@ class RouteDbMemory : public RouteAbstractDb
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

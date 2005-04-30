@@ -1,49 +1,30 @@
-#if !defined(RESIP_USERDB_HXX)
-#define RESIP_USERDB_HXX 
+#include <cassert>
 
-#ifdef WIN32
-#include <db_cxx.h>
-#else 
-#include <db4/db_cxx.h>
-#endif
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
+#include "repro/Store.hxx"
+#include "repro/AbstractDb.hxx"
 
-#include "repro/UserAbstractDb.hxx"
 
-namespace resip
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+
+Store::Store( AbstractDb& db ):
+   mUserStore(db),
+   mRouteStore(db)
 {
-  class TransactionUser;
 }
 
-namespace repro
-{
 
-class UserDb: public UserAbstractDb
+Store::~Store()
 {
-   public:
-      UserDb( char* dbName="user_database.db" );
-      
-      virtual ~UserDb();
-      
-   private:
-      Db*  mDb;
-      Dbc* mCursor;
-      
-      // Db manipulation routines
-      virtual void dbWriteRecord( const resip::Data& key, 
-                                  const resip::Data& data );
-      virtual bool dbReadRecord(  const resip::Data& key, 
-                                  resip::Data& data ) const; // return false if not found
-      virtual void dbRemoveRecord(const resip::Data& key );
-      virtual resip::Data dbFirstKey();
-      virtual resip::Data dbNextKey(bool first=true); // return empty if no more  
-};
-
 }
-#endif  
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
