@@ -7,7 +7,7 @@
 #include "repro/RequestContext.hxx"
 
 #include "resiprocate/os/Logger.hxx"
-#include "repro/RouteAbstractDb.hxx"
+#include "repro/RouteStore.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -18,12 +18,14 @@ using namespace repro;
 using namespace std;
 
 
-RouteMonkey::RouteMonkey(RouteAbstractDb& db) :
-   mDb(db)
+RouteMonkey::RouteMonkey(RouteStore& store) :
+   mRouteStore(store)
 {}
+
 
 RouteMonkey::~RouteMonkey()
 {}
+
 
 RequestProcessor::processor_action_t
 RouteMonkey::handleRequest(RequestContext& context)
@@ -41,11 +43,11 @@ RouteMonkey::handleRequest(RequestContext& context)
       event = msg.header(h_Event).value() ;
    }
    
-   RouteAbstractDb::UriList targets(mDb.process( ruri,
-                                                 method,
-                                                 event));
+   RouteStore::UriList targets(mRouteStore.process( ruri,
+                                                    method,
+                                                    event));
    
-   for ( RouteAbstractDb::UriList::const_iterator i = targets.begin();
+   for ( RouteStore::UriList::const_iterator i = targets.begin();
          i != targets.end(); i++ )
    {
       InfoLog(<< "Adding target " << *i );
@@ -54,6 +56,7 @@ RouteMonkey::handleRequest(RequestContext& context)
    
    return RequestProcessor::Continue;
 }
+
 
 void
 RouteMonkey::dump(std::ostream &os) const
@@ -104,10 +107,4 @@ RouteMonkey::dump(std::ostream &os) const
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

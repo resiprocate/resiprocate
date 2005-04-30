@@ -15,21 +15,23 @@ TESTPROGRAMS = \
 #	userAdmin.cxx 
 
 SRC =   \
+	RouteStore.cxx \
+	UserStore.cxx \
+	Store.cxx \
+	AbstractDb.cxx \
+	BerkleyDb.cxx \
+	\
 	CommandLineParser.cxx \
 	HttpBase.cxx \
 	HttpConnection.cxx \
+	WebAdmin.cxx \
+	WebAdminThread.cxx \
 	\
 	Proxy.cxx \
 	Registrar.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
-	RouteDbMemory.cxx \
-	UserAbstractDb.cxx \
-	UserDb.cxx \
-	WebAdmin.cxx \
-	RouteAbstractDb.cxx \
-	WebAdminThread.cxx \
         RequestProcessor.cxx \
         RequestProcessorChain.cxx \
 	\
@@ -39,6 +41,8 @@ SRC =   \
 	monkeys/LocationServer.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/RouteMonkey.cxx \
+	\
+
 
 SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/CertPublicationHandler.cxx \

@@ -1,10 +1,12 @@
-#if !defined(REPRO_USERABSTRACTDB_HXX)
-#define REPRO_USERABSTRACTDB_HXX
-
+#if !defined(REPRO_USERSTORE_HXX)
+#define REPRO_USERSTORE_HXX
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Message.hxx"
+
+#include "repro/AbstractDb.hxx"
+
 
 namespace resip
 {
@@ -16,23 +18,24 @@ namespace repro
 
 typedef resip::Fifo<resip::Message> MessageFifo;
 
-class UserAbstractDb
+class UserStore
 {
    public:
       typedef resip::Data Key;
       
-      UserAbstractDb();
+      UserStore(AbstractDb& db);
       
-      virtual ~UserAbstractDb();
+      virtual ~UserStore();
       
       void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
+                                const resip::Data& domain,
                                 const resip::Data& transactionId,
                                 resip::TransactionUser& transactionUser) const;
 
-      resip::Data getUserAuthInfo( const Key& key ) const;
+      AbstractDb::UserRecord getUserInfo( const Key& key ) const;
+
       resip::Data getUserAuthInfo( const resip::Data& user,
-                                   const resip::Data& realm ) const;
+                                   const resip::Data& domain ) const;
       
       void addUser( const resip::Data& user, 
                     const resip::Data& domain, 
@@ -41,45 +44,19 @@ class UserAbstractDb
                     const resip::Data& fullName,
                     const resip::Data& emailAddress  );
       
-      void removeUser( const resip::Data& user,
-                       const resip::Data& realm );
+      //void removeUser( const resip::Data& user,
+      //                 const resip::Data& realm );
       
-      void removeUser( const Key& key );
+      void eraseUser( const Key& key );
       
-      //Data getForward( Data& key);
-      //void requestForwardAuth( user, realm );
-      //void setForward( Data& key, Data& forwardAddress );
-
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
       
-   protected:
+   private:
       Key buildKey( const resip::Data& user, 
-                    const resip::Data& realm) const;
-      
-      class UserRecord
-      {
-         public:
-            short version;
-            resip::Data user;
-            resip::Data domain;
-            resip::Data realm;
-            resip::Data passwordHash;
-            resip::Data name;
-            resip::Data email;
-            resip::Data forwardAddress;
-      };
-      
-      resip::Data encodeUserRecord( const UserRecord& userRec ) const;
-      UserRecord decodeUserRecord( const resip::Data& data ) const;
+                    const resip::Data& domain) const;
 
-      // Db manipulation routines
-      virtual void dbWriteRecord( const Key& key, const resip::Data& data ) =0;
-      virtual bool dbReadRecord( const Key& key, resip::Data& data ) const =0 ; // return false if not found
-      virtual void dbRemoveRecord( const Key& key ) = 0 ;
-
-      virtual Key dbFirstKey()=0;// return empty if no more
-      virtual Key dbNextKey(bool first=false)=0; // return empty if no more 
+      AbstractDb& mDb;
 };
 
  }
@@ -127,10 +104,4 @@ class UserAbstractDb
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

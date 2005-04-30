@@ -5,7 +5,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
-#include "repro/UserDb.hxx"
+#include "repro/UserStore.hxx"
 #include "repro/HttpBase.hxx"
 
 namespace repro
