@@ -236,14 +236,19 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
 int
 Helper::jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum)
 {
+   assert(upperPercentage >= lowerPercentage);
    if (input < minimum)
+   {
+      return input;
+   }
+   else if (lowerPercentage == 100 && upperPercentage == 100)
    {
       return input;
    }
    else
    {
       const int rnd = Random::getRandom() % (upperPercentage-lowerPercentage) + lowerPercentage;
-      return (input * rnd) / 100; // !dlb! rounding...
+      return (input * rnd) / 100;
    }
 }
 
