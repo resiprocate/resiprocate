@@ -43,8 +43,23 @@ class AbstractDb
             bool mLocalUserOnly;
       };
 
+      class AclRecord
+      {
+         public:
+            resip::Data mMachine;
+      };
+
+      class ConfigRecord
+      {
+         public:
+            resip::Data mDomain;
+            short mTlsPort;
+      };
+
       typedef resip::Data Key;
       typedef std::vector<RouteRecord> RouteRecordList;
+      typedef std::vector<AclRecord> AclRecordList;
+      typedef std::vector<ConfigRecord> ConfigRecordList;
 
       // functions for User Records 
       virtual void add( const Key& key, const UserRecord& rec );
@@ -61,21 +76,34 @@ class AbstractDb
       virtual RouteRecordList getAllRoutes();
       Key firstRouteKey();// return empty if no more
       Key nextRouteKey(); // return empty if no more 
+
+      // functions for Acl Records
+      virtual void add( const Key& key, const AclRecord& rec );
+      virtual void eraseAcl(  const Key& key );
+      virtual AclRecordList getAllAcls();
+      virtual AclRecord getAcl( const Key& key) const;
+      Key firstAclKey();// return empty if no more
+      Key nextAclKey(); // return empty if no more 
+
+      // functions for Config Records
+      virtual void add( const Key& key, const ConfigRecord& rec );
+      virtual void eraseConfig(  const Key& key );
+      virtual ConfigRecordList getAllConfigs();
+      virtual ConfigRecord getConfig( const Key& key) const;
+      Key firstConfigKey();// return empty if no more
+      Key nextConfigKey(); // return empty if no more 
+
  
    protected:
       typedef enum 
       {
          UserTable=0,
          RouteTable,
+         AclTable,
+         ConfigTable,
          MaxTable  // This one MUST be last 
       } Table;
       
-      resip::Data serializeRoute( const RouteRecord& route );
-      RouteRecord deSerializeRoute( const resip::Data& data );
-
-      resip::Data serializeUser( const UserRecord& route );
-      UserRecord deSerializeUser( const resip::Data& data );
-
       // Db manipulation routines
       virtual void dbWriteRecord( const Table table, 
                                   const resip::Data& key, 

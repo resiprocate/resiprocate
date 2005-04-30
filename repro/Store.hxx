@@ -4,8 +4,8 @@
 #include "repro/AbstractDb.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/RouteStore.hxx"
-//#include "repro/AclStore.hxx"
-//#include "repro/ConfigStore.hxx"
+#include "repro/AclStore.hxx"
+#include "repro/ConfigStore.hxx"
 
 
 namespace repro
@@ -22,8 +22,8 @@ class Store
       
       UserStore mUserStore;
       RouteStore mRouteStore; 
-      //AclStore mAclStore; 
-      //ConfigStore mConfigStore;
+      AclStore mAclStore; 
+      ConfigStore mConfigStore;
     private:
 };
 
