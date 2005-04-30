@@ -21,7 +21,7 @@
 using namespace resip;
 using namespace std;
 
-Log::Level Log::_level = Log::Debug;
+Log::Level Log::_level = Log::Info;
 Log::Type Log::_type = Cout;
 Data Log::_appName;
 Data Log::_hostname;
