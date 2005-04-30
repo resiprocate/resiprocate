@@ -1,10 +1,11 @@
 #if !defined(RESIP_DATA_HXX)
 #define RESIP_DATA_HXX 
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/DataStream.hxx"
 #include <iostream>
 #include <string>
+
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 
 #include "HashMap.hxx"
@@ -149,7 +150,8 @@ class Data
       int convertInt() const;
       size_t convertSize() const;
       double convertDouble() const;
-
+      UInt64 convertUInt64() const;
+      
       bool prefix(const Data& pre) const;
       bool postfix(const Data& post) const;
       Data substr(size_type first, size_type count = Data::npos) const;
