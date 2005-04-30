@@ -12,7 +12,7 @@ ifeq ($(USE_SSL), true)
 
 TESTPROGRAMS = \
 	repro.cxx \
-	userAdmin.cxx 
+#	userAdmin.cxx 
 
 SRC =   \
 	CommandLineParser.cxx \

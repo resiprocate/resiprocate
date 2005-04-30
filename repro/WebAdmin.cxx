@@ -76,11 +76,14 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("index.html") ) && 
       ( pageName != Data("input") ) && 
       ( pageName != Data("certs") ) && 
+      ( pageName != Data("userTest.html") ) && 
+      ( pageName != Data("domains.html")  ) &&
+      ( pageName != Data("acls.html")  ) &&
       ( pageName != Data("addUser.html") ) && 
-      ( pageName != Data("addRoute.html") ) && 
-      ( pageName != Data("showRegs.html") ) &&  
-      ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("showUsers.html")  ) &&
+      ( pageName != Data("addRoute.html") ) && 
+      ( pageName != Data("showRoutes.html") )&& 
+      ( pageName != Data("registrations.html") ) &&  
       ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
@@ -128,39 +131,39 @@ WebAdmin::buildPage( const Data& uri,
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
          mUserDb.addUser( pUser, // user
-						 Data::Empty, // domain 
+                          Data::Empty, // domain 
                           Data::Empty, // realm 
                           Data("admin"), // password 
                           Data::Empty, // name 
                           Data::Empty ); // email 
          dbA1 = mUserDb.getUserAuthInfo( pUser, Data::Empty );
       }
-  // !cj! TODO -    assert( !dbA1.empty() );
+      // !cj! TODO -    assert( !dbA1.empty() );
 
-	if ( !dbA1.empty() )
-	{
-      MD5Stream a1;
-      a1 << pUser // username
-         << Symbols::COLON
-         << Data::Empty // realm
-         << Symbols::COLON
-         << pPassword;
-      Data compA1 = a1.getHex();
-      
-      if ( dbA1 == compA1 )
+      if ( !dbA1.empty() )
       {
-               authenticatedUser = pUser;
+         MD5Stream a1;
+         a1 << pUser // username
+            << Symbols::COLON
+            << Data::Empty // realm
+            << Symbols::COLON
+            << pPassword;
+         Data compA1 = a1.getHex();
+         
+         if ( dbA1 == compA1 )
+         {
+            authenticatedUser = pUser;
+         }
+         else
+         {
+            InfoLog( << "user " << pUser << " failed to authneticate to web server" );
+            setPage( resip::Data::Empty, pageNumber,401 );
+            return;
+         }
       }
-      else
       {
-         InfoLog( << "user " << pUser << " failed to authneticate to web server" );
-         setPage( resip::Data::Empty, pageNumber,401 );
-         return;
+         ErrLog( << "user " << pUser << " failed to add to user db" );
       }
-	}
-	{
-		   ErrLog( << "user " << pUser << " failed to add to user db" );
-	}
    }
    
    // parse any URI tags from form entry 
@@ -287,21 +290,28 @@ WebAdmin::buildPage( const Data& uri,
    Data page;
    if ( authenticatedUser == Data("admin") )
    {
-            DataStream s(page);
-            buildPageOutlinePre(s);
+      DataStream s(page);
+      buildPageOutlinePre(s);
+      
+      // admin only pages 
+      if ( pageName == Data("user.html")    ) ; /* do nothing */ 
+      if ( pageName == Data("domains.html")    ) buildDomainsSubPage(s);
+      if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
+      
+      if ( pageName == Data("addUser.html")    ) buildAddUserSubPage(s);
+      if ( pageName == Data("showUsers.html")  ) buildShowUsersSubPage(s);
+      
+      if ( pageName == Data("addRoute.html")   ) buildAddRouteSubPage(s);
+      if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
+      
+      if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
+      
+      buildPageOutlinePost(s);
+      s.flush();
 
-         // admin only pages 
-         if ( pageName == Data("addUser.html")    ) buildAddUserSubPage(s);
-         if ( pageName == Data("addRoute.html")   ) buildAddRouteSubPage(s);
-         if ( pageName == Data("showRegs.html")   ) buildShowRegsSubPage(s);
-         if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
-         if ( pageName == Data("showUsers.html")  ) buildShowUsersSubPage(s);
-
-            buildPageOutlinePost(s);
-            s.flush();
+      if ( pageName == Data("userTest.html")   ) page=buildUserPage();
    }
-   
-   if ( !authenticatedUser.empty() )
+   else if ( !authenticatedUser.empty() )
    {
       // user only pages 
       if ( pageName == Data("user.html") ) page=buildUserPage();
@@ -315,45 +325,122 @@ WebAdmin::buildPage( const Data& uri,
   
 
 void
+WebAdmin::buildAclsSubPage(DataStream& s)
+{ 
+   s << 
+      "      <form id=\"addRouteFrom\" method=\"get\" action=\"../Documents/reproDump6/web-content/input\" name=\"addRouteForm\">" << endl <<
+      "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
+      "          <tr>" << endl <<
+      "            <td align=\"right\">Host or IP:</td>" << endl <<
+      "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"aclMask\" size=\"2\"/></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"aclAdd\" value=\"Add\"/></td>" << endl <<
+      "          </tr>" << endl <<
+      "        </table>" << endl <<
+      "      </form>" << endl <<
+      "      <div class=sace>" << endl <<
+      "        <br />" << endl <<
+      "      </div>" << endl <<
+      "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
+      "        <thead>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>Host</td>" << endl <<
+      "            <td align=\"center\">Mask</td>" << endl <<
+      "          </tr>" << endl <<
+      "        </thead>" << endl <<
+      "        <tbody>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>example.com</td>" << endl <<
+      "            <td align=\"center\"></td>" << endl <<
+      "          </tr>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>1.2.3.4</td>" << endl <<
+      "            <td align=\"center\">/24</td>" << endl <<
+      "          </tr>" << endl <<
+      "        </tbody>" << endl <<
+      "      </table>" << endl;
+}
+
+
+void
+WebAdmin::buildDomainsSubPage(DataStream& s)
+{ 
+   s <<
+      "     <form id=\"addRouteFrom\" method=\"get\" action=\"../Documents/reproDump6/web-content/input\" name=\"addRouteForm\">" << endl <<
+      "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
+      "          <tr>" << endl <<
+      "            <td align=\"right\">New Domain:</td>" << endl <<
+      "            <td><input type=\"text\" name=\"domainUri\" size=\"24\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"domainTlsPort\" size=\"4\"/></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"domainAdd\" value=\"Add\"/></td>" << endl <<
+      "          </tr>" << endl <<
+      "        </table>" << endl <<
+      "      </form>" << endl <<
+      "      <div class=sace>" << endl <<
+      "        <br />" << endl <<
+      "      </div>" << endl <<
+      "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
+      "        <thead>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>Domain</td>" << endl <<
+      "            <td align=\"center\">TLS Port</td>" << endl <<
+      "          </tr>" << endl <<
+      "        </thead>" << endl <<
+// TODO !cj! fix getting the domains 
+      "        <tbody>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>example.com</td>" << endl <<
+      "            <td align=\"center\">5061</td>" << endl <<
+      "          </tr>" << endl <<
+      "          <tr>" << endl <<
+      "            <td>example.com</td>" << endl <<
+      "            <td align=\"center\">5061</td>" << endl <<
+      "          </tr>" << endl <<
+      "        </tbody>" << endl <<
+      "      </table>" << endl;
+ }
+
+void
 WebAdmin::buildAddRouteSubPage(DataStream& s)
 {
    s << 
-      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
-      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
-      "<tr>"
-      "<td>URI</td>"
-      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>"
-      "</tr>"
-      "<tr>"
-      "<td>Method</td>"
-      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
-      "</tr>"
-      
-      "<tr>"
-      "<td>Event</td>"
-      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
-      "</tr>"
-      
-      "<tr>"
-      "<td>Destination</td>"
-      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
-      "</tr>"
-      
-      "<tr>"
-      "<td>Order</td>"
-      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
-      "</tr>"
+      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl << 
+      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
 
-      "<tr>"
-      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">"
-      "    <input type=\"reset\"  value=\"Cancel\"/>"
-      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>"
-      "  </td>"
-      "</tr>"
+      "<tr>" << endl << 
+      "<td>URI</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
 
-      "</table>"
-      "</form>"
-      ;
+      "<tr>" << endl << 
+      "<td>Method</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Event</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Destination</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Order</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
+      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl;
 }
 
 
@@ -361,64 +448,66 @@ void
 WebAdmin::buildAddUserSubPage( DataStream& s)
 {
       s << 
-         "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
-         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\">User Name:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
-         "</tr>"
+         "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
 
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\" >Realm:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
-         "</tr>"
+         //"<tr>" << endl << 
+         //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
+         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>" << endl << 
+         //"</tr>" << endl << 
 
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\" >Domain:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"domain\" size=\"24\"/></td>"
-         "</tr>"
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Domain:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"domain\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
 
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\" >Password:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
-         "</tr>"
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
 
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\" >Full Name:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
-         "</tr>"
-         "<tr>"
-         "<td align=\"right\" valign=\"middle\" >Email:</td>"
-         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
-         "</tr>"
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
 
-         "<tr>"
-         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">"
-         "    <input type=\"reset\" value=\"Cancel\"/>"
-         "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
-         "  </td>"
-         "</tr>"
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+         "    <input type=\"reset\" value=\"Cancel\"/>" << endl << 
+         "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>" << endl << 
+         "  </td>" << endl << 
+         "</tr>" << endl << 
          
-         "</table>"
-         "</form>"
+         "</table>" << endl << 
+         "</form>" << endl << 
          " ";
 }
 
 
 void
-WebAdmin::buildShowRegsSubPage(DataStream& s)
+WebAdmin::buildRegistrationsSubPage(DataStream& s)
 {
    s << 
-      // "<h1>Registrations</h1>"
-      "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-      //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
-      //"<hr/>"
-      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-      "<tr>"
-      "<td>AOR</td>"
-      "<td>Contact</td>"
-      "<td><button name=\"removeReg\" type=\"button\">Remove</button></td>"
-      "</tr>";
+      "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl << 
+      //"<hr/>" << endl << 
+
+      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+
+      "<tr>" << endl << 
+      "  <td>AOR</td>" << endl << 
+      "  <td>Contact</td>" << endl << 
+      "  <td><button name=\"removeReg\" type=\"button\">Remove</button></td>" << endl << 
+      "</tr>" << endl;
    
       RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
       for ( RegistrationPersistenceManager::UriList::const_iterator 
@@ -433,31 +522,30 @@ WebAdmin::buildShowRegsSubPage(DataStream& s)
                  = contacts.begin();
               i != contacts.end(); ++i )
          {
-            s << "<tr>"
-              << "<td>";
+            s << "<tr>" << endl
+              << "  <td>" ;
             if (first) 
             { 
                s << uri;
                first = false;
             }
-            s << "</td>"
-              << "<td>";
+            s << "</td>" << endl
+              << "  <td>";
             
             const RegistrationPersistenceManager::ContactPair& p = *i;
             const Uri& contact = p.first; 
          
-            s << contact << " ";
-            s <<"</td>"
-              << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+            s << contact;
+            s <<"</td>" << endl 
+              << "  <td><input type=\"checkbox\" name=\"removeUser\" value=\""
               << uri
-              << "\"/></td>"
-              << "</tr>";
+              << "\"/></td>" << endl
+              << "</tr>" << endl;
          }
       }
                   
-      s << "</table>"
-         "</form>"
-         ;
+      s << "</table>" << endl << 
+         "</form>" << endl;
 }
 
 
@@ -466,16 +554,16 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
       
       s << 
-         //"<h1>Users</h1>"
-         "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
-         "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "<tr>"
-         "<td>User</td>"
-         "<td>Realm</td>"
-         "<td>Name</td>"
-         "<td>Email</td>"
-         "<td><button name=\"buttonName\" type=\"button\">Remove</button></td>"
-         "</tr>" ;
+         //"<h1>Users</h1>" << endl << 
+         "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "<tr>" << endl << 
+         "  <td>User</td>" << endl << 
+         "  <td>Realm</td>" << endl << 
+         "  <td>Name</td>" << endl << 
+         "  <td>Email</td>" << endl << 
+         "  <td><button name=\"buttonName\" type=\"button\">Remove</button></td>" << endl << 
+         "</tr>" << endl;
       
 /*
   "<tr>"
@@ -491,23 +579,22 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       Data key = mUserDb.getFirstKey();
       while ( !key.empty() )
       {
-         s << "<tr>"
-           << "<td>" << key << "</td>"
-           << "<td> </td>"
-           << "<td> </td>"
-           << "<td> </td>"
-           << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
+         s << "<tr>" << endl 
+           << "  <td>" << key << "</td>" << endl
+           << "  <td> </td>" << endl
+           << "  <td> </td>" << endl
+           << "  <td> </td>" << endl
+           << "  <td><input type=\"checkbox\" name=\"removeUser\" value=\""
            << key
-           << "\"/></td>"
-           << "</tr>"
-           << endl;
+           << "\"/></td>" << endl 
+           << "</tr>" << endl;
          
          key = mUserDb.getNextKey();
       }
       
       s << 
-         "</table>"
-         "</form>"
+         "</table>" << endl << 
+         "</form>" << endl;
          ;
 }
 
@@ -517,51 +604,53 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
 { 
       
       s <<
-         "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         //"      <tr>"
-         // "        <td>"
-         //"          <h1>Routes</h1>"
-         //"        </td>"
-         //"      </tr>" 
-         "      <tr>"
-         "        <td>" 
-         "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
-         "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>"
-         "            <hr/>"
-         "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
-         "              <tr>"
-         "                <td>URI</td>"
-         "                <td>Method</td>"
-         "                <td>Event</td>"
-         "                <td>Destination</td>"
-         "                <td>Order</td>"
-         "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>"
-         "              </tr>";
+         "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         //"      <tr>" << endl << 
+         // "        <td>" << endl << 
+         //"          <h1>Routes</h1>" << endl << 
+         //"        </td>" << endl << 
+         //"      </tr>" << endl <<  
+         "      <tr>" << endl << 
+         "        <td>" << endl <<  
+         "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
+         "            <hr/>" << endl << 
+         "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "              <thead><tr>" << endl << 
+         "                <td>URI</td>" << endl << 
+         "                <td>Method</td>" << endl << 
+         "                <td>Event</td>" << endl << 
+         "                <td>Destination</td>" << endl << 
+         "                <td>Order</td>" << endl << 
+         "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>" << endl << 
+         "              </tr></thead>" << endl << 
+         "              <tbody>" << endl;
       
       RouteAbstractDb::RouteList routes = mRouteDb.getRoutes();
       for ( RouteAbstractDb::RouteList::const_iterator i = routes.begin();
             i != routes.end();
             i++ )
       {
-         s <<  "<tr>"
-            "<td>" << i->mMatchingPattern << "</td>"
-            "<td>" << i->mMethod << "</td>"
-            "<td>" << i->mEvent << "</td>"
-            "<td>" << i->mRewriteExpression << "</td>"
-            "<td>" << i->mOrder << "</td>"
-            "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>"
-            "</tr>";
+         s <<  "<tr>" << endl << 
+            "<td>" << i->mMatchingPattern << "</td>" << endl << 
+            "<td>" << i->mMethod << "</td>" << endl << 
+            "<td>" << i->mEvent << "</td>" << endl << 
+            "<td>" << i->mRewriteExpression << "</td>" << endl << 
+            "<td>" << i->mOrder << "</td>" << endl << 
+            "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>" << endl << 
+            "</tr>" << endl;
       }
       
       s << 
-         "            </table>"
-         "          </form>"
-         "        </td>"
-         "      </tr>"
-         "      <tr><td>"
-         "          <hr noshade=\"noshade\"/>"
-         "          <br>"
-         "        </td></tr>";
+         "              </tbody>" << endl << 
+         "            </table>" << endl << 
+         "          </form>" << endl << 
+         "        </td>" << endl << 
+         "      </tr>" << endl << 
+         "      <tr><td>" << endl << 
+         "          <hr noshade=\"noshade\"/>" << endl << 
+         "          <br>" << endl << 
+         "        </td></tr>" << endl;
 
       Uri uri;
       try 
@@ -583,44 +672,42 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       RouteAbstractDb::UriList routeList = mRouteDb.process( uri, Data("INVITE"), Data::Empty);
       
       s << 
-         "      <tr>"
-         "        <td>"
-         "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">"
-         "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+         "      <tr>" << endl << 
+         "        <td>" << endl << 
+         "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
          "              "
-         "              <tr>"
-         "                <td align=\"right\">Input:</td>"
-         "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>"
-         "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>"
-         "              </tr>";
+         "              <tr>" << endl << 
+         "                <td align=\"right\">Input:</td>" << endl << 
+         "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>" << endl << 
+         "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>" << endl << 
+         "              </tr>" << endl;
       
       bool first=true;
       for ( RouteAbstractDb::UriList::const_iterator i=routeList.begin();
             i != routeList.end(); i++)
       {
-         s<<"              <tr>";
+         s<<"              <tr>" << endl;
          if (first)
          {
             first=false;
-            s<<"             <td align=\"right\">Targets:</td>";
+            s<<"             <td align=\"right\">Targets:</td>" << endl;
          }
          else
          {
-            s<<"             <td align=\"right\"></td>";
+            s<<"             <td align=\"right\"></td>" << endl;
          }
-         s<<"                <td><label>" << *i << "</label></td>";
-         s<<"                <td></td>";
-         s<<"              </tr>";
+         s<<"                <td><label>" << *i << "</label></td>" << endl;
+         s<<"                <td></td>" << endl;
+         s<<"              </tr>" << endl;
       }
       
       s<<
-         "            </table>"
-         "          </form>"
-         "        </td>"
-         "      </tr>"
-         "    </table>"
-         ;
-      
+         "            </table>" << endl << 
+         "          </form>" << endl << 
+         "        </td>" << endl << 
+         "      </tr>" << endl << 
+         "    </table>" << endl;      
 }
 
 
@@ -646,27 +733,19 @@ WebAdmin::buildDefaultPage()
       DataStream s(ret);
       
       s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-         "<title>Repro Proxy</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
-         "<h1>The default account is 'admin' with password 'admin'</h1>"
-         "<p><a href=\"addUser.html\">add users</a></p>"
-         "<p><a href=\"showRegs.html\">show registrations</a></p>"
-         "<p><a href=\"showUsers.html\">show users</a></p>"
-         "<p><a href=\"addRoute.html\">add route</a></p>"
-         "<p><a href=\"showRoutes.html\">show routes</a></p>"
-         "</body>"
-         ""
-         "</html>"
-         " ";
+         "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << 
+         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl << 
+         "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl << 
+         "<head>" << endl << 
+         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl << 
+         "<title>Repro Proxy Login</title>" << endl << 
+         "</head>" << endl << 
+
+         "<body bgcolor=\"#ffffff\">" << endl << 
+         "  <h1><a href=\"user.html\">Login</a></h1>" << endl << 
+         "  <p>The default account is 'admin' with password 'admin'</p>" << endl << 
+         "</body>" << endl << 
+         "</html>" << endl;
       
       s.flush();
    }
@@ -677,63 +756,60 @@ WebAdmin::buildDefaultPage()
 void
 WebAdmin::buildPageOutlinePre(DataStream& s)
 {
-   s << 
-      "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
-      "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-      "	<head>"
-      "		<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-      "		<title>Repro Proxy</title>"
-      "	</head>"
-      "	<style>"
-      "body         { font-size: 90%; font-family: Arial, Helvetica, sans-serif }"
-      "h1           { font-size: 200%; font-weight: bold }"
-      "h2           { font-size: 100%; font-weight: bold; text-transform: uppercase }"
-      "h3           { font-size: 100%; font-weight: normal }"
-      "h4           { font-size: 100%; font-style: oblique; font-weight: normal }          "
-      "hr           { line-height: 2px; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; height: 10px }"
-      "div.title    { color: black; background-color: #395af6;  padding-top: 10px; padding-bottom: 10px; padding-left: 10px }"
-      "div.title h1 { text-transform: uppercase; margin-top: 0; margin-bottom: 0 }	"
-      "div.menu     { color: black; background-color: #ff8d09;  padding: 0 10px 10px; width: 9em; float: left; clear: none; overflow: hidden }"
-      "div.menu p   { font-weight: bold; text-transform: uppercase; list-style-type: none; margin-top: 0; margin-bottom: 0; margin-left: 10px }"
-      "div.menu h2  { margin-top: 10px; margin-bottom: 0 ; text-transform: uppercase; }"
-      "div.main     { color: black; background-color: #395af6; margin-left: 11em }"
-      "div.space    { font-size: 5px; height: 10px }"
-      "	</style>"
-      ""
-      "	<body bgcolor=\"#ffffff\">"
-      "		<div class=\"title\" >"
-      "			<h1>Repro</h1>"
-      "		</div>"
-      "		<div class=\"space\">"
-      "			<br />"
-      "		</div>"
-      "		<div class=\"menu\" >"
-//      "			<h2>Domains</h2>"
-//      "			<p><a href=\"addDomain.html\">Add Domain</a></p>"
-//      "			<p><a href=\"showDomains.html\">Show Domains</a></p>"
-      "			<h2>Users</h2>"
-      "			<p><a href=\"addUser.html\">Add Users</a></p>"
-      "			<p><a href=\"showUsers.html\">Show Users</a></p>"
-      "			<p><a href=\"showRegs.html\">Registrations</a></p>"
-      "			<h2>Routes</h2>"
-      "			<p><a href=\"addRoute.html\">Add Route</a></p>"
-      "			<p><a href=\"showRoutes.html\">Show Routes</a></p>"
-//      "			<h2>ACLs</h2>"
-//      "			<p><a href=\"addAcl.html\">Add ACL</a></p>"
-//      "			<p><a href=\"showAcls.html\">Show ACLs</a></p>"
-      "		</div>"
-      "		<div class=\"main\">";
+   s << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
+     << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">" << endl
+     << "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
+     << "  <head>" << endl
+     << "    <meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
+     << "    <title>Repro Proxy</title>" << endl
+     << "  </head>" << endl
+     << "  <style>" << endl
+     << "body         { bgcolor: white; font-size: 90%; font-family: Arial, Helvetica, sans-serif }" << endl
+     << "h1           { font-size: 200%; font-weight: bold }" << endl
+     << "h2           { font-size: 100%; font-weight: bold; text-transform: uppercase }" << endl
+     << "h3           { font-size: 100%; font-weight: normal }" << endl
+     << "h4           { font-size: 100%; font-style: oblique; font-weight: normal }          " << endl
+     << "hr           { line-height: 2px; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; height: 10px }" << endl
+     << "div.title    { color: white; background-color: #395af6;  padding-top: 10px; padding-bottom: 10px; padding-left: 10px }" << endl
+     << "div.title h1 { text-transform: uppercase; margin-top: 0; margin-bottom: 0 }  " << endl
+     << "div.menu     { color: black; background-color: #ff8d09;  padding: 0 10px 10px; " << endl
+     << "               width: 9em; float: left; clear: none; overflow: hidden }" << endl
+     << "div.menu p   { font-weight: bold; text-transform: uppercase; list-style-type: none; " << endl
+     << "               margin-top: 0; margin-bottom: 0; margin-left: 10px }" << endl
+     << "div.menu h2  { margin-top: 10px; margin-bottom: 0 ; text-transform: uppercase; }" << endl
+     << "div.main     { color: black; background-color: #dae1ed; margin-left: 11em }" << endl
+     << "div.space    { font-size: 5px; height: 10px }" << endl
+     << "  </style>" << endl
+     << "  <body>" << endl
+     << "    <div class=\"title\" >" << endl
+     << "      <h1>Repro</h1>" << endl
+     << "    </div>" << endl
+     << "    <div class=\"space\">" << endl
+     << "      <br />" << endl
+     << "    </div>" << endl
+     << "    <div class=\"menu\" >" << endl
+     << "      <h2>Configure</h2>" << endl
+     << "        <p><a href=\"domains.html\">Domains</a></p>" << endl
+     << "        <p><a href=\"acls.html\">ACLs</a></p>" << endl
+     << "      <h2>Users</h2>" << endl
+     << "        <p><a href=\"addUser.html\">Add User</a></p>" << endl
+     << "        <p><a href=\"showUsers.html\">Show Users</a></p>" << endl
+     << "      <h2>Routes</h2>" << endl
+     << "        <p><a href=\"addRoute.html\">Add Route</a></p>" << endl
+     << "        <p><a href=\"showRoutes.html\">Show Routes</a></p>" << endl
+     << "      <h2>Statistics</h2>" << endl
+     << "        <p><a href=\"registrations.html\">Registrations</a></p>" << endl
+     << "    </div>" << endl
+     << "    <div class=\"main\">" << endl;
 }
 
 
 void
 WebAdmin::buildPageOutlinePost(DataStream& s)
 {
-   s << 
-      "         </div>"
-      "	    </body>"
-      "</html>"
+   s << "     </div>" << endl
+     << "  </body>" << endl
+     << "</html>" << endl;
       ;
 }
 
@@ -745,29 +821,24 @@ WebAdmin::buildUserPage()
    {
       DataStream s(ret);
       
-      s << 
-         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-         ""
-         "<html xmlns=\"http://www.w3.org/1999/xhtml\">"
-         ""
-         "<head>"
-         "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />"
-         "<title>Repro Proxy</title>"
-         "</head>"
-         ""
-         "<body bgcolor=\"#ffffff\">"
-         "<h1>user page </h1>"
-         "<p><a href=\"addUser.html\">add users</a></p>"
-         "<p><a href=\"showRegs.html\">show registrations</a></p>"
-         "<p><a href=\"showUsers.html\">show users</a></p>"
-         "<p><a href=\"addRoute.html\">add route</a></p>"
-         "<p><a href=\"showRoutes.html\">show routes</a></p>"
-         "</body>"
-         ""
-         "</html>"
-         " ";
+      s <<  "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
+        <<    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" << endl
+        <<    "" << endl
+        <<    "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
+        <<    "" << endl
+        <<    "<head>" << endl
+        <<    "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
+        <<    "<title>Repro Proxy</title>" << endl
+        <<    "</head>" << endl
+        <<    "" << endl
+        <<    "<body bgcolor=\"#ffffff\">" << endl;
       
+      buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
+      
+      s <<    "</body>" << endl
+        <<    "" << endl
+        <<    "</html>" << endl;
+            
       s.flush();
    }
    return ret;
