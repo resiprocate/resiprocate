@@ -45,8 +45,7 @@ WebAdmin::WebAdmin(  Store& store,
                      IpVersion version,
                      const Data& realm ):
    HttpBase( port, version, realm ),
-   mUserStore(store.mUserStore),
-   mRouteStore(store.mRouteStore),
+   mStore(store),
    mRegDb(regDb),
    mSecurity(security),
    mNoWebChallenges( noChal ) 
@@ -127,17 +126,17 @@ WebAdmin::buildPage( const Data& uri,
       }
       
       // check that authentication is correct 
-      Data dbA1 = mUserStore.getUserAuthInfo( pUser, Data::Empty );
+      Data dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
       
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
-         mUserStore.addUser( pUser, // user
+         mStore.mUserStore.addUser( pUser, // user
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           Data("admin"), // password 
                           Data::Empty, // name 
                           Data::Empty ); // email 
-         dbA1 = mUserStore.getUserAuthInfo( pUser, Data::Empty );
+         dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
       }
       // !cj! TODO -    assert( !dbA1.empty() );
 
@@ -189,6 +188,11 @@ WebAdmin::buildPage( const Data& uri,
                              // expression 
       int routeOrder;
       
+      Data domainUri;
+      int  domainTlsPort;
+      
+      Data aclUri;
+      
       while ( !pb.eof() )
       {
          const char* anchor1 = pb.position();
@@ -238,27 +242,39 @@ WebAdmin::buildPage( const Data& uri,
             domain = value.charHttpUnencoded();
          }
 
-           if ( key == Data("routeUri") )
-           {
-              routeUri = value.charHttpUnencoded();
-           }
-           if ( key == Data("routeMethod") )
-           {
-              routeMethod = value.charHttpUnencoded();
-           }
-          if ( key == Data("routeEvent") )
-           {
-              routeEvent = value.charHttpUnencoded();
-           }
-           if ( key == Data("routeDestination") )
-           {
-               routeDestination = value.charHttpUnencoded();
-           }
-           if ( key == Data("routeOrder") )
-           {
-              routeOrder = value.convertInt();
-           }
-           
+         if ( key == Data("routeUri") )
+         {
+            routeUri = value.charHttpUnencoded();
+         }
+         if ( key == Data("routeMethod") )
+         {
+            routeMethod = value.charHttpUnencoded();
+         }
+         if ( key == Data("routeEvent") )
+         {
+            routeEvent = value.charHttpUnencoded();
+         }
+         if ( key == Data("routeDestination") )
+         {
+            routeDestination = value.charHttpUnencoded();
+         }
+         if ( key == Data("routeOrder") )
+         {
+            routeOrder = value.convertInt();
+         }
+         
+         if ( key == Data("aclUri") )
+         {
+            aclUri = value.charHttpUnencoded();
+         }
+         if ( key == Data("domainUri") )
+         {
+            domainUri = value.charHttpUnencoded();
+         }
+         if ( key == Data("domainTlsPort") )
+         {
+            domainTlsPort = value.convertInt();
+         }
       }
 
       // must be admin to do this 
@@ -271,12 +287,26 @@ WebAdmin::buildPage( const Data& uri,
                realm = domain;
             }
             
-            mUserStore.addUser(user,domain,realm,password,name,email);
+            mStore.mUserStore.addUser(user,domain,realm,password,name,email);
          }
          
          if ( !routeDestination.empty() )
          {
-            mRouteStore.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
+            mStore.mRouteStore.add(routeMethod ,
+                                   routeEvent ,
+                                   routeUri, 
+                                   routeDestination, 
+                                   routeOrder );
+         }
+
+         if ( !domainUri.empty() )
+         {
+            mStore.mConfigStore.add(domainUri,domainTlsPort);
+         }
+
+         if ( !aclUri.empty() )
+         {
+            mStore.mAclStore.add(aclUri);
          }
       }
    }
@@ -330,12 +360,12 @@ void
 WebAdmin::buildAclsSubPage(DataStream& s)
 { 
    s << 
-      "      <form id=\"addRouteFrom\" method=\"get\" action=\"../Documents/reproDump6/web-content/input\" name=\"addRouteForm\">" << endl <<
+      "      <form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
       "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
-      "            <td><input type=\"text\" name=\"aclMask\" size=\"2\"/></td>" << endl <<
+      //    "            <td><input type=\"text\" name=\"aclMask\" size=\"2\"/></td>" << endl <<
       "            <td><input type=\"submit\" name=\"aclAdd\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
@@ -347,17 +377,24 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "        <thead>" << endl <<
       "          <tr>" << endl <<
       "            <td>Host</td>" << endl <<
-      "            <td align=\"center\">Mask</td>" << endl <<
+      //  "            <td align=\"center\">Mask</td>" << endl <<
       "          </tr>" << endl <<
       "        </thead>" << endl <<
-      "        <tbody>" << endl <<
-      "          <tr>" << endl <<
-      "            <td>example.com</td>" << endl <<
-      "            <td align=\"center\"></td>" << endl <<
-      "          </tr>" << endl <<
-      "          <tr>" << endl <<
-      "            <td>1.2.3.4</td>" << endl <<
-      "            <td align=\"center\">/24</td>" << endl <<
+      "        <tbody>" << endl;
+   
+   AbstractDb::AclRecordList list = mStore.mAclStore.getAcls();
+   
+   for (AbstractDb::AclRecordList::iterator i = list.begin();
+        i != list.end(); i++ )
+   {
+      s << 
+         "          <tr>" << endl <<
+         "            <td>" << i->mMachine << "</td>" << endl <<
+         //   "            <td align=\"center\">" <<  "</td>" << endl <<
+         "          </tr>" << endl;
+   }
+   
+   s <<  
       "          </tr>" << endl <<
       "        </tbody>" << endl <<
       "      </table>" << endl;
@@ -368,7 +405,7 @@ void
 WebAdmin::buildDomainsSubPage(DataStream& s)
 { 
    s <<
-      "     <form id=\"addRouteFrom\" method=\"get\" action=\"../Documents/reproDump6/web-content/input\" name=\"addRouteForm\">" << endl <<
+      "     <form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">New Domain:</td>" << endl <<
@@ -388,19 +425,24 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "            <td align=\"center\">TLS Port</td>" << endl <<
       "          </tr>" << endl <<
       "        </thead>" << endl <<
-// TODO !cj! fix getting the domains 
-      "        <tbody>" << endl <<
-      "          <tr>" << endl <<
-      "            <td>example.com</td>" << endl <<
-      "            <td align=\"center\">5061</td>" << endl <<
-      "          </tr>" << endl <<
-      "          <tr>" << endl <<
-      "            <td>example.com</td>" << endl <<
-      "            <td align=\"center\">5061</td>" << endl <<
-      "          </tr>" << endl <<
+      "        <tbody>" << endl;
+   
+   AbstractDb::ConfigRecordList list = mStore.mConfigStore.getConfigs();
+   
+   for (AbstractDb::ConfigRecordList::iterator i = list.begin();
+        i != list.end(); i++ )
+   {
+      s << 
+         "          <tr>" << endl <<
+         "            <td>" << i->mDomain << "</td>" << endl <<
+         "            <td align=\"center\">" << i->mTlsPort << "</td>" << endl <<
+         "          </tr>" << endl;
+   }
+   
+   s <<
       "        </tbody>" << endl <<
       "      </table>" << endl;
- }
+}
 
 void
 WebAdmin::buildAddRouteSubPage(DataStream& s)
@@ -578,7 +620,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 */
       s << endl;
       
-      Data key = mUserStore.getFirstKey();
+      Data key = mStore.mUserStore.getFirstKey();
       while ( !key.empty() )
       {
          s << "<tr>" << endl 
@@ -591,7 +633,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
            << "\"/></td>" << endl 
            << "</tr>" << endl;
          
-         key = mUserStore.getNextKey();
+         key = mStore.mUserStore.getNextKey();
       }
       
       s << 
@@ -628,7 +670,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          "              </tr></thead>" << endl << 
          "              <tbody>" << endl;
       
-      AbstractDb::RouteRecordList routes = mRouteStore.getRoutes();
+      AbstractDb::RouteRecordList routes = mStore.mRouteStore.getRoutes();
       for ( AbstractDb::RouteRecordList::const_iterator i = routes.begin();
             i != routes.end();
             i++ )
@@ -671,7 +713,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       }
 
       // !cj! - TODO - shoudl input method and envent type to test 
-      RouteStore::UriList routeList = mRouteStore.process( uri, Data("INVITE"), Data::Empty);
+      RouteStore::UriList routeList = mStore.mRouteStore.process( uri, Data("INVITE"), Data::Empty);
       
       s << 
          "      <tr>" << endl << 

@@ -42,13 +42,13 @@ BerkleyDb::BerkleyDb( char* dbName )
       Data fileName( dbName );
       switch (i)
       {
-         case 0:
+         case UserTable:
             fileName += "_user.db"; break;
-         case 1:
+         case RouteTable:
             fileName += "_route.db"; break;
-         case 2:
+         case AclTable:
             fileName += "_acl.db"; break;
-         case 3:
+         case ConfigTable:
             fileName += "_config.db"; break;
          default:
             assert(0);
