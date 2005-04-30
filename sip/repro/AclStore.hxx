@@ -1,76 +1,34 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(REPRO_ACLSTORE_HXX)
+#define REPRO_ACLSTORE_HXX
 
-#include "resiprocate/Security.hxx"
 #include "resiprocate/os/Data.hxx"
-//#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
 
-//#include "repro/Store.hxx"
-#include "repro/HttpBase.hxx"
-
-namespace resip
-{
-class RegistrationPersistenceManager;
-class DataStream;
-}
+#include "repro/AbstractDb.hxx"
 
 
 namespace repro
 {
-class Store;
-class UserStore;
-class RouteStore;
 
-class WebAdmin: public HttpBase
+class AclStore
 {
    public:
-      WebAdmin( Store& store,
-                resip::RegistrationPersistenceManager& regDb,
-                resip::Security* security,
-                bool noWebChallenges,
-                int port=5080, 
-                resip::IpVersion version=resip::V4,
-                const resip::Data& realm = resip::Data::Empty );
+      typedef std::vector<resip::Data> DataList;
       
-   protected:
-      virtual void buildPage( const resip::Data& uri, 
-                              int pageNumber,
-                              const resip::Data& user,
-                              const resip::Data& password);
-
-   private: 
-      resip::Data buildDefaultPage();
-      resip::Data buildUserPage();
+      AclStore(AbstractDb& db);
+      ~AclStore();
       
-      void buildPageOutlinePre(resip::DataStream& s);
-      void buildPageOutlinePost(resip::DataStream& s);
+      void add(const resip::Data& acl);
       
-      void buildDomainsSubPage(resip::DataStream& s);
-      void buildAclsSubPage(resip::DataStream& s);
-      void buildAddUserSubPage(resip::DataStream& s);
-      void buildShowUsersSubPage(resip::DataStream& s);
-      void buildAddRouteSubPage(resip::DataStream& s);
-      void buildShowRoutesSubPage(resip::DataStream& s);
-      void buildRegistrationsSubPage(resip::DataStream& s);
-                                  
-      resip::Data buildCertPage(const resip::Data& domain);
+      AbstractDb::AclRecordList getAcls() const;
+      void erase(const resip::Data& acl);
       
-      Store& mStore;
+   private:
+      AbstractDb& mDb;  
 
-      resip::RegistrationPersistenceManager& mRegDb;
-      resip::Security* mSecurity;
-
-      resip::Data routeTestUri;
-
-      bool mNoWebChallenges;
+      AbstractDb::Key buildKey(const resip::Data& acl) const;
 };
 
-
-
-}
-
+ }
 #endif  
 
 /* ====================================================================
@@ -115,10 +73,4 @@ class WebAdmin: public HttpBase
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
