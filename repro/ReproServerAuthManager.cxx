@@ -11,7 +11,7 @@
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
-#include "repro/UserAbstractDb.hxx"
+#include "repro/UserStore.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -20,7 +20,7 @@ using namespace repro;
 
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
-                                               UserAbstractDb& db):
+                                               UserStore& db):
    ServerAuthManager(dum),
    mDum(dum),
    mDb(db)

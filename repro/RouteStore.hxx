@@ -1,56 +1,64 @@
-#if !defined(REPRO_ROUTEABSTRACTDB_HXX)
-#define REPRO_ROUTEABSTRACTDB_HXX
+#if !defined(REPRO_ROUTESTORE_HXX)
+#define REPRO_ROUTESTORE_HXX
+
+#ifdef WIN32
+#include <pcreposix.h>
+#else
+#include <regex.h>
+#endif
 
 #include <vector>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Uri.hxx"
 
+#include "repro/AbstractDb.hxx"
+
 
 namespace repro
 {
+//class AbstractDb;
 
-class RouteAbstractDb
+class RouteStore
 {
    public:
-      class Route
+      typedef std::vector<resip::Uri> UriList;
+      
+      RouteStore(AbstractDb& db);
+      ~RouteStore();
+      
+      void add(const resip::Data& method,
+               const resip::Data& event,
+               const resip::Data& matchingPattern,
+               const resip::Data& rewriteExpression,
+               const int order );
+      
+      AbstractDb::RouteRecordList getRoutes() const;
+      
+      void erase(const resip::Data& method,
+                 const resip::Data& event,
+                 const resip::Data& matchingPattern );
+      
+      UriList process(const resip::Uri& ruri, 
+                      const resip::Data& method, 
+                      const resip::Data& event );
+   private:
+      AbstractDb& mDb;  
+
+      class RouteOp
       {
          public:
-            //!dcm! -- cleanse
-            short mVersion;
-            
-            resip::Data mMethod;
-            resip::Data mEvent;
-            resip::Data mMatchingPattern;
-            resip::Data mRewriteExpression;
-
-            int mOrder;
+            regex_t preq;
+            AbstractDb::RouteRecord routeRecord;
       };
       
-      typedef std::vector<Route> RouteList;
-      typedef std::vector<resip::Uri> UriList;
-   
-      RouteAbstractDb();
-      virtual ~RouteAbstractDb();
+      typedef std::vector<RouteOp> RouteOpList;
+      RouteOpList mRouteOperators;
       
-      virtual void add(const resip::Data& method,
-                       const resip::Data& event,
-                       const resip::Data& matchingPattern,
-                       const resip::Data& rewriteExpression,
-                       const int order )=0;
-      
-      virtual RouteList getRoutes() const=0;
-
-      virtual void erase(const resip::Data& method,
-                       const resip::Data& event,
-                       const resip::Data& matchingPattern )=0;
-      
-      virtual UriList process(const resip::Uri& ruri, 
-                              const resip::Data& method, 
-                              const resip::Data& event ) =0;
-   protected:
-      resip::Data serialize( const Route& route );
-      Route deSerialize( const resip::Data& data );
+      typedef resip::Data Key;
+      Key buildKey(const resip::Data& method,
+                   const resip::Data& event,
+                   const resip::Data& matchingPattern ) const;
 };
 
  }
@@ -98,10 +106,4 @@ class RouteAbstractDb
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
