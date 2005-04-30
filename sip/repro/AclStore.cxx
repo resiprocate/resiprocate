@@ -1,31 +1,61 @@
-#include <cassert>
 
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/Uri.hxx"
 
-#include "repro/Store.hxx"
-#include "repro/AbstractDb.hxx"
+#include "repro/AclStore.hxx"
 
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-Store::Store( AbstractDb& db ):
-   mUserStore(db),
-   mRouteStore(db),
-   mAclStore(db),
-   mConfigStore(db)
-{
+AclStore::AclStore(AbstractDb& db):
+   mDb(db)
+{  
 }
 
 
-Store::~Store()
+AclStore::~AclStore()
 {
 }
 
+      
+void 
+AclStore::add(const resip::Data& acl )
+{ 
+   InfoLog( << "Add ACL" );
+   
+   AbstractDb::AclRecord rec;
+   rec.mMachine = acl;
+   
+   mDb.add( buildKey(acl), rec );
+}
+
+      
+AbstractDb::AclRecordList 
+AclStore::getAcls() const
+{ 
+   return mDb.getAllAcls();
+}
+
+
+void 
+AclStore::erase(const resip::Data& acl)
+{  
+   mDb.eraseAcl( buildKey(acl) );
+}
+
+
+AbstractDb::Key 
+AclStore::buildKey(const resip::Data& acl ) const
+{  
+   return acl;
+}
 
 
 /* ====================================================================
@@ -70,10 +100,4 @@ Store::~Store()
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

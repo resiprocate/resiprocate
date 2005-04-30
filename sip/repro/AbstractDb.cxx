@@ -42,6 +42,15 @@ decodeString( iDataStream& s)
 }
 
 
+Data 
+AbstractDb::dbFirstKey(const AbstractDb::Table table)
+{
+   return dbNextKey(table,true/*first*/);
+}
+
+
+
+
 AbstractDb::AbstractDb()
 {
 }
@@ -150,7 +159,7 @@ AbstractDb::nextUserKey()
 {
    return dbNextKey(UserTable);
 }
-
+ 
 
 void 
 AbstractDb::add( const AbstractDb::Key& key, 
@@ -263,11 +272,218 @@ AbstractDb::nextRouteKey()
 }
 
 
-Data 
-AbstractDb::dbFirstKey(const AbstractDb::Table table)
-{
-   return dbNextKey(table,true/*first*/);
+
+
+void 
+AbstractDb::add( const AbstractDb::Key& key, 
+                 const AbstractDb::AclRecord& rec )
+{ 
+   assert( !key.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+      
+      short version=1;
+      assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+      
+      encodeString( s, rec.mMachine );
+
+      s.flush();
+   }
+   
+   dbWriteRecord( AclTable, key, data );
 }
+
+
+void 
+AbstractDb::eraseAcl(  const AbstractDb::Key& key )
+{  
+   dbEraseRecord (AclTable, key);
+}
+
+
+AbstractDb::AclRecord 
+AbstractDb::getAcl( const AbstractDb::Key& key) const
+{ 
+   AbstractDb::AclRecord rec;
+   Data data;
+   bool stat = dbReadRecord( AclTable, key, data );
+   if ( !stat )
+   {
+      return rec;
+   }
+   if ( data.empty() )
+   {
+      return rec;
+   }
+
+   iDataStream s(data);
+
+   short version;
+   assert( sizeof(version) == 2 );
+   s.read( (char*)(&version), sizeof(version) );
+   
+   if ( version == 1 )
+   {
+      rec.mMachine = decodeString( s );
+   }
+   else
+   {
+      // unkonwn version 
+      ErrLog( <<"Data in ACL database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+      
+   return rec;
+}
+
+
+AbstractDb::AclRecordList 
+AbstractDb::getAllAcls()
+{
+   AbstractDb::AclRecordList ret;
+   
+   AbstractDb::Key key = firstAclKey();
+   while ( !key.empty() )
+   {
+      AbstractDb::AclRecord rec = getAcl(key);
+      
+      ret.push_back(rec);
+            
+      key = nextAclKey();
+   }
+   
+   return ret;
+}
+
+
+AbstractDb::Key 
+AbstractDb::firstAclKey()
+{ 
+   return dbFirstKey(AclTable);
+}
+
+
+AbstractDb::Key 
+AbstractDb::nextAclKey()
+{ 
+   return dbNextKey(AclTable);
+}
+
+
+
+
+void 
+AbstractDb::add( const AbstractDb::Key& key, 
+                 const AbstractDb::ConfigRecord& rec )
+{ 
+   assert( !key.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+      
+      short version=1;
+      assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+      
+      encodeString( s, rec.mDomain );
+      s.write( (char*)(&rec.mTlsPort) , sizeof( rec.mTlsPort ) );
+      assert( sizeof(rec.mTlsPort) == 2 );
+
+      s.flush();
+   }
+   
+   dbWriteRecord( ConfigTable, key, data );
+}
+
+
+void 
+AbstractDb::eraseConfig(  const AbstractDb::Key& key )
+{  
+   dbEraseRecord (ConfigTable, key);
+}
+
+
+AbstractDb::ConfigRecord 
+AbstractDb::getConfig( const AbstractDb::Key& key) const
+{ 
+   AbstractDb::ConfigRecord rec;
+   Data data;
+   bool stat = dbReadRecord( ConfigTable, key, data );
+   if ( !stat )
+   {
+      return rec;
+   }
+   if ( data.empty() )
+   {
+      return rec;
+   }
+
+   iDataStream s(data);
+
+   short version;
+   assert( sizeof(version) == 2 );
+   s.read( (char*)(&version), sizeof(version) );
+   
+   if ( version == 1 )
+   {
+      rec.mDomain = decodeString( s );   
+
+      s.read( (char*)(&rec.mTlsPort), sizeof(rec.mTlsPort) ); 
+      assert( sizeof( rec.mTlsPort) == 2 );
+   }
+   else
+   {
+      // unkonwn version 
+      ErrLog( <<"Data in ACL database with unknown version " << version );
+      ErrLog( <<"record size is " << data.size() );
+   }
+      
+   return rec;
+}
+
+
+AbstractDb::ConfigRecordList 
+AbstractDb::getAllConfigs()
+{
+   AbstractDb::ConfigRecordList ret;
+   
+   AbstractDb::Key key = firstConfigKey();
+   while ( !key.empty() )
+   {
+      AbstractDb::ConfigRecord rec = getConfig(key);
+      
+      ret.push_back(rec);
+            
+      key = nextConfigKey();
+   }
+   
+   return ret;
+}
+
+
+AbstractDb::Key 
+AbstractDb::firstConfigKey()
+{ 
+   return dbFirstKey(ConfigTable);
+}
+
+
+AbstractDb::Key 
+AbstractDb::nextConfigKey()
+{ 
+   return dbNextKey(ConfigTable);
+}
+
+
+
+
+
+
+
 
 
 /* ====================================================================
