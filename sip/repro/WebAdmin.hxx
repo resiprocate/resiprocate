@@ -46,11 +46,13 @@ class WebAdmin: public HttpBase
       void buildPageOutlinePre(resip::DataStream& s);
       void buildPageOutlinePost(resip::DataStream& s);
       
-      void buildAddRouteSubPage(resip::DataStream& s);
+      void buildDomainsSubPage(resip::DataStream& s);
+      void buildAclsSubPage(resip::DataStream& s);
       void buildAddUserSubPage(resip::DataStream& s);
-      void buildShowRegsSubPage(resip::DataStream& s);
-      void buildShowRoutesSubPage(resip::DataStream& s);
       void buildShowUsersSubPage(resip::DataStream& s);
+      void buildAddRouteSubPage(resip::DataStream& s);
+      void buildShowRoutesSubPage(resip::DataStream& s);
+      void buildRegistrationsSubPage(resip::DataStream& s);
                                   
       resip::Data buildCertPage(const resip::Data& domain);
       
