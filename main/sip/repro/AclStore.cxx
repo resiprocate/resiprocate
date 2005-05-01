@@ -33,7 +33,7 @@ AclStore::add(const resip::Data& acl )
    AbstractDb::AclRecord rec;
    rec.mMachine = acl;
    
-   mDb.add( buildKey(acl), rec );
+   mDb.addAcl( buildKey(acl), rec );
 }
 
       

@@ -1,81 +1,59 @@
+#if !defined(RESIP_MYSQLDB_HXX)
+#define RESIP_MYSQLDB_HXX 
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/Uri.hxx"
+#ifdef WIN32
+#include <mysql.h>
+#else 
+#include <mysql/mysql.h>
+#endif
 
-#include "repro/ConfigStore.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "repro/AbstractDb.hxx"
 
-
-using namespace resip;
-using namespace repro;
-using namespace std;
-
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
-
-
-ConfigStore::ConfigStore(AbstractDb& db):
-   mDb(db)
-{  
-}
-
-
-ConfigStore::~ConfigStore()
+namespace resip
 {
+  class TransactionUser;
 }
 
+namespace repro
+{
+
+class MySqlDb: public AbstractDb
+{
+   public:
+      MySqlDb( const resip::Data& dbServer );
       
-void 
-ConfigStore::add(const resip::Data& domain,
-               const int tlsPort )
-{ 
-   InfoLog( << "Add config" );
-   
-   AbstractDb::ConfigRecord rec;
-   rec.mDomain = domain;
-   rec.mTlsPort = tlsPort;
-   
-   mDb.addConfig( buildKey(domain), rec );
+      virtual ~MySqlDb();
+         
+      virtual void addUser( const Key& key, const UserRecord& rec );
+      virtual void eraseUser( const Key& key );
+      virtual UserRecord getUser( const Key& key ) const;
+      virtual resip::Data getUserAuthInfo(  const Key& key ) const;
+      virtual Key firstUserKey();// return empty if no more
+      virtual Key nextUserKey(); // return empty if no more 
+
+   private:
+      // Db manipulation routines
+      virtual void dbWriteRecord( const Table table, 
+                                  const resip::Data& key, 
+                                  const resip::Data& data );
+      virtual bool dbReadRecord( const Table table, 
+                                 const resip::Data& key, 
+                                 resip::Data& data ) const; // return false if not found
+      virtual void dbEraseRecord( const Table table, 
+                                  const resip::Data& key );
+      virtual resip::Data dbNextKey( const Table table, 
+                                     bool first=true); // return empty if no
+                                                       // more  
+      MYSQL* mConn;
+      MYSQL_RES* mResult[4];
+
+      char* tableName( Table table ) const;
+      resip::Data sqlWhere( const Key& key) const;
+};
+
 }
-
-      
-AbstractDb::ConfigRecordList 
-ConfigStore::getConfigs() const
-{ 
-   return mDb.getAllConfigs();
-}
-
-
-ConfigStore::DataList 
-ConfigStore::getDomains() const
-{  
-   AbstractDb::ConfigRecordList input = getConfigs();
-   
-   DataList result;
-   result.reserve( input.size() );
-   
-   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
-        it != input.end(); it++)
-   {
-      result.push_back(it->mDomain);
-   }
-   return result;   
-}
-
-
-void 
-ConfigStore::erase(const resip::Data& domain)
-{  
-   mDb.eraseConfig( buildKey(domain) );
-}
-
-
-AbstractDb::Key 
-ConfigStore::buildKey(const resip::Data& domain ) const
-{  
-   return domain;
-}
-
+#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

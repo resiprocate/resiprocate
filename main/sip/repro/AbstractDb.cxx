@@ -63,7 +63,7 @@ AbstractDb::~AbstractDb()
 
 
 void 
-AbstractDb::add( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
+AbstractDb::addUser( const AbstractDb::Key& key, const AbstractDb::UserRecord& rec )
 {  
    assert( !key.empty() );
    
@@ -162,7 +162,7 @@ AbstractDb::nextUserKey()
  
 
 void 
-AbstractDb::add( const AbstractDb::Key& key, 
+AbstractDb::addRoute( const AbstractDb::Key& key, 
                  const AbstractDb::RouteRecord& rec )
 { 
    assert( !key.empty() );
@@ -275,7 +275,7 @@ AbstractDb::nextRouteKey()
 
 
 void 
-AbstractDb::add( const AbstractDb::Key& key, 
+AbstractDb::addAcl( const AbstractDb::Key& key, 
                  const AbstractDb::AclRecord& rec )
 { 
    assert( !key.empty() );
@@ -376,7 +376,7 @@ AbstractDb::nextAclKey()
 
 
 void 
-AbstractDb::add( const AbstractDb::Key& key, 
+AbstractDb::addConfig( const AbstractDb::Key& key, 
                  const AbstractDb::ConfigRecord& rec )
 { 
    assert( !key.empty() );

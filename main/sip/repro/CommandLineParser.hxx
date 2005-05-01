@@ -31,6 +31,7 @@ class CommandLineParser
       bool mNoRegistrar;
       bool mCertServer;
       Data mRequestProcessorChainName;
+      Data mMySqlServer;
 };
  
 }

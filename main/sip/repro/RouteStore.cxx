@@ -59,7 +59,7 @@ RouteStore::add(const resip::Data& method,
    
    mRouteOperators.push_back( route ); 
 
-   mDb.add( buildKey(method,event,matchingPattern), route.routeRecord );
+   mDb.addRoute( buildKey(method,event,matchingPattern), route.routeRecord );
 }
 
       

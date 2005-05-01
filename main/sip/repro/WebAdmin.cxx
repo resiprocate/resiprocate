@@ -137,9 +137,10 @@ WebAdmin::buildPage( const Data& uri,
                           Data::Empty, // name 
                           Data::Empty ); // email 
          dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
+         assert( !dbA1.empty() );
       }
-      // !cj! TODO -    assert( !dbA1.empty() );
 
+      assert( !dbA1.empty() );
       if ( !dbA1.empty() )
       {
          MD5Stream a1;
@@ -161,9 +162,11 @@ WebAdmin::buildPage( const Data& uri,
             return;
          }
       }
+      else
       {
          // !cj! TODO - fix this one up 
          ErrLog( << "user " << pUser << " failed creation of inital account" );
+         assert(0);
       }
    }
    

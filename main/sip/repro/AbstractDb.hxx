@@ -62,36 +62,36 @@ class AbstractDb
       typedef std::vector<ConfigRecord> ConfigRecordList;
 
       // functions for User Records 
-      virtual void add( const Key& key, const UserRecord& rec );
+      virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
-      Key firstUserKey();// return empty if no more
-      Key nextUserKey(); // return empty if no more 
+      virtual Key firstUserKey();// return empty if no more
+      virtual Key nextUserKey(); // return empty if no more 
          
       // functions for Route Records
-      virtual void add( const Key& key, const RouteRecord& rec );
+      virtual void addRoute( const Key& key, const RouteRecord& rec );
       virtual void eraseRoute(  const Key& key );
       virtual RouteRecord getRoute( const Key& key) const;
       virtual RouteRecordList getAllRoutes();
-      Key firstRouteKey();// return empty if no more
-      Key nextRouteKey(); // return empty if no more 
+      virtual Key firstRouteKey();// return empty if no more
+      virtual Key nextRouteKey(); // return empty if no more 
 
       // functions for Acl Records
-      virtual void add( const Key& key, const AclRecord& rec );
+      virtual void addAcl( const Key& key, const AclRecord& rec );
       virtual void eraseAcl(  const Key& key );
       virtual AclRecordList getAllAcls();
       virtual AclRecord getAcl( const Key& key) const;
-      Key firstAclKey();// return empty if no more
-      Key nextAclKey(); // return empty if no more 
+      virtual Key firstAclKey();// return empty if no more
+      virtual Key nextAclKey(); // return empty if no more 
 
       // functions for Config Records
-      virtual void add( const Key& key, const ConfigRecord& rec );
+      virtual void addConfig( const Key& key, const ConfigRecord& rec );
       virtual void eraseConfig(  const Key& key );
       virtual ConfigRecordList getAllConfigs();
       virtual ConfigRecord getConfig( const Key& key) const;
-      Key firstConfigKey();// return empty if no more
-      Key nextConfigKey(); // return empty if no more 
+      virtual Key firstConfigKey();// return empty if no more
+      virtual Key nextConfigKey(); // return empty if no more 
 
  
    protected:
