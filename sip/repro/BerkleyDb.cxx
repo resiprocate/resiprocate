@@ -27,6 +27,8 @@ using namespace std;
 
 BerkleyDb::BerkleyDb( char* dbName )
 { 
+   InfoLog( << "Using BerkleyDB " << dbName );
+   
    assert( MaxTable <= 4 );
    
    for (int i=0;i<MaxTable;i++)
