@@ -88,7 +88,7 @@ UserStore::addUser( const Data& username,
    rec.email = emailAddress;
    rec.forwardAddress = Data::Empty;
 
-   mDb.add( buildKey(username,domain), rec);
+   mDb.addUser( buildKey(username,domain), rec);
 }
 
 
