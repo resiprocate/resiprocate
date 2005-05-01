@@ -4,7 +4,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Message.hxx"
-
+#include <vector>
 
 namespace resip
 {
