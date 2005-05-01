@@ -120,7 +120,16 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath=".\AbstractDb.cxx">
+			</File>
+			<File
+				RelativePath=".\AclStore.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\AmIResponsible.cxx">
+			</File>
+			<File
+				RelativePath=".\BerkleyDb.cxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.cxx">
@@ -133,6 +142,9 @@
 			</File>
 			<File
 				RelativePath=".\CommandLineParser.cxx">
+			</File>
+			<File
+				RelativePath=".\ConfigStore.cxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\ConstantLocationMonkey.cxx">
@@ -180,22 +192,19 @@
 				RelativePath=".\ResponseContext.cxx">
 			</File>
 			<File
-				RelativePath=".\RouteAbstractDb.cxx">
-			</File>
-			<File
-				RelativePath=".\RouteDbMemory.cxx">
-			</File>
-			<File
 				RelativePath=".\monkeys\RouteMonkey.cxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\RouteProcessor.cxx">
 			</File>
 			<File
-				RelativePath=".\UserAbstractDb.cxx">
+				RelativePath=".\RouteStore.cxx">
 			</File>
 			<File
-				RelativePath=".\UserDb.cxx">
+				RelativePath=".\Store.cxx">
+			</File>
+			<File
+				RelativePath=".\UserStore.cxx">
 			</File>
 			<File
 				RelativePath=".\WebAdmin.cxx">
@@ -209,7 +218,16 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath=".\AbstractDb.hxx">
+			</File>
+			<File
+				RelativePath=".\AclStore.hxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\AmIResponsible.hxx">
+			</File>
+			<File
+				RelativePath=".\BerkleyDb.hxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx">
@@ -222,6 +240,9 @@
 			</File>
 			<File
 				RelativePath=".\CommandLineParser.hxx">
+			</File>
+			<File
+				RelativePath=".\ConfigStore.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\ConstantLocationMonkey.hxx">
@@ -266,22 +287,19 @@
 				RelativePath=".\ResponseContext.hxx">
 			</File>
 			<File
-				RelativePath=".\RouteAbstractDb.hxx">
-			</File>
-			<File
-				RelativePath=".\RouteDbMemory.hxx">
-			</File>
-			<File
 				RelativePath=".\monkeys\RouteMonkey.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\RouteProcessor.hxx">
 			</File>
 			<File
-				RelativePath=".\UserAbstractDb.hxx">
+				RelativePath=".\RouteStore.hxx">
 			</File>
 			<File
-				RelativePath=".\UserDb.hxx">
+				RelativePath=".\Store.hxx">
+			</File>
+			<File
+				RelativePath=".\UserStore.hxx">
 			</File>
 			<File
 				RelativePath=".\WebAdmin.hxx">
