@@ -40,6 +40,10 @@
 #include "repro/stateAgents/CertServer.hxx"
 #endif
 
+#if defined(USE_MYSQL)
+#include "repro/MySqlDb.hxx"
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace repro;
@@ -137,9 +141,21 @@ main(int argc, char** argv)
    InMemoryRegistrationDatabase regData;
    MasterProfile profile;
  
-   BerkleyDb db;
-   Store store(db);
-      
+
+   AbstractDb* db=NULL;
+#ifdef USE_MYSQL
+   if ( !args.mMySqlServer.empty() )
+   {
+      db = new MySqlDb(args.mMySqlServer);
+   }
+#endif
+   if (!db)
+   {
+      db = new BerkleyDb;
+   }
+   assert( db );
+   Store store(*db);
+
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
    
@@ -292,4 +308,6 @@ main(int argc, char** argv)
    {
       dumThread->join();
    }
+
+   delete db; db=0;
 }

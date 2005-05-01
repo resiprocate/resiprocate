@@ -36,25 +36,27 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noRegistrar = false;
    int certServer = false;
    char* reqChainName = "default";
-
+   char* mySqlServer = 0;
+   
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
-      {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
-      {"tls-domain",   't', POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
-      {"udp",          0,   POPT_ARG_INT, &udpPort, 0, "add UDP transport on specified port", "5060"},
-      {"tcp",          0,   POPT_ARG_INT, &tcpPort, 0, "add TCP transport on specified port", "5060"},
-      {"tls",          0,   POPT_ARG_INT, &tlsPort, 0, "add TLS transport on specified port", "5061"},
-      {"dtls",         0,   POPT_ARG_INT, &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
-      {"disable-v6",   0,   POPT_ARG_NONE, &disableV6, 0, "disable IPV6", 0},
-      {"disable-v4",   0,   POPT_ARG_NONE, &disableV4, 0, "disable IPV4", 0},
-      {"disable-auth",  0,   POPT_ARG_NONE, &noChallenge, 0, "disable DIGEST challenges", 0},
-      {"disable-web-auth",  0,   POPT_ARG_NONE, &noWebChallenge, 0, "disable HTTP challenges", 0},
-      {"disable-reg",  0,   POPT_ARG_NONE, &noRegistrar, 0, "disable registrar", 0},
-      {"enable-cert-server",  0,   POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
-      {"domains",     'd',  POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"log-type",     'l',  POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",    'v',  POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
+      {"mysqlServer",    'x',  POPT_ARG_STRING, &mySqlServer,  0, "enable MySQL and provide name of server", "localhost"},
+      {"udp",            0,  POPT_ARG_INT,    &udpPort, 0, "add UDP transport on specified port", "5060"},
+      {"tcp",            0,  POPT_ARG_INT,    &tcpPort, 0, "add TCP transport on specified port", "5060"},
+      {"tls",            0,  POPT_ARG_INT,    &tlsPort, 0, "add TLS transport on specified port", "5061"},
+      {"dtls",           0,  POPT_ARG_INT,    &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
+      {"disable-v6",     0,  POPT_ARG_NONE,   &disableV6, 0, "disable IPV6", 0},
+      {"disable-v4",     0,  POPT_ARG_NONE,   &disableV4, 0, "disable IPV4", 0},
+      {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
+      {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
+      {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
+      {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
+      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"cert-path",   'c',   POPT_ARG_STRING, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
-      {"reqChainName",   0,   POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
+      {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -87,6 +89,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoRegistrar = noRegistrar != 0 ;
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
+   if (mySqlServer) 
+   {
+      mMySqlServer = Data(mySqlServer);
+   }
 }
 
 resip::Uri 
