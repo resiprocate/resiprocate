@@ -42,13 +42,24 @@ OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
 endif
 
 
+MYSQL_LIBNAME :=  mysqlclient z m
+ifeq ($(USE_MYSQL),true)
+DEFINES += USE_MYSQL
+endif
+
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
 ARES_LIBDIRS := $(ROOT)/contrib/ares
 ARES_LIBNAME := ares
 ARES_DEFINES := 
 
+ifeq ($(OSTYPE),FreeBSD)
 DB42_LIBNAME := db4
 DB4CXX_LIBNAME := db4_cxx
+else
+DB42_LIBNAME := db-4.2
+DB4CXX_LIBNAME := db_cxx-4.2
+endif
+
 
 RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
