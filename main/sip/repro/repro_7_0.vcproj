@@ -112,145 +112,193 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			<File
-				RelativePath="monkeys\AmIResponsible.cxx">
+				RelativePath=".\AbstractDb.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\AmIResponsible.hxx">
+				RelativePath=".\AclStore.cxx">
 			</File>
 			<File
-				RelativePath="CommandLineParser.cxx">
+				RelativePath=".\monkeys\AmIResponsible.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\ConstantLocationMonkey.cxx">
+				RelativePath=".\BerkleyDb.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\DigestAuthenticator.cxx">
+				RelativePath=".\stateAgents\CertPublicationHandler.cxx">
 			</File>
 			<File
-				RelativePath="HttpBase.cxx">
+				RelativePath=".\stateAgents\CertServer.cxx">
 			</File>
 			<File
-				RelativePath="HttpConnection.cxx">
+				RelativePath=".\stateAgents\CertSubscriptionHandler.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\LocationServer.cxx">
+				RelativePath=".\CommandLineParser.cxx">
 			</File>
 			<File
-				RelativePath="Proxy.cxx">
+				RelativePath=".\ConfigStore.cxx">
 			</File>
 			<File
-				RelativePath="Registrar.cxx">
+				RelativePath=".\monkeys\ConstantLocationMonkey.cxx">
 			</File>
 			<File
-				RelativePath="ReproServerAuthManager.cxx">
+				RelativePath=".\monkeys\DigestAuthenticator.cxx">
 			</File>
 			<File
-				RelativePath="RequestContext.cxx">
+				RelativePath=".\HttpBase.cxx">
 			</File>
 			<File
-				RelativePath="RequestProcessor.cxx">
+				RelativePath=".\HttpConnection.cxx">
 			</File>
 			<File
-				RelativePath="RequestProcessorChain.cxx">
+				RelativePath=".\monkeys\LocationServer.cxx">
 			</File>
 			<File
-				RelativePath="ResponseContext.cxx">
+				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx">
 			</File>
 			<File
-				RelativePath="RouteAbstractDb.cxx">
+				RelativePath=".\stateAgents\PrivateKeySubscriptionHandler.cxx">
 			</File>
 			<File
-				RelativePath="RouteDbMemory.cxx">
+				RelativePath=".\Proxy.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\RouteMonkey.cxx">
+				RelativePath=".\Registrar.cxx">
 			</File>
 			<File
-				RelativePath="monkeys\RouteProcessor.cxx">
+				RelativePath=".\repro.cxx">
 			</File>
 			<File
-				RelativePath="UserAbstractDb.cxx">
+				RelativePath=".\ReproServerAuthManager.cxx">
 			</File>
 			<File
-				RelativePath="UserDb.cxx">
+				RelativePath=".\RequestContext.cxx">
 			</File>
 			<File
-				RelativePath="WebAdmin.cxx">
+				RelativePath=".\RequestProcessor.cxx">
 			</File>
 			<File
-				RelativePath="WebAdminThread.cxx">
+				RelativePath=".\RequestProcessorChain.cxx">
 			</File>
 			<File
-				RelativePath="repro.cxx">
+				RelativePath=".\ResponseContext.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RouteMonkey.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RouteProcessor.cxx">
+			</File>
+			<File
+				RelativePath=".\RouteStore.cxx">
+			</File>
+			<File
+				RelativePath=".\Store.cxx">
+			</File>
+			<File
+				RelativePath=".\UserStore.cxx">
+			</File>
+			<File
+				RelativePath=".\WebAdmin.cxx">
+			</File>
+			<File
+				RelativePath=".\WebAdminThread.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc">
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			<File
-				RelativePath="CommandLineParser.hxx">
+				RelativePath=".\AbstractDb.hxx">
 			</File>
 			<File
-				RelativePath="monkeys\ConstantLocationMonkey.hxx">
+				RelativePath=".\AclStore.hxx">
 			</File>
 			<File
-				RelativePath="monkeys\DigestAuthenticator.hxx">
+				RelativePath=".\monkeys\AmIResponsible.hxx">
 			</File>
 			<File
-				RelativePath="HttpBase.hxx">
+				RelativePath=".\BerkleyDb.hxx">
 			</File>
 			<File
-				RelativePath="HttpConnection.hxx">
+				RelativePath=".\stateAgents\CertPublicationHandler.hxx">
 			</File>
 			<File
-				RelativePath="monkeys\LocationServer.hxx">
+				RelativePath=".\stateAgents\CertServer.hxx">
 			</File>
 			<File
-				RelativePath="Proxy.hxx">
+				RelativePath=".\stateAgents\CertSubscriptionHandler.hxx">
 			</File>
 			<File
-				RelativePath="Registrar.hxx">
+				RelativePath=".\CommandLineParser.hxx">
 			</File>
 			<File
-				RelativePath="ReproServerAuthManager.hxx">
+				RelativePath=".\ConfigStore.hxx">
 			</File>
 			<File
-				RelativePath="RequestContext.hxx">
+				RelativePath=".\monkeys\ConstantLocationMonkey.hxx">
 			</File>
 			<File
-				RelativePath="RequestProcessor.hxx">
+				RelativePath=".\monkeys\DigestAuthenticator.hxx">
 			</File>
 			<File
-				RelativePath="RequestProcessorChain.hxx">
+				RelativePath=".\HttpBase.hxx">
 			</File>
 			<File
-				RelativePath="ResponseContext.hxx">
+				RelativePath=".\HttpConnection.hxx">
 			</File>
 			<File
-				RelativePath="RouteAbstractDb.hxx">
+				RelativePath=".\monkeys\LocationServer.hxx">
 			</File>
 			<File
-				RelativePath="RouteDbMemory.hxx">
+				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.hxx">
 			</File>
 			<File
-				RelativePath="monkeys\RouteMonkey.hxx">
+				RelativePath=".\stateAgents\PrivateKeySubscriptionHandler.hxx">
 			</File>
 			<File
-				RelativePath="monkeys\RouteProcessor.hxx">
+				RelativePath=".\Proxy.hxx">
 			</File>
 			<File
-				RelativePath="UserAbstractDb.hxx">
+				RelativePath=".\Registrar.hxx">
 			</File>
 			<File
-				RelativePath="UserDb.hxx">
+				RelativePath=".\ReproServerAuthManager.hxx">
 			</File>
 			<File
-				RelativePath="WebAdmin.hxx">
+				RelativePath=".\RequestContext.hxx">
 			</File>
 			<File
-				RelativePath="WebAdminThread.hxx">
+				RelativePath=".\RequestProcessor.hxx">
+			</File>
+			<File
+				RelativePath=".\RequestProcessorChain.hxx">
+			</File>
+			<File
+				RelativePath=".\ResponseContext.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RouteMonkey.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RouteProcessor.hxx">
+			</File>
+			<File
+				RelativePath=".\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\Store.hxx">
+			</File>
+			<File
+				RelativePath=".\UserStore.hxx">
+			</File>
+			<File
+				RelativePath=".\WebAdmin.hxx">
+			</File>
+			<File
+				RelativePath=".\WebAdminThread.hxx">
 			</File>
 		</Filter>
 		<Filter
