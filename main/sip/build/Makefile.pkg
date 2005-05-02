@@ -55,7 +55,14 @@ ARES_DEFINES :=
 ifeq ($(OSTYPE),FreeBSD)
 DB42_LIBNAME := db4
 DB4CXX_LIBNAME := db4_cxx
-else
+endif
+
+ifeq ($(OSTYPE),NetBSD)
+DB42_LIBNAME := db4
+DB4CXX_LIBNAME := db4_cxx
+endif
+
+ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
 endif
