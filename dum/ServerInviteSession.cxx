@@ -464,6 +464,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_ProvidedOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedOffer:
+      case UAS_OfferProvidedAnswer:
          dispatchOfferOrEarly(msg);
          break;       
       case UAS_Accepted:
