@@ -269,7 +269,11 @@ DnsUtil::getInterfaces(const Data& matching)
 
       count++;
       
+#if defined(__NetBSD__)
+      int si = sizeof(ifr->ifr_name) + ifr->ifr_addr.sa_len;
+#else
       int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
+#endif
       tl -= si;
       ptr += si;
 
