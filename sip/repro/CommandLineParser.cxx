@@ -25,7 +25,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int disableV4 = false;
    int disableV6 = false;
    char* domains = 0;
-   char* certPath = "~/.sipCerts";
+   char certPathBuf[256];
+   char* certPath = certPathBuf;
 #ifdef WIN32
       int noChallenge = true;
    int noWebChallenge = true;
@@ -37,7 +38,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int certServer = false;
    char* reqChainName = "default";
    char* mySqlServer = 0;
-   
+
+   strcpy(certPath, getenv("HOME"));
+   strcat(certPath, "/.sipCerts");
+
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
       {"log-type",     'l',  POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -54,7 +58,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
-      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "sip:example.com,sip:foo.com"},
       {"cert-path",   'c',   POPT_ARG_STRING, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       POPT_AUTOHELP
