@@ -82,18 +82,15 @@ bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
    if (mTuSelectorMode)
-   //InfoLog(<< "TuSelector::wouldAccept " << mTuSelectorMode);   
    {
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
-         if (!it->shuttingDown && it->tu->wouldAccept(usage))
+         if (!it->shuttingDown  && !it->tu->wouldAccept(usage))
          {
-            //InfoLog(<< "TuSelector::wouldAccept returning true");   
-            return true;
+            return false;
          }
       }
-      //InfoLog(<< "TuSelector::wouldAccept returning false");   
-      return false;
+      return true;
    }
    else
    {
