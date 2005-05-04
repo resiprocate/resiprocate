@@ -121,6 +121,30 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
    return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
+static int 
+verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
+{
+   char cBuf1[500];
+   char cBuf2[500];
+   X509 *pErrCert;
+   int iErr = 0;
+   int iDepth = 0;
+   pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
+   iErr = X509_STORE_CTX_get_error(pInStore);
+   iDepth =	X509_STORE_CTX_get_error_depth(pInStore);
+
+   if (NULL != pErrCert)
+      X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
+
+   sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
+   if(!iInCode)
+   {
+      memset(cBuf2, 0, sizeof(cBuf2) ); 
+      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
+   }
+ 
+   return iInCode;
+}
 
 Security::Security(const Data& directory) : mPath(directory)
 {
@@ -848,12 +872,16 @@ BaseSecurity::BaseSecurity () :
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
+   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
+    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+       verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
    assert(ret);
 }
@@ -1619,7 +1647,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    dumpAsn("identity-out-sig", sig );
    dumpAsn("identity-out-hash", computedHash );
 
-   return ret;
+   return (ret != 0);
 }
 
 
@@ -2224,7 +2252,7 @@ BaseSecurity::getCetName(X509 *cert)
     }
  
     char cname[256];
-    memset(cname, 0, sizeof cname);
+    memset(cname, 0, sizeof cname);
 
     if ((subj = X509_get_subject_name(cert)) &&
         X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
