@@ -15,9 +15,12 @@ class DnsAAAARecord : public DnsResourceRecord
       ~DnsAAAARecord() {}
 
       const struct in6_addr& v6Address() const { return mAddr; }
+      const Data& name() const { return mName; }
+      bool equal(const Data& value) const;
       
    private:
       struct in6_addr mAddr;
+      Data mName;
       
 };
 

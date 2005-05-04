@@ -25,9 +25,12 @@ class DnsCnameRecord : public DnsResourceRecord
       ~DnsCnameRecord() {}
 
       // accessors.
-      const Data& cname() const { return mName; }
+      const Data& cname() const { return mCname; }
+      const Data& name() const { return mName; }
+      bool equal(const Data&) const;
       
    private:
+      Data mCname;
       Data mName;
 };
 
