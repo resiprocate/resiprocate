@@ -61,7 +61,6 @@ check_PROGRAMS = \
 	testSipMessage \
 	testSipMessageMemory \
 	testSource \
-	testSpeed \
 	testStack \
 	testTcp \
 	testThreadIf \
@@ -118,7 +117,6 @@ testSipFrag_SOURCES = testSipFrag.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
 testSipMessage_SOURCES = testSipMessage.cxx
 testSource_SOURCES = testSource.cxx
-testSpeed_SOURCES = testSpeed.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
