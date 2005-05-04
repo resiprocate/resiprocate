@@ -279,8 +279,6 @@ TlsConnection::checkState()
          return mState;
       }
 
-      computePeerName(); // force peer name to get checked and perhaps cert loaded
-
    }
    else
    {
@@ -298,6 +296,9 @@ TlsConnection::checkState()
     
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
+
+   // force peer name to get checked and perhaps cert loaded
+   computePeerName();
 
 #endif // USE_SSL   
    return mState;
