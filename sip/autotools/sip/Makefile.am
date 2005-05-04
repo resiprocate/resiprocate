@@ -1,8 +1,9 @@
 AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = resiprocate .
-EXTRA_DIST = contrib/ares certs README.windows ReSIProcate.sln	\
-		SipIMP SipIMP-Qt SipIMPSetup ReSIProcate_7_1.sln \
+EXTRA_DIST = contrib/ares certs README.windows \
+		SipIMP SipIMPSetup \
+		ReSIProcate_7_0.sln  ReSIProcate_7_1.sln  ReSIProcate_8_0.sln \
 		sip.xcode README.autotools
 
 dist-hook:
@@ -11,7 +12,7 @@ dist-hook:
 	fi
 	echo This is a little drastic. Need to re-write to exclude control files.
 	find $(distdir)/contrib $(distdir)/certs $(distdir)/SipIMP \
-	     $(distdir)/SipIMP-Qt $(distdir)/SipIMPSetup -name CVS \
+	     $(distdir)/SipIMPSetup -name CVS \
              -o -name .cvsignore | xargs rm -rf
 
 #rpms:	dist
