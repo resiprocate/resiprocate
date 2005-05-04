@@ -8,6 +8,7 @@ extern "C"
 
 #include <set>
 #include <vector>
+#include <cassert>
 
 #ifndef WIN32
 #ifndef __CYGWIN__
@@ -20,7 +21,6 @@ extern "C"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Inserter.hxx"
-
 #include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
@@ -36,6 +36,16 @@ DnsStub::~DnsStub()
    for (set<QueryBase*>::iterator it = mQueries.begin(); it != mQueries.end(); ++it)
    {
       delete *it;
+   }
+}
+
+void DnsStub::process()
+{
+   while (mCommandFifo.messageAvailable())
+   {
+      Command* command = mCommandFifo.getNext();
+      command->execute();
+      delete command;
    }
 }
 
@@ -65,7 +75,7 @@ void DnsStub::cache(const Data& key,
    int nscount = DNS_HEADER_NSCOUNT(abuf);
    for (int i = 0; i < nscount; i++)
    {
-      aptr = createOverlay(abuf, alen, aptr, overlays);
+      aptr = createOverlay(abuf, alen, aptr, overlays, true);
    }
 
    // additional records.
@@ -111,10 +121,6 @@ void DnsStub::cacheTTL(const Data& key,
    // answers.
    int ancount = DNS_HEADER_ANCOUNT(abuf);
    if (ancount != 0) return;
-   for (int i = 0; i < ancount; i++)
-   {
-      aptr = createOverlay(abuf, alen, aptr, overlays);
-   }
    
    // name server records.
    int nscount = DNS_HEADER_NSCOUNT(abuf);
@@ -171,7 +177,8 @@ const unsigned char*
 DnsStub::createOverlay(const unsigned char* abuf,
                        const int alen,
                        const unsigned char* aptr, 
-                       vector<RROverlay>& overlays)
+                       vector<RROverlay>& overlays,
+                       bool discard)
 {
    const unsigned char* rptr = aptr;
    char* name = 0;
@@ -193,8 +200,11 @@ DnsStub::createOverlay(const unsigned char* abuf,
    }
    // rewind before handing it off to overlay.
    aptr -= len;
-   RROverlay overlay(aptr, abuf, alen);
-   overlays.push_back(overlay);
+   if (!discard)
+   {
+      RROverlay overlay(aptr, abuf, alen);
+      overlays.push_back(overlay);
+   }
    return rptr + len + RRFIXEDSZ + dlen;
 }
 
@@ -206,4 +216,21 @@ DnsStub::removeQuery(QueryBase* query)
    {
       mQueries.erase(it);
    }   
+}
+
+void DnsStub::doBlacklisting(const Data& target,
+                             const int rrType, 
+                             const int protocol, 
+                             const DataArr& targetsToBlacklist)
+{
+   mCache.blacklist(target, rrType, protocol, targetsToBlacklist);
+}
+
+void DnsStub::doRetryAfter(const Data& target, 
+                           const int rrType, 
+                           const int protocol,
+                           const int retryAfter, 
+                           const DataArr& targetsToRetryAfter)
+{
+   mCache.retryAfter(target, rrType, protocol, retryAfter, targetsToRetryAfter);
 }

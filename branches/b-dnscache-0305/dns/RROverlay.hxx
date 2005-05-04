@@ -34,6 +34,7 @@ class RROverlay
       int nameLength() const { return mNameLen; }
       int ttl() const { return mTTL; }
       int type() const { return mType; }
+      const Data& domain() const { return mDomain; }
 
    private:
       const unsigned char* mData;
@@ -43,6 +44,7 @@ class RROverlay
       int mNameLen;
       int mTTL;
       int mType; //short?
+      Data mDomain; // the domain name this RR refers to.
 };
 
 }

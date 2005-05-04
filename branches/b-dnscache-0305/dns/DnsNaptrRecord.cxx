@@ -6,6 +6,12 @@ extern "C"
 }
 #endif
 
+#ifndef __CYGWIN__
+#ifndef RRFIXEDSZ
+#define RRFIXEDSZ 10
+#endif
+#endif
+
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "RROverlay.hxx"
@@ -18,7 +24,10 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 {
    char* name = 0;
    int len = 0;
-   ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   {
+      throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+   }
    mName = name;
    free(name);
 
@@ -57,4 +66,9 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    }
    mReplacement = name;
    free(name);
+}
+
+bool DnsNaptrRecord::equal(const Data& value) const
+{
+   return mReplacement == value;
 }

@@ -8,18 +8,20 @@
 #include "resiprocate/dns/DnsNaptrRecord.hxx"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
+#include "resiprocate/dns/RRList.hxx"
 
 namespace resip
 {
-class RRList;
 class RROverlay;
 
 class RRCache
 {
    public:
+      typedef RRList::Protocol Protocol;
       typedef RRList::LruList LruListType;
       typedef RRList::Records Result;
       typedef std::vector<RROverlay>::const_iterator Itr;
+      typedef std::vector<Data> DataArr;
 
       RRCache();
       ~RRCache();
@@ -33,7 +35,9 @@ class RRCache
                     const int rrType,
                     const int status,
                     RROverlay overlay);
-      bool lookup(const Data& target, const int type, Result& records, int& status);
+      bool lookup(const Data& target, const int type, const int proto, Result& records, int& status, int& retryAfter);
+      void blacklist(const Data& target, const int rrType, const int protocol, const DataArr& targetsToBlacklist);
+      void retryAfter(const Data& target, const int rrType, const int protocol, const int retryAfter, const DataArr& targetsToRetryAfter);
 
    private:
       static const int DEFAULT_SIZE = 512;
@@ -77,9 +81,9 @@ class RRCache
       RRFactory<DnsNaptrRecord> mNaptrRecordFacotry;
       RRFactory<DnsCnameRecord> mCnameRecordFactory;
 
-      typedef std::map<int, RRFactoryBase*> FactoryMap;
+      typedef std::map<int, resip::RRFactoryBase*> FactoryMap;
       FactoryMap  mFactoryMap;
-
+      
       int mUserDefinedTTL; // in minutes
       unsigned int mSize;
 };
