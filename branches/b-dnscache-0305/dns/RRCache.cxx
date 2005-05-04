@@ -25,10 +25,13 @@ extern "C"
 
 #include <set>
 #include <vector>
+#include <list>
+#include <map>
 #include <cassert>
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/dns/RRFactory.hxx"
 #include "resiprocate/dns/RROverlay.hxx"
 #include "resiprocate/dns/RRFactory.hxx"
 #include "resiprocate/dns/DnsResourceRecord.hxx"
@@ -37,7 +40,6 @@ extern "C"
 #include "resiprocate/dns/DnsNaptrRecord.hxx"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/dns/RRList.hxx"
 #include "resiprocate/dns/RRCache.hxx"
 
 using namespace resip;
@@ -68,9 +70,10 @@ void RRCache::updateCache(const Data& target,
                           Itr begin, 
                           Itr end)
 {
+   Data domain = (*begin).domain();
    FactoryMap::iterator it = mFactoryMap.find(rrType);
    assert(it != mFactoryMap.end());
-   RRList* key = new RRList(target, rrType);         
+   RRList* key = new RRList(domain, rrType);         
    RRSet::iterator lb = mRRSet.lower_bound(key);
    if (lb != mRRSet.end() &&
        !(mRRSet.key_comp()(key, *lb)))
@@ -80,8 +83,8 @@ void RRCache::updateCache(const Data& target,
    }
    else
    {
-      RRList* val = new RRList(it->second, target, rrType, begin, end, mUserDefinedTTL);
-      mRRSet.insert(lb, val);
+      RRList* val = new RRList(it->second, domain, rrType, begin, end, mUserDefinedTTL);
+      mRRSet.insert(val);
       mLruHead->push_back(val);
       purge();
    }
@@ -100,13 +103,26 @@ void RRCache::cacheTTL(const Data& target,
       ttl = ttl < mUserDefinedTTL? ttl : mUserDefinedTTL;
    }
    RRList* val = new RRList(target, rrType, ttl, status);
+   RRSet::iterator it = mRRSet.find(val);
+   if (it != mRRSet.end())
+   {
+      (*it)->remove();
+      delete *it;
+      mRRSet.erase(it);
+   }
    mRRSet.insert(val);
    mLruHead->push_back(val);
    purge();
 }
 
-bool RRCache::lookup(const Data& target, const int type, Result& records, int& status)
+bool RRCache::lookup(const Data& target, 
+                     const int type, 
+                     const int protocol,
+                     Result& records, 
+                     int& status,
+                     int& retryAfter)
 {
+   retryAfter = 0;
    records.empty();
    status = 0;
    RRList* key = new RRList(target, type);
@@ -126,12 +142,49 @@ bool RRCache::lookup(const Data& target, const int type, Result& records, int& s
       }
       else
       {
-         touch(*it);
-         records = (*it)->records();
-         status = (*it)->status();
-         return true;
+         bool allBlacklisted = false;
+         records = (*it)->records(protocol, retryAfter, allBlacklisted);
+         if (allBlacklisted)
+         {
+            assert(records.empty());
+            (*it)->remove();
+            delete *it;
+            mRRSet.erase(it);
+            return false;
+         }
+         else
+         {
+            status = (*it)->status();
+            touch(*it);
+            return true;
+         }
       }
    }
+}
+
+void RRCache::blacklist(const Data& target, 
+                        const int type,
+                        const int protocol,
+                        const DataArr& targetsToBlacklist)
+{
+   RRList* key = new RRList(target, type);
+   RRSet::iterator it = mRRSet.find(key);
+   delete key;
+   if (it == mRRSet.end()) return;
+   (*it)->blacklist(protocol, targetsToBlacklist);
+}
+
+void RRCache::retryAfter(const Data& target,
+                         const int type,
+                         const int protocol,
+                         const int retryAfter,
+                         const DataArr& targetsToRetryAfter)
+{
+   RRList* key = new RRList(target, type);
+   RRSet::iterator it = mRRSet.find(key);
+   delete key;
+   if (it == mRRSet.end()) return;
+   (*it)->retryAfter(protocol, retryAfter, targetsToRetryAfter);
 }
 
 void RRCache::touch(RRList* node)
@@ -144,6 +197,7 @@ void RRCache::cleanup()
 {
    for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
    {
+      (*it)->remove();
       delete *it;
    }
    mRRSet.clear();

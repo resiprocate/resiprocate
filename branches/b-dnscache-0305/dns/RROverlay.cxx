@@ -38,14 +38,15 @@ RROverlay::RROverlay(const unsigned char *aptr,
    {
       throw OverlayException("Failed parse of RR", __FILE__, __LINE__);
    }
+   mDomain = name;
    aptr += len;
    mNameLen = len;
+   free(name);
       
    // Make sure there is enough data after the RR name for the fixed
    // part of the RR.
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
-      free(name);
       throw OverlayException("Failed parse of RR", __FILE__, __LINE__);
    }
    
@@ -58,13 +59,11 @@ RROverlay::RROverlay(const unsigned char *aptr,
    aptr += RRFIXEDSZ;
    if (aptr + mDataLen > abuf + alen)
    {
-      free(name);
       throw OverlayException("Failed parse of RR", __FILE__, __LINE__);
    }
 
    mData = aptr;
    mMsgLen = alen;
    mMsg = abuf;
-   free(name);
    aptr += mDataLen;
 }

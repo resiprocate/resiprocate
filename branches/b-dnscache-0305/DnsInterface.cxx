@@ -155,6 +155,7 @@ DnsInterface::buildFdSet(FdSet& fdset)
 void 
 DnsInterface::process(FdSet& fdset)
 {
+   mDnsStub->process();
    mDnsProvider->process(fdset.read, fdset.write);
 }
 

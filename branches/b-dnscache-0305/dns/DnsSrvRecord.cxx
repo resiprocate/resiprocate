@@ -24,7 +24,10 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
 {
    char* name = 0;
    int len = 0;
-   ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   {
+      throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
+   }
    mName = name;
    free(name);
 
@@ -38,4 +41,9 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    }
    mTarget = name;
    free(name);
+}
+
+bool DnsSrvRecord::equal(const Data& value) const
+{
+   return value == mTarget;
 }
