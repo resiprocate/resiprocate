@@ -35,6 +35,8 @@ class DnsResult : public DnsResultSink
          Destroyed  // the associated transaction has been deleted
       } Type;
 
+      typedef std::vector<Data> DataVector;
+
       // Starts a lookup.  Has the rules for determining the transport
       // from a uri as per rfc3263 and then does a NAPTR lookup or an A
       // lookup depending on the uri
@@ -54,6 +56,9 @@ class DnsResult : public DnsResultSink
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
       void destroy();
+
+      void blacklist(const Data& target, const DataVector& list);
+      void retryAfter(const Data& target, const int retryAfter, const DataVector& list);
       
       // Used to store a NAPTR result
       class NAPTR

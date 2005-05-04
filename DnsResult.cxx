@@ -131,7 +131,6 @@ DnsResult::next()
    Tuple next = mResults.front();
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
-   if (mResults.empty()) transition(Finished);
    return next;
 }
 
@@ -139,7 +138,7 @@ void
 DnsResult::lookup(const Uri& uri)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
-   int type = this->mType;
+   //int type = this->mType;
    
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mSips = (uri.scheme() == Symbols::Sips);
@@ -179,7 +178,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               mDns.lookup<RR_SRV>("_sips._udp." + mTarget, this);
+               mDns.lookup<RR_SRV>("_sips._udp." + mTarget, Protocol::Sip, this);
             }
             else
             {
@@ -191,7 +190,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
+               mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip,  this);
             }
          }
          else
@@ -207,22 +206,22 @@ DnsResult::lookup(const Uri& uri)
             {
                case TLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
-                  mDns.lookup<RR_SRV>("_sip._tls." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._tls." + mTarget, Protocol::Sip, this);
                   break;
                case DTLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
-                  mDns.lookup<RR_SRV>("_sip._dtls." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._dtls." + mTarget, Protocol::Sip, this);
                   break;
                case TCP:
                   mSRVCount++;
-                  mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, Protocol::Sip, this);
                   break;
                case SCTP:
                case DCCP:
                case UDP:
                default: //fall through to UDP for unimplemented & unknown
                   mSRVCount++;
-                  mDns.lookup<RR_SRV>("_sip._udp." + mTarget, this);
+                  mDns.lookup<RR_SRV>("_sip._udp." + mTarget, Protocol::Sip, this);
             }
          }
       }
@@ -265,9 +264,19 @@ DnsResult::lookup(const Uri& uri)
       }
       else // do NAPTR
       {
-         mDns.lookup<RR_NAPTR>(mTarget, this); // for current target
+         mDns.lookup<RR_NAPTR>(mTarget, Protocol::Sip, this); // for current target
       }
    }
+}
+
+void DnsResult::blacklist(const Data& target, const DataVector& list)
+{
+   mDns.blacklist<RR_A>(target, Protocol::Sip, list);
+}
+
+void DnsResult::retryAfter(const Data& target, const int retryAfter, const DataVector& list)
+{
+   mDns.retryAfter<RR_A>(target, Protocol::Sip, retryAfter, list);
 }
 
 void DnsResult::lookupHost(const Data& target)
@@ -277,15 +286,15 @@ void DnsResult::lookupHost(const Data& target)
 #ifdef USE_IPV6
       DebugLog(<< "Doing host (AAAA) lookup: " << target);
       mPassHostFromAAAAtoA = target;
-      mDns.lookup<RR_AAAA>(target, this);
+      mDns.lookup<RR_AAAA>(target, Protocol::Sip, this);
 #else
       assert(0);
-      mDns.lookup<RR_A>(target, this);
+      mDns.lookup<RR_A>(target, Protocol::Sip, this);
 #endif
    }
    else if (mInterface.isSupported(mTransport, V4))
    {
-      mDns.lookup<RR_A>(target, this);
+      mDns.lookup<RR_A>(target, Protocol::Sip, this);
    }
    else
    {
@@ -891,13 +900,21 @@ DnsResult::primeResults()
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
          if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
+
          {
+
             lookupHost(next.target);
+
          }
+
          else
+
          {
+
             assert(0);
+
             mHandler->handle(this);
+
          }
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
@@ -913,7 +930,9 @@ DnsResult::primeResults()
    // Either we are finished or there are results primed
    assert(mType == Finished || 
           mType == Pending || 
-          (mType == Available && !mResults.empty()));
+          mType == Available
+          //(mType == Available && !mResults.empty())
+      );
 }
 
 // implement the selection algorithm from rfc2782 (SRV records)
@@ -1557,7 +1576,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       {
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
-         Tuple tuple(addr, mPort, mTransport, mTarget);
+         //Tuple tuple(addr, mPort, mTransport, mTarget);
+         Tuple tuple(addr, mPort, mTransport, it->name());
          StackLog (<< "Adding " << tuple << " to result set");
          mResults.push_back(tuple);
       }
@@ -1622,7 +1642,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       }
       else 
       {
-         transition(Available);
+         if (mSRVResults.empty())
+         {
+            transition(Available);
+         }
+         else
+         {
+            mType = Available;
+         }
       }
       if (changed) mHandler->handle(this);
    }
@@ -1658,7 +1685,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    {
       StackLog (<< "Failed async dns query: " << result.msg);
    }
-   mDns.lookup<RR_A>(mPassHostFromAAAAtoA, this);
+   mDns.lookup<RR_A>(mPassHostFromAAAAtoA, Protocol::Sip, this);
 #else
 	assert(0);
 #endif
@@ -1832,7 +1859,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       {
          transition(Pending);
          mSRVCount++;
-         mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, this);
+         mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
       }
    }
    else
@@ -1860,7 +1887,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          }
 
          mSRVCount++;
-         mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
+         mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
       }
       else
       {
@@ -1868,17 +1895,17 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          int count = mSRVCount;
          if (mInterface.isSupportedProtocol(TLS))
          {
-            mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
             --count;
          }
          if (mInterface.isSupportedProtocol(TCP))
          {
-            mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, Protocol::Sip, this);
             --count;
          }
          if (mInterface.isSupportedProtocol(UDP))
          {
-            mDns.lookup<RR_SRV>("_sip._udp." + mTarget, this);
+            mDns.lookup<RR_SRV>("_sip._udp." + mTarget, Protocol::Sip, this);
             --count;
          }
          assert(0==count);

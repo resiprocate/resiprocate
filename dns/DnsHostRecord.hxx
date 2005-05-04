@@ -16,9 +16,12 @@ class DnsHostRecord : public DnsResourceRecord
       // accessors.
       Data host() const;
       in_addr addr() const { return mAddr; }
+      const Data& name() const { return mName; }
+      bool equal(const Data& value) const;
       
    private:
       in_addr mAddr;
+      Data mName;
 };
 
 }
