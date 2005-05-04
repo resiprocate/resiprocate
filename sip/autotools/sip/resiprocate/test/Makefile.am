@@ -23,7 +23,6 @@ noinst_HEADERS = \
 LDADD = libtestsupport.a ../libresiprocate.la
 check_PROGRAMS = \
 	testThreads \
-	testSrv \
 	SipTortureTests \
 	testGperfHash \
 	test1 \
@@ -79,7 +78,6 @@ SipTortureTests_SOURCES = SipTortureTests.cxx
 #testDnsResolver_SOURCES = testDnsResolver.cxx
 #testLockStep_SOURCES = testLockStep.cxx
 #testSipStack1_SOURCES = testSipStack1.cxx
-testSrv_SOURCES = testSrv.cxx
 limpc_SOURCES = limpc.cxx
 test1_SOURCES = test1.cxx
 test2_SOURCES = test2.cxx
