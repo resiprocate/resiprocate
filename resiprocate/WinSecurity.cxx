@@ -18,8 +18,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-int verifyCallback(int iInCode, X509_STORE_CTX *pInStore);
-
 #include <windows.h>
 #include <wincrypt.h>
 
@@ -27,8 +25,6 @@ void
 WinSecurity::preload()
 {
    HCERTSTORE storeHandle = NULL;
-
-   X509_STORE_set_verify_cb_func(mRootCerts, verifyCallback);
 
    getCerts(WinSecurity::ROOT_CA_STORE);
    //getCerts(WinSecurity::CA_STORE);
@@ -159,30 +155,6 @@ WinSecurity::getCerts(MsCertStoreType eType)
    closeCertifStore(storeHandle);
 }
 
-int 
-verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
-{
-   char cBuf1[500];
-   char cBuf2[500];
-   X509 *pErrCert;
-   int iErr = 0;
-   int iDepth = 0;
-   pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
-   iErr = X509_STORE_CTX_get_error(pInStore);
-   iDepth =	X509_STORE_CTX_get_error_depth(pInStore);
-
-   if (NULL != pErrCert)
-      X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
-
-   sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
-   if(!iInCode)
-   {
-      memset(cBuf2, 0, sizeof(cBuf2) ); 
-      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
-   }
- 
-   return iInCode;
-}
 /*
   void 
   WinSecurity::getCredentials(MsCertStoreType eType)
