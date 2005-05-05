@@ -18,54 +18,78 @@ noinst_HEADERS = \
 	testIM.hxx \
 	InviteServer.hxx \
 	Registrar.hxx \
-	TestSupport.hxx
+	TestSupport.hxx \
+	Transceiver.hxx
+
+# The following files (.cxx) are not included as SOURCES
+# anywhere in this makefile:
+# 
+# makeSelfCert (I know this is wrong)
+#
+# lg md5 test1 test2 testAor testBlast testConnectionBase
+# testConvertRaw testCorruption testDigestAuthentication2
+# testExternalBodyContents testForce testGperfHash
+# testHack testHash testHashCasen testHeaderFieldValueList
+# testId testIdentity testInserter testMacSecurity
+# testMsgHeaderDiagram testNameAddrParamExclusions
+# testNonInviteClientTx testNonInviteServerTx
+# testParseNameAddr testParseUtil testSipStackInvite
+# testSource testTlsConnection testTransportSelector
+# testTypes Transceiver
 
 LDADD = libtestsupport.a ../libresiprocate.la
 check_PROGRAMS = \
-	testThreads \
 	SipTortureTests \
-	testGperfHash \
-	test1 \
-	test2 \
+	test503Generator \
 	testApplicationSip \
+	testAppTimer \
 	testClient \
 	testCoders \
-	testConvertRaw \
 	testCountStream \
 	testData \
+	testDataPerformance \
 	testDataStream \
 	testDigestAuthentication \
 	testDns \
+	testDnsUtil \
 	testEmbedded \
 	testEmptyHeader \
+	testExternalLogger \
 	testFifo \
-	testForce \
+	testFileSystem \
 	testIM \
+	testIntrusiveList \
+	testLockStep \
 	testLogger \
+	testMem \
 	testMessageWaiting \
 	testMultipartMixedContents \
 	testMultipartRelated \
-	testHack \
-	testHash \
-	testMsgHeaderDiagram \
 	testParseBuffer \
 	testParserCategories \
-	testParseNameAddr \
+	testPidf \
+	testPksc7 \
 	testPlainContents \
 	testRandomHex \
 	testResponses \
+	testRlmi \
+	testRSP-2 \
 	testSdp \
+	testSelect \
+	testSelectInterruptor \
 	testServer \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
-	testSource \
+	testSipStack1 \
 	testStack \
 	testTcp \
 	testThreadIf \
 	testTime \
 	testTimer \
 	testTransactionFSM \
+	testTuple \
+	testTypedef \
 	testUdp \
 	testUri \
 	testXMLCursor 
@@ -74,55 +98,58 @@ bin_PROGRAMS = limpc testTcp testDataPerformance
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
-#lg_SOURCES = lg.cxx
-#testDnsResolver_SOURCES = testDnsResolver.cxx
-#testLockStep_SOURCES = testLockStep.cxx
-#testSipStack1_SOURCES = testSipStack1.cxx
 limpc_SOURCES = limpc.cxx
-test1_SOURCES = test1.cxx
-test2_SOURCES = test2.cxx
-testGperfHash_SOURCES = testGperfHash.cxx
+test503Generator_SOURCES = test503Generator.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
+testAppTimer_SOURCES = testAppTimer.cxx
 testClient_SOURCES = testClient.cxx
 testCoders_SOURCES = testCoders.cxx
-testConvertRaw_SOURCES = testConvertRaw.cxx
 testCountStream_SOURCES = testCountStream.cxx
+testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
-testData_SOURCES = testData.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
 testDns_SOURCES = testDns.cxx
+testDnsUtil_SOURCES = testDnsUtil.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
+testExternalLogger_SOURCES = testExternalLogger.cxx
 testFifo_SOURCES = 	testFifo.cxx
-testForce_SOURCES = 	testForce.cxx
+testFileSystem_SOURCES = testFileSystem.cxx
 testIM_SOURCES = testIM.cxx
+testIntrusiveList_SOURCES = testIntrusiveList.cxx
+testLockStep_SOURCES = testLockStep.cxx
 testLogger_SOURCES = testLogger.cxx
+testMem_SOURCES = testMem.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
 testMultipartRelated_SOURCES = testMultipartRelated.cxx
-testHack_SOURCES = testHack.cxx
-testHash_SOURCES = testHash.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
-testParseNameAddr_SOURCES = testParseNameAddr.cxx
 testParserCategories_SOURCES = testParserCategories.cxx
+testPidf_SOURCES = testPidf.cxx
+testPksc7_SOURCES = testPksc7.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testResponses_SOURCES = testResponses.cxx
+testRlmi_SOURCES = testRlmi.cxx
+testRSP_2_SOURCES = testRSP-2.cxx
 testSdp_SOURCES = testSdp.cxx
+testSelect_SOURCES = testSelect.cxx
+testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
 testServer_SOURCES = testServer.cxx
 testSipFrag_SOURCES = testSipFrag.cxx
-testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
 testSipMessage_SOURCES = testSipMessage.cxx
-testSource_SOURCES = testSource.cxx
+testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
+testSipStack1_SOURCES = testSipStack1.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testTime_SOURCES = testTime.cxx
 testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
+testTuple_SOURCES = testTuple.cxx
+testTypedef_SOURCES = testTypedef.cxx
 testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
-testMsgHeaderDiagram_SOURCES = testMsgHeaderDiagram.cxx
 
