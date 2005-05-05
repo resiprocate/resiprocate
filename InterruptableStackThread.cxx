@@ -1,4 +1,4 @@
-#include "resiprocate/NonPollingStackThread.hxx"
+#include "resiprocate/InterruptableStackThread.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -7,18 +7,18 @@
 
 using namespace resip;
 
-NonPollingStackThread::NonPollingStackThread(SipStack& stack, SelectInterruptor& si)
+InterruptableStackThread::InterruptableStackThread(SipStack& stack, SelectInterruptor& si)
    : mStack(stack),
      mSelectInterruptor(si)
 {}
 
-NonPollingStackThread::~NonPollingStackThread()
+InterruptableStackThread::~InterruptableStackThread()
 {
-   //InfoLog (<< "NonPollingStackThread::~NonPollingStackThread()");
+   //InfoLog (<< "InterruptableStackThread::~InterruptableStackThread()");
 }
 
 void
-NonPollingStackThread::thread()
+InterruptableStackThread::thread()
 {
    while (!isShutdown())
    {
@@ -48,11 +48,11 @@ NonPollingStackThread::thread()
 }
 
 void
-NonPollingStackThread::buildFdSet(FdSet& fdset)
+InterruptableStackThread::buildFdSet(FdSet& fdset)
 {}
 
 unsigned int
-NonPollingStackThread::getTimeTillNextProcessMS() const
+InterruptableStackThread::getTimeTillNextProcessMS() const
 {
    //.dcm. --- eventually make infinite
    return 10000;   
