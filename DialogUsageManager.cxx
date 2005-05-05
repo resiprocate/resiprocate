@@ -613,9 +613,17 @@ DialogUsageManager::send(SipMessage& msg)
          msg.header(h_Vias).front().param(p_branch).reset();
       }
 
-      if (msg.exists(h_Vias) && !userProfile->getRportEnabled())
+      if (msg.exists(h_Vias))
       {
-         msg.header(h_Vias).front().remove(p_rport);
+         if(!userProfile->getRportEnabled())
+         {
+            msg.header(h_Vias).front().remove(p_rport);
+         }
+         int iFixedTransportPort = userProfile->getFixedTransportPort();
+         if(iFixedTransportPort != 0)
+         {
+            msg.header(h_Vias).front().sentPort() = iFixedTransportPort;
+         }
       }
 
       if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
