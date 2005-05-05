@@ -619,10 +619,10 @@ DialogUsageManager::send(SipMessage& msg)
          {
             msg.header(h_Vias).front().remove(p_rport);
          }
-         int iFixedTransportPort = userProfile->getFixedTransportPort();
-         if(iFixedTransportPort != 0)
+         int fixedTransportPort = userProfile->getFixedTransportPort();
+         if(fixedTransportPort != 0)
          {
-            msg.header(h_Vias).front().sentPort() = iFixedTransportPort;
+            msg.header(h_Vias).front().sentPort() = fixedTransportPort;
          }
       }
 
