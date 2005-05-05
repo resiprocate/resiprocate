@@ -109,6 +109,16 @@ class Profile
       virtual void setKeepAliveTime(int keepAliveTime);
       virtual int getKeepAliveTime() const;      
 
+      //If set dum will provide a port in the via for requests sent down to the stack.  This
+      //will tell the transport selector to only look at those transports using this port.
+      //Default is 0 (Disabled).
+      //WARNING:  Setting this can cause undesirable behaviour in the case when you want
+      //          DNS entries to decided your transport and you are supporting TLS.
+      //          For example: if you add UDP:5060, TCP:5060 and TLS:5061 and setFixedTransportPort 
+      //          to 5060 - then the TLS transport cannot be used.
+      virtual void setFixedTransportPort(int fixedTransportPort);
+      virtual int getFixedTransportPort() const;
+
    private:
       // !slg! - should we provide a mechanism to clear the mHasxxxxx members to re-enable fall through after setting?
       bool mHasDefaultRegistrationExpires;
@@ -155,6 +165,9 @@ class Profile
       
       bool mHasKeepAliveTime;
       int  mKeepAliveTime;
+
+      bool mHasFixedTransportPort;
+      int  mFixedTransportPort;
       
       Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
