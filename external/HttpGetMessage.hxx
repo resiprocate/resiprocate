@@ -2,11 +2,13 @@
 #define RESIP_HttpGetMessage_hxx 
 
 #include "resiprocate/Message.hxx"
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
 
-class HttpGetMessage : public TransactionMessage
+class HttpGetMessage : public Message
 {
    public:
       HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
@@ -17,13 +19,13 @@ class HttpGetMessage : public TransactionMessage
       const Data& tid() const { return mTid; } //replace w/ act
 
       virtual Data brief() const;
-      virtual Message* clone() const { return new HttpGetMessage(mType, tu); }
+      virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
    private:
+      Data mTid;
       bool mSuccess;
       Data mBody;
       Mime mType;
-      Data mTid;
 };
  
 }

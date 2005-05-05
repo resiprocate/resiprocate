@@ -1,4 +1,4 @@
-#include "resiprocate/HttpGetMessage.hxx"
+#include "resiprocate/external/HttpGetMessage.hxx"
 
 using namespace resip;
 
@@ -6,8 +6,8 @@ using namespace resip;
 HttpGetMessage::HttpGetMessage(const Data& tid, 
                                bool success, 
                                const Data& body,
-                               const Mime& type)) :
-   mTransactionId(tid),
+                               const Mime& type) :
+   mTid(tid),
    mSuccess(success),
    mBody(body),
    mType(type)
@@ -23,11 +23,11 @@ HttpGetMessage::brief() const
 std::ostream& 
 HttpGetMessage::encode(std::ostream& strm) const
 {
-   return strm << brief() << mTransactionId; 
+   return strm << brief() << mTid; 
 }
 
 Message* 
 HttpGetMessage::clone() const 
 { 
-   return new HttpGetMessage(mTid, mSuccess, mX509Blob); 
+   return new HttpGetMessage(mTid, mSuccess, mBody, mType); 
 }
