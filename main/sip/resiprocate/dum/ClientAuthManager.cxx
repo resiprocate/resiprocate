@@ -199,9 +199,9 @@ ClientAuthManager::addAuthentication(SipMessage& request)
            it != authState.wwwCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
-         request.header(h_Authorizations).push_back( Helper::makeChallengeResponseAuthWithA1(request,
+         request.header(h_Authorizations).push_back( Helper::makeChallengeResponseAuth(request,
                                                                                              it->second.user,
-                                                                                             it->second.passwordHashA1,
+                                                                                             it->second.password,
                                                                                              it->first,
                                                                                              authState.cnonce, 
                                                                                              authState.cnonceCount,
@@ -211,9 +211,9 @@ ClientAuthManager::addAuthentication(SipMessage& request)
            it != authState.proxyCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
-         request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuthWithA1(request,
+         request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuth(request,
                                                                                                  it->second.user,
-                                                                                                 it->second.passwordHashA1,
+                                                                                                 it->second.password,
                                                                                                  it->first,
                                                                                                  authState.cnonce, 
                                                                                                  authState.cnonceCount,
