@@ -169,12 +169,12 @@ Random::getRandom(unsigned int len)
      initialize();
    }
    assert( mIsInitialized == true );
-   assert(len < 512);
+   assert(len < Random::maxLength+1);
    
    union 
    {
-         char cbuf[512];
-         unsigned int  ibuf[512/sizeof(int)];
+         char cbuf[Random::maxLength+1];
+         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
    };
    
    for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
@@ -192,12 +192,12 @@ Random::getCryptoRandom(unsigned int len)
      initialize();
    }
    assert( mIsInitialized == true );
-   assert(len < 512);
+   assert(len < Random::maxLength+1);
    
    union 
    {
-         char cbuf[512];
-         unsigned int  ibuf[512/sizeof(int)];
+         char cbuf[Random::maxLength+1];
+         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
    };
    
    for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
