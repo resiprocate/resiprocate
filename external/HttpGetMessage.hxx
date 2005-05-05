@@ -9,10 +9,11 @@ namespace resip
 class HttpGetMessage : public TransactionMessage
 {
    public:
-      HttpGetMessage(const Data& tid, bool success, const Data& x509);
+      HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
 
       bool success() const { return mSuccess; }
-      const Data& getX509Blob() const { return mX509Blob; }
+      const Data& getBodyData() const { return mBody; }
+      const Mime& getType() const {return mType;}
       const Data& tid() const { return mTid; } //replace w/ act
 
       virtual Data brief() const;
@@ -20,7 +21,8 @@ class HttpGetMessage : public TransactionMessage
       virtual std::ostream& encode(std::ostream& strm) const;
    private:
       bool mSuccess;
-      Data mX509Blob;
+      Data mBody;
+      Mime mType;
       Data mTid;
 };
  
