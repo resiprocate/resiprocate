@@ -54,6 +54,9 @@ Profile::Profile(Profile *baseProfile) :
 
       mHasKeepAliveTime = true;
       mKeepAliveTime = 30;      // 30 seconds
+
+      mHasFixedTransportPort = true;
+      mFixedTransportPort = 0;
    }
    else
    {
@@ -72,6 +75,7 @@ Profile::Profile(Profile *baseProfile) :
       mHasUserAgent = false;
       mHasOverrideHostPort = false;
       mHasKeepAliveTime = false;
+      mHasFixedTransportPort = false;
    }
 }
 
@@ -395,6 +399,24 @@ Profile::getKeepAliveTime() const
        return mBaseProfile->getKeepAliveTime();
    }
    return mKeepAliveTime;
+}
+
+void 
+Profile::setFixedTransportPort(int fixedTransportPort)
+{
+   mFixedTransportPort = fixedTransportPort;
+   mHasFixedTransportPort = true;
+}
+
+int 
+Profile::getFixedTransportPort() const
+{
+   // Fall through seting (if required)
+   if(!mHasFixedTransportPort && mBaseProfile)
+   {
+       return mBaseProfile->getFixedTransportPort();
+   }
+   return mFixedTransportPort;
 }
 
    
