@@ -38,7 +38,7 @@ MacSecurity::openSystemCertStore(const Data& name)
    // Currently we only search for certificates in the
    // default key chain. Later when we support more we can
    // enable it here.
-   if (name != NULL)
+   if (!name.empty())
    {
       ErrLog( << "Certificate store " << name << " unsupported");
       assert(0);
@@ -78,7 +78,7 @@ void
 MacSecurity::getCerts()
 {
    SecKeychainSearchRef searchReference = NULL;
-   searchReference = (SecKeychainSearchRef) openSystemCertStore(NULL);
+   searchReference = (SecKeychainSearchRef) openSystemCertStore(Data());
 
    // nothing to do, error already reported
    if (searchReference == NULL)
