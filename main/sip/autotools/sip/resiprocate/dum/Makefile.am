@@ -20,14 +20,16 @@ libresipdum_la_SOURCES = \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
 	DefaultServerReferHandler.cxx \
+	DestroyUsage.cxx \
 	Dialog.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \
 	DialogSetId.cxx \
 	DialogUsage.cxx \
 	DialogUsageManager.cxx \
+	DumProcessHandler.cxx \
+	DumThread.cxx \
 	DumTimeout.cxx \
-	Handle.cxx \
 	Handled.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
@@ -35,7 +37,11 @@ libresipdum_la_SOURCES = \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
 	InviteSessionHandler.cxx \
+	KeepAliveManager.cxx \
+	KeepAliveTimeout.cxx \
+	MasterProfile.cxx \
 	MergedRequestKey.cxx \
+	NetworkAssociation.cxx \
 	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
 	PagerMessageCreator.cxx \
@@ -53,8 +59,82 @@ libresipdum_la_SOURCES = \
 	SubscriptionCreator.cxx \
 	SubscriptionHandler.cxx \
 	SubscriptionState.cxx \
-	UInt64Hash.cxx 
+	UInt64Hash.cxx \
+	UserAuthInfo.cxx \
+	UserProfile.cxx
 
+
+resipdum_include_HEADERS = \
+	AppDialog.hxx \
+	AppDialogSetFactory.hxx \
+	AppDialogSet.hxx \
+	BaseCreator.hxx \
+	BaseSubscription.hxx \
+	BaseUsage.hxx \
+	ClientAuthManager.hxx \
+	ClientInviteSession.hxx \
+	ClientOutOfDialogReq.hxx \
+	ClientPagerMessage.hxx \
+	ClientPublication.hxx \
+	ClientRegistration.hxx \
+	ClientSubscription.hxx \
+	DefaultServerReferHandler.hxx \
+	DestroyUsage.hxx \
+	Dialog.hxx \
+	DialogId.hxx \
+	DialogSetHandler.hxx \
+	DialogSet.hxx \
+	DialogSetId.hxx \
+	DialogUsage.hxx \
+	DialogUsageManager.hxx \
+	DumException.hxx \
+	DumProcessHandler.hxx \
+	DumShutdownHandler.hxx \
+	DumThread.hxx \
+	DumTimeout.hxx \
+	Handled.hxx \
+	HandleException.hxx \
+	Handle.hxx \
+	HandleManager.hxx \
+	Handles.hxx \
+	InMemoryRegistrationDatabase.hxx \
+	InviteSessionCreator.hxx \
+	InviteSessionHandler.hxx \
+	InviteSession.hxx \
+	KeepAliveManager.hxx \
+	KeepAliveTimeout.hxx \
+	MasterProfile.hxx \
+	MergedRequestKey.hxx \
+	NetworkAssociation.hxx \
+	NonDialogUsage.hxx \
+	OutOfDialogHandler.hxx \
+	OutOfDialogReqCreator.hxx \
+	PagerMessageCreator.hxx \
+	PagerMessageHandler.hxx \
+	Profile.hxx \
+	PublicationCreator.hxx \
+	PublicationHandler.hxx \
+	RedirectHandler.hxx \
+	RedirectManager.hxx \
+	RefCountedDestroyer.hxx \
+	RegistrationCreator.hxx \
+	RegistrationHandler.hxx \
+	RegistrationPersistenceManager.hxx \
+	ServerAuthManager.hxx \
+	ServerInviteSession.hxx \
+	ServerOutOfDialogReq.hxx \
+	ServerPagerMessage.hxx \
+	ServerPublication.hxx \
+	ServerRegistration.hxx \
+	ServerSubscription.hxx \
+	SubscriptionCreator.hxx \
+	SubscriptionHandler.hxx \
+	SubscriptionPersistenceManager.hxx \
+	SubscriptionState.hxx \
+	UInt64Hash.hxx \
+	UsageUseException.hxx \
+	UserAuthInfo.hxx \
+	UserProfile.hxx
 
 libresipdum_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
