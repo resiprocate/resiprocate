@@ -17,7 +17,8 @@ using namespace std;
 // GenericUri
 //====================
 GenericURI::GenericURI(const GenericURI& rhs)
-   : ParserCategory(rhs)
+   : ParserCategory(rhs),
+     mUri(rhs.mUri)
 {}
 
 GenericURI::GenericURI(HeaderFieldValue* hfv, Headers::Type type) 
