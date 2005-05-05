@@ -70,7 +70,7 @@ InviteClient::go()
 
             DebugLog(<< "Creating dialog.");
             
-            Dialog dlog(contact);
+            DeprecatedDialog dlog(contact);
 
             DebugLog(<< "Creating dialog as UAC.");
             dlog.createDialogAsUAC(*i_200);
