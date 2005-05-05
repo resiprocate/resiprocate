@@ -11,6 +11,8 @@ class Random
 {
    public:
       static void initialize();
+
+      enum {maxLength = 512};
       
       static Data getRandom(unsigned int numBytes);
       static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
