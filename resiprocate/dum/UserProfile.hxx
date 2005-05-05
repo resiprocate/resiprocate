@@ -36,12 +36,13 @@ class UserProfile : public Profile
             DigestCredential(); 
             DigestCredential(const Data& realm, 
                              const Data& username, 
-                             const Data& password);
+                             const Data& pwd);
             DigestCredential(const Data& realm);
                              
             Data realm;
             Data user;
-            Data passwordHashA1;
+//            Data passwordHashA1;
+            Data password;            
 
             bool operator<(const DigestCredential& rhs) const;
       };
