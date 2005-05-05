@@ -3,10 +3,14 @@
 using namespace resip;
 
 
-HttpGetMessage::HttpGetMessage(const Data& tid, bool success, const Data& x509) :
+HttpGetMessage::HttpGetMessage(const Data& tid, 
+                               bool success, 
+                               const Data& body,
+                               const Mime& type)) :
    mTransactionId(tid),
    mSuccess(success),
-   mX509Blob(x509)
+   mBody(body),
+   mType(type)
 {
 }
 
