@@ -133,14 +133,14 @@ UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, co
 UserProfile::DigestCredential::DigestCredential() : 
    realm(Data::Empty),
    user(Data::Empty),
-   passwordHashA1(Data::Empty)
+   password(Data::Empty)
 {
 }  
 
 UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
    realm(pRealm),
    user(Data::Empty),
-   passwordHashA1(Data::Empty) 
+   password(Data::Empty) 
 {
 }  
 
