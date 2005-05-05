@@ -176,10 +176,10 @@ AC_DEFUN([RESIP_SELECT_CONTENTS],
                 resip_tcf=`basename $F`
                 resip_tcfd=`basename $resip_tcf .lo`
                 AC_MSG_CHECKING([for $resip_tcfd ])                
-                if test x_$resip_tcf = x_Contents.o; then
+                if test x_$resip_tcf = x_Contents.lo; then
                         continue
-                        # Contents.o is not options and is a part of the base sources for the
-                        # library.
+                        # Contents is part of the base source set for the
+                        # library and must not be suppressed.
                 fi
                 if  test x_`eval echo "\\$with_$resip_tcfd"`  = x_no ; then
                         AC_MSG_RESULT([NO])
