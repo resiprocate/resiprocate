@@ -5,6 +5,8 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/Mime.hxx"
+
 #include "repro/UserStore.hxx"
 #include "repro/HttpBase.hxx"
 
@@ -22,7 +24,9 @@ class HttpConnection
       void buildFdSet(resip::FdSet& fdset);
       bool process(resip::FdSet& fdset);
 
-      void setPage(const resip::Data& page, int response);
+      void setPage(const resip::Data& page, 
+                   int response,
+                   const resip::Mime& pType );
 
    private:
       bool processSomeReads();

@@ -185,7 +185,7 @@ HttpBase::process(FdSet& fdset)
 }
 
 
-void HttpBase::setPage( const Data& page, int pageNumber, int response )
+void HttpBase::setPage( const Data& page, int pageNumber, int response, const Mime& type )
 {
    for ( int i=0 ; i<MaxConnections; i++)
    {
@@ -193,7 +193,7 @@ void HttpBase::setPage( const Data& page, int pageNumber, int response )
       {
          if ( mConnection[i]->mPageNumber == pageNumber )
          {
-            mConnection[i]->setPage( page,response );
+            mConnection[i]->setPage( page,response,type );
          }
       }
    }
