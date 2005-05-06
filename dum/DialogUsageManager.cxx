@@ -6,6 +6,9 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
+
+#include "resiprocate/external/HttpGetMessage.hxx"
+
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
@@ -968,25 +971,18 @@ DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
 #if 0 // TODO --- make this work w/ HttpGetMessage
 #if defined(USE_SSL)
-   if (msg.header(h_CSeq).method() == OPTIONS)
+   RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
+   if (it == mRequiresCerts.end())
    {
-      RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
-      if (it == mRequiresCerts.end())
-      {
-         return false;
-      }
-      else
-      {
-         getSecurity()->checkAndSetIdentity(msg);
-         processRequest(*it->second);
-         delete it->second;
-         mRequiresCerts.erase(it);
-         return true;
-      }
+      return false;
    }
    else
    {
-      return false;
+      getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
+      processRequest(*it->second);
+      delete it->second;
+      mRequiresCerts.erase(it);
+      return true;
    }
 #else
    return false;

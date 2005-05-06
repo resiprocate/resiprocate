@@ -1588,15 +1588,19 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
 
 bool
-BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64 ) const
+BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64, X509* pCert ) const
 {
-   if (mDomainCerts.count(signerDomain) == 0)
+   X509* cert =  pCert;
+   if (!cert)
    {
-      ErrLog( << "No public key for " << signerDomain );
-      throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
+      if (mDomainCerts.count(signerDomain) == 0)
+      {
+         ErrLog( << "No public key for " << signerDomain );
+         throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
+      }
+      cert = mDomainCerts[signerDomain];
    }
-   X509* cert = mDomainCerts[signerDomain];
-
+   
    DebugLog( << "Check identity for " << in );
    DebugLog( << " base64 data is " << sigBase64 );
 
@@ -1652,23 +1656,42 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
 
 void
-BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
+BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) const
 {
    auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
-
+   X509* cert=NULL;
+   
    try
    {
-      if (checkIdentity(msg.header(h_From).uri().host(),
-                        msg.getCanonicalIdentityString(),
-                        msg.header(h_Identity).value()))
+      if ( !certDer.empty() )
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
-         sec->setIdentityStrength(SecurityAttributes::Identity);
+         unsigned char* in = (unsigned char*)certDer.data();
+         if (d2i_X509(&cert,&in,certDer.size()) == 0)
+         {
+            DebugLog(<< "Could not read DER certificate from " << certDer );
+            cert = NULL;
+         }
+      }
+      if ( certDer.empty() || cert )
+      {
+         if ( checkIdentity(msg.header(h_From).uri().host(),
+                            msg.getCanonicalIdentityString(),
+                            msg.header(h_Identity).value(),
+                            cert ) )
+         {
+            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentityStrength(SecurityAttributes::Identity);
+         }
+         else
+         {
+            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+         }
       }
       else
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
-         sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
    catch (BaseException&)
