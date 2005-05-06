@@ -44,6 +44,8 @@ class ServerAuthManager
                                      const Data& realm, 
                                      const Data& transactionToken ) = 0;
       
+      virtual bool useAuthInt() const;
+      
    private:
       DialogUsageManager& mDum;      
       typedef std::map<Data, SipMessage*> MessageMap;
