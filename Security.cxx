@@ -17,6 +17,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/SHA1Stream.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
@@ -1530,19 +1531,13 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    int resultSize = sizeof(result);
    assert( resultSize >= RSA_size(rsa) );
 
-   assert(SHA_DIGEST_LENGTH == 20);
-   unsigned char hashRes[SHA_DIGEST_LENGTH];
-   unsigned int hashResLen=SHA_DIGEST_LENGTH;
-
-   SHA_CTX sha;
-   SHA1_Init( &sha );
-   SHA1_Update(&sha, in.data() , in.size() );
-   SHA1_Final( hashRes, &sha );
-
-   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
+   SHA1Stream sha;
+   sha << in;
+   Data hashRes =  sha.getBin();
+   DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, hashRes, hashResLen,
+   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    assert( r == 1 );
@@ -1579,7 +1574,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    Data enc = res.base64encode();
 
    Security::dumpAsn("identity-in", in );
-   Security::dumpAsn("identity-in-hash", Data(hashRes, hashResLen) );
+   Security::dumpAsn("identity-in-hash", hashRes );
    Security::dumpAsn("identity-in-rsa",res);
    Security::dumpAsn("identity-in-base64",enc);
 
@@ -1607,17 +1602,10 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    Data sig = sigBase64.base64decode();
    DebugLog( << "decoded sig is 0x"<< sig.hex() );
 
-   assert(SHA_DIGEST_LENGTH == 20);
-   unsigned char hashRes[SHA_DIGEST_LENGTH];
-   unsigned int hashResLen=SHA_DIGEST_LENGTH;
-
-   SHA_CTX sha;
-   SHA1_Init( &sha );
-   SHA1_Update(&sha, in.data() , in.size() );
-   SHA1_Final( hashRes, &sha );
-   Data computedHash(hashRes, hashResLen);
-
-   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
+   SHA1Stream sha;
+   sha << in;
+   Data hashRes =  sha.getBin();
+   DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    assert( pKey );
@@ -1626,8 +1614,8 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
-   int ret = RSA_verify(NID_sha1, hashRes, hashResLen,
-                        (unsigned char*)sig.data(), sig.size(),
+   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
+                        hashRes.size(), (unsigned char*)sig.data(), sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
@@ -1649,7 +1637,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    dumpAsn("identity-out-msg", in );
    dumpAsn("identity-out-base64", sigBase64 );
    dumpAsn("identity-out-sig", sig );
-   dumpAsn("identity-out-hash", computedHash );
+   dumpAsn("identity-out-hash", hashRes );
 
    return (ret != 0);
 }
@@ -2275,7 +2263,7 @@ BaseSecurity::getCetName(X509 *cert)
     }
  
     char cname[256];
-    memset(cname, 0, sizeof cname);
+    memset(cname, 0, sizeof cname);
 
     if ((subj = X509_get_subject_name(cert)) &&
         X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
