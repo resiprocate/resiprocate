@@ -1,5 +1,5 @@
-#if !defined(RESIP_EXTERNAL_TIMER_HXX)
-#define RESIP_EXTERNAL_TIMER_HXX
+#ifndef RESIP_HttpProvider
+#define RESIP_HttpProvider
 
 #include "resiprocate/os/Mutex.hxx"
 #include <memory>
