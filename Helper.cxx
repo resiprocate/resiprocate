@@ -994,14 +994,15 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
 Data
 Helper::qopOption(const Auth& challenge)
 {
+   // priority-order list of preferred qop tokens
    static Data preferredTokens[] = 
    {
       Symbols::authInt,
       Symbols::auth
    };
-   bool found = false;
-   size_t index;
 
+   bool found = false;
+   size_t index = 0;
    if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
    {
       ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
@@ -1016,11 +1017,11 @@ Helper::qopOption(const Auth& challenge)
          for (size_t i=0; i < sizeof(preferredTokens)/sizeof(*preferredTokens); i++) 
          {
             if (q == preferredTokens[i]) {
+               // found a preferred token; is it higher priority?
                if (!found || i < index) {
                   found = true;
                   index = i;
                }
-               return(q);
             }
          }
       }
