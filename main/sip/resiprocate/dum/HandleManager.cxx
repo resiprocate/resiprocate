@@ -9,7 +9,7 @@ using namespace resip;
 
 HandleManager::HandleManager() : 
    mShuttingDown(false),
-   mLastId(0)
+   mLastId(Handled::npos)
 {
 }
 
@@ -31,8 +31,15 @@ HandleManager::~HandleManager()
 Handled::Id
 HandleManager::create(Handled* handled)
 {
-   mHandleMap[++mLastId] = handled;
-   return mLastId;
+   if (!mShuttingDown)
+   {
+      mHandleMap[++mLastId] = handled;
+      return mLastId;
+   }
+   else
+   {
+      return Handled::npos;
+   }
 }
 
 void HandleManager::shutdownWhenEmpty()
