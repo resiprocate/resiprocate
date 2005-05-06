@@ -29,7 +29,7 @@ TuSelector::process()
    {
       TransactionUserMessage* msg = mShutdownFifo.getNext();
       
-      switch (msg->type() )
+      switch (msg->type())
       {
          case TransactionUserMessage::RequestShutdown:
             InfoLog (<< "TransactionUserMessage::RequestShutdown " << *(msg->tu));

@@ -924,6 +924,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          if (mDumShutdownHandler)
          {
             mDumShutdownHandler->onDumCanBeDeleted();
+            mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
          }
          return;
       }
