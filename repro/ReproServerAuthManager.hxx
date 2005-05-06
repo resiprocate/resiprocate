@@ -32,6 +32,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                                      const resip::Data& realm, 
                                      const resip::Data& transactionId );
       
+      virtual bool useAuthInt() const;
+
    private:
       resip::DialogUsageManager& mDum;
       UserStore& mDb;
