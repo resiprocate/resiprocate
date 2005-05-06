@@ -30,9 +30,9 @@ class WebAdmin: public HttpBase
                 resip::RegistrationPersistenceManager& regDb,
                 resip::Security* security,
                 bool noWebChallenges,
+                const resip::Data& realm,
                 int port=5080, 
-                resip::IpVersion version=resip::V4,
-                const resip::Data& realm = resip::Data::Empty );
+                resip::IpVersion version=resip::V4 );
       
    protected:
       virtual void buildPage( const resip::Data& uri, 
