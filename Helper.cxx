@@ -618,6 +618,8 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << Symbols::COLON
       << password;
    a1.flush();
+ 
+   DebugLog(<< "Computed A1 of " << a1.getHex() << " for " << username << " at realm " << realm );
    
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
@@ -1015,8 +1017,10 @@ Helper::qopOption(const Auth& challenge)
          pb.data(q, anchor);
          for (size_t i=0; i < sizeof(preferredTokens)/sizeof(*preferredTokens); i++) 
          {
-            if (q == preferredTokens[i]) {
-               if (!found || i < index) {
+            if (q == preferredTokens[i]) 
+            {
+               if (!found || i < index) 
+               {
                   found = true;
                   index = i;
                }
