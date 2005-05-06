@@ -44,6 +44,8 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/external/HttpProvider.hxx"
+#include "resiprocate/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -623,7 +625,9 @@ DialogUsageManager::send(SipMessage& msg)
          if(fixedTransportPort != 0)
          {
             msg.header(h_Vias).front().sentPort() = fixedTransportPort;
+
          }
+
       }
 
       if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
@@ -897,14 +901,14 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                processRequest(*sipMsg);
             }
          }
-         else if (sipMsg->isResponse())
-         {
-            if (!processIdentityCheckResponse(*sipMsg))
-            {
-               processResponse(*sipMsg);
-            }
-         }
          return;
+      }
+
+      HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg.get());
+      if (httpMsg)
+      {
+         processIdentityCheckResponse(*httpMsg);         
+         return;         
       }
 
       TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
@@ -959,9 +963,10 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 }
 
-bool
-DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
+void
+DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
+#if 0 // TODO --- make this work w/ HttpGetMessage
 #if defined(USE_SSL)
    if (msg.header(h_CSeq).method() == OPTIONS)
    {
@@ -986,6 +991,7 @@ DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
 #else
    return false;
 #endif
+#endif
 }
 
 bool
@@ -1003,16 +1009,17 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
       }
       else
       {
+         if (!HttpProvider::instance())
+         {
+            return false;
+         }
+         
          try
          {
-            Uri certTarget(sipMsg->header(h_IdentityInfo).uri());
-            //?dcm? -- IdentityInfo must use TLS
-            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg->header(h_From), OPTIONS);
-            mRequiresCerts[opt->getTransactionId()] = sipMsg;
-            //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
-            //are there issues with outbound proxies.
-            mStack.send(*opt, this);
-
+            mRequiresCerts[sipMsg->getTransactionId()] = sipMsg;
+            HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
+                                          sipMsg->getTransactionId(),
+                                          *this);
             return true;
          }
          catch (BaseException&)
