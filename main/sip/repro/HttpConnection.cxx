@@ -98,7 +98,7 @@ HttpConnection::process(FdSet& fdset)
 
 
 void 
-HttpConnection::setPage(const Data& pPage,int response)
+HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
 {
    Data page(pPage);
 
@@ -110,7 +110,20 @@ HttpConnection::setPage(const Data& pPage,int response)
          
          page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
                  "<html><head>"
-                 "<title>301 Unauthorized</title>"
+                 "<title>401 Unauthorized</title>"
+                 "</head><body>"
+                 "<h1>Unauthorized</h1>"
+                 "</body></html>" );
+      }
+      break;
+
+      case 404:
+      {  
+         mTxBuffer += "HTTP/1.0 404 Not Found"; mTxBuffer += Symbols::CRLF;
+         
+         page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+                 "<html><head>"
+                 "<title>404 Not Found</title>"
                  "</head><body>"
                  "<h1>Unauthorized</h1>"
                  "</body></html>" );
@@ -178,7 +191,12 @@ HttpConnection::setPage(const Data& pPage,int response)
    mTxBuffer += "Mime-version: 1.0 " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Pragma: no-cache " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Content-Length: "; mTxBuffer += len; mTxBuffer += Symbols::CRLF;
-   mTxBuffer += "Content-Type: text/html" ; mTxBuffer += Symbols::CRLF;
+
+   mTxBuffer += "Content-Type: "  ;
+   mTxBuffer += pType.type() ;
+   mTxBuffer +="/"  ;
+   mTxBuffer += pType.subType() ; mTxBuffer += Symbols::CRLF;
+   
    mTxBuffer += Symbols::CRLF;
    
    mTxBuffer += page;

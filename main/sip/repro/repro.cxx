@@ -51,20 +51,46 @@ using namespace resip;
 using namespace std;
 
 
-static void
-addDomains(TransactionUser& tu, CommandLineParser& args)
+Data
+addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
 {
+   Data realm;
+   
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
-      InfoLog (<< "Adding domain " << i->host() );
+      InfoLog (<< "Adding domain " << i->host() << " from command line");
       tu.addDomain(i->host());
+      if ( realm.empty() )
+      {
+         realm = i->host();
+      }
+   }
+
+   ConfigStore::DataList dList = store.mConfigStore.getDomains();
+   for (  ConfigStore::DataList::const_iterator i=dList.begin(); 
+           i != dList.end(); ++i)
+   {
+      InfoLog (<< "Adding domain " << *i << " from config");
+      tu.addDomain( *i );
+      if ( realm.empty() )
+      {
+         realm = *i;
+      }
    }
 
    tu.addDomain(DnsUtil::getLocalHostName());
+   if ( realm.empty() )
+   {
+      realm =DnsUtil::getLocalHostName();
+   }
 
    tu.addDomain("localhost");
-
+   if ( realm.empty() )
+   {
+      realm = "localhost";
+   }
+   
 #ifndef WIN32 // !cj! TODO 
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
@@ -75,6 +101,8 @@ addDomains(TransactionUser& tu, CommandLineParser& args)
 #endif 
 
    tu.addDomain("127.0.0.1");
+
+   return realm;
 }
 
 
@@ -209,14 +237,13 @@ main(int argc, char** argv)
       }
    }
    
-
    Proxy proxy(stack, requestProcessors, store.mUserStore );
-   addDomains(proxy, args);
+   Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, &security, args.mNoWebChallenge );
+   WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm  );
 #else
-   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge );
+   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm );
 #endif
    WebAdminThread adminThread(admin);
 
@@ -227,16 +254,13 @@ main(int argc, char** argv)
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
 
-#if defined(USE_SSL)
-   CertServer* certServer = 0;
-#endif
 
    resip::MessageFilterRuleList ruleList;
    if (!args.mNoRegistrar || args.mCertServer)
    {
       dum = new DialogUsageManager(stack);
       dum->setMasterProfile(&profile);
-      addDomains(*dum, args);
+      addDomains(*dum, args, store);
    }
 
    if (!args.mNoRegistrar)
@@ -256,6 +280,7 @@ main(int argc, char** argv)
    if (args.mCertServer)
    {
 #if defined(USE_SSL)
+      CertServer* certServer = 0;
       certServer = new CertServer(*dum);
 
       // Install rules so that the registrar only gets REGISTERs
@@ -280,15 +305,6 @@ main(int argc, char** argv)
       dum->setMessageFilterRuleList(ruleList);
       dumThread = new DumThread(*dum);
    }
-
-#ifndef WIN32 // !cj! TODO 
-   // go add all the domains that this proxy is responsible for 
-   list< pair<Data,Data> > ips = DnsUtil::getInterfaces();
-   if ( ips.empty() )
-   {
-      ErrLog( << "No IP address found to run on" );
-   } 
-#endif
 
    stack.registerTransactionUser(proxy);
 
