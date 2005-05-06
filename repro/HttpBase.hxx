@@ -5,6 +5,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/Mime.hxx"
 
 #include "repro/HttpBase.hxx"
 
@@ -28,7 +29,10 @@ class HttpBase
                               int pageNumber, 
                               const resip::Data& user,
                               const resip::Data& password )=0;
-      void setPage( const resip::Data& page, int pageNumber, int response );
+      void setPage( const resip::Data& page, 
+                    int pageNumber, 
+                    int response=200,
+                    const resip::Mime& pType = resip::Mime("text","html") );
       
       const resip::Data mRealm;
 
