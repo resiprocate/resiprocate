@@ -23,7 +23,7 @@ HttpGetMessage::brief() const
 std::ostream& 
 HttpGetMessage::encode(std::ostream& strm) const
 {
-   return strm << brief() << mTid; 
+   return strm << brief() << mTid << " " << mType << " " << mBody;   
 }
 
 Message* 
