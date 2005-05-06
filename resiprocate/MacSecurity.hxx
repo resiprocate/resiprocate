@@ -25,9 +25,9 @@ class MacSecurity : public Security
 
    protected:
 
-      // utility function to begin enumerating over
-      // root certificates
-      KeychainHandle openSystemCertStore(const Data& name);
+      // Opens a search handle to certificates store in
+      // the X509Anchors keychain
+      KeychainHandle openSystemCertStore();
       
       // loads root certificates into memory
       void getCerts();
