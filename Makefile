@@ -157,8 +157,7 @@ SRC = \
 	KeepAliveMessage.cxx \
 	\
 	\
-	external/ExternalDnsProvider.cxx \
-	external/ExternalDnsProviderFactory.cxx \
+	external/HttpProvider.cxx \
 	external/HttpGetMessage.cxx
 
 SUFFIXES += .gperf .cxx
