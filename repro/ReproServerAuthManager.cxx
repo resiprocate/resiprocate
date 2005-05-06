@@ -32,7 +32,14 @@ ReproServerAuthManager::~ReproServerAuthManager()
 {
 }
 
-  
+
+bool 
+ReproServerAuthManager::useAuthInt() const
+{
+   return false;
+}
+
+
 void 
 ReproServerAuthManager::requestCredential(const Data& user, 
                                           const Data& realm, 

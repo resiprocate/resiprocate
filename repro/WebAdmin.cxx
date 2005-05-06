@@ -157,7 +157,8 @@ WebAdmin::buildPage( const Data& uri,
          }
          else
          {
-            InfoLog( << "user " << pUser << " failed to authneticate to web server" );
+            InfoLog(  << "user " << pUser << " failed to authneticate to web server" );
+            DebugLog( << " compA1="<<compA1<< " dbA1="<<dbA1 );
             setPage( resip::Data::Empty, pageNumber,401 );
             return;
          }
@@ -314,12 +315,6 @@ WebAdmin::buildPage( const Data& uri,
       }
    }
    
-   if (  pageName == Data("input")  )
-   {
-      setPage( resip::Data::Empty, pageNumber, 301 );
-      return;
-   }
-
    DebugLog( << "building page for user=" << authenticatedUser  );
 
    Data page;
@@ -330,6 +325,7 @@ WebAdmin::buildPage( const Data& uri,
       
       // admin only pages 
       if ( pageName == Data("user.html")    ) ; /* do nothing */ 
+      if ( pageName == Data("input")    ) ; /* do nothing */ 
       if ( pageName == Data("domains.html")    ) buildDomainsSubPage(s);
       if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
       
@@ -349,9 +345,10 @@ WebAdmin::buildPage( const Data& uri,
    else if ( !authenticatedUser.empty() )
    {
       // user only pages 
-      if ( pageName == Data("user.html") ) page=buildUserPage();
-   }
-
+      if ( pageName == Data("user.html") ) page=buildUserPage(); 
+      if ( pageName == Data("input") ) page=buildUserPage();
+  }
+   
    assert( !authenticatedUser.empty() );
    assert( !page.empty() );
    
