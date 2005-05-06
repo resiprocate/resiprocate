@@ -40,10 +40,10 @@ using namespace std;
 WebAdmin::WebAdmin(  Store& store,
                      RegistrationPersistenceManager& regDb,
                      Security* security,
-                     bool noChal, 
+                     bool noChal,  
+                     const Data& realm,
                      int port, 
-                     IpVersion version,
-                     const Data& realm ):
+                     IpVersion version ):
    HttpBase( port, version, realm ),
    mStore(store),
    mRegDb(regDb),
@@ -75,7 +75,7 @@ WebAdmin::buildPage( const Data& uri,
    if (
       ( pageName != Data("index.html") ) && 
       ( pageName != Data("input") ) && 
-      ( pageName != Data("certs") ) && 
+      ( pageName != Data("cert.cer") ) && 
       ( pageName != Data("userTest.html") ) && 
       ( pageName != Data("domains.html")  ) &&
       ( pageName != Data("acls.html")  ) &&
@@ -96,11 +96,11 @@ WebAdmin::buildPage( const Data& uri,
       setPage( buildDefaultPage(), pageNumber, 200); 
       return;
    }
-   if ( pageName == Data("cert") )
+   if ( pageName == Data("cert.cer") )
    {
       if ( !mRealm.empty() ) // !cj! this is goofy using the realm 
       {
-         setPage( buildCertPage(mRealm), pageNumber, 200 );
+         setPage( buildCertPage(mRealm), pageNumber, 200, Mime("application","pkix-cert") );
          return;
       }
       else
