@@ -68,7 +68,7 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    free(name);
 }
 
-bool DnsNaptrRecord::equal(const Data& value) const
+bool DnsNaptrRecord::isSameValue(const Data& value) const
 {
    return mReplacement == value;
 }
