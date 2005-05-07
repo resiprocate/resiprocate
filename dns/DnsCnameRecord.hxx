@@ -27,7 +27,7 @@ class DnsCnameRecord : public DnsResourceRecord
       // accessors.
       const Data& cname() const { return mCname; }
       const Data& name() const { return mName; }
-      bool equal(const Data&) const;
+      bool isSameValue(const Data&) const;
       
    private:
       Data mCname;

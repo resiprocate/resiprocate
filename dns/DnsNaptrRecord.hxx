@@ -34,7 +34,7 @@ class DnsNaptrRecord : public DnsResourceRecord
       const Data& regexp() const { return mRegexp; }
       const Data& replacement() const { return mReplacement; }
       const Data& name() const { return mName; }
-      bool equal(const Data& value) const;
+      bool isSameValue(const Data& value) const;
       
    private:
       int mOrder;
