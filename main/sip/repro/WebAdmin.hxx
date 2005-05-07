@@ -69,8 +69,8 @@ class WebAdmin: public HttpBase
       
       Dictionary mHttpParams;
       
-      // list of the IDs of records that should be deleted
-      std::set<int> mRemoveSet;
+      // list of the keys of records that should be deleted
+      std::set<resip::Data> mRemoveSet;
 };
 
 
