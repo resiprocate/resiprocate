@@ -221,15 +221,14 @@ WebAdmin::buildPage( const Data& uri,
          if ( key.prefix("remove.") )  // special case of parameters to delete one or more records
          {
             Data tmp = key.substr(7);  // the ID is everything after the dot
-            int i = tmp.convertInt();
-            if (i)
+            if (!tmp.empty())
             {
-               mRemoveSet.insert(i);   // add to the set of records to remove
+               mRemoveSet.insert(tmp.charHttpUnencoded());   // add to the set of records to remove
             }
          }
          else if ( !key.empty() && !value.empty() ) // make sure both exist
          {
-            mHttpParams[key] = value;  // add other parameters to the Map
+            mHttpParams[key] = value.charHttpUnencoded();  // add other parameters to the Map
          }
       }
 
@@ -576,14 +575,25 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 void 
 WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
+
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mUserStore.eraseUser(*i);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
       
       s << 
          //"<h1>Users</h1>" << endl << 
          "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
          "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
          "<tr>" << endl << 
-         "  <td>User</td>" << endl << 
-         "  <td>Realm</td>" << endl << 
+         "  <td>User@Domain</td>" << endl << 
+//         "  <td>Realm</td>" << endl << 
          "  <td>Name</td>" << endl << 
          "  <td>Email</td>" << endl << 
          "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
@@ -601,13 +611,16 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       s << endl;
       
       Data key = mStore.mUserStore.getFirstKey();
+      AbstractDb::UserRecord rec;
       while ( !key.empty() )
       {
+         rec = mStore.mUserStore.getUserInfo(key);
+      
          s << "<tr>" << endl 
            << "  <td><a href=\"editUser.html?user=" << key.charEncoded() << "\">" << key << "</a></td>" << endl
-           << "  <td> </td>" << endl
-           << "  <td> </td>" << endl
-           << "  <td> </td>" << endl
+//           << "  <td> </td>" << endl
+           << "  <td>" << rec.name << "</td>" << endl
+           << "  <td>" << rec.email << "</td>" << endl
            << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
            << "</tr>" << endl;
          
