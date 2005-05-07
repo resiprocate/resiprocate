@@ -36,7 +36,7 @@ Data DnsHostRecord::host() const
    return Data(inet_ntoa(mAddr));
 }
 
-bool DnsHostRecord::equal(const Data& value) const
+bool DnsHostRecord::isSameValue(const Data& value) const
 {
    return DnsUtil::inet_ntop(mAddr) == value;
 }
