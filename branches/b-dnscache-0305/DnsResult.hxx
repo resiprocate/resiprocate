@@ -6,6 +6,7 @@
 #include <vector>
 #include <deque>
 #include <map>
+#include <stack>
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/Transport.hxx"
@@ -57,9 +58,6 @@ class DnsResult : public DnsResultSink
       // until the pending queries get responses and then delete
       void destroy();
 
-      void blacklist(const Data& target, const DataVector& list);
-      void retryAfter(const Data& target, const int retryAfter, const DataVector& list);
-      
       // Used to store a NAPTR result
       class NAPTR
       {
@@ -245,6 +243,22 @@ class DnsResult : public DnsResultSink
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
+
+      typedef struct
+      {
+            Data domain;
+            int rrType;
+            Data record;
+      } Item;
+
+      std::stack<Item> mCurrResultPath;
+
+      void clearCurrPath();
+      void addToPath(const std::deque<Tuple>& results);
+      void blacklistPrevResult();
+
+      Tuple mPrevResult; // the tuple returned to caller of DnsResult::next().
+      bool mBlacklistPrevResult; // used to indicate whether to blacklist mPrevResult.
 };
 
 std::ostream& operator<<(std::ostream& strm, const DnsResult&);

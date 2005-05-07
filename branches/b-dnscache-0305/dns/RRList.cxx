@@ -178,7 +178,7 @@ RRList::RecordItr RRList::find(const Data& value)
 {
    for (RecordItr it = mRecords.begin(); it != mRecords.end(); ++it)
    {
-      if ((*it).record->equal(value))
+      if ((*it).record->isSameValue(value))
       {
          return it;
       }
