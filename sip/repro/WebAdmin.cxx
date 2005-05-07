@@ -76,6 +76,7 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("index.html") ) && 
       ( pageName != Data("input") ) && 
       ( pageName != Data("cert.cer") ) && 
+      ( ! pageName.prefix("cert") ) && 
       ( pageName != Data("userTest.html") ) && 
       ( pageName != Data("domains.html")  ) &&
       ( pageName != Data("acls.html")  ) &&
@@ -96,11 +97,30 @@ WebAdmin::buildPage( const Data& uri,
       setPage( buildDefaultPage(), pageNumber, 200); 
       return;
    }
-   if ( pageName == Data("cert.cer") )
+   if ( pageName.prefix("cert") || pageName == Data("cert.cer") )
    {
-      if ( !mRealm.empty() ) // !cj! this is goofy using the realm 
+      Data domain = mRealm;
+      try 
       {
-         setPage( buildCertPage(mRealm), pageNumber, 200, Mime("application","pkix-cert") );
+         const char* anchor = pb.skipChar('?');
+         pb.skipToChar('=');
+         Data query;
+         pb.data(query, anchor);
+         InfoLog( << "query is " << query );
+         if ( query == "domain" ) {
+           anchor = pb.skipChar('=');
+           pb.skipToEnd();
+           pb.data(domain, anchor);
+         }
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+      }
+
+      if ( !domain.empty() )
+      {
+         InfoLog( << "domain is " << domain );
+         setPage( buildCertPage(domain), pageNumber, 200, Mime("application","pkix-cert") );
          return;
       }
       else
