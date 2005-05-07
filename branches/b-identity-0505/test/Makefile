@@ -8,7 +8,8 @@ include $(BUILD)/Makefile.pre
 PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), true)
-TESTPROGRAMS += makeSelfCert.cxx 
+TESTPROGRAMS += makeSelfCert.cxx \
+		testTls.cxx 
 endif
 
 TESTPROGRAMS += testTuple.cxx \
