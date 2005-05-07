@@ -86,6 +86,8 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 
          case Helper::Authenticated:
             InfoLog (<< "Authentication ok for " << user);
+            sipMessage->remove(h_Authorizations);
+            sipMessage->remove(h_ProxyAuthorizations);
             rc.setDigestIdentity(user);
             if (sipMessage->header(h_From).uri().user() == user &&
                 sipMessage->header(h_From).uri().host() == realm)
