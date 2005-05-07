@@ -73,7 +73,7 @@ CurlHttpProvider::RequestThread::thread()
         Mime contentType; 
         {
            char* contentTypeString;
-           curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, contentTypeString);
+           curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentTypeString);
 
            InfoLog ( << "Content type from curl: " << contentTypeString);
            
