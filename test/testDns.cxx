@@ -49,14 +49,17 @@ class TestDnsHandler : public DnsHandler
       {
          Lock lock(mutex);
          (void)lock;
-         while (result->available() == DnsResult::Available)
+         DnsResult::Type type;
+         while ((type=result->available()) == DnsResult::Available)
          {
             Tuple tuple = result->next();
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
          }
-         mComplete = true;
-         
+         if (type != DnsResult::Pending)
+         {
+            mComplete = true;
+         }         
       }
       bool complete()
       {
@@ -168,208 +171,7 @@ main(int argc, const char** argv)
       argc--;
    }
 
-   // query dns server.
    int count = results.size();
-   while (count>0)
-   {
-      for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-      {
-         if ((*it).handler->complete())
-         {
-            --count;
-         }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).res) << ub << std::endl;
-         }
-      }
-#ifdef WIN32
-      sleep(100);
-#else
-      sleep(1);
-#endif
-   }
-
-   // blacklist all the records.
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      std::vector<Data> list;
-      for (std::vector<Tuple>::iterator tuple = (*it).handler->results.begin();
-         tuple != (*it).handler->results.end(); ++tuple)
-      {
-         Data item = DnsUtil::inet_ntop((*tuple));
-         list.push_back(item);
-         cout << "Blacklisting " << (*tuple).getTargetDomain() << " -- " << item << endl;
-      }
-      if (!list.empty())
-      {
-         (*it).res->blacklist((*(*it).handler->results.begin()).getTargetDomain(), list);
-      }
-   }
-
-   // do lookup - should go on to the wire.
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).res->destroy();
-      delete (*it).handler;
-   }
-
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).handler = new TestDnsHandler;
-      (*it).res = dns.createDnsResult((*it).handler);
-      dns.lookup((*it).res, (*it).uri);
-   }
-
-   count = results.size();
-   while (count>0)
-   {
-      for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-      {
-         if ((*it).handler->complete())
-         {
-            --count;
-         }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).res) << ub << std::endl;
-         }
-      }
-#ifdef WIN32
-      sleep(100);
-#else
-      sleep(1);
-#endif
-   }
-
-   // blacklist some records.   
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      int odd = 0;
-      std::vector<Data> list;
-      for (std::vector<Tuple>::iterator tuple = (*it).handler->results.begin();
-         tuple != (*it).handler->results.end(); ++tuple)
-      {
-         if (odd%2)
-         {
-            Data item = DnsUtil::inet_ntop((*tuple));
-            list.push_back(item);
-            cout << "Blacklisting " << (*tuple).getTargetDomain() << " -- " << item << endl;
-         }
-         ++odd;
-      }
-      if (!list.empty())
-      {
-         (*it).res->blacklist((*(*it).handler->results.begin()).getTargetDomain(), list);
-      }
-   }
-
-   // lookup - should return non-blacklisted records in the cache if any or go on to the wire.
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).res->destroy();
-      delete (*it).handler;
-   }
-
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).handler = new TestDnsHandler;
-      (*it).res = dns.createDnsResult((*it).handler);
-      dns.lookup((*it).res, (*it).uri);
-   }
-
-   count = results.size();
-   while (count>0)
-   {
-      for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-      {
-         if ((*it).handler->complete())
-         {
-            --count;
-         }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).res) << ub << std::endl;
-         }
-      }
-#ifdef WIN32
-      sleep(100);
-#else
-      sleep(1);
-#endif
-   }
-
-   // retry-after
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      std::vector<Data> list;
-      for (std::vector<Tuple>::iterator tuple = (*it).handler->results.begin();
-         tuple != (*it).handler->results.end(); ++tuple)
-      {
-         Data item = DnsUtil::inet_ntop((*tuple));
-         list.push_back(item);
-         cout << "Retry " << (*tuple).getTargetDomain() << " -- " << item << " after" << " 10 seconds." << endl;
-      }
-      if (!list.empty())
-      {
-         (*it).res->retryAfter((*(*it).handler->results.begin()).getTargetDomain(), 10, list);
-      }
-   }
-
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).res->destroy();
-      delete (*it).handler;
-   }
-
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).handler = new TestDnsHandler;
-      (*it).res = dns.createDnsResult((*it).handler);
-      dns.lookup((*it).res, (*it).uri);
-   }
-
-   count = results.size();
-   while (count>0)
-   {
-      for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-      {
-         if ((*it).handler->complete())
-         {
-            --count;
-         }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).res) << ub << std::endl;
-         }
-      }
-#ifdef WIN32
-      sleep(100);
-#else
-      sleep(1);
-#endif
-   }
-
-   cout << "Sleeping for 15 seconds..." << endl;
-#ifdef WIN32
-      sleep(15000);
-#else
-      sleep(15);
-#endif
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).res->destroy();
-      delete (*it).handler;
-   }
-
-   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
-   {
-      (*it).handler = new TestDnsHandler;
-      (*it).res = dns.createDnsResult((*it).handler);
-      dns.lookup((*it).res, (*it).uri);
-   }
-
-   count = results.size();
    while (count>0)
    {
       for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)

@@ -72,17 +72,17 @@ class DnsStub
       DnsStub(DnsInterface* dns);
       ~DnsStub();
 
-      template<class QueryType>
-      void blacklist(const Data& target, const int proto, const DataArr& targetsToBlacklist)
+      //template<class QueryType>
+      void blacklist(const Data& target, const int rrType, const int proto, const DataArr& targetsToBlacklist)
       {
-         BlacklistingCommand* command = new BlacklistingCommand(target, QueryType::getRRType(), proto, *this, targetsToBlacklist);
+         BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
          mCommandFifo.add(command);
       }
 
-      template<class QueryType>
-      void retryAfter(const Data& target, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
+      //template<class QueryType>
+      void retryAfter(const Data& target, const int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
       {
-         RetryAfterCommand* command = new RetryAfterCommand(target, QueryType::getRRType(), proto, *this, retryAfter, targetsToRetryAfter);
+         RetryAfterCommand* command = new RetryAfterCommand(target, rrType, proto, *this, retryAfter, targetsToRetryAfter);
          mCommandFifo.add(command);
       }
 
