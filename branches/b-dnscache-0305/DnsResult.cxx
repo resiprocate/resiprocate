@@ -3,6 +3,7 @@
 #endif
 
 #include <algorithm>
+#include <stack>
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -64,7 +65,8 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handl
      mSips(false),
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
-     mType(Pending)
+     mType(Pending),
+     mBlacklistPrevResult(false)
 {
 }
 
@@ -114,6 +116,11 @@ DnsResult::available()
       }
       else
       {
+         if (mBlacklistPrevResult)
+         {
+            blacklistPrevResult();
+            mBlacklistPrevResult = false;
+         }
          primeResults();
          return available(); // recurse
       }
@@ -131,6 +138,16 @@ DnsResult::next()
    Tuple next = mResults.front();
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
+  
+   if (mBlacklistPrevResult)
+   {
+      blacklistPrevResult();
+   }
+   else if (!mCurrResultPath.empty())
+   {
+      mBlacklistPrevResult = true;
+   }
+   mPrevResult = next;
    return next;
 }
 
@@ -267,16 +284,6 @@ DnsResult::lookup(const Uri& uri)
          mDns.lookup<RR_NAPTR>(mTarget, Protocol::Sip, this); // for current target
       }
    }
-}
-
-void DnsResult::blacklist(const Data& target, const DataVector& list)
-{
-   mDns.blacklist<RR_A>(target, Protocol::Sip, list);
-}
-
-void DnsResult::retryAfter(const Data& target, const int retryAfter, const DataVector& list)
-{
-   mDns.retryAfter<RR_A>(target, Protocol::Sip, retryAfter, list);
 }
 
 void DnsResult::lookupHost(const Data& target)
@@ -851,6 +858,7 @@ DnsResult::primeResults()
 #endif
          )
       {
+         assert(0); // should never get here in case of caching.
 #if defined(USE_IPV6)
          In6AddrList& aaaarecs = mAAAARecords[next.target];
          for (In6AddrList::const_iterator i=aaaarecs.begin();
@@ -900,21 +908,34 @@ DnsResult::primeResults()
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
          if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
-
          {
-
+            assert(mCurrResultPath.size()<=2);
+            Item top;
+            if (!mCurrResultPath.empty())
+            {
+               top = mCurrResultPath.top();
+               if (top.rrType == T_SRV)
+               {
+                  vector<Data> records;
+                  records.push_back(top.record);
+                  mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+                  mCurrResultPath.pop();
+               }
+               else
+               {
+                  assert(top.rrType==T_NAPTR);
+               }
+            }
+            top.domain = next.key;
+            top.rrType = T_SRV;
+            top.record = next.target;
+            mCurrResultPath.push(top);
             lookupHost(next.target);
-
          }
-
          else
-
          {
-
             assert(0);
-
             mHandler->handle(this);
-
          }
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
@@ -924,14 +945,25 @@ DnsResult::primeResults()
    {
       bool changed = (mType == Pending);
       transition(Finished);
+      if (!mCurrResultPath.empty())
+      {
+         assert(mCurrResultPath.size()<=2);
+         while (!mCurrResultPath.empty())
+         {
+            Item top = mCurrResultPath.top();
+            vector<Data> records;
+            records.push_back(top.record);
+            mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+            mCurrResultPath.pop();
+         }
+      }
       if (changed) mHandler->handle(this);
    }
 
    // Either we are finished or there are results primed
    assert(mType == Finished || 
           mType == Pending || 
-          mType == Available
-          //(mType == Available && !mResults.empty())
+          (mType == Available && !mResults.empty())
       );
 }
 
@@ -1639,6 +1671,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 #else
          mType = Finished; 
 #endif
+         clearCurrPath();
       }
       else 
       {
@@ -1650,6 +1683,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          {
             mType = Available;
          }
+         addToPath(mResults);
       }
       if (changed) mHandler->handle(this);
    }
@@ -1687,7 +1721,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    }
    mDns.lookup<RR_A>(mPassHostFromAAAAtoA, Protocol::Sip, this);
 #else
-	assert(0);
+   assert(0);
 #endif
 }
 #endif
@@ -1858,6 +1892,12 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       else
       {
          transition(Pending);
+         Item item;
+         item.domain = mPreferredNAPTR.key;
+         item.rrType = T_NAPTR;
+         item.record = mPreferredNAPTR.replacement;
+         clearCurrPath();
+         mCurrResultPath.push(item);
          mSRVCount++;
          mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
       }
@@ -1916,6 +1956,40 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
 
 void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
 {
+}
+
+void DnsResult::clearCurrPath()
+{
+   while (!mCurrResultPath.empty())
+   {
+      mCurrResultPath.pop();
+   }
+}
+
+void DnsResult::blacklistPrevResult()
+{
+   assert(!mCurrResultPath.empty());
+   Item top = mCurrResultPath.top();
+   assert(top.rrType==T_A || top.rrType==T_AAAA);
+   assert(top.domain==mPrevResult.getTargetDomain());
+   assert(top.record==DnsUtil::inet_ntop(mPrevResult));
+   vector<Data> records;
+   records.push_back(top.record);
+   mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+   mCurrResultPath.pop();
+}
+
+void DnsResult::addToPath(const std::deque<Tuple>& results)
+{
+   assert(mCurrResultPath.size()<=2);
+   for (std::deque<Tuple>::const_reverse_iterator it = results.rbegin(); it != results.rend(); ++it)
+   {
+      Item item;
+      item.domain = (*it).getTargetDomain();
+      item.rrType = (*it).isV4()? T_A : T_AAAA;
+      item.record = DnsUtil::inet_ntop((*it));
+      mCurrResultPath.push(item);
+   }
 }
 
 std::ostream& 
