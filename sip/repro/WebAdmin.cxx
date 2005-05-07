@@ -190,33 +190,15 @@ WebAdmin::buildPage( const Data& uri,
          assert(0);
       }
    }
-   
+      
    // parse any URI tags from form entry 
-   Data domain;
+   mRemoveSet.clear();
+   mHttpParams.clear();
+   
    if (!pb.eof())
    {
       pb.skipChar('?');
-      
-      // keys to add user
-      Data user;
-      Data realm;
-      Data password;
-      Data name;
-      Data email;
-
-      // keys to add route 
-      Data routeUri; // TODO !cj! name suck - this should be route match pattern 
-      Data routeMethod;
-      Data routeEvent;
-      Data routeDestination; // name suck - this should be route rewrite
-                             // expression 
-      int routeOrder;
-      
-      Data domainUri;
-      int  domainTlsPort;
-      
-      Data aclUri;
-      
+           
       while ( !pb.eof() )
       {
          const char* anchor1 = pb.position();
@@ -236,103 +218,21 @@ WebAdmin::buildPage( const Data& uri,
            
          DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.charHttpUnencoded() );
 
-         if ( key == Data("routeTestUri") )
+         if ( key.prefix("remove.") )  // special case of parameters to delete one or more records
          {
-            routeTestUri = value.charHttpUnencoded();
-         }
-
-         if ( key == Data("user") )
-         {
-            user = value.charHttpUnencoded();
-         }
-         if ( key == Data("password") )
-         {
-            password = value.charHttpUnencoded();
-         }
-         if ( key == Data("realm") )
-         {
-            realm = value.charHttpUnencoded();
-         }
-         if ( key == Data("name") )
-         {
-            name = value.charHttpUnencoded();
-         }
-         if ( key == Data("email") )
-         {
-            email = value.charHttpUnencoded();
-         }
-         if ( key == Data("domain") )
-         {
-            domain = value.charHttpUnencoded();
-         }
-
-         if ( key == Data("routeUri") )
-         {
-            routeUri = value.charHttpUnencoded();
-         }
-         if ( key == Data("routeMethod") )
-         {
-            routeMethod = value.charHttpUnencoded();
-         }
-         if ( key == Data("routeEvent") )
-         {
-            routeEvent = value.charHttpUnencoded();
-         }
-         if ( key == Data("routeDestination") )
-         {
-            routeDestination = value.charHttpUnencoded();
-         }
-         if ( key == Data("routeOrder") )
-         {
-            routeOrder = value.convertInt();
-         }
-         
-         if ( key == Data("aclUri") )
-         {
-            aclUri = value.charHttpUnencoded();
-         }
-         if ( key == Data("domainUri") )
-         {
-            domainUri = value.charHttpUnencoded();
-         }
-         if ( key == Data("domainTlsPort") )
-         {
-            domainTlsPort = value.convertInt();
-         }
-      }
-
-      // must be admin to do this 
-      if ( authenticatedUser == "admin")
-      {
-         if ( !user.empty() )
-         {
-            if ( realm.empty() )
+            Data tmp = key.substr(7);  // the ID is everything after the dot
+            int i = tmp.convertInt();
+            if (i)
             {
-               realm = domain;
+               mRemoveSet.insert(i);   // add to the set of records to remove
             }
-            
-            mStore.mUserStore.addUser(user,domain,realm,password,name,email);
          }
-         
-         if ( !routeDestination.empty() )
+         else if ( !key.empty() && !value.empty() ) // make sure both exist
          {
-            mStore.mRouteStore.add(routeMethod ,
-                                   routeEvent ,
-                                   routeUri, 
-                                   routeDestination, 
-                                   routeOrder );
-         }
-
-         if ( !domainUri.empty() )
-         {
-            mStore.mConfigStore.add(domainUri,domainTlsPort);
-         }
-
-         if ( !aclUri.empty() )
-         {
-            mStore.mAclStore.add(aclUri);
+            mHttpParams[key] = value;  // add other parameters to the Map
          }
       }
+
    }
    
    DebugLog( << "building page for user=" << authenticatedUser  );
@@ -380,7 +280,7 @@ void
 WebAdmin::buildAclsSubPage(DataStream& s)
 { 
    s << 
-      "      <form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl <<
+      "      <form id=\"addRouteForm\" method=\"get\" action=\"acls.html\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
@@ -424,8 +324,25 @@ WebAdmin::buildAclsSubPage(DataStream& s)
 void
 WebAdmin::buildDomainsSubPage(DataStream& s)
 { 
+   Dictionary::iterator pos;
+   Data domainUri;
+   int domainTlsPort;
+
+   if ( !mRemoveSet.empty())
+   {
+      // walk through list and delete unwanted domains
+   }
+   
+   pos = mHttpParams.find("domainUri");
+   if (pos != mHttpParams.end()) // found domainUri key
+   {
+      domainUri = pos->second;
+      domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
+      mStore.mConfigStore.add(domainUri,domainTlsPort);
+   }   
+   
    s <<
-      "     <form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl <<
+      "     <form id=\"addRouteFrom\" method=\"get\" action=\"domains.html\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">New Domain:</td>" << endl <<
@@ -443,12 +360,12 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "          <tr>" << endl <<
       "            <td>Domain</td>" << endl <<
       "            <td align=\"center\">TLS Port</td>" << endl <<
+      "            <td><input type=\"submit\" name=\"removeSelected\" value=\"Remove\"/></td>" << endl << 
       "          </tr>" << endl <<
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
    AbstractDb::ConfigRecordList list = mStore.mConfigStore.getConfigs();
-   
    for (AbstractDb::ConfigRecordList::iterator i = list.begin();
         i != list.end(); i++ )
    {
@@ -456,6 +373,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
          "          <tr>" << endl <<
          "            <td>" << i->mDomain << "</td>" << endl <<
          "            <td align=\"center\">" << i->mTlsPort << "</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << i->mDomain << "\"/></td>" << endl <<
          "          </tr>" << endl;
    }
    
@@ -511,8 +429,31 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
 void
 WebAdmin::buildAddUserSubPage( DataStream& s)
 {
+   Dictionary::iterator pos;
+   Data user;
+   
+   pos = mHttpParams.find("user");
+   if (pos != mHttpParams.end()) // found user key
+   {
+      user = pos->second;
+      Data domain = mHttpParams["domain"];
+      
+//      pos = mHttpParams.find("realm");
+//      if (pos == mHttpParams.end())
+//      {
+//         realm = mHttpParams["domain"];
+//      }
+            
+      mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],mHttpParams["name"],mHttpParams["email"]);      
+      // !rwm! TODO check if the add was successful
+      // if (success)
+      //{
+            s << "<p><em>Added:</em> " << user << "@" << domain << "</p>\n";
+      //}
+   }
+
       s << 
-         "<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<form id=\"addUserForm\" action=\"addUser.html\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
          "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
@@ -526,9 +467,28 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Domain:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"domain\" size=\"24\"/></td>" << endl << 
-         "</tr>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
+         ; 
+         
+         // for each domain, add an option in the pulldown
+         
+         AbstractDb::ConfigRecordList list = mStore.mConfigStore.getConfigs();
 
+         for (AbstractDb::ConfigRecordList::iterator i = list.begin();
+              i != list.end(); i++ )
+         {
+            s << "            <option";
+            
+            // if i->Domain is the default domain
+            // {
+            //    s << " selected=\"true\""; 
+            // }
+            
+            s << ">" << i->mDomain << "</option>" << endl;
+         }
+
+         s <<
+         "</select></td></tr>" << endl <<
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
          "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>" << endl << 
@@ -547,13 +507,13 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "<tr>" << endl << 
          "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
          "    <input type=\"reset\" value=\"Cancel\"/>" << endl << 
-         "    <input type=\"submit\" name=\"submit\" value=\"OK\"/>" << endl << 
+         "    <input type=\"submit\" name=\"submit\" value=\"Add\"/>" << endl << 
          "  </td>" << endl << 
          "</tr>" << endl << 
          
          "</table>" << endl << 
-         "</form>" << endl << 
-         " ";
+         "</form>" << endl
+         ;
 }
 
 
@@ -619,14 +579,14 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       
       s << 
          //"<h1>Users</h1>" << endl << 
-         "<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
          "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
          "<tr>" << endl << 
          "  <td>User</td>" << endl << 
          "  <td>Realm</td>" << endl << 
          "  <td>Name</td>" << endl << 
          "  <td>Email</td>" << endl << 
-         "  <td><button name=\"buttonName\" type=\"button\">Remove</button></td>" << endl << 
+         "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
          "</tr>" << endl;
       
 /*
@@ -644,13 +604,11 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       while ( !key.empty() )
       {
          s << "<tr>" << endl 
-           << "  <td>" << key << "</td>" << endl
+           << "  <td><a href=\"editUser.html?user=" << key.charEncoded() << "\">" << key << "</a></td>" << endl
            << "  <td> </td>" << endl
            << "  <td> </td>" << endl
            << "  <td> </td>" << endl
-           << "  <td><input type=\"checkbox\" name=\"removeUser\" value=\""
-           << key
-           << "\"/></td>" << endl 
+           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
            << "</tr>" << endl;
          
          key = mStore.mUserStore.getNextKey();
@@ -696,7 +654,8 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
             i++ )
       {
          s <<  "<tr>" << endl << 
-            "<td>" << i->mMatchingPattern << "</td>" << endl << 
+            "<td><a href=\"editRoute.html?routeUri=\"" << i->mMatchingPattern.charEncoded() << 
+            "\">" << i->mMatchingPattern << "</a></td>" << endl << 
             "<td>" << i->mMethod << "</td>" << endl << 
             "<td>" << i->mEvent << "</td>" << endl << 
             "<td>" << i->mRewriteExpression << "</td>" << endl << 
@@ -820,61 +779,18 @@ WebAdmin::buildDefaultPage()
 void
 WebAdmin::buildPageOutlinePre(DataStream& s)
 {
-   s << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl
-     << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">" << endl
-     << "<html xmlns=\"http://www.w3.org/1999/xhtml\">" << endl
-     << "  <head>" << endl
-     << "    <meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />" << endl
-     << "    <title>Repro Proxy</title>" << endl
-     << "  </head>" << endl
-     << "  <style>" << endl
-     << "body         { bgcolor: white; font-size: 90%; font-family: Arial, Helvetica, sans-serif }" << endl
-     << "h1           { font-size: 200%; font-weight: bold }" << endl
-     << "h2           { font-size: 100%; font-weight: bold; text-transform: uppercase }" << endl
-     << "h3           { font-size: 100%; font-weight: normal }" << endl
-     << "h4           { font-size: 100%; font-style: oblique; font-weight: normal }          " << endl
-     << "hr           { line-height: 2px; margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; height: 10px }" << endl
-     << "div.title    { color: white; background-color: #395af6;  padding-top: 10px; padding-bottom: 10px; padding-left: 10px }" << endl
-     << "div.title h1 { text-transform: uppercase; margin-top: 0; margin-bottom: 0 }  " << endl
-     << "div.menu     { color: black; background-color: #ff8d09;  padding: 0 10px 10px; " << endl
-     << "               width: 9em; float: left; clear: none; overflow: hidden }" << endl
-     << "div.menu p   { font-weight: bold; text-transform: uppercase; list-style-type: none; " << endl
-     << "               margin-top: 0; margin-bottom: 0; margin-left: 10px }" << endl
-     << "div.menu h2  { margin-top: 10px; margin-bottom: 0 ; text-transform: uppercase; }" << endl
-     << "div.main     { color: black; background-color: #dae1ed; margin-left: 11em }" << endl
-     << "div.space    { font-size: 5px; height: 10px }" << endl
-     << "  </style>" << endl
-     << "  <body>" << endl
-     << "    <div class=\"title\" >" << endl
-     << "      <h1>Repro</h1>" << endl
-     << "    </div>" << endl
-     << "    <div class=\"space\">" << endl
-     << "      <br />" << endl
-     << "    </div>" << endl
-     << "    <div class=\"menu\" >" << endl
-     << "      <h2>Configure</h2>" << endl
-     << "        <p><a href=\"domains.html\">Domains</a></p>" << endl
-     << "        <p><a href=\"acls.html\">ACLs</a></p>" << endl
-     << "      <h2>Users</h2>" << endl
-     << "        <p><a href=\"addUser.html\">Add User</a></p>" << endl
-     << "        <p><a href=\"showUsers.html\">Show Users</a></p>" << endl
-     << "      <h2>Routes</h2>" << endl
-     << "        <p><a href=\"addRoute.html\">Add Route</a></p>" << endl
-     << "        <p><a href=\"showRoutes.html\">Show Routes</a></p>" << endl
-     << "      <h2>Statistics</h2>" << endl
-     << "        <p><a href=\"registrations.html\">Registrations</a></p>" << endl
-     << "    </div>" << endl
-     << "    <div class=\"main\">" << endl;
+   s << 
+#include "repro/webadmin/pageOutlinePre.ixx"
+   ;
 }
 
 
 void
 WebAdmin::buildPageOutlinePost(DataStream& s)
 {
-   s << "     </div>" << endl
-     << "  </body>" << endl
-     << "</html>" << endl;
-      ;
+   s << 
+#include "repro/webadmin/pageOutlinePost.ixx"   
+   ;
 }
 
 
@@ -897,7 +813,7 @@ WebAdmin::buildUserPage()
         <<    "" << endl
         <<    "<body bgcolor=\"#ffffff\">" << endl;
       
-      buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
+      //buildAddUserSubPage(s); // !cj! TODO - should do beter page here 
       
       s <<    "</body>" << endl
         <<    "" << endl
