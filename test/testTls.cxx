@@ -30,33 +30,28 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-
    char* logType = "cout";
    char* logLevel = "ALERT";
-   char* proto = "tcp";
-   char* bindAddr = 0;
+   char* proto = "udp";
 
-   int runs = 100;
-   int window = 5;
+   int window = 5*20;
    int seltime = 100;
-   int v6 = 0;
 
-#ifdef WIN32
+   const int MaxStacks=100;
+   int numStacks=20;
+
    //logLevel = "ALERT";
-  logLevel = "INFO";
-  //logLevel = "DEBUG";
-#endif
+   //logLevel = "INFO";
+   //logLevel = "DEBUG";
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
-      {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
+      {"num-stacks",    'r', POPT_ARG_INT,  &numStacks,      0, "number of calls in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
       {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
-      {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
-      {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -64,52 +59,46 @@ main(int argc, char* argv[])
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
 #endif
+
+   int runs = 3*numStacks*numStacks;
+
    Log::initialize(logType, logLevel, argv[0]);
    cout << "Performing " << runs << " runs." << endl;
 
-   IpVersion version = (v6 ? V6 : V4);
-   SipStack receiver;
-   SipStack sender;
-//   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
-//   sender.addTransport(TCP, 25060, version);
-   if (bindAddr)
+   IpVersion version = V4;
+   Data bindInterface;
+   //bindInterface = Data( "127.0.0.1" );
+         
+   SipStack* stack[MaxStacks];
+   for ( int s=0; s<numStacks; s++)
    {
-      InfoLog(<<"Binding to address: " << bindAddr);
-      sender.addTransport(UDP, 25070,version,bindAddr);
-      sender.addTransport(TCP, 25070,version,bindAddr);
+      stack[s] = new SipStack;
+      
+      stack[s]->addTransport(UDP, 25000+s,version,bindInterface);
    }
-   else
-   {
-      sender.addTransport(UDP, 25070, version);
-      sender.addTransport(TCP, 25070, version);
-   }
-
-   receiver.addTransport(UDP, 25080, version);
-   receiver.addTransport(TCP, 25080, version);
-
-
+   
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = bindAddr?bindAddr:DnsUtil::getLocalHostName();
-   target.uri().port() = 25080;
+   target.uri().host() = Data("127.0.0.1");
+   target.uri().port() = 25000;
    target.uri().param(p_transport) = proto;
   
    NameAddr contact;
    contact.uri().scheme() = "sip";
    contact.uri().user() = "fluffy";
-
-#ifdef WIN32
-     target.uri().host() = Data("127.0.0.1");
-#endif
+   contact.uri().host() = Data("127.0.0.1");
+   contact.uri().port() = 25000;
 
    NameAddr from = target;
-   from.uri().port() = 25070;
+   from.uri().port() = 25000;
    
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
    int sent = 0;
+   int msgMod=0;
+   
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
@@ -118,43 +107,65 @@ main(int argc, char* argv[])
       while (sent < runs && outstanding < window)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = 25080; // +(sent%window);
-         SipMessage* next = Helper::makeRegister( target, from, contact);
-         next->header(h_Vias).front().sentPort() = 25070;
-         sender.send(*next);
+
+         // send from stack s to to stack r 
+         int s = msgMod%numStacks;
+         int r = (msgMod/numStacks)%numStacks;
+         msgMod++;
+         if ( s == r ) 
+         {
+            continue;
+         }
+         
+         target.uri().port() = 25000+r;
+         from.uri().port() = 25000+s;
+         contact.uri().port() = 25000+s;
+   
+         SipMessage* msg = Helper::makeRegister( target, from, contact);
+         msg->header(h_Vias).front().sentPort() = 25000+s;
+         stack[s]->send(*msg);
          outstanding++;
          sent++;
-         delete next;
+         delete msg;
       }
       
       FdSet fdset; 
-      receiver.buildFdSet(fdset);
-      sender.buildFdSet(fdset);
-      fdset.selectMilliSeconds(seltime); 
-      receiver.process(fdset);
-      sender.process(fdset);
-      
-      SipMessage* request = receiver.receive();
-      if (request)
+      for ( int s=0; s<numStacks; s++)
       {
-         assert(request->isRequest());
-         assert(request->header(h_RequestLine).getMethod() == REGISTER);
-
-         SipMessage* response = Helper::makeResponse(*request, 200);
-         receiver.send(*response);
-         delete response;
-         delete request;
+         stack[s]->buildFdSet(fdset);
       }
-      
-      SipMessage* response = sender.receive();
-      if (response)
+      fdset.selectMilliSeconds(seltime); 
+      for ( int s=0; s<numStacks; s++)
       {
-         assert(response->isResponse());
-         assert(response->header(h_CSeq).method() == REGISTER);
-         assert(response->header(h_StatusLine).statusCode() == 200);
-         outstanding--;
-         count++;
-         delete response;
+         stack[s]->process(fdset);
+      }
+       
+      for ( int s=0; s<numStacks; s++)
+      { 
+         SipMessage* msg = stack[s]->receive();
+         
+         if ( msg )
+         {
+            if ( msg->isRequest() )
+            {  
+               assert(msg->isRequest());
+               assert(msg->header(h_RequestLine).getMethod() == REGISTER);
+               
+               SipMessage* response = Helper::makeResponse(*msg, 200);
+               stack[s]->send(*response);
+               delete response;
+               delete msg;
+            }
+            else
+            { 
+               assert(msg->isResponse());
+               assert(msg->header(h_CSeq).method() == REGISTER);
+               assert(msg->header(h_StatusLine).statusCode() == 200);
+               outstanding--;
+               count++;
+               delete msg;
+            }
+         }
       }
    }
    InfoLog (<< "Finished " << count << " runs");
@@ -165,6 +176,12 @@ main(int argc, char* argv[])
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
+
+   while (true)
+   {
+      sleep(10);
+   }
+   
    return 0;
 }
 /* ====================================================================
