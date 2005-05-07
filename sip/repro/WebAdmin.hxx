@@ -22,6 +22,7 @@ namespace repro
 class Store;
 class UserStore;
 class RouteStore;
+typedef std::map<resip::Data, resip::Data> Dictionary;
 
 class WebAdmin: public HttpBase
 {
@@ -65,6 +66,11 @@ class WebAdmin: public HttpBase
       resip::Data routeTestUri;
 
       bool mNoWebChallenges;
+      
+      Dictionary mHttpParams;
+      
+      // list of the IDs of records that should be deleted
+      std::set<int> mRemoveSet;
 };
 
 
