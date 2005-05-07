@@ -34,7 +34,7 @@ DnsCnameRecord::DnsCnameRecord(const RROverlay& overlay)
    free(name);
 }
 
-bool DnsCnameRecord::equal(const Data& value) const
+bool DnsCnameRecord::isSameValue(const Data& value) const
 {
    return mCname==value;
 }

@@ -34,7 +34,7 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
    memcpy(&mAddr, overlay.data(), sizeof(in6_addr));
 }
 
-bool DnsAAAARecord::equal(const Data& value) const
+bool DnsAAAARecord::isSameValue(const Data& value) const
 {
    return DnsUtil::inet_ntop(mAddr) == value;
 }

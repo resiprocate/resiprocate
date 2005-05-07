@@ -43,7 +43,7 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
    free(name);
 }
 
-bool DnsSrvRecord::equal(const Data& value) const
+bool DnsSrvRecord::isSameValue(const Data& value) const
 {
    return value == mTarget;
 }

@@ -31,7 +31,7 @@ class DnsSrvRecord : public DnsResourceRecord
       int port() const { return mPort; }
       const Data& target() const { return mTarget; }
       const Data& name() const { return mName; }
-      bool equal(const Data& value) const;
+      bool isSameValue(const Data& value) const;
       
    private:
       int mPriority;
