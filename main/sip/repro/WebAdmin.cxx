@@ -81,8 +81,10 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("domains.html")  ) &&
       ( pageName != Data("acls.html")  ) &&
       ( pageName != Data("addUser.html") ) && 
+      ( pageName != Data("editUser.html") ) &&
       ( pageName != Data("showUsers.html")  ) &&
       ( pageName != Data("addRoute.html") ) && 
+      ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
       ( pageName != Data("user.html")  ) )
@@ -249,9 +251,11 @@ WebAdmin::buildPage( const Data& uri,
       if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
       
       if ( pageName == Data("addUser.html")    ) buildAddUserSubPage(s);
+      if ( pageName == Data("editUser.html")   ) buildEditUserSubPage(s);
       if ( pageName == Data("showUsers.html")  ) buildShowUsersSubPage(s);
       
       if ( pageName == Data("addRoute.html")   ) buildAddRouteSubPage(s);
+      if ( pageName == Data("editRoute.html")  ) buildEditRouteSubPage(s);
       if ( pageName == Data("showRoutes.html") ) buildShowRoutesSubPage(s);
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
@@ -572,9 +576,106 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
 }
 
 
+void
+WebAdmin::buildEditUserSubPage( DataStream& s)
+{
+   Dictionary::iterator pos;
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end()) 
+   {
+      Data key = pos->second;
+      AbstractDb::UserRecord rec = mStore.mUserStore.getUserInfo(key);
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      
+      s << "<p>Editing Record with key: " << key << "</p>" << endl;      
+
+      s << 
+         "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+         "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         //"<tr>" << endl << 
+         //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
+         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>" << endl << 
+         //"</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Domain:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
+         ; 
+         
+         // for each domain, add an option in the pulldown
+         
+         AbstractDb::ConfigRecordList list = mStore.mConfigStore.getConfigs();
+
+         for (AbstractDb::ConfigRecordList::iterator i = list.begin();
+              i != list.end(); i++ )
+         {
+            s << "            <option";
+            
+            if (i->mDomain == rec.domain)
+            {
+               s << " selected=\"true\""; 
+            }
+            
+            s << ">" << i->mDomain << "</option>" << endl;
+         }
+
+         s <<
+         "</select></td></tr>" << endl <<
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
+      // Note that the UserStore only stores a passwordHash, so we will collect a password.  If one is provided in the
+      // edit page, we will use it to generate a new passwordHash, otherwise we will leave the hash alone.
+
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name << 
+         "\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" value=\"" << rec.email <<
+         "\" size=\"24\"/></td>" << endl << 
+         "</tr>" << endl << 
+
+         "<tr>" << endl << 
+         "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+         "    <input type=\"submit\" name=\"submit\" value=\"Update\"/>" << endl << 
+         "  </td>" << endl << 
+         "</tr>" << endl << 
+         
+         "</table>" << endl << 
+         "</form>" << endl
+         ;
+   }
+   else
+   {
+      // go back to show users page
+   }
+}
+
+
+void
+WebAdmin::buildEditRouteSubPage(DataStream& s)
+{
+   return;
+}
+
 void 
 WebAdmin::buildShowUsersSubPage(DataStream& s)
 {
+   Dictionary::iterator pos;
+   Data key;
+   AbstractDb::UserRecord rec;
+
 
    if (!mRemoveSet.empty())
    {
@@ -586,6 +687,33 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
+   
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end())  // check if the user parameter exists, if so, use as a key to update the record
+   {
+      key = pos->second;
+      rec = mStore.mUserStore.getUserInfo(key);
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      if (1)
+      {
+         rec.user = mHttpParams["user"];
+         rec.domain = mHttpParams["domain"];
+         rec.realm = mHttpParams["domain"];   // eventually sort out realms
+         Data password = mHttpParams["password"];
+         if (!password.empty())
+         {
+            // !rwm! TODO compute passwordHash if the password was updated
+            
+         }
+         rec.name = mHttpParams["name"];
+         rec.email = mHttpParams["email"];
+         
+         // !rwm! TODO need to actually write out the updated record to the database now!
+         
+         s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
+      }
+   }
+   
       
       s << 
          //"<h1>Users</h1>" << endl << 
@@ -609,16 +737,16 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
   "</tr>"
 */
       s << endl;
-      
-      Data key = mStore.mUserStore.getFirstKey();
-      AbstractDb::UserRecord rec;
+            
+      key = mStore.mUserStore.getFirstKey();
       while ( !key.empty() )
       {
          rec = mStore.mUserStore.getUserInfo(key);
       
          s << "<tr>" << endl 
-           << "  <td><a href=\"editUser.html?user=" << key.charEncoded() << "\">" << key << "</a></td>" << endl
-//           << "  <td> </td>" << endl
+           << "  <td><a href=\"editUser.html?key=";
+         key.httpEscapeToStream(s);
+         s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
            << "  <td>" << rec.name << "</td>" << endl
            << "  <td>" << rec.email << "</td>" << endl
            << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
@@ -667,7 +795,9 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
             i++ )
       {
          s <<  "<tr>" << endl << 
-            "<td><a href=\"editRoute.html?routeUri=\"" << i->mMatchingPattern.charEncoded() << 
+            "<td><a href=\"editRoute.html?routeUri=\"";
+         i->mMatchingPattern.httpEscapeToStream(s); 
+         s << 
             "\">" << i->mMatchingPattern << "</a></td>" << endl << 
             "<td>" << i->mMethod << "</td>" << endl << 
             "<td>" << i->mEvent << "</td>" << endl << 
