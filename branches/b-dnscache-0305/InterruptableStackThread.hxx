@@ -1,87 +1,35 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#ifndef RESIP_NonPollingStackThread__hxx
+#define RESIP_NonPollingStackThread__hxx
+
+#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Socket.hxx"
+
+namespace resip
+{
+
+class SipStack;
+class SelectInterruptor;
+
+class NonPollingStackThread : public ThreadIf
+{
+   public:
+      NonPollingStackThread(SipStack& stack, SelectInterruptor& si);
+      virtual ~NonPollingStackThread();
+      
+      virtual void thread();
+
+   protected:
+      virtual void buildFdSet(FdSet& fdset);
+      virtual unsigned int getTimeTillNextProcessMS() const;
+
+   private:
+      SipStack& mStack;
+      SelectInterruptor& mSelectInterruptor;
+};
+
+}
+
 #endif
-
-#include "resiprocate/GenericUri.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-
-using namespace resip;
-using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
-
-//====================
-// GenericUri
-//====================
-GenericURI::GenericURI(const GenericURI& rhs)
-   : ParserCategory(rhs),
-     mUri(rhs.mUri)
-{}
-
-GenericURI::GenericURI(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type) 
-{}
-
-GenericURI&
-GenericURI::operator=(const GenericURI& rhs)
-{
-   if (this != &rhs)
-   {
-      ParserCategory::operator=(rhs);
-      mUri = rhs.mUri;
-   }
-   return *this;
-}
-
-Data& 
-GenericURI::uri()
-{
-   checkParsed();
-   return mUri;
-}
-
-const Data& 
-GenericURI::uri() const
-{
-   checkParsed();
-   return mUri;
-}
-
-void
-GenericURI::parse(ParseBuffer& pb)
-{
-   pb.skipWhitespace();
-   const char* anchor = pb.skipChar(Symbols::LA_QUOTE[0]);
-
-   pb.skipToChar(Symbols::RA_QUOTE[0]);
-   pb.data(mUri, anchor);
-   pb.skipChar(Symbols::RA_QUOTE[0]);
-
-   pb.skipWhitespace();
-
-   parseParameters(pb);
-}
-
-ParserCategory* 
-GenericURI::clone() const
-{
-   return new GenericURI(*this);
-}
-
-std::ostream& 
-GenericURI::encodeParsed(std::ostream& str) const
-{
-   str << Symbols::LA_QUOTE[0]
-       << mUri
-       << Symbols::RA_QUOTE[0];
-
-   encodeParameters(str);
-
-   return str;
-}
 
 
 /* ====================================================================

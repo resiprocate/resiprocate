@@ -1161,21 +1161,7 @@ Data::charHttpUnencoded() const
       {
          if ( i+2 < size())
          {
-		    ret += hexpair2int( *p++, *p++);
-//            char* high = strchr(hexmap, *p++);
-//            char* low = strchr(hexmap, *p++);
-
-			// !rwm! changed from high==0 || low==0
-//            if (high == 0 && low == 0)
-//            {
-//               assert(0);
-//               // ugh
-//               return ret;
-//            }
-            
-//            int highInt = high - hexmap;
-//            int lowInt = low - hexmap;
-//            ret += char(highInt<<4 | lowInt);
+            ret += hexpair2int( *p++, *p++);
             i += 2;
          }
          else
@@ -1193,6 +1179,38 @@ Data::charHttpUnencoded() const
       }
    }
    return ret;
+}
+
+void
+Data::httpEscapeToStream(DataStream& s) const
+{
+   char temp;   
+   const char* p = data();
+   for (size_type i = 0; i < size() ; ++i)
+   {
+      unsigned char c = *p++;
+
+      // pchar, slash, questionmark
+      // pchar = unreserved, sub-delims, colon, at-sign
+      // unreserved = alphanum, hyphen, underscore, period, tilde
+      // subdelims = bang (!), dollar, ampersand (oops!), plus, single-quote, lparen, rparen, asterisk, comma, semicolon, equal
+      if (isalpha(c) || isdigit(c) || strchr("-_.~!$+'()*,;=:@/?", c))
+      {
+         s << c;
+      }
+      else
+      {
+         if (c == 0x20)
+         {
+            s << '+';
+         }
+         else
+         {
+            temp = (c & 0xF0)>>4; 
+            s << '%' << temp << (c & 0x0F);
+         }
+      }
+   }
 }
 
 
@@ -1267,6 +1285,45 @@ int
 Data::convertInt() const
 {
    int val = 0;
+   char* p = mBuf;
+   int l = mSize;
+   int s = 1;
+
+   while (isspace(*p++))
+   {
+      l--;
+   }
+   p--;
+   
+   if (*p == '-')
+   {
+      s = -1;
+      ++p;
+      l--;
+   }
+   
+   while (l--)
+   {
+      char c = *p++;
+      if (!isdigit(c)) break;
+      if ((c >= '0') && (c <= '9'))
+      {
+         val *= 10;
+         val += c - '0';
+      }
+      else
+      {
+         return s*val;
+      }
+   }
+
+   return s*val;
+}
+
+UInt64
+Data::convertUInt64() const
+{
+   UInt64 val = 0;
    char* p = mBuf;
    int l = mSize;
    int s = 1;

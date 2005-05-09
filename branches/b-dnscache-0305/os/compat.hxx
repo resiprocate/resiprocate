@@ -1,6 +1,7 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
+
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
@@ -14,11 +15,15 @@
 #endif
 
 #ifdef WIN32
+
+// !cj! TODO would be nice to remove this 
+#pragma warning(disable : 4996)
+
 #include <errno.h>
 #include <winsock2.h>
 #include <io.h>
 #endif
- 
+
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/time.h>
@@ -35,8 +40,12 @@
 # include <errno.h>
 # include <winsock2.h>
 # include <io.h>
+
+#ifndef __BIT_TYPES_DEFINED__ /* sleepcat DB uses this */ 
 typedef unsigned long int u_int32_t;
 typedef long int ssize_t;
+#endif
+
 #endif
 
 #if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
@@ -47,12 +56,14 @@ typedef long int ssize_t;
 #define __SCHAR_MAX__ 127
 #endif
 #endif
+
 #endif
 
 #if defined(__SUNPRO_CC)
 #if defined(_TIME_T)
  using std::time_t;
 #endif
+
 #include <time.h>
 #include <memory.h>
 #include <string.h>
@@ -119,22 +130,22 @@ typedef unsigned long long UInt64;
 
 typedef struct { unsigned char octet[16]; }  UInt128;
 
-
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,
 //etc...like most compilers and VC++2003+.
 //COMPLETE would allow template metaprogramming, template< template< > > tricks,
 //etc...REASONABLE should always be defined when COMPLETE is defined.
 
-
 #if defined(_MSC_VER) && (MSC_VER >= 1200)
 #define REASONABLE_TEMPLATES
 #endif
+
 #if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 #define REASONABLE_TEMPLATES
 #endif
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -184,3 +195,4 @@ typedef struct { unsigned char octet[16]; }  UInt128;
  * <http://www.vovida.org/>.
  *
  */
+

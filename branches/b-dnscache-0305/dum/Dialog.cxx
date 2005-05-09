@@ -228,7 +228,7 @@ Dialog::~Dialog()
    mDialogSet.possiblyDie();
 }
 
-DialogId
+const DialogId&
 Dialog::getId() const
 {
    return mId;

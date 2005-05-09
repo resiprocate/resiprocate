@@ -338,9 +338,13 @@ SipMessage::compute2543TransactionHash() const
 const Data&
 SipMessage::getRFC2543TransactionId() const
 {
-   if (mRFC2543TransactionId.empty())
+   if(!( exists(h_Vias) && header(h_Vias).front().exists(p_branch) &&
+         header(h_Vias).front().param(p_branch).hasMagicCookie() ) )
    {
-      compute2543TransactionHash();
+      if (mRFC2543TransactionId.empty())
+      {
+         compute2543TransactionHash();
+      }
    }
    return mRFC2543TransactionId;
 }
