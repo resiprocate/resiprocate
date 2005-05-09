@@ -17,13 +17,13 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
 Data 
 HttpGetMessage::brief() const
 { 
-   return ("HttpGetMessage");
+   return ("HttpGetMessage: ") << mTid << " " << mType;   
 }
 
 std::ostream& 
 HttpGetMessage::encode(std::ostream& strm) const
 {
-   return strm << brief() << mTid << " " << mType << " " << mBody;   
+   return strm << brief() << "body: " << mBody;   
 }
 
 Message* 
