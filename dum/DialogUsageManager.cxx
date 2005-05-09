@@ -1007,6 +1007,9 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
          try
          {
             mRequiresCerts[sipMsg->getTransactionId()] = sipMsg;
+            InfoLog( << "Dum::queueForIdentityCheck, sending http request to: " 
+                     << sipMsg->header(h_IdentityInfo));
+            
             HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
                                           sipMsg->getTransactionId(),
                                           *this);
