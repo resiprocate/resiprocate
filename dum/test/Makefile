@@ -3,14 +3,16 @@
 BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD POPT
+PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD POPT CURL
 
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx testIdentity.cxx
+
+CODE_SUBDIRS += curlHttp
 
 TESTPROGRAMS += limpc.cxx
-SRC = CommandLineParser.cxx UserAgent.cxx 
+SRC = CommandLineParser.cxx UserAgent.cxx curlHttp/CurlHttpProvider.cxx
 
 include $(BUILD)/Makefile.post
