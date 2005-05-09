@@ -41,7 +41,6 @@ extern "C"
 
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsInterface.hxx"
-
 #include "resiprocate/dns/QueryTypes.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/DnsResult.hxx"
@@ -317,14 +316,14 @@ DnsResult::getDefaultPort(TransportType transport, int port)
       switch (transport)
       {
          case UDP:
-            return 5060;
+            return Symbols::DefaultSipPort;
          case TCP:
-            return mSips ? 5061 : 5060;
+            return mSips ? Symbols::DefaultSipsPort : Symbols::DefaultSipPort;
          case TLS:
-            return 5061;
+            return Symbols::DefaultSipsPort;
          default:
             InfoLog( << "Should not get this - unkown transport" );
-            return 5060; // !cj! todo - remove 
+            return Symbols::DefaultSipPort; // !cj! todo - remove 
             assert(0);
       }
    }
@@ -645,12 +644,12 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
             if (mSips)
             {
                mTransport = TLS;
-               mPort = 5061;
+               mPort = Symbols::DefaultSipsPort;
             }
             else
             {
                mTransport = UDP;
-               mPort = 5060;
+               mPort = Symbols::DefaultSipPort;
             }
          }
          else
@@ -1799,12 +1798,12 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
             if (mSips)
             {
                mTransport = TLS;
-               mPort = 5061;
+               mPort = Symbols::DefaultSipsPort;
             }
             else
             {
                mTransport = UDP;
-               mPort = 5060;
+               mPort = Symbols::DefaultSipPort;
             }
          }
          else
@@ -2077,4 +2076,3 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
  * <http://www.vovida.org/>.
  *
  */
-

@@ -38,7 +38,10 @@ class Helper
       {
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
-      
+
+      // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
+      static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
+
       //in general content length handled automatically by SipMessage?
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
@@ -123,7 +126,7 @@ class Helper
                                             bool stale = false);
 
       // adds authorization headers in reponse to the 401 or 407--currently
-      // only supports md5, the only qop supported is auth.
+      // only supports md5.
       static SipMessage& addAuthorization(SipMessage& request,
                                           const SipMessage& challenge,
                                           const Data& username,
@@ -149,12 +152,12 @@ class Helper
       static Data makeResponseMD5WithA1(const Data& a1,
                                         const Data& method, const Data& digestUri, const Data& nonce,
                                         const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
-                                        const Data& cnonceCount = Data::Empty);
+                                        const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
 
       static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                                   const Data& method, const Data& digestUri, const Data& nonce,
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
-                                  const Data& cnonceCount = Data::Empty);
+                                  const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
       
       
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
@@ -199,8 +202,11 @@ class Helper
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
       
       static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
+
+   private:
+      static Data qopOption(const Auth& challenge);
 };
- 
+
 }
 
 #endif

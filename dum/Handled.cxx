@@ -10,7 +10,7 @@ using namespace resip;
 
 Handled::Handled(HandleManager& ham) : 
    mHam(ham),
-   mId(0)
+   mId(Handled::npos)
 {
    mId = mHam.create(this);
    StackLog ( << "&&&&&& Handled::Handled " << mId << "this(" << this << ") " << &ham );
@@ -18,8 +18,11 @@ Handled::Handled(HandleManager& ham) :
 
 Handled::~Handled()
 {
-   StackLog ( << "&&&&&& ~Handled " << mId << "this(" << this << ") " << &mHam );
-   mHam.remove(mId);
+   if (mId != Handled::npos)
+   {
+      StackLog ( << "&&&&&& ~Handled " << mId << "this(" << this << ") " << &mHam );
+      mHam.remove(mId);
+   }
 }
 
 std::ostream& 
