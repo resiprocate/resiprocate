@@ -269,7 +269,11 @@ DnsUtil::getInterfaces(const Data& matching)
 
       count++;
       
+#if defined(__NetBSD__)
+      int si = sizeof(ifr->ifr_name) + ifr->ifr_addr.sa_len;
+#else
       int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
+#endif
       tl -= si;
       ptr += si;
 
@@ -281,7 +285,8 @@ DnsUtil::getInterfaces(const Data& matching)
       e = ioctl(s,SIOCGIFADDR,&ifr2);
       if ( e == -1 )
       {
-         // no valid address for this interface, skip it 
+         // no valid address for this interface, skip it    
+         DebugLog (<< "Ignoring interface  " << name << " as there is no valid address" );
          continue;
       }
       struct sockaddr a = ifr2.ifr_addr;
@@ -291,6 +296,7 @@ DnsUtil::getInterfaces(const Data& matching)
       if ( e == -1 )
       {
          // no valid flags for this interface, skip it 
+         DebugLog (<< "Ignoring interface  " << name << " as there is no valid flags" );
          continue;
       }
       short flags = ifr2.ifr_flags;

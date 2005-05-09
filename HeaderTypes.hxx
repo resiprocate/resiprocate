@@ -7,6 +7,8 @@
 //
 // !dlb! until automated, must ensure that this set is consistent with
 //
+// ************ PLEASE RUN testParserCategories AFTER CHANGING ***************
+//
 // HeaderTypes.hxx
 // Headers.hxx
 // HeaderHash.gperf
@@ -98,17 +100,17 @@ class Headers
          defineMultiHeader(Reason, "Reason", Token, "RFC 3326"),
          defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323"),
          defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841"),
-		 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313"),
+         defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313"),
          defineMultiHeader(Path, "Path", NameAddr, "RFC 3327"),
-		 defineHeader(Join, "Join", CallId, "RFC 3911"),
-		 defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft"),
+         defineHeader(Join, "Join", CallId, "RFC 3911"),
+         defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft"),
          defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325"),
          defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325"),
          defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841"),
          defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841"),
-		 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455"),
-		 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
-		 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608"),
+         defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455"),
+         defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
+         defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608"),
 
          defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
          defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),

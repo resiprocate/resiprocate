@@ -10,12 +10,10 @@ AppDialogSet::AppDialogSet(DialogUsageManager& dum) :
    Handled(dum),
    mDum(dum),
    mDialogSet(0)
-{
-}
+{}
 
 AppDialogSet::~AppDialogSet()
-{
-}
+{}
 
 AppDialogSetHandle 
 AppDialogSet::getHandle()
@@ -75,6 +73,21 @@ AppDialogSet::getDialogSetId()
    {
        return DialogSetId(Data::Empty, Data::Empty);
    }
+}
+
+AppDialogSet*
+AppDialogSet::reuse()
+{
+   assert(mDialogSet);
+   mDialogSet->appDissociate();
+   mDialogSet = 0;
+   return this;
+}
+
+const Data 
+AppDialogSet::getClassName()
+{
+   return "AppDialogSet";
 }
 
 std::ostream& 

@@ -15,7 +15,7 @@ class NetworkAssociation
       NetworkAssociation() : mDum(0) {}
       void setDum(DialogUsageManager* dum) { mDum = dum; }
       void update(const SipMessage& msg, int keepAliveInterval);
-      NetworkAssociation::~NetworkAssociation();
+      ~NetworkAssociation();
    private:
       Tuple mTarget;
       DialogUsageManager* mDum;

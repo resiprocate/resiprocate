@@ -43,7 +43,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
 
       void performWrite();
 
-      int Connection::read(Fifo<TransactionMessage>& fifo);
+      int read(Fifo<TransactionMessage>& fifo);
 
       // pure virtual, but need concrete Connection
       Transport* transport();

@@ -266,19 +266,39 @@ TlsConnection::checkState()
       }
    }
    //post-connection verification: check that certificate name matches domain name
-   bool bResult = mSecurity->validatePeerCertName(mSsl, who().getTargetDomain());
-   if(!bResult)
-   {
-       mState = Broken;
-       mBio = 0;
-       ErrLog (<< "Certificate name mismatch ");
-       return mState;
-   }
+   
 
+   X509* cert = SSL_get_peer_certificate(mSsl);
+   if (cert)
+   {
+      if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
+      {
+         mState = Broken;
+         mBio = 0;
+         ErrLog (<< "Certificate name mismatch ");
+         return mState;
+      }
+
+   }
+   else
+   {
+      //!dcm! -- add 'require mutual tls' logic here
+      if (!mServer)
+      {
+         ErrLog(<< "No server certificate in TLS connection" );
+         mState = Broken;
+         mBio = 0;
+         return mState;
+      }
+   }
+   X509_free(cert); 
+   cert=NULL;
+    
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
 
-   computePeerName(); // force peer name to get checked and perhaps cert loaded
+   // force peer name to get checked and perhaps cert loaded
+   computePeerName();
 
 #endif // USE_SSL   
    return mState;
@@ -325,7 +345,7 @@ TlsConnection::read(char* buf, int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            DebugLog( << "Got TLS read got condition of " << err  );
+            StackLog( << "Got TLS read got condition of " << err  );
             return 0;
          }
          break;
@@ -340,7 +360,7 @@ TlsConnection::read(char* buf, int count )
       }
       assert(0);
    }
-   //DebugLog(<<"SSL bytesRead="<<bytesRead);
+   StackLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
 #endif // USE_SSL
    return -1;
@@ -383,7 +403,7 @@ TlsConnection::write( const char* buf, int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            DebugLog( << "Got TLS write got condition of " << err  );
+            StackLog( << "Got TLS write got condition of " << err  );
             return 0;
          }
          break;
@@ -412,7 +432,7 @@ TlsConnection::write( const char* buf, int count )
       }
    }
 
-   DebugLog( << "Did TLS write"  );
+   StackLog( << "Did TLS write"  );
 
    return ret;
 #endif // USE_SSL
@@ -494,7 +514,7 @@ TlsConnection::computePeerName()
    X509* cert = SSL_get_peer_certificate(mSsl);
    if ( !cert )
    {
-      DebugLog(<< "No peer certifiace in TLS connection" );
+      DebugLog(<< "No peer certificate in TLS connection" );
       return;
    }
 

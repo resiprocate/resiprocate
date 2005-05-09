@@ -16,7 +16,6 @@ class DialogUsageManager;
 class AppDialogSet : public Handled
 {
    public:
-      AppDialogSet(DialogUsageManager& dum);
 
       // by default, calls the destructor. application can override this if it
       // wants to manage memory on its own. 
@@ -31,9 +30,14 @@ class AppDialogSet : public Handled
       AppDialogSetHandle getHandle();
       DialogSetId getDialogSetId();
 
+      virtual const Data getClassName();
+
       virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
+
+      AppDialogSet(DialogUsageManager& dum);
+
       DialogUsageManager& mDum;      
       virtual ~AppDialogSet();
       // This is called by the DialogUsageManager to select an userProfile to assign to a UAS DialogSet.
@@ -42,7 +46,15 @@ class AppDialogSet : public Handled
       virtual UserProfile* selectUASUserProfile(const SipMessage&); 
 
    private:
+      /// Prepare for association with a different dialog set id.  Need this
+      /// when the initial message changes (408/Retry-After) but the application
+      /// doesn't want to know.
+      AppDialogSet* reuse();
+      
       friend class DialogUsageManager;
+      friend class AppDialogSetFactory;
+      friend class ClientSubscription;
+
       DialogSet* mDialogSet;
 };
 
