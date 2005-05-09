@@ -464,6 +464,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_ProvidedOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedOffer:
+      case UAS_OfferProvidedAnswer:
          dispatchOfferOrEarly(msg);
          break;       
       case UAS_Accepted:
@@ -548,26 +549,38 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         if(!isTerminated())  
+         {
+            handler->onOffer(getSessionHandle(), msg, *sdp);
+         }
          break;
       case OnInvite:
          mLastSessionModification = msg;
          transition(UAS_NoOffer);
          handler->onNewSession(getHandle(), None, msg);
-         handler->onOfferRequired(getSessionHandle(), msg);
+         if(!isTerminated())  
+         {
+            handler->onOfferRequired(getSessionHandle(), msg);
+         }
          break;
       case OnInviteReliableOffer:
          mLastSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         if(!isTerminated())  
+         {
+            handler->onOffer(getSessionHandle(), msg, *sdp);
+         }
          break;
       case OnInviteReliable:
          mLastSessionModification = msg;
          transition(UAS_NoOfferReliable);
          handler->onNewSession(getHandle(), None, msg);
-         handler->onOfferRequired(getSessionHandle(), msg);
+         if(!isTerminated())  
+         {
+            handler->onOfferRequired(getSessionHandle(), msg);
+         }
          break;
       default:
          assert(0);
@@ -721,7 +734,10 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
-         handler->onConnected(getSessionHandle(), msg);
+         if(!isTerminated())  // onAnswer callback may call end() or reject()
+         {
+            handler->onConnected(getSessionHandle(), msg);
+         }
          break;
          
       case OnCancel:

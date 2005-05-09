@@ -20,8 +20,6 @@
 typedef int socklen_t;
 inline int getErrno() { return WSAGetLastError(); }
 
-typedef SOCKET Socket;
-
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
@@ -68,7 +66,6 @@ typedef int socklen_t;
 
 #endif
 
-
 namespace resip
 {
 
@@ -81,6 +78,8 @@ typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
 inline int getErrno() { return errno; }
+#else
+typedef SOCKET Socket;
 #endif
 
 bool makeSocketNonBlocking(Socket fd);
@@ -90,7 +89,7 @@ int closeSocket( Socket fd );
 class FdSet
 {
    public:
-      FdSet() : size(0)
+      FdSet() : size(0), numReady(0)
       {
          FD_ZERO(&read);
          FD_ZERO(&write);
@@ -99,7 +98,7 @@ class FdSet
       
       int select(struct timeval& tv)
       {
-         return ::select(size, &read, &write, &except, &tv);
+         return numReady = ::select(size, &read, &write, &except, &tv);
       }
 
       int selectMilliSeconds(unsigned long ms)
@@ -165,6 +164,7 @@ class FdSet
       void reset()
       {
          size = 0;
+         numReady = 0;
          FD_ZERO(&read);
          FD_ZERO(&write);
          FD_ZERO(&except);
@@ -175,6 +175,7 @@ class FdSet
       fd_set write;
       fd_set except;
       int size;
+	  int numReady;  // set after each select call
 };
 
 	

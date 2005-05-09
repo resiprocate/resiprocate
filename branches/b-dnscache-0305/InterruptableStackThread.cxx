@@ -1,88 +1,62 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
-
-#include "resiprocate/GenericUri.hxx"
+#include "resiprocate/InterruptableStackThread.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-
-using namespace resip;
-using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+using namespace resip;
 
-//====================
-// GenericUri
-//====================
-GenericURI::GenericURI(const GenericURI& rhs)
-   : ParserCategory(rhs),
-     mUri(rhs.mUri)
+InterruptableStackThread::InterruptableStackThread(SipStack& stack, SelectInterruptor& si)
+   : mStack(stack),
+     mSelectInterruptor(si)
 {}
 
-GenericURI::GenericURI(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type) 
-{}
-
-GenericURI&
-GenericURI::operator=(const GenericURI& rhs)
+InterruptableStackThread::~InterruptableStackThread()
 {
-   if (this != &rhs)
-   {
-      ParserCategory::operator=(rhs);
-      mUri = rhs.mUri;
-   }
-   return *this;
-}
-
-Data& 
-GenericURI::uri()
-{
-   checkParsed();
-   return mUri;
-}
-
-const Data& 
-GenericURI::uri() const
-{
-   checkParsed();
-   return mUri;
+   //InfoLog (<< "InterruptableStackThread::~InterruptableStackThread()");
 }
 
 void
-GenericURI::parse(ParseBuffer& pb)
+InterruptableStackThread::thread()
 {
-   pb.skipWhitespace();
-   const char* anchor = pb.skipChar(Symbols::LA_QUOTE[0]);
-
-   pb.skipToChar(Symbols::RA_QUOTE[0]);
-   pb.data(mUri, anchor);
-   pb.skipChar(Symbols::RA_QUOTE[0]);
-
-   pb.skipWhitespace();
-
-   parseParameters(pb);
+   while (!isShutdown())
+   {
+      try
+      {
+         FdSet fdset;
+         mStack.process(fdset); // .dcm. reqd to get send requests queued at transports
+         mSelectInterruptor.buildFdSet(fdset);
+         mStack.buildFdSet(fdset);
+         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(), 
+                                                     getTimeTillNextProcessMS()));
+         if (ret >= 0)
+         {
+            // .dlb. use return value to peak at the message to see if it is a
+            // shutdown, and call shutdown if it is
+            // .dcm. how will this interact w/ TuSelector?
+            mSelectInterruptor.buildFdSet(fdset);
+            mStack.process(fdset);
+         }
+      }
+      catch (BaseException& e)
+      {
+         InfoLog (<< "Unhandled exception: " << e);
+      }
+   }
+   WarningLog (<< "Shutting down stack thread");
 }
 
-ParserCategory* 
-GenericURI::clone() const
+void
+InterruptableStackThread::buildFdSet(FdSet& fdset)
+{}
+
+unsigned int
+InterruptableStackThread::getTimeTillNextProcessMS() const
 {
-   return new GenericURI(*this);
+   //.dcm. --- eventually make infinite
+   return 10000;   
 }
-
-std::ostream& 
-GenericURI::encodeParsed(std::ostream& str) const
-{
-   str << Symbols::LA_QUOTE[0]
-       << mUri
-       << Symbols::RA_QUOTE[0];
-
-   encodeParameters(str);
-
-   return str;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

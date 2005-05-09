@@ -63,6 +63,7 @@ class Symbols
       static const char* Postd;
 
       static const char* auth;
+      static const char* authInt;
       static const char* Digest;
       static const char* Basic;
       

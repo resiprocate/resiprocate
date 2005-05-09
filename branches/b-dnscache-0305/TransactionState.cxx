@@ -1261,7 +1261,10 @@ TransactionState::processNoDnsResults()
 
    sendToTU(response); // !jf! should be 480? 
    terminateClientTransaction(mId);
-   delete this; 
+   if (mMachine != Stateless)
+   {
+	   delete this; 
+   }
 }
 
 void
@@ -1418,12 +1421,12 @@ simpleTupleForUri(const Uri& uri)
       switch(transport)
       {
          case TLS:
-            port = 5061;
+            port = Symbols::DefaultSipsPort;
             break;
          case UDP:
          case TCP:
          default:
-            port = 5060;
+            port = Symbols::DefaultSipPort;
             break;
          // !ah! SCTP?
 

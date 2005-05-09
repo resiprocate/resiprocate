@@ -116,30 +116,31 @@ UserProfile::getDigestCredential( const Data& realm  )
    }
 }
 
-UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& password) :
+UserProfile::DigestCredential::DigestCredential(const Data& r, const Data& u, const Data& pwd) :
    realm(r),
-   user(u)
+   user(u),
+   password(pwd)
 {  
-   MD5Stream a1;
-   a1 << user
-      << Symbols::COLON
-      << realm
-      << Symbols::COLON
-      << password;
-   passwordHashA1 = a1.getHex();
+//    MD5Stream a1;
+//    a1 << user
+//       << Symbols::COLON
+//       << realm
+//       << Symbols::COLON
+//       << password;
+//    passwordHashA1 = a1.getHex();
 }
 
 UserProfile::DigestCredential::DigestCredential() : 
    realm(Data::Empty),
    user(Data::Empty),
-   passwordHashA1(Data::Empty)
+   password(Data::Empty)
 {
 }  
 
 UserProfile::DigestCredential::DigestCredential(const Data& pRealm) : 
    realm(pRealm),
    user(Data::Empty),
-   passwordHashA1(Data::Empty) 
+   password(Data::Empty) 
 {
 }  
 

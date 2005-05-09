@@ -70,6 +70,9 @@ Condition::Condition()
 
 #ifdef WIN32
 #  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
+    m_blocked = 0;
+    m_gone = 0;
+    m_waiting = 0;
     m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
     m_queue = reinterpret_cast<void*>(
 //        CreateSemaphore(0, 0, (std::numeric_limits<long>::max)(), 0));

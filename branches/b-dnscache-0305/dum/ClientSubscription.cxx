@@ -9,6 +9,8 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 
+#include "resiprocate/dum/AppDialogSet.hxx"
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -17,7 +19,8 @@ using namespace resip;
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
-     mEnded(false)
+     mEnded(false),
+     mExpires(0)
 {
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
@@ -57,15 +60,16 @@ ClientSubscription::dispatch(const SipMessage& msg)
          mOnNewSubscriptionCalled = true;
       }         
       int expires = 0;      
-      //default to 60 seconds so non-compliant endpoints don't result in leaked usages
+      //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
       {
          expires = msg.header(h_SubscriptionState).param(p_expires);
       }
       else
       {
-         expires = 60;
+         expires = 3600;
       }
+
       if (!mLastRequest.exists(h_Expires))
       {
          mLastRequest.header(h_Expires).value() = expires;
@@ -113,39 +117,32 @@ ClientSubscription::dispatch(const SipMessage& msg)
          return;
       }
 
-      SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*> (mDialog.mDialogSet.getCreator());
-
-      int refreshInterval = 0;
-      if (expires)
+      assert(expires);
+      unsigned long refreshInterval = 0;
+      UInt64 now = Timer::getTimeMs() / 1000;
+      
+      if (mExpires == 0 || now + expires < mExpires)
       {
-         if (creator && creator->hasRefreshInterval() && creator->getRefreshInterval() <  expires)
-         {
-            refreshInterval = creator->getRefreshInterval();
-         }
-         else
-         {
-            refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
-         }
+         refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
+         mExpires = now + refreshInterval;
       }
 
       if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
          {
-            unsigned long t = refreshInterval;
-            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
+            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
          }
-
+         
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
       {
          if (refreshInterval)
          {
-            unsigned long t = refreshInterval;
-            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
+            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
          }
 
          handler->onUpdatePending(getHandle(), msg);
@@ -174,29 +171,49 @@ ClientSubscription::dispatch(const SipMessage& msg)
          // !kh!
          // why not absorb this error if DUM reSUBs for user?
          handler->onTerminated(getHandle(), msg);
-         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
+
+         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
          mDum.send(sub);
 
          delete this;
          return;
       }
-      else if (msg.header(h_StatusLine).statusCode() == 408)
+      else if (msg.header(h_StatusLine).statusCode() == 408 ||
+               ((msg.header(h_StatusLine).statusCode() == 413 ||
+                 msg.header(h_StatusLine).statusCode() == 480 ||
+                 msg.header(h_StatusLine).statusCode() == 486 ||
+                 msg.header(h_StatusLine).statusCode() == 500 ||
+                 msg.header(h_StatusLine).statusCode() == 503 ||
+                 msg.header(h_StatusLine).statusCode() == 600 ||
+                 msg.header(h_StatusLine).statusCode() == 603) &&
+                msg.exists(h_RetryAfter)))
       {
-         InfoLog (<< "Received 408 to SUBSCRIBE "
-                  << mLastRequest.header(h_To));
+         int retry;
 
-         int retry = handler->onRequestRetry(getHandle(), 0, msg);
+         if (msg.header(h_StatusLine).statusCode() == 408)
+         {
+            InfoLog (<< "Received 408 to SUBSCRIBE "
+                     << mLastRequest.header(h_To));
+            retry = handler->onRequestRetry(getHandle(), 0, msg);
+         }
+         else
+         {
+            InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
+                     << mLastRequest.header(h_To));
+            retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
+         }
+
          if (retry < 0)
          {
             DebugLog(<< "Application requested failure on Retry-After");
-            handler->onTerminated(getHandle(), msg);            
+            handler->onTerminated(getHandle(), msg);
             delete this;
             return;
          }
          else if (retry == 0)
          {
             DebugLog(<< "Application requested immediate retry on Retry-After");
-            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             return;
          }
@@ -240,7 +257,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             delete this;
          }
@@ -264,6 +281,7 @@ ClientSubscription::requestRefresh(int expires)
       {
          mLastRequest.header(h_Expires).value() = expires;
       }
+      mExpires = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
       send(mLastRequest);
    }
