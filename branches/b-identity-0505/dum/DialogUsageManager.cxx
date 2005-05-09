@@ -6,9 +6,6 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
-
-#include "resiprocate/external/HttpGetMessage.hxx"
-
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
@@ -903,6 +900,10 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             {
                processRequest(*sipMsg);
             }
+         }
+         else
+         {
+            processResponse(*sipMsg);
          }
          return;
       }
