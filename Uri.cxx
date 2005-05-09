@@ -31,6 +31,7 @@ Uri::Uri()
 {
 }
 
+static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
    : ParserCategory(), 
      mScheme(Symbols::DefaultSipScheme),
@@ -38,20 +39,11 @@ Uri::Uri(const Data& data)
      mOldPort(0),
      mEmbeddedHeaders(0)
 {
-   try
-   {
-      ParseBuffer pb(data.data(), data.size());
-      Uri tmp;
-
-      // avoid the destructor/constructor issue
-      tmp.parse(pb);
-      *this = tmp;
-   }
-   catch(ParseBuffer::Exception& e)
-   {
-      DebugLog(<< "Failed trying to construct a Uri from " << data << ": " << e);
-      throw;
-   }
+   // must copy because parse creates overlays
+   Uri tmp;
+   ParseBuffer pb(data, parseContext);
+   tmp.parse(pb);
+   *this = tmp;
 }
 
 Uri::Uri(const Uri& rhs)

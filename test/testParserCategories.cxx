@@ -52,6 +52,20 @@ int
 main(int arc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+
+   {
+      TR _tr("Test poorly formed NameAddr by construction");
+
+      try
+      {
+         NameAddr test("<jason_AT_example.com@10.0.0.1;transport=TCP>");
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << e << endl;
+      }
+   }
    
    {
       TR _tr("Test copy transport param");
@@ -65,6 +79,7 @@ main(int arc, char** argv)
       
       assert(test.uri().param(p_transport) == copy.uri().param(p_transport));
    }
+   
    {
       TR _tr("Test iterator erase in ParserContainer");
 
