@@ -619,8 +619,6 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << password;
    a1.flush();
  
-   DebugLog(<< "Computed A1 of " << a1.getHex() << " for " << username << " at realm " << realm );
-   
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
 }
