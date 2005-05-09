@@ -32,31 +32,51 @@ MacSecurity::preload()
    getCerts();
 }
 
+// Opens a search handle to certificates store in
+// the X509Anchors keychain
 KeychainHandle
-MacSecurity::openSystemCertStore(const Data& name)
+MacSecurity::openSystemCertStore()
 {
-   // Currently we only search for certificates in the
-   // default key chain. Later when we support more we can
-   // enable it here.
-   if (!name.empty())
+   OSStatus status = noErr;
+
+   // The ROOT certificates we're interested in are stored
+   // in the X509Anchors keychain
+
+   // NOTE: instead of hardcoding the "/System" portion of the path
+   // we could retrieve it using ::FSFindFolder instead. But it
+   // doesn't seem useful right now.
+   SecKeychainRef systemCertsKeyChain;
+   status = ::SecKeychainOpen(
+      "/System/Library/Keychains/X509Anchors",
+      &systemCertsKeyChain
+   );
+
+   if (status != noErr)
    {
-      ErrLog( << "Certificate store " << name << " unsupported");
+      ErrLog( << "X509Anchors keychain could not be opened");
       assert(0);
       return NULL;
    }
 
-   OSStatus status;
+   // Create a handle to search that iterates over root certificates
+   // in the X509Anchors keychain
+
    SecKeychainSearchRef searchReference = nil;
    status = ::SecKeychainSearchCreateFromAttributes(
-      NULL,
+      systemCertsKeyChain,
       kSecCertificateItemClass,
       NULL,
       &searchReference
    );
    
+   // Now that we have the search handle we don't need an explicit
+   // reference to the keychain
+   
+   ::CFRelease(systemCertsKeyChain);
+   
    if (status != noErr)
-   {
-      ErrLog( << "System certificate store cannot be openned");
+   {      
+      ErrLog( << "System certificate store cannot be opened");
       assert(0);
       return NULL;
    }
@@ -78,23 +98,28 @@ void
 MacSecurity::getCerts()
 {
    SecKeychainSearchRef searchReference = NULL;
-   searchReference = (SecKeychainSearchRef) openSystemCertStore(Data());
+   searchReference = (SecKeychainSearchRef) openSystemCertStore();
 
    // nothing to do, error already reported
    if (searchReference == NULL)
       return;
    
-   // itterate over each certificate
+   // iterate over each certificate
    for (;;)
    {
       OSStatus status = noErr;
       SecKeychainItemRef itemRef = nil;
       
-      // get the next cerfiticate in the search
+      // get the next certificate in the search
       status = ::SecKeychainSearchCopyNext(
          searchReference,
          &itemRef
       );
+      if (status == errSecItemNotFound)
+      {
+         // no more certificates left
+         break;
+      }      
 
       // get data from the certificate
       if (status == noErr)
@@ -109,26 +134,21 @@ MacSecurity::getCerts()
             &dataSize,
             &data
          );
-         
+                  
          if (status == noErr && data != NULL)
          {
             Data certDER(Data::Borrow, (const char*)data, dataSize);
-            addCertDER (BaseSecurity::RootCert, NULL, certDER, false);
+            addCertDER(BaseSecurity::RootCert, NULL, certDER, false);
+            
+            status = ::SecKeychainItemFreeAttributesAndData(NULL, data);
          }
-         
-         // TODO: need to free data using SecKeychainItemFreeAttributesAndData ??  
       }
       
       // free the certificate handle
-      if (itemRef)
-         CFRelease(itemRef);
+      if (itemRef != NULL)
+         ::CFRelease(itemRef);
       
-      if (status == errSecItemNotFound)
-      {
-         // no more certificates left
-         break;
-      }
-      else if (status != noErr)
+      if (status != noErr)
       {
          // there was an error loading the certificate
          ErrLog( << "Couldn't load certificate, error code: " << status);
