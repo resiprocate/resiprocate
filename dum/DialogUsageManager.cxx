@@ -970,24 +970,17 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 void
 DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
-#if 0 // TODO --- make this work w/ HttpGetMessage
 #if defined(USE_SSL)
+   InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
    RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
-   if (it == mRequiresCerts.end())
-   {
-      return false;
-   }
-   else
+   if (it != mRequiresCerts.end())
    {
       getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
+      InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
       processRequest(*it->second);
       delete it->second;
       mRequiresCerts.erase(it);
-      return true;
    }
-#else
-   return false;
-#endif
 #endif
 }
 
