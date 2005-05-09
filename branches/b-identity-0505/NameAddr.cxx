@@ -39,23 +39,17 @@ NameAddr::NameAddr(const NameAddr& rhs)
      mDisplayName(rhs.mDisplayName)
 {}
 
+static const Data parseContext("NameAddr constructor");
 NameAddr::NameAddr(const Data& unparsed)
    : ParserCategory(),
      mAllContacts(false),
      mDisplayName()
 {
-   try
-   {
-      ParseBuffer pb(unparsed.data(), unparsed.size());
-      NameAddr tmp;
-      tmp.parse(pb);
-      *this = tmp;
-   }
-   catch(ParseBuffer::Exception&)
-   {
-      DebugLog (<< "Failed trying to construct a NameAddr from " << unparsed);
-      throw;
-   }
+   // must copy because parse creates overlays
+   NameAddr tmp;
+   ParseBuffer pb(unparsed, parseContext);
+   tmp.parse(pb);
+   *this = tmp;
 }
 
 NameAddr::NameAddr(const Uri& uri)
