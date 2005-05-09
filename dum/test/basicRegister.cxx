@@ -100,7 +100,7 @@ class Client : public ClientRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-   int level=(int)Log::Info;
+   int level=(int)Log::Debug;
    if (argc >1 ) level = atoi(argv[1]);
 
    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
@@ -111,19 +111,19 @@ main (int argc, char** argv)
 
    SipStack stack;
    DialogUsageManager clientDum(stack);
-   clientDum.addTransport(UDP, 15060);
+   clientDum.addTransport(UDP, 15066);
    clientDum.setMasterProfile(&profile);
 
    clientDum.setClientRegistrationHandler(&client);
    clientDum.setClientAuthManager(clientAuth);
    clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
 
-   NameAddr from("sip:101@proxy.internal.xten.net");
+   NameAddr from("sip:derek@booze.internal.xten.net");
    clientDum.getMasterProfile()->setDefaultFrom(from);
 
 
-//   profile.addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
-//   profile.addDigestCredential( "sphone.vopr.vonage.net", "13015604286", "" );
+   profile.setDigestCredential( "booze.internal.xten.net", "derek", "derek");
+   
 
    SipMessage & regMessage = clientDum.makeRegistration(from, new RegisterAppDialogSet(clientDum));
    NameAddr contact;
