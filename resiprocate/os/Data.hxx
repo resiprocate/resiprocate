@@ -142,6 +142,8 @@ class Data
       /// encodes with %hex for special characters
       Data charEncoded() const;
       Data charUnencoded() const;
+      Data urlEncoded() const;
+      Data urlDecoded() const;
       std::ostream& urlDecode(std::ostream& s) const;
       std::ostream& urlEncode(std::ostream& s) const;
       Data trunc(size_type trunc) const;
