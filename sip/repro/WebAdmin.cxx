@@ -41,7 +41,7 @@ WebAdmin::WebAdmin(  Store& store,
                      RegistrationPersistenceManager& regDb,
                      Security* security,
                      bool noChal,  
-                     const Data& realm,
+                     const Data& realm, // this realm is used for http challenges
                      int port, 
                      IpVersion version ):
    HttpBase( port, version, realm ),
@@ -69,7 +69,6 @@ WebAdmin::buildPage( const Data& uri,
    pb.data(pageName,anchor);
    
    DebugLog (<< "  got page name: " << pageName );
-   
 
    // if this is not a valid page, redirect it
    if (
@@ -99,6 +98,8 @@ WebAdmin::buildPage( const Data& uri,
       setPage( buildDefaultPage(), pageNumber, 200); 
       return;
    }
+
+   // certificate pages 
    if ( pageName.prefix("cert") || pageName == Data("cert.cer") )
    {
       Data domain = mRealm;
@@ -109,7 +110,8 @@ WebAdmin::buildPage( const Data& uri,
          Data query;
          pb.data(query, anchor);
          InfoLog( << "query is " << query );
-         if ( query == "domain" ) {
+         if ( query == "domain" ) 
+         {
            anchor = pb.skipChar('=');
            pb.skipToEnd();
            pb.data(domain, anchor);
@@ -140,6 +142,10 @@ WebAdmin::buildPage( const Data& uri,
    }
    else
    {
+      // TODO !cj! - this code is broken - the user name in the web digest should be
+      // moved to alice@example.com instead of alice and assuming the realm is
+      // empty
+
       // all pages after this, user must authenticate  
       if ( pUser.empty() )
       {  
@@ -765,115 +771,114 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 void
 WebAdmin::buildShowRoutesSubPage(DataStream& s)
 { 
-      
-      s <<
-         "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-         //"      <tr>" << endl << 
-         // "        <td>" << endl << 
-         //"          <h1>Routes</h1>" << endl << 
-         //"        </td>" << endl << 
-         //"      </tr>" << endl <<  
-         "      <tr>" << endl << 
-         "        <td>" << endl <<  
-         "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
-         "            <hr/>" << endl << 
-         "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
-         "              <thead><tr>" << endl << 
-         "                <td>URI</td>" << endl << 
-         "                <td>Method</td>" << endl << 
-         "                <td>Event</td>" << endl << 
-         "                <td>Destination</td>" << endl << 
-         "                <td>Order</td>" << endl << 
-         "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>" << endl << 
-         "              </tr></thead>" << endl << 
-         "              <tbody>" << endl;
-      
-      AbstractDb::RouteRecordList routes = mStore.mRouteStore.getRoutes();
-      for ( AbstractDb::RouteRecordList::const_iterator i = routes.begin();
-            i != routes.end();
-            i++ )
-      {
-         s <<  "<tr>" << endl << 
-            "<td><a href=\"editRoute.html?routeUri=\"";
-         i->mMatchingPattern.httpEscapeToStream(s); 
-         s << 
-            "\">" << i->mMatchingPattern << "</a></td>" << endl << 
-            "<td>" << i->mMethod << "</td>" << endl << 
-            "<td>" << i->mEvent << "</td>" << endl << 
-            "<td>" << i->mRewriteExpression << "</td>" << endl << 
-            "<td>" << i->mOrder << "</td>" << endl << 
-            "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>" << endl << 
-            "</tr>" << endl;
-      }
-      
+   s <<
+      "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+      //"      <tr>" << endl << 
+      // "        <td>" << endl << 
+      //"          <h1>Routes</h1>" << endl << 
+      //"        </td>" << endl << 
+      //"      </tr>" << endl <<  
+      "      <tr>" << endl << 
+      "        <td>" << endl <<  
+      "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
+      "            <hr/>" << endl << 
+      "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+      "              <thead><tr>" << endl << 
+      "                <td>URI</td>" << endl << 
+      "                <td>Method</td>" << endl << 
+      "                <td>Event</td>" << endl << 
+      "                <td>Destination</td>" << endl << 
+      "                <td>Order</td>" << endl << 
+      "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>" << endl << 
+      "              </tr></thead>" << endl << 
+      "              <tbody>" << endl;
+   
+   AbstractDb::RouteRecordList routes = mStore.mRouteStore.getRoutes();
+   for ( AbstractDb::RouteRecordList::const_iterator i = routes.begin();
+         i != routes.end();
+         i++ )
+   {
+      s <<  "<tr>" << endl << 
+         "<td><a href=\"editRoute.html?routeUri=\"";
+      i->mMatchingPattern.httpEscapeToStream(s); 
       s << 
-         "              </tbody>" << endl << 
-         "            </table>" << endl << 
-         "          </form>" << endl << 
-         "        </td>" << endl << 
-         "      </tr>" << endl << 
-         "      <tr><td>" << endl << 
-         "          <hr noshade=\"noshade\"/>" << endl << 
-         "          <br>" << endl << 
-         "        </td></tr>" << endl;
-
-      Uri uri;
+         "\">" << i->mMatchingPattern << "</a></td>" << endl << 
+         "<td>" << i->mMethod << "</td>" << endl << 
+         "<td>" << i->mEvent << "</td>" << endl << 
+         "<td>" << i->mRewriteExpression << "</td>" << endl << 
+         "<td>" << i->mOrder << "</td>" << endl << 
+         "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>" << endl << 
+         "</tr>" << endl;
+   }
+   
+   s << 
+      "              </tbody>" << endl << 
+      "            </table>" << endl << 
+      "          </form>" << endl << 
+      "        </td>" << endl << 
+      "      </tr>" << endl << 
+      "      <tr><td>" << endl << 
+      "          <hr noshade=\"noshade\"/>" << endl << 
+      "          <br>" << endl << 
+      "        </td></tr>" << endl;
+   
+   Uri uri;
+   try 
+   {
+      uri = Uri(routeTestUri);
+   }
+   catch( BaseException& e )
+   {
       try 
       {
-         uri = Uri(routeTestUri);
+         uri = Uri( Data("sip:")+routeTestUri );
       }
       catch( BaseException& e )
       {
-         try 
-         {
-            uri = Uri( Data("sip:")+routeTestUri );
-         }
-         catch( BaseException& e )
-         {
-         }
       }
-
-      // !cj! - TODO - shoudl input method and envent type to test 
-      RouteStore::UriList routeList = mStore.mRouteStore.process( uri, Data("INVITE"), Data::Empty);
-      
-      s << 
-         "      <tr>" << endl << 
-         "        <td>" << endl << 
-         "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
-         "              "
-         "              <tr>" << endl << 
-         "                <td align=\"right\">Input:</td>" << endl << 
-         "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>" << endl << 
-         "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>" << endl << 
-         "              </tr>" << endl;
-      
-      bool first=true;
-      for ( RouteStore::UriList::const_iterator i=routeList.begin();
-            i != routeList.end(); i++)
+   }
+   
+   // !cj! - TODO - shoudl input method and envent type to test 
+   RouteStore::UriList routeList = mStore.mRouteStore.process( uri, Data("INVITE"), Data::Empty);
+   
+   s << 
+      "      <tr>" << endl << 
+      "        <td>" << endl << 
+      "          <form id=\"testRoute\" action=\"showRoutes.html\" method=\"get\" name=\"testRoute\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      "            <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+      "              "
+      "              <tr>" << endl << 
+      "                <td align=\"right\">Input:</td>" << endl << 
+      "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>" << endl << 
+      "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>" << endl << 
+      "              </tr>" << endl;
+   
+   bool first=true;
+   for ( RouteStore::UriList::const_iterator i=routeList.begin();
+         i != routeList.end(); i++)
+   {
+      s<<"              <tr>" << endl;
+      if (first)
       {
-         s<<"              <tr>" << endl;
-         if (first)
-         {
-            first=false;
-            s<<"             <td align=\"right\">Targets:</td>" << endl;
-         }
-         else
-         {
-            s<<"             <td align=\"right\"></td>" << endl;
-         }
-         s<<"                <td><label>" << *i << "</label></td>" << endl;
-         s<<"                <td></td>" << endl;
-         s<<"              </tr>" << endl;
+         first=false;
+         s<<"             <td align=\"right\">Targets:</td>" << endl;
       }
-      
-      s<<
-         "            </table>" << endl << 
-         "          </form>" << endl << 
-         "        </td>" << endl << 
-         "      </tr>" << endl << 
-         "    </table>" << endl;      
+      else
+      {
+         s<<"             <td align=\"right\"></td>" << endl;
+      }
+      s<<"                <td><label>" << *i << "</label></td>" << endl;
+      s<<"                <td></td>" << endl;
+      s<<"              </tr>" << endl;
+   }
+   
+   s<<
+      "            </table>" << endl << 
+      "          </form>" << endl << 
+      "        </td>" << endl << 
+      "      </tr>" << endl << 
+      "    </table>" << endl;      
 }
 
 
