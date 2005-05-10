@@ -7,7 +7,6 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
-#include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -29,7 +28,7 @@ TransactionController::TransactionController(SipStack& stack,
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
-   mStateMacFifo(stack.mAsyncProcessHandler),
+   mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo, stack.getSecurity()),
    mStatelessHandler(*this),
