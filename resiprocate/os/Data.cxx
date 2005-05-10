@@ -1148,7 +1148,7 @@ urlNonEncodedCharsInitFn()
 {
    for (int i = 0; i < 256; ++i)
    {
-      char c(i);
+      unsigned char c(i);
       urlNonEncodedChars[c] = (isalpha(c) || 
                                isdigit(c) ||
                                c == '-' ||
