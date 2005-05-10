@@ -350,6 +350,9 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       mStore.mConfigStore.add(domainUri,domainTlsPort);
    }   
    
+   // TODO !cj! - make a web page after you add a domain that tells people they
+   // have to restart the proxy 
+
    s <<
       "     <form id=\"addRouteFrom\" method=\"get\" action=\"domains.html\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
