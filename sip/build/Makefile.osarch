@@ -38,7 +38,7 @@ ifeq ($(ARCH),i386)
 endif
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT
-        INCDIRS  += /usr/local/include
+        INCDIRS  += /usr/pkg/include
         LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
 endif
 
