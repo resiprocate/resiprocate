@@ -7,7 +7,8 @@ libtestsupport_a_SOURCES = \
 	InviteServer.cxx \
 	Register.cxx \
 	Registrar.cxx \
-	TestSupport.cxx 
+	TestSupport.cxx \
+	test503Generator.cxx
 
 noinst_HEADERS = \
 	digcalc.hxx \
@@ -19,7 +20,8 @@ noinst_HEADERS = \
 	InviteServer.hxx \
 	Registrar.hxx \
 	TestSupport.hxx \
-	Transceiver.hxx
+	Transceiver.hxx \
+	tassert.h
 
 # The following files (.cxx) are not included as SOURCES
 # anywhere in this makefile:
@@ -40,7 +42,6 @@ noinst_HEADERS = \
 LDADD = libtestsupport.a ../libresiprocate.la
 check_PROGRAMS = \
 	SipTortureTests \
-	test503Generator \
 	testApplicationSip \
 	testAppTimer \
 	testClient \
@@ -99,7 +100,6 @@ bin_PROGRAMS = limpc testTcp testDataPerformance
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
 limpc_SOURCES = limpc.cxx
-test503Generator_SOURCES = test503Generator.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
 testAppTimer_SOURCES = testAppTimer.cxx
 testClient_SOURCES = testClient.cxx
