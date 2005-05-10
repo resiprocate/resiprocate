@@ -58,7 +58,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
-      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "sip:example.com,sip:foo.com"},
+      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"cert-path",   'c',   POPT_ARG_STRING, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       POPT_AUTOHELP
@@ -86,7 +86,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mDtlsPort = dtlsPort;
    mUseV4 = !disableV4;
    mUseV6 = !disableV6;
-   mDomains = toUriVector(domains, "domains"); 
+   mDomains = toVector(domains, "domains"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
    mNoWebChallenge = noWebChallenge != 0;
@@ -123,10 +123,10 @@ CommandLineParser::toUri(const char* input, const char* description)
    return uri;
 }
 
-std::vector<resip::Uri> 
-CommandLineParser::toUriVector(const char* input, const char* description)
+std::vector<resip::Data> 
+CommandLineParser::toVector(const char* input, const char* description)
 {
-   std::vector<Uri> uris; 
+   std::vector<Data> domains; 
 
    if (input)
    {
@@ -137,7 +137,7 @@ CommandLineParser::toUriVector(const char* input, const char* description)
          {
             try
             {
-               uris.push_back(Uri(token));
+               domains.push_back(token);
             } 
             catch (ParseException& e)
             {
@@ -153,6 +153,6 @@ CommandLineParser::toUriVector(const char* input, const char* description)
          }
       }
    }
-   return uris;
+   return domains;
 }
    
