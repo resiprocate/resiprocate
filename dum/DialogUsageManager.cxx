@@ -1311,11 +1311,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
             assert(false);
          case SUBSCRIBE:
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
-            if (!checkEventPackage(request))
-            {
-               InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
-               return;
-            }
+            //.dcm. Illegal NOTIFY messages aren't handler through a
+            //ClientSubscriptionHandler so this check will always fail unless
+            //the corresponding event packacke is also installed
+            //in-dialog. Taking it out for now.
+//             if (!checkEventPackage(request))
+//             {
+//                InfoLog (<< "Rejecting request (unsupported package) " 
+//                         << request.brief());
+//                return;
+//             }
             // no break
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
