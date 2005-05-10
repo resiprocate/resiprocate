@@ -1111,6 +1111,26 @@ Data::charUnencoded() const
    return ret;
 }
 
+Data
+Data::urlEncoded() const
+{
+   Data buffer;
+   DataStream strm(buffer);
+   urlEncode(strm);
+   strm.flush();
+   return buffer;
+}
+
+Data
+Data::urlDecoded() const
+{
+   Data buffer;
+   DataStream strm(buffer);
+   urlDecode(strm);
+   strm.flush();
+   return buffer;
+}
+
 std::ostream&
 Data::urlDecode(std::ostream& s) const
 {
