@@ -145,6 +145,8 @@ BerkleyDb::dbEraseRecord( const Table table,
 
    assert( mDb );
    mDb[table]->del(NULL,&key, 0);
+
+   mDb[table]->sync(0);
 }
 
 
