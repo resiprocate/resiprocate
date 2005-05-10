@@ -35,7 +35,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    char* reqChainName = "default";
    char* mySqlServer = 0;
-
+   int httpPort = 5080;
+   
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
 
@@ -58,6 +59,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
+      {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -71,7 +73,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 #endif
 
-
+   mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
    if (tlsDomain) mTlsDomain = tlsDomain;
