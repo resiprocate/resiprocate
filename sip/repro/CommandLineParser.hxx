@@ -13,7 +13,7 @@ class CommandLineParser
    public:
       CommandLineParser(int argc, char** argv);
       static resip::Uri toUri(const char* input, const char* description);
-      static std::vector<resip::Uri> toUriVector(const char* input, const char* description);
+      static std::vector<resip::Data> toVector(const char* input, const char* description);
       
       Data mLogType;
       Data mLogLevel;
@@ -24,7 +24,7 @@ class CommandLineParser
       int mDtlsPort;
       bool mUseV4;
       bool mUseV6;
-      std::vector<Uri> mDomains;
+      std::vector<Data> mDomains;
       Data mCertPath;
       bool mNoChallenge;
       bool mNoWebChallenge;
