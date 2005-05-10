@@ -24,8 +24,9 @@ class TestData
                DataStream str(result);
                httpString.urlEncode(str);
             }
-
             cerr << result << endl;
+            assert(result == httpString.urlEncoded());
+            assert(httpString == httpString.urlEncoded().urlDecoded());
             assert(result == httpString);
          }
 
@@ -40,6 +41,8 @@ class TestData
 
             cerr << result << endl;
             assert(result == "http::/foo.com/in+word?arg1=%22quote%25%22&arg2=%22%25%25%25%25%25%22");
+            assert(result == httpString.urlEncoded());
+            assert(httpString == httpString.urlEncoded().urlDecoded());
          }
 
          {
