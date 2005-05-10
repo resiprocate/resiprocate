@@ -89,7 +89,7 @@ CurlHttpProvider::RequestThread::thread()
               delete contentTypeString;          
            }
         }
-        
+        mStream.flush();        
         HttpGetMessage* res = new HttpGetMessage(mTid, true, mX509Blob, contentType);
         mTransactionUser.post(res);
     }
@@ -109,6 +109,7 @@ CurlHttpProvider::RequestThread::curlCallback(void *ptr, size_t size, size_t nme
    DataStream* ds = reinterpret_cast<DataStream*>(stream);
    assert(size == 1);
    ds->write(reinterpret_cast<const char*>(ptr), nmemb);
+   InfoLog ( << "Wrote: " << nmemb << " to stream" );   
    return nmemb;
 }
 
