@@ -224,19 +224,19 @@ WebAdmin::buildPage( const Data& uri,
             pb.skipChar('&');
          }
            
-         DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.charHttpUnencoded() );
+         DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.urlDecoded() );
 
          if ( key.prefix("remove.") )  // special case of parameters to delete one or more records
          {
             Data tmp = key.substr(7);  // the ID is everything after the dot
             if (!tmp.empty())
             {
-               mRemoveSet.insert(tmp.charHttpUnencoded());   // add to the set of records to remove
+               mRemoveSet.insert(tmp.urlDecoded());   // add to the set of records to remove
             }
          }
          else if ( !key.empty() && !value.empty() ) // make sure both exist
          {
-            mHttpParams[key] = value.charHttpUnencoded();  // add other parameters to the Map
+            mHttpParams[key] = value.urlDecoded();  // add other parameters to the Map
          }
       }
 
@@ -754,7 +754,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       
          s << "<tr>" << endl 
            << "  <td><a href=\"editUser.html?key=";
-         key.httpEscapeToStream(s);
+         key.urlEncode(s);
          s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
            << "  <td>" << rec.name << "</td>" << endl
            << "  <td>" << rec.email << "</td>" << endl
@@ -804,7 +804,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
    {
       s <<  "<tr>" << endl << 
          "<td><a href=\"editRoute.html?routeUri=\"";
-      i->mMatchingPattern.httpEscapeToStream(s); 
+      i->mMatchingPattern.urlEncode(s); 
       s << 
          "\">" << i->mMatchingPattern << "</a></td>" << endl << 
          "<td>" << i->mMethod << "</td>" << endl << 
