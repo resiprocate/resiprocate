@@ -25,6 +25,7 @@ class StatisticsManager;
 class Tuple;
 class Uri;
 class TransactionUser;
+class AsyncProcessHandler;
 
 class SipStack
 {
