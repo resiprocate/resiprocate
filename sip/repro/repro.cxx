@@ -232,8 +232,8 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          //TODO NEEDD TO FIX THIS 
-         //DigestAuthenticator* da = new DigestAuthenticator;
-         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         DigestAuthenticator* da = new DigestAuthenticator;
+         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
@@ -283,7 +283,7 @@ main(int argc, char** argv)
       CertServer* certServer = 0;
       certServer = new CertServer(*dum);
 
-      // Install rules so that the registrar only gets REGISTERs
+      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
       resip::MessageFilterRule::MethodList methodList;
       methodList.push_back(resip::SUBSCRIBE);
       methodList.push_back(resip::PUBLISH);
