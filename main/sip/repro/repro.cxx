@@ -56,14 +56,14 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
 {
    Data realm;
    
-   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+   for (std::vector<Data>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
-      InfoLog (<< "Adding domain " << i->host() << " from command line");
-      tu.addDomain(i->host());
+      InfoLog (<< "Adding domain " << *i << " from command line");
+      tu.addDomain(*i);
       if ( realm.empty() )
       {
-         realm = i->host();
+         realm = *i;
       }
    }
 
