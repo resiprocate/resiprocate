@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
    bool first = true;
    NameAddr userAor(argv[1]);
    Data passwd(argv[2]);
-   int port = 25060;
 
    InfoLog(<< "user: " << userAor << ", passwd: " << passwd << "\n");
 
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
 
    SipStack clientStack(security);
    DialogUsageManager clientDum(clientStack);
-   clientDum.addTransport(UDP, port);
+   clientDum.addTransport(UDP, 10000 + rand()&0x7fff);
 
    MasterProfile clientProfile;   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
@@ -186,8 +185,6 @@ int main(int argc, char *argv[])
    InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
 
-   int n = 0;
-	
    while (!clientHandler.isEnded() || !clientHandler.isRcvd() )
    {
       FdSet fdset;
