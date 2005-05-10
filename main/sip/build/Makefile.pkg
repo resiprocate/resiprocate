@@ -67,8 +67,10 @@ DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
 endif
 
+ifeq ($(USE_CURL),true)
 CURL_LIBNAME := curl
-CURL_DEFINES := 
+CURL_DEFINES := USE_CURL
+endif
 
 RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
