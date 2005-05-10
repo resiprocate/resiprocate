@@ -27,15 +27,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* domains = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
-#ifdef WIN32
-      int noChallenge = true;
-   int noWebChallenge = true;
-#else
-      int noChallenge = false;
+   int noChallenge = false;
    int noWebChallenge = false;
-#endif
+   
    int noRegistrar = false;
-   int certServer = false;
+   int certServer = true;
+
    char* reqChainName = "default";
    char* mySqlServer = 0;
 

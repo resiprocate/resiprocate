@@ -231,7 +231,6 @@ main(int argc, char** argv)
       
       if (!args.mNoChallenge)
       {
-         //TODO NEEDD TO FIX THIS 
          DigestAuthenticator* da = new DigestAuthenticator;
          requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
