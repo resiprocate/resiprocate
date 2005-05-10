@@ -240,9 +240,9 @@ main(int argc, char** argv)
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm  );
+   WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm, args.mHttpPort  );
 #else
-   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm );
+   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mHttpPort  );
 #endif
    WebAdminThread adminThread(admin);
 
