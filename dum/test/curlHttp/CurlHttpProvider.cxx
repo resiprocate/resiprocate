@@ -63,7 +63,11 @@ CurlHttpProvider::RequestThread::thread()
    
    int code = 404;
    curl_easy_perform(curl);
+#if ( LIBCURL_VERSION_NUM > 0x070a07 )
    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+#else
+   curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
+#endif
    InfoLog ( << "Curl returned: " << code);   
 
     if (code / 100 == 2) 
