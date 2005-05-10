@@ -8,7 +8,9 @@ libtestsupport_a_SOURCES = \
 	Register.cxx \
 	Registrar.cxx \
 	TestSupport.cxx \
-	test503Generator.cxx
+	test503Generator.cxx \
+	testResponses.cxx \
+	testRSP-2.cxx
 
 noinst_HEADERS = \
 	digcalc.hxx \
@@ -60,7 +62,6 @@ check_PROGRAMS = \
 	testFileSystem \
 	testIM \
 	testIntrusiveList \
-	testLockStep \
 	testLogger \
 	testMem \
 	testMessageWaiting \
@@ -72,9 +73,7 @@ check_PROGRAMS = \
 	testPksc7 \
 	testPlainContents \
 	testRandomHex \
-	testResponses \
 	testRlmi \
-	testRSP-2 \
 	testSdp \
 	testSelect \
 	testSelectInterruptor \
@@ -118,7 +117,6 @@ testFifo_SOURCES = 	testFifo.cxx
 testFileSystem_SOURCES = testFileSystem.cxx
 testIM_SOURCES = testIM.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
-testLockStep_SOURCES = testLockStep.cxx
 testLogger_SOURCES = testLogger.cxx
 testMem_SOURCES = testMem.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
@@ -130,9 +128,7 @@ testPidf_SOURCES = testPidf.cxx
 testPksc7_SOURCES = testPksc7.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
-testResponses_SOURCES = testResponses.cxx
 testRlmi_SOURCES = testRlmi.cxx
-testRSP_2_SOURCES = testRSP-2.cxx
 testSdp_SOURCES = testSdp.cxx
 testSelect_SOURCES = testSelect.cxx
 testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
