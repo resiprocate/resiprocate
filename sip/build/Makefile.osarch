@@ -40,6 +40,10 @@ endif
 	CFLAGS   += -D_REENTRANT
         INCDIRS  += /usr/pkg/include
         LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
+
+        DISTCC   = distcc 
+        CCACHE   =
+
 endif
 
 ############################## Linux ##############################
