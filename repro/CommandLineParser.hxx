@@ -32,6 +32,7 @@ class CommandLineParser
       bool mCertServer;
       Data mRequestProcessorChainName;
       Data mMySqlServer;
+      int mHttpPort;
 };
  
 }
