@@ -56,7 +56,7 @@ AC_DEFUN([RESIP_DATA_LOCAL_SIZE_CHECK],
         
 
         AC_MSG_CHECKING([for Data::localAlloc size hint])
-        if test x_$enable_data_local_size == x_; then
+        if test x_$enable_data_local_size = x_; then
                 AC_MSG_RESULT([no])
                 enable_data_local_size=16
         else   
