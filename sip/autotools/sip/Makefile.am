@@ -8,7 +8,7 @@ EXTRA_DIST = contrib/ares certs README.windows \
 
 dist-hook:
 	if [ -f $(distdir)/contrib/ares/Makefile ]; then \
-		make -C $(distdir)/contrib/ares distclean; \
+		${MAKE} -C $(distdir)/contrib/ares distclean; \
 	fi
 	echo This is a little drastic. Need to re-write to exclude control files.
 	find $(distdir)/contrib $(distdir)/certs $(distdir)/SipIMP \
