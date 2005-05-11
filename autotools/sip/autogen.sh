@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 intver() {
-    local V=$( $1 --version | head -1 | sed 's/^.* \([0-9][0-9.]*\)[^0-9.]*$/\1/g' )
-    local i=$( echo $V | cut -d. -f1)
-    local t=$( echo $V | cut -d. -f2)
-    local h=$( echo $V | cut -d. -f3)
+    local V=`$1 --version | head -1 | sed 's/^.* \([0-9][0-9.]*\)[^0-9.]*$/\1/g'`
+    local i=`echo $V | cut -d. -f1`
+    local t=`echo $V | cut -d. -f2`
+    local h=`echo $V | cut -d. -f3`
     expr $i \* 10000 + 100 \* $t + $h
 }
 
