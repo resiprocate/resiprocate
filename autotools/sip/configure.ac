@@ -159,6 +159,6 @@ LIBS="$LIBS -lpthread"
 
 
 
-AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])  
+AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile resiprocate/dum/test/Makefile])  
 
 AC_OUTPUT
