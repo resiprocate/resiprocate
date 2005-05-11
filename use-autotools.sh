@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # $Id:$
 
 # We 'remove' these files in SVN when using autotools.
@@ -41,7 +41,7 @@ AUTOTOOLS_ARTIFACTS="config.guess
                      "
                      
 makeLink () {
-    RD=$( echo ${1} | sed 's:[^/][^/]*:..:g;s:^\.\.:.:g' )/autotools/sip/${1}
+    RD=`echo ${1} | sed 's:[^/][^/]*:..:g;s:^\.\.:.:g'`/autotools/sip/${1}
     echo Making link for $1
     [ -e $(dirname ${1})/${RD} ] || echo missing ${RD}
     if [ -h ${1} ]; then
@@ -71,9 +71,8 @@ exit 1
 fi
 
     # Determine your repository URI.
-    URI=$(svn info |  grep '^URL:' | sed 's,.*\(http.*://.*\),\1,g')
-    URI=${URI//\/rep\/resiprocate\/*}/rep/resiprocate
-    SCHEME=${URI//:*}
+    URI=`svn info | grep '^URL:' | sed 's,.*\(http.*://.*/rep/resiprocate\).*,\1,g'`
+    SCHEME=`echo $URI | sed 's,\(./*\)://.*,\1,g'`
     if [ "${SCHEME}" != "https" ]; then
         cat <<EOF
 
@@ -103,7 +102,7 @@ EOF
 
 
 read DUMMY
-[ "${DUMMY}x" == "yesx" ] || exit -1
+[ "${DUMMY}x" = "yesx" ] || exit -1
 
 ATCF=.autotools-conflicts-list
 
