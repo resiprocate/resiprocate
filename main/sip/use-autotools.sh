@@ -26,6 +26,7 @@ AUTOTOOLS_USED="Makefile.am
                 resiprocate/Makefile.am 
                 resiprocate/test/Makefile.am 
                 resiprocate/dum/Makefile.am
+                resiprocate/dum/test/Makefile.am
                 configure.ac 
                 acinclude.m4
                 autogen.sh
