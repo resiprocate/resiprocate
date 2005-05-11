@@ -1,6 +1,11 @@
 CXX = ${DISTCC} @CXX@
 AM_LDFLAGS = -lpopt
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
+
+EXTRA_DIST = 	test_7_0.vcproj \
+		test_7_1.vcproj \
+		test_8_0.vcproj 
+
 noinst_LIBRARIES = libtestsupport.a
 libtestsupport_a_SOURCES = \
 	InviteClient.cxx \
