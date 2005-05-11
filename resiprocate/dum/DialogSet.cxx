@@ -28,11 +28,6 @@
 using namespace resip;
 using namespace std;
 
-// Remove warning about 'this' use in initiator list - pointer is only stored
-#if defined(WIN32)
-#pragma warning( disable : 4355 ) // using this in base member initializer list
-#endif
-
 // UAC 
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mMergeKey(),
