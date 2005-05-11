@@ -25,17 +25,40 @@ AC_DEFUN([RESIP_LIB_OPENSSL],
     fi
 ])
 
+AC_DEFUN([RESIP_SSL_ENABLE],
+[
+    AC_MSG_CHECKING([for enabling ssl])
+    AC_ARG_ENABLE([ssl],
+    AC_HELP_STRING([--enable-ssl], 
+        [Enable use of SSL @<:@default=yes@:>@ ]),
+        [
+            if test x_$enableval == x_yes; then
+              AC_DEFINE([USE_SSL],[1],[SSL Enabled])
+              AC_MSG_RESULT([SSL Enabled])
+	      RESIP_LIB_OPENSSL
+            else
+              AC_DEFINE([USE_SSL],[0],[SSL Disabled])
+              AC_MSG_RESULT([SSL Disabled])
+            fi
+        ],
+        [
+            AC_DEFINE([USE_SSL],[1],[SSL Enabled])
+            AC_MSG_RESULT([not requested - enabled by default])
+            RESIP_LIB_OPENSSL
+        ])
+])
+        
 AC_DEFUN([RESIP_DATA_LOCAL_SIZE_CHECK],
 [
         AC_ARG_ENABLE([data-local-size],
-                AC_HELP_STRING([--enable-data-local-size],[Define localAlloc size @<:@default 128@:>@ ],
+                AC_HELP_STRING([--enable-data-local-size],[Define localAlloc size @<:@default 16@:>@ ],
         []))
         
 
         AC_MSG_CHECKING([for Data::localAlloc size hint])
         if test x_$enable_data_local_size == x_; then
                 AC_MSG_RESULT([no])
-                enable_data_local_size=128
+                enable_data_local_size=16
         else   
                 AC_MSG_RESULT([ ($enable_data_local_size) yes])
         fi
@@ -47,10 +70,86 @@ AC_DEFUN([RESIP_IPV6],
 [
         AC_MSG_CHECKING([for ipv6])
         AC_ARG_ENABLE([ipv6],
-        AC_HELP_STRING([--enable-ipv6], [use IPv6 code]),
+        AC_HELP_STRING([--enable-ipv6], [use IPv6 code @<:@default=no@:>@ ]),
         [
+             if test x_$enableval == x_yes; then
                 AC_DEFINE([USE_IPV6],[1],[Select IPv6 code])
                 AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
+        ],
+        [
+                AC_MSG_RESULT([not requested])
+        ])
+])
+
+AC_DEFUN([RESIP_GOOGLE_MALLOC],
+[
+        AC_MSG_CHECKING([for google malloc])
+        AC_ARG_ENABLE([google-malloc],
+        AC_HELP_STRING([--enable-google-malloc], [use Google malloc @<:@default=no@:>@ ]),
+        [
+             if test x_$enableval == x_yes; then
+                AC_DEFINE([USE_GOOGLE_MALLOC],[1],[Use Google Malloc])
+                AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
+        ],
+        [
+                AC_MSG_RESULT([not requested])
+        ])
+])
+
+AC_DEFUN([RESIP_GOOGLE_CPUPERF],
+[
+        AC_MSG_CHECKING([for google cpuperf])
+        AC_ARG_ENABLE([google-cpuperf],
+        AC_HELP_STRING([--enable-google-cpuperf], [use Google cpuperf @<:@default=no@:>@ ]),
+        [
+             if test x_$enableval == x_yes; then
+                AC_DEFINE([USE_GOOGLE_CPUPERF],[1],[Use Google cpuperf])
+                AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
+        ],
+        [
+                AC_MSG_RESULT([not requested])
+        ])
+])
+
+AC_DEFUN([RESIP_BOOST],
+[
+        AC_MSG_CHECKING([for boost])
+        AC_ARG_ENABLE([boost],
+        AC_HELP_STRING([--enable-boost], [use BOOST @<:@default=no@:>@ ]),
+        [
+             if test x_$enableval == x_yes; then
+                AC_DEFINE([USE_BOOST],[1],[Use BOOST])
+                AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
+        ],
+        [
+                AC_MSG_RESULT([not requested])
+        ])
+])
+
+AC_DEFUN([RESIP_CURL],
+[
+        AC_MSG_CHECKING([for CURL])
+        AC_ARG_ENABLE([curl],
+        AC_HELP_STRING([--enable-curl], [use CURL @<:@default=no@:>@ ]),
+        [
+             if test x_$enableval == x_yes; then
+                AC_DEFINE([USE_CURL],[1],[Use CURL])
+                AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
         ],
         [
                 AC_MSG_RESULT([not requested])
@@ -71,8 +170,12 @@ AC_DEFUN([RESIP_SCANNER_DEBUG],
         AC_ARG_ENABLE([scanner-debug],
         AC_HELP_STRING([--enable-scanner-debug], [use new message scanner debug]),
         [
+             if test x_$enableval == x_yes; then
                 AC_DEFINE([RESIP_MSG_HEADER_SCANNER_DEBUG], [1], [set when debugging requested in MsgHeaderScanner])
                 AC_MSG_RESULT([yes])
+             else
+                AC_MSG_RESULT([no])       
+             fi
         ],
         [
                 AC_MSG_RESULT([not requested])
