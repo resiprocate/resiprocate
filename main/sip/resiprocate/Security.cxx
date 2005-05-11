@@ -2252,7 +2252,7 @@ BaseSecurity::getCetName(X509 *cert)
     }
  
     char cname[256];
-    memset(cname, 0, sizeof cname);
+    memset(cname, 0, sizeof cname);
 
     if ((subj = X509_get_subject_name(cert)) &&
         X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
