@@ -2,7 +2,10 @@ SUBDIRS = .  dum test
 CXX = ${DISTCC} @CXX@
 dnl INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
-# EXTRA_DIST = resip.spec.in
+
+EXTRA_DIST = 	resiprocate_7_0.vcproj \
+		resiprocate_7_1.vcproj \
+		resiprocate_8_0.vcproj
 
 LIBTOOL = @LIBTOOL@ --tag=CXX
 

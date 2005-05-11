@@ -4,7 +4,7 @@ SUBDIRS = resiprocate .
 EXTRA_DIST = contrib/ares certs README.windows \
 		SipIMP SipIMPSetup \
 		ReSIProcate_7_0.sln  ReSIProcate_7_1.sln  ReSIProcate_8_0.sln \
-		sip.xcode README.autotools
+		sip.xcode README.autotools sip.mcp.xml
 
 dist-hook:
 	if [ -f $(distdir)/contrib/ares/Makefile ]; then \
