@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <errno.h>
+#include <netdb.h>
 #endif
 
 #include <stdio.h>
@@ -20,14 +21,18 @@
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 256
+#endif
+
 using namespace resip;
 using namespace std;
 
 Data
 DnsUtil::getLocalHostName()
 {
-   char buffer[256];
-   if (int e = gethostname(buffer,256) == -1)
+   char buffer[MAXHOSTNAMELEN];
+   if (int e = gethostname(buffer,sizeof(buffer)) == -1)
    {
       if ( e != 0 )
       {
@@ -44,6 +49,15 @@ DnsUtil::getLocalHostName()
          throw Exception("could not find local hostname",__FILE__,__LINE__);
       }
    }
+   struct hostent* he;
+   if ((he = gethostbyname(buffer)) != NULL) {
+     if (strchr(he->h_name, '.') != NULL) {
+       strncpy(buffer, he->h_name, sizeof(buffer));
+     }
+	 else {
+       WarningLog( << "local hostname does not contain a domain part");
+     }
+   }
    return Data(buffer);
 }
 
@@ -51,23 +65,29 @@ DnsUtil::getLocalHostName()
 Data
 DnsUtil::getLocalDomainName()
 {
+   Data lhn(getLocalHostName());
+   size_t dpos = lhn.find(".");
+   if (dpos != Data::npos) {
+     return lhn.substr(dpos+1);
+   }
+   else {
 #if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
-   assert(0);
-   // !cj! TODO
-   return NULL;
+     throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
 #else
-   char buffer[1024];
-   if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
-   {
-      if ( e != 0 )
-      {
+     WarningLog( << "using getdomainname, because of missing domainname");
+     char buffer[MAXHOSTNAMELEN];
+     if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
+     {
+       if ( e != 0 )
+       {
          int err = getErrno();
          CritLog(<< "Couldn't find domainname: " << strerror(err));
          throw Exception(strerror(err), __FILE__,__LINE__);
-      }
-   }
-   return buffer;
+       }
+     }
+     return Data(buffer);
 #endif
+   }
 }
 
 Data
