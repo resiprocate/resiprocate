@@ -184,7 +184,7 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx">
 			<File
 				RelativePath=".\AbstractDb.cxx">
 			</File>
@@ -281,7 +281,7 @@
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd">
 			<File
 				RelativePath=".\AbstractDb.hxx">
 			</File>
