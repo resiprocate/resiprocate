@@ -35,139 +35,140 @@ const bool Data::isCharHex[256] =
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false   //f
 };
 
+//must be lowercase for MD5
+static const char hexmap[] = "0123456789abcdef";
+
 int 
 hexpair2int(char high, char low)
 {
-    int val;
+   int val;
+    
+   switch(high)
+   {
+      case '0':
+         val = 0x00;
+         break;
+      case '1':
+         val = 0x10;
+         break;
+      case '2':
+         val = 0x20;
+         break;
+      case '3':
+         val =  0x30;
+         break;
+      case '4':
+         val =  0x40;
+         break;
+      case '5':
+         val =  0x50;
+         break;
+      case '6':
+         val =  0x60;
+         break;
+      case '7':
+         val =  0x70;
+         break;
+      case '8':
+         val =  0x80;
+         break;
+      case '9':
+         val =  0x90;
+         break;
+      case 'A':
+      case 'a':
+         val =  0xA0;
+         break;
+      case 'B':
+      case 'b':
+         val =  0xB0;
+         break;
+      case 'C':
+      case 'c':
+         val =  0xC0;
+         break;
+      case 'D':
+      case 'd':
+         val =  0xD0;
+         break;
+      case 'E':
+      case 'e':
+         val =  0xE0;
+         break;
+      case 'F':
+      case 'f':
+         val =  0xF0;
+         break;
+      default:
+         return '?';
+         break;
+   }
 
-	switch(high)
-	{
-	   case '0':
-		  val = 0x00;
-		  break;
-	   case '1':
-		  val = 0x10;
-		  break;
-	   case '2':
-		  val = 0x20;
-		  break;
-	   case '3':
-		  val =  0x30;
-		  break;
-	   case '4':
-		  val =  0x40;
-		  break;
-	   case '5':
-		  val =  0x50;
-		  break;
-	   case '6':
-		  val =  0x60;
-		  break;
-	   case '7':
-		  val =  0x70;
-		  break;
-	   case '8':
-		  val =  0x80;
-		  break;
-	   case '9':
-		  val =  0x90;
-		  break;
-	   case 'A':
-	   case 'a':
-		  val =  0xA0;
-		  break;
-	   case 'B':
-	   case 'b':
-		  val =  0xB0;
-		  break;
-	   case 'C':
-	   case 'c':
-		  val =  0xC0;
-		  break;
-	   case 'D':
-	   case 'd':
-		  val =  0xD0;
-		  break;
-	   case 'E':
-	   case 'e':
-		  val =  0xE0;
-		  break;
-	   case 'F':
-	   case 'f':
-		  val =  0xF0;
-		  break;
-	  default:
-		  return '?';
-		  break;
-	}
-
-	switch(low)
-	{
-	   case '0':
-		  if (!val)
-		  {
-			 return '?';
-		  }
-		  break;
-	   case '1':
-		  val += 0x01;
-		  break;
-	   case '2':
-		  val += 0x02;
-		  break;
-	   case '3':
-		  val +=  0x03;
-		  break;
-	   case '4':
-		  val +=  0x04;
-		  break;
-	   case '5':
-		  val +=  0x05;
-		  break;
-	   case '6':
-		  val +=  0x06;
-		  break;
-	   case '7':
-		  val +=  0x07;
-		  break;
-	   case '8':
-		  val +=  0x08;
-		  break;
-	   case '9':
-		  val +=  0x09;
-		  break;
-	   case 'A':
-	   case 'a':
-		  val +=  0x0A;
-		  break;
-	   case 'B':
-	   case 'b':
-		  val +=  0x0B;
-		  break;
-	   case 'C':
-	   case 'c':
-		  val +=  0x0C;
-		  break;
-	   case 'D':
-	   case 'd':
-		  val +=  0x0D;
-		  break;
-	   case 'E':
-	   case 'e':
-		  val +=  0x0E;
-		  break;
-	   case 'F':
-	   case 'f':
-		  val +=  0x0F;
-		  break;
-	  default:
-		  return '?';
-		  break;
-	}
-	return val;
+   switch(low)
+   {
+      case '0':
+         if (!val)
+         {
+            return '?';
+         }
+         break;
+      case '1':
+         val += 0x01;
+         break;
+      case '2':
+         val += 0x02;
+         break;
+      case '3':
+         val +=  0x03;
+         break;
+      case '4':
+         val +=  0x04;
+         break;
+      case '5':
+         val +=  0x05;
+         break;
+      case '6':
+         val +=  0x06;
+         break;
+      case '7':
+         val +=  0x07;
+         break;
+      case '8':
+         val +=  0x08;
+         break;
+      case '9':
+         val +=  0x09;
+         break;
+      case 'A':
+      case 'a':
+         val +=  0x0A;
+         break;
+      case 'B':
+      case 'b':
+         val +=  0x0B;
+         break;
+      case 'C':
+      case 'c':
+         val +=  0x0C;
+         break;
+      case 'D':
+      case 'd':
+         val +=  0x0D;
+         break;
+      case 'E':
+      case 'e':
+         val +=  0x0E;
+         break;
+      case 'F':
+      case 'f':
+         val +=  0x0F;
+         break;
+      default:
+         return '?';
+         break;
+   }
+   return val;
 }
-
-
 
 bool
 Data::init()
@@ -182,7 +183,6 @@ Data::Data()
      mCapacity(LocalAlloc),
      mMine(Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -198,7 +198,6 @@ Data::Data(int capacity, bool)
      mMine(capacity > LocalAlloc ? Take : Borrow)
 {
    assert( capacity >= 0 );
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -212,7 +211,6 @@ Data::Data(const char* str, int length)
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -231,7 +229,6 @@ Data::Data(const unsigned char* str, int length)
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -250,7 +247,6 @@ Data::Data(const char* str, int length, bool)
      mMine(Share)
 {
    assert(str);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer, int length)
@@ -260,7 +256,6 @@ Data::Data(ShareEnum se, const char* buffer, int length)
      mMine(se)
 {
    assert(buffer);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
@@ -270,7 +265,6 @@ Data::Data(ShareEnum se, const char* buffer)
      mMine(se)
 {
    assert(buffer);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
@@ -279,7 +273,6 @@ Data::Data(ShareEnum se, const Data& staticData)
      mCapacity(mSize),
      mMine(Share)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    // !dlb! maybe:
    // if you are trying to use Take, but make sure that you unset the mMine on
    // the staticData
@@ -297,7 +290,6 @@ Data::Data(const char* str)
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (str)
    {
       memcpy(mBuf, str, mSize+1);
@@ -318,7 +310,6 @@ Data::Data(const string& str)
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
@@ -332,7 +323,6 @@ Data::Data(const Data& data)
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize)
    {
       memcpy(mBuf, data.mBuf, mSize);
@@ -353,8 +343,6 @@ Data::Data(int val)
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
-
    if (val == 0)
    {
       mBuf[0] = '0';
@@ -411,7 +399,6 @@ Data::Data(unsigned long value)
                : LocalAlloc),
      mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -452,7 +439,6 @@ Data::Data(double value, int precision)
                : LocalAlloc),
      mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    assert(precision >= 0);
    assert(precision < DoubleMaxPrecision);
 
@@ -536,7 +522,6 @@ Data::Data(unsigned int value)
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -576,35 +561,16 @@ Data::Data(char c)
                : LocalAlloc),
      mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[0] = c;
    mBuf[1] = 0;
 }
 
 Data::Data(bool value)
-   : mSize(0), 
-     mBuf(0),
-     mCapacity(0),
+   : mSize(value ? 4 : 5), 
+     mBuf(value ? const_cast<char*>("true") : const_cast<char*>("false")),
+     mCapacity(value ? 4 : 5),
      mMine(Borrow)
-{
-   //memset(mPreBuffer, 0, LocalAlloc+1);
-
-   static char truec[] = "true";
-   static char falsec[] = "false";
-
-   if (value)
-   {
-      mBuf = truec;
-      mSize = 4;
-      mCapacity = 4;
-   }
-   else
-   {
-      mBuf = falsec;
-      mSize = 5;
-      mCapacity = 5;
-   }
-}
+{}
 
 Data::~Data()
 {
@@ -1013,9 +979,6 @@ Data::md5() const
    return ret;
 }
 
-//must be lowercase for MD5
-static char hexmap[] = "0123456789abcdef";
-
 Data 
 Data::escaped() const
 { 
@@ -1119,10 +1082,10 @@ Data::charUnencoded() const
       {
          if ( i+2 < size())
          {
-            char* high = strchr(hexmap, *p++);
-            char* low = strchr(hexmap, *p++);
+            const char* high = strchr(hexmap, *p++);
+            const char* low = strchr(hexmap, *p++);
 
-			// !rwm! changed from high==0 || low==0
+            // !rwm! changed from high==0 || low==0
             if (high == 0 && low == 0)
             {
                assert(0);
@@ -1149,52 +1112,109 @@ Data::charUnencoded() const
 }
 
 Data
-Data::charHttpUnencoded() const
+Data::urlEncoded() const
 {
-   Data ret(size(), true);
+   Data buffer;
+   DataStream strm(buffer);
+   urlEncode(strm);
+   strm.flush();
+   return buffer;
+}
 
-   const char* p = data();
-   for (size_type i = 0; i < size(); ++i)
+Data
+Data::urlDecoded() const
+{
+   Data buffer;
+   DataStream strm(buffer);
+   urlDecode(strm);
+   strm.flush();
+   return buffer;
+}
+
+std::ostream&
+Data::urlDecode(std::ostream& s) const
+{
+
+   unsigned int i = 0;
+   for (const char* p = data(); p != data()+size(); ++p, ++i)
    {
-      unsigned char c = *p++;
+      unsigned char c = *p;
       if (c == '%')
       {
-         if ( i+2 < size())
+         if (i+2 < size())
          {
-            ret += hexpair2int( *p++, *p++);
-            i += 2;
+            s << (char) hexpair2int( *(++p), *(++p));
          }
          else
          {
             break;
          }
       }
-	  else if (c == '+')
-	  {
-	     ret += ' ';
-	  }
+      else if (c == '+')
+      {
+         s << ' ';
+      }
       else
       {
-         ret += c;
+         s << c;
       }
    }
-   return ret;
+   return s;
 }
 
-void
-Data::httpEscapeToStream(DataStream& s) const
+bool urlNonEncodedChars[256] = {false};
+bool 
+urlNonEncodedCharsInitFn()
 {
-   char temp;   
-   const char* p = data();
-   for (size_type i = 0; i < size() ; ++i)
+   // query part of HTTP URL can be a pchar, slash, or question
+   // pchar is unreserved, subdelims, colon, at-sign
+
+   for (int i = 0; i < 256; ++i)
    {
-      unsigned char c = *p++;
+      unsigned char c(i);
+      urlNonEncodedChars[c] = (isalpha(c) ||  // unreserved
+                               isdigit(c) ||  // unreserved
+                               c == '-' ||  // these first 4 are unreserved
+                               c == '_' ||
+                               c == '.' ||
+                               c == '~' ||
+                               c == '!' ||  // these are subdelims (allowed in pchars)
+                               c == '$' ||
+//                               c == '&' ||  // while these are allowed subdelims, this is an error
+//                               c == '+' ||  // I believe this is an error as well.
+                               c == '\'' ||
+                               c == '(' ||
+                               c == ')' ||
+                               c == '*' ||
+                               c == ',' ||
+                               c == ';' ||
+                               c == '=' ||
+                               c == ':' ||   // next two explicitly allowed in pchar
+                               c == '@' ||   
+                               c == '/' ||   // next two explicitly allowed in query in addition to pchar
+                               c == '?');    
+   }
+
+   return false;
+}
+
+static bool dummy = urlNonEncodedCharsInitFn();
+
+// e.g. http://www.blooberry.com/indexdot/html/topics/urlencoding.htm
+std::ostream&
+Data::urlEncode(std::ostream& s) const
+{
+   for (const char* p = data(); p != data() + size(); ++p)
+   {
+      unsigned char c = *p;
 
       // pchar, slash, questionmark
       // pchar = unreserved, sub-delims, colon, at-sign
       // unreserved = alphanum, hyphen, underscore, period, tilde
       // subdelims = bang (!), dollar, ampersand (oops!), plus, single-quote, lparen, rparen, asterisk, comma, semicolon, equal
-      if (isalpha(c) || isdigit(c) || strchr("-_.~!$+'()*,;=:@/?", c))
+      //if (isalpha(c) || isdigit(c) || strchr("-_.~!$+'()*,;=:@/?", c)) //
+      // strchr is inefficient and wrong
+      if (urlNonEncodedChars[c])
       {
          s << c;
       }
@@ -1206,13 +1226,13 @@ Data::httpEscapeToStream(DataStream& s) const
          }
          else
          {
-            temp = (c & 0xF0)>>4; 
-            s << '%' << temp << (c & 0x0F);
+            s << '%' << (hexmap[(c & 0xF0)>>4]) << (hexmap[(c & 0x0F)]);
          }
       }
    }
-}
 
+   return s;
+}
 
 Data
 Data::trunc(size_t s) const

@@ -46,7 +46,8 @@ MD5Buffer::overflow(int c)
 Data 
 MD5Buffer::getHex()
 {
-   MD5Final((unsigned char*)mBuf, &mContext);
+   MD5Context tmp = mContext;
+   MD5Final((unsigned char*)mBuf, &tmp);
    Data digest(Data::Share, (const char*)mBuf,16);
    return digest.hex();   
 }
