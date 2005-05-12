@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 #include "resiprocate/os/Data.hxx"
 
 #if defined (USE_SSL)
@@ -10,7 +11,7 @@
 #else
 // !kh!
 // so it would compile without openssl.
-// also see my comment just above the declaration of member mContext.
+// also see my comment below.
 typedef int SHA_CTX;
 #endif // USE_SSL
 
@@ -28,12 +29,13 @@ class SHA1Buffer : public std::streambuf
       virtual int sync();
       virtual int overflow(int c = -1);
    private:
-      char mBuf[SHA_DIGEST_LENGTH];
       // !kh!
-      // used a pointer to SHA_CTX to keep the same object layout.
-      // this adds overhead, an additional "new" and "delete".
-      // could get rid of the overhead if, sizeof(SHA_CTX) is known and FIXED.
+      // used pointers to keep the same object layout.
+      // this adds overhead, two additional new/delete.
+      // could get rid of the overhead if, sizeof(SHA_CTX) and SHA_DIGEST_LENGTH are known and FIXED.
+      // could use pimpl to get rid of one new/delete pair.
       std::auto_ptr<SHA_CTX> mContext;
+      std::vector<char> mBuf;
 };
 
 class SHA1Stream : private SHA1Buffer, public std::ostream
