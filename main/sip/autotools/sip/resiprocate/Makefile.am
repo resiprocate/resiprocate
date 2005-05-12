@@ -17,6 +17,8 @@ lib_LTLIBRARIES = libresiprocate.la
 # the *Contents* family
 
 libresiprocate_la_SOURCES = \
+	external/HttpGetMessage.cxx \
+	external/HttpProvider.cxx \
 	os/AbstractFifo.cxx \
 	os/BaseException.cxx \
 	os/Coders.cxx \
@@ -308,7 +310,9 @@ resiprocate_external_includedir=$(includedir)/resiprocate/external
 resiprocate_external_include_HEADERS = \
 	external/AsyncID.hxx \
 	external/ExternalDns.hxx \
-	external/ExternalTimer.hxx 
+	external/ExternalTimer.hxx \
+	external/HttpGetMessage.hxx \
+	external/HttpProvider.hxx 
 
 resiprocate_os_includedir=$(includedir)/resiprocate/os
 resiprocate_os_include_HEADERS = \
@@ -341,6 +345,7 @@ resiprocate_os_include_HEADERS = \
 	os/RWMutex.hxx \
 	os/Random.hxx \
 	os/RecursiveMutex.hxx \
+	os/SHA1Stream.hxx \
 	os/SelectInterruptor.hxx \
 	os/Socket.hxx \
 	os/Subsystem.hxx \
