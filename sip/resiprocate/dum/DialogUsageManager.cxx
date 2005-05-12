@@ -44,6 +44,8 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/external/HttpProvider.hxx"
+#include "resiprocate/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -897,14 +899,18 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                processRequest(*sipMsg);
             }
          }
-         else if (sipMsg->isResponse())
+         else
          {
-            if (!processIdentityCheckResponse(*sipMsg))
-            {
-               processResponse(*sipMsg);
-            }
+            processResponse(*sipMsg);
          }
          return;
+      }
+
+      HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg.get());
+      if (httpMsg)
+      {
+         processIdentityCheckResponse(*httpMsg);         
+         return;         
       }
 
       TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
@@ -960,32 +966,20 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 }
 
-bool
-DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
+void
+DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
 #if defined(USE_SSL)
-   if (msg.header(h_CSeq).method() == OPTIONS)
+   InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
+   RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
+   if (it != mRequiresCerts.end())
    {
-      RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
-      if (it == mRequiresCerts.end())
-      {
-         return false;
-      }
-      else
-      {
-         getSecurity()->checkAndSetIdentity(msg);
-         processRequest(*it->second);
-         delete it->second;
-         mRequiresCerts.erase(it);
-         return true;
-      }
+      getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
+      InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
+      processRequest(*it->second);
+      delete it->second;
+      mRequiresCerts.erase(it);
    }
-   else
-   {
-      return false;
-   }
-#else
-   return false;
 #endif
 }
 
@@ -1004,16 +998,20 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
       }
       else
       {
+         if (!HttpProvider::instance())
+         {
+            return false;
+         }
+         
          try
          {
-            Uri certTarget(sipMsg->header(h_IdentityInfo).uri());
-            //?dcm? -- IdentityInfo must use TLS
-            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg->header(h_From), OPTIONS);
-            mRequiresCerts[opt->getTransactionId()] = sipMsg;
-            //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
-            //are there issues with outbound proxies.
-            mStack.send(*opt, this);
-
+            mRequiresCerts[sipMsg->getTransactionId()] = sipMsg;
+            InfoLog( << "Dum::queueForIdentityCheck, sending http request to: " 
+                     << sipMsg->header(h_IdentityInfo));
+            
+            HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
+                                          sipMsg->getTransactionId(),
+                                          *this);
             return true;
          }
          catch (BaseException&)
