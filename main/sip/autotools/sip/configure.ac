@@ -66,8 +66,45 @@ dnl AC_PROG_RANLIB
 
 AC_PROG_LIBTOOL
 
-AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h sys/socket.h ])
-AC_CHECK_HEADER([popt.h],[AC_DEFINE([HAVE_POPT_H],[1],[ Has popt.h ]) LIBS="$LIBS -lpopt"])
+AC_CHECK_HEADERS([sys/sockio.h netinet/in.h sys/socket.h ])
+
+
+
+AC_MSG_CHECKING([for libpopt])
+
+popt_incdirs="/usr/include /opt/include /usr/pkg/include /usr/local/include"
+for dir in $popt_incdirs; do
+  try="ls -1 $dir/popt.h"
+  if test=`eval $try 2> /dev/null`; then
+     popt_incdir=$dir;
+     break;
+  else
+     echo "tried $dir" >&AC_FD_CC ;
+  fi
+done
+
+popt_libdirs="/usr/lib /opt/lib /usr/pkg/lib /usr/local/lib"
+popt_libdir=NONE
+for dir in $popt_libdirs; do
+  try="ls -1 $dir/libpopt*"
+  if test=`eval $try 2> /dev/null`; then
+     popt_libdir=$dir;
+     break;
+  else
+        echo "tried $dir" >&AC_FD_CC ;
+  fi
+done
+
+if test "$popt_libdir" = "NONE" || test "$popt_incdir" = "NONE"; then
+   AC_MSG_RESULT([no])
+else
+   AC_MSG_RESULT([yes])
+   AC_DEFINE([HAVE_POPT_H], [1], [ Has popt.h ])    
+   LIBS="$LIBS -L$popt_libdir -lpopt"
+   CPPFLAGS="$CPPFLAGS -I$popt_incdir"
+fi
+
+
 
 AC_CHECK_STRUCT_FOR([
 #include <sys/stat.h>
