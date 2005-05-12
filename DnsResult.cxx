@@ -56,9 +56,10 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler) 
+DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHandler* handler) 
    : mInterface(interfaceObj),
      mDns(dns),
+     mVip(vip),
      mHandler(handler),
      mSRVCount(0),
      mSips(false),
@@ -147,7 +148,38 @@ DnsResult::next()
       mBlacklistPrevResult = true;
    }
    mPrevResult = next;
+
+   assert(mCurrSuccessPath.size()<=3);
+   Item top;
+   if (!mCurrSuccessPath.empty())
+   {
+      top = mCurrSuccessPath.top();
+      if (top.rrType == T_A || top.rrType == T_AAAA)
+      {
+         mCurrSuccessPath.pop();
+      }
+   }
+   top.domain = next.getTargetDomain();
+   top.rrType = next.isV4()? T_A : T_AAAA;
+   top.value = DnsUtil::inet_ntop(next);
+   mCurrSuccessPath.push(top);
    return next;
+}
+
+void DnsResult::success()
+{
+   assert(!mCurrSuccessPath.empty());
+   assert(mCurrSuccessPath.size()<=3);
+   Item top = mCurrSuccessPath.top();
+   if (top.rrType == T_A || top.rrType == T_AAAA)
+   {
+      do 
+      {
+         top = mCurrSuccessPath.top();
+         mVip.vip(top.domain, top.rrType, top.value);
+         mCurrSuccessPath.pop();
+      } while (!mCurrSuccessPath.empty());
+   }
 }
 
 void
@@ -857,7 +889,7 @@ DnsResult::primeResults()
 #endif
          )
       {
-         assert(0); // should never get here in case of caching.
+         assert(0); // should never get here.
 #if defined(USE_IPV6)
          In6AddrList& aaaarecs = mAAAARecords[next.target];
          for (In6AddrList::const_iterator i=aaaarecs.begin();
@@ -916,7 +948,7 @@ DnsResult::primeResults()
                if (top.rrType == T_SRV)
                {
                   vector<Data> records;
-                  records.push_back(top.record);
+                  records.push_back(top.value);
                   mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
                   mCurrResultPath.pop();
                }
@@ -925,10 +957,24 @@ DnsResult::primeResults()
                   assert(top.rrType==T_NAPTR);
                }
             }
+
+            while (!mCurrSuccessPath.empty())
+            {
+               top = mCurrSuccessPath.top();
+               if (top.rrType != T_NAPTR)
+               {
+                  mCurrSuccessPath.pop();
+               }
+               else
+               {
+                  break;
+               }
+            }
             top.domain = next.key;
             top.rrType = T_SRV;
-            top.record = next.target;
+            top.value = next.target;
             mCurrResultPath.push(top);
+            mCurrSuccessPath.push(top);
             lookupHost(next.target);
          }
          else
@@ -951,7 +997,7 @@ DnsResult::primeResults()
          {
             Item top = mCurrResultPath.top();
             vector<Data> records;
-            records.push_back(top.record);
+            records.push_back(top.value);
             mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
             mCurrResultPath.pop();
          }
@@ -1894,9 +1940,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          Item item;
          item.domain = mPreferredNAPTR.key;
          item.rrType = T_NAPTR;
-         item.record = mPreferredNAPTR.replacement;
+         item.value = mPreferredNAPTR.replacement;
          clearCurrPath();
          mCurrResultPath.push(item);
+         mCurrSuccessPath.push(item);
          mSRVCount++;
          mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
       }
@@ -1963,6 +2010,11 @@ void DnsResult::clearCurrPath()
    {
       mCurrResultPath.pop();
    }
+
+   while (!mCurrSuccessPath.empty())
+   {
+      mCurrSuccessPath.pop();
+   }
 }
 
 void DnsResult::blacklistPrevResult()
@@ -1971,9 +2023,9 @@ void DnsResult::blacklistPrevResult()
    Item top = mCurrResultPath.top();
    assert(top.rrType==T_A || top.rrType==T_AAAA);
    assert(top.domain==mPrevResult.getTargetDomain());
-   assert(top.record==DnsUtil::inet_ntop(mPrevResult));
+   assert(top.value==DnsUtil::inet_ntop(mPrevResult));
    vector<Data> records;
-   records.push_back(top.record);
+   records.push_back(top.value);
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
    mCurrResultPath.pop();
 }
@@ -1986,7 +2038,7 @@ void DnsResult::addToPath(const std::deque<Tuple>& results)
       Item item;
       item.domain = (*it).getTargetDomain();
       item.rrType = (*it).isV4()? T_A : T_AAAA;
-      item.record = DnsUtil::inet_ntop((*it));
+      item.value = DnsUtil::inet_ntop((*it));
       mCurrResultPath.push(item);
    }
 }
