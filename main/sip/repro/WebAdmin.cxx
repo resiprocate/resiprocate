@@ -706,7 +706,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       if (1)
       {
          rec.user = mHttpParams["user"];
-         rec.domain = mHttpParams["domain"];
+         rec.domain = mHttpParams["domain"];                  
          rec.realm = mHttpParams["domain"];   // eventually sort out realms
          Data password = mHttpParams["password"];
          if (!password.empty())
@@ -751,6 +751,11 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       while ( !key.empty() )
       {
          rec = mStore.mUserStore.getUserInfo(key);
+
+         if ((rec.domain == Data::Empty) && (rec.user == "admin"))
+         {
+            continue;   // skip the row for the admin web user
+         }
       
          s << "<tr>" << endl 
            << "  <td><a href=\"editUser.html?key=";

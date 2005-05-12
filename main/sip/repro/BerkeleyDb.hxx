@@ -1,5 +1,5 @@
-#if !defined(RESIP_BERKLEYDB_HXX)
-#define RESIP_BERKLEYDB_HXX 
+#if !defined(RESIP_BERKELEYDB_HXX)
+#define RESIP_BERKELEYDB_HXX 
 
 #ifdef WIN32
 #include <db_cxx.h>
@@ -18,12 +18,12 @@ namespace resip
 namespace repro
 {
 
-class BerkleyDb: public AbstractDb
+class BerkeleyDb: public AbstractDb
 {
    public:
-      BerkleyDb( char* dbName="repro" );
+      BerkeleyDb( char* dbName="repro" );
       
-      virtual ~BerkleyDb();
+      virtual ~BerkeleyDb();
       
    private:
       //DbEnv mEnv; // !cj! TODO - move to using envoronments
