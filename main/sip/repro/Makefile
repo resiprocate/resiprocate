@@ -1,4 +1,4 @@
-e# $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
+# $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
 
 # repro is not GPL so if you want to link in MySQL, you needs a 
 # a comercial license for MySQL that is not GPL 
