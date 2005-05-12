@@ -31,8 +31,8 @@ int
 main(int argc, char* argv[])
 {
 
-   char* logType = 0;
-   char* logLevel = 0;
+   char* logType = "cout";
+   char* logLevel = "ALERT";
    char* proto = "tcp";
    char* bindAddr = 0;
 
@@ -42,10 +42,7 @@ main(int argc, char* argv[])
    int v6 = 0;
 
 #ifdef WIN32
-  runs = 100;
-  window = 5;
-  logType = "cout";
-  logLevel = "ALERT";
+   //logLevel = "ALERT";
   logLevel = "INFO";
   //logLevel = "DEBUG";
 #endif
@@ -103,15 +100,12 @@ main(int argc, char* argv[])
    contact.uri().user() = "fluffy";
 
 #ifdef WIN32
-     target.uri().host() = Data("192.168.0.129");
-
-   //target.uri().host() = Data("cj30.libvoip.com");
+     target.uri().host() = Data("127.0.0.1");
 #endif
 
    NameAddr from = target;
    from.uri().port() = 25070;
    
-
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
    int count = 0;
@@ -166,8 +160,8 @@ main(int argc, char* argv[])
    InfoLog (<< "Finished " << count << " runs");
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
-        << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+   cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+        << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
