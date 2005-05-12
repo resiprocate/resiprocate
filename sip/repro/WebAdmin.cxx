@@ -754,6 +754,8 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 
          if ((rec.domain == Data::Empty) && (rec.user == "admin"))
          {
+//            DebugLog( << "Found the admin account, would skip here.  Key is: " << key );
+            key = mStore.mUserStore.getNextKey();
             continue;   // skip the row for the admin web user
          }
       
