@@ -58,6 +58,13 @@ class DnsStub
       typedef RRCache::Protocol Protocol;
       typedef std::vector<Data> DataArr;
 
+      class ResultTransform
+      {
+         public:
+            virtual ~ResultTransform() {}
+            virtual void transform(const Data& target, int rrType, std::vector<DnsResourceRecord*>& src) = 0;
+      };
+
       class DnsStubException : public BaseException
       {
          public:
@@ -72,21 +79,24 @@ class DnsStub
       DnsStub(DnsInterface* dns);
       ~DnsStub();
 
+      void setResultTransform(ResultTransform*);
+      void removeResultTransform();
+
       //template<class QueryType>
-      void blacklist(const Data& target, const int rrType, const int proto, const DataArr& targetsToBlacklist)
+      void blacklist(const Data& target, int rrType, const int proto, const DataArr& targetsToBlacklist)
       {
          BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
          mCommandFifo.add(command);
       }
 
       //template<class QueryType>
-      void retryAfter(const Data& target, const int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
+      void retryAfter(const Data& target, int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
       {
          RetryAfterCommand* command = new RetryAfterCommand(target, rrType, proto, *this, retryAfter, targetsToRetryAfter);
          mCommandFifo.add(command);
       }
 
-      template<class QueryType> void lookup(const Data& target, const int proto, DnsResultSink* sink)
+      template<class QueryType> void lookup(const Data& target, int proto, DnsResultSink* sink)
       {
          QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, proto, sink, *this);
          mCommandFifo.add(command);
@@ -120,9 +130,10 @@ class DnsStub
       class Query : public DnsRawSink, public QueryBase
       {
          public:
-            Query(DnsStub& stub, const Data& target, const int proto, DnsResultSink* s)
+            Query(DnsStub& stub, ResultTransform* transform, const Data& target, int proto, DnsResultSink* s)
                : QueryBase(), 
                  mStub(stub), 
+                 mTransform(transform),
                  mTarget(target),
                  mProto(proto),
                  mReQuery(0),
@@ -170,9 +181,10 @@ class DnsStub
                   std::vector<typename QueryType::Type> rrs;
                   if (!records.empty())
                   {
+                     if (mTransform) mTransform->transform(targetToQuery, QueryType::getRRType(), records);
                      cloneRecords(rrs, records);
                   }
-                  notifyUser(status, retryAfter, rrs);      
+                  notifyUser(status, retryAfter, rrs);
                   mStub.removeQuery(this);
                   delete this;
                }
@@ -240,6 +252,7 @@ class DnsStub
                      mStub.mCache.lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
                      if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
                      mStub.mCache.lookup(targetToQuery, QueryType::getRRType(), mProto, result, status, retryAfter);
+                     if (mTransform) mTransform->transform(targetToQuery, QueryType::getRRType(), result);
                      cloneRecords(records, result);
                      notifyUser(status, retryAfter, records);
                   }
@@ -310,6 +323,7 @@ class DnsStub
 
          private:
             DnsStub& mStub;
+            ResultTransform* mTransform;
             Data mTarget;
             int mProto;
             int mReQuery;
@@ -321,16 +335,16 @@ class DnsStub
       DnsStub(const DnsStub&);   // disable copy ctor.
 
       template<class QueryType>
-      void query(const Data& target, const int proto, DnsResultSink* sink)
+      void query(const Data& target, int proto, DnsResultSink* sink)
       {
-         Query<QueryType>* query = new Query<QueryType>(*this, target, proto, sink);
+         Query<QueryType>* query = new Query<QueryType>(*this, mTransform, target, proto, sink);
          mQueries.insert(query);
          query->go(mDns);
       }
-      void doBlacklisting(const Data& target, const int rrType, 
-                          const int protocol, const DataArr& targetsToBlacklist);
-      void doRetryAfter(const Data& target, const int rrType, const int protocol,
-                        const int retryAfter, const DataArr& targetsToRetryAfter);
+      void doBlacklisting(const Data& target, int rrType, 
+                          int protocol, const DataArr& targetsToBlacklist);
+      void doRetryAfter(const Data& target, int rrType, int protocol,
+                        int retryAfter, const DataArr& targetsToRetryAfter);
                           
 
       class Command
@@ -345,7 +359,7 @@ class DnsStub
       {
          public:
             QueryCommand(const Data& target, 
-                         const int proto,
+                         int proto,
                          DnsResultSink* sink,
                          DnsStub& stub)
                : mTarget(target),
@@ -372,8 +386,8 @@ class DnsStub
       {
          public:
             BlacklistingCommand(const Data& target,
-                                const int rrType,
-                                const int proto,
+                                int rrType,
+                                int proto,
                                 DnsStub& stub,
                                 const DataArr& targetToBlacklist)
                : mTarget(target),
@@ -400,8 +414,8 @@ class DnsStub
       {
          public:
             RetryAfterCommand(const Data& target,
-                              const int rrType,
-                              const int proto,
+                              int rrType,
+                              int proto,
                               DnsStub& stub,
                               const int retryAfter,
                               const DataArr& targetsToRetryAfter)
@@ -443,6 +457,7 @@ class DnsStub
       void removeQuery(QueryBase*);
 
       DnsInterface* mDns;
+      ResultTransform* mTransform;
       std::set<QueryBase*> mQueries;
 };
 
