@@ -10,8 +10,9 @@
 using namespace resip;
 
 SHA1Buffer::SHA1Buffer()
+        : mContext(new SHA_CTX())
 {
-   SHA1_Init(&mContext);
+   SHA1_Init(mContext.get());
    setp(mBuf, mBuf + sizeof(mBuf));
 }
 
@@ -25,7 +26,7 @@ SHA1Buffer::sync()
    size_t len = pptr() - pbase();
    if (len > 0) 
    {
-      SHA1_Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+      SHA1_Update(mContext.get(), reinterpret_cast <unsigned const char*>(pbase()), len);
       // reset the put buffer
       setp(mBuf, mBuf + sizeof(mBuf));
    }
@@ -48,7 +49,7 @@ SHA1Buffer::overflow(int c)
 Data 
 SHA1Buffer::getHex()
 {
-   SHA1_Final((unsigned char*)mBuf, &mContext);
+   SHA1_Final((unsigned char*)mBuf, mContext.get());
    Data digest(Data::Share, (const char*)mBuf,SHA_DIGEST_LENGTH);
    return digest.hex();   
 }
@@ -56,7 +57,7 @@ SHA1Buffer::getHex()
 Data
 SHA1Buffer::getBin()
 {
-   SHA1_Final((unsigned char *)mBuf, &mContext);
+   SHA1_Final((unsigned char *)mBuf, mContext.get());
    return Data(mBuf, SHA_DIGEST_LENGTH);
 }
 
