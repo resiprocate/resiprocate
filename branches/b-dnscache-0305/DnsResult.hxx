@@ -12,6 +12,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
 
 struct hostent;
@@ -25,7 +26,7 @@ class DnsResult : public DnsResultSink
 {
    public:
       RESIP_HeapCount(DnsResult);
-      DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler);
+      DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHandler* handler);
       virtual ~DnsResult();
 
       typedef enum
@@ -50,6 +51,9 @@ class DnsResult : public DnsResultSink
       // return the next tuple available for this query. The caller should have
       // checked available() before calling next()
       Tuple next();
+
+      // whitelist the tuple returned by next().
+      void success();
 
       // return the target of associated query
       Data target() const { return mTarget; }
@@ -181,6 +185,7 @@ class DnsResult : public DnsResultSink
    private:
       DnsInterface& mInterface;
       DnsStub& mDns;
+      RRVip& mVip;
       DnsHandler* mHandler;
       int mSRVCount;
       bool mSips;
@@ -248,10 +253,11 @@ class DnsResult : public DnsResultSink
       {
             Data domain;
             int rrType;
-            Data record;
+            Data value; // stores ip for A/AAAA; target host for SRV; replacement for NAPTR.
       } Item;
 
       std::stack<Item> mCurrResultPath;
+      std::stack<Item> mCurrSuccessPath;
 
       void clearCurrPath();
       void addToPath(const std::deque<Tuple>& results);
@@ -259,6 +265,7 @@ class DnsResult : public DnsResultSink
 
       Tuple mPrevResult; // the tuple returned to caller of DnsResult::next().
       bool mBlacklistPrevResult; // used to indicate whether to blacklist mPrevResult.
+
 };
 
 std::ostream& operator<<(std::ostream& strm, const DnsResult&);

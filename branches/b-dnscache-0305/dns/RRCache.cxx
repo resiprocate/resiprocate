@@ -163,8 +163,8 @@ bool RRCache::lookup(const Data& target,
 }
 
 void RRCache::blacklist(const Data& target, 
-                        const int type,
-                        const int protocol,
+                        int type,
+                        int protocol,
                         const DataArr& targetsToBlacklist)
 {
    RRList* key = new RRList(target, type);
@@ -175,9 +175,9 @@ void RRCache::blacklist(const Data& target,
 }
 
 void RRCache::retryAfter(const Data& target,
-                         const int type,
-                         const int protocol,
-                         const int retryAfter,
+                         int type,
+                         int protocol,
+                         int retryAfter,
                          const DataArr& targetsToRetryAfter)
 {
    RRList* key = new RRList(target, type);

@@ -28,6 +28,7 @@ class DnsNaptrRecord : public DnsResourceRecord
 
       // accessors.
       int order() const { return mOrder; }
+      int& order() { return mOrder; }
       int preference() const { return mPreference; }
       const Data& flags() const { return mFlags; }
       const Data& service() const { return mService; }

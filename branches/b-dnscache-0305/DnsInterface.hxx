@@ -9,6 +9,8 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 
 namespace resip
 {
@@ -20,7 +22,6 @@ class Uri;
 class Via;
 class ExternalDns;
 class DnsRawSink;
-class DnsStub;
 
 class DnsInterface : public ExternalDnsHandler
 {
@@ -88,6 +89,8 @@ class DnsInterface : public ExternalDnsHandler
 
       DnsResult* createDnsResult(DnsHandler* handler=0);
       void lookup(DnsResult* res, const Uri& uri);
+      void registerVipListener(const RRVip::Listener*);
+      void unregisterVipListener(const RRVip::Listener*);
 
 //      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
 //      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
@@ -116,6 +119,7 @@ class DnsInterface : public ExternalDnsHandler
       int mActiveQueryCount;      
 
       DnsStub* mDnsStub;
+      RRVip mVip;
 };
 
 }
