@@ -112,7 +112,7 @@ find . -name ${ATCF} -exec cp /dev/null {} \;
 # Remove conflicting files -- and add to ignore list.
 for F in ${AUTOTOOLS_CONFLICTS} ${AUTOTOOLS_USED}; do
     for E in echo "" ; do
-        [ -e "${F}" ] && ${E} rm ${F}
+        [ -e "${F}" ] && ${E} rm -f ${F}
     done
     Fd=$(dirname ${F})
     Fb=$(basename ${F})
@@ -136,7 +136,7 @@ for D in $( find . -name ${ATCF} -print ) ;do
     ( cd $(dirname $D) ; pwd ; echo ${ATCF} >> ${ATCF} ; \
         cat .cvsignore ${ATCF} > /tmp/$$.atcf ;\
         svn propset svn:ignore -F /tmp/$$.atcf . ;\
-        rm /tmp/$$.atcf)
+        rm -f /tmp/$$.atcf)
 done
 
 
