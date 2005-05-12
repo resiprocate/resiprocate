@@ -1,5 +1,5 @@
 CXX = ${DISTCC} @CXX@
-AM_LDFLAGS = -lpopt
+#AM_LDFLAGS = -lpopt
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
 EXTRA_DIST = 	test_7_0.vcproj \
