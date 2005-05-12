@@ -1,6 +1,6 @@
 SUBDIRS = .  dum test
 CXX = ${DISTCC} @CXX@
-dnl INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
+# INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
 EXTRA_DIST = 	resiprocate_7_0.vcproj \
