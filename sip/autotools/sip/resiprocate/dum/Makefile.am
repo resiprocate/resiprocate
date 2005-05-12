@@ -4,7 +4,8 @@ INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
 EXTRA_DIST =	dum_7_0.vcproj \
 		dum_7_1.vcproj \
-		dum_8_0.vcproj
+		dum_8_0.vcproj \
+		doc Doxyfile
 
 LIBTOOL = @LIBTOOL@ --tag=CXX
 

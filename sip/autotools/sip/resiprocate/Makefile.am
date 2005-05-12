@@ -5,7 +5,8 @@ INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
 EXTRA_DIST = 	resiprocate_7_0.vcproj \
 		resiprocate_7_1.vcproj \
-		resiprocate_8_0.vcproj
+		resiprocate_8_0.vcproj \
+		doc Doxyfile FAQ Readme-Compliance.txt
 
 LIBTOOL = @LIBTOOL@ --tag=CXX
 
