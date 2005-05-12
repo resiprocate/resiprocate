@@ -14,7 +14,7 @@
 #include "resiprocate/os/Logger.hxx"
 
 #include "repro/AbstractDb.hxx"
-#include "repro/BerkleyDb.hxx"
+#include "repro/BerkeleyDb.hxx"
 
 
 using namespace resip;
@@ -25,9 +25,9 @@ using namespace std;
 
 
 
-BerkleyDb::BerkleyDb( char* dbName )
+BerkeleyDb::BerkeleyDb( char* dbName )
 { 
-   InfoLog( << "Using BerkleyDB " << dbName );
+   InfoLog( << "Using BerkeleyDb " << dbName );
    
    assert( MaxTable <= 4 );
    
@@ -71,7 +71,7 @@ BerkleyDb::BerkleyDb( char* dbName )
 }
 
 
-BerkleyDb::~BerkleyDb()
+BerkeleyDb::~BerkeleyDb()
 {  
    for (int i=0;i<MaxTable;i++)
    {
@@ -87,7 +87,7 @@ BerkleyDb::~BerkleyDb()
 
 
 void 
-BerkleyDb::dbWriteRecord( const Table table, 
+BerkeleyDb::dbWriteRecord( const Table table, 
                           const resip::Data& pKey, 
                           const resip::Data& pData )
 {
@@ -104,7 +104,7 @@ BerkleyDb::dbWriteRecord( const Table table,
 
 
 bool 
-BerkleyDb::dbReadRecord( const Table table, 
+BerkeleyDb::dbReadRecord( const Table table, 
                          const resip::Data& pKey, 
                          resip::Data& pData ) const
 { 
@@ -138,7 +138,7 @@ BerkleyDb::dbReadRecord( const Table table,
 
 
 void 
-BerkleyDb::dbEraseRecord( const Table table, 
+BerkeleyDb::dbEraseRecord( const Table table, 
                           const resip::Data& pKey )
 { 
    Dbt key( (void*) pKey.data(), (u_int32_t)pKey.size() );
@@ -151,7 +151,7 @@ BerkleyDb::dbEraseRecord( const Table table,
 
 
 resip::Data 
-BerkleyDb::dbNextKey( const Table table, 
+BerkeleyDb::dbNextKey( const Table table, 
                       bool first)
 { 
    Dbt key,data;
