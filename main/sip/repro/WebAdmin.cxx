@@ -717,7 +717,8 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          rec.name = mHttpParams["name"];
          rec.email = mHttpParams["email"];
          
-         // !rwm! TODO need to actually write out the updated record to the database now!
+         // write out the updated record to the database now
+         mStore.mUserStore.writeUser(key, rec);
          
          s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
       }
@@ -754,7 +755,6 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 
          if ((rec.domain == Data::Empty) && (rec.user == "admin"))
          {
-//            DebugLog( << "Found the admin account, would skip here.  Key is: " << key );
             key = mStore.mUserStore.getNextKey();
             continue;   // skip the row for the admin web user
          }
