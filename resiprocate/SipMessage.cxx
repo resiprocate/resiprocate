@@ -1175,10 +1175,10 @@ defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313
 defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
 defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 
-defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC 3261");
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC 3261");
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
+defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
+defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
+defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
 
 defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
 defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");

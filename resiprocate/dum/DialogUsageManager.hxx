@@ -49,6 +49,7 @@ class AppDialogSetFactory;
 class DumShutdownHandler;
 
 class KeepAliveManager;
+class HttpGetMessage;
 
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
@@ -297,7 +298,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool checkEventPackage(const SipMessage& request);
 
       bool queueForIdentityCheck(SipMessage* msg);
-      bool processIdentityCheckResponse(const SipMessage& msg);
+      void processIdentityCheckResponse(const HttpGetMessage& msg);
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
