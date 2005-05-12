@@ -1143,7 +1143,7 @@ Data::urlDecode(std::ostream& s) const
       {
          if (i+2 < size())
          {
-            s << hexpair2int( *p++, *p++);
+            s << (char) hexpair2int( *(++p), *(++p));
          }
          else
          {
@@ -1166,19 +1166,22 @@ bool urlNonEncodedChars[256] = {false};
 bool 
 urlNonEncodedCharsInitFn()
 {
+   // query part of HTTP URL can be a pchar, slash, or question
+   // pchar is unreserved, subdelims, colon, at-sign
+
    for (int i = 0; i < 256; ++i)
    {
       unsigned char c(i);
-      urlNonEncodedChars[c] = (isalpha(c) || 
-                               isdigit(c) ||
-                               c == '-' ||
+      urlNonEncodedChars[c] = (isalpha(c) ||  // unreserved
+                               isdigit(c) ||  // unreserved
+                               c == '-' ||  // these first 4 are unreserved
                                c == '_' ||
                                c == '.' ||
                                c == '~' ||
-                               c == '!' ||
+                               c == '!' ||  // these are subdelims (allowed in pchars)
                                c == '$' ||
-                               c == '&' ||
-                               c == '+' ||
+//                               c == '&' ||  // while these are allowed subdelims, this is an error
+//                               c == '+' ||  // I believe this is an error as well.
                                c == '\'' ||
                                c == '(' ||
                                c == ')' ||
@@ -1186,10 +1189,10 @@ urlNonEncodedCharsInitFn()
                                c == ',' ||
                                c == ';' ||
                                c == '=' ||
-                               c == ':' ||
-                               c == '@' ||
-                               c == '/' ||
-                               c == '?');
+                               c == ':' ||   // next two explicitly allowed in pchar
+                               c == '@' ||   
+                               c == '/' ||   // next two explicitly allowed in query in addition to pchar
+                               c == '?');    
    }
 
    return false;
