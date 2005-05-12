@@ -79,6 +79,7 @@ check_PROGRAMS = \
 	testPlainContents \
 	testRandomHex \
 	testRlmi \
+	testSHA1Stream \
 	testSdp \
 	testSelect \
 	testSelectInterruptor \
@@ -134,6 +135,7 @@ testPksc7_SOURCES = testPksc7.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testRlmi_SOURCES = testRlmi.cxx
+testSHA1Stream_SOURCES = testSHA1Stream.cxx
 testSdp_SOURCES = testSdp.cxx
 testSelect_SOURCES = testSelect.cxx
 testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
