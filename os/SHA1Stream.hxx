@@ -1,63 +1,43 @@
-#if !defined(RESIP_SERVERAUTHMANAGER_HXX)
-#define RESIP_SERVERAUTHMANAGER_HXX
+#if !defined(RESIP_SHA1STREAM_HXX)
+#define RESIP_SHA1STREAM_HXX 
 
-#include <map>
+#include <iostream>
+#include "resiprocate/os/Data.hxx"
 
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/Message.hxx"
+#include "openssl/sha.h"
 
 namespace resip
 {
-class Profile;
-class UserAuthInfo;
-class DialogUsageManager;
 
-
-class ServerAuthManager
+class SHA1Buffer : public std::streambuf
 {
    public:
-      typedef enum Result
-      {
-         //Authorized,
-         RequestedCredentials,
-         Challenged,
-         Skipped,
-         Rejected
-      };
-      
-      ServerAuthManager(DialogUsageManager& dum);
-      virtual ~ServerAuthManager();
-      
-      // can return Authorized, Rejected or Skipped
-      //Result handleUserAuthInfo(Message* msg);
-
-      // returns the SipMessage that was authorized if succeeded or returns 0 if
-      // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
-
-      // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
-      
+      SHA1Buffer();
+      virtual ~SHA1Buffer();
+      Data getHex();
+      Data getBin();
    protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const Data& user, 
-                                     const Data& realm, 
-                                     const Data& transactionToken ) = 0;
-      
-      virtual bool useAuthInt() const;
-      
+      virtual int sync();
+      virtual int overflow(int c = -1);
    private:
-      DialogUsageManager& mDum;      
-      typedef std::map<Data, SipMessage*> MessageMap;
-      MessageMap mMessages;
-      
+      char mBuf[SHA_DIGEST_LENGTH];
+      SHA_CTX mContext;
 };
 
- 
+class SHA1Stream : private SHA1Buffer, public std::ostream
+{
+   public:
+      SHA1Stream();
+      ~SHA1Stream();
+      Data getHex();
+      Data getBin();
+   private:
+      //SHA1Buffer mStreambuf;
+};
+
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

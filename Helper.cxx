@@ -618,7 +618,7 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << Symbols::COLON
       << password;
    a1.flush();
-   
+ 
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
 }
@@ -1016,9 +1016,11 @@ Helper::qopOption(const Auth& challenge)
          pb.data(q, anchor);
          for (size_t i=0; i < sizeof(preferredTokens)/sizeof(*preferredTokens); i++) 
          {
-            if (q == preferredTokens[i]) {
+            if (q == preferredTokens[i]) 
+            {
                // found a preferred token; is it higher priority?
-               if (!found || i < index) {
+               if (!found || i < index) 
+               {
                   found = true;
                   index = i;
                }
