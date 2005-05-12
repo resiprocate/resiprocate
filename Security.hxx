@@ -116,9 +116,9 @@ class BaseSecurity
       Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
 
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
-      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig ) const;
+      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
 
-      void checkAndSetIdentity( const SipMessage& msg ) const;
+      void checkAndSetIdentity( const SipMessage& msg, const Data& derCert=Data::Empty ) const;
 
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );

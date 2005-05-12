@@ -15,6 +15,10 @@
 #include "resiprocate/dns/RRVip.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
 
+#ifdef WIN32
+#include <Ws2tcpip.h>
+#endif
+
 struct hostent;
 
 namespace resip
@@ -225,7 +229,7 @@ class DnsResult : public DnsResultSink
       typedef union 
       {
 #ifdef USE_IPV6
-            struct in6_addr addr;
+            struct ::in6_addr addr;
 #endif
             char pad[16];
       } IpV6Addr;

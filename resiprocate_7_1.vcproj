@@ -23,7 +23,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -73,7 +73,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -98,8 +98,7 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Documents and Settings\Jason Fischl\My Documents\Visual Studio Projects\sip&quot;"/>
+				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -121,7 +120,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -169,7 +168,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -514,6 +513,15 @@
 				RelativePath="Helper.cxx">
 			</File>
 			<File
+				RelativePath=".\external\HttpGetMessage.cxx">
+			</File>
+			<File
+				RelativePath=".\external\HttpProvider.cxx">
+			</File>
+			<File
+				RelativePath=".\os\Id.cxx">
+			</File>
+			<File
 				RelativePath="IntegerCategory.cxx">
 			</File>
 			<File
@@ -571,6 +579,9 @@
 				RelativePath="MultipartMixedContents.cxx">
 			</File>
 			<File
+				RelativePath=".\MultipartRelatedContents.cxx">
+			</File>
+			<File
 				RelativePath="MultipartSignedContents.cxx">
 			</File>
 			<File
@@ -610,7 +621,13 @@
 				RelativePath="Pkcs7Contents.cxx">
 			</File>
 			<File
+				RelativePath=".\Pkcs8Contents.cxx">
+			</File>
+			<File
 				RelativePath="PlainContents.cxx">
+			</File>
+			<File
+				RelativePath=".\os\Poll.cxx">
 			</File>
 			<File
 				RelativePath="QopParameter.cxx">
@@ -700,6 +717,9 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\dns\RRVip.cxx">
+			</File>
+			<File
 				RelativePath="os\RWMutex.cxx">
 			</File>
 			<File
@@ -710,6 +730,12 @@
 			</File>
 			<File
 				RelativePath=".\SecurityAttributes.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SelectInterruptor.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SHA1Stream.cxx">
 			</File>
 			<File
 				RelativePath="SipFrag.cxx">
@@ -842,6 +868,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinCompat.cxx">
+			</File>
+			<File
+				RelativePath=".\X509Contents.cxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.cxx">
@@ -1046,6 +1075,15 @@
 				RelativePath="Helper.hxx">
 			</File>
 			<File
+				RelativePath=".\external\HttpGetMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\external\HttpProvider.hxx">
+			</File>
+			<File
+				RelativePath=".\os\Id.hxx">
+			</File>
+			<File
 				RelativePath="os\Inserter.hxx">
 			</File>
 			<File
@@ -1112,6 +1150,9 @@
 				RelativePath="MultipartMixedContents.hxx">
 			</File>
 			<File
+				RelativePath=".\MultipartRelatedContents.hxx">
+			</File>
+			<File
 				RelativePath="MultipartSignedContents.hxx">
 			</File>
 			<File
@@ -1163,7 +1204,13 @@
 				RelativePath="Pkcs7Contents.hxx">
 			</File>
 			<File
+				RelativePath=".\Pkcs8Contents.hxx">
+			</File>
+			<File
 				RelativePath="PlainContents.hxx">
+			</File>
+			<File
+				RelativePath=".\os\Poll.hxx">
 			</File>
 			<File
 				RelativePath="QopParameter.hxx">
@@ -1205,6 +1252,9 @@
 				RelativePath=".\dns\RROverlay.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\RRVip.hxx">
+			</File>
+			<File
 				RelativePath="os\RWMutex.hxx">
 			</File>
 			<File
@@ -1220,7 +1270,13 @@
 				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
+				RelativePath=".\os\SelectInterruptor.hxx">
+			</File>
+			<File
 				RelativePath=".\SendData.hxx">
+			</File>
+			<File
+				RelativePath=".\os\SHA1Stream.hxx">
 			</File>
 			<File
 				RelativePath=".\ShutdownMessage.hxx">
@@ -1352,6 +1408,9 @@
 				RelativePath="os\Tuple.hxx">
 			</File>
 			<File
+				RelativePath=".\TuSelector.hxx">
+			</File>
+			<File
 				RelativePath="UdpTransport.hxx">
 			</File>
 			<File
@@ -1377,6 +1436,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\X509Contents.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
