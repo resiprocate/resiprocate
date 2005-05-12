@@ -2,12 +2,16 @@
 #define RESIP_SHA1STREAM_HXX 
 
 #include <iostream>
+#include <memory>
 #include "resiprocate/os/Data.hxx"
 
 #if defined (USE_SSL)
 # include "openssl/sha.h"
 #else
-typedef void SHA_CTX;
+// !kh!
+// so it would compile without openssl.
+// also see my comment just above the declaration of member mContext.
+typedef int SHA_CTX;
 #endif // USE_SSL
 
 namespace resip
@@ -25,7 +29,11 @@ class SHA1Buffer : public std::streambuf
       virtual int overflow(int c = -1);
    private:
       char mBuf[SHA_DIGEST_LENGTH];
-      SHA_CTX mContext;
+      // !kh!
+      // used a pointer to SHA_CTX to keep the same object layout.
+      // this adds overhead, an additional "new" and "delete".
+      // could get rid of the overhead if, sizeof(SHA_CTX) is known and FIXED.
+      std::auto_ptr<SHA_CTX> mContext;
 };
 
 class SHA1Stream : private SHA1Buffer, public std::ostream
