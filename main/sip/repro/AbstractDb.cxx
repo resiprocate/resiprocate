@@ -95,6 +95,38 @@ AbstractDb::eraseUser( const AbstractDb::Key& key )
    dbEraseRecord( UserTable, key);
 }
 
+void 
+AbstractDb::writeUser( const AbstractDb::Key& oldkey, const AbstractDb::Key& newkey, const AbstractDb::UserRecord& rec )
+{  
+   assert( !oldkey.empty() );
+   assert( !newkey.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+      
+      short version=2;
+      assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+      
+      encodeString( s, rec.user );
+      encodeString( s, rec.domain);
+      encodeString( s, rec.realm);
+      encodeString( s, rec.passwordHash);
+      encodeString( s, rec.name);
+      encodeString( s, rec.email);
+      encodeString( s, rec.forwardAddress);
+      s.flush();
+   }
+   
+   if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
+   {
+      dbEraseRecord( UserTable, oldkey);
+   }
+   
+   dbWriteRecord(UserTable,newkey,data);
+}
+
 
 AbstractDb::UserRecord 
 AbstractDb::getUser( const AbstractDb::Key& key ) const

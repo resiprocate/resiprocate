@@ -48,6 +48,7 @@ class UserStore
       //                 const resip::Data& realm );
       
       void eraseUser( const Key& key );
+      void writeUser( const Key& originalKey, const AbstractDb::UserRecord& rec);
       
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
