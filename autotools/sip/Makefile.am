@@ -10,7 +10,7 @@ dist-hook:
 		${MAKE} -C $(distdir)/contrib/ares distclean; \
 	fi
 	echo This is a little drastic. Need to re-write to exclude control files.
-	find $(distdir)/contrib $(distdir)/certs -name .svn -o -name .cvsignore | xargs rm -rf
+	find $(distdir) -name .svn -o -name .cvsignore | xargs rm -rf
 
 #rpms:	dist
 #	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
