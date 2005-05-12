@@ -4,7 +4,11 @@
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
 
-#include "openssl/sha.h"
+#if defined (USE_SSL)
+# include "openssl/sha.h"
+#else
+typedef void SHA_CTX;
+#endif // USE_SSL
 
 namespace resip
 {
