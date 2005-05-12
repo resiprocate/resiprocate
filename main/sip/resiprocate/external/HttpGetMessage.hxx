@@ -1,67 +1,40 @@
-#if !defined(RESIP_SERVERAUTHMANAGER_HXX)
-#define RESIP_SERVERAUTHMANAGER_HXX
+#ifndef RESIP_HttpGetMessage_hxx
+#define RESIP_HttpGetMessage_hxx 
 
-#include <map>
-
-#include "resiprocate/dum/UserProfile.hxx"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
-class Profile;
-class UserAuthInfo;
-class DialogUsageManager;
 
-
-class ServerAuthManager
+class HttpGetMessage : public Message
 {
    public:
-      typedef enum Result
-      {
-         //Authorized,
-         RequestedCredentials,
-         Challenged,
-         Skipped,
-         Rejected
-      };
-      
-      ServerAuthManager(DialogUsageManager& dum);
-      virtual ~ServerAuthManager();
-      
-      // can return Authorized, Rejected or Skipped
-      //Result handleUserAuthInfo(Message* msg);
+      HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
 
-      // returns the SipMessage that was authorized if succeeded or returns 0 if
-      // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
+      bool success() const { return mSuccess; }
+      const Data& getBodyData() const { return mBody; }
+      const Mime& getType() const {return mType;}
+      const Data& tid() const { return mTid; } //replace w/ act
 
-      // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
-      
-   protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const Data& user, 
-                                     const Data& realm, 
-                                     const Data& transactionToken ) = 0;
-      
-      virtual bool useAuthInt() const;
-      
+      virtual Data brief() const;
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
    private:
-      DialogUsageManager& mDum;      
-      typedef std::map<Data, SipMessage*> MessageMap;
-      MessageMap mMessages;
-      
+      Data mTid;
+      bool mSuccess;
+      Data mBody;
+      Mime mType;
 };
-
  
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

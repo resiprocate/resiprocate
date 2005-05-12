@@ -59,6 +59,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       else
       {
          InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+         InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
 
          SipMessage response;
          Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
@@ -68,7 +69,15 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       }
    }
 }
-      
+
+            
+bool
+ServerAuthManager::useAuthInt() const
+{
+   return true;
+}
+
+
 // return true if request has been consumed 
 ServerAuthManager::Result
 ServerAuthManager::handle(const SipMessage& sipMsg)
@@ -81,8 +90,8 @@ ServerAuthManager::handle(const SipMessage& sipMsg)
          //assume TransactionUser has matched/repaired a realm
          SipMessage* challenge = Helper::makeProxyChallenge(sipMsg, 
                                                             sipMsg.header(h_RequestLine).uri().host(),
-                                                            true,
-                                                            false);
+                                                            useAuthInt(),
+                                                            false /*stale*/);
          InfoLog (<< "Sending challenge to " << sipMsg.brief());
          mDum.send(*challenge);
          delete challenge;
