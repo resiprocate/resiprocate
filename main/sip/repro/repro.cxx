@@ -26,7 +26,7 @@
 #include "repro/UserStore.hxx"
 #include "repro/RouteStore.hxx"
 #include "repro/AbstractDb.hxx"
-#include "repro/BerkleyDb.hxx"
+#include "repro/BerkeleyDb.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
@@ -179,7 +179,7 @@ main(int argc, char** argv)
 #endif
    if (!db)
    {
-      db = new BerkleyDb;
+      db = new BerkeleyDb;
    }
    assert( db );
    Store store(*db);
