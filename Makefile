@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os
+CODE_SUBDIRS = os external
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -32,6 +32,7 @@ SRC = \
 	os/RWMutex.cxx \
 	os/Random.cxx \
 	os/SelectInterruptor.cxx \
+	os/SHA1Stream.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
 	os/SysLogBuf.cxx \
@@ -154,7 +155,11 @@ SRC = \
 	Uri.cxx \
 	X509Contents.cxx \
 	XMLCursor.cxx \
-	KeepAliveMessage.cxx
+	KeepAliveMessage.cxx \
+	\
+	\
+	external/HttpProvider.cxx \
+	external/HttpGetMessage.cxx
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
