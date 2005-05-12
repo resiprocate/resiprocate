@@ -15,7 +15,8 @@ libtestsupport_a_SOURCES = \
 	TestSupport.cxx \
 	test503Generator.cxx \
 	testResponses.cxx \
-	testRSP-2.cxx
+	testRSP-2.cxx \
+	testUdp.cxx
 
 noinst_HEADERS = \
 	digcalc.hxx \
@@ -96,7 +97,6 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testTuple \
 	testTypedef \
-	testUdp \
 	testUri \
 	testXMLCursor 
 
@@ -152,7 +152,6 @@ testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testTuple_SOURCES = testTuple.cxx
 testTypedef_SOURCES = testTypedef.cxx
-testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 
