@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os dns
+CODE_SUBDIRS = os external
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -31,6 +31,8 @@ SRC = \
 	os/ParseBuffer.cxx \
 	os/RWMutex.cxx \
 	os/Random.cxx \
+	os/SelectInterruptor.cxx \
+	os/SHA1Stream.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
 	os/SysLogBuf.cxx \
@@ -156,6 +158,8 @@ SRC = \
 	KeepAliveMessage.cxx \
 	\
 	\
+	external/HttpProvider.cxx \
+	external/HttpGetMessage.cxx \
 	dns/DnsAAAARecord.cxx \
 	dns/DnsCnameRecord.cxx \
 	dns/DnsHostRecord.cxx \

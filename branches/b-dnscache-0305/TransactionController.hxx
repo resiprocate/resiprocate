@@ -14,7 +14,6 @@ namespace resip
 class TransactionMessage;
 class ApplicationMessage;
 class StatisticsManager;
-class AsyncProcessHandler;
 class SipStack;
 
 class TransactionController

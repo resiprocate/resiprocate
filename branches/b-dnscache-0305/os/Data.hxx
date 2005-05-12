@@ -142,8 +142,10 @@ class Data
       /// encodes with %hex for special characters
       Data charEncoded() const;
       Data charUnencoded() const;
-      Data charHttpUnencoded() const;
-      void httpEscapeToStream(DataStream& s) const;
+      Data urlEncoded() const;
+      Data urlDecoded() const;
+      std::ostream& urlDecode(std::ostream& s) const;
+      std::ostream& urlEncode(std::ostream& s) const;
       Data trunc(size_type trunc) const;
 	
       // resize to zero without changing capacity
