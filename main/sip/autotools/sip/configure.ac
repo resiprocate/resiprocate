@@ -10,7 +10,11 @@ dnl
 RESIP_MAJOR_VERSION=0
 RESIP_MINOR_VERSION=5
 RESIP_MICRO_VERSION=0
-RESIP_REVISION=`svn info | grep Revision | awk '{print $2}'`
+if test -e .svn; then
+  RESIP_REVISION=`svn info | grep Revision | awk '{print $2}'`
+else
+  RESIP_REVISION='nosvn'
+fi
 
 RESIP_VERSION=$RESIP_MAJOR_VERSION.$RESIP_MINOR_VERSION.$RESIP_MICRO_VERSION-$RESIP_REVISION
 
