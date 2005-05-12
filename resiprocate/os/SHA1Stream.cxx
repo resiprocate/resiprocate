@@ -1,9 +1,11 @@
 #include "resiprocate/os/SHA1Stream.hxx"
 
+#if defined(USE_SSL)
+
 // Remove warning about 'this' use in initiator list - pointer is only stored
-#if defined(WIN32)
-#pragma warning( disable : 4355 ) // using this in base member initializer list 
-#endif
+# if defined(WIN32)
+#   pragma warning( disable : 4355 ) // using this in base member initializer list 
+# endif // WIN32
 
 using namespace resip;
 
@@ -80,6 +82,8 @@ SHA1Stream::getBin()
    flush();
    return SHA1Buffer::getBin();
 }
+
+#endif // USE_SSL
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
