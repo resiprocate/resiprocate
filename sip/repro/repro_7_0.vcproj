@@ -123,7 +123,7 @@
 				RelativePath=".\monkeys\AmIResponsible.cxx">
 			</File>
 			<File
-				RelativePath=".\BerkleyDb.cxx">
+				RelativePath=".\BerkeleyDb.cxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.cxx">
@@ -220,7 +220,7 @@
 				RelativePath=".\monkeys\AmIResponsible.hxx">
 			</File>
 			<File
-				RelativePath=".\BerkleyDb.hxx">
+				RelativePath=".\BerkeleyDb.hxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\CertPublicationHandler.hxx">
