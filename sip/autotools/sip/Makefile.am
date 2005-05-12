@@ -2,18 +2,15 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = resiprocate .
 EXTRA_DIST = contrib/ares certs README.windows \
-		SipIMP SipIMPSetup \
 		ReSIProcate_7_0.sln  ReSIProcate_7_1.sln  ReSIProcate_8_0.sln \
-		sip.xcode README.autotools sip.mcp.xml
+		README.autotools sip.mcp.xml
 
 dist-hook:
 	if [ -f $(distdir)/contrib/ares/Makefile ]; then \
 		${MAKE} -C $(distdir)/contrib/ares distclean; \
 	fi
 	echo This is a little drastic. Need to re-write to exclude control files.
-	find $(distdir)/contrib $(distdir)/certs $(distdir)/SipIMP \
-	     $(distdir)/SipIMPSetup -name CVS \
-             -o -name .cvsignore | xargs rm -rf
+	find $(distdir)/contrib $(distdir)/certs -name .svn -o -name .cvsignore | xargs rm -rf
 
 #rpms:	dist
 #	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
