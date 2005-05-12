@@ -157,7 +157,8 @@ void RRVip::Transform::transform(RRVector& src,
                                  bool& invalidVip)
 {
    invalidVip = true;
-   for (RRVector::iterator it = src.begin(); it != src.end(); ++it)
+   RRVector::iterator it;
+   for (it = src.begin(); it != src.end(); ++it)
    {
       if ((*it)->isSameValue(mVip))
       {

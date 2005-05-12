@@ -67,7 +67,7 @@ class RRVip : public DnsStub::ResultTransform
       class TransformFactory
       {
          public:
-            ~TransformFactory() {}
+            virtual ~TransformFactory() {}
             virtual Transform* createTransform(const Data& vip) = 0;
       };
 
