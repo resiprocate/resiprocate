@@ -1,62 +1,85 @@
-#if !defined(RESIP_SERVERAUTHMANAGER_HXX)
-#define RESIP_SERVERAUTHMANAGER_HXX
+#include "resiprocate/os/SHA1Stream.hxx"
 
-#include <map>
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
 
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/Message.hxx"
+using namespace resip;
 
-namespace resip
+SHA1Buffer::SHA1Buffer()
 {
-class Profile;
-class UserAuthInfo;
-class DialogUsageManager;
-
-
-class ServerAuthManager
-{
-   public:
-      typedef enum Result
-      {
-         //Authorized,
-         RequestedCredentials,
-         Challenged,
-         Skipped,
-         Rejected
-      };
-      
-      ServerAuthManager(DialogUsageManager& dum);
-      virtual ~ServerAuthManager();
-      
-      // can return Authorized, Rejected or Skipped
-      //Result handleUserAuthInfo(Message* msg);
-
-      // returns the SipMessage that was authorized if succeeded or returns 0 if
-      // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
-
-      // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
-      
-   protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const Data& user, 
-                                     const Data& realm, 
-                                     const Data& transactionToken ) = 0;
-      
-      virtual bool useAuthInt() const;
-      
-   private:
-      DialogUsageManager& mDum;      
-      typedef std::map<Data, SipMessage*> MessageMap;
-      MessageMap mMessages;
-      
-};
-
- 
+   SHA1_Init(&mContext);
+   setp(mBuf, mBuf + sizeof(mBuf));
 }
 
-#endif
+SHA1Buffer::~SHA1Buffer()
+{
+}
+
+int
+SHA1Buffer::sync()
+{
+   size_t len = pptr() - pbase();
+   if (len > 0) 
+   {
+      SHA1_Update(&mContext, reinterpret_cast <unsigned const char*>(pbase()), len);
+      // reset the put buffer
+      setp(mBuf, mBuf + sizeof(mBuf));
+   }
+   return 0;
+}
+
+int
+SHA1Buffer::overflow(int c)
+{
+   sync();
+   if (c != -1) 
+   {
+      mBuf[0] = c;
+      pbump(1);
+      return c;
+   }
+   return 0;
+}
+
+Data 
+SHA1Buffer::getHex()
+{
+   SHA1_Final((unsigned char*)mBuf, &mContext);
+   Data digest(Data::Share, (const char*)mBuf,SHA_DIGEST_LENGTH);
+   return digest.hex();   
+}
+
+Data
+SHA1Buffer::getBin()
+{
+   SHA1_Final((unsigned char *)mBuf, &mContext);
+   return Data(mBuf, SHA_DIGEST_LENGTH);
+}
+
+SHA1Stream::SHA1Stream()
+   : std::ostream(this)
+{
+}
+
+SHA1Stream::~SHA1Stream()
+{}
+
+Data 
+SHA1Stream::getHex()
+{
+   flush();
+   return SHA1Buffer::getHex();
+   //return mStreambuf.getHex();
+}
+
+Data
+SHA1Stream::getBin()
+{
+   flush();
+   return SHA1Buffer::getBin();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

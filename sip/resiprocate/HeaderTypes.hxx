@@ -51,10 +51,10 @@ class Headers
          defineMultiHeader(Accept, "Accept", Mime, "RFC 3261"),
          defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261"),
          defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261"),
-         defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC 3261"),
+         defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261"),
          defineMultiHeader(Allow, "Allow", Token, "RFC 3261"),
          defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261"),
-         defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC 3261"),
+         defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261"),
          defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ?"),
          defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ?"),
          defineHeader(ContentId, "Content-ID", Token, "RFC 2045"),
@@ -63,7 +63,7 @@ class Headers
          defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?"), // !dlb! defineMultiHeader
          defineHeader(ContentType, "Content-Type", Mime, "RFC 3261"),
          defineHeader(Date, "Date", DateCategory, "RFC 3261"),
-         defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC 3261"),
+         defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261"),
          defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC 3261"),
          defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261"),
          defineHeader(MIMEVersion, "MIME-Version", Token, "RFC 3261"),
@@ -113,7 +113,7 @@ class Headers
          defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608"),
 
          defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
-         defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),
+         defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03"),
 
          defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261"),
 
