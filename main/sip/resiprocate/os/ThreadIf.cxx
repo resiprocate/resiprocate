@@ -13,8 +13,9 @@
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
 
@@ -114,12 +115,17 @@ ThreadIf::join()
    CloseHandle(mThread);
 #else
    void* stat;
-   int r = pthread_join( mId , &stat );
-   if ( r!= 0 )
+   if (mId != pthread_self())
    {
-      assert(0);
-      // TODO
+      int r = pthread_join( mId , &stat );
+      if ( r != 0 )
+      {
+         InfoLog( << "pthread_join() returned " << r );
+         assert(0);
+         // TODO
+      }
    }
+   
 #endif
 
    mId = 0;

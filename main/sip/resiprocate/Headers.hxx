@@ -147,13 +147,13 @@ defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
 defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 
 //====================
-// GenericURIs:
+// GenericUris:
 //====================
-typedef ParserContainer<GenericURI> GenericURIs;
-defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC 3261");
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC 3261");
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
+typedef ParserContainer<GenericUri> GenericUris;
+defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
+defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
+defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
 
 //====================
 // NameAddr:
