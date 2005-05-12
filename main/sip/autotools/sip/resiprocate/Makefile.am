@@ -38,6 +38,7 @@ libresiprocate_la_SOURCES = \
 	os/Random.cxx \
 	os/RecursiveMutex.cxx \
 	os/SelectInterruptor.cxx \
+	os/SHA1Stream.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
 	os/SysLogBuf.cxx \
