@@ -17,36 +17,51 @@ class Profile
       Profile(Profile *baseProfile = 0);  // Default to no base profile
       virtual ~Profile();
 
+      // Note:
+      // setXXXX methods will set this setting internally in this object.  If you do not call
+      // a particular setXXX method on this object then a corresponding getXXXX call will attempt
+      // to retrieve that value from the BaseProfile (provided in the constructor).  This allows
+      // you to setup a heirarchy of profiles and settings.
+      // unsetXXX methods are used to re-enable fallthrough after calling a setXXXX method.  If
+      // you call an unsetXXXX method on an object with a NULL BaseProfile it will have no effect.
+
       // This default is used if no value is passed in when creating a registration
       virtual void setDefaultRegistrationTime(int secs);
       virtual int getDefaultRegistrationTime() const;
+      virtual void unsetDefaultRegistrationTime();  
 
       // If a registration gets rejected with a 423, then we with the MinExpires value - if it is less than this
       // Set to 0 to disable this check and accept any time suggested by the server.
       virtual void setDefaultMaxRegistrationTime(int secs);
       virtual int getDefaultMaxRegistrationTime() const;
+      virtual void unsetDefaultMaxRegistrationTime();   
 
       // The time to retry registrations on error responses (if Retry-After header is not present in error)
       // Set to 0 to never retry on errors
       virtual void setDefaultRegistrationRetryTime(int secs);
       virtual int getDefaultRegistrationRetryTime() const;
+      virtual void unsetDefaultRegistrationRetryTime();   
 
       // This default is used if no value is passed in when creating a subscription
       virtual void setDefaultSubscriptionTime(int secs);
       virtual int getDefaultSubscriptionTime() const;
+      virtual void unsetDefaultSubscriptionTime();   
 
       // This default is used if no value is passed in when creating a publication
       virtual void setDefaultPublicationTime(int secs);
       virtual int getDefaultPublicationTime() const;
+      virtual void unsetDefaultPublicationTime();  
 
       /// Call is stale if UAC gets no final response within the stale call timeout (default 3 minutes)
       virtual void setDefaultStaleCallTime(int secs);
       virtual int getDefaultStaleCallTime() const;
+      virtual void unsetDefaultStaleCallTime();  
 
       // Only used if timer option tag is set in MasterProfile.
       // Note:  Value must be higher than 90 (as specified in session-timer draft)
       virtual void setDefaultSessionTime(int secs); 
       virtual int getDefaultSessionTime() const;
+      virtual void unsetDefaultSessionTime(); 
 
       // Only used if timer option tag is set in MasterProfile.
       // Set to PreferLocalRefreshes if you prefer that the local UA performs the refreshes.  
@@ -67,10 +82,12 @@ class Profile
       } SessionTimerMode;
       virtual void setDefaultSessionTimerMode(Profile::SessionTimerMode mode);
       virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const;
+      virtual void unsetDefaultSessionTimerMode();   
 
       // The amount of time that can pass before dum will resubmit an unreliable provisional response
       virtual void set1xxRetransmissionTime(int secs);
       virtual int get1xxRetransmissionTime() const;
+      virtual void unset1xxRetransmissionTime();   
 
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
@@ -80,6 +97,7 @@ class Profile
       virtual void setOverrideHostAndPort(const Uri& hostPort);
       virtual bool hasOverrideHostAndPort() const;
       virtual const Uri& getOverrideHostAndPort() const;      
+      virtual void unsetOverrideHostAndPort(); 
       
       //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
       //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
@@ -88,26 +106,31 @@ class Profile
       //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
       virtual void addAdvertisedCapability(const Headers::Type header);
       virtual bool isAdvertisedCapability(const Headers::Type header) const;
-      virtual void clearAdvertisedCapabilities();
+      virtual void clearAdvertisedCapabilities(); 
+      virtual void unsetAdvertisedCapabilities();
       
       // Use to route all outbound requests through a particular proxy
       virtual void setOutboundProxy( const Uri& uri );
       virtual const NameAddr& getOutboundProxy() const;
       virtual bool hasOutboundProxy() const;
+      virtual void unsetOutboundProxy(); 
       
       //enable/disable rport for requests. rport is enabled by default
       virtual void setRportEnabled(bool enabled);
       virtual bool getRportEnabled() const;      
+      virtual void unsetRportEnabled(); 
 
       //if set then UserAgent header is added to outbound messages
       virtual void setUserAgent( const Data& userAgent );
       virtual const Data& getUserAgent() const;
       virtual bool hasUserAgent() const;
+      virtual void unsetUserAgent(); 
 
       //time between CR/LF keepalive messages in seconds.  Set to 0 to disable.  Default is 30.
       //Note:  You must set a KeepAliveManager on DUM for this to work.
       virtual void setKeepAliveTime(int keepAliveTime);
       virtual int getKeepAliveTime() const;      
+      virtual void unsetKeepAliveTime(); 
 
       //If set dum will provide a port in the via for requests sent down to the stack.  This
       //will tell the transport selector to only look at those transports using this port.
@@ -118,9 +141,9 @@ class Profile
       //          to 5060 - then the TLS transport cannot be used.
       virtual void setFixedTransportPort(int fixedTransportPort);
       virtual int getFixedTransportPort() const;
+      virtual void unsetFixedTransportPort(); 
 
    private:
-      // !slg! - should we provide a mechanism to clear the mHasxxxxx members to re-enable fall through after setting?
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
       
