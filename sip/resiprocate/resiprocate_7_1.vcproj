@@ -350,6 +350,12 @@
 				RelativePath="Helper.cxx">
 			</File>
 			<File
+				RelativePath=".\external\HttpGetMessage.cxx">
+			</File>
+			<File
+				RelativePath=".\external\HttpProvider.cxx">
+			</File>
+			<File
 				RelativePath=".\os\Id.cxx">
 			</File>
 			<File
@@ -495,6 +501,12 @@
 			</File>
 			<File
 				RelativePath=".\SecurityAttributes.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SelectInterruptor.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SHA1Stream.cxx">
 			</File>
 			<File
 				RelativePath="SipFrag.cxx">
@@ -810,6 +822,12 @@
 				RelativePath="Helper.hxx">
 			</File>
 			<File
+				RelativePath=".\external\HttpGetMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\external\HttpProvider.hxx">
+			</File>
+			<File
 				RelativePath=".\os\Id.hxx">
 			</File>
 			<File
@@ -981,7 +999,13 @@
 				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
+				RelativePath=".\os\SelectInterruptor.hxx">
+			</File>
+			<File
 				RelativePath=".\SendData.hxx">
+			</File>
+			<File
+				RelativePath=".\os\SHA1Stream.hxx">
 			</File>
 			<File
 				RelativePath=".\ShutdownMessage.hxx">
