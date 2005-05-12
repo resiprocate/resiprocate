@@ -16,6 +16,7 @@ extern "C"
 #include "resiprocate/os/Socket.hxx"
 
 #include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
@@ -42,6 +43,7 @@ DnsInterface::DnsInterface() :
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
    mDnsStub = new DnsStub(this);
+   mDnsStub->setResultTransform(&mVip);   
    assert(mDnsStub!=0);
 }
 
@@ -163,7 +165,7 @@ DnsInterface::process(FdSet& fdset)
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this, *mDnsStub, handler);
+   DnsResult* result = new DnsResult(*this, *mDnsStub, mVip, handler);
    mActiveQueryCount++;  
    return result;
 }
@@ -174,6 +176,17 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
    res->lookup(uri);   
 }
 
+void DnsInterface::registerVipListener(const RRVip::Listener* listener)
+{
+   mVip.addListener(T_A, listener);
+   mVip.addListener(T_AAAA, listener);
+}
+
+void DnsInterface::unregisterVipListener(const RRVip::Listener* listener)
+{
+   mVip.removeListener(T_A, listener);
+   mVip.removeListener(T_AAAA, listener);
+}
 
 
 // DnsResult* 

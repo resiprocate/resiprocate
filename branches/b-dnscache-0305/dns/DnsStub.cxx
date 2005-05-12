@@ -27,7 +27,7 @@ extern "C"
 using namespace resip;
 using namespace std;
 
-DnsStub::DnsStub(DnsInterface* dns) : mDns(dns)
+DnsStub::DnsStub(DnsInterface* dns) : mDns(dns), mTransform(0)
 {
 }
 
@@ -219,18 +219,28 @@ DnsStub::removeQuery(QueryBase* query)
 }
 
 void DnsStub::doBlacklisting(const Data& target,
-                             const int rrType, 
-                             const int protocol, 
+                             int rrType, 
+                             int protocol, 
                              const DataArr& targetsToBlacklist)
 {
    mCache.blacklist(target, rrType, protocol, targetsToBlacklist);
 }
 
 void DnsStub::doRetryAfter(const Data& target, 
-                           const int rrType, 
-                           const int protocol,
-                           const int retryAfter, 
+                           int rrType, 
+                           int protocol,
+                           int retryAfter, 
                            const DataArr& targetsToRetryAfter)
 {
    mCache.retryAfter(target, rrType, protocol, retryAfter, targetsToRetryAfter);
+}
+
+void DnsStub::setResultTransform(ResultTransform* transform)
+{
+   mTransform = transform;
+}
+
+void DnsStub::removeResultTransform()
+{
+   mTransform = 0;
 }

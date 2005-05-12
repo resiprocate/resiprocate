@@ -27,6 +27,7 @@ class DnsSrvRecord : public DnsResourceRecord
 
       // accessors.
       int priority() const { return mPriority; }
+      int& priority() { return mPriority; }
       int weight() const { return mWeight; }
       int port() const { return mPort; }
       const Data& target() const { return mTarget; }
