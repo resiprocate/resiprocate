@@ -98,6 +98,13 @@ UserStore::eraseUser( const Key& key )
    mDb.eraseUser( key );
 }
 
+void
+UserStore::writeUser( const Key& originalKey, const AbstractDb::UserRecord& rec)
+{
+   Key newkey = buildKey(rec.user, rec.domain);
+   mDb.writeUser( originalKey, newkey, rec);
+}
+
 
 UserStore::Key
 UserStore::getFirstKey()
