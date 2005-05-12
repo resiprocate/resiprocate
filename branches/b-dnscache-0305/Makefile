@@ -168,6 +168,7 @@ SRC = \
 	dns/DnsStub.cxx \
 	dns/RRCache.cxx \
 	dns/RRList.cxx \
+	dns/RRVip.cxx \
 	dns/QueryTypes.cxx \
 	dns/RROverlay.cxx \
 
