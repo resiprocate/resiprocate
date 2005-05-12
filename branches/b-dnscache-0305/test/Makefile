@@ -8,7 +8,8 @@ include $(BUILD)/Makefile.pre
 PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), true)
-TESTPROGRAMS += makeSelfCert.cxx 
+TESTPROGRAMS += makeSelfCert.cxx \
+		testTls.cxx 
 endif
 
 TESTPROGRAMS += testTuple.cxx \
@@ -38,7 +39,7 @@ TESTPROGRAMS += testTuple.cxx \
 		testEmbedded.cxx \
 		testEmptyHeader.cxx \
 		testIM.cxx \
-		testIM.cxx \
+		testSHA1Stream.cxx \
 		testIntrusiveList.cxx \
 		testLockStep.cxx \
 		testLockStep.cxx \
@@ -71,6 +72,7 @@ TESTPROGRAMS += testTuple.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
 	        test503Generator.cxx \
+		testSelectInterruptor.cxx \
 #		testTransportSelector.cxx
 
 

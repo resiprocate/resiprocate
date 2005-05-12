@@ -14,7 +14,37 @@ class TestData
       int main()
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
-         
+
+         {
+            Data httpString("-_.~!$+'()*,;=:@/?");
+            httpString += "0123456789";
+
+            Data result;
+            {
+               DataStream str(result);
+               httpString.urlEncode(str);
+            }
+            cerr << result << endl;
+            assert(result == httpString.urlEncoded());
+            assert(httpString == httpString.urlEncoded().urlDecoded());
+            assert(result == httpString);
+         }
+
+         {
+            Data httpString("http::/foo.com/in word?arg1=\"quote%\"&arg2=\"%%%%%\"");
+
+            Data result;
+            {
+               DataStream str(result);
+               httpString.urlEncode(str);
+            }
+
+            cerr << result << endl;
+            assert(result == "http::/foo.com/in+word?arg1=%22quote%25%22&arg2=%22%25%25%25%25%25%22");
+            assert(result == httpString.urlEncoded());
+            assert(httpString == httpString.urlEncoded().urlDecoded());
+         }
+
          {
             Data needsCharEncode("CharEncode % me");
             cerr << "original " << needsCharEncode << endl;
@@ -581,6 +611,8 @@ class TestData
          }
 
          {
+            cerr << "!! " << Data(true) << endl;
+
             assert(Data(true) == "true");
             assert(Data(false) == "false");
          }

@@ -22,6 +22,7 @@
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 
 using namespace std;
 
@@ -50,11 +51,26 @@ class TestDnsHandler : public DnsHandler
          Lock lock(mutex);
          (void)lock;
          DnsResult::Type type;
+         int count = 0;
+         Tuple vip;
+         bool whitelisted = false;
          while ((type=result->available()) == DnsResult::Available)
          {
             Tuple tuple = result->next();
+            if (count==1)
+            {
+               result->success();
+               vip = tuple;
+               whitelisted = true;
+            }
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
+            ++count;
+         }
+         if (whitelisted)
+         {
+            cout << "Whitelist " << result->target() << " -> " << vip << std::endl;
+            whitelisted = false;
          }
          if (type != DnsResult::Pending)
          {
@@ -73,6 +89,14 @@ class TestDnsHandler : public DnsHandler
    private:
       bool mComplete;
       Mutex mutex;
+};
+
+class VipListener : public RRVip::Listener
+{
+   void onVipInvalidated(int rrType, const Data& vip) const
+   {
+      cout << "VIP " << " -> " << vip << " type" << " -> " << rrType << " has been invalidated." << endl;
+   }
 };
 	
 class TestDns : public DnsInterface, public ThreadIf
@@ -106,6 +130,7 @@ typedef struct
    DnsResult* res;
    Uri uri;
    TestDnsHandler* handler;
+   VipListener* listener;
 } Results;
 
 int 
@@ -144,6 +169,7 @@ main(int argc, const char** argv)
    {
       Results result;
       result.handler = new TestDnsHandler;
+      result.listener = new VipListener;
       cerr << "Creating Uri" << endl;       
       uri = Uri("sip:www.yahoo.com");
       result.uri = uri;
@@ -159,6 +185,7 @@ main(int argc, const char** argv)
    {
       Results result;
       result.handler = new TestDnsHandler;
+      result.listener = new VipListener;
       cerr << "Creating Uri" << endl;       
       uri = Uri(*++args);
       result.uri = uri;
@@ -169,6 +196,11 @@ main(int argc, const char** argv)
       cerr << "Looking up" << endl;
       dns.lookup(res, uri);
       argc--;
+   }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      dns.registerVipListener((*it).listener);
    }
 
    int count = results.size();
@@ -191,11 +223,63 @@ main(int argc, const char** argv)
       sleep(1);
 #endif
    }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      dns.unregisterVipListener((*it).listener);
+   }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      (*it).res->destroy();
+      delete (*it).handler;
+      delete (*it).listener;
+   }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      (*it).handler = new TestDnsHandler;
+      (*it).res = dns.createDnsResult((*it).handler);
+      (*it).listener = new VipListener;
+      dns.lookup((*it).res, (*it).uri);
+   }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      dns.registerVipListener((*it).listener);
+   }
+
+   count = results.size();
+   while (count>0)
+   {
+      for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+      {
+         if ((*it).handler->complete())
+         {
+            --count;
+         }
+         else
+         {
+            std::cout << rf << "Waiting for " << *((*it).res) << ub << std::endl;
+         }
+      }
+#ifdef WIN32
+      sleep(100);
+#else
+      sleep(1);
+#endif
+   }
+
+   for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
+   {
+      dns.unregisterVipListener((*it).listener);
+   }
    
    for (std::list<Results>::iterator it = results.begin(); it != results.end(); ++it)
    {
       (*it).res->destroy();
       delete (*it).handler;
+      delete (*it).listener;
    }
    dns.shutdown();
    dns.join();
