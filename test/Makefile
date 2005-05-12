@@ -39,7 +39,7 @@ TESTPROGRAMS += testTuple.cxx \
 		testEmbedded.cxx \
 		testEmptyHeader.cxx \
 		testIM.cxx \
-		testIM.cxx \
+		testSHA1Stream.cxx \
 		testIntrusiveList.cxx \
 		testLockStep.cxx \
 		testLockStep.cxx \
