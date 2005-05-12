@@ -64,6 +64,7 @@ class AbstractDb
       // functions for User Records 
       virtual void addUser( const Key& key, const UserRecord& rec );
       virtual void eraseUser( const Key& key );
+      virtual void writeUser( const Key& oldkey, const Key& newkey, const UserRecord& rec );
       virtual UserRecord getUser( const Key& key ) const;
       virtual resip::Data getUserAuthInfo(  const Key& key ) const;
       virtual Key firstUserKey();// return empty if no more
