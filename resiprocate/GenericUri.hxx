@@ -12,15 +12,15 @@ namespace resip
 //====================
 // GenericUri:
 //====================
-class GenericURI : public ParserCategory
+class GenericUri : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      GenericURI() : ParserCategory() {}
-      GenericURI(HeaderFieldValue* hfv, Headers::Type type);
-      GenericURI(const GenericURI&);
-      GenericURI& operator=(const GenericURI&);
+      GenericUri() : ParserCategory() {}
+      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
+      GenericUri(const GenericUri&);
+      GenericUri& operator=(const GenericUri&);
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -32,9 +32,10 @@ class GenericURI : public ParserCategory
    private:
       mutable Data mUri;
 };
-typedef ParserContainer<GenericURI> GenericURIs;
- 
+typedef ParserContainer<GenericUri> GenericUris;
+typedef GenericUri GenericURI; //.dcm. deprecated, should be removed soon
 }
+
 
 #endif
 /* ====================================================================
