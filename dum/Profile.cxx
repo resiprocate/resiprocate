@@ -102,6 +102,15 @@ Profile::getDefaultRegistrationTime() const
 }
 
 void
+Profile::unsetDefaultRegistrationTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultRegistrationExpires = false;
+   }
+}
+
+void
 Profile::setDefaultMaxRegistrationTime(int secs)
 {
    mDefaultMaxRegistrationExpires = secs;
@@ -117,6 +126,15 @@ Profile::getDefaultMaxRegistrationTime() const
        return mBaseProfile->getDefaultMaxRegistrationTime();
    }
    return mDefaultMaxRegistrationExpires;
+}
+
+void
+Profile::unsetDefaultMaxRegistrationTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultMaxRegistrationExpires = false;
+   }
 }
 
 void
@@ -138,6 +156,15 @@ Profile::getDefaultRegistrationRetryTime() const
 }
 
 void
+Profile::unsetDefaultRegistrationRetryTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultRegistrationRetryInterval = false;
+   }
+}
+
+void
 Profile::setDefaultSubscriptionTime(int secs)
 {
    mDefaultSubscriptionExpires = secs;
@@ -153,6 +180,15 @@ Profile::getDefaultSubscriptionTime() const
        return mBaseProfile->getDefaultSubscriptionTime();
    }
    return mDefaultSubscriptionExpires;
+}
+
+void
+Profile::unsetDefaultSubscriptionTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultSubscriptionExpires = false;
+   }
 }
 
 void
@@ -174,6 +210,15 @@ Profile::getDefaultPublicationTime() const
 }
 
 void
+Profile::unsetDefaultPublicationTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultPublicationExpires = false;
+   }
+}
+
+void
 Profile::setDefaultStaleCallTime(int secs)
 {
    mDefaultStaleCallTime = secs;
@@ -189,6 +234,15 @@ Profile::getDefaultStaleCallTime() const
        return mBaseProfile->getDefaultStaleCallTime();
    }
    return mDefaultStaleCallTime;
+}
+
+void
+Profile::unsetDefaultStaleCallTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultStaleCallTime = false;
+   }
 }
 
 void
@@ -210,6 +264,15 @@ Profile::getDefaultSessionTime() const
 }
 
 void
+Profile::unsetDefaultSessionTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultSessionExpires = false;
+   }
+}
+
+void
 Profile::setDefaultSessionTimerMode(Profile::SessionTimerMode mode)
 {
    mDefaultSessionTimerMode = mode;
@@ -228,6 +291,15 @@ Profile::getDefaultSessionTimerMode() const
 }
 
 void
+Profile::unsetDefaultSessionTimerMode()
+{
+   if(mBaseProfile) 
+   {
+      mHasDefaultSessionTimerMode = false;
+   }
+}
+
+void
 Profile::set1xxRetransmissionTime(int secs)
 {
    m1xxRetransmissionTime = secs;
@@ -243,6 +315,15 @@ Profile::get1xxRetransmissionTime() const
        return mBaseProfile->get1xxRetransmissionTime();
    }
    return m1xxRetransmissionTime;
+}
+
+void
+Profile::unset1xxRetransmissionTime()
+{
+   if(mBaseProfile) 
+   {
+      mHas1xxRetransmissionTime = false;
+   }
 }
 
 void 
@@ -274,6 +355,15 @@ Profile::getOverrideHostAndPort() const
    return mOverrideHostPort;
 }
 
+void
+Profile::unsetOverrideHostAndPort()
+{
+   if(mBaseProfile) 
+   {
+      mHasOverrideHostPort = false;
+   }
+}
+
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
@@ -300,9 +390,17 @@ Profile::isAdvertisedCapability(const Headers::Type header) const
 void 
 Profile::clearAdvertisedCapabilities(void)
 {
-   // !slg! do we set mHasAdvertisedCapabilities = false and allow fall through?  For now we assume that clearing means to not advertise any headers
    mHasAdvertisedCapabilities = true;
    return mAdvertisedCapabilities.clear();
+}
+
+void
+Profile::unsetAdvertisedCapabilities()
+{
+   if(mBaseProfile) 
+   {
+      mHasAdvertisedCapabilities = false;
+   }
 }
 
 void 
@@ -334,7 +432,16 @@ Profile::hasOutboundProxy() const
    }
    return mHasOutboundProxy;
 }
-   
+
+void
+Profile::unsetOutboundProxy()
+{
+   if(mBaseProfile) 
+   {
+      mHasOutboundProxy = false;
+   }
+}
+
 void 
 Profile::setRportEnabled(bool enabled)
 {
@@ -351,6 +458,15 @@ Profile::getRportEnabled() const
        return mBaseProfile->getRportEnabled();
    }
    return mRportEnabled;
+}
+
+void
+Profile::unsetRportEnabled()
+{
+   if(mBaseProfile) 
+   {
+      mHasRportEnabled = false;
+   }
 }
 
 void 
@@ -383,6 +499,15 @@ Profile::hasUserAgent() const
    return mHasUserAgent;
 }
 
+void
+Profile::unsetUserAgent()
+{
+   if(mBaseProfile) 
+   {
+      mHasUserAgent = false;
+   }
+}
+
 void 
 Profile::setKeepAliveTime(int keepAliveTime)
 {
@@ -401,6 +526,15 @@ Profile::getKeepAliveTime() const
    return mKeepAliveTime;
 }
 
+void
+Profile::unsetKeepAliveTime()
+{
+   if(mBaseProfile) 
+   {
+      mHasKeepAliveTime = false;
+   }
+}
+
 void 
 Profile::setFixedTransportPort(int fixedTransportPort)
 {
@@ -417,6 +551,15 @@ Profile::getFixedTransportPort() const
        return mBaseProfile->getFixedTransportPort();
    }
    return mFixedTransportPort;
+}
+
+void
+Profile::unsetFixedTransportPort()
+{
+   if(mBaseProfile) 
+   {
+      mHasFixedTransportPort = false;
+   }
 }
 
    
