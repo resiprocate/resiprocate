@@ -45,22 +45,26 @@ class DtlsTransport : public UdpTransport
             {
                return sock.sin_addr.s_addr ;
             }
-
-      } ;
-
+            
+      };
+      
       struct addr_cmp
       { 
-         bool operator()(const struct sockaddr_in s1, 
-                    const struct sockaddr_in s2) const
-         {
-            if ( ( s1.sin_addr.s_addr == s2.sin_addr.s_addr ) &&
-                 ( s1.sin_port == s2.sin_port) )
-               return 1 ;
-            else
-               return 0 ;
-         }
-      } ;
-
+            bool operator()(const struct sockaddr_in s1, 
+                            const struct sockaddr_in s2) const
+            {
+               if ( ( s1.sin_addr.s_addr == s2.sin_addr.s_addr ) &&
+                    ( s1.sin_port == s2.sin_port) )
+               {
+                  return 1;
+               }
+               else
+               {
+                  return 0;
+               }
+            }
+      };
+      
    public:
       RESIP_HeapCount(DtlsTransport);
       // Specify which udp port to use for send and receive
@@ -98,7 +102,8 @@ class DtlsTransport : public UdpTransport
       DtlsConnectionMap   mDtlsConnections ;  /* IP addr/port -> transport */
       unsigned char       mDummyBuf[ 4 ] ;
       BIO*                mDummyBio ;
-
+      const Data          mDomain;
+      
       void _read( FdSet& fdset ) ;
       void _write( FdSet& fdset ) ;
       void _doHandshake() ;

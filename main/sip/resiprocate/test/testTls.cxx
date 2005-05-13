@@ -30,9 +30,9 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
+#ifdef USE_SSL
    char* logType = "cout";
    char* logLevel = "ALERT";
-   char* proto = "udp";
 
    int window = 5*20;
    int seltime = 100;
@@ -42,7 +42,7 @@ main(int argc, char* argv[])
 
    //logLevel = "ALERT";
    //logLevel = "INFO";
-   //logLevel = "DEBUG";
+   logLevel = "DEBUG";
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
@@ -51,7 +51,6 @@ main(int argc, char* argv[])
       {"num-stacks",    'r', POPT_ARG_INT,  &numStacks,      0, "number of calls in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
-      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -62,6 +61,8 @@ main(int argc, char* argv[])
 
    int runs = 3*numStacks*numStacks;
 
+   runs = 1;
+   
    Log::initialize(logType, logLevel, argv[0]);
    cout << "Performing " << runs << " runs." << endl;
 
@@ -73,8 +74,14 @@ main(int argc, char* argv[])
    for ( int s=0; s<numStacks; s++)
    {
       stack[s] = new SipStack;
+
+      Data domain = Data("example") + Data(s) +".com";
       
-      stack[s]->addTransport(UDP, 25000+s,version,bindInterface);
+#ifdef USE_DTLS
+      stack[s]->addTransport(DTLS, 25000+s,version,bindInterface, domain);
+#else
+      stack[s]->addTransport(TLS,  25000+s,version,bindInterface, domain);
+#endif
    }
    
    NameAddr target;
@@ -82,8 +89,12 @@ main(int argc, char* argv[])
    target.uri().user() = "fluffy";
    target.uri().host() = Data("127.0.0.1");
    target.uri().port() = 25000;
-   target.uri().param(p_transport) = proto;
-  
+#ifdef USE_DTLS
+   target.uri().param(p_transport) = "dtls";
+#else
+   target.uri().param(p_transport) = "tls";
+#endif  
+
    NameAddr contact;
    contact.uri().scheme() = "sip";
    contact.uri().user() = "fluffy";
@@ -181,6 +192,7 @@ main(int argc, char* argv[])
    {
       sleep(10);
    }
+#endif 
    
    return 0;
 }
