@@ -1,6 +1,8 @@
 #ifndef RESIP_SecurityAttributes_hxx
 #define RESIP_SecurityAttributes_hxx
 
+#include <iostream>
+
 #include "resiprocate/os/Data.hxx"
 
 namespace resip
@@ -57,6 +59,8 @@ class SecurityAttributes
          mSigner = signer;
       }
 
+   friend std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);
+
    private:
       bool mIsEncrypted;
       SignatureStatus mSigStatus;
@@ -65,6 +69,7 @@ class SecurityAttributes
       IdentityStrength mStrength;
 };
 
+   std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);
 }
 
 #endif

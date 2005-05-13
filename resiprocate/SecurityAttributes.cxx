@@ -12,6 +12,28 @@ SecurityAttributes::SecurityAttributes()  :
 SecurityAttributes::~SecurityAttributes() 
 {};
 
+std::ostream& 
+resip::operator<<(std::ostream& strm, const SecurityAttributes& sa)
+{
+   const char* strengthText[] = 
+      {
+         "From", "IdentityFailed", "Identity" 
+      };
+
+   const char* sigstatusText[] = 
+      {
+         "None", "Bad", "Trusted", "CA Trusted", "Untrusted"
+      };
+
+   strm << "SecurityAttributes: identity=" << sa.mIdentity
+        << " strength=" << strengthText[sa.mStrength]
+        << " encrypted=" << Data(sa.mIsEncrypted)
+        << " status=" << sigstatusText[sa.mSigStatus]
+        << " signer=" << sa.mSigner;
+   return strm;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
