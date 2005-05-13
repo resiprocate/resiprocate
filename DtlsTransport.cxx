@@ -71,7 +71,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& sipDomain)
    : UdpTransport( fifo, portNum, version, interfaceObj ),
      mTimer( mHandshakePending ),
-     mSecurity( &security )
+     mSecurity( &security ),
+     mDomain(sipDomain)
 {
    setTlsDomain(sipDomain);   
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
@@ -170,9 +171,21 @@ DtlsTransport::_read( FdSet& fdset )
       SSL_set_accept_state( ssl ) ;
 
       X509 *cert = mSecurity->getDomainCert( mDomain ) ;
-      assert( cert ) ;
-
       EVP_PKEY *pkey = mSecurity->getDomainKey( mDomain ) ;
+
+      if( !cert )
+      {
+         Data error = Data("Could not load certifiacte for domain: ") + mDomain;
+         throw Security::Exception( error,__FILE__, __LINE__ ) ;
+      }
+
+      if( !pkey )
+      {
+         Data error = Data("Could not load private key for domain: ") + mDomain;
+         throw Security::Exception( error,__FILE__, __LINE__ ) ;
+      }
+
+      assert( cert ) ;
       assert( pkey ) ;
 
       if( ! SSL_use_certificate( ssl, cert ) )
