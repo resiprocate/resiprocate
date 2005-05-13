@@ -747,7 +747,9 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
   "</tr>"
 */
       s << endl;
-            
+      
+      int count =0;
+      
       key = mStore.mUserStore.getFirstKey();
       while ( !key.empty() )
       {
@@ -769,12 +771,22 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
            << "</tr>" << endl;
          
          key = mStore.mUserStore.getNextKey();
+
+         // make a limit to how many users are displayed 
+         if ( ++count > 1000 )
+         {
+            break;
+         }
+      }
+      
+      if ( !key.empty() )
+      {
+         s << "<tr><td>Only first 1000 users were displayed<td></tr>" << endl;
       }
       
       s << 
          "</table>" << endl << 
          "</form>" << endl;
-         ;
 }
 
 
