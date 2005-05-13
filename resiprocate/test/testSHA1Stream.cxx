@@ -9,6 +9,7 @@ using namespace std;
 int
 main(void)
 {
+#ifdef USE_SSL
 
    {
       SHA1Stream str;
@@ -33,6 +34,7 @@ main(void)
    }
 
    cerr << "All OK" << endl;
+#endif
 
    return 0;
 }
