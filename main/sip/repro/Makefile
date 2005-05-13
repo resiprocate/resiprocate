@@ -21,6 +21,7 @@ TARGET_LIBRARY = librepro
 
 TESTPROGRAMS = \
 	repro.cxx \
+#	genUsers.cxx \
 #	userAdmin.cxx 
 
 SRC 	+=   \
