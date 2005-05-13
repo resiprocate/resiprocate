@@ -553,7 +553,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #if defined( USE_DTLS )
             else if (target.getType() == DTLS)
             {
-               target.transport = findDTlsTransport(msg->getTlsDomain());
+               target.transport = findDtlsTransport(msg->getTlsDomain());
                //target.transport = findDtlsTransport(msg->header(h_From).uri().host());
             }
 #endif
@@ -798,34 +798,36 @@ TransportSelector::findTransport(const Tuple& search)
    return 0;
 }
 
+
 Transport*
 TransportSelector::findTlsTransport(const Data& domainname)
-
 {
-   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'" << " have " << mTlsTransports.size());
+   DebugLog (<< "Searching for TLS transport for domain='" 
+             << domainname << "'" << " have " << mTlsTransports.size());
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {
       DebugLog (<< "Found default TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports.begin()->second;
    }
-   else if (mTlsTransports.count(domainname))
+
+   if (mTlsTransports.count(domainname))
    {
       DebugLog (<< "Found TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports[domainname];
    }
-   else  // don't know which one to use
-   {
-      DebugLog (<< "No TLS transport found");
-      return 0;
-   }
+
+   // don't know which one to use
+   DebugLog (<< "No TLS transport found");
+   return 0;
 }
 
-#if defined( USE_DTLS )
+
 Transport*
 TransportSelector::findDtlsTransport(const Data& domainname)
 
 {
+#ifdef USE_DTLS
    DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mDtlsTransports.size() == 1)
@@ -833,18 +835,18 @@ TransportSelector::findDtlsTransport(const Data& domainname)
       DebugLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
       return (Transport*)mDtlsTransports.begin()->second;
    }
-   else if (mDtlsTransports.count(domainname))
+   
+   if (mDtlsTransports.count(domainname))
    {
       DebugLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
       return (Transport*)mDtlsTransports[domainname];
    }
-   else  // don't know which one to use
-   {
-      DebugLog (<< "No DTLS transport found");
-      return 0;
-   }
-}
 #endif
+   
+   // don't know which one to use
+   DebugLog (<< "No DTLS transport found");
+   return 0;
+}
 
 
 unsigned int 
