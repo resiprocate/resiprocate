@@ -65,6 +65,9 @@ class TestIdentityHandler : public ClientPagerMessageHandler,
 
          InfoLog( << "ServerPagerMessageHandler::onMessageArrived: "
                   << *body << "\n" );
+
+         const SecurityAttributes *attr = message.getSecurityAttributes();
+         InfoLog( << *attr );
          
          _rcvd = true;
       }
@@ -206,7 +209,7 @@ int main(int argc, char *argv[])
          auto_ptr<Contents> content(new PlainContents(Data("message")));
          cpmh.get()->page(content); 
       }
-   }   
+   } 
 
    return 0;
 }
