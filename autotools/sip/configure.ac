@@ -8,7 +8,7 @@ dnl
 dnl Release Version
 dnl
 RESIP_MAJOR_VERSION=0
-RESIP_MINOR_VERSION=5
+RESIP_MINOR_VERSION=9
 RESIP_MICRO_VERSION=0
 if test -e .svn; then
   RESIP_REVISION=`svn info | grep Revision | awk '{print $2}'`
