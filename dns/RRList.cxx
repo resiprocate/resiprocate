@@ -11,19 +11,19 @@
 using namespace resip;
 using namespace std;
 
-RRList::RRList() : mRRType(0), mStatus(0), mAbsoluteRetryAfter(0), mAbsoluteExpiry(ULONG_MAX) {}
+RRList::RRList() : mRRType(0), mAbsoluteRetryAfter(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX) {}
 
 RRList::RRList(const Data& key, 
                 const int rrtype, 
                 int ttl, 
                 int status)
-   : mKey(key), mRRType(rrtype), mStatus(status), mAbsoluteRetryAfter(0)
+   : mKey(key), mRRType(rrtype), mAbsoluteRetryAfter(0), mStatus(status)
 {
    mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
 }
 
 RRList::RRList(const Data& key, int rrtype)
-   : mKey(key), mRRType(rrtype), mStatus(0), mAbsoluteRetryAfter(0), mAbsoluteExpiry(ULONG_MAX)
+   : mKey(key), mRRType(rrtype), mAbsoluteRetryAfter(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX)
 {}
 
 RRList::~RRList()
@@ -37,7 +37,7 @@ RRList::RRList(const RRFactoryBase* factory,
                Itr begin,
                Itr end, 
                int ttl)
-   : mKey(key), mRRType(rrType), mStatus(0), mAbsoluteRetryAfter(0)
+   : mKey(key), mRRType(rrType), mAbsoluteRetryAfter(0), mStatus(0)
 {
    update(factory, begin, end, ttl);
 }
