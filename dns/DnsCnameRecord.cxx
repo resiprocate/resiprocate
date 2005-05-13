@@ -6,6 +6,12 @@ extern "C"
 }
 #endif
 
+#ifndef __CYGWIN__
+#ifndef RRFIXEDSZ
+#define RRFIXEDSZ 10
+#endif
+#endif
+
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "RROverlay.hxx"
