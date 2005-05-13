@@ -203,11 +203,7 @@ AC_DEFUN([RESIP_EXCEPTION_DEBUG_LOGS],
 AC_DEFUN([RESIP_LIB_ARES],
 [
     AC_MSG_CHECKING([for ares])
-    for dir in $with_ares \
-                 `pwd`/contrib/ares \
-                 `pwd`/../contrib/ares \
-		 `pwd`/../../contrib/ares \
-                 /usr/local; do
+    for dir in $with_ares /usr/local; do
 	AC_MSG_CHECKING([for ares in $dir])
 	if test -f "$dir/include/ares.h"; then
 	    found_ares=yes;
@@ -227,6 +223,45 @@ AC_DEFUN([RESIP_LIB_ARES],
 	fi
 	AC_MSG_RESULT([no])
     done
+    if test x_$found_ares != x_yes; then
+      for dir in   `pwd`/contrib/ares \
+                   `pwd`/../contrib/ares \
+		   `pwd`/../../contrib/ares; do
+                  
+  	AC_MSG_CHECKING([for ares in $dir])
+  	if test -f "$dir/include/ares.h"; then
+  	    found_ares=yes;
+  	    CPPFLAGS="$CPPFLAGS -I$dir/include"
+  	    LDFLAGS="$LDFLAGS -L$dir/lib"
+  	    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+            AC_MSG_RESULT([ yes ])
+            AC_MSG_CHECKING([to see if we need to build ares])
+            if test -f "$dir/libares.a"; then 
+              AC_MSG_RESULT([ no ])
+            else
+              sh -c "cd $dir; ./configure; make" > ares_buildlog 2>&1
+              AC_MSG_RESULT([ yes - done ])
+            fi
+  	    break;
+  	fi
+  	if test -f "$dir/ares.h"; then
+  	    found_ares=yes;
+  	    CPPFLAGS="$CPPFLAGS -I$dir"
+  	    LDFLAGS="$LDFLAGS -L$dir"
+  	    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+            AC_MSG_RESULT([ yes ])
+            AC_MSG_CHECKING([to see if we need to build ares])
+            if test -f "$dir/libares.a"; then 
+              AC_MSG_RESULT([ no ])
+            else
+              sh -c "cd $dir; ./configure; make" > ares_buildlog 2>&1
+              AC_MSG_RESULT([ yes - done ])
+            fi
+  	    break;
+  	fi
+  	AC_MSG_RESULT([no])
+      done
+    fi
     if test x_$found_ares != x_yes; then
 	AC_MSG_CHECKING([for ares in /usr/include])
 	if test -f "/usr/include/ares.h"; then
