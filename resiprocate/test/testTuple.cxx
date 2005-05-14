@@ -9,18 +9,23 @@ int
 main()
 {
    typedef HashMap<Tuple, Connection*> AddrMap;
-   AddrMap mMap;
-   Tuple t("2000:1::203:baff:fe30:1176", 5100, V6, TCP);
-   mMap[t] = 0;
-   std::cerr << Inserter(mMap) << std::endl;
-   
-   assert(mMap.count(t) == 1);
+
+#ifdef USE_IPV6
+   {
+      AddrMap mMap;
+      Tuple t("2000:1::203:baff:fe30:1176", 5100, V6, TCP);
+      mMap[t] = 0;
+      std::cerr << Inserter(mMap) << std::endl;
+      
+      assert(mMap.count(t) == 1);
+   }
+#endif
+
+   std::cerr << "ALL OK" << std::endl;
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -59,10 +64,4 @@ main()
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

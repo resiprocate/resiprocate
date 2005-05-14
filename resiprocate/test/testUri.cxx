@@ -127,6 +127,7 @@ main(int argc, char* argv[])
       assert(DnsUtil::isIpV6Address("::1"));
    }
 
+#ifdef USE_IPV6
    {
       cerr << "!! " << DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") << endl;
       assert(DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") ==
@@ -162,6 +163,7 @@ main(int argc, char* argv[])
       cerr << "!! " << Data::from(uri) << endl;
       assert(Data::from(uri) == "sip:user@[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
    }
+#endif
    
    {
       Uri uri("sips:192.168.2.12");
