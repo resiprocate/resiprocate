@@ -1684,7 +1684,7 @@ Data::base64decode() const
 #if 0
    return Base64Coder::decode( *this );
 #else
-   static char base64Lookup[128] = 
+   static signed char base64Lookup[128] = 
    {
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
