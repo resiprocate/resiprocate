@@ -1977,24 +1977,21 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       }
       else
       {
-         mSRVCount = mInterface.supportedProtocols();
-         int count = mSRVCount;
          if (mInterface.isSupportedProtocol(TLS))
          {
             mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
-            --count;
+            ++mSRVCount;
          }
          if (mInterface.isSupportedProtocol(TCP))
          {
             mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, Protocol::Sip, this);
-            --count;
+            ++mSRVCount;
          }
          if (mInterface.isSupportedProtocol(UDP))
          {
             mDns.lookup<RR_SRV>("_sip._udp." + mTarget, Protocol::Sip, this);
-            --count;
+            ++mSRVCount;
          }
-         assert(0==count);
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
