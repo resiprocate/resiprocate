@@ -1,6 +1,6 @@
 #!/bin/sh
 intver() {
-    local V=`$1 --version | head -1 | sed 's/^.* \([0-9][0-9.]*\)[^0-9.]*$/\1/g'`
+    local V=`$1 --version | head -n 1 | sed 's/^.* \([0-9][0-9.]*\)[^0-9.]*$/\1/g'`
     local i=`echo $V | cut -d. -f1`
     local t=`echo $V | cut -d. -f2`
     local h=`echo $V | cut -d. -f3`
