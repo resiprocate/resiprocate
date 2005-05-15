@@ -9,7 +9,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
-
+#include "resiprocate/SecurityTypes.hxx"
 
 using namespace resip;
 using namespace std;
@@ -99,7 +99,7 @@ class ImCallback: public TuIM::Callback
 {
 public:
 	virtual void receivedPage( const Data& msg, const Uri& from ,
-		const Data& signedBy,  Security::SignatureStatus sigStatus,
+		const Data& signedBy,  resip::SignatureStatus sigStatus,
 		bool wasEncryped  );
 	virtual void sendPageFailed( const Uri& dest,int num  );
 	virtual void registrationFailed( const Uri& dest, int num );
@@ -113,7 +113,7 @@ public:
 
 void 
 ImCallback::receivedPage( const Data& msg, const Uri& from,
-						 const Data& signedBy,  Security::SignatureStatus sigStatus,
+						 const Data& signedBy,  resip::SignatureStatus sigStatus,
 						 bool wasEncryped  )
 {  
 	assert( theApp.m_pMainWnd );
