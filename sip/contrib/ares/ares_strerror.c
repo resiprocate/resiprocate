@@ -40,6 +40,9 @@ const char *ares_strerror(int code)
     "Out of memory"
   };
 
+#ifndef WIN32
   assert(code >= 0 && code < (sizeof(errtext) / sizeof(*errtext)));
+#endif
+
   return errtext[code];
 }
