@@ -21,7 +21,7 @@ public:
 	void receivedPage( const resip::Data& msg, 
 		const resip::Uri& from,
 		const resip::Data& signedBy,  
-		const resip::Security::SignatureStatus sigStatus,
+		const resip::SignatureStatus sigStatus,
 		const bool wasEncryped  );
 	void presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& status );
 
