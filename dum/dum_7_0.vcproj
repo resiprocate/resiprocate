@@ -67,7 +67,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/dum.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
