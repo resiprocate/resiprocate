@@ -293,7 +293,7 @@ void
 BuddyDlg::receivedPage( const resip::Data& msg, 
 					   const resip::Uri& from,
 					   const resip::Data& signedBy,  
-					   const resip::Security::SignatureStatus sigStatus,
+					   const resip::SignatureStatus sigStatus,
 					   const bool wasEncryped  )
 {
 	CString res = _T("");
