@@ -37,8 +37,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* mySqlServer = 0;
    int httpPort = 5080;
    
+#ifdef WIN32
+   noChallenge = 1;
+   logLevel = "ERR";
+   strcpy(certPath,"C:\\sipCerts");
+#else
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
+#endif
 
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
