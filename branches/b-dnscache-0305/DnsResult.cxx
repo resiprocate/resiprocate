@@ -1630,13 +1630,12 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 
 void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 {
-  if (!mInterface.isSupported(mTransport, V4))
+   if (!mInterface.isSupported(mTransport, V4) && !mInterface.isSupported(mTransport, V6))
    {
       return;
    }
-   StackLog (<< "Received A result for: " << mTarget);
+   StackLog (<< "Received dns result for: " << mTarget);
    StackLog (<< "DnsResult::onDnsResult() " << result.status);
-   assert(mInterface.isSupported(mTransport, V4));
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -1742,8 +1741,9 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    {
       return;
    }
-#ifdef USE_IPV6
    StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   assert(mInterface.isSupported(mTransport, V6));
+
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
    // callback into this function
@@ -1752,22 +1752,23 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
       destroy();
       return;
    }
+
    if (result.status == 0)
    {
       for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
+         StackLog (<< "Adding " << tuple << " to result set");
          mResults.push_back(tuple);
       }
    }
    else
    {
-      StackLog (<< "Failed async dns query: " << result.msg);
+      StackLog (<< "Failed async AAAA query: " << result.msg);
    }
+   // funnel through to host processing
    mDns.lookup<RR_A>(mPassHostFromAAAAtoA, Protocol::Sip, this);
-#else
-   assert(0);
-#endif
+
 }
 #endif
 
