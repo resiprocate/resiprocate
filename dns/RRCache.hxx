@@ -23,10 +23,10 @@ class RRCache
       typedef std::vector<RROverlay>::const_iterator Itr;
       typedef std::vector<Data> DataArr;
 
-      RRCache();
+      static RRCache* instance();
       ~RRCache();
       void setTTL(int ttl) { mUserDefinedTTL = ttl; }
-      void setSize(int size) { mSize = size; }      
+      void setSize(int size) { mSize = size; }
       void updateCache(const Data& target,
                        const int rrType,
                        Itr  begin, 
@@ -40,7 +40,9 @@ class RRCache
       void retryAfter(const Data& target, int rrType, int protocol, int retryAfter, const DataArr& targetsToRetryAfter);
 
    private:
+      RRCache();
       static const int DEFAULT_SIZE = 512;
+      static RRCache* mInstance;
       class CompareT  : public std::binary_function<const RRList*, const RRList*, bool>
       {
          public:

@@ -27,13 +27,15 @@ extern "C"
 using namespace resip;
 using namespace std;
 
+DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
+
 DnsStub::DnsStub(DnsInterface* dns) : mDns(dns), mTransform(0)
 {
 }
 
 DnsStub::~DnsStub()
 {
-   for (set<QueryBase*>::iterator it = mQueries.begin(); it != mQueries.end(); ++it)
+   for (set<Query*>::iterator it = mQueries.begin(); it != mQueries.end(); ++it)
    {
       delete *it;
    }
@@ -92,7 +94,7 @@ void DnsStub::cache(const Data& key,
    vector<RROverlay>::iterator itHigh = upper_bound(overlays.begin(), overlays.end(), *overlays.begin());
    while (itLow != overlays.end())
    {
-      mCache.updateCache(key, (*itLow).type(), itLow, itHigh);
+      RRCache::instance()->updateCache(key, (*itLow).type(), itLow, itHigh);
       itLow = itHigh;
       if (itHigh != overlays.end())
       {
@@ -127,11 +129,9 @@ void DnsStub::cacheTTL(const Data& key,
    if (nscount == 0) return;
    vector<RROverlay> soa;
    aptr = createOverlay(abuf, alen, aptr, soa);
-   mCache.cacheTTL(key, rrType, status, soa[0]);
+   RRCache::instance()->cacheTTL(key, rrType, status, soa[0]);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-//
 const unsigned char* 
 DnsStub::skipDNSQuestion(const unsigned char *aptr,
                          const unsigned char *abuf,
@@ -209,13 +209,13 @@ DnsStub::createOverlay(const unsigned char* abuf,
 }
 
 void
-DnsStub::removeQuery(QueryBase* query)
+DnsStub::removeQuery(Query* query)
 {
-   set<QueryBase*>::iterator it = mQueries.find(query);
+   set<Query*>::iterator it = mQueries.find(query);
    if (it != mQueries.end())
    {
       mQueries.erase(it);
-   }   
+   }
 }
 
 void DnsStub::doBlacklisting(const Data& target,
@@ -223,7 +223,7 @@ void DnsStub::doBlacklisting(const Data& target,
                              int protocol, 
                              const DataArr& targetsToBlacklist)
 {
-   mCache.blacklist(target, rrType, protocol, targetsToBlacklist);
+   RRCache::instance()->blacklist(target, rrType, protocol, targetsToBlacklist);
 }
 
 void DnsStub::doRetryAfter(const Data& target, 
@@ -232,7 +232,7 @@ void DnsStub::doRetryAfter(const Data& target,
                            int retryAfter, 
                            const DataArr& targetsToRetryAfter)
 {
-   mCache.retryAfter(target, rrType, protocol, retryAfter, targetsToRetryAfter);
+   RRCache::instance()->retryAfter(target, rrType, protocol, retryAfter, targetsToRetryAfter);
 }
 
 void DnsStub::setResultTransform(ResultTransform* transform)
@@ -244,3 +244,176 @@ void DnsStub::removeResultTransform()
 {
    mTransform = 0;
 }
+
+DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv, 
+                      const Data& target, int rrType, 
+                      bool followCname, int proto, DnsResultSink* s)
+   : mRRType(rrType),
+     mStub(stub), 
+     mTransform(transform),
+     mResultConverter(resultConv),
+     mTarget(target),
+     mProto(proto),
+     mReQuery(0),
+     mSink(s),
+     mDns(0),
+     mFollowCname(followCname)
+{
+   assert(s);               
+}
+
+DnsStub::Query::~Query() 
+{
+   delete mResultConverter; //.dcm. flyweight?
+}
+
+
+void 
+DnsStub::Query::go(DnsInterface* dns)
+{
+   mDns = dns;
+   assert(mDns!=0);
+   DnsResourceRecordsByPtr records;
+   int status = 0;
+   int retryAfter = 0;
+   bool cached = false;
+   Data targetToQuery = mTarget;
+   cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status, retryAfter);
+   if (!cached)
+   {
+      if (mRRType != T_CNAME)
+      {
+         DnsResourceRecordsByPtr cnames;
+         cached = RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+         if (cached && !cnames.empty()) 
+         {
+            targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
+            // check the cache.
+            cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status, retryAfter);
+         }
+      }
+   }
+
+   if (!cached)
+   {
+      mDns->lookupRecords(targetToQuery, mRRType, this);
+   }
+   else
+   {
+      if (mTransform && !records.empty())
+      {
+         mTransform->transform(targetToQuery, mRRType, records);
+      }
+      mResultConverter->notifyUser(mTarget, status, retryAfter, mDns->errorMessage(status), records, mSink); 
+      mStub.removeQuery(this);
+      delete this;
+   }
+}
+
+void 
+DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
+{
+   if (status != 0)
+   {
+      if (status == 4 || status == 1) // domain name not found or no answer.
+      {
+         mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
+      }
+      mResultConverter->notifyUser(mTarget, status, 0, mDns->errorMessage(status), Empty, mSink);
+      mReQuery = 0;
+      mStub.removeQuery(this);
+      delete this;
+      return;
+   }
+
+   bool bDeleteThis = true;
+
+   // skip header
+   const unsigned char* aptr = abuf + HFIXEDSZ;
+
+   int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
+   for (int i = 0; i < qdcount && aptr; ++i)
+   {
+      aptr = mStub.skipDNSQuestion(aptr, abuf, alen);
+   }
+
+   int ancount = DNS_HEADER_ANCOUNT(abuf);
+   if (ancount == 0)
+   {
+      mResultConverter->notifyUser(mTarget, 0, 0, mDns->errorMessage(0), Empty, mSink); 
+   }
+   else
+   {
+      bool bGotAnswers = true;
+      if (ancount == 1)
+      {
+         followCname(aptr, abuf, alen, bGotAnswers, bDeleteThis);
+      }
+
+      if (bGotAnswers)
+      {
+         mStub.cache(mTarget, abuf, alen);
+         mReQuery = 0;
+         int status = 0;
+         int retryAfter = 0;
+         Data targetToQuery = mTarget;
+         DnsResourceRecordsByPtr result;
+         DnsResourceRecordsByPtr cnames;
+         RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+         if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
+         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status, retryAfter);
+         if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
+         mResultConverter->notifyUser(mTarget, status, retryAfter, mDns->errorMessage(status), result, mSink);
+      }
+   }
+               
+   if (bDeleteThis) 
+   {
+      mStub.removeQuery(this);
+      delete this;
+   }
+}
+
+void 
+DnsStub::Query::onDnsRaw(int status, const unsigned char* abuf, int alen)
+{
+   process(status, abuf, alen);
+}
+
+void 
+DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis)
+{
+   bGotAnswers = true;
+   bDeleteThis = true;
+   if (mRRType != T_CNAME)
+   {
+      char* name = 0;
+      int len = 0;
+      ares_expand_name(aptr, abuf, alen, &name, &len);
+      aptr += len;
+
+      if (DNS_RR_TYPE(aptr) == T_CNAME)
+      {
+         if (mFollowCname && mReQuery < MAX_REQUERIES)
+         {
+            mStub.cache(mTarget, abuf, alen);
+            ++mReQuery;
+            DnsResourceRecordsByPtr cnames;
+            int status = 0;
+            int retryAfter = 0;
+            RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+            assert(!cnames.empty());
+            mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), mRRType, this);
+            bDeleteThis = false;
+         }
+         else
+         {
+            mReQuery = 0;
+            mResultConverter->notifyUser(mTarget, 0, 0, mDns->errorMessage(0), Empty, mSink);
+         }
+         bGotAnswers = false;
+      }
+   }
+}
+
+
