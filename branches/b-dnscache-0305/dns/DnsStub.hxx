@@ -58,12 +58,15 @@ class DnsStub
       typedef RRCache::Protocol Protocol;
       typedef std::vector<Data> DataArr;
 
+      typedef std::vector<DnsResourceRecord*> DnsResourceRecordsByPtr;
       class ResultTransform
       {
          public:
             virtual ~ResultTransform() {}
-            virtual void transform(const Data& target, int rrType, std::vector<DnsResourceRecord*>& src) = 0;
+            virtual void transform(const Data& target, int rrType, DnsResourceRecordsByPtr& src) = 0;
       };
+
+      
 
       class DnsStubException : public BaseException
       {
@@ -82,34 +85,32 @@ class DnsStub
       void setResultTransform(ResultTransform*);
       void removeResultTransform();
 
-      //template<class QueryType>
-      void blacklist(const Data& target, int rrType, const int proto, const DataArr& targetsToBlacklist)
-      {
-         BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
-         mCommandFifo.add(command);
-      }
-
-      //template<class QueryType>
-      void retryAfter(const Data& target, int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
-      {
-         RetryAfterCommand* command = new RetryAfterCommand(target, rrType, proto, *this, retryAfter, targetsToRetryAfter);
-         mCommandFifo.add(command);
-      }
-
       template<class QueryType> void lookup(const Data& target, int proto, DnsResultSink* sink)
       {
          QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, proto, sink, *this);
          mCommandFifo.add(command);
       }
 
+      void blacklist(const Data& target, int rrType, const int proto, const DataArr& targetsToBlacklist)
+      {
+         BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
+         mCommandFifo.add(command);
+      }
+
+      void retryAfter(const Data& target, int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
+      {
+         RetryAfterCommand* command = new RetryAfterCommand(target, rrType, proto, *this, retryAfter, targetsToRetryAfter);
+         mCommandFifo.add(command);
+      }
+
       void setTTL(int ttl) // in minute. 
       {
-         mCache.setTTL(ttl);
+         RRCache::instance()->setTTL(ttl);
       }
 
       void setCacheSize(int size)
       {
-         if (size > 0) mCache.setSize(size);
+         if (size > 0) RRCache::instance()->setSize(size);
       }
 
       void process();
@@ -119,225 +120,82 @@ class DnsStub
       void cacheTTL(const Data& key, int rrType, int status, const unsigned char* abuf, int alen);
 
    private:
-
-      class QueryBase
-      {
-      public:
-         virtual ~QueryBase() {}
-      };
-
-      template<class QueryType> 
-      class Query : public DnsRawSink, public QueryBase
+      class ResultConverter //.dcm. -- flyweight?
       {
          public:
-            Query(DnsStub& stub, ResultTransform* transform, const Data& target, int proto, DnsResultSink* s)
-               : QueryBase(), 
-                 mStub(stub), 
-                 mTransform(transform),
-                 mTarget(target),
-                 mProto(proto),
-                 mReQuery(0),
-                 mSink(s),
-                 mDns(0)
+            virtual void notifyUser(const Data& target, 
+                                    int status, 
+                                    int retryAfter, 
+                                    const Data& msg,
+                                    const DnsResourceRecordsByPtr& src,
+                                    DnsResultSink* sink) = 0;
+            virtual ~ResultConverter() {}
+      };
+      
+      template<class QueryType>  
+      class ResultConverterImpl : public ResultConverter
+      {
+         public:
+            virtual void notifyUser(const Data& target, 
+                                    int status, 
+                                    int retryAfter, 
+                                    const Data& msg,
+                                    const DnsResourceRecordsByPtr& src,
+                                    DnsResultSink* sink)
             {
+               assert(sink);
+               DNSResult<typename QueryType::Type>  result;               
+               for (unsigned int i = 0; i < src.size(); ++i)
+               {
+                  result.records.push_back(*(dynamic_cast<typename QueryType::Type*>(src[i])));
+               }
+               result.domain = target;
+               result.status = status;
+               result.retryAfter = retryAfter;
+               result.msg = msg;
+               sink->onDnsResult(result);
             }
+      };
 
-            ~Query() {}
+      class Query : public DnsRawSink
+      {
+         public:
+            Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv, 
+                  const Data& target, int rrType, bool followCname, int proto, DnsResultSink* s);
+            virtual ~Query();
 
             enum {MAX_REQUERIES = 5};
 
-            void go(DnsInterface* dns)
-            {
-               mDns = dns;
-               assert(mDns!=0);
-               std::vector<DnsResourceRecord*> records;
-               int status = 0;
-               int retryAfter = 0;
-               bool cached = false;
-               Data targetToQuery = mTarget;
-               cached = mStub.mCache.lookup(mTarget, QueryType::getRRType(), mProto, records, status, retryAfter);
-               if (!cached)
-               {
-                  if (QueryType::getRRType() != T_CNAME)
-                  {
-                     std::vector<DnsResourceRecord*> cnames;
-                     cached = mStub.mCache.lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
-                     if (cached && !cnames.empty()) 
-                     {
-                        targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
-                        // check the cache.
-                        cached = mStub.mCache.lookup(targetToQuery, QueryType::getRRType(), mProto, records, status, retryAfter);
-                     }
-                  }
-               }
-
-               if (!cached)
-               {
-                  mDns->lookupRecords(targetToQuery, QueryType::getRRType(), this);
-               }
-               else
-               {
-                  if (!mSink) return;
-                  std::vector<typename QueryType::Type> rrs;
-                  if (!records.empty())
-                  {
-                     if (mTransform) mTransform->transform(targetToQuery, QueryType::getRRType(), records);
-                     cloneRecords(rrs, records);
-                  }
-                  notifyUser(status, retryAfter, rrs);
-                  mStub.removeQuery(this);
-                  delete this;
-               }
-            }
-
-            void cloneRecords(std::vector<typename QueryType::Type>& records, const std::vector<DnsResourceRecord*>& src)
-            {
-               for (unsigned int i = 0; i < src.size(); ++i)
-               {
-                  records.push_back(*(dynamic_cast<typename QueryType::Type*>(src[i])));
-               }
-            }
-
-            void process(int status, const unsigned char* abuf, const int alen)
-            {
-               if (status != 0)
-               {
-                  if (status == 4 || status == 1) // domain name not found or no answer.
-                  {
-                     mStub.cacheTTL(mTarget, QueryType::getRRType(), status, abuf, alen);
-                  }
-                  std::vector<typename QueryType::Type> Empty;
-                  notifyUser(status, 0, Empty);
-                  mReQuery = 0;
-                  mStub.removeQuery(this);
-                  delete this;
-                  return;
-               }
-
-               bool bDeleteThis = true;
-
-               // skip header
-               const unsigned char* aptr = abuf + HFIXEDSZ;
-
-               int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
-               for (int i = 0; i < qdcount && aptr; ++i)
-               {
-                  aptr = mStub.skipDNSQuestion(aptr, abuf, alen);
-               }
-
-               int ancount = DNS_HEADER_ANCOUNT(abuf);
-               if (ancount == 0)
-               {
-                  std::vector<typename QueryType::Type> Empty;
-                  notifyUser(0, 0, Empty);
-               }
-               else
-               {
-                  bool bGotAnswers = true;
-                  if (ancount == 1)
-                  {
-                     followCname(aptr, abuf, alen, bGotAnswers, bDeleteThis);
-                  }
-
-                  if (bGotAnswers)
-                  {
-                     mStub.cache(mTarget, abuf, alen);
-                     mReQuery = 0;
-                     std::vector<typename QueryType::Type> records;
-                     std::vector<DnsResourceRecord*> result;
-                     int status = 0;
-                     int retryAfter = 0;
-                     Data targetToQuery = mTarget;
-                     std::vector<DnsResourceRecord*> cnames;
-                     mStub.mCache.lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
-                     if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
-                     mStub.mCache.lookup(targetToQuery, QueryType::getRRType(), mProto, result, status, retryAfter);
-                     if (mTransform) mTransform->transform(targetToQuery, QueryType::getRRType(), result);
-                     cloneRecords(records, result);
-                     notifyUser(status, retryAfter, records);
-                  }
-               }
-               
-               if (bDeleteThis) 
-               {
-                  mStub.removeQuery(this);
-                  delete this;
-               }
-            }
-
-            void onDnsRaw(int status, const unsigned char* abuf, int alen)
-            {
-               process(status, abuf, alen);
-            }
-
-            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis)
-            {
-               bGotAnswers = true;
-               bDeleteThis = true;
-               std::vector<typename QueryType::Type> Empty;
-               if (QueryType::getRRType() != T_CNAME)
-               {
-                  char* name = 0;
-                  int len = 0;
-                  if (int status = ares_expand_name(aptr, abuf, alen, &name, &len) != ARES_SUCCESS)
-                  {
-                     notifyUser(status, 0, Empty);
-                  }
-                  aptr += len;
-
-                  if (DNS_RR_TYPE(aptr) == T_CNAME)
-                  {
-                     if (QueryType::SupportsCName && mReQuery < MAX_REQUERIES)
-                     {
-                        mStub.cache(mTarget, abuf, alen);
-                        ++mReQuery;
-                        std::vector<DnsResourceRecord*> cnames;
-                        int status = 0;
-                        int retryAfter = 0;
-                        mStub.mCache.lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
-                        assert(!cnames.empty());
-                        mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), QueryType::getRRType(), this);
-                        bDeleteThis = false;
-                     }
-                     else
-                     {
-                        mReQuery = 0;
-                        notifyUser(0, 0, Empty);
-                     }
-                     bGotAnswers = false;
-                  }
-               }
-            }
-
-            void notifyUser(int status, int retryAfter, std::vector<typename QueryType::Type>& records)
-            {
-               if (!mSink) return;
-               DNSResult<typename QueryType::Type>  result;
-               result.domain = mTarget;
-               result.status = status;
-               result.retryAfter = retryAfter;
-               result.records = records;
-               result.msg = mDns->errorMessage(status);
-               mSink->onDnsResult(result);
-            }
+            void go(DnsInterface* dns);
+            void process(int status, const unsigned char* abuf, const int alen);
+            void onDnsRaw(int status, const unsigned char* abuf, int alen);
+            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis);
 
          private:
+            static DnsResourceRecordsByPtr Empty;
+            int mRRType;
             DnsStub& mStub;
             ResultTransform* mTransform;
+            ResultConverter* mResultConverter;
             Data mTarget;
             int mProto;
             int mReQuery;
             DnsResultSink* mSink;
             DnsInterface* mDns;
+            bool mFollowCname;
       };
 
    private:
       DnsStub(const DnsStub&);   // disable copy ctor.
+      DnsStub& operator=(const DnsStub&);
 
       template<class QueryType>
       void query(const Data& target, int proto, DnsResultSink* sink)
       {
-         Query<QueryType>* query = new Query<QueryType>(*this, mTransform, target, proto, sink);
+         Query* query = new Query(*this, mTransform, 
+                                  new ResultConverterImpl<QueryType>(), 
+                                  target, QueryType::getRRType(),
+                                  QueryType::SupportsCName, proto, sink);
          mQueries.insert(query);
          query->go(mDns);
       }
@@ -443,7 +301,6 @@ class DnsStub
 
       resip::Fifo<Command> mCommandFifo;
 
-      RRCache mCache;
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                            const unsigned char *abuf,
                                            int alen);
@@ -453,12 +310,10 @@ class DnsStub
                                          const unsigned char* aptr, 
                                          std::vector<RROverlay>&,
                                          bool discard=false);
-
-      void removeQuery(QueryBase*);
-
+      void removeQuery(Query*);
       DnsInterface* mDns;
       ResultTransform* mTransform;
-      std::set<QueryBase*> mQueries;
+      std::set<Query*> mQueries;
 };
 
 typedef DnsStub::Protocol Protocol;
