@@ -45,6 +45,8 @@ extern "C"
 using namespace resip;
 using namespace std;
 
+RRCache* RRCache::mInstance = new RRCache;
+
 RRCache::RRCache() 
    : mHead(),
      mLruHead(LruListType::makeList(&mHead)),
@@ -64,6 +66,12 @@ RRCache::~RRCache()
 {
    cleanup();
 }
+
+RRCache* RRCache::instance()
+{
+   return mInstance;
+}
+
 
 void RRCache::updateCache(const Data& target,
                           const int rrType,
