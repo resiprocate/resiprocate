@@ -52,28 +52,12 @@ class TestDnsHandler : public DnsHandler
          
          std::cout << gf << "DnsHandler received " <<  result->target() << ub <<  std::endl;
          Lock lock(mutex);
-         (void)lock;
          DnsResult::Type type;
-         int count = 0;
-         Tuple vip;
-         bool whitelisted = false;
          while ((type=result->available()) == DnsResult::Available)
          {
             Tuple tuple = result->next();
-            if (count==1)
-            {
-               result->success();
-               vip = tuple;
-               whitelisted = true;
-            }
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
-            ++count;
-         }
-         if (whitelisted)
-         {
-            cout << rf << "Whitelist " << result->target() << " -> " << vip << ub << std::endl;
-            whitelisted = false;
          }
          if (type != DnsResult::Pending)
          {
@@ -83,7 +67,6 @@ class TestDnsHandler : public DnsHandler
       bool complete()
       {
          Lock lock(mutex);
-         (void)lock;
          return mComplete;
       }
 
@@ -94,6 +77,7 @@ class TestDnsHandler : public DnsHandler
       Mutex mutex;
 };
 
+/*
 class VipListener : public RRVip::Listener
 {
    void onVipInvalidated(int rrType, const Data& vip) const
@@ -101,6 +85,7 @@ class VipListener : public RRVip::Listener
       cout << rf << "VIP " << " -> " << vip << " type" << " -> " << rrType << " has been invalidated." << ub << endl;
    }
 };
+*/
 	
 class TestDns : public DnsInterface, public ThreadIf
 {
@@ -133,10 +118,10 @@ using namespace resip;
 
 typedef struct 
 {
-   DnsResult* result;
-   Uri uri;
-   TestDnsHandler* handler;
-   VipListener* listener;
+      DnsResult* result;
+      Uri uri;
+      TestDnsHandler* handler;
+      //VipListener* listener;
 } Query;
 
 int 
@@ -158,60 +143,49 @@ main(int argc, const char** argv)
 #endif
 
    Log::initialize(logType, logLevel, argv[0]);
-
    initNetwork();
-
-   // spawn a DNS processing thread
    TestDns dns;
-   dns.run();
-
+   dns.run();   
    Uri uri;
-   cerr << rf << "Starting" << ub << endl;   
+   cerr << "Starting" << endl;   
    std::list<Query> queries;
-
 #if defined(HAVE_POPT_H)
    const char** args = poptGetArgs(context);
 #else
    const char** args = argv;
 #endif
 
-   // default query: sip:www.yahoo.com
+   // default query: sip:yahoo.com
    if (argc == 1)
    {
       Query query;
       query.handler = new TestDnsHandler;
-      query.listener = new VipListener;
-
+      //query.listener = new VipListener;
       cerr << "Creating Uri" << endl;       
-      uri = Uri("sip:www.yahoo.com");
+      uri = Uri("sip:yahoo.com");
       query.uri = uri;
-
-      cerr << rf << "Creating DnsResult" << ub << endl;      
-      query.result = dns.createDnsResult(query.handler);
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
       queries.push_back(query);
-
       cerr << rf << "Looking up" << ub << endl;
-      dns.lookup(query.result, uri);
+      dns.lookup(res, uri);
    }
 
    while (argc > 1 && args && *args != 0)
    {
       Query query;
       query.handler = new TestDnsHandler;
-      query.listener = new VipListener;
-
-      cerr << rf << "Creating Uri " << *args << ub << endl;       
-      uri = Uri(*args++);
+      //query.listener = new VipListener;
+      cerr << "Creating Uri" << endl;       
+      uri = Uri(*++args);
       query.uri = uri;
-
-      cerr << rf << "Creating DnsResult" << ub << endl;
-      query.result = dns.createDnsResult(query.handler);
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
       queries.push_back(query);
-
-      dns.registerVipListener(query.listener);
-
       cerr << rf << "Looking up" << ub << endl;
-      dns.lookup(query.result, uri);
+      dns.lookup(res, uri);
       argc--;
    }
 
@@ -224,10 +198,6 @@ main(int argc, const char** argv)
          {
             --count;
          }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).result) << ub << std::endl;
-         }
       }
 #ifdef WIN32
       sleep(100);
@@ -244,75 +214,13 @@ main(int argc, const char** argv)
          cerr << rf << (*i) << ub << endl;
       }
    }
-   
+
    for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
    {
-      dns.unregisterVipListener((*it).listener);
       (*it).result->destroy();
       delete (*it).handler;
-      delete (*it).listener;
+      //delete (*it).listener;
    }
-
-
-
-   //
-   // do it all again to see if the DNS cache is working...
-   //
-
-   cerr << rf << "Restarting to test caching" << ub << endl;
-
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-   {
-      (*it).handler = new TestDnsHandler;
-      (*it).result = dns.createDnsResult((*it).handler);
-      (*it).listener = new VipListener;
-      dns.lookup((*it).result, (*it).uri);
-   }
-
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-   {
-      dns.registerVipListener((*it).listener);
-   }
-
-   count = queries.size();
-   while (count>0)
-   {
-      for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-      {
-         if ((*it).handler->complete())
-         {
-            --count;
-         }
-         else
-         {
-            std::cout << rf << "Waiting for " << *((*it).result) << ub << std::endl;
-         }
-      }
-#ifdef WIN32
-      sleep(100);
-#else
-      sleep(1);
-#endif
-   }
-
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-   {
-      cerr << rf << "DNS results for " << (*it).uri << ub << endl;
-      for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
-      {
-         cerr << rf << (*i) << ub << endl;
-      }
-   }
-   
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-   {
-      dns.unregisterVipListener((*it).listener);
-      (*it).result->destroy();
-      delete (*it).handler;
-      delete (*it).listener;
-   }
-
-
 
    dns.shutdown();
    dns.join();
