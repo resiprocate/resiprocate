@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "repro/monkeys/RouteMonkey.hxx"
 #include "repro/RequestContext.hxx"
 
@@ -46,17 +47,42 @@ RouteMonkey::handleRequest(RequestContext& context)
    RouteStore::UriList targets(mRouteStore.process( ruri,
                                                     method,
                                                     event));
+   bool requireAuth = false;
    
    for ( RouteStore::UriList::const_iterator i = targets.begin();
          i != targets.end(); i++ )
    {
       InfoLog(<< "Adding target " << *i );
       context.addTarget(NameAddr(*i));
+      
+      // !rwm! TODO would be useful to check if these targets require authentication
+      // but for know we will just fail safe and assume that all routes require auth
+      requireAuth |= true;
+   }
+   if (requireAuth)
+   {
+      // !rwm! TODO do we need anything more sophisticated to figure out the realm?
+      Data realm = msg.header(h_RequestLine).uri().host();
+      
+      challengeRequest(context, realm);
+      return RequestProcessor::SkipAllChains;
    }
    
    return RequestProcessor::Continue;
 }
 
+void
+RouteMonkey::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
+{
+   Message *message = rc.getCurrentEvent();
+   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
+   assert(sipMessage);
+
+   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, true, false);
+   rc.sendResponse(*challenge);
+
+   delete challenge;
+}
 
 void
 RouteMonkey::dump(std::ostream &os) const

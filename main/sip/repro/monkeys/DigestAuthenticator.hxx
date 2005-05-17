@@ -16,8 +16,9 @@ namespace repro
       virtual void dump(std::ostream &os) const;
 
     private:
+      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
       void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &);
+      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
       virtual resip::Data getRealm(RequestContext &);
   };
 }
