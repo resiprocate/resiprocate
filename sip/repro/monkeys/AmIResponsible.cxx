@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
@@ -48,7 +49,24 @@ AmIResponsible::handleRequest(RequestContext& context)
       if (!context.getProxy().isMyDomain(uri.host()))
       {
          // if this request is not for a domain for which the proxy is responsible,
-         // send to the Request URI
+         // check that we relay from this sender and send to the Request URI
+         
+         // !rwm! verify the AuthenticatioInfo object here.
+         
+         // !rwm! TODO check some kind of relay list here
+         // for now, just see if the sender claims to be from one of our domains
+         // send a 403 if not on the list         
+         if (!context.getProxy().isMyDomain(request.header(h_From).uri().host()))
+         {
+            // make 403, send, dispose of memory
+            resip::SipMessage response;
+            InfoLog (<< *this << ": will not relay to " << uri << " from " 
+                     << request.header(h_From).uri() << ", send 403");
+            Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
+            context.sendResponse(response);
+            return RequestProcessor::SkipThisChain;
+         }
+         
          context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
          // skip the rest of the monkeys
