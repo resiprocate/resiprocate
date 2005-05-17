@@ -226,15 +226,6 @@ void DnsStub::doBlacklisting(const Data& target,
    RRCache::instance()->blacklist(target, rrType, protocol, targetsToBlacklist);
 }
 
-void DnsStub::doRetryAfter(const Data& target, 
-                           int rrType, 
-                           int protocol,
-                           int retryAfter, 
-                           const DataArr& targetsToRetryAfter)
-{
-   RRCache::instance()->retryAfter(target, rrType, protocol, retryAfter, targetsToRetryAfter);
-}
-
 void DnsStub::setResultTransform(ResultTransform* transform)
 {
    mTransform = transform;
@@ -275,21 +266,20 @@ DnsStub::Query::go(DnsInterface* dns)
    assert(mDns!=0);
    DnsResourceRecordsByPtr records;
    int status = 0;
-   int retryAfter = 0;
    bool cached = false;
    Data targetToQuery = mTarget;
-   cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status, retryAfter);
+   cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status);
    if (!cached)
    {
       if (mRRType != T_CNAME)
       {
          DnsResourceRecordsByPtr cnames;
-         cached = RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+         cached = RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
          if (cached && !cnames.empty()) 
          {
             targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
             // check the cache.
-            cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status, retryAfter);
+            cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
          }
       }
    }
@@ -304,7 +294,7 @@ DnsStub::Query::go(DnsInterface* dns)
       {
          mTransform->transform(targetToQuery, mRRType, records);
       }
-      mResultConverter->notifyUser(mTarget, status, retryAfter, mDns->errorMessage(status), records, mSink); 
+      mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), records, mSink); 
       mStub.removeQuery(this);
       delete this;
    }
@@ -319,7 +309,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       {
          mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
       }
-      mResultConverter->notifyUser(mTarget, status, 0, mDns->errorMessage(status), Empty, mSink);
+      mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), Empty, mSink);
       mReQuery = 0;
       mStub.removeQuery(this);
       delete this;
@@ -340,7 +330,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    int ancount = DNS_HEADER_ANCOUNT(abuf);
    if (ancount == 0)
    {
-      mResultConverter->notifyUser(mTarget, 0, 0, mDns->errorMessage(0), Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, 0, mDns->errorMessage(0), Empty, mSink); 
    }
    else
    {
@@ -355,15 +345,14 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          mStub.cache(mTarget, abuf, alen);
          mReQuery = 0;
          int status = 0;
-         int retryAfter = 0;
          Data targetToQuery = mTarget;
          DnsResourceRecordsByPtr result;
          DnsResourceRecordsByPtr cnames;
-         RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+         RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
          if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
-         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status, retryAfter);
+         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status);
          if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
-         mResultConverter->notifyUser(mTarget, status, retryAfter, mDns->errorMessage(status), result, mSink);
+         mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), result, mSink);
       }
    }
                
@@ -400,8 +389,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             ++mReQuery;
             DnsResourceRecordsByPtr cnames;
             int status = 0;
-            int retryAfter = 0;
-            RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status, retryAfter);
+            RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
             assert(!cnames.empty());
             mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), mRRType, this);
             bDeleteThis = false;
@@ -409,7 +397,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
          else
          {
             mReQuery = 0;
-            mResultConverter->notifyUser(mTarget, 0, 0, mDns->errorMessage(0), Empty, mSink);
+            mResultConverter->notifyUser(mTarget, 0, mDns->errorMessage(0), Empty, mSink);
          }
          bGotAnswers = false;
       }

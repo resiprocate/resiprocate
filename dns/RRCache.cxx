@@ -127,10 +127,8 @@ bool RRCache::lookup(const Data& target,
                      const int type, 
                      const int protocol,
                      Result& records, 
-                     int& status,
-                     int& retryAfter)
+                     int& status)
 {
-   retryAfter = 0;
    records.empty();
    status = 0;
    RRList* key = new RRList(target, type);
@@ -151,7 +149,7 @@ bool RRCache::lookup(const Data& target,
       else
       {
          bool allBlacklisted = false;
-         records = (*it)->records(protocol, retryAfter, allBlacklisted);
+         records = (*it)->records(protocol, allBlacklisted);
          if (allBlacklisted)
          {
             assert(records.empty());
@@ -180,19 +178,6 @@ void RRCache::blacklist(const Data& target,
    delete key;
    if (it == mRRSet.end()) return;
    (*it)->blacklist(protocol, targetsToBlacklist);
-}
-
-void RRCache::retryAfter(const Data& target,
-                         int type,
-                         int protocol,
-                         int retryAfter,
-                         const DataArr& targetsToRetryAfter)
-{
-   RRList* key = new RRList(target, type);
-   RRSet::iterator it = mRRSet.find(key);
-   delete key;
-   if (it == mRRSet.end()) return;
-   (*it)->retryAfter(protocol, retryAfter, targetsToRetryAfter);
 }
 
 void RRCache::touch(RRList* node)
