@@ -38,9 +38,8 @@ class RRList : public IntrusiveListElement<RRList*>
              int ttl);
       
       void update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl);
-      Records records(const int protocol, int& retryAfter, bool& allBlacklisted);
+      Records records(const int protocol, bool& allBlacklisted);
       void blacklist(const int protocol, const DataArr& targetsToBlacklist);
-      void retryAfter(const int protocol, const int retryAfter, const DataArr& targetsToRetryAfter);
 
       const Data& key() const { return mKey; }
       int status() const { return mStatus; }
@@ -53,7 +52,6 @@ class RRList : public IntrusiveListElement<RRList*>
       struct RecordState
       {
             bool blacklisted;
-            bool retryAfter;
       };
       typedef std::vector<RecordState> States;
       struct RecordItem
@@ -69,7 +67,7 @@ class RRList : public IntrusiveListElement<RRList*>
 
       Data mKey;
       int mRRType;
-      UInt64 mAbsoluteRetryAfter;
+
       int mStatus; // dns query status.
       UInt64 mAbsoluteExpiry;
 
