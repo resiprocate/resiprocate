@@ -18,6 +18,7 @@ class RouteMonkey: public RequestProcessor
       
    private:
       RouteStore& mRouteStore;
+      void challengeRequest(repro::RequestContext &rc, resip::Data &realm);
 };
 
 }
