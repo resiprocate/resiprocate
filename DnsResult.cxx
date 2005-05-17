@@ -66,7 +66,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
      mType(Pending),
-     mBlacklistPrevResult(false)
+     mBlacklistLastReturnedResult(false)
 {
 }
 
@@ -116,10 +116,10 @@ DnsResult::available()
       }
       else
       {
-         if (mBlacklistPrevResult)
+         if (mBlacklistLastReturnedResult)
          {
-            blacklistPrevResult();
-            mBlacklistPrevResult = false;
+            blacklistLastReturnedResult();
+            mBlacklistLastReturnedResult = false;
          }
          primeResults();
          return available(); // recurse
@@ -139,15 +139,15 @@ DnsResult::next()
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
   
-   if (mBlacklistPrevResult)
+   if (mBlacklistLastReturnedResult)
    {
-      blacklistPrevResult();
+      blacklistLastReturnedResult();
    }
    else if (!mCurrResultPath.empty())
    {
-      mBlacklistPrevResult = true;
+      mBlacklistLastReturnedResult = true;
    }
-   mPrevResult = next;
+   mLastReturnedResult = next;
 
    assert(mCurrSuccessPath.size()<=3);
    Item top;
@@ -1024,7 +1024,7 @@ DnsResult::retrieveSRV()
    {
       int priority = srv.priority;
    
-      mCumulativeWeight=0;
+     mCumulativeWeight=0;
       //!dcm! -- this should be fixed properly; TCP req. lines were being sent
       //out on UDP
       TransportType transport = mSRVResults.begin()->transport;      
@@ -2015,16 +2015,17 @@ void DnsResult::clearCurrPath()
    }
 }
 
-void DnsResult::blacklistPrevResult()
+void DnsResult::blacklistLastReturnedResult()
 {
    assert(!mCurrResultPath.empty());
    Item top = mCurrResultPath.top();
    assert(top.rrType==T_A || top.rrType==T_AAAA);
-   assert(top.domain==mPrevResult.getTargetDomain());
-   assert(top.value==DnsUtil::inet_ntop(mPrevResult));
+   assert(top.domain==mLastReturnedResult.getTargetDomain());
+   assert(top.value==DnsUtil::inet_ntop(mLastReturnedResult));
    vector<Data> records;
    records.push_back(top.value);
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+   mVip.removeVip(top.domain, top.rrType);
    mCurrResultPath.pop();
 }
 
