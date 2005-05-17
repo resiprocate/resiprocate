@@ -27,7 +27,6 @@ class DNSResult
    public:
       Data domain;
       int status;
-      int retryAfter; // in seconds.
       Data msg;
       std::vector<T> records;
 };
@@ -66,8 +65,6 @@ class DnsStub
             virtual void transform(const Data& target, int rrType, DnsResourceRecordsByPtr& src) = 0;
       };
 
-      
-
       class DnsStubException : public BaseException
       {
          public:
@@ -97,12 +94,6 @@ class DnsStub
          mCommandFifo.add(command);
       }
 
-      void retryAfter(const Data& target, int rrType, const int proto, const int retryAfter, const DataArr& targetsToRetryAfter)
-      {
-         RetryAfterCommand* command = new RetryAfterCommand(target, rrType, proto, *this, retryAfter, targetsToRetryAfter);
-         mCommandFifo.add(command);
-      }
-
       void setTTL(int ttl) // in minute. 
       {
          RRCache::instance()->setTTL(ttl);
@@ -125,7 +116,6 @@ class DnsStub
          public:
             virtual void notifyUser(const Data& target, 
                                     int status, 
-                                    int retryAfter, 
                                     const Data& msg,
                                     const DnsResourceRecordsByPtr& src,
                                     DnsResultSink* sink) = 0;
@@ -138,20 +128,18 @@ class DnsStub
          public:
             virtual void notifyUser(const Data& target, 
                                     int status, 
-                                    int retryAfter, 
                                     const Data& msg,
                                     const DnsResourceRecordsByPtr& src,
                                     DnsResultSink* sink)
             {
                assert(sink);
-               DNSResult<typename QueryType::Type>  result;               
+               DNSResult<typename QueryType::Type>  result;
                for (unsigned int i = 0; i < src.size(); ++i)
                {
                   result.records.push_back(*(dynamic_cast<typename QueryType::Type*>(src[i])));
                }
                result.domain = target;
                result.status = status;
-               result.retryAfter = retryAfter;
                result.msg = msg;
                sink->onDnsResult(result);
             }
@@ -201,9 +189,6 @@ class DnsStub
       }
       void doBlacklisting(const Data& target, int rrType, 
                           int protocol, const DataArr& targetsToBlacklist);
-      void doRetryAfter(const Data& target, int rrType, int protocol,
-                        int retryAfter, const DataArr& targetsToRetryAfter);
-                          
 
       class Command
       {
@@ -266,37 +251,6 @@ class DnsStub
             int mProto;
             DnsStub& mStub;
             DataArr mTargetsToBlacklist;
-      };
-
-      class RetryAfterCommand: public Command
-      {
-         public:
-            RetryAfterCommand(const Data& target,
-                              int rrType,
-                              int proto,
-                              DnsStub& stub,
-                              const int retryAfter,
-                              const DataArr& targetsToRetryAfter)
-               : mTarget(target),
-                 mRRType(rrType),
-                 mProto(proto),
-                 mStub(stub),
-                 mRetryAfter(retryAfter),
-                 mTargetsToRetryAfter(targetsToRetryAfter)
-            {}
-            ~RetryAfterCommand() {}
-            void execute()
-            {
-               mStub.doRetryAfter(mTarget, mRRType, mProto, mRetryAfter, mTargetsToRetryAfter);
-            }
-
-         private:
-            Data mTarget;
-            int mRRType;
-            int mProto;
-            DnsStub& mStub;
-            int mRetryAfter;
-            DataArr mTargetsToRetryAfter;
       };
 
       resip::Fifo<Command> mCommandFifo;
