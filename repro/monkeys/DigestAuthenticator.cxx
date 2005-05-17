@@ -1,4 +1,3 @@
-
 #ifdef WIN32
 #include <db_cxx.h>
 #else 
@@ -46,17 +45,35 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
    
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
+   Proxy &proxy = rc.getProxy();
    
    if (sipMessage)
    {
-      if (!sipMessage->exists(h_ProxyAuthorizations))
+      if (sipMessage->exists(h_ProxyAuthorizations))
+      {
+         Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
+         
+         // if we find a Proxy-Authorization header for a realm we handle, 
+         // asynchronously fetch the relevant userAuthInfo from the database
+         for (Auths::iterator i = authHeaders.begin() ; i != authHeaders.end() ; ++i)
+         {
+            // !rwm!  TODO sometime we need to have a separate isMyRealm() function
+            if (proxy.isMyDomain(i->param(p_realm)))
+            {
+               return requestUserAuthInfo(rc, i->param(p_realm));
+            }
+         }
+      }
+      
+      // if there was no Proxy-Auth header already, and the request is purportedly From
+      // one of our domains, send a challenge.
+      //
+      // Note that other monkeys can still challenge the request later if needed 
+      // for other reasons (for example, the RouteMonkey)
+      if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          challengeRequest(rc, false);
          return SkipAllChains;
-      }
-      else
-      {
-         return requestUserAuthInfo(rc);
       }
    }
    else if (userAuthInfo)
@@ -76,7 +93,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
          case Helper::Failed:
             InfoLog (<< "Authentication failed for " << user << " at realm " << realm);
             rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403)));
+                            (Helper::makeResponse(*sipMessage, 403, "Authentication Failed")));
             return SkipAllChains;
         
             // !abr! Eventually, this should just append a counter to
@@ -86,12 +103,15 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 
          case Helper::Authenticated:
             InfoLog (<< "Authentication ok for " << user);
-            sipMessage->remove(h_Authorizations);
-            sipMessage->remove(h_ProxyAuthorizations);
-            rc.setDigestIdentity(user);
-            if (sipMessage->header(h_From).uri().user() == user &&
-                sipMessage->header(h_From).uri().host() == realm)
+            
+            // !rwm! Not so fast!  these might be needed by a downstream node!
+            //sipMessage->remove(h_Authorizations);
+            //sipMessage->remove(h_ProxyAuthorizations);
+            
+            if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
+               rc.setDigestIdentity(user);
+            
                sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
                static Data post(":5080/cert?domain=");
@@ -100,6 +120,15 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                   + post + realm;
                InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
                InfoLog (<< *sipMessage);
+            }
+            else
+            {
+               // !rwm! The user is trying to forge a request.  Respond with a 403
+               InfoLog (<< "User: " << user << " at realm: " << realm << 
+                           " trying to forge request from: " << sipMessage->header(h_From).uri());
+               rc.sendResponse(*auto_ptr<SipMessage>
+                               (Helper::makeResponse(*sipMessage, 403)));
+               return SkipAllChains;               
             }
             
             return Continue;
@@ -112,13 +141,21 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
          case Helper::BadlyFormed:
             InfoLog (<< "Authentication nonce badly formed for " << user);
             rc.sendResponse(*auto_ptr<SipMessage>
-                            (Helper::makeResponse(*sipMessage, 403,
-                                                  "Where on earth did you get that nonce?")));
+                            (Helper::makeResponse(*sipMessage, 403, "Where on earth did you get that nonce?")));
             return SkipAllChains;
       }
    }
 
    return Continue;
+}
+
+bool
+DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, 
+                                                resip::Uri &fromUri)
+{
+   // !rwm! good enough for now.  TODO eventually consult a database to see what
+   // combinations of user/realm combos are authorized for an identity
+   return ((fromUri.user() == user) && (fromUri.host() == realm));
 }
 
 void
@@ -140,14 +177,13 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
 
 
 repro::RequestProcessor::processor_action_t
-DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
+DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data &realm)
 {
    Message *message = rc.getCurrentEvent();
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
    UserStore& database = rc.getProxy().getUserStore();
-   Data realm = getRealm(rc);
 
    // Extract the user from the appropriate Proxy-Authorization header
    Auths &authorizationHeaders = sipMessage->header(h_ProxyAuthorizations); 
@@ -195,6 +231,14 @@ DigestAuthenticator::getRealm(RequestContext &rc)
    if (sipMessage->exists(h_PPreferredIdentities))
    {
       // !abr! Add this when we get a chance
+      // find the fist sip or sips P-Preferred-Identity header
+      // for (;;)
+      // {
+      //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
+      //    {
+      //       return i->uri().host();
+      //    }
+      // }
    }
 
    // (2) Check From domain
