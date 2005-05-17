@@ -21,9 +21,13 @@ class RRVip : public DnsStub::ResultTransform
       void addListener(int rrType, const Listener*);
       void removeListener(int rrType, const Listener*);
       void vip(const Data& target, int rrType, const Data& vip);
+      void removeVip(const Data& target, int rrType);
       void transform(const Data& target, int rrType, std::vector<DnsResourceRecord*>&);
 
    private:
+
+      RRVip(const RRVip&);
+      RRVip& operator=(const RRVip&);
 
       typedef std::vector<DnsResourceRecord*> RRVector;
       class Transform
