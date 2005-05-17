@@ -1619,7 +1619,8 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& co
 int
 SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 {
-   for (std::list<Codec>::const_iterator i = mCodecs.begin(); i != mCodecs.end(); i++)
+   const std::list<Codec>& codecList = codecs();
+   for (std::list<Codec>::const_iterator i = codecList.begin(); i != codecList.end(); i++)
    {
       if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
       {
