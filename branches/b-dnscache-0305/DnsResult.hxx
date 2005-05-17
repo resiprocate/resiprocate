@@ -265,10 +265,10 @@ class DnsResult : public DnsResultSink
 
       void clearCurrPath();
       void addToPath(const std::deque<Tuple>& results);
-      void blacklistPrevResult();
+      void blacklistLastReturnedResult();
 
-      Tuple mPrevResult; // the tuple returned to caller of DnsResult::next().
-      bool mBlacklistPrevResult; // used to indicate whether to blacklist mPrevResult.
+      Tuple mLastReturnedResult;
+      bool mBlacklistLastReturnedResult;
 
 };
 
