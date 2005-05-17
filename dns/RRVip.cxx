@@ -113,6 +113,27 @@ void RRVip::vip(const Data& target,
    }
 }
 
+void RRVip::removeVip(const Data& target,
+                      int rrType)
+{
+   RRVip::MapKey key(target, rrType);
+   TransformMap::iterator it = mTransforms.find(key);
+   if (it != mTransforms.end())
+   {
+      Data vip = it->second->vip();
+      delete (*it).second;
+      mTransforms.erase(it);
+      ListenerMap::iterator it = mListenerMap.find(rrType);
+      if (it != mListenerMap.end())
+      {
+         for (Listeners::const_iterator itL = (*it).second.begin(); itL != (*it).second.end(); ++itL)
+         {
+            (*itL)->onVipInvalidated(rrType, vip);
+         }
+      }
+   }
+}
+
 void RRVip::transform(const Data& target,
                       int rrType,
                       std::vector<DnsResourceRecord*>& src)
@@ -125,16 +146,7 @@ void RRVip::transform(const Data& target,
       it->second->transform(src, invalidVip);
       if (invalidVip) 
       {
-         Data vip = it->second->vip();
-         mTransforms.erase(it);
-         ListenerMap::iterator it = mListenerMap.find(rrType);
-         if (it != mListenerMap.end())
-         {
-            for (Listeners::const_iterator itL = (*it).second.begin(); itL != (*it).second.end(); ++itL)
-            {
-               (*itL)->onVipInvalidated(rrType, vip);
-            }
-         }
+         removeVip(target, rrType);
       }
    }
 }
