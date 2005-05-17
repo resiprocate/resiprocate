@@ -11,19 +11,19 @@
 using namespace resip;
 using namespace std;
 
-RRList::RRList() : mRRType(0), mAbsoluteRetryAfter(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX) {}
+RRList::RRList() : mRRType(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX) {}
 
 RRList::RRList(const Data& key, 
                 const int rrtype, 
                 int ttl, 
                 int status)
-   : mKey(key), mRRType(rrtype), mAbsoluteRetryAfter(0), mStatus(status)
+   : mKey(key), mRRType(rrtype), mStatus(status)
 {
    mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
 }
 
 RRList::RRList(const Data& key, int rrtype)
-   : mKey(key), mRRType(rrtype), mAbsoluteRetryAfter(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX)
+   : mKey(key), mRRType(rrtype), mStatus(0), mAbsoluteExpiry(ULONG_MAX)
 {}
 
 RRList::~RRList()
@@ -37,7 +37,7 @@ RRList::RRList(const RRFactoryBase* factory,
                Itr begin,
                Itr end, 
                int ttl)
-   : mKey(key), mRRType(rrType), mAbsoluteRetryAfter(0), mStatus(0)
+   : mKey(key), mRRType(rrType), mStatus(0)
 {
    update(factory, begin, end, ttl);
 }
@@ -66,21 +66,12 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
    mAbsoluteExpiry += Timer::getTimeMs()/1000;
 }
 
-RRList::Records RRList::records(const int protocol, int& retryAfter, bool& allBlacklisted)
+RRList::Records RRList::records(const int protocol, bool& allBlacklisted)
 {
    Records records;
-   retryAfter = 0;
    allBlacklisted = false;
    if (mRecords.empty()) return records;
 
-   retryAfter  = (int)(mAbsoluteRetryAfter - Timer::getTimeMs()/1000);
-   if (retryAfter < 0) 
-   {
-      retryAfter = 0;
-      mAbsoluteRetryAfter = 0;
-   }
-
-   bool retry = false;
    for (std::vector<RecordItem>::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
    {
       if ((*it).states.empty())
@@ -89,39 +80,18 @@ RRList::Records RRList::records(const int protocol, int& retryAfter, bool& allBl
       }
       else if (!(*it).states[protocol].blacklisted)
       {
-         if (mAbsoluteRetryAfter == 0)
-         {
-            records.push_back((*it).record);
-            (*it).states[protocol].retryAfter = false;
-         }
-         else if (!(*it).states[protocol].retryAfter)
-         {
-            records.push_back((*it).record);
-         }
-         else
-         {
-            retry = true;
-         }
+         records.push_back((*it).record);
       }
    }
    if (records.empty())
    {
-      if (!retry)
-      {
-         // every record is blacklisted.
-         // two options:
-         //    1. reset the states and return all the records.
-         //    2. get caller to remove the cache.
-         // Option 2 is used in this implementation.
-         allBlacklisted = true;
-         retryAfter = 0;
-      }
+      // every record is blacklisted.
+      // two options:
+      //    1. reset the states and return all the records.
+      //    2. get caller to remove the cache and requery.
+      // Option 2 is used in this implementation.
+      allBlacklisted = true;
    }
-   else
-   {
-      retryAfter = 0;
-   }
-
    return records;
 }
 
@@ -142,32 +112,10 @@ void RRList::blacklist(const int protocol,
    }
 }
 
-void RRList::retryAfter(const int protocol,
-                        const int retryAfter,
-                        const DataArr& targets)
-{
-   bool retry = false;
-   for (DataArr::const_iterator it = targets.begin(); it != targets.end(); ++it)
-   {
-      RecordItr recordItr = find(*it);
-      if (recordItr != mRecords.end())
-      {
-         if ((*recordItr).states.empty())
-         {
-            initStates((*recordItr).states);
-         }
-         (*recordItr).states[protocol].retryAfter = true;
-         retry = true;
-      }
-   }
-   if (retry) mAbsoluteRetryAfter = retryAfter +  Timer::getTimeMs()/1000;
-}
-
 void RRList::initStates(States& states)
 {
    RecordState state;
    state.blacklisted = false;
-   state.retryAfter = false;
    for (int i = 0; i < Protocol::Total; ++i)
    {
       states.push_back(state);
