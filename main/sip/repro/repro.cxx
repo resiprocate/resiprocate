@@ -207,6 +207,12 @@ main(int argc, char** argv)
       locators->addProcessor(std::auto_ptr<RequestProcessor>(manip));
 #endif
 
+      if (!args.mNoChallenge)
+      {
+         DigestAuthenticator* da = new DigestAuthenticator;
+         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+      }
+
       AmIResponsible* isme = new AmIResponsible;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
       
@@ -227,13 +233,7 @@ main(int argc, char** argv)
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
  
-      requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
-      
-      if (!args.mNoChallenge)
-      {
-         DigestAuthenticator* da = new DigestAuthenticator;
-         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
-      }
+      requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));      
    }
    
    Proxy proxy(stack, requestProcessors, store.mUserStore );
