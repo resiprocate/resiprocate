@@ -57,8 +57,7 @@ DnsInterface::DnsInterface() :
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
    mDnsStub = new DnsStub(this);
-   mDnsStub->setResultTransform(&mVip);   
-   assert(mDnsStub!=0);
+   mDnsStub->setResultTransform(&mVip);
 }
 
 DnsInterface::~DnsInterface()
@@ -189,19 +188,6 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
 {
    res->lookup(uri);   
 }
-
-void DnsInterface::registerVipListener(const RRVip::Listener* listener)
-{
-   mVip.addListener(T_A, listener);
-   mVip.addListener(T_AAAA, listener);
-}
-
-void DnsInterface::unregisterVipListener(const RRVip::Listener* listener)
-{
-   mVip.removeListener(T_A, listener);
-   mVip.removeListener(T_AAAA, listener);
-}
-
 
 // DnsResult* 
 // DnsInterface::lookup(const Via& via, DnsHandler* handler)

@@ -89,8 +89,6 @@ class DnsInterface : public ExternalDnsHandler
 
       DnsResult* createDnsResult(DnsHandler* handler=0);
       void lookup(DnsResult* res, const Uri& uri);
-      void registerVipListener(const RRVip::Listener*);
-      void unregisterVipListener(const RRVip::Listener*);
 
 //      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
 //      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
