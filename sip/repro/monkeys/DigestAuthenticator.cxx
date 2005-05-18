@@ -88,6 +88,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
       pair<Helper::AuthResult,Data> result =
          Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
 
+      Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
       switch (result.first)
       {
          case Helper::Failed:
@@ -107,6 +108,17 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
             // !rwm! Not so fast!  these might be needed by a downstream node!
             //sipMessage->remove(h_Authorizations);
             //sipMessage->remove(h_ProxyAuthorizations);
+            
+            for (Auths::iterator i = authHeaders.begin() ; i != authHeaders.end() ; ++i)
+            {
+               // !rwm!  TODO sometime we need to have a separate isMyRealm() function
+               if (proxy.isMyDomain(i->param(p_realm)))
+               {
+                  // is this safe?
+                  authHeaders.erase(i);
+               }
+            }
+
             
             if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
@@ -155,7 +167,11 @@ DigestAuthenticator::authorizedForThisIdentity(const resip::Data &user, const re
 {
    // !rwm! good enough for now.  TODO eventually consult a database to see what
    // combinations of user/realm combos are authorized for an identity
-   return ((fromUri.user() == user) && (fromUri.host() == realm));
+   if (fromUri.host() == realm)
+   {
+      return ((fromUri.user() == user) || (fromUri.user() == "anonymous"));
+   }
+   return false;
 }
 
 void
