@@ -23,6 +23,7 @@ class RouteStore
 {
    public:
       typedef std::vector<resip::Uri> UriList;
+      typedef resip::Data Key;
       
       RouteStore(AbstractDb& db);
       ~RouteStore();
@@ -42,6 +43,10 @@ class RouteStore
       UriList process(const resip::Uri& ruri, 
                       const resip::Data& method, 
                       const resip::Data& event );
+
+      Key buildKey(const resip::Data& method,
+                   const resip::Data& event,
+                   const resip::Data& matchingPattern ) const;
    private:
       AbstractDb& mDb;  
 
@@ -55,10 +60,7 @@ class RouteStore
       typedef std::vector<RouteOp> RouteOpList;
       RouteOpList mRouteOperators;
       
-      typedef resip::Data Key;
-      Key buildKey(const resip::Data& method,
-                   const resip::Data& event,
-                   const resip::Data& matchingPattern ) const;
+      
 };
 
  }
