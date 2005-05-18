@@ -23,7 +23,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int tlsPort = 5061;
    int dtlsPort = 0;
    int disableV4 = false;
-   int disableV6 = false;
+   int enableV6 = false;
    char* domains = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
@@ -56,7 +56,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"tcp",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tcpPort, 0, "add TCP transport on specified port", "5060"},
       {"tls",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tlsPort, 0, "add TLS transport on specified port", "5061"},
       {"dtls",           0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
-      {"disable-v6",     0,  POPT_ARG_NONE,   &disableV6, 0, "disable IPV6", 0},
+      {"enable-v6",      0,  POPT_ARG_NONE,   &enableV6, 0, "disable IPV6", 0},
       {"disable-v4",     0,  POPT_ARG_NONE,   &disableV4, 0, "disable IPV4", 0},
       {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
@@ -88,7 +88,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mTlsPort = tlsPort;
    mDtlsPort = dtlsPort;
    mUseV4 = !disableV4;
-   mUseV6 = !disableV6;
+   mUseV6 = enableV6;
    mDomains = toVector(domains, "domains"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
