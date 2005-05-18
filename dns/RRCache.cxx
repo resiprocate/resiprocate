@@ -99,7 +99,7 @@ void RRCache::updateCache(const Data& target,
    delete key;
 }
 
-void RRCache::cacheTTL(const Data& target,                    
+void RRCache::cacheTTL(const Data& target,
                        const int rrType,
                        const int status,
                        RROverlay overlay)

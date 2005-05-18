@@ -45,5 +45,5 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
 
 bool DnsSrvRecord::isSameValue(const Data& value) const
 {
-   return value == mTarget;
+   return value == (mTarget + ":" + Data(mPort));
 }
