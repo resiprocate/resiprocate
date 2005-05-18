@@ -698,44 +698,60 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
 void
 WebAdmin::buildEditRouteSubPage(DataStream& s)
 {
-      s << 
-      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl << 
-      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+   Dictionary::iterator pos;
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end()) 
+   {
+      Data key = pos->second;
+      AbstractDb::RouteRecord rec = mStore.mRouteStore.getRouteInfo(key);
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      
+      s << "<p>Editing Record with matching pattern: " << rec.mMatchingPattern << "</p>" << endl;      
 
+      s << 
+      "<form id=\"editRouteForm\" method=\"get\" action=\"showRoutes.html\" name=\"editRouteForm\">" << endl << 
+      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+      "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
       "<tr>" << endl << 
       "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" value=\"" << rec.mMatchingPattern << "\" size=\"24\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" value=\"" << rec.mMethod << "\" size=\"24\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << rec.mEvent << "\" size=\"24\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Destination</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeDestination\" value=\"" << rec.mRewriteExpression <<
+                            "\" size=\"24\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Order</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeOrder\" value=\"" << rec.mOrder <<
+                            "\" size=\"4\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
-      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
-      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>" << endl << 
+      "    <input type=\"submit\" name=\"routeEdit\" value=\"Update\"/>" << endl << 
       "  </td>" << endl << 
       "</tr>" << endl << 
 
       "</table>" << endl << 
       "</form>" << endl;
+   }
+   else
+   {
+      // go back to show users page
+   }
 
 }
 
@@ -885,6 +901,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          
          if (!rec.mMatchingPattern.empty() && !rec.mRewriteExpression.empty())
          {
+            DebugLog(<< "Updating route from: " << rec.mMatchingPattern << " to: " << rec.mRewriteExpression);
             // write out the updated record to the database now
             mStore.mRouteStore.writeRoute(key, rec);
          
@@ -902,8 +919,8 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       //"      </tr>" << endl <<  
       "      <tr>" << endl << 
       "        <td>" << endl <<  
-      "          <form id=\"showReg\" action=\"input\" method=\"get\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-      "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
+      "          <form id=\"showRoutes\" action=\"showRoutes.html\" method=\"get\" name=\"showRoutes\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+      // "            <button name=\"removeAllRoute\" value=\"\" type=\"submit\">Remove All</button>" << endl << 
       "            <hr/>" << endl << 
       "            <table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
       "              <thead><tr>" << endl << 
@@ -912,7 +929,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "                <td>Event</td>" << endl << 
       "                <td>Destination</td>" << endl << 
       "                <td>Order</td>" << endl << 
-      "                <td><button name=\"removeRoute\" type=\"submit\">Remove</button></td>" << endl << 
+      "                <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "              </tr></thead>" << endl << 
       "              <tbody>" << endl;
    
@@ -922,15 +939,16 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          i++ )
    {
       s <<  "<tr>" << endl << 
-         "<td><a href=\"editRoute.html?routeUri=";
-      i->mMatchingPattern.urlEncode(s); 
+         "<td><a href=\"editRoute.html?key=";
+      Data routeKey = mStore.mRouteStore.buildKey(i->mMethod, i->mEvent, i->mMatchingPattern);
+      routeKey.urlEncode(s); 
       s << 
          "\">" << i->mMatchingPattern << "</a></td>" << endl << 
          "<td>" << i->mMethod << "</td>" << endl << 
          "<td>" << i->mEvent << "</td>" << endl << 
          "<td>" << i->mRewriteExpression << "</td>" << endl << 
          "<td>" << i->mOrder << "</td>" << endl << 
-         "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>" << endl << 
+         "<td><input type=\"checkbox\" name=\"remove." << routeKey << "\"/></td>" << endl << 
          "</tr>" << endl;
    }
    
@@ -944,7 +962,9 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "          <hr noshade=\"noshade\"/>" << endl << 
       "          <br>" << endl << 
       "        </td></tr>" << endl;
-   
+
+// !rwm!  Why, was this code getting executed here?
+/*   
    Uri uri;
    try 
    {
@@ -1001,6 +1021,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "        </td>" << endl << 
       "      </tr>" << endl << 
       "    </table>" << endl;      
+   */
 }
 
 
