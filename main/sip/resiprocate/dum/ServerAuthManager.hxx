@@ -50,6 +50,9 @@ class ServerAuthManager
       DialogUsageManager& mDum;      
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
+      bool authorizedForThisIdentity(const resip::Data &user, 
+                                     const resip::Data &realm, 
+                                     resip::Uri &fromUri);
       
 };
 
