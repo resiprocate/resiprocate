@@ -65,8 +65,6 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
                                              3000);
       if (resPair.first == Helper::Authenticated)
       {
-         InfoLog (<< "Authentication ok for " << userAuth->getUser());
-         
          if (authorizedForThisIdentity(userAuth->getUser(), userAuth->getRealm(), 
                                        requestWithAuth->header(h_From).uri()))
          {
@@ -85,10 +83,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             delete requestWithAuth;
             return 0;
          }
-         
-         InfoLog (<< "Authorized request for " << userAuth->getRealm());
-         return requestWithAuth;
-      }
+       }
       else
       {
          InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
