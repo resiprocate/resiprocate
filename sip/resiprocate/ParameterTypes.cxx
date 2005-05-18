@@ -95,7 +95,7 @@ defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
-defineParam(refresher, "refresher", DataParameter, "Session Timer Draft");
+defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 
 defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework");
