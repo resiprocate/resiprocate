@@ -20,18 +20,6 @@ ServerAuthManager::~ServerAuthManager()
 {
 }
 
-
-//!dcm! -- fast hack for Rohan, fix before commtiing
-bool
-authorizedForThisIdentity(const resip::Data &user, 
-                                               const resip::Data &realm, 
-                                                resip::Uri &fromUri)
-{
-   // !rwm! good enough for now.  TODO eventually consult a database to see what
-   // combinations of user/realm combos are authorized for an identity
-   return ((fromUri.user() == user) && (fromUri.host() == realm));
-}
-
 SipMessage*
 ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 {
@@ -63,37 +51,61 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
                                              userAuth->getRealm(),
                                              userAuth->getA1(),
                                              3000);
-      if (resPair.first == Helper::Authenticated)
-      {
-         if (authorizedForThisIdentity(userAuth->getUser(), userAuth->getRealm(), 
-                                       requestWithAuth->header(h_From).uri()))
-         {
-            InfoLog (<< "Authorized request for " << userAuth->getRealm());
-            return requestWithAuth;
-         }
-         else
-         {
-            // !rwm! The user is trying to forge a request.  Respond with a 403
-            InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() << 
-                     " trying to forge request from: " << requestWithAuth->header(h_From).uri());
 
-            SipMessage response;
-            Helper::makeResponse(response, *requestWithAuth, 403, "Invalid user name provided");
+      SipMessage response;
+      SipMessage* challenge;
+      switch (resPair.first) 
+      {
+         case Helper::Authenticated :
+            if (authorizedForThisIdentity(userAuth->getUser(), userAuth->getRealm(), 
+                                          requestWithAuth->header(h_From).uri()))
+            {
+               InfoLog (<< "Authorized request for " << userAuth->getRealm());
+               return requestWithAuth;
+            }
+            else
+            {
+               // !rwm! The user is trying to forge a request.  Respond with a 403
+               InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() << 
+                        " trying to forge request from: " << requestWithAuth->header(h_From).uri());
+
+               Helper::makeResponse(response, *requestWithAuth, 403, "Invalid user name provided");
+               mDum.send(response);
+               delete requestWithAuth;
+               return 0;
+            }
+            break;
+         case Helper::Failed :
+            InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+            InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
+
+            Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
             mDum.send(response);
             delete requestWithAuth;
             return 0;
-         }
-       }
-      else
-      {
-         InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
-         InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
+            break;
+         case Helper::BadlyFormed :
+            InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
 
-         SipMessage response;
-         Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
-         mDum.send(response);
-         delete requestWithAuth;
-         return 0;
+            Helper::makeResponse(response, *requestWithAuth, 403, "Invalid nonce");
+            mDum.send(response);
+            delete requestWithAuth;
+            return 0;
+            break;
+         case Helper::Expired :
+            InfoLog (<< "Nonce expired for " << userAuth->getUser());
+
+            challenge = Helper::makeProxyChallenge(*requestWithAuth, 
+                                                    requestWithAuth->header(h_RequestLine).uri().host(),
+                                                    useAuthInt(),
+                                                    true /*stale*/);
+            InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
+            mDum.send(*challenge);
+            delete challenge;
+            delete requestWithAuth;
+            return 0;
+         default :
+            break;
       }
    }
 }
@@ -102,7 +114,18 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 bool
 ServerAuthManager::useAuthInt() const
 {
-   return true;
+   return false;
+}
+
+
+bool
+ServerAuthManager::authorizedForThisIdentity(const resip::Data &user, 
+                                               const resip::Data &realm, 
+                                                resip::Uri &fromUri)
+{
+   // !rwm! good enough for now.  TODO eventually consult a database to see what
+   // combinations of user/realm combos are authorized for an identity
+   return ((fromUri.user() == user) && (fromUri.host() == realm));
 }
 
 
