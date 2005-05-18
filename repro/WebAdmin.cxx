@@ -397,8 +397,31 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
 void
 WebAdmin::buildAddRouteSubPage(DataStream& s)
 {
+   Dictionary::iterator pos;
+
+   pos = mHttpParams.find("routeUri");
+   if (pos != mHttpParams.end())
+   {
+      Data routeUri = mHttpParams["routeUri"];
+      Data routeDestination = mHttpParams["routeDestination"];
+      
+      if (!routeDestination.empty())
+      {
+         mStore.mRouteStore.add(mHttpParams["routeMethod"], 
+                                mHttpParams["routeEvent"], 
+                                routeUri,
+                                routeDestination,
+                                mHttpParams["routeOrder"].convertInt());
+         
+         // check if successful
+         // {
+               s << "<p><em>Added</em> route for: " << routeUri << "</p>\n";
+         // }
+      }
+   }
+   
    s << 
-      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl << 
+      "<form id=\"addRouteFrom\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl << 
       "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
 
       "<tr>" << endl << 
@@ -675,7 +698,45 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
 void
 WebAdmin::buildEditRouteSubPage(DataStream& s)
 {
-   return;
+      s << 
+      "<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">" << endl << 
+      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+
+      "<tr>" << endl << 
+      "<td>URI</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "<td>Method</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Event</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Destination</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>" << endl << 
+      "</tr>" << endl << 
+      
+      "<tr>" << endl << 
+      "<td>Order</td>" << endl << 
+      "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>" << endl << 
+      "</tr>" << endl << 
+
+      "<tr>" << endl << 
+      "  <td colspan=\"2\" align=\"right\" valign=\"middle\">" << endl << 
+      "    <input type=\"reset\"  value=\"Cancel\"/>" << endl << 
+      "    <input type=\"submit\" name=\"routeAdd\" value=\"Add\"/>" << endl << 
+      "  </td>" << endl << 
+      "</tr>" << endl << 
+
+      "</table>" << endl << 
+      "</form>" << endl;
+
 }
 
 void 
@@ -792,7 +853,46 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
 
 void
 WebAdmin::buildShowRoutesSubPage(DataStream& s)
-{ 
+{
+   Dictionary::iterator pos;
+   Data key;
+   AbstractDb::RouteRecord rec;
+
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         mStore.mRouteStore.eraseRoute(*i);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+   
+   pos = mHttpParams.find("key");
+   if (pos != mHttpParams.end())   // if a key parameter exists, use the key to update the record
+   {
+      key = pos->second;
+      rec = mStore.mRouteStore.getRouteInfo(key);
+      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      if (1)
+      {
+         rec.mMethod = mHttpParams["routeMethod"]; 
+         rec.mEvent = mHttpParams["routeEvent"]; 
+         rec.mMatchingPattern = mHttpParams["routeUri"];
+         rec.mRewriteExpression = mHttpParams["routeDestination"];
+         rec.mOrder = mHttpParams["routeOrder"].convertInt();
+         
+         if (!rec.mMatchingPattern.empty() && !rec.mRewriteExpression.empty())
+         {
+            // write out the updated record to the database now
+            mStore.mRouteStore.writeRoute(key, rec);
+         
+            s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
+         }
+      }
+   }
+
    s <<
       "    <table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
       //"      <tr>" << endl << 
@@ -822,7 +922,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          i++ )
    {
       s <<  "<tr>" << endl << 
-         "<td><a href=\"editRoute.html?routeUri=\"";
+         "<td><a href=\"editRoute.html?routeUri=";
       i->mMatchingPattern.urlEncode(s); 
       s << 
          "\">" << i->mMatchingPattern << "</a></td>" << endl << 

@@ -79,12 +79,22 @@ RouteStore::getRoutes() const
 
 
 void 
-RouteStore::erase(const resip::Data& method,
-                  const resip::Data& event,
-                  const resip::Data& matchingPattern )
+RouteStore::eraseRoute(const resip::Data& key )
 {  
-   // !cj! TODO 
-   assert(0);
+   mDb.eraseRoute(key);
+}
+
+void
+RouteStore::writeRoute( const resip::Data& originalKey, const AbstractDb::RouteRecord& rec)
+{
+   resip::Data newkey = buildKey(rec.mMethod, rec.mEvent, rec.mMatchingPattern /*, rec.mOrder*/);
+   mDb.writeRoute( originalKey, newkey, rec);
+}
+
+AbstractDb::RouteRecord 
+RouteStore::getRouteInfo( const resip::Data& key )
+{
+   return mDb.getRoute(key);
 }
 
 
@@ -235,6 +245,8 @@ RouteStore::buildKey(const resip::Data& method,
                      const resip::Data& event,
                      const resip::Data& matchingPattern ) const
 {  
+   // missing mOrder
+   // Data pKey = Data(order) + ":" + method + ":" + event + ":" + matchingPattern;
    Data pKey = method+":"+event+":"+matchingPattern; 
    return pKey;
 }
