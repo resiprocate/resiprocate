@@ -257,7 +257,7 @@ class DnsResult : public DnsResultSink
       {
             Data domain;
             int rrType;
-            Data value; // stores ip for A/AAAA; target host for SRV; replacement for NAPTR.
+            Data value; // stores ip for A/AAAA, target host:port for SRV, and replacement for NAPTR.
       } Item;
 
       std::stack<Item> mCurrResultPath;
