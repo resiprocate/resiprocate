@@ -73,6 +73,7 @@ class AbstractDb
       // functions for Route Records
       virtual void addRoute( const Key& key, const RouteRecord& rec );
       virtual void eraseRoute(  const Key& key );
+      virtual void writeRoute( const Key& oldkey, const Key& newkey, const RouteRecord& rec );
       virtual RouteRecord getRoute( const Key& key) const;
       virtual RouteRecordList getAllRoutes();
       virtual Key firstRouteKey();// return empty if no more
