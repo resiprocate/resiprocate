@@ -5,11 +5,11 @@ from socket import *
 from random import *
 from time import *
 
-proxyHost = "10.0.1.3"
+proxyHost = "10.0.1.6"
 proxyPort = "5060"
 domain = "localhost"
 
-myHost = "10.0.1.7"
+myHost = "10.0.1.3"
 myPort = "5074"
 
 print "Will register to ", proxyHost, ":", proxyPort 
@@ -49,15 +49,16 @@ Content-Length: 0\r\n\
     if ( n%100 == 0 ):
         print "Send registration for",user," in ",s,"octets"
 
-    if ( outstanding > 20 ):
+    if ( outstanding > 40 ):
         junk = sock.recv(8192)
         outstanding = outstanding - 1
         #print "got packet"
 
 # pick up the remaingin responses 
-while ( outstanding > 0 ) :
-     junk = sock.recv(8192)
-     outstanding = outstanding - 1
+while ( outstanding > 50 ) :
+  print "oustanding=", outstanding
+  junk = sock.recv(8192)
+  outstanding = outstanding - 1
         
 endTime = time();
 sock.close()
