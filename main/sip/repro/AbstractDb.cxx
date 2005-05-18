@@ -230,6 +230,37 @@ AbstractDb::eraseRoute(  const AbstractDb::Key& key )
 }
 
 
+void
+AbstractDb::writeRoute( const Key& oldkey, const Key& newkey, const RouteRecord& rec )
+{
+   assert( !oldkey.empty() );
+   assert( !newkey.empty() );
+   
+   Data data;
+   {
+      oDataStream s(data);
+      
+      short version=1;
+      assert( sizeof( version) == 2 );
+      s.write( (char*)(&version) , sizeof(version) );
+      
+      encodeString( s, rec.mMethod );
+      encodeString( s, rec.mEvent );
+      encodeString( s, rec.mMatchingPattern );
+      encodeString( s, rec.mRewriteExpression );
+      s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
+      assert( sizeof( rec.mOrder) == 2 );
+      s.flush();
+   }
+   
+   if (oldkey != newkey)   // the domain or user (or both) changed, so the key has changed
+   {
+      dbEraseRecord( RouteTable, oldkey);
+   }
+   
+   dbWriteRecord(RouteTable,newkey,data);
+}
+
 AbstractDb::RouteRecord 
 AbstractDb::getRoute( const AbstractDb::Key& key) const
 { 
