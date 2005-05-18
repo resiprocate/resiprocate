@@ -35,9 +35,9 @@ class RouteStore
       
       AbstractDb::RouteRecordList getRoutes() const;
       
-      void erase(const resip::Data& method,
-                 const resip::Data& event,
-                 const resip::Data& matchingPattern );
+      void eraseRoute( const resip::Data& key );
+      void writeRoute( const resip::Data& originalKey, const AbstractDb::RouteRecord& rec );
+      AbstractDb::RouteRecord getRouteInfo( const resip::Data& key );
       
       UriList process(const resip::Uri& ruri, 
                       const resip::Data& method, 
