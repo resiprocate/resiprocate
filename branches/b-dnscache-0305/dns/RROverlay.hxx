@@ -10,7 +10,15 @@ class RROverlay
 {
    friend bool operator<(const RROverlay& r1, const RROverlay& r2)
    {
-      return r1.mType < r2.mType;
+      if (r1.mType < r2.mType)
+      {
+         return true;
+      }
+      if (r1.mType > r2.mType)
+      {
+         return false;
+      }
+      return r1.mDomain < r2.mDomain;
    }
 
    public:

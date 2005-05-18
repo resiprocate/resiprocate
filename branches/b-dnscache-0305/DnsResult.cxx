@@ -168,17 +168,12 @@ DnsResult::next()
 
 void DnsResult::success()
 {
-   assert(!mCurrSuccessPath.empty());
-   assert(mCurrSuccessPath.size()<=3);
-   Item top = mCurrSuccessPath.top();
-   if (top.rrType == T_A || top.rrType == T_AAAA)
+   while (!mCurrSuccessPath.empty())
    {
-      do 
-      {
-         top = mCurrSuccessPath.top();
-         mVip.vip(top.domain, top.rrType, top.value);
-         mCurrSuccessPath.pop();
-      } while (!mCurrSuccessPath.empty());
+      Item top = mCurrSuccessPath.top();
+      mVip.vip(top.domain, top.rrType, top.value);
+      InfoLog( << "Whitelisting " << top.domain << "(" << top.rrType << "): " << top.value);
+      mCurrSuccessPath.pop();
    }
 }
 
@@ -972,7 +967,7 @@ DnsResult::primeResults()
             }
             top.domain = next.key;
             top.rrType = T_SRV;
-            top.value = next.target;
+            top.value = next.target + ":" + Data(next.port);
             mCurrResultPath.push(top);
             mCurrSuccessPath.push(top);
             lookupHost(next.target);
