@@ -20,7 +20,7 @@ using namespace std;
 static void 
 encodeString( oDataStream& s, const Data& data )
 {
-   short len = data.size();
+   short len = (short)data.size();
    s.write( (char*)(&len) , sizeof( len ) );
    s.write( data.data(), len );
 }
