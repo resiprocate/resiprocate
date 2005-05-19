@@ -72,7 +72,7 @@ HttpConnection::process(FdSet& fdset)
       int errNumSize = sizeof(errNum);
       getsockopt(mSock,SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
       InfoLog (<< "Exception reading from socket " 
-               << mSock << " code: " << errNum << "; closing connection");
+               << (int)mSock << " code: " << errNum << "; closing connection");
       return false;
    }
    
@@ -243,7 +243,7 @@ HttpConnection::processSomeReads()
             InfoLog (<< "Some other error");
             break;
       }
-      InfoLog (<< "Failed read on " << mSock << " " << strerror(e));
+      InfoLog (<< "Failed read on " << (int)mSock << " " << strerror(e));
       return false;
    }
    else if (bytesRead == 0)
