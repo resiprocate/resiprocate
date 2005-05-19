@@ -114,8 +114,9 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                // !rwm!  TODO sometime we need to have a separate isMyRealm() function
                if (proxy.isMyDomain(i->param(p_realm)))
                {
-                  // is this safe?
-                  authHeaders.erase(i);
+                  // need a safe alternative to delete the Proxy-Auth header used by us
+                  // authHeaders.erase(i);}
+                  ;
                }
             }
 
