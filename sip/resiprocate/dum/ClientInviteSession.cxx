@@ -298,13 +298,13 @@ ClientInviteSession::sendSipFrag(const SipMessage& msg)
          if (code > 100)
          {
             SipFrag contents;
+            contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
             if (code < 200)
             {
                mServerSub->send(mServerSub->update(&contents));
             }
             else
             {
-               contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
                mServerSub->end(NoResource, &contents);
             }
          }
