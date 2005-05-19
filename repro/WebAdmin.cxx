@@ -117,7 +117,7 @@ WebAdmin::buildPage( const Data& uri,
            pb.data(domain, anchor);
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseBuffer::Exception& )
       {
       }
 
@@ -251,7 +251,7 @@ WebAdmin::buildPage( const Data& uri,
       buildPageOutlinePre(s);
       
       // admin only pages 
-      if ( pageName == Data("user.html")    ) ; /* do nothing */ 
+	  if ( pageName == Data("user.html")    ) {}; /* do nothing */ 
       //if ( pageName == Data("input")    ) ; /* do nothing */ 
       if ( pageName == Data("domains.html")    ) buildDomainsSubPage(s);
       if ( pageName == Data("acls.html")       ) buildAclsSubPage(s);
@@ -994,14 +994,14 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
             uri = Uri(routeTestUri);
             badUri=false;
          }
-         catch( BaseException& e )
+         catch( BaseException&  )
          {
             try 
             {
                uri = Uri( Data("sip:")+routeTestUri );
                badUri=false;
             }
-            catch( BaseException& e )
+            catch( BaseException&  )
             {
             }
          }
