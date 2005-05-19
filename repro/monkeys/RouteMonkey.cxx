@@ -59,7 +59,7 @@ RouteMonkey::handleRequest(RequestContext& context)
       // but for know we will just fail safe and assume that all routes require auth
       requireAuth |= true;
    }
-   if (requireAuth)
+   if (requireAuth && context.getDigestIdentity().empty())
    {
       // !rwm! TODO do we need anything more sophisticated to figure out the realm?
       Data realm = msg.header(h_RequestLine).uri().host();
