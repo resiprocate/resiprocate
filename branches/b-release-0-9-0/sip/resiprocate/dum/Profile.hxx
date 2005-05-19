@@ -58,7 +58,7 @@ class Profile
       virtual void unsetDefaultStaleCallTime();  
 
       // Only used if timer option tag is set in MasterProfile.
-      // Note:  Value must be higher than 90 (as specified in session-timer draft)
+      // Note:  Value must be higher than 90 (as specified in RFC 4028)
       virtual void setDefaultSessionTime(int secs); 
       virtual int getDefaultSessionTime() const;
       virtual void unsetDefaultSessionTime(); 
@@ -66,8 +66,8 @@ class Profile
       // Only used if timer option tag is set in MasterProfile.
       // Set to PreferLocalRefreshes if you prefer that the local UA performs the refreshes.  
       // Set to PreferRemoteRefreshes if you prefer that the remote UA peforms the refreshes.
-      // Set to PreferUACRefreshes if you prefer that the UAC performs the refreshes.
-      // Set to PreferUASRefreshes if you prefer that the UAS performs the refreshes.
+      // Set to PreferUACRefreshes if you prefer that the UAC (for the session - caller) performs the refreshes.
+      // Set to PreferUASRefreshes if you prefer that the UAS (for the session - callee) performs the refreshes.
       // Note: determining the refresher is a negotiation, so despite this setting the remote 
       // end may end up enforcing their preference.  Also if the remote end doesn't support 
       // SessionTimers then the refresher will always be local.
