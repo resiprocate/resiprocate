@@ -26,7 +26,7 @@ AclStore::~AclStore()
 
       
 void 
-AclStore::add(const resip::Data& acl )
+AclStore::addAcl(const resip::Data& acl )
 { 
    InfoLog( << "Add ACL" );
    
@@ -37,15 +37,25 @@ AclStore::add(const resip::Data& acl )
 }
 
       
-AbstractDb::AclRecordList 
+AclStore::DataList
 AclStore::getAcls() const
 { 
-   return mDb.getAllAcls();
+   AbstractDb::AclRecordList input = mDb.getAllAcls();
+   
+   DataList result;
+   result.reserve( input.size() );
+   
+   for (AbstractDb::AclRecordList::const_iterator it = input.begin();
+        it != input.end(); it++)
+   {
+      result.push_back(it->mMachine);
+   }
+   return result;   
 }
 
 
 void 
-AclStore::erase(const resip::Data& acl)
+AclStore::eraseAcl(const resip::Data& acl)
 {  
    mDb.eraseAcl( buildKey(acl) );
 }

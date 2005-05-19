@@ -65,8 +65,6 @@ class WebAdmin: public HttpBase
       resip::RegistrationPersistenceManager& mRegDb;
       resip::Security* mSecurity;
 
-      resip::Data routeTestUri;
-
       bool mNoWebChallenges;
       
       Dictionary mHttpParams;
