@@ -21,7 +21,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
        if(userProfile.getDefaultSessionTime() >= 90)
        {
            getLastRequest().header(h_SessionExpires).value() = userProfile.getDefaultSessionTime();
-           //getLastRequest().header(h_MinSE).value() = 90;
+           getLastRequest().header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
        }
    }
    if (initial)
