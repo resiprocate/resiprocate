@@ -1213,8 +1213,8 @@ defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
 defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
-defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft");
-defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft");
+defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
+defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 
 defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
 defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
