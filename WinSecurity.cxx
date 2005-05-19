@@ -160,6 +160,7 @@ WinSecurity::getCerts(MsCertStoreType eType)
    //retrive only certificates
    HCERTSTORE storeHandle = NULL;
    storeHandle = openSystemCertStore(certStoreTypes(eType));
+   int i;
    if(NULL != storeHandle)
    {
       PCCERT_CONTEXT   pCertContext = NULL;  
@@ -167,9 +168,11 @@ WinSecurity::getCerts(MsCertStoreType eType)
       {
          Data certDER(Data::Borrow, (const char*)pCertContext->pbCertEncoded, pCertContext->cbCertEncoded);
          addCertDER (BaseSecurity::RootCert, NULL, certDER, false);
+         i++;
       }
       CertFreeCertificateContext(pCertContext);
    }
+   InfoLog( << i << " certs loaded of type " << eType );
    closeCertifStore(storeHandle);
 }
 
