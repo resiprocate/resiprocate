@@ -147,11 +147,21 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
+Security::Security()
+{
+#ifdef WIN32
+   mPath = "C:\\sipCerts\\";
+#else
+   mPath = getenv("HOME");
+   mPath += "/.sipCerts/";
+#endif
+}
+
 Security::Security(const Data& directory) : mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
-   if ( mPath[mPath.size()-1] != Symbols::SLASH[0] )
+   if ( !mPath.postfix(Symbols::SLASH))
    {
       mPath += Symbols::SLASH;
    }
