@@ -22,14 +22,16 @@ RouteStore::RouteStore(AbstractDb& db):
    {
       RouteOp route;
       route.routeRecord =  mDb.getRoute(key);
-
+      route.key = key;
+      
       // TODO - !cj! - compile regex when create the route object instead of
       // doing it every time 
       
       mRouteOperators.push_back( route ); 
 
       key = mDb.nextRouteKey();
-   }
+   } 
+   mCursor = mRouteOperators.begin();
 }
 
 
@@ -39,30 +41,35 @@ RouteStore::~RouteStore()
 
       
 void 
-RouteStore::add(const resip::Data& method,
-                const resip::Data& event,
-                const resip::Data& matchingPattern,
-                const resip::Data& rewriteExpression,
-                const int order )
+RouteStore::addRoute(const resip::Data& method,
+                     const resip::Data& event,
+                     const resip::Data& matchingPattern,
+                     const resip::Data& rewriteExpression,
+                     const int order )
 { 
    InfoLog( << "Add route" );
    
    RouteOp route;
+
+   Key key = buildKey(method,event,matchingPattern);
+   
    route.routeRecord.mMethod = method;
    route.routeRecord.mEvent = event;
    route.routeRecord.mMatchingPattern = matchingPattern;
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
- 
+   route.key = key;
+   
    // TODO - !cj! - compile regex when create the route object instead of
    // doing it every time 
    
    mRouteOperators.push_back( route ); 
 
-   mDb.addRoute( buildKey(method,event,matchingPattern), route.routeRecord );
+   mDb.addRoute( key , route.routeRecord );
 }
 
       
+/*
 AbstractDb::RouteRecordList 
 RouteStore::getRoutes() const
 { 
@@ -76,25 +83,158 @@ RouteStore::getRoutes() const
    }
    return result;   
 }
+*/
 
 
 void 
 RouteStore::eraseRoute(const resip::Data& key )
 {  
    mDb.eraseRoute(key);
+
+   RouteOpList::iterator it = mRouteOperators.begin();
+   while ( it != mRouteOperators.end() )
+   {
+      Data method = it->routeRecord.mMethod;
+      Data event = it->routeRecord.mEvent;
+      Data match = it->routeRecord.mMatchingPattern ;
+      
+      Data k = buildKey( method, event, match );
+      
+      if ( k == key )
+      {
+         RouteOpList::iterator i = it;
+         it++;
+         
+         mRouteOperators.erase(i);
+      }
+      else
+      {
+         it++;
+      }
+   }
 }
+
 
 void
-RouteStore::writeRoute( const resip::Data& originalKey, const AbstractDb::RouteRecord& rec)
+RouteStore::updateRoute( const resip::Data& originalKey, 
+                         const resip::Data& method,
+                         const resip::Data& event,
+                         const resip::Data& matchingPattern,
+                         const resip::Data& rewriteExpression,
+                         const int order )
 {
-   resip::Data newkey = buildKey(rec.mMethod, rec.mEvent, rec.mMatchingPattern /*, rec.mOrder*/);
-   mDb.writeRoute( originalKey, newkey, rec);
+   resip::Data newkey = buildKey( method, event, matchingPattern );
+   addRoute( method, event, matchingPattern, rewriteExpression, order );
+   if ( newkey != originalKey )
+   {
+      eraseRoute(originalKey);
+   }
 }
 
-AbstractDb::RouteRecord 
-RouteStore::getRouteInfo( const resip::Data& key )
+
+RouteStore::Key 
+RouteStore::getFirstKey()
 {
-   return mDb.getRoute(key);
+   RouteOpList::iterator mCursor = mRouteOperators.begin();
+   if ( mCursor == mRouteOperators.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mCursor->key;
+}
+
+bool 
+RouteStore::findKey(const Key& key)
+{ 
+   // check if cursor happens to be at the key
+   if ( mCursor != mRouteOperators.end() )
+   {
+      if ( mCursor->key == key )
+      {
+         return true;
+      }
+   }
+   
+   // search for the key 
+   mCursor = mRouteOperators.begin();
+   while (  mCursor != mRouteOperators.end() )
+   {
+      if ( mCursor->key == key )
+      {
+         return true; // found the key 
+      }
+   }
+   return false; // key was not found 
+}
+
+RouteStore::Key 
+RouteStore::getNextKey(Key& key)
+{  
+   if ( !findKey(key) )
+   {
+      return Key(Data::Empty);
+   }
+      
+   mCursor++;
+   
+   if ( mCursor == mRouteOperators.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mCursor->key;
+}
+
+
+resip::Data 
+RouteStore::getRouteMethod( const resip::Data& key )
+{ 
+   if ( !findKey(key) )
+   {
+      return Data::Empty;
+   }
+   return mCursor->routeRecord.mMethod;
+}
+
+resip::Data 
+RouteStore::getRouteEvent( const resip::Data& key )
+{
+   if ( !findKey(key) )
+   {
+      return Data::Empty;
+   }
+   return mCursor->routeRecord.mEvent ;
+}
+
+resip::Data 
+RouteStore::getRoutePattern( const resip::Data& key )
+{
+   if ( !findKey(key) )
+   {
+      return Data::Empty;
+   }
+   return mCursor->routeRecord.mMatchingPattern; ;
+}
+
+resip::Data 
+RouteStore::getRouteRewrite( const resip::Data& key )
+{
+   if ( !findKey(key) )
+   {
+      return Data::Empty;
+   }
+   return mCursor->routeRecord.mRewriteExpression ;
+}
+
+int         
+RouteStore::getRouteOrder( const resip::Data& key )
+{
+   if ( !findKey(key) )
+   {
+      return 0;
+   }
+   return mCursor->routeRecord.mOrder ;
 }
 
 
