@@ -198,6 +198,8 @@ class InviteSession : public DialogUsage
 
       void setSessionTimerHeaders(SipMessage& msg);
       void sessionRefresh();
+      void setSessionTimerPreferences();
+      void startSessionTimer();
       void handleSessionTimerResponse(const SipMessage& msg);
       void handleSessionTimerRequest(SipMessage &response, const SipMessage& request);
 
@@ -239,8 +241,10 @@ class InviteSession : public DialogUsage
 
       // Session Timer settings
       int  mSessionInterval;
-      bool mSessionRefresherUAS;
+      int  mMinSE;
+      bool mSessionRefresher;
       int  mSessionTimerSeq;
+
       bool mSentRefer;
       
    private:
