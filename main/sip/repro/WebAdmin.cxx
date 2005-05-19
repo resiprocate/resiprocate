@@ -288,7 +288,7 @@ WebAdmin::buildPage( const Data& uri,
 void
 WebAdmin::buildAclsSubPage(DataStream& s)
 { 
-   if (!mRemoveSet.empty())
+   if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
    {
       int j = 0;
       for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
@@ -300,31 +300,31 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    }
    
    Dictionary::iterator pos = mHttpParams.find("aclUri");
-   if (pos != mHttpParams.end()) // found 
+   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found 
    {
       Data acl  = pos->second;
       mStore.mAclStore.addAcl(acl);
    }   
    
    s << 
-      "      <form id=\"addRouteForm\" method=\"get\" action=\"acls.html\" name=\"addRouteForm\">" << endl <<
+      "      <form id=\"aclsForm\" method=\"get\" action=\"acls.html\" name=\"aclsForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
       "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
       //    "            <td><input type=\"text\" name=\"aclMask\" size=\"2\"/></td>" << endl <<
-      "            <td><input type=\"submit\" name=\"aclAdd\" value=\"Add\"/></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      </form>" << endl <<
-      "      <div class=sace>" << endl <<
+      "      <div class=space>" << endl <<
       "        <br />" << endl <<
       "      </div>" << endl <<
       "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
       "        <thead>" << endl <<
       "          <tr>" << endl <<
       "            <td>Host</td>" << endl <<
-      //  "            <td align=\"center\">Mask</td>" << endl <<
+      "            <td align=\"center\">Mask <em>(unused)</em></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </thead>" << endl <<
       "        <tbody>" << endl;
@@ -337,14 +337,20 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       s << 
          "          <tr>" << endl <<
          "            <td>" << *i << "</td>" << endl <<
-         //   "            <td align=\"center\">" <<  "</td>" << endl <<
+         "            <td align=\"center\">" << "&nbsp;" << "</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << *i << "\"/></td>" << endl <<
          "          </tr>" << endl;
    }
    
    s <<  
       "          </tr>" << endl <<
       "        </tbody>" << endl <<
-      "      </table>" << endl;
+      "      </table>" << endl <<
+      "     </form>" << endl;
+      
+   s << "<p>Note that the access lists are not yet used by the proxy.  " 
+     << "They will be used in a future version as a whitelist to allow "
+     << "gateways and other trusted nodes to skip authentication. </p>";
 }
 
 
@@ -354,7 +360,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
    Data domainUri;
    int domainTlsPort;
 
-  if (!mRemoveSet.empty())
+  if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
    {
       int j = 0;
       for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
@@ -365,29 +371,30 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
-   
    Dictionary::iterator pos = mHttpParams.find("domainUri");
-   if (pos != mHttpParams.end()) // found domainUri key
+   if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found domainUri key
    {
       domainUri = pos->second;
       domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
       mStore.mConfigStore.addDomain(domainUri,domainTlsPort);
+      
+      s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
    }   
+
    
    // TODO !cj! - make a web page after you add a domain that tells people they
    // have to restart the proxy 
 
    s <<
-      "     <form id=\"addRouteFrom\" method=\"get\" action=\"domains.html\" name=\"addRouteForm\">" << endl <<
+      "     <form id=\"domainForm\" method=\"get\" action=\"domains.html\" name=\"domainForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">New Domain:</td>" << endl <<
       "            <td><input type=\"text\" name=\"domainUri\" size=\"24\"/></td>" << endl <<
       "            <td><input type=\"text\" name=\"domainTlsPort\" size=\"4\"/></td>" << endl <<
-      "            <td><input type=\"submit\" name=\"domainAdd\" value=\"Add\"/></td>" << endl <<
+      "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      </form>" << endl <<
       "      <div class=sace>" << endl <<
       "        <br />" << endl <<
       "      </div>" << endl <<
@@ -396,7 +403,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "          <tr>" << endl <<
       "            <td>Domain</td>" << endl <<
       "            <td align=\"center\">TLS Port</td>" << endl <<
-      "            <td><input type=\"submit\" name=\"removeSelected\" value=\"Remove\"/></td>" << endl << 
+      "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl << 
       "          </tr>" << endl <<
       "        </thead>" << endl <<
       "        <tbody>" << endl;
@@ -415,7 +422,8 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
    
    s <<
       "        </tbody>" << endl <<
-      "      </table>" << endl;
+      "      </table>" << endl <<
+      "     </form>" << endl;
 }
 
 void
