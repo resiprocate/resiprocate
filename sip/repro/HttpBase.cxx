@@ -67,7 +67,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
       //throw Exception("Can't create HttpBase listner socket", __FILE__,__LINE__);
    }
 
-   DebugLog (<< "Creating fd=" << mFd 
+   DebugLog (<< "Creating fd=" << (int)mFd 
              << (ipVer == V4 ? " V4/" : " V6/") );
       
 #if !defined(WIN32)
@@ -168,7 +168,7 @@ HttpBase::process(FdSet& fdset)
       
       mConnection[c] = new HttpConnection(*this,sock);
       
-      DebugLog (<< "Received TCP connection as connection=" << c << " fd=" << sock);
+      DebugLog (<< "Received TCP connection as connection=" << c << " fd=" << (int)sock);
    }
     
    for( int i=0; i<MaxConnections; i++)

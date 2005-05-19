@@ -88,7 +88,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mTlsPort = tlsPort;
    mDtlsPort = dtlsPort;
    mUseV4 = !disableV4;
-   mUseV6 = enableV6;
+   mUseV6 = enableV6?true:false;
    mDomains = toVector(domains, "domains"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
