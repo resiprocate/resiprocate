@@ -108,6 +108,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             break;
       }
    }
+   return 0;
 }
 
             
