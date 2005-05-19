@@ -17,13 +17,13 @@ class ConfigStore
       ConfigStore(AbstractDb& db);
       ~ConfigStore();
       
-      void add(const resip::Data& domain,
-               const int tlsPort );
+      void addDomain(const resip::Data& domain,
+                     const int tlsPort );
       
-      AbstractDb::ConfigRecordList getConfigs() const;
       DataList getDomains() const;
+      int      getTlsPort(const resip::Data& domain) const;
       
-      void erase(const resip::Data& domain);
+      void eraseDomain(const resip::Data& domain);
       
    private:
       AbstractDb& mDb;  
