@@ -360,14 +360,14 @@ RouteStore::process(const resip::Uri& ruri,
          {
             targetUri = Uri(target);
          }
-         catch( BaseException& e)
+         catch( BaseException& )
          {
             ErrLog( << "Routing rule transform " << rewrite << " gave invalid URI " << target );
             try
             {
                targetUri = Uri( Data("sip:")+target);
             }
-            catch( BaseException& e)
+            catch( BaseException& )
             {
                ErrLog( << "Routing rule transform " << rewrite << " gave invalid URI sip:" << target );
                continue;
