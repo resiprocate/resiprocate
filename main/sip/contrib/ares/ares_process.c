@@ -280,9 +280,7 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
 	     continue;
 	  }
 
-#ifndef WIN323
 	  assert( server->udp_socket != -1 );
-#endif
 	  
       count = recv(server->udp_socket, buf, sizeof(buf), 0);
       if (count <= 0)
