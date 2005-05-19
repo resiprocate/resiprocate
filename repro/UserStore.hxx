@@ -44,11 +44,15 @@ class UserStore
                     const resip::Data& fullName,
                     const resip::Data& emailAddress  );
       
-      //void removeUser( const resip::Data& user,
-      //                 const resip::Data& realm );
-      
       void eraseUser( const Key& key );
-      void writeUser( const Key& originalKey, const AbstractDb::UserRecord& rec);
+      
+      void updateUser( const Key& originalKey,
+                       const resip::Data& user, 
+                       const resip::Data& domain, 
+                       const resip::Data& realm, 
+                       const resip::Data& password, 
+                       const resip::Data& fullName,
+                       const resip::Data& emailAddress );
       
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 

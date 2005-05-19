@@ -7,7 +7,7 @@
 #include <regex.h>
 #endif
 
-#include <vector>
+#include <list>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Uri.hxx"
@@ -28,39 +28,54 @@ class RouteStore
       RouteStore(AbstractDb& db);
       ~RouteStore();
       
-      void add(const resip::Data& method,
-               const resip::Data& event,
-               const resip::Data& matchingPattern,
-               const resip::Data& rewriteExpression,
-               const int order );
-      
-      AbstractDb::RouteRecordList getRoutes() const;
+      void addRoute(const resip::Data& method,
+                    const resip::Data& event,
+                    const resip::Data& matchingPattern,
+                    const resip::Data& rewriteExpression,
+                    const int order );
       
       void eraseRoute( const resip::Data& key );
-      void writeRoute( const resip::Data& originalKey, const AbstractDb::RouteRecord& rec );
-      AbstractDb::RouteRecord getRouteInfo( const resip::Data& key );
+
+      void updateRoute( const resip::Data& originalKey,
+                        const resip::Data& method,
+                        const resip::Data& event,
+                        const resip::Data& matchingPattern,
+                        const resip::Data& rewriteExpression,
+                        const int order );
+      
+      resip::Data getRouteMethod( const resip::Data& key );
+      resip::Data getRouteEvent( const resip::Data& key );
+      resip::Data getRoutePattern( const resip::Data& key );
+      resip::Data getRouteRewrite( const resip::Data& key );
+      int         getRouteOrder( const resip::Data& key );
+      
+      Key getFirstKey();// return empty if no more
+      Key getNextKey(Key& key); // return empty if no more 
       
       UriList process(const resip::Uri& ruri, 
                       const resip::Data& method, 
                       const resip::Data& event );
 
+   private:
+      bool findKey(const Key& key); // move cursor to key
+      
       Key buildKey(const resip::Data& method,
                    const resip::Data& event,
                    const resip::Data& matchingPattern ) const;
-   private:
+
       AbstractDb& mDb;  
 
       class RouteOp
       {
          public:
+            Key key;
             regex_t preq;
             AbstractDb::RouteRecord routeRecord;
       };
       
-      typedef std::vector<RouteOp> RouteOpList;
-      RouteOpList mRouteOperators;
-      
-      
+      typedef std::list<RouteOp> RouteOpList;
+      RouteOpList mRouteOperators; 
+      RouteOpList::iterator mCursor;
 };
 
  }
