@@ -32,6 +32,24 @@ WinSecurity::preload()
    //getCerts(WinSecurity::USERS_STORE);   
 }
 
+void
+WinSecurity::onReadPEM(const Data& name, PEMType type, Data& buffer)
+{
+   throw;
+}
+
+void
+WinSecurity::onWritePEM(const Data& name, PEMType type, const Data& buffer)
+{
+   throw;
+}
+
+void
+WinSecurity::onRemovePEM(const Data& name, PEMType type)
+{
+   throw;
+}
+
 static const Data 
 certStoreTypes(  WinSecurity::MsCertStoreType pType )
 {
