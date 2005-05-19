@@ -276,11 +276,12 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                return true;                     
             }
 
-            // Check if a 422 response to initial Invite (sessionTimer draft)
+            // Check if a 422 response to initial Invite (RFC4028)
             if(msg.header(h_StatusLine).statusCode() == 422 && msg.exists(h_MinSE))
             {
                // Change interval to min from 422 response
                getCreator()->getLastRequest().header(h_SessionExpires).value() = msg.header(h_MinSE).value();
+               getCreator()->getLastRequest().header(h_MinSE).value() = msg.header(h_MinSE).value();
 
                InfoLog( << "about to re-send request with new session expiration time" );
                DebugLog( << getCreator()->getLastRequest() );
