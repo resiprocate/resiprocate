@@ -212,8 +212,8 @@ defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262");
 // !rwm!  WHO CARES!!!! Comments are evil
 defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
-defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft");
-defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft");
+defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
+defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 
 //====================
 // CallId:
