@@ -299,6 +299,13 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
    
+   Dictionary::iterator pos = mHttpParams.find("aclUri");
+   if (pos != mHttpParams.end()) // found 
+   {
+      Data acl  = pos->second;
+      mStore.mAclStore.addAcl(acl);
+   }   
+   
    s << 
       "      <form id=\"addRouteForm\" method=\"get\" action=\"acls.html\" name=\"addRouteForm\">" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
@@ -722,6 +729,7 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
       Data key = pos->second;
 
       // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
+      DebugLog( << "Creating page to edit route " << key );
       
       s << "<p>Editing Record with matching pattern: " << mStore.mRouteStore.getRoutePattern(key) << "</p>" << endl;      
 
@@ -963,7 +971,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "          <br>" << endl << 
       "        </td></tr>" << endl;
 
-   int badUri = false;
+   int badUri = true;
    Uri uri;
    Data routeTestUri;
    
@@ -971,28 +979,27 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
    if (pos != mHttpParams.end()) // found it
    {
       routeTestUri = pos->second;
-   }
-   else
-   {
-      badUri=true;
-   }
-   
-   try 
-   {
-      uri = Uri(routeTestUri);
-   }
-   catch( BaseException& e )
-   {
-      try 
+      if ( routeTestUri  != "sip:" )
       {
-         uri = Uri( Data("sip:")+routeTestUri );
-      }
-      catch( BaseException& e )
-      {
-         badUri = true;
+         try 
+         {
+            uri = Uri(routeTestUri);
+            badUri=false;
+         }
+         catch( BaseException& e )
+         {
+            try 
+            {
+               uri = Uri( Data("sip:")+routeTestUri );
+               badUri=false;
+            }
+            catch( BaseException& e )
+            {
+            }
+         }
       }
    }
-   
+      
    // !cj! - TODO - shoudl input method and envent type to test 
    RouteStore::UriList routeList;
    if ( !badUri )
