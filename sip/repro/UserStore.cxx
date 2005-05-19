@@ -99,10 +99,21 @@ UserStore::eraseUser( const Key& key )
 }
 
 void
-UserStore::writeUser( const Key& originalKey, const AbstractDb::UserRecord& rec)
+UserStore::updateUser( const Key& originalKey, 
+                       const resip::Data& user, 
+                       const resip::Data& domain, 
+                       const resip::Data& realm, 
+                       const resip::Data& password, 
+                       const resip::Data& fullName,
+                       const resip::Data& emailAddress )
 {
-   Key newkey = buildKey(rec.user, rec.domain);
-   mDb.writeUser( originalKey, newkey, rec);
+   Key newkey = buildKey(user, domain);
+   
+   addUser( user,domain,realm,password,fullName,emailAddress);
+   if ( newkey != originalKey )
+   {
+      eraseUser(originalKey);
+   }
 }
 
 

@@ -26,10 +26,10 @@ ConfigStore::~ConfigStore()
 
       
 void 
-ConfigStore::add(const resip::Data& domain,
-               const int tlsPort )
+ConfigStore::addDomain(const resip::Data& domain,
+                       const int tlsPort )
 { 
-   InfoLog( << "Add config" );
+   InfoLog( << "Add domain to config " );
    
    AbstractDb::ConfigRecord rec;
    rec.mDomain = domain;
@@ -39,17 +39,17 @@ ConfigStore::add(const resip::Data& domain,
 }
 
       
-AbstractDb::ConfigRecordList 
+/*AbstractDb::ConfigRecordList 
 ConfigStore::getConfigs() const
 { 
    return mDb.getAllConfigs();
 }
-
+*/
 
 ConfigStore::DataList 
 ConfigStore::getDomains() const
 {  
-   AbstractDb::ConfigRecordList input = getConfigs();
+   AbstractDb::ConfigRecordList input = mDb.getAllConfigs();
    
    DataList result;
    result.reserve( input.size() );
@@ -63,8 +63,31 @@ ConfigStore::getDomains() const
 }
 
 
+int      
+ConfigStore::getTlsPort(const resip::Data& domain) const
+{ 
+   // this is a really lame way to implement - shoudl cache all the config data 
+
+   AbstractDb::ConfigRecordList input = mDb.getAllConfigs();
+   
+   DataList result;
+   result.reserve( input.size() );
+   
+   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
+        it != input.end(); it++)
+   {
+      if ( it->mDomain == domain )
+      {
+         return it->mTlsPort;
+      }
+   }
+   
+   return 0; 
+}
+
+
 void 
-ConfigStore::erase(const resip::Data& domain)
+ConfigStore::eraseDomain(const resip::Data& domain)
 {  
    mDb.eraseConfig( buildKey(domain) );
 }

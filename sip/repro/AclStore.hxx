@@ -17,14 +17,16 @@ class AclStore
       AclStore(AbstractDb& db);
       ~AclStore();
       
-      void add(const resip::Data& acl);
+      void addAcl(const resip::Data& acl);
       
-      AbstractDb::AclRecordList getAcls() const;
-      void erase(const resip::Data& acl);
+      DataList getAcls() const;
+
+      void eraseAcl(const resip::Data& acl);
       
    private:
       AbstractDb& mDb;  
-
+      DataList mAcl;
+      
       AbstractDb::Key buildKey(const resip::Data& acl) const;
 };
 
