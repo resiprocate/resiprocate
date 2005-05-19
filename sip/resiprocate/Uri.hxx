@@ -39,8 +39,8 @@ class Uri : public ParserCategory
       const Data& scheme() const {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
       int port() const {checkParsed(); return mPort;}
-      Data& password() const {checkParsed(); return mPassword;}
-      const Data& password() {checkParsed(); return mPassword;}
+      Data& password() {checkParsed(); return mPassword;}
+      const Data& password() const {checkParsed(); return mPassword;}
 
       bool hasEmbedded() const;
       SipMessage& embedded();
