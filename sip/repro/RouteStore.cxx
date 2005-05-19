@@ -164,6 +164,7 @@ RouteStore::findKey(const Key& key)
       {
          return true; // found the key 
       }
+      mCursor++;
    }
    return false; // key was not found 
 }
