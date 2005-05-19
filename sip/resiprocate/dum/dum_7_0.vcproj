@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding = "Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="dum"
 	ProjectGUID="{31B0654F-E08E-405F-909F-80F86CB14B9D}"
-	RootNamespace="dum"
 	Keyword="ManagedCProj">
 	<Platforms>
 		<Platform
@@ -33,7 +32,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/dum.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -67,7 +67,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/dum.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -80,7 +81,6 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
 		</Configuration>
 	</Configurations>
 	<References>
