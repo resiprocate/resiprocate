@@ -35,6 +35,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "repro", "repro\repro_7_1.vc
 		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basicCall", "resiprocate\dum\test\basicCall_7_1.vcproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -129,6 +133,18 @@ Global
 		{9D8D2649-213F-49D3-A8B0-C1849C611654}.SSL-Debug.Build.0 = Debug|Win32
 		{9D8D2649-213F-49D3-A8B0-C1849C611654}.SSL-Release.ActiveCfg = Release|Win32
 		{9D8D2649-213F-49D3-A8B0-C1849C611654}.SSL-Release.Build.0 = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Debug.ActiveCfg = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Debug.Build.0 = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Debug Static.ActiveCfg = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Debug Static.Build.0 = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Release.ActiveCfg = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Release.Build.0 = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Release Static.ActiveCfg = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.Release Static.Build.0 = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Debug.ActiveCfg = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Debug.Build.0 = Debug|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.ActiveCfg = Release|Win32
+		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
