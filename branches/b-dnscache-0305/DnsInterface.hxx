@@ -42,11 +42,6 @@ class DnsInterface : public ExternalDnsHandler
 
       virtual ~DnsInterface();
 
-      void lookupARecords(const Data& target, DnsResult* dres);
-      void lookupAAAARecords(const Data& target, DnsResult* dres);
-      void lookupNAPTR(const Data& target, DnsResult* dres);
-      void lookupSRV(const Data& target, DnsResult* dres);
-      
       Data errorMessage(int status);
 
       // set the supported set of types that a UAC wishes to use
@@ -93,13 +88,6 @@ class DnsInterface : public ExternalDnsHandler
 //      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
 //      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
 
-      //callbacks for mDnsProvider
-      virtual void handle_NAPTR(ExternalDnsRawResult res);
-      virtual void handle_SRV(ExternalDnsRawResult res);
-      virtual void handle_AAAA(ExternalDnsRawResult res);
-      virtual void handle_host(ExternalDnsHostResult res);
-
-      // new version
       void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
       virtual void handleDnsRaw(ExternalDnsRawResult);
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);

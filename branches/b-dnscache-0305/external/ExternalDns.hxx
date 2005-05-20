@@ -18,13 +18,6 @@ class ExternalDns
       //returns 0 for success, otherwise message can be pulled from errorMessage
       virtual int init() = 0; 
                           
-      //null terminated strings; lifespan of strings passed in is not guaranteed
-      //beyond the duration of the call.  
-      virtual void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
-      virtual void lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
-      virtual void lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
-      virtual void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
-
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;
 
@@ -42,7 +35,6 @@ class ExternalDns
       
       virtual ~ExternalDns()  {}
 
-      // new version
       virtual void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData) = 0;
       
 };
@@ -93,10 +85,10 @@ class ExternalDnsHandler
       //underscores are against convention, but pretty impossible to read
       //otherwise. ?dcm? -- results stack or heap? 
       //the free routines can be dealt w/ iheritence instead if pointers are used
-      virtual void handle_NAPTR(ExternalDnsRawResult res) = 0;
-      virtual void handle_SRV(ExternalDnsRawResult res) = 0;
-      virtual void handle_AAAA(ExternalDnsRawResult res) = 0;
-      virtual void handle_host(ExternalDnsHostResult res) = 0;
+      //virtual void handle_NAPTR(ExternalDnsRawResult res) = 0;
+      //virtual void handle_SRV(ExternalDnsRawResult res) = 0;
+      //virtual void handle_AAAA(ExternalDnsRawResult res) = 0;
+      //virtual void handle_host(ExternalDnsHostResult res) = 0;
 
       // new version
       virtual void handleDnsRaw(ExternalDnsRawResult res) = 0;
