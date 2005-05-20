@@ -59,41 +59,6 @@ RRVip::~RRVip()
    }
 }
 
-void RRVip::addListener(int rrType, const Listener* listener)
-{
-   ListenerMap::iterator it = mListenerMap.find(rrType);
-   if (it == mListenerMap.end())
-   {
-      Listeners lst;
-      lst.push_back(listener);
-      mListenerMap.insert(ListenerMap::value_type(rrType, lst));
-   }
-   else
-   {
-      for (Listeners::iterator itr = it->second.begin(); itr != it->second.end(); ++itr)
-      {
-         if ((*itr) == listener) return;
-      }
-      it->second.push_back(listener);
-   }
-}
-
-void RRVip::removeListener(int rrType, const Listener* listener)
-{
-   ListenerMap::iterator it = mListenerMap.find(rrType);
-   if (it != mListenerMap.end())
-   {
-      for (Listeners::iterator itr = it->second.begin(); itr != it->second.end(); ++itr)
-      {
-         if ((*itr) == listener)
-         {
-            it->second.erase(itr);
-            break;
-         }
-      }
-   }
-}
-
 void RRVip::vip(const Data& target,
                 int rrType,
                 const Data& vip)
@@ -123,14 +88,6 @@ void RRVip::removeVip(const Data& target,
       Data vip = it->second->vip();
       delete (*it).second;
       mTransforms.erase(it);
-      ListenerMap::iterator it = mListenerMap.find(rrType);
-      if (it != mListenerMap.end())
-      {
-         for (Listeners::const_iterator itL = (*it).second.begin(); itL != (*it).second.end(); ++itL)
-         {
-            (*itL)->onVipInvalidated(rrType, vip);
-         }
-      }
    }
 }
 

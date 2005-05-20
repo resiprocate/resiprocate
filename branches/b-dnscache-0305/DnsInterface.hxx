@@ -102,6 +102,8 @@ class DnsInterface : public ExternalDnsHandler
       // new version
       void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
       virtual void handleDnsRaw(ExternalDnsRawResult);
+      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()

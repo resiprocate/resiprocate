@@ -59,6 +59,9 @@ class TransportSelector
 
       unsigned int getTimeTillNextProcessMS();
       Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
+
+      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
