@@ -1,9 +1,7 @@
 #if !defined(resip_WinCompat_hxx)
 #define resip_WinCompat_hxx
 
-#ifdef WIN32
 #include <Iphlpapi.h>
-#endif
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Mutex.hxx"
@@ -48,7 +46,6 @@ class WinCompat
 
       static Tuple WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination);
       static Tuple WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination);
-#ifdef WIN32      
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
 
@@ -57,7 +54,6 @@ class WinCompat
       GetBestInterfaceExProc getBestInterfaceEx;
       GetAdaptersAddressesProc getAdaptersAddresses;
       bool loadLibraryAlreadyFailed;
-#endif
 };
 
 }
