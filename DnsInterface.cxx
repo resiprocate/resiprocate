@@ -66,30 +66,6 @@ DnsInterface::~DnsInterface()
    delete mDnsStub;
 }
 
-void 
-DnsInterface::lookupARecords(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupARecords(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupAAAARecords(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupAAAARecords(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupNAPTR(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupNAPTR(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupSRV(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupSRV(target.c_str(), this, dres);
-}
-
 Data 
 DnsInterface::errorMessage(int status)
 {
@@ -197,34 +173,6 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
 //    //DnsResult* result = new DnsResult(*this);
 //    return NULL;
 // }
-
-void 
-DnsInterface::handle_NAPTR(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processNAPTR(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_SRV(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processSRV(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_AAAA(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processAAAA(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_host(ExternalDnsHostResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processHost(res.errorCode(), res.host);
-   mDnsProvider->freeResult(res);
-}
 
 //?dcm? -- why is this here?
 DnsHandler::~DnsHandler()
