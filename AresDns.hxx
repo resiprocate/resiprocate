@@ -20,10 +20,6 @@ class AresDns : public ExternalDns
       virtual ~AresDns();
 
       virtual int init(); 
-      void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData);
-      void lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData);
-      void lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData);
-      void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData);    
 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
@@ -35,23 +31,15 @@ class AresDns : public ExternalDns
 
       virtual char* errorMessage(long errorCode);
 
-      // new version
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
    private:
-      static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresHostCallback(void *arg, int status, struct hostent* result);
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
-
-	  struct ares_channeldata* mChannel;
-
-      // new version
       static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+	  struct ares_channeldata* mChannel;
 };
    
 }
