@@ -31,6 +31,8 @@ class WinCompat
          WindowsUnknown
       };
 
+      static Version getVersion();
+
       class Exception : public BaseException
       {
          public:
@@ -38,7 +40,6 @@ class WinCompat
             const char* name() const { return "TransportException"; }
       };
 
-      static Version getVersion();
       static Tuple determineSourceInterface(const Tuple& destination);
 
    private:
@@ -47,7 +48,7 @@ class WinCompat
 
       static Tuple WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination);
       static Tuple WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination);
-      
+#ifdef WIN32      
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
 
@@ -56,7 +57,7 @@ class WinCompat
       GetBestInterfaceExProc getBestInterfaceEx;
       GetAdaptersAddressesProc getAdaptersAddresses;
       bool loadLibraryAlreadyFailed;
-
+#endif
 };
 
 }
