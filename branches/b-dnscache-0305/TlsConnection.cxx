@@ -103,10 +103,6 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
 
    mState = mServer ? Accepting : Connecting;
 
-   if (checkState() == Broken)
-   {
-      throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
-   }
 #endif // USE_SSL   
 }
 
@@ -156,24 +152,24 @@ TlsConnection::checkState()
          int err = SSL_get_error(mSsl,ok);
          char buf[256];
          ERR_error_string_n(err,buf,sizeof(buf));
-         DebugLog( << "TLS error in " 
+         StackLog( << "TLS error in " 
                    << (char*)( (mState == Accepting) ? (char*)"accept" : (char*)"connect" )
                    << " ok=" << ok << " err=" << err << " " << buf );
           
          switch (err)
          {
             case SSL_ERROR_WANT_READ:
-               DebugLog( << "TLS connection want read" );
+               //StackLog( << "TLS connection want read" );
                return mState;
             case SSL_ERROR_WANT_WRITE:
-               DebugLog( << "TLS connection want write" );
+               //StackLog( << "TLS connection want write" );
                return mState;
             case SSL_ERROR_WANT_CONNECT:
-               DebugLog( << "TLS connection want connect" );
+               //StackLog( << "TLS connection want connect" );
                return mState;
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
             case SSL_ERROR_WANT_ACCEPT:
-               DebugLog( << "TLS connection want accept" );
+               //StackLog( << "TLS connection want accept" );
                return mState;
 #endif
          }
@@ -225,7 +221,7 @@ TlsConnection::checkState()
             char buf[256];
             ERR_error_string_n(code,buf,sizeof(buf));
             ErrLog( << buf  );
-            InfoLog( << "Error code = " 
+            ErrLog( << "Error code = " 
                      << code << " file=" << file << " line=" << line );
          }
          
@@ -252,10 +248,10 @@ TlsConnection::checkState()
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
-            DebugLog( << "TLS handshake want read" );
+            StackLog( << "TLS handshake want read" );
             return mState;
          case SSL_ERROR_WANT_WRITE:
-            DebugLog( << "TLS handshake want write" );
+            StackLog( << "TLS handshake want write" );
             return mState;
          default:
             ErrLog( << "TLS handshake failed "
@@ -336,6 +332,8 @@ TlsConnection::read(char* buf, int count )
    }
    
    int bytesRead = SSL_read(mSsl,buf,count);
+   StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, bytesRead) << "]");
+   
    if (bytesRead <= 0 )
    {
       int err = SSL_get_error(mSsl,bytesRead);
