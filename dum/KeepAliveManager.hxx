@@ -22,13 +22,13 @@ class KeepAliveManager : public DnsStub::BlacklistListener
       typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
       KeepAliveManager() {}
-      ~KeepAliveManager();
+      virtual ~KeepAliveManager();
       void setDialogUsageManager(DialogUsageManager* dum);
       void add(const Tuple& target, int keepAliveInterval);
       void remove(const Tuple& target);
       void process(KeepAliveTimeout& timeout);
 
-      void onBlacklisted(int rrType, const Data& target);
+      virtual void onBlacklisted(int rrType, const Data& target);
 
    protected:
       DialogUsageManager* mDum;
