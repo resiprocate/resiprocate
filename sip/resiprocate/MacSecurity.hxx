@@ -23,6 +23,15 @@ class MacSecurity : public Security
       // load root certificates into memory
       virtual void preload();
 
+      // we need to stub out these functions since we don't
+      // dynamically add or remove certificates on the mac
+      virtual void onReadPEM(const Data&, PEMType, Data&) const
+      { }
+      virtual void onWritePEM(const Data&, PEMType, const Data&) const
+      { }
+      virtual void onRemovePEM(const Data&, PEMType) const
+      { }
+
    protected:
 
       // Opens a search handle to certificates store in
