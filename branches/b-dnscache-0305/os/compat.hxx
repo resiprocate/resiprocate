@@ -96,6 +96,10 @@ typedef unsigned int u_int32_t;
 #define T_AAAA 28
 #endif
 
+#if !defined(T_A)
+#define T_A 1
+#endif
+
 namespace resip
 {
 
