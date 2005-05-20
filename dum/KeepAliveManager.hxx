@@ -9,8 +9,9 @@ namespace resip
 
 class KeepAliveTimeout;
 class DialogUsageManager;
+class DnsStub;
 
-class KeepAliveManager
+class KeepAliveManager : public DnsStub::BlacklistListener
 {
    public:
       struct NetworkAssociationInfo
@@ -21,10 +22,13 @@ class KeepAliveManager
       typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
       KeepAliveManager() {}
-      void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
+      ~KeepAliveManager();
+      void setDialogUsageManager(DialogUsageManager* dum);
       void add(const Tuple& target, int keepAliveInterval);
       void remove(const Tuple& target);
       void process(KeepAliveTimeout& timeout);
+
+      void onBlacklisted(int rrType, const Data& target);
 
    protected:
       DialogUsageManager* mDum;
