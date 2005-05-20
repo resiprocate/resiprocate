@@ -160,7 +160,7 @@ WinSecurity::getCerts(MsCertStoreType eType)
    //retrive only certificates
    HCERTSTORE storeHandle = NULL;
    storeHandle = openSystemCertStore(certStoreTypes(eType));
-   int i;
+   int i = 0;
    if(NULL != storeHandle)
    {
       PCCERT_CONTEXT   pCertContext = NULL;  
