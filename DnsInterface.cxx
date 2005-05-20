@@ -244,6 +244,17 @@ DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
    mDnsProvider->freeResult(res);
 }
 
+void
+DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDnsStub->registerBlacklistListener(rrType, listener);
+}
+
+void DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDnsStub->unregisterBlacklistListener(rrType, listener);
+}
+
 //  Copyright (c) 2003, Jason Fischl 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
