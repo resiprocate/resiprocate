@@ -1,14 +1,30 @@
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/KeepAliveMessage.hxx"
 #include "resiprocate/dum/KeepAliveManager.hxx"
 #include "resiprocate/dum/KeepAliveTimeout.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipStack.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
+
+void KeepAliveManager::setDialogUsageManager(DialogUsageManager* dum)
+{
+   assert(dum);
+   mDum = dum;
+   mDum->getSipStack().registerBlacklistListener(T_A, this);
+   mDum->getSipStack().registerBlacklistListener(T_AAAA, this);
+}
+
+KeepAliveManager::~KeepAliveManager()
+{
+   mDum->getSipStack().unregisterBlacklistListener(T_A, this);
+   mDum->getSipStack().unregisterBlacklistListener(T_AAAA, this);
+}
 
 void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
 {
@@ -59,6 +75,19 @@ void KeepAliveManager::process(KeepAliveTimeout& timeout)
       KeepAliveTimeout t(it->first);
       stack.post(t, it->second.keepAliveInterval, mDum);
       InfoLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
+   }
+}
+
+void KeepAliveManager::onBlacklisted(int rrType, const Data& target)
+{
+   switch (rrType)
+   {
+      case T_A:
+      case T_AAAA:
+         InfoLog(<< target << "has been blacklisted.");
+         break;
+      default:
+         break;
    }
 }
 
