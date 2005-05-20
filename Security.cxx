@@ -432,6 +432,10 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
    {
       Data certPEM;
       onReadPEM(aor, type, certPEM);
+      if (certPEM.empty())
+      {
+         return false;
+      }
       BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
    }
