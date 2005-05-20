@@ -98,6 +98,7 @@ WinCompat::getVersion()
 #endif
 }
 
+#ifdef WIN32
 
 WinCompat* WinCompat::mInstance = 0;
 
@@ -299,7 +300,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
    return Tuple();
 }
 
-
+#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
