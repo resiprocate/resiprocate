@@ -1,7 +1,5 @@
-#if defined(WIN32)
 #include <Winsock2.h>
 #include <Iphlpapi.h>
-#endif
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/WinCompat.hxx"
@@ -22,7 +20,6 @@ WinCompat::Exception::Exception(const Data& msg, const Data& file, const int lin
 WinCompat::Version
 WinCompat::getVersion()
 {
-#if defined(WIN32)
    OSVERSIONINFOEX osvi;
    BOOL bOsVersionInfoEx;
 
@@ -93,12 +90,8 @@ WinCompat::getVersion()
    }
 
    return WinCompat::WindowsUnknown;
-#else
-   return WinCompat::NotWindows;
-#endif
 }
 
-#ifdef WIN32
 
 WinCompat* WinCompat::mInstance = 0;
 
@@ -120,7 +113,7 @@ WinCompat::instance()
 
 
 WinCompat::WinCompat() :
-loadLibraryAlreadyFailed(false), getBestInterfaceEx(0), getAdaptersAddresses(0)
+   loadLibraryAlreadyFailed(false), getBestInterfaceEx(0), getAdaptersAddresses(0)
 {
 
    // Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's.
@@ -277,7 +270,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 //        you can define NO_IPHLPAPI so that you are not required to link with this 
 //        library. (SLG)
 
-#if defined(WIN32) && !defined(NO_IPHLPAPI)
+#if !defined(NO_IPHLPAPI)
 #if defined(USE_IPV6)
    try
    {
@@ -300,7 +293,6 @@ WinCompat::determineSourceInterface(const Tuple& destination)
    return Tuple();
 }
 
-#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
