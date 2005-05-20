@@ -827,6 +827,17 @@ TransportSelector::getTimeTillNextProcessMS()
    }
 }
 
+void
+TransportSelector::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDns.registerBlacklistListener(rrType, listener);
+}
+
+void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDns.unregisterBlacklistListener(rrType, listener);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
