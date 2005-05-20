@@ -56,13 +56,19 @@ class DnsStub
    public:
       typedef RRCache::Protocol Protocol;
       typedef std::vector<Data> DataArr;
-
       typedef std::vector<DnsResourceRecord*> DnsResourceRecordsByPtr;
+
       class ResultTransform
       {
          public:
             virtual ~ResultTransform() {}
             virtual void transform(const Data& target, int rrType, DnsResourceRecordsByPtr& src) = 0;
+      };
+
+      class BlacklistListener
+      {
+         public:
+            virtual void onBlacklisted(int rrType, const Data& target)= 0;
       };
 
       class DnsStubException : public BaseException
@@ -81,6 +87,8 @@ class DnsStub
 
       void setResultTransform(ResultTransform*);
       void removeResultTransform();
+      void registerBlacklistListener(int rrType, BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, BlacklistListener*);
 
       template<class QueryType> void lookup(const Data& target, int proto, DnsResultSink* sink)
       {
@@ -268,6 +276,10 @@ class DnsStub
       DnsInterface* mDns;
       ResultTransform* mTransform;
       std::set<Query*> mQueries;
+
+      typedef std::list<BlacklistListener*> Listeners;
+      typedef std::map<int, Listeners> ListenerMap;
+      ListenerMap mListenerMap;
 };
 
 typedef DnsStub::Protocol Protocol;

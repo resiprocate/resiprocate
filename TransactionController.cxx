@@ -163,6 +163,17 @@ TransactionController::getTimerQueueSize() const
    return mTimers.size();
 }
 
+void
+TransactionController::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* l)
+{
+   mTransportSelector.registerBlacklistListener(rrType, l);
+}
+
+void TransactionController::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* l)
+{
+   mTransportSelector.unregisterBlacklistListener(rrType, l);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

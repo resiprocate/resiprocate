@@ -9,17 +9,9 @@ namespace resip
 class RRVip : public DnsStub::ResultTransform
 {
    public:
-      class Listener
-      {
-         public:
-            virtual void onVipInvalidated(int rrType, const Data& vip) const = 0;
-      };
-
       RRVip();
       ~RRVip();
 
-      void addListener(int rrType, const Listener*);
-      void removeListener(int rrType, const Listener*);
       void vip(const Data& target, int rrType, const Data& vip);
       void removeVip(const Data& target, int rrType);
       void transform(const Data& target, int rrType, std::vector<DnsResourceRecord*>&);
@@ -97,11 +89,7 @@ class RRVip : public DnsStub::ResultTransform
       TransformFactoryMap  mFactories;
 
       typedef std::map<MapKey, Transform*> TransformMap;
-      TransformMap mTransforms;
-
-      typedef std::list<const Listener*> Listeners;
-      typedef std::map<int, Listeners> ListenerMap;
-      ListenerMap mListenerMap;
+      TransformMap mTransforms;  
 };
 
 }
