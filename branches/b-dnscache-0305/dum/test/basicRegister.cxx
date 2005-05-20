@@ -2,145 +2,121 @@
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Subsystem.hxx"
-#include "resiprocate/dum/AppDialogSet.hxx"
-#include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/KeepAliveManager.hxx"
 
+#ifdef WIN32
+#include "resiprocate/WinSecurity.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
 using namespace std;
 
-class RegisterAppDialogSet : public AppDialogSet
+class ClientHandler : public ClientRegistrationHandler
 {
    public:
-      RegisterAppDialogSet(DialogUsageManager& dum) : AppDialogSet(dum) 
-      {}      
-};
-
-   
-
-class Client : public ClientRegistrationHandler
-{
-   public:
-      Client() : done(false), removing(true) {}
+      ClientHandler() : done(false) {}
 
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {
-         InfoLog( << "Client::Success: " << endl << response );
-         if (removing)
-         {
-            removing = false;             
+         InfoLog( << "ClientHandler::onSuccess: " << endl );
+
+         cerr << "Pausing before unregister" << endl;
+         
 #ifdef WIN32
-            Sleep(2000);
+         Sleep(2000);
 #else
-            sleep(5);
+         sleep(5);
 #endif
-            //ClientRegistration* foo = h.get();          
-            h->removeAll();
-         }
-         else
-         {             
-            done = true;
-         }          
+         h->removeAll();
       }
 
       virtual void onRemoved(ClientRegistrationHandle)
       {
-         InfoLog ( << "Client::onRemoved ");
+         InfoLog ( << "ClientHandler::onRemoved ");
+         done = true;
       }
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
       {
-         InfoLog ( << "Client::onFailure: " << response );
-         done = true;
+         InfoLog ( << "ClientHandler::onFailure: " << response );
       }
 
       virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)
       {
-         return 0;
+         InfoLog ( << "ClientHandler:onRequestRetry");
+         return -1;
       }
       
-
       bool done;
-      bool removing;      
 };
 
-/*
-  class RegistrationServer : public ServerRegistrationHandler
-  {
-  public:
-  RegistrationServer() : done(false) {}
-  virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
-      
-  /// called when one of the contacts is removed
-  virtual void onRemoveOne(ServerRegistrationHandle, const SipMessage& reg)=0;
-      
-  /// Called when all the contacts are removed 
-  virtual void onRemoveAll(ServerRegistrationHandle, const SipMessage& reg)=0;
-      
-  /// Called when a new contact is added. This is after authentication has
-  /// all sucseeded
-  virtual void onAdd(ServerRegistrationHandle, const SipMessage& reg)=0;
 
-  /// Called when an registration expires 
-  virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
-      
-  private:
-  bool done;
-  };
-*/
 
 int 
 main (int argc, char** argv)
 {
-   int level=(int)Log::Debug;
-   if (argc >1 ) level = atoi(argv[1]);
 
-   Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
+   if ( argc < 3 ) {
+      cout << "usage: " << argv[0] << " sip:user passwd\n";
+      return 0;
+   }
 
-   Client client;
+   Log::initialize(Log::Cout, Log::Stack, argv[0]);
+
+   NameAddr userAor(argv[1]);
+   Data passwd(argv[2]);
+
+#ifdef WIN32
+   WinSecurity* security = new WinSecurity;
+   SipStack stack(security);
+#else
+#ifdef USE_SSL
+   Security* security = new Security;
+   SipStack stack(security);
+#else
+   SipStack stack;
+#endif
+#endif
+
+   DialogUsageManager clientDum(stack);
    MasterProfile profile;   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
+   ClientHandler clientHandler;
 
-   SipStack stack;
-   DialogUsageManager clientDum(stack);
-   clientDum.addTransport(UDP, 15066);
+   clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V4);
+   // clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
+   clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
+   // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
+   clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
+   // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
    clientDum.setMasterProfile(&profile);
+   clientDum.setClientRegistrationHandler(&clientHandler);
+   clientDum.setClientAuthManager(clientAuth);
+   clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
 
    // keep alive test.
    auto_ptr<KeepAliveManager> keepAlive(new KeepAliveManager);
    clientDum.setKeepAliveManager(keepAlive);
 
-   clientDum.setClientRegistrationHandler(&client);
-   clientDum.setClientAuthManager(clientAuth);
-   clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
+   clientDum.getMasterProfile()->setDefaultFrom(userAor);
+   profile.setDigestCredential(userAor.uri().host(),
+                                     userAor.uri().user(),
+                                     passwd);
 
-   NameAddr from("sip:derek@foo.net");
-   clientDum.getMasterProfile()->setDefaultFrom(from);
-
-
-   profile.setDigestCredential( "foo.net", "derek", "derek");
-   
-
-   SipMessage & regMessage = clientDum.makeRegistration(from, new RegisterAppDialogSet(clientDum));
+   SipMessage & regMessage = clientDum.makeRegistration(userAor);
    NameAddr contact;
-//   contact.uri().user() = "13015604286";   
-//   regMessage.header(h_Contacts).push_back(contact);   
 
-   InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
 
    int n = 0;
-   while ( !client.done )
-
+   while ( !clientHandler.done )
    {
       FdSet fdset;
 
@@ -150,7 +126,9 @@ main (int argc, char** argv)
 
       stack.process(fdset);
       while(clientDum.process());
-     if (n == 1000) client.done = true;
+
+      if (n == 1000) clientHandler.done = true;
+
       if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
    }   
    return 0;
