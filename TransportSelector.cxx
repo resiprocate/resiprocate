@@ -7,8 +7,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#else
-#include "resiprocate/os/WinCompat.hxx"
 #endif
 
 #include "resiprocate/NameAddr.hxx"
@@ -28,6 +26,10 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+
+#ifdef WIN32
+#include "resiprocate/os/WinCompat.hxx"
+#endif
 
 #include <sys/types.h>
 
