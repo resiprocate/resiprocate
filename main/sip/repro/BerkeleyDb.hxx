@@ -3,6 +3,9 @@
 
 #ifdef WIN32
 #include <db_cxx.h>
+#elif HAVE_CONFIG_H
+#include "config.hxx"
+#include DB_HEADER
 #else 
 #include <db4/db_cxx.h>
 #endif
