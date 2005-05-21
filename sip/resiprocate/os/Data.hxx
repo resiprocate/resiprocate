@@ -14,7 +14,7 @@
 #endif
 
 #if !defined(RESIP_DATA_LOCAL_SIZE)
-#define RESIP_DATA_LOCAL_SIZE 128
+#define RESIP_DATA_LOCAL_SIZE 16
 #endif
 
 class TestData;
@@ -191,7 +191,7 @@ class Data
       // Larger LocalAlloc makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
 
-      enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE};
+      enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE };
       char mPreBuffer[LocalAlloc+1];
 
       size_type mSize;
