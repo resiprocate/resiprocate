@@ -3,11 +3,16 @@
 
 #ifdef WIN32
 #include <db_cxx.h>
+#elif HAVE_CONFIG_H
+#include "config.hxx"
+#include DB_HEADER
 #else 
 #include <db4/db_cxx.h>
 #endif
 
 #include <cassert>
+
+#ifdef USE_MYSQL
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -414,6 +419,7 @@ MySqlDb::sqlWhere( const AbstractDb::Key& key) const
    return ret;
 }
 
+#endif // USE_MYSQL
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
