@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.hxx>
+#endif
 
 #if HAVE_POPT_H
 #include <popt.h>
