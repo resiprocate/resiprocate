@@ -72,27 +72,30 @@ main(int argc, char* argv[])
    SipStack sender;
 //   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
 //   sender.addTransport(TCP, 25060, version);
+
+   int senderPort = 25070 + rand()& 0x7fff;   
    if (bindAddr)
    {
       InfoLog(<<"Binding to address: " << bindAddr);
-      sender.addTransport(UDP, 25070,version,bindAddr);
-      sender.addTransport(TCP, 25070,version,bindAddr);
+      sender.addTransport(UDP, senderPort, version,bindAddr);
+      sender.addTransport(TCP, senderPort, version,bindAddr);
    }
    else
    {
-      sender.addTransport(UDP, 25070, version);
-      sender.addTransport(TCP, 25070, version);
+      sender.addTransport(UDP, senderPort, version);
+      sender.addTransport(TCP, senderPort, version);
    }
 
-   receiver.addTransport(UDP, 25080, version);
-   receiver.addTransport(TCP, 25080, version);
+   int registrarPort = 25080 + rand()& 0x7fff;   
+   receiver.addTransport(UDP, registrarPort, version);
+   receiver.addTransport(TCP, registrarPort, version);
 
 
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = bindAddr?bindAddr:DnsUtil::getLocalHostName();
-   target.uri().port() = 25080;
+   target.uri().host() = bindAddr ? bindAddr :DnsUtil::getLocalHostName();
+   target.uri().port() = registrarPort;
    target.uri().param(p_transport) = proto;
   
    NameAddr contact;
@@ -104,7 +107,7 @@ main(int argc, char* argv[])
 #endif
 
    NameAddr from = target;
-   from.uri().port() = 25070;
+   from.uri().port() = senderPort;
    
    UInt64 startTime = Timer::getTimeMs();
    int outstanding=0;
@@ -118,9 +121,9 @@ main(int argc, char* argv[])
       while (sent < runs && outstanding < window)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
-         target.uri().port() = 25080; // +(sent%window);
+         target.uri().port() = registrarPort; // +(sent%window);
          SipMessage* next = Helper::makeRegister( target, from, contact);
-         next->header(h_Vias).front().sentPort() = 25070;
+         next->header(h_Vias).front().sentPort() = senderPort;
          sender.send(*next);
          outstanding++;
          sent++;
