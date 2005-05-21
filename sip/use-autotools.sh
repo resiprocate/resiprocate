@@ -15,6 +15,11 @@ AUTOTOOLS_CONFLICTS="
 	resiprocate/config.hxx.in
         missing 
         aclocal.m4
+	repro/Makefile
+	repro/Makefile.in
+	repro/config.hxx
+	repro/config.hxx.in
+	repro/aclocal.m4
 "
 
 # These are files that we care about and that
@@ -30,6 +35,10 @@ AUTOTOOLS_USED="Makefile.am
                 configure.ac 
                 acinclude.m4
                 autogen.sh
+		repro/Makefile.am
+		repro/acinclude.m4
+		repro/configure.ac
+		repro/autogen.sh
 
             "
 
