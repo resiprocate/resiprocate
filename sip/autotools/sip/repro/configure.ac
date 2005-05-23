@@ -6,7 +6,7 @@ AC_INIT([repro], [0.1], [resiprocate-devel@lists.sipfoundry.org])
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([repro.cxx])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADER([config.hxx])
 
 # Checks for programs.
 AC_LANG(C++)
