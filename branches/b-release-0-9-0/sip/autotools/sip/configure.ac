@@ -73,6 +73,7 @@ AC_CHECK_HEADERS([sys/sockio.h netinet/in.h sys/socket.h ])
 AC_MSG_CHECKING([for libpopt])
 
 popt_incdirs="/usr/include /opt/include /usr/pkg/include /usr/local/include /sw/include"
+popt_incdir=NONE
 for dir in $popt_incdirs; do
   try="ls -1 $dir/popt.h"
   if test "`eval $try 2> /dev/null`"; then
