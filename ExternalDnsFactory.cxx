@@ -1,25 +1,13 @@
-//#define USE_LOCAL_DNS 
-
-#ifdef USE_LOCAL_DNS
-#include "resiprocate/LocalDns.hxx"
-#else
 #include "resiprocate/AresDns.hxx"
-#endif
-
 #include "resiprocate/ExternalDnsFactory.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
-
 
 using namespace resip;
 
 ExternalDns* 
 ExternalDnsFactory::createExternalDns()
 {
-#ifdef USE_LOCAL_DNS
-   return new LocalDns();
-#else
    return new AresDns();
-#endif
 }
 
 /* ====================================================================
