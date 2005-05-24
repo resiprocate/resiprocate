@@ -24,7 +24,7 @@
 "
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6;USE_WHITELIST"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -74,7 +74,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6;USE_WHITELIST"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -535,9 +535,6 @@
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
-			</File>
-			<File
-				RelativePath=".\LocalDns.cxx">
 			</File>
 			<File
 				RelativePath="os\Lock.cxx">
@@ -1103,9 +1100,6 @@
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
-			</File>
-			<File
-				RelativePath=".\LocalDns.hxx">
 			</File>
 			<File
 				RelativePath="os\Lock.hxx">
