@@ -22,7 +22,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
@@ -63,7 +63,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6"
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="TRUE"
