@@ -765,9 +765,6 @@
 				RelativePath=".\StringCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\Stun.cxx">
-			</File>
-			<File
 				RelativePath=".\Subscription.cxx">
 			</File>
 			<File
@@ -1307,9 +1304,6 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
-			</File>
-			<File
-				RelativePath=".\Stun.hxx">
 			</File>
 			<File
 				RelativePath="Subscription.hxx">
