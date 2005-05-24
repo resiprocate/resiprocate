@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	RootNamespace="resiprocate"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -23,7 +24,7 @@
 "
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -73,7 +74,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -281,10 +282,172 @@
 				RelativePath=".\DeprecatedDialog.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsAAAARecord.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\dns\DnsCnameRecord.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\dns\DnsHostRecord.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsNaptrRecord.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="DnsResult.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsSrvRecord.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\dns\DnsStub.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="os\DnsUtil.cxx">
@@ -467,6 +630,33 @@
 				RelativePath="QopParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\QueryTypes.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
@@ -489,6 +679,42 @@
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRCache.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRList.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RROverlay.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="SSL-Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\dns\RRVip.cxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.cxx">
@@ -537,6 +763,9 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\Stun.cxx">
 			</File>
 			<File
 				RelativePath=".\Subscription.cxx">
@@ -735,13 +964,34 @@
 				RelativePath=".\DeprecatedDialog.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsAAAARecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsCnameRecord.hxx">
+			</File>
+			<File
 				RelativePath=".\DnsHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsHostRecord.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsNaptrRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsResourceRecord.hxx">
+			</File>
+			<File
 				RelativePath="DnsResult.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsSrvRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsStub.hxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.hxx">
@@ -960,6 +1210,9 @@
 				RelativePath="QopParameter.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\QueryTypes.hxx">
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
@@ -982,6 +1235,18 @@
 			</File>
 			<File
 				RelativePath="RportParameter.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRCache.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRList.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RROverlay.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRVip.hxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.hxx">
@@ -1042,6 +1307,9 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\Stun.hxx">
 			</File>
 			<File
 				RelativePath="Subscription.hxx">

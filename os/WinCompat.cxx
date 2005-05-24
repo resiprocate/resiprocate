@@ -1,10 +1,13 @@
-#if defined(WIN32)
 #include <Winsock2.h>
 #include <Iphlpapi.h>
-#endif
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/WinCompat.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
 
 using namespace resip;
 
@@ -13,10 +16,10 @@ WinCompat::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
+
 WinCompat::Version
 WinCompat::getVersion()
 {
-#if defined(WIN32)
    OSVERSIONINFOEX osvi;
    BOOL bOsVersionInfoEx;
 
@@ -86,20 +89,130 @@ WinCompat::getVersion()
          return WinCompat::WindowsUnknown;
    }
 
-   return WindowsUnknown;
+   return WinCompat::WindowsUnknown;
+}
+
+
+WinCompat* WinCompat::mInstance = 0;
+
+
+WinCompat *
+WinCompat::instance()
+{
+   static Mutex mutex;
+   if (!mInstance)
+   {
+      Lock lock(mutex);
+      if (!mInstance)
+      {
+         mInstance = new WinCompat();
+      }
+   }
+   return mInstance;
+}
+
+
+WinCompat::WinCompat() :
+   loadLibraryAlreadyFailed(false), getBestInterfaceEx(0), getAdaptersAddresses(0)
+{
+
+   // Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's.
+   //        If you don't care about Win95/98/Me as your target system - then
+   //        you can define NO_IPHLPAPI so that you are not required to link with this 
+   //        library. (SLG)
+#if !defined (NO_IPHLPAPI)
+   // check to see if the GetAdaptersAddresses() is in the IPHLPAPI library
+   HINSTANCE hLib = LoadLibraryA("iphlpapi.dll");
+   if (hLib == NULL)
+   {
+      loadLibraryAlreadyFailed = true;
+      return;
+   }
+
+   getBestInterfaceEx = (GetBestInterfaceExProc) GetProcAddress(hLib, "GetBestInterfaceEx");
+   getAdaptersAddresses = (GetAdaptersAddressesProc) GetProcAddress(hLib, "GetAdaptersAddresses");
+   if (getAdaptersAddresses == NULL || getBestInterfaceEx == NULL)
+   {   
+      loadLibraryAlreadyFailed = true;
+      return;
+   }
 #else
-   return WinCompat::NotWindows;
+   loadLibraryAlreadyFailed = true;
 #endif
 }
 
+
+#if !defined(NO_IPHLPAPI)
 Tuple
-WinCompat::determineSourceInterface(const Tuple& destination)
+WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
 {
-// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
-//        statically.  If you don't care about Win95/98/Me as your target system - then
-//        you can define NO_IPHLPAPI so that you are not required to link with this 
-//        library. (SLG)
-#if defined(WIN32) && !defined(NO_IPHLPAPI)  
+   if (instance()->loadLibraryAlreadyFailed || (getVersion() < WinCompat::WindowsXP))
+   {
+      throw Exception("Library iphlpapi.dll with IPv6 support not available", __FILE__,__LINE__);
+   }
+
+   DWORD dwBestIfIndex;
+   const sockaddr* saddr = &destination.getSockaddr();
+
+   if ((instance()->getBestInterfaceEx)((sockaddr *)saddr, &dwBestIfIndex) != NO_ERROR)
+   {
+      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+   }
+
+   // Obtain the size of the structure
+   IP_ADAPTER_ADDRESSES *pAdapterAddresses;
+   DWORD dwRet, dwSize;
+   dwRet = (instance()->getAdaptersAddresses)(saddr->sa_family, 0, NULL, NULL, &dwSize);
+   if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
+   {
+      // Allocate memory
+      pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT,dwSize);
+      if (pAdapterAddresses == NULL) 
+      {
+         throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+      }
+
+      // Obtain network adapter information (IPv6)
+      DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST;
+      dwRet = (instance()->getAdaptersAddresses)(saddr->sa_family, flags, NULL, pAdapterAddresses, &dwSize);
+      if (dwRet != ERROR_SUCCESS) 
+      {
+         LocalFree(pAdapterAddresses);
+         throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+      } 
+      else 
+      {
+         IP_ADAPTER_ADDRESSES *AI;
+         int i;
+         for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
+         {
+             if (AI->FirstUnicastAddress != NULL) 
+             {
+                if (AI->FirstUnicastAddress->Address.lpSockaddr->sa_family != saddr->sa_family)
+                   continue;
+                if ((saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex) ||
+                   (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex))
+                {
+                   Tuple tuple(*AI->FirstUnicastAddress->Address.lpSockaddr, destination.getType());
+                   LocalFree(pAdapterAddresses);
+                   return(tuple);
+                }
+            } 
+         }
+      }
+      
+      LocalFree(pAdapterAddresses);
+      throw Exception("Can't find source address for destination", __FILE__,__LINE__);
+   }
+
+   return Tuple();
+}
+
+
+Tuple
+WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination)
+{
+
    // try to figure the best route to the destination
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
@@ -108,11 +221,11 @@ WinCompat::determineSourceInterface(const Tuple& destination)
    {
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
-   
+      
    // look throught the local ip address to find one that match the best route.
    PMIB_IPADDRTABLE  pIpAddrTable = NULL;
    ULONG addrSize = 0;
-      
+         
    // allocate the space
    if (ERROR_INSUFFICIENT_BUFFER == GetIpAddrTable(NULL, &addrSize, FALSE))
    {
@@ -122,33 +235,62 @@ WinCompat::determineSourceInterface(const Tuple& destination)
    {
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
-   
+     
    struct in_addr sourceIP;
    sourceIP.s_addr = 0;
-      
+         
    if (NO_ERROR == GetIpAddrTable(pIpAddrTable, &addrSize, FALSE)) 
    {
       // try to find a match
       for (DWORD i=0; i<pIpAddrTable->dwNumEntries; i++) 
       {
          MIB_IPADDRROW &entry = pIpAddrTable->table[i];
-	   
+   	   
          ULONG addr = pIpAddrTable->table[i].dwAddr;
          ULONG gw = bestRoute.dwForwardNextHop;
          if( (entry.dwIndex == bestRoute.dwForwardIfIndex) &&
-             (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) ) {
+             (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) )
+         {
             sourceIP.s_addr = entry.dwAddr;
             break;
          }
       }
    }
-
+   
    delete [] (char *) pIpAddrTable;
    return Tuple(sourceIP, 0, destination.getType());
+}
+#endif // !defined(NO_IPHLPAPI)
+
+Tuple
+WinCompat::determineSourceInterface(const Tuple& destination)
+{
+// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's.
+//        If you don't care about Win95/98/Me as your target system - then
+//        you can define NO_IPHLPAPI so that you are not required to link with this 
+//        library. (SLG)
+
+#if !defined(NO_IPHLPAPI)
+#if defined(USE_IPV6)
+   try
+   {
+      return  determineSourceInterfaceWithIPv6(destination);
+   }
+   catch (...)
+   {
+   }
+#endif
+   try
+   {
+      return determineSourceInterfaceWithoutIPv6(destination);
+   }
+   catch (...)
+   {
+   }
 #else
    assert(0);
-   return Tuple();
 #endif
+   return Tuple();
 }
 
 /* ====================================================================

@@ -171,6 +171,9 @@ class SipStack
       void registerTransactionUser(TransactionUser&);
       void requestTransactionUserShutdown(TransactionUser&);
       void unregisterTransactionUser(TransactionUser&);
+
+      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       
    private:
       void checkAsyncProcessHandler();

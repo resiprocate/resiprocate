@@ -159,7 +159,18 @@ SRC = \
 	\
 	\
 	external/HttpProvider.cxx \
-	external/HttpGetMessage.cxx
+	external/HttpGetMessage.cxx \
+	dns/DnsAAAARecord.cxx \
+	dns/DnsCnameRecord.cxx \
+	dns/DnsHostRecord.cxx \
+	dns/DnsNaptrRecord.cxx \
+	dns/DnsSrvRecord.cxx \
+	dns/DnsStub.cxx \
+	dns/RRCache.cxx \
+	dns/RRList.cxx \
+	dns/RRVip.cxx \
+	dns/QueryTypes.cxx \
+	dns/RROverlay.cxx \
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

@@ -1,6 +1,7 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
+
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
@@ -22,7 +23,7 @@
 #include <winsock2.h>
 #include <io.h>
 #endif
- 
+
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/time.h>
@@ -55,12 +56,14 @@ typedef long int ssize_t;
 #define __SCHAR_MAX__ 127
 #endif
 #endif
+
 #endif
 
 #if defined(__SUNPRO_CC)
 #if defined(_TIME_T)
  using std::time_t;
 #endif
+
 #include <time.h>
 #include <memory.h>
 #include <string.h>
@@ -93,6 +96,10 @@ typedef unsigned int u_int32_t;
 #define T_AAAA 28
 #endif
 
+#if !defined(T_A)
+#define T_A 1
+#endif
+
 namespace resip
 {
 
@@ -115,12 +122,17 @@ typedef size_t socklen_t;
 #endif
 }
 
+typedef unsigned char  UInt8;
+typedef unsigned short UInt16;
+typedef unsigned int   UInt32;
+
 #if defined( WIN32 )
 typedef unsigned __int64 UInt64;
 #else
 typedef unsigned long long UInt64;
 #endif
 
+typedef struct { unsigned char octet[16]; }  UInt128;
 
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,
@@ -128,15 +140,16 @@ typedef unsigned long long UInt64;
 //COMPLETE would allow template metaprogramming, template< template< > > tricks,
 //etc...REASONABLE should always be defined when COMPLETE is defined.
 
-
 #if defined(_MSC_VER) && (MSC_VER >= 1200)
 #define REASONABLE_TEMPLATES
 #endif
+
 #if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 #define REASONABLE_TEMPLATES
 #endif
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

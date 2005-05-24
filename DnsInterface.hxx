@@ -9,16 +9,20 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 
 namespace resip
 {
 class DnsHandler;
+class DnsResultSink;
 class DnsResult;
 class TransactionState;
 class Uri;
 class Via;
 class ExternalDns;
-// 
+class DnsRawSink;
+
 class DnsInterface : public ExternalDnsHandler
 {
    public:
@@ -38,11 +42,6 @@ class DnsInterface : public ExternalDnsHandler
 
       virtual ~DnsInterface();
 
-      void lookupARecords(const Data& target, DnsResult* dres);
-      void lookupAAAARecords(const Data& target, DnsResult* dres);
-      void lookupNAPTR(const Data& target, DnsResult* dres);
-      void lookupSRV(const Data& target, DnsResult* dres);
-      
       Data errorMessage(int status);
 
       // set the supported set of types that a UAC wishes to use
@@ -55,6 +54,7 @@ class DnsInterface : public ExternalDnsHandler
       // this is used if NAPTR doesn't return anything to decide which SRV
       // records to query
       bool isSupportedProtocol(TransportType t);
+      int supportedProtocols();
 
       
       //only call buildFdSet and process if requiresProcess is true.  
@@ -88,11 +88,10 @@ class DnsInterface : public ExternalDnsHandler
 //      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
 //      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
 
-      //callbacks for mDnsProvider
-      virtual void handle_NAPTR(ExternalDnsRawResult res);
-      virtual void handle_SRV(ExternalDnsRawResult res);
-      virtual void handle_AAAA(ExternalDnsRawResult res);
-      virtual void handle_host(ExternalDnsHostResult res);
+      void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
+      virtual void handleDnsRaw(ExternalDnsRawResult);
+      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
@@ -106,6 +105,9 @@ class DnsInterface : public ExternalDnsHandler
 
       ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
+
+      DnsStub* mDnsStub;
+      RRVip mVip;
 };
 
 }
