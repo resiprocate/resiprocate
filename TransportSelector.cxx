@@ -289,8 +289,7 @@ getFirstInterface(bool is_v4, TransportType type)
 #ifdef __CYGWIN__
    assert(0);
    return Tuple();
-#endif
-   
+#else
    // !kh!
    // 1. Query local hostname.
    char hostname[256] = "";
@@ -341,6 +340,7 @@ getFirstInterface(bool is_v4, TransportType type)
    freeaddrinfo(results);
    
    return source;
+#endif
 }
 
 Tuple
