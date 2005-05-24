@@ -1,47 +1,28 @@
-#if !defined(RESIP_ARES_DNS_HXX)
-#define RESIP_ARES_DNS_HXX
+#if !defined(RESIP_RRFACTORY_HXX)
+#define RESIP_RRFACTORY_HXX 
 
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/external/ExternalDns.hxx"
-
-extern "C"
-{
-struct ares_channeldata;
-}
-
-//struct fd_set;
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+#include "resiprocate/dns/RROverlay.hxx"
 
 namespace resip
 {
-class AresDns : public ExternalDns
+
+class RRFactoryBase
 {
    public:
-      AresDns() {}
-      virtual ~AresDns();
-
-      virtual int init(); 
-
-      virtual bool requiresProcess();
-      virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
-      virtual void process(fd_set& read, fd_set& write);
-
-      //?dcm?  I believe these need to do nothing in the ARES case.
-      virtual void freeResult(ExternalDnsRawResult /* res */) {}
-      virtual void freeResult(ExternalDnsHostResult /* res */) {}
-
-      virtual char* errorMessage(long errorCode);
-
-      void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
-
-   private:
-
-      typedef std::pair<ExternalDnsHandler*, void*> Payload;
-      static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
-      static ExternalDnsHandler* getHandler(void* arg);
-      static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
-	  struct ares_channeldata* mChannel;
+      virtual DnsResourceRecord* create(const RROverlay&) const = 0;
 };
-   
+
+template<class T>
+class RRFactory : public RRFactoryBase
+{
+   public:
+      virtual DnsResourceRecord* create(const RROverlay& overlay) const
+      {
+         return new T(overlay);
+      }
+};
+
 }
 
 #endif
@@ -49,17 +30,17 @@ class AresDns : public ExternalDns
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 

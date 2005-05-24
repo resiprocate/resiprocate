@@ -22,6 +22,10 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Subsystem.hxx"
 
+#ifdef WIN32
+#include "resiprocate/WinSecurity.hxx"
+#endif
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -143,23 +147,22 @@ int main(int argc, char *argv[])
 
    InfoLog(<< "user: " << userAor << ", passwd: " << passwd << "\n");
 
-   Security* security = new Security("certs");
-
-   try
-   {
-      assert(security != 0);
-      security->preload();
-   }
-   catch( ... )
-   {
-      ErrLog( << "Got a exception loading certificates" );
-   }
+#ifdef WIN32
+   WinSecurity* security = new WinSecurity;
+#else
+   Security* security = new Security;
+#endif
 
    assert( security );
 
    SipStack clientStack(security);
    DialogUsageManager clientDum(clientStack);
-   clientDum.addTransport(UDP, 10000 + rand()&0x7fff);
+   clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V4);
+   clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
+   clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
+   // clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
+   // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
+   // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
 
    MasterProfile clientProfile;   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   

@@ -13,12 +13,16 @@
 #include <iostream>
 #include <list>
 
+#include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 
 using namespace std;
 
@@ -38,17 +42,50 @@ const char ub[] = "\033[01;00m";
 namespace resip
 {
 
+// called on the DNS processing thread, therefore state must be locked
 class TestDnsHandler : public DnsHandler
 {
    public:
+      TestDnsHandler() : mComplete(false) {}
       void handle(DnsResult* result)
       {
-         while (result->available() == DnsResult::Available)
-        {
-             std::cout << gf << result->target() << " -> " << result->next() << ub <<  std::endl;
+         
+         std::cout << gf << "DnsHandler received " <<  result->target() << ub <<  std::endl;
+         Lock lock(mutex);
+         DnsResult::Type type;
+         while ((type=result->available()) == DnsResult::Available)
+         {
+            Tuple tuple = result->next();
+            results.push_back(tuple);
+            std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
          }
+         if (type != DnsResult::Pending)
+         {
+            mComplete = true;
+         }         
       }
+      bool complete()
+      {
+         Lock lock(mutex);
+         return mComplete;
+      }
+
+      std::vector<Tuple> results;
+
+   private:
+      bool mComplete;
+      Mutex mutex;
 };
+
+/*
+class VipListener : public RRVip::Listener
+{
+   void onVipInvalidated(int rrType, const Data& vip) const
+   {
+      cout << rf << "VIP " << " -> " << vip << " type" << " -> " << rrType << " has been invalidated." << ub << endl;
+   }
+};
+*/
 	
 class TestDns : public DnsInterface, public ThreadIf
 {
@@ -58,6 +95,9 @@ class TestDns : public DnsInterface, public ThreadIf
          addTransportType(TCP, V4);
          addTransportType(UDP, V4);
          addTransportType(TLS, V4);
+         addTransportType(TCP, V6);
+         addTransportType(UDP, V6);
+         addTransportType(TLS, V6);
       }
 
       void thread()
@@ -76,11 +116,19 @@ class TestDns : public DnsInterface, public ThreadIf
 
 using namespace resip;
 
+typedef struct 
+{
+      DnsResult* result;
+      Uri uri;
+      TestDnsHandler* handler;
+      //VipListener* listener;
+} Query;
+
 int 
 main(int argc, const char** argv)
 {
-   char* logType = 0;
-   char* logLevel = "INFO";
+   char* logType = "cout";
+   char* logLevel = "STACK";
 
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
@@ -95,50 +143,87 @@ main(int argc, const char** argv)
 #endif
 
    Log::initialize(logType, logLevel, argv[0]);
-
-   TestDnsHandler handler;
+   initNetwork();
    TestDns dns;
-   dns.run();
-   
+   dns.run();   
    Uri uri;
-
-   cerr << "Starting" << endl;
-   
-   std::list<DnsResult*> results;
+   cerr << "Starting" << endl;   
+   std::list<Query> queries;
 #if defined(HAVE_POPT_H)
    const char** args = poptGetArgs(context);
 #else
    const char** args = argv;
 #endif
-   while (args && *args != 0)
-   {
-       cerr << "Creating Uri" << endl;       
-       uri = Uri(*args++);
-       cerr << "Creating DnsResult" << endl;
-       
-       DnsResult* res = dns.createDnsResult(&handler);
-       results.push_back(res);
-       cerr << "Looking up" << endl;
 
-       dns.lookup(res, uri);
+   // default query: sip:yahoo.com
+   if (argc == 1)
+   {
+      Query query;
+      query.handler = new TestDnsHandler;
+      //query.listener = new VipListener;
+      cerr << "Creating Uri" << endl;       
+      uri = Uri("sip:yahoo.com");
+      query.uri = uri;
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
+      queries.push_back(query);
+      cerr << rf << "Looking up" << ub << endl;
+      dns.lookup(res, uri);
    }
 
-   while (!results.empty())
+   while (argc > 1 && args && *args != 0)
    {
-      if (results.front()->available() == DnsResult::Finished)
+      Query query;
+      query.handler = new TestDnsHandler;
+      //query.listener = new VipListener;
+      cerr << "Creating Uri" << endl;       
+      uri = Uri(*++args);
+      query.uri = uri;
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
+      queries.push_back(query);
+      cerr << rf << "Looking up" << ub << endl;
+      dns.lookup(res, uri);
+      argc--;
+   }
+
+   int count = queries.size();
+   while (count>0)
+   {
+      for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
       {
-          std::cout << bf << "Deleting results: " << *(results.front()) << ub << std::endl;
-          delete results.front();
-          results.pop_front();
-          std::cout << gf << results.size() << " remaining to resolve" << ub << std::endl;
+         if ((*it).handler->complete())
+         {
+            --count;
+         }
       }
-      else
+#ifdef WIN32
+      sleep(100);
+#else
+      sleep(1);
+#endif
+   }
+
+   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
+   {
+      cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+      for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
       {
-          std::cout << rf << "Waiting for " << *(results.front()) << ub << std::endl;
-          sleep(1);
+         cerr << rf << (*i) << ub << endl;
       }
    }
 
+   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
+   {
+      (*it).result->destroy();
+      delete (*it).handler;
+      //delete (*it).listener;
+   }
+
+   dns.shutdown();
+   dns.join();
 
    return 0;
 }
