@@ -1520,6 +1520,23 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 void
 TransactionState::sendToTU(TransactionMessage* msg) const
 {
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+   if (sipMsg && sipMsg->isResponse())
+   {
+      // whitelisting rules.
+      switch (sipMsg->header(h_StatusLine).statusCode())
+      {
+         case 408:
+         case 500:
+         case 503:
+         case 504:
+         case 600:
+            break;
+         default:
+            mDnsResult->success();
+            break;
+      }
+   }
    TransactionState::sendToTU(mTransactionUser, mController, msg);
 }
 
