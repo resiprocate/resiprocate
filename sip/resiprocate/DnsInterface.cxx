@@ -2,6 +2,20 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#ifndef __CYGWIN__
+#  include <netinet/in.h>
+#  include <arpa/nameser.h>
+#  include <resolv.h>
+#endif
+#endif
+
+
+
+
 #if defined(USE_ARES)
 extern "C"
 {
@@ -12,7 +26,11 @@ extern "C"
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Socket.hxx"
 
+#include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/dns/RRVip.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
@@ -33,40 +51,21 @@ DnsInterface::DnsInterface() :
    if (retCode != 0)
    {
       ErrLog (<< "Failed to initialize async dns library");
-      char* errmem = mDnsProvider->errorMessage(retCode);      
+      char* errmem = mDnsProvider->errorMessage(retCode);
       ErrLog (<< errmem);
       delete errmem;
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
+   mDnsStub = new DnsStub(this);
+#ifdef USE_DNS_VIP
+   mDnsStub->setResultTransform(&mVip);
+#endif
 }
 
 DnsInterface::~DnsInterface()
 {
    delete mDnsProvider;
-}
-
-void 
-DnsInterface::lookupARecords(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupARecords(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupAAAARecords(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupAAAARecords(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupNAPTR(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupNAPTR(target.c_str(), this, dres);
-}
-
-void 
-DnsInterface::lookupSRV(const Data& target, DnsResult* dres)
-{
-   mDnsProvider->lookupSRV(target.c_str(), this, dres);
+   delete mDnsStub;
 }
 
 Data 
@@ -129,6 +128,11 @@ DnsInterface::isSupportedProtocol(TransportType t)
    return false;
 }
 
+int DnsInterface::supportedProtocols()
+{
+   return mSupportedTransports.size();
+}
+
 bool 
 DnsInterface::requiresProcess()
 {
@@ -144,6 +148,7 @@ DnsInterface::buildFdSet(FdSet& fdset)
 void 
 DnsInterface::process(FdSet& fdset)
 {
+   mDnsStub->process();
    mDnsProvider->process(fdset.read, fdset.write);
 }
 
@@ -151,7 +156,7 @@ DnsInterface::process(FdSet& fdset)
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this, handler);
+   DnsResult* result = new DnsResult(*this, *mDnsStub, mVip, handler);
    mActiveQueryCount++;  
    return result;
 }
@@ -162,47 +167,42 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
    res->lookup(uri);   
 }
 
-
-
 // DnsResult* 
 // DnsInterface::lookup(const Via& via, DnsHandler* handler)
 // {
 //    assert(0);
+
 //    //DnsResult* result = new DnsResult(*this);
 //    return NULL;
 // }
 
-void 
-DnsInterface::handle_NAPTR(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processNAPTR(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_SRV(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processSRV(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_AAAA(ExternalDnsRawResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processAAAA(res.errorCode(), res.abuf, res.alen);
-   mDnsProvider->freeResult(res);
-}
-
-void 
-DnsInterface::handle_host(ExternalDnsHostResult res)
-{
-   reinterpret_cast<DnsResult*>(res.userData)->processHost(res.errorCode(), res.host);
-   mDnsProvider->freeResult(res);
-}
-
 //?dcm? -- why is this here?
 DnsHandler::~DnsHandler()
 {
+}
+
+void 
+DnsInterface::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
+{
+   mDnsProvider->lookup(target.c_str(), type, this, sink);
+}
+
+void 
+DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
+}
+
+void
+DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDnsStub->registerBlacklistListener(rrType, listener);
+}
+
+void DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDnsStub->unregisterBlacklistListener(rrType, listener);
 }
 
 //  Copyright (c) 2003, Jason Fischl 

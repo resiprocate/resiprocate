@@ -32,6 +32,24 @@ WinSecurity::preload()
    //getCerts(WinSecurity::USERS_STORE);   
 }
 
+void
+WinSecurity::onReadPEM(const Data& name, PEMType type, Data& buffer)
+{
+   throw;
+}
+
+void
+WinSecurity::onWritePEM(const Data& name, PEMType type, const Data& buffer)
+{
+   throw;
+}
+
+void
+WinSecurity::onRemovePEM(const Data& name, PEMType type)
+{
+   throw;
+}
+
 static const Data 
 certStoreTypes(  WinSecurity::MsCertStoreType pType )
 {
@@ -142,6 +160,7 @@ WinSecurity::getCerts(MsCertStoreType eType)
    //retrive only certificates
    HCERTSTORE storeHandle = NULL;
    storeHandle = openSystemCertStore(certStoreTypes(eType));
+   int i = 0;
    if(NULL != storeHandle)
    {
       PCCERT_CONTEXT   pCertContext = NULL;  
@@ -149,9 +168,11 @@ WinSecurity::getCerts(MsCertStoreType eType)
       {
          Data certDER(Data::Borrow, (const char*)pCertContext->pbCertEncoded, pCertContext->cbCertEncoded);
          addCertDER (BaseSecurity::RootCert, NULL, certDER, false);
+         i++;
       }
       CertFreeCertificateContext(pCertContext);
    }
+   InfoLog( << i << " certs loaded of type " << eType );
    closeCertifStore(storeHandle);
 }
 

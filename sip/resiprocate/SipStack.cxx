@@ -476,6 +476,18 @@ SipStack::unregisterTransactionUser(TransactionUser& tu)
    mTuSelector.unregisterTransactionUser(tu);
 }
 
+void
+SipStack::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mTransactionController.registerBlacklistListener(rrType, listener);
+}
+
+void
+SipStack::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mTransactionController.unregisterBlacklistListener(rrType, listener);
+}
+
 std::ostream& 
 SipStack::dump(std::ostream& strm)  const
 {
