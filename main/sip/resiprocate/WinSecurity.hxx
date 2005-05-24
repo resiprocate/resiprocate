@@ -25,6 +25,10 @@ class WinSecurity : public Security
 	  WinSecurity(){};
 
       virtual void preload();
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer);
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer);
+      virtual void onRemovePEM(const Data& name, PEMType type);
+
 
    protected:
       HCERTSTORE openSystemCertStore(const Data& name);

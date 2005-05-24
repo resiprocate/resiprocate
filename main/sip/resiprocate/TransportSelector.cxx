@@ -3,7 +3,7 @@
 #endif
 
 #if !defined(WIN32)
-#include <sys/types.h>
+//#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -22,11 +22,14 @@
 
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+
+#ifdef WIN32
+#include "resiprocate/os/WinCompat.hxx"
+#endif
 
 #include <sys/types.h>
 
@@ -38,8 +41,7 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET ),
-   mWindowsVersion(WinCompat::getVersion())
+   mSocket6( INVALID_SOCKET )
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -231,7 +233,7 @@ TransportSelector::dnsResolve(DnsResult* result,
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
-          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
+         //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
          mDns.lookup(result, msg->getForceTarget());
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
@@ -250,8 +252,8 @@ TransportSelector::dnsResolve(DnsResult* result,
    }
    else if (msg->isResponse())
    {
-       ErrLog(<<"unimplemented response dns");
-       assert(0);
+      ErrLog(<<"unimplemented response dns");
+      assert(0);
    }
    else
    {
@@ -259,13 +261,11 @@ TransportSelector::dnsResolve(DnsResult* result,
    }
 }
 
-namespace
+bool isDgramTransport (TransportType type)
 {
-   bool isDgramTransport (TransportType type)
+   static const bool unknown_transport = false;
+   switch(type)
    {
-      static const bool unknown_transport = false;
-      switch(type)
-      {
       case UDP:
       case DTLS:
       case DCCP:
@@ -279,70 +279,68 @@ namespace
       default:
          assert(unknown_transport);
          return unknown_transport;  // !kh! just to make it compile wo/warning.
-      }
    }
+}
 
-   Tuple
-   getFirstInterface(bool is_v4, TransportType type)
-   {
-// !kh! both getaddrinfo() and IPv6 are supported by cygwin, yet.
-#if !defined(__CYGWIN__)
-      // !kh!
-      // 1. Query local hostname.
-      char hostname[256] = "";
-      if(gethostname(hostname, sizeof(hostname)) != 0)
-      {
-         int e = getErrno();
-         Transport::error( e );
-         InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
-         throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
-      }
-      InfoLog(<< "Local hostname is [" << hostname << "]");
-
-      // !kh!
-      // 2. Resolve address(es) of local hostname for specified transport.
-      const bool is_dgram = isDgramTransport(type);
-      addrinfo hint;
-      memset(&hint, 0, sizeof(hint));
-      hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
-      hint.ai_flags     = AI_PASSIVE;
-      hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
-
-      addrinfo* results;
-      int ret = getaddrinfo(
-         hostname,
-         0,
-         &hint,
-         &results);
-
-      if(ret != 0)
-      {
-         Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
-         InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
-         throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
-      }
-
-      // !kh!
-      // 3. Use first address resolved if there are more than one.
-      // What should I do if there are more than one address?
-      // i.e. results->ai_next != 0.
-      Tuple source(*(results->ai_addr), type);
-      InfoLog(<< "Local address is " << source);
-      addrinfo* ai = results->ai_next;
-      for(; ai; ai = ai->ai_next)
-      {
-         Tuple addr(*(ai->ai_addr), type);
-         InfoLog(<<"Additional address " << addr);
-      }
-      freeaddrinfo(results);
-
-      return   source;
+Tuple
+getFirstInterface(bool is_v4, TransportType type)
+{
+// !kh! both getaddrinfo() and IPv6 are not supported by cygwin, yet.
+#ifdef __CYGWIN__
+   assert(0);
+   return Tuple();
 #else
-      static const bool cygwin_not_supported = false;
-      assert(cygwin_not_supported);
-      return   Tuple();
-#endif
+   // !kh!
+   // 1. Query local hostname.
+   char hostname[256] = "";
+   if(gethostname(hostname, sizeof(hostname)) != 0)
+   {
+      int e = getErrno();
+      Transport::error( e );
+      InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
+      throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
    }
+   InfoLog(<< "Local hostname is [" << hostname << "]");
+
+   // !kh!
+   // 2. Resolve address(es) of local hostname for specified transport.
+   const bool is_dgram = isDgramTransport(type);
+   addrinfo hint;
+   memset(&hint, 0, sizeof(hint));
+   hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
+   hint.ai_flags     = AI_PASSIVE;
+   hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
+
+   addrinfo* results;
+   int ret = getaddrinfo(
+      hostname,
+      0,
+      &hint,
+      &results);
+
+   if(ret != 0)
+   {
+      Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
+      InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
+      throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
+   }
+
+   // !kh!
+   // 3. Use first address resolved if there are more than one.
+   // What should I do if there are more than one address?
+   // i.e. results->ai_next != 0.
+   Tuple source(*(results->ai_addr), type);
+   InfoLog(<< "Local address is " << source);
+   addrinfo* ai = results->ai_next;
+   for(; ai; ai = ai->ai_next)
+   {
+      Tuple addr(*(ai->ai_addr), type);
+      InfoLog(<<"Additional address " << addr);
+   }
+   freeaddrinfo(results);
+   
+   return source;
+#endif
 }
 
 Tuple
@@ -352,171 +350,140 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
    if (msg->isRequest() && !via.sentHost().empty())
-   // hint provided in sent-by of via by application
+      // hint provided in sent-by of via by application
    {
       return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
    }
    else
    {
       Tuple source(target);
-      switch (mWindowsVersion)
+#if defined(WIN32) && !defined(NO_IPHLPAPI)
+      try
       {
-         case WinCompat::NotWindows:
-
-// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
-//        statically.  If you don't care about Win95/98/Me as your target system - then
-//        you can define NO_IPHLPAPI so that you are not required to link with this
-//        library. (SLG)
-// Note:  WinCompat::determineSourceInterface uses IPHLPAPI and is only required for
-//        Win95/98/Me and to work around personal firewall issues.
-#ifdef NO_IPHLPAPI
-         default:
-#endif
+         // will not work on ipv6
+         source = WinCompat::determineSourceInterface(target);
+      }
+      catch (WinCompat::Exception&)
+      {
+         ErrLog (<< "Can't find source interface to use");
+         throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
+      }
+#else
+      // !kh!
+      // The connected UDP technique doesn't work all the time.
+      // 1. Might not work on all implementaions as stated in UNP vol.1 8.14.
+      // 2. Might not work under unspecified condition on Windows,
+      //    search "getsockname" in MSDN library.
+      // 3. We've experienced this issue on our production software.
+      
+      // this process will determine which interface the kernel would use to
+      // send a packet to the target by making a connect call on a udp socket.
+      Socket tmp = INVALID_SOCKET;
+      if (target.isV4())
+      {
+         if (mSocket == INVALID_SOCKET)
          {
-            // !kh!
-            // The connected UDP technique doesn't work all the time.
-            // 1. Might not work on all implementaions as stated in UNP vol.1 8.14.
-            // 2. Might not work under unspecified condition on Windows,
-            //    search "getsockname" in MSDN library.
-            // 3. We've experienced this issue on our production software.
-
-            // this process will determine which interface the kernel would use to
-            // send a packet to the target by making a connect call on a udp socket.
-            Socket tmp = INVALID_SOCKET;
-            if (target.isV4())
-            {
-               if (mSocket == INVALID_SOCKET)
-               {
-                  mSocket = InternalTransport::socket(UDP, V4); // may throw
-               }
-               tmp = mSocket;
-            }
-            else
-            {
-               if (mSocket6 == INVALID_SOCKET)
-               {
-                  mSocket6 = InternalTransport::socket(UDP, V6); // may throw
-               }
-               tmp = mSocket6;
-            }
-
-            int ret = connect(tmp,&target.getSockaddr(), target.length());
-            if (ret < 0)
-            {
-               int e = getErrno();
-               Transport::error( e );
-               InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
-               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-            }
-
-            socklen_t len = source.length();
-            ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-            if (ret < 0)
-            {
-               int e = getErrno();
-               Transport::error(e);
-               InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
-               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-            }
-
-            // !kh! test if connected UDP technique results INADDR_ANY, i.e. 0.0.0.0.
-            // if it does, assume the first avaiable interface.
-            if(source.isV4())
-            {
-               long src = (reinterpret_cast<const sockaddr_in*>(&source.getSockaddr())->sin_addr.s_addr);
-               if(src == INADDR_ANY)
-               {
-                  InfoLog(<< "Connected UDP failed to determine source address, use first address instaed.");
-                  source = getFirstInterface(true, target.getType());
-               }
-            }
-            else  // IPv6
-            {
-#if defined(USE_IPV6)
-#  if defined(_MSC_VER)
-                  static const bool ipv6_support_not_completed = false;
-                  assert(ipv6_support_not_completed);
-#  else
-                  // !kh! this is compiled out on windows,
-                  // for some reason VC dosen't recognize INADDR6_ANY,
-                  // and I don't have time yet to find out why.
-                  if (source.isAnyInterface())
-                  {
-                     source = getFirstInterface(false, target.getType());
-                  }
-#  endif
-#else
-               assert(0);
-#endif
-            }
-            //if(source.getSockaddr() ==
-
-            // Unconnect.
-            // !jf! This is necessary, but I am not sure what we can do if this
-            // fails. I'm not sure the stack can recover from this error condition.
-            if (target.isV4())
-            {
-               ret = connect(mSocket,
-                             (struct sockaddr*)&mUnspecified.v4Address,
-                             sizeof(mUnspecified.v4Address));
-            }
-#ifdef USE_IPV6
-            else
-            {
-               ret = connect(mSocket6,
-                             (struct sockaddr*)&mUnspecified6.v6Address,
-                             sizeof(mUnspecified6.v6Address));
-            }
-#else
-            else
-            {
-               assert(0);
-            }
-#endif
-
-            if ( ret<0 )
-            {
-               int e =  getErrno();
-               if  ( e != EAFNOSUPPORT )
-               {
-                  ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
-                  Transport::error(e);
-                  throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
-               }
-            }
-            break;
+            mSocket = InternalTransport::socket(UDP, V4); // may throw
          }
-
-#ifndef NO_IPHLPAPI
-         default:
-            try
-            {
-               // will not work on ipv6
-               source = WinCompat::determineSourceInterface(target);
-            }
-            catch (WinCompat::Exception&)
-            {
-               ErrLog (<< "Can't find source interface to use");
-               throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
-            }
-            break;
-#endif
+         tmp = mSocket;
+      }
+      else
+      {
+         if (mSocket6 == INVALID_SOCKET)
+         {
+            mSocket6 = InternalTransport::socket(UDP, V6); // may throw
+         }
+         tmp = mSocket6;
       }
 
-      // This is the port that the request will get sent out from. By default,
-      // this value will be 0, since the Helper that creates the request will
-      // not assign it. In this case, the stack will pick an arbitrary (but
-      // appropriate) transport. If it is non-zero, it will only match
-      // transports that are bound to the specified port (and fail if none are
-      // available)
+      int ret = connect(tmp,&target.getSockaddr(), target.length());
+      if (ret < 0)
+      {
+         int e = getErrno();
+         Transport::error( e );
+         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+      }
+
+      socklen_t len = source.length();
+      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+      if (ret < 0)
+      {
+         int e = getErrno();
+         Transport::error(e);
+         InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
+         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+      }
+
+      // !kh! test if connected UDP technique results INADDR_ANY, i.e. 0.0.0.0.
+      // if it does, assume the first avaiable interface.
+      if(source.isV4())
+      {
+         long src = (reinterpret_cast<const sockaddr_in*>(&source.getSockaddr())->sin_addr.s_addr);
+         if(src == INADDR_ANY)
+         {
+            InfoLog(<< "Connected UDP failed to determine source address, use first address instaed.");
+            source = getFirstInterface(true, target.getType());
+         }
+      }
+      else  // IPv6
+      {
+//should never reach here in WIN32 w/ V6 support
+#if defined(USE_IPV6) && !defined(WIN32) 
+         if (source.isAnyInterface())  //!dcm! -- when could this happen?
+         {
+            source = getFirstInterface(false, target.getType());
+         }
+# endif
+      }
+      // Unconnect.
+      // !jf! This is necessary, but I am not sure what we can do if this
+      // fails. I'm not sure the stack can recover from this error condition.
+      if (target.isV4())
+      {
+         ret = connect(mSocket,
+                       (struct sockaddr*)&mUnspecified.v4Address,
+                       sizeof(mUnspecified.v4Address));
+      }
+#ifdef USE_IPV6
+      else
+      {
+         ret = connect(mSocket6,
+                       (struct sockaddr*)&mUnspecified6.v6Address,
+                       sizeof(mUnspecified6.v6Address));
+      }
+#else
+      else
+      {
+         assert(0);
+      }
+#endif
+
+      if ( ret<0 )
+      {
+         int e =  getErrno();
+         if  ( e != EAFNOSUPPORT )
+         {
+            ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+            Transport::error(e);
+            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+         }
+      }
+#endif
+      
+      // This is the port that the request will get sent out from. By default, 
+      // this value will be 0, since the Helper that creates the request will not
+      // assign it. In this case, the stack will pick an arbitrary (but appropriate)
+      // transport. If it is non-zero, it will only match transports that are bound to
+      // the specified port (and fail if none are available)
       source.setPort(via.sentPort());
-
-
+      
+ 
       DebugLog (<< "Looked up source for destination: " << target
                 << " -> " << source
                 << " sent-by=" << via.sentHost()
                 << " sent-port=" << via.sentPort());
-
+      
       return source;
    }
 }
@@ -531,9 +498,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
    try
    {
-     // !ah! You NEED to do this for responses too -- the transport doesn't
-     // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
-     // (imagine a synthetic message...)
+      // !ah! You NEED to do this for responses too -- the transport doesn't
+      // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
+      // (imagine a synthetic message...)
 
       Tuple source;
       if (msg->isRequest())
@@ -658,7 +625,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-		   << " via " << source
+                   << " via " << source
                    << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
@@ -860,6 +827,17 @@ TransportSelector::getTimeTillNextProcessMS()
    {
       return INT_MAX;
    }
+}
+
+void
+TransportSelector::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDns.registerBlacklistListener(rrType, listener);
+}
+
+void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+{
+   mDns.unregisterBlacklistListener(rrType, listener);
 }
 
 /* ====================================================================

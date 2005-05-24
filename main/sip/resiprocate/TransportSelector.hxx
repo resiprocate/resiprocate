@@ -10,7 +10,6 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/GenericIPAddress.hxx"
@@ -60,6 +59,9 @@ class TransportSelector
 
       unsigned int getTimeTillNextProcessMS();
       Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
+
+      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
@@ -98,7 +100,6 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
-      WinCompat::Version mWindowsVersion;
       
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
