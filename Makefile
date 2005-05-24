@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os external
+CODE_SUBDIRS = os external dns
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -41,7 +41,6 @@ SRC = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
-	os/WinCompat.cxx \
 	\
 	\
 	AresDns.cxx \
