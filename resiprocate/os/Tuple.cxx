@@ -176,6 +176,20 @@ Tuple::Tuple(const struct sockaddr& addr,
    mTransportType(ptype),
    mTargetDomain(targetDomain)
 {
+   if (addr.sa_family == AF_INET)   
+   {
+      m_anonv4 = (sockaddr_in&)(addr);
+   }
+#ifdef USE_IPV6
+   else if (addr.sa_family == AF_INET6)
+   {
+      m_anonv6 = (sockaddr_in6&)(addr);
+   }
+#endif
+   else
+   {
+      assert(0);
+   }
 }
 
 Data 
