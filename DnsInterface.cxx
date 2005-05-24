@@ -57,7 +57,9 @@ DnsInterface::DnsInterface() :
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
    mDnsStub = new DnsStub(this);
+#ifdef USE_DNS_VIP
    mDnsStub->setResultTransform(&mVip);
+#endif
 }
 
 DnsInterface::~DnsInterface()

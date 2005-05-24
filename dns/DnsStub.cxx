@@ -239,9 +239,7 @@ void DnsStub::doBlacklisting(const Data& target,
 
 void DnsStub::setResultTransform(ResultTransform* transform)
 {
-#ifdef USE_WHITELIST
    mTransform = transform;
-#endif
 }
 
 void DnsStub::removeResultTransform()
