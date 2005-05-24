@@ -39,30 +39,6 @@ AresDns::~AresDns()
    ares_destroy(mChannel);
 }
 
-void 
-AresDns::lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData)
-{
-   ares_gethostbyname(mChannel, target, AF_INET, AresDns::aresHostCallback, new Payload(handler, userData));
-}
-
-void 
-AresDns::lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData)
-{
-   ares_query(mChannel, target, C_IN, T_AAAA, AresDns::aresAAAACallback, new Payload(handler, userData)); 
-}
-
-void 
-AresDns::lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData)
-{
-   ares_query(mChannel, target, C_IN, T_NAPTR, AresDns::aresNAPTRCallback, new Payload(handler, userData)); 
-}
-
-void 
-AresDns::lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData)    
-{
-   ares_query(mChannel, target, C_IN, T_SRV, AresDns::aresSRVCallback, new Payload(handler, userData)); 
-}
-
 ExternalDnsHandler* 
 AresDns::getHandler(void* arg)
 {
@@ -79,55 +55,13 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    
    if (status != ARES_SUCCESS)
    {
-      return ExternalDnsRawResult(status, userArg);
+      return ExternalDnsRawResult(status, abuf, alen, userArg);
    }
    else
    {
       return ExternalDnsRawResult(abuf, alen, userArg);
    }
 }
-
-void
-AresDns::aresHostCallback(void *arg, int status, struct hostent* result)
-{
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
-   void* userArg = reinterpret_cast<void*>(p->second);
-
-   if (status != ARES_SUCCESS)
-   {
-      thisp->handle_host(ExternalDnsHostResult(status, userArg));
-   }
-   else
-   {
-      thisp->handle_host(ExternalDnsHostResult(result, userArg));
-   }
-   delete p;   
-}
-
-void
-AresDns::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_NAPTR(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}
-
-void
-AresDns::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_SRV(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}
-
-void
-AresDns::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_AAAA(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}                             
       
 bool 
 AresDns::requiresProcess()
@@ -162,6 +96,20 @@ AresDns::errorMessage(long errorCode)
    strncpy(errorString, aresMsg, len);
    errorString[len] = '\0';
    return errorString;
+}
+
+void
+AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
+{
+   ares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
+}
+
+void
+AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+{
+   getHandler(arg)->handleDnsRaw(makeRawResult(arg, status, abuf, alen));
+   Payload* p = reinterpret_cast<Payload*>(arg);
+   delete p;
 }
 
 /* ====================================================================
