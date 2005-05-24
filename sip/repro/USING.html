@@ -7,55 +7,55 @@
 </head>
 <body>
 <h1>Using Repro</h1>
-This guide describes briefly how to get started using repro.&nbsp; For
+This guide describes briefly how to get started using repro.  For
 help compiling or installing repro, please see the <a
  href="http://scm.sipfoundry.org/rep/resiprocate/main/sip/repro/INSTALL.html">INSTALL</a>
 file.<br>
 <br>
 <h2>1) Run repro</h2>
-Run the executable from the command line.&nbsp; A number of command
-line options are available.&nbsp; For a summary of options run repro
+Run the executable from the command line.  A number of command
+line options are available.  For a summary of options run repro
 with the help option:<br>
 <br>
 <pre>%repro --help</pre>
 <pre>Usage: repro [OPTION...]</pre>
-<pre>&nbsp; -l, --log-type=syslog|cerr|cout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; where to send logging messages</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (default: "cout")</pre>
-<pre>&nbsp; -v, --log-level=DEBUG|INFO|WARNING|ALERT&nbsp;&nbsp;&nbsp;&nbsp; specify the default log level</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (default: "INFO")</pre>
-<pre>&nbsp; -t, --tls-domain=example.com&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; act as a TLS server for</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specified domain</pre>
-<pre>&nbsp; -x, --mysqlServer=localhost&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; enable MySQL and provide name</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; of server (default: null)</pre>
-<pre>&nbsp; --udp=5060&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add UDP transport on specified</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; port (default: 5060)</pre>
-<pre>&nbsp; --tcp=5060&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add TCP transport on specified</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; port (default: 5060)</pre>
-<pre>&nbsp; --tls=5061&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add TLS transport on specified</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; port (default: 5061)</pre>
-<pre>&nbsp; --dtls=5061&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add DTLS transport on specified</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; port (default: 0)</pre>
-<pre>&nbsp; --enable-v6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; disable IPV6</pre>
-<pre>&nbsp; --disable-v4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; disable IPV4</pre>
-<pre>&nbsp; --disable-auth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; disable DIGEST challenges</pre>
-<pre>&nbsp; --disable-web-auth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; disable HTTP challenges</pre>
-<pre>&nbsp; --disable-reg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; disable registrar</pre>
-<pre>&nbsp; --enable-cert-server&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; run a cert server</pre>
-<pre>&nbsp; -d, --domains=example.com,foo.com&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specify domains that this proxy</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; is authorative</pre>
-<pre>&nbsp; -c, --cert-path=STRING&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; path for certificates (default:</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ~/.sipCerts) (default:</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "/Users/rohan/.sipCerts")</pre>
-<pre>&nbsp; --reqChainName=STRING&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name of request chain (default:</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; default)</pre>
-<pre>&nbsp; --http=5080&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; run HTTP server on specified</pre>
-<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; port (default: 5080)</pre>
+<pre>  -l, --log-type=syslog|cerr|cout              where to send logging messages</pre>
+<pre>                                               (default: "cout")</pre>
+<pre>  -v, --log-level=DEBUG|INFO|WARNING|ALERT     specify the default log level</pre>
+<pre>                                               (default: "INFO")</pre>
+<pre>  -t, --tls-domain=example.com                 act as a TLS server for</pre>
+<pre>                                               specified domain</pre>
+<pre>  -x, --mysqlServer=localhost                  enable MySQL and provide name</pre>
+<pre>                                               of server (default: null)</pre>
+<pre>  --udp=5060                                   add UDP transport on specified</pre>
+<pre>                                               port (default: 5060)</pre>
+<pre>  --tcp=5060                                   add TCP transport on specified</pre>
+<pre>                                               port (default: 5060)</pre>
+<pre>  --tls=5061                                   add TLS transport on specified</pre>
+<pre>                                               port (default: 5061)</pre>
+<pre>  --dtls=5061                                  add DTLS transport on specified</pre>
+<pre>                                               port (default: 0)</pre>
+<pre>  --enable-v6                                  disable IPV6</pre>
+<pre>  --disable-v4                                 disable IPV4</pre>
+<pre>  --disable-auth                               disable DIGEST challenges</pre>
+<pre>  --disable-web-auth                           disable HTTP challenges</pre>
+<pre>  --disable-reg                                disable registrar</pre>
+<pre>  --enable-cert-server                         run a cert server</pre>
+<pre>  -d, --domains=example.com,foo.com            specify domains that this proxy</pre>
+<pre>                                               is authorative</pre>
+<pre>  -c, --cert-path=STRING                       path for certificates (default:</pre>
+<pre>                                               ~/.sipCerts) (default:</pre>
+<pre>                                               "/Users/rohan/.sipCerts")</pre>
+<pre>  --reqChainName=STRING                        name of request chain (default:</pre>
+<pre>                                               default)</pre>
+<pre>  --http=5080                                  run HTTP server on specified</pre>
+<pre>                                               port (default: 5080)</pre>
 <pre><br>Help options:</pre>
-<pre>&nbsp; -?, --help&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Show this help message</pre>
-<pre>&nbsp; --usage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Display brief usage message</pre>
+<pre>  -?, --help                                   Show this help message</pre>
+<pre>  --usage                                      Display brief usage message</pre>
 <pre>%</pre>
 <br>
-Running the proxy server with the default options is fine.&nbsp; If you
+Running the proxy server with the default options is fine.  If you
 are troubleshooting, we recommend that you enable DEBUG level logging:<br>
 <pre>% ./repro -v DEBUG</pre>
 <br>
@@ -74,11 +74,11 @@ You must add at least one "domain" before you can use the proxy server.
 The domains are names that the proxy recognizes after the at-sign (@)
 in the SIP URI. The list of domains is used by the proxy and the
 registrar to decide if repro is responsible for SIP requests it
-receives.&nbsp; The WebAdmin also uses the list of domains to make sure
+receives.  The WebAdmin also uses the list of domains to make sure
 users you add are in one of the domains. <br>
 <br>
 For example, if you want the proxy to answer requests for atlanta.com,
-you need to add atlanta.com to the list of domains.&nbsp; You still
+you need to add atlanta.com to the list of domains.  You still
 need to make sure that you configure DNS so that SIP requests for that
 domain resolve to repro.<br>
 <br>
@@ -90,7 +90,7 @@ address as a "domain".<br>
 <br>
 <h2>4) Add users</h2>
 Next add users. The mandatory fields are the username and the
-domain.&nbsp; The password is the SIP Digest password.<br>
+domain.  The password is the SIP Digest password.<br>
 <br>
 <img alt="addUser page screenshot" src="doc/repro-addUser.png"
  style="width: 474px; height: 310px;"><br>
@@ -107,9 +107,9 @@ status of the registration from the Registrations page on the WebAdmin.<br>
 <h2>6) About Routes and ACLs</h2>
 Routes are used by repro to send certain requests to a particular
 location. The static routes use (POSIX-standard) regular expression to
-match and rewrite SIP URIs.&nbsp; The screenshot shows an example of
+match and rewrite SIP URIs.  The screenshot shows an example of
 sending all requests that consist of only digits in the userpart of the
-SIP URI to a gateway.&nbsp; Note that to match characters that have a
+SIP URI to a gateway.  Note that to match characters that have a
 special meaning in regular expression (like a "."), you need to escape
 these. You can also use variable substitution in the rewrite
 expression. The string inside the first set of parentheses () is
@@ -120,7 +120,7 @@ referenced in the rewrite string as $1, the second is $2, etc.<br>
 <br>
 Since it is easy to make mistakes entering regular expressions, you can
 test your static routes in the Show Routes page. Type in a SIP URI,
-click Test Route.&nbsp; You should see the rewritten URL below.<br>
+click Test Route.  You should see the rewritten URL below.<br>
 <br>
 <img alt="showRoutes page screenshot" src="doc/repro-showRoutes.png"
  style="width: 769px; height: 316px;"><br>
