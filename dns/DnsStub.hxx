@@ -185,6 +185,10 @@ class DnsStub
       DnsStub(const DnsStub&);   // disable copy ctor.
       DnsStub& operator=(const DnsStub&);
 
+   public:
+      // sailesh - due to a bug in CodeWarrior,
+      // QueryCommand::execute() can only access this method
+      // if it's public. Even using "friend" doesn't work.
       template<class QueryType>
       void query(const Data& target, int proto, DnsResultSink* sink)
       {
@@ -195,6 +199,8 @@ class DnsStub
          mQueries.insert(query);
          query->go(mDns);
       }
+      
+   private:
       void doBlacklisting(const Data& target, int rrType, 
                           int protocol, const DataArr& targetsToBlacklist);
 
