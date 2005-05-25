@@ -27,15 +27,9 @@ endif
 
 ifeq ($(OSTYPE),NetBSD)
 
-ifeq ($(ARCH),i686)
-	CXXFLAGS += -march=i686
-endif
-ifeq ($(ARCH),i486)
-	CXXFLAGS += -march=i486
-endif
-ifeq ($(ARCH),i386)
-	CXXFLAGS += -march=i386
-endif
+# pull in system-specific changes (if available)
+-include /etc/mk.conf
+
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT
         INCDIRS  += /usr/pkg/include
@@ -43,6 +37,8 @@ endif
 
         DISTCC   = distcc 
         CCACHE   = ccache
+
+	CXXFLAGS += $(shell test -x /usr/pkg/bin/cpuflags && /usr/pkg/bin/cpuflags)
 
 endif
 
