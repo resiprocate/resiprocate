@@ -5,9 +5,10 @@
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Timer.hxx"
 #include <unistd.h>
 
-#define VERBOSE
+//#define VERBOSE
 
 using namespace resip;
 using namespace std;
@@ -25,75 +26,105 @@ class Foo
 class Consumer: public ThreadIf
 {
   public: 
-    Consumer(TimeLimitFifo<Foo>&);
-    ~Consumer() {};
+      Consumer(TimeLimitFifo<Foo>&);
+      virtual ~Consumer() 
+      {
+         shutdown();
+         join();
+#ifdef VERBOSE
+         cerr << "Consumer thread finished" << endl;
+#endif
 
-    void thread();
+         shutdown();
+         join();
+      };
 
-  private:
-    TimeLimitFifo<Foo>& mFifo;
+      void thread();
+
+   private:
+      TimeLimitFifo<Foo>& mFifo;
 };
 
 class Producer: public ThreadIf
 {
   public: 
-    Producer(TimeLimitFifo<Foo>&);
-    ~Producer() {};
+      Producer(TimeLimitFifo<Foo>&);
+      virtual ~Producer() 
+      {
+         shutdown();
+         join();
+#ifdef VERBOSE
+         cerr << "Producer thread finished" << endl;
+#endif
 
-    void thread();
+         shutdown();
+         join();
+      }
 
-  private:
-    TimeLimitFifo<Foo>& mFifo;
+      void thread();
+
+   private:
+      TimeLimitFifo<Foo>& mFifo;
 };
 
 Consumer::Consumer(TimeLimitFifo<Foo>& f) :
-    mFifo(f)
+   mFifo(f)
 {}
 
 void Consumer::thread()
 {
-    static unsigned wakeups[6] = { 1, 2, 3, 0, 1, 3 };
+    static unsigned wakeups[6] = { 10000, 20000, 30000, 0, 10000, 30000 };
     unsigned int w = 0;
 
-    while(!mShutdown) {
-	if (mFifo.messageAvailable())
-	    mFifo.getNext();
-	else
-	{
-	    unsigned wakeup = wakeups[w];
-	    w = (w + 1) % 6;
+    while (!mShutdown) 
+    {
+       if (mFifo.messageAvailable())
+       {
+          mFifo.getNext(100);
+       }
+       else
+       {
+          unsigned wakeup = wakeups[w];
+          w = (w + 1) % 6;
 #ifdef VERBOSE
-	    cerr << "Consumer sleeping for " << wakeup << " seconds with mSize " << mFifo.size() << endl;
+          cerr << "Consumer sleeping for " << wakeup << " useconds with mSize " << mFifo.size() << endl;
 #endif
-	    if (wakeup > 0)
-		sleep(wakeup);
-	}
+          if (wakeup > 0)
+          {
+             usleep(wakeup);
+          }
+       }
     }
 }
 
 Producer::Producer(TimeLimitFifo<Foo>& f) :
-    mFifo(f)
+   mFifo(f)
 {}
 
 void Producer::thread()
 {
-    static unsigned wakeups[6] = { 0, 1, 0, 2, 3, 1 };
-    unsigned int w = 0;
+   static unsigned wakeups[6] = { 0, 10000, 0, 20000, 30000, 10000 };
+   unsigned int w = 0;
 
-    for (unsigned long n = 0; n < 0x1ffff; n++) {
-	if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
-	    mFifo.add(new Foo(Data(n)), TimeLimitFifo<Foo>::EnforceTimeDepth);
-	else
-	{
-	    unsigned wakeup = wakeups[w];
-	    w = (w + 1) % 6;
+   for (unsigned long n = 0; n < 0x1ffff; n++) 
+   {
+      if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
+      {
+         mFifo.add(new Foo(Data(n)), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      }
+      else
+      {
+         unsigned wakeup = wakeups[w];
+         w = (w + 1) % 6;
 #ifdef VERBOSE
-	    cerr << "Producer sleeping for " << wakeup << " seconds at " << n << " with mSize " << mFifo.size() << endl;
+         cerr << "Producer sleeping for " << wakeup << " useconds at " << n << " with mSize " << mFifo.size() << endl;
 #endif
-	    if (wakeup > 0)
-		sleep(wakeup);
-	}
-    }
+         if (wakeup > 0)
+         {
+            usleep(wakeup);
+         }
+      }
+   }
 }
 
 bool
@@ -111,9 +142,9 @@ main()
    Fifo<Foo> f;
    FiniteFifo<Foo> ff(5);
 
-   cerr << "!! PreFirst" << endl;
-
    {
+      cerr << "!! test basic" << endl;
+      
       bool c;
       TimeLimitFifo<Foo> tlf(5, 10); // 5 seconds or 10 count limit
 
@@ -172,6 +203,8 @@ main()
    }
 
    {
+      cerr << "!! Test time depth" << endl;
+
       TimeLimitFifo<Foo> tlfNS(5, 0); // 5 seconds, no count limit
       bool c;
 
@@ -227,6 +260,8 @@ main()
    }
 
    {
+      cerr << "!! Test reserved" << endl;
+
       TimeLimitFifo<Foo> tlfNS(5, 10); // 5 seconds, limit 10 (2 reserved)
       bool c;
 
@@ -264,6 +299,8 @@ main()
    }
 
    {
+      cerr << "!! Test unlimited" << endl;
+
       TimeLimitFifo<Foo> tlfNS(0, 0); // unlimited
 
       bool c;
@@ -281,6 +318,8 @@ main()
    }
    
    {
+      cerr << "!! Test produce consumer" << endl;
+
        TimeLimitFifo<Foo> tlfNS(20, 5000);
        Producer prod(tlfNS);
        Consumer cons(tlfNS);
@@ -300,14 +339,74 @@ main()
        cerr << "Consumer thread finished" << endl;
 #endif
    }
+
+   {
+      cerr << "!! Test producers consumers" << endl;
+
+       TimeLimitFifo<Foo> tlfNS(20, 50000);
+       
+       Producer prod1(tlfNS);
+       Producer prod2(tlfNS);
+       Producer prod3(tlfNS);
+       Producer prod4(tlfNS);
+       Producer prod5(tlfNS);
+       Producer prod6(tlfNS);
+       Producer prod7(tlfNS);
+       Producer prod8(tlfNS);
+       Producer prod9(tlfNS);
+       Producer prod10(tlfNS);
+
+       Consumer cons1(tlfNS);
+       Consumer cons2(tlfNS);
+       Consumer cons3(tlfNS);
+       Consumer cons4(tlfNS);
+       Consumer cons5(tlfNS);
+       Consumer cons6(tlfNS);
+       Consumer cons7(tlfNS);
+       Consumer cons8(tlfNS);
+       Consumer cons9(tlfNS);
+       Consumer cons10(tlfNS);
+
+
+       cons1.run();
+       cons2.run();
+       cons3.run();
+       cons4.run();
+       cons5.run();
+       cons6.run();
+       cons7.run();
+       cons8.run();
+       cons9.run();
+       cons10.run();
+
+       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
+       tlfNS.getNext(1000);
+       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+
+       prod1.run();
+
+       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
+       tlfNS.getNext(1000);
+       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+
+       prod2.run();
+       prod3.run();
+       prod4.run();
+       prod5.run();
+       prod6.run();
+       prod7.run();
+       prod8.run();
+       prod9.run();
+       prod10.run();
+
+   }
+
    cerr << "All OK" << endl;
    return 0;
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
