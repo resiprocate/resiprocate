@@ -6,12 +6,23 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Timer.hxx"
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 //#define VERBOSE
 
 using namespace resip;
 using namespace std;
+
+void sleepMS(unsigned int ms)
+{
+#ifdef WIN32
+   Sleep(ms);
+#else
+   usleep(ms*1000);
+#endif
+}
 
 class Foo
 {
@@ -29,14 +40,14 @@ class Consumer: public ThreadIf
       Consumer(TimeLimitFifo<Foo>&);
       virtual ~Consumer() 
       {
+#ifdef VERBOSE
+         cerr << "Consumer thread finishing..." << endl;
+#endif
          shutdown();
          join();
 #ifdef VERBOSE
          cerr << "Consumer thread finished" << endl;
 #endif
-
-         shutdown();
-         join();
       };
 
       void thread();
@@ -51,14 +62,14 @@ class Producer: public ThreadIf
       Producer(TimeLimitFifo<Foo>&);
       virtual ~Producer() 
       {
+#ifdef VERBOSE
+         cerr << "Producer thread finishing" << endl;
+#endif
          shutdown();
          join();
 #ifdef VERBOSE
          cerr << "Producer thread finished" << endl;
 #endif
-
-         shutdown();
-         join();
       }
 
       void thread();
@@ -73,8 +84,12 @@ Consumer::Consumer(TimeLimitFifo<Foo>& f) :
 
 void Consumer::thread()
 {
-    static unsigned wakeups[6] = { 10000, 20000, 30000, 0, 10000, 30000 };
+    static unsigned wakeups[6] = { 10, 20, 30, 0, 10, 30 };
     unsigned int w = 0;
+
+#ifdef VERBOSE
+    cerr << "Consumer running..." << endl;
+#endif
 
     while (!mShutdown) 
     {
@@ -87,11 +102,11 @@ void Consumer::thread()
           unsigned wakeup = wakeups[w];
           w = (w + 1) % 6;
 #ifdef VERBOSE
-          cerr << "Consumer sleeping for " << wakeup << " useconds with mSize " << mFifo.size() << endl;
+          cerr << "Consumer sleeping for " << wakeup << " ms with mSize " << mFifo.size() << endl;
 #endif
           if (wakeup > 0)
           {
-             usleep(wakeup);
+             sleepMS(wakeup);
           }
        }
     }
@@ -103,8 +118,12 @@ Producer::Producer(TimeLimitFifo<Foo>& f) :
 
 void Producer::thread()
 {
-   static unsigned wakeups[6] = { 0, 10000, 0, 20000, 30000, 10000 };
+   static unsigned wakeups[6] = { 0, 10, 0, 20, 30, 10 };
    unsigned int w = 0;
+
+#ifdef VERBOSE
+   cerr << "Producer running..." << endl;
+#endif
 
    for (unsigned long n = 0; n < 0x1ffff; n++) 
    {
@@ -117,11 +136,11 @@ void Producer::thread()
          unsigned wakeup = wakeups[w];
          w = (w + 1) % 6;
 #ifdef VERBOSE
-         cerr << "Producer sleeping for " << wakeup << " useconds at " << n << " with mSize " << mFifo.size() << endl;
+         cerr << "Producer sleeping for " << wakeup << " ms at " << n << " with mSize " << mFifo.size() << endl;
 #endif
          if (wakeup > 0)
          {
-            usleep(wakeup);
+            sleepMS(wakeup);
          }
       }
    }
@@ -155,8 +174,10 @@ main()
       c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
 
+#ifdef VERBOSE
       cerr << __LINE__ << endl;
-   
+#endif
+
       assert(!tlf.empty());
       assert(tlf.size() == 1);
 #ifdef VERBOSE
@@ -164,9 +185,11 @@ main()
 #endif
       assert(tlf.timeDepth() == 0);
 
+#ifdef VERBOSE
       cerr << __LINE__ << endl;
+#endif
 
-      sleep(2);
+      sleepMS(2000);
 
       assert(!tlf.empty());
       assert(tlf.size() == 1);
@@ -178,14 +201,16 @@ main()
       assert(tlf.size() == 0);
       assert(tlf.timeDepth() == 0);
 
+#ifdef VERBOSE
       cerr << __LINE__ << endl;
+#endif
 
       c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-      sleep(3);
+      sleepMS(3000);
       c = tlf.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-      sleep(3);
+      sleepMS(3000);
       c = tlf.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
       c = tlf.add(new Foo("yep"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
@@ -214,10 +239,10 @@ main()
 
       c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-      sleep(3);
+      sleepMS(3000);
       c = tlfNS.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
-      sleep(3);
+      sleepMS(3000);
       c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
       Foo* fp = tlfNS.getNext();
@@ -241,7 +266,7 @@ main()
          assert(c);
       }
 
-      sleep(6);
+      sleepMS(6000);
       c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
 
@@ -313,7 +338,7 @@ main()
       {
          c = tlfNS.add(new Foo(Data("element") + Data(i)), TimeLimitFifo<Foo>::EnforceTimeDepth);
          assert(c);
-         sleep(1);
+         sleepMS(1000);
       }
    }
    
@@ -343,62 +368,82 @@ main()
    {
       cerr << "!! Test producers consumers" << endl;
 
-       TimeLimitFifo<Foo> tlfNS(20, 50000);
+      TimeLimitFifo<Foo> tlfNS(20, 50000);
        
-       Producer prod1(tlfNS);
-       Producer prod2(tlfNS);
-       Producer prod3(tlfNS);
-       Producer prod4(tlfNS);
-       Producer prod5(tlfNS);
-       Producer prod6(tlfNS);
-       Producer prod7(tlfNS);
-       Producer prod8(tlfNS);
-       Producer prod9(tlfNS);
-       Producer prod10(tlfNS);
+      Producer prod1(tlfNS);
+      Producer prod2(tlfNS);
+      Producer prod3(tlfNS);
+      Producer prod4(tlfNS);
+      Producer prod5(tlfNS);
+      Producer prod6(tlfNS);
+      Producer prod7(tlfNS);
+      Producer prod8(tlfNS);
+      Producer prod9(tlfNS);
+      Producer prod10(tlfNS);
 
-       Consumer cons1(tlfNS);
-       Consumer cons2(tlfNS);
-       Consumer cons3(tlfNS);
-       Consumer cons4(tlfNS);
-       Consumer cons5(tlfNS);
-       Consumer cons6(tlfNS);
-       Consumer cons7(tlfNS);
-       Consumer cons8(tlfNS);
-       Consumer cons9(tlfNS);
-       Consumer cons10(tlfNS);
+      Consumer cons1(tlfNS);
+      Consumer cons2(tlfNS);
+      Consumer cons3(tlfNS);
+      Consumer cons4(tlfNS);
+      Consumer cons5(tlfNS);
+      Consumer cons6(tlfNS);
+      Consumer cons7(tlfNS);
+      Consumer cons8(tlfNS);
+      Consumer cons9(tlfNS);
+      Consumer cons10(tlfNS);
 
 
-       cons1.run();
-       cons2.run();
-       cons3.run();
-       cons4.run();
-       cons5.run();
-       cons6.run();
-       cons7.run();
-       cons8.run();
-       cons9.run();
-       cons10.run();
+      cons1.run();
+      cons2.run();
+      cons3.run();
+      cons4.run();
+      cons5.run();
+      cons6.run();
+      cons7.run();
+      cons8.run();
+      cons9.run();
+      cons10.run();
 
-       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
-       tlfNS.getNext(1000);
-       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+#ifdef VERBOSE
+      cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
+#endif
+      tlfNS.getNext(1000);
+#ifdef VERBOSE
+      cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+#endif
+      prod1.run();
 
-       prod1.run();
+#ifdef VERBOSE
+      cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
+#endif
+      tlfNS.getNext(1000);
+#ifdef VERBOSE
+      cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+#endif
+      prod2.run();
+      prod3.run();
+      prod4.run();
+      prod5.run();
+      prod6.run();
+      prod7.run();
+      prod8.run();
+      prod9.run();
+      prod10.run();
 
-       cerr << "before getNext(1000) " << Timer::getTimeMs() << endl;
-       tlfNS.getNext(1000);
-       cerr << "after getNext(1000) " << Timer::getTimeMs() << endl;
+      // Wait for producers to finish
+      prod1.join();
+      prod2.join();
+      prod3.join();
+      prod4.join();
+      prod5.join();
+      prod6.join();
+      prod7.join();
+      prod8.join();
+      prod9.join();
+      prod10.join();
 
-       prod2.run();
-       prod3.run();
-       prod4.run();
-       prod5.run();
-       prod6.run();
-       prod7.run();
-       prod8.run();
-       prod9.run();
-       prod10.run();
-
+      // Give some time for consumers to finish consuming, before shutting down
+      sleepMS(1000);
    }
 
    cerr << "All OK" << endl;
