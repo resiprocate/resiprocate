@@ -31,6 +31,15 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
 
 ifeq ($(USE_CCACHE),true)
+
+ ifdef CCACHE_DIR
+ export CCACHE_DIR
+ endif
+
+ ifdef CCACHE_UMASK
+ export CCACHE_UMASK
+ endif
+
  ifeq ($(USE_DISTCC),true)
   CC = $(CCACHE) $(DISTCC) gcc
   CXX = $(CCACHE) $(DISTCC) g++
