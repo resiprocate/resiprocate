@@ -1469,6 +1469,10 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
 
+#if (OPENSSL_VERSION_NUMBER < 0x0090705fL )
+#error PKCS7_encrypt() is broken in OpenSSL 0.9.7d
+#endif
+
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
    {
