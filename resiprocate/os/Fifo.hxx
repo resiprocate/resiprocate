@@ -35,6 +35,9 @@ class Fifo : public AbstractFifo
        */
       Msg* getNext(int ms);
 
+      /// delete all elements in the queue
+      virtual void clear();
+
    private:
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
@@ -48,7 +51,14 @@ Fifo<Msg>::Fifo() :
 }
 
 template <class Msg>
-Fifo<Msg>::~Fifo()
+Fifo<Msg>::~Fifo<Msg>()
+{
+   clear();
+}
+
+template <class Msg>
+void
+Fifo<Msg>::clear()
 {
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
@@ -91,8 +101,6 @@ Fifo<Msg> ::getNext(int ms)
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
