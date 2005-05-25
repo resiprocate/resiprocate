@@ -1,17 +1,17 @@
 #include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 using namespace resip;
 
 AbstractFifo::AbstractFifo(unsigned int maxSize)
    : mSize(0),
      mMaxSize(maxSize)
-{
-}
+{}
 
 AbstractFifo::~AbstractFifo()
-{
-}
+{}
 
 void*
 AbstractFifo ::getNext()
@@ -39,11 +39,13 @@ AbstractFifo::getNext(int ms)
 {
    Lock lock(mMutex); (void)lock;
 
-   // Wait while there are messages available.
-   //
-   if (mFifo.empty())
+   const UInt64 end(Timer::getTimeMs() + ms);
+
+   // Wait while there are messages available
+   while (mFifo.empty())
    {
-      bool signaled = mCondition.wait(mMutex, ms);
+      // bail if total wait time exceeds limit
+      bool signaled = mCondition.wait(mMutex, end - Timer::getTimeMs());
       if (!signaled)
       {
         return 0;
@@ -62,6 +64,7 @@ AbstractFifo::getNext(int ms)
 bool
 AbstractFifo::empty() const
 {
+   Lock lock(mMutex); (void)lock;
    return mSize == 0;
 }
 
@@ -72,6 +75,12 @@ AbstractFifo ::size() const
    return mSize;
 }
 
+time_t
+AbstractFifo::timeDepth() const
+{
+   return 0;
+}
+
 bool
 AbstractFifo::messageAvailable() const
 {
@@ -79,6 +88,19 @@ AbstractFifo::messageAvailable() const
    assert(mSize != NoSize);
    return !mFifo.empty();
 }
+
+size_t 
+AbstractFifo::getCountDepth() const
+{
+   return mSize;
+}
+
+size_t 
+AbstractFifo::getTimeDepth() const
+{
+   return 0;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
