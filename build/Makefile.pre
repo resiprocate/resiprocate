@@ -119,8 +119,8 @@ USE_DTLS=false
 # by Makefile.opt
 ######################################################################
 
-include $(BUILD)/Makefile.tools
 include $(BUILD)/Makefile.osarch
+include $(BUILD)/Makefile.tools
 
 ######################################################################
 # set defaults if the none of the above has overridden them.
