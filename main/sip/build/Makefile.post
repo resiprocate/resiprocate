@@ -166,12 +166,13 @@ all: code
 clean:
 	-rm -f *.rpo core core.* *~ \#* .make* *.a *.d *.S
 	-rm -rf html
-	-rm obj.*/*.rpo
-	-rm obj.*/*.so 
-	-rm obj.*/*.[oda] 
-	-rm obj.*/*/*.[oda] 
-	-rm bin.*/*
-	-rm bin.*/*/*
+	-rm -f obj.*/*.rpo
+	-rm -f obj.*/*.so 
+	-rm -f obj.*/*.[oda] 
+	-rm -f obj.*/*/*.[oda] 
+	-rm -f bin.*/*
+	-rm -f bin.*/*/*
+	for file in *; do test -h $$file && rm -f $$file; done ; true
 
 cleanall: clean
 	-rm -rf bin.* obj.*

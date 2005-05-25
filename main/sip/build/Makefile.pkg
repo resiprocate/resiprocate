@@ -27,8 +27,9 @@ endif
 ifeq ($(USE_SSL),true)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
-OPENSSL_LIBDIRS := /usr/local/ssl/lib
+OPENSSL_INCLUDEDIRS :=
+OPENSSL_LIBDIRS :=
+OPENSSL_DEFINES += USE_SSL
 endif
 
 # note there is no elif and no && for gnu make
@@ -39,12 +40,12 @@ OPENSSL_INCLUDEDIRS :=
 OPENSSL_LIBDIRS :=
 OPENSSL_LDLIBS_LAST := $(ROOT)/contrib/dtls/libssl.a $(ROOT)/contrib/dtls/libcrypto.a
 OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
+OPENSSL_DEFINES += USE_DTLS
 endif
 
-
-MYSQL_LIBNAME :=  mysqlclient z m
 ifeq ($(USE_MYSQL),true)
-DEFINES += USE_MYSQL
+MYSQL_LIBNAME :=  mysqlclient z m
+MYSQL_DEFINES += USE_MYSQL
 endif
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
@@ -94,5 +95,5 @@ endif
 
 ifeq ($(USE_POPT),true)
 POPT_DEFINES := HAVE_POPT_H
-POPT_LIBNAME  := popt
+POPT_LIBNAME := popt
 endif

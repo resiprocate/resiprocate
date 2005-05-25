@@ -42,7 +42,7 @@ endif
         LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
 
         DISTCC   = distcc 
-        CCACHE   =
+        CCACHE   = ccache
 
 endif
 
@@ -97,12 +97,6 @@ ifeq ($(OSTYPE),SunOS)
     CFLAGS   += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
     CXXFLAGS += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
     LDFLAGS  += -L/opt/sfw/lib
-
-    ifeq ($(USE_POPT), true)
-      CFLAGS   += -DHAVE_POPT_H 
-      CXXFLAGS += -DHAVE_POPT_H 
-      LDLIBS_LAST   += -lpopt
-    endif
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
         CXXFLAGS += -D_REENTRANT
@@ -227,14 +221,6 @@ ifeq ($(VOCAL_COMPILE_TYPE),prof)
 LDFLAGS  += -pg $(OPTFLAGS) -DNDEBUG
 CXXFLAGS += -pg $(OPTFLAGS) -DNDEBUG
 CFLAGS   += -pg $(OPTFLAGS) -DNDEBUG
-endif
-
-ifeq ($(USE_SSL),true)
-DEFINES += USE_SSL
-endif
-
-ifeq ($(USE_DTLS),true)
-DEFINES += USE_DTLS
 endif
 
 ######################################################################
