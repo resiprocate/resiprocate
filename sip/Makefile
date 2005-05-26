@@ -1,6 +1,6 @@
 
 BUILD 	=	build
-include $(BUILD)/Makefile.conf
+-include $(BUILD)/Makefile.conf
 
 ifeq ($(USE_DTLS),true)
 BUILD_DTLS = dtls
