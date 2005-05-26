@@ -1533,7 +1533,10 @@ TransactionState::sendToTU(TransactionMessage* msg) const
          case 600:
             break;
          default:
+            if (mDnsResult != NULL)
+            {
             mDnsResult->success();
+            }
             break;
       }
    }
