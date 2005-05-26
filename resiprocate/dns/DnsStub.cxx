@@ -426,6 +426,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
       int len = 0;
       ares_expand_name(aptr, abuf, alen, &name, &len);
       aptr += len;
+      free(name);
 
       if (DNS_RR_TYPE(aptr) == T_CNAME)
       {
