@@ -29,34 +29,8 @@
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
-
-ifeq ($(USE_CCACHE),true)
-
- ifdef CCACHE_DIR
- export CCACHE_DIR
- endif
-
- ifdef CCACHE_UMASK
- export CCACHE_UMASK
- endif
-
- ifeq ($(USE_DISTCC),true)
-  CC = $(CCACHE) $(DISTCC) gcc
-  CXX = $(CCACHE) $(DISTCC) g++
- else
-  CC = $(CCACHE) gcc
-  CXX = $(CCACHE) g++
- endif
-else 
- ifeq ($(USE_DISTCC),true)
-  CC = $(DISTCC) gcc
-  CXX = $(DISTCC) g++
- else
-  CC = gcc
-  CXX = g++
- endif
-endif
-
+CC		= gcc
+CXX		= g++
 MKSHLIB		= $(CC) -fPIC -shared 
 DEP		= $(CXX) 
 LINKER		= $(CXX) 
@@ -171,7 +145,6 @@ endif
 
 ############################## microsoft toolchain ##############################
 
-
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),msgnu)
 
 AR		= CC -xar -o
@@ -190,5 +163,33 @@ DEBUG_FLAG	= -Zi
 LD_STATIC       = -Bstatic
 LD_DYNAMIC      = -Bdynamic
 RANLIB		= ranlib
+
+endif
+
+############################## distcc/ccache ##############################
+
+ifeq ($(USE_DISTCC),true)
+
+  ifdef DISTCC_HOSTS
+  export DISTCC_HOSTS
+  endif
+
+  CC := $(DISTCC) $(CC)
+  CXX := $(DISTCC) $(CXX)
+
+endif
+
+ifeq ($(USE_CCACHE),true)
+
+  ifdef CCACHE_DIR
+  export CCACHE_DIR
+  endif
+
+  ifdef CCACHE_UMASK
+  export CCACHE_UMASK
+  endif
+
+  CC := $(CCACHE) $(CC)
+  CXX := $(CCACHE) $(CXX)
 
 endif
