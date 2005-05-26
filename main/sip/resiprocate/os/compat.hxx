@@ -122,9 +122,11 @@ typedef size_t socklen_t;
 #endif
 }
 
+#ifndef TARGET_OS_MAC
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
+#endif
 
 #if defined( WIN32 )
 typedef unsigned __int64 UInt64;
