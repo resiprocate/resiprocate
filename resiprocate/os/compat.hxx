@@ -10,6 +10,10 @@
 #undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
 #endif
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #if defined(HAVE_SYS_INT_TYPES_H)
 #include <sys/int_types.h>
 #endif
@@ -117,9 +121,6 @@ resipMax(const _Tp& __a, const _Tp& __b)
    if (__a < __b) return __b; return __a;
 }
 
-#if defined(__DARWIN__)
-typedef size_t socklen_t;
-#endif
 }
 
 #ifndef TARGET_OS_MAC
