@@ -106,6 +106,7 @@ endif
 # you choose to override any of the above options
 ######################################################################
 
+USE_IPV6=false
 USE_SSL=true
 USE_DTLS=false
 
