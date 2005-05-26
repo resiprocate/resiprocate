@@ -46,7 +46,7 @@ void DnsStub::process()
    while (mCommandFifo.messageAvailable())
    {
       Command* command = mCommandFifo.getNext();
-      command->execute();
+      command->doIt();
       delete command;
    }
 }
