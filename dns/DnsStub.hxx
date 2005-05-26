@@ -187,7 +187,7 @@ class DnsStub
 
    public:
       // sailesh - due to a bug in CodeWarrior,
-      // QueryCommand::execute() can only access this method
+      // QueryCommand::doIt() can only access this method
       // if it's public. Even using "friend" doesn't work.
       template<class QueryType>
       void query(const Data& target, int proto, DnsResultSink* sink)
@@ -201,15 +201,17 @@ class DnsStub
       }
       
    private:
-      void doBlacklisting(const Data& target, int rrType, 
-                          int protocol, const DataArr& targetsToBlacklist);
 
       class Command
       {
          public:
             virtual ~Command() {}
-            virtual void execute() = 0;
+            virtual void doIt() = 0;
       };
+
+
+      void doBlacklisting(const Data& target, int rrType, 
+                          int protocol, const DataArr& targetsToBlacklist);
 
       template<class QueryType>
       class QueryCommand : public Command
@@ -227,7 +229,7 @@ class DnsStub
 
             ~QueryCommand() {}
 
-            void execute()
+            void doIt()
             {
                mStub.query<QueryType>(mTarget, mProto, mSink);
             }
@@ -254,7 +256,7 @@ class DnsStub
                  mTargetsToBlacklist(targetToBlacklist)
             {}             
             ~BlacklistingCommand() {}
-            void execute()
+            void doIt()
             {
                mStub.doBlacklisting(mTarget, mRRType, mProto, mTargetsToBlacklist);
             }
