@@ -89,7 +89,7 @@ class SdpContents : public Contents
                   int mPayloadType;
                   Data mParameters;
 
-                  static CodecMap* sStaticCodecs;
+                  static std::auto_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
                   friend std::ostream& operator<<(std::ostream&, const Codec&);
             };
