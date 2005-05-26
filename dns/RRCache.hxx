@@ -41,7 +41,7 @@ class RRCache
    private:
       RRCache();
       static const int DEFAULT_SIZE = 512;
-      static RRCache* mInstance;
+      static std::auto_ptr<RRCache> mInstance;
       class CompareT  : public std::binary_function<const RRList*, const RRList*, bool>
       {
          public:
