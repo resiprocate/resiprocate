@@ -45,7 +45,7 @@ extern "C"
 using namespace resip;
 using namespace std;
 
-RRCache* RRCache::mInstance = new RRCache;
+std::auto_ptr<RRCache> RRCache::mInstance(new RRCache);
 
 RRCache::RRCache() 
    : mHead(),
@@ -69,9 +69,8 @@ RRCache::~RRCache()
 
 RRCache* RRCache::instance()
 {
-   return mInstance;
+   return mInstance.get();
 }
-
 
 void RRCache::updateCache(const Data& target,
                           const int rrType,
