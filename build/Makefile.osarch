@@ -35,9 +35,6 @@ ifeq ($(OSTYPE),NetBSD)
         INCDIRS  += /usr/pkg/include
         LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
 
-        DISTCC   = distcc 
-        CCACHE   = ccache
-
 	CXXFLAGS += $(shell test -x /usr/pkg/bin/cpuflags && /usr/pkg/bin/cpuflags)
 
 endif
@@ -58,9 +55,6 @@ endif
 
 	CXXFLAGS += -D_REENTRANT 
 	CFLAGS   += -D_REENTRANT 
-	DISTCC   = distcc 
-	CCACHE   = ccache
-        LDLIBS_LAST   += -lpopt
 
 ifeq ($(USE_GOOGLE_MALLOC),true)
 LDLIBS_LAST += -lprofiler
@@ -129,7 +123,6 @@ ifeq ($(OSTYPE),cygwin)
     USE_LIBGETOPT = 1
     CFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
     CXXFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
-    LDLIBS_LAST   += -lpopt
 endif
 
 
@@ -223,6 +216,8 @@ endif
 #              More Toolchain defaults
 ######################################################################
 
+DISTCC   = distcc 
+CCACHE   = ccache
 
 ifeq ($(OSCLASS),VXWORKS)
 
