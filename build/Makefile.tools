@@ -31,9 +31,9 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
 CC		= gcc
 CXX		= g++
-MKSHLIB		= $(CC) -fPIC -shared 
-DEP		= $(CXX) 
-LINKER		= $(CXX) 
+MKSHLIB		:= $(CC) -fPIC -shared 
+DEP		:= $(CXX) 
+LINKER		:= $(CXX) 
 RANLIB		= ranlib
 AR		= ar
 ARFLAGS		= rv
@@ -41,8 +41,8 @@ DFLAGS		= -MM
 DMANGLE		=
 INSTALL		= install
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
-CFLAGS		+= -Wall 
-CXXFLAGS	+= -Wall 
+CFLAGS		+= -Werror 
+CXXFLAGS	+= -Werror
 DFLAG_INTEGRATED = -MMD
 DEBUG_FLAG	= -g 
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
@@ -56,7 +56,7 @@ endif
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),intel)
 AR              = ar
 ARFLAGS         = rv
-MKSHLIB		= $(CC) -shared 
+MKSHLIB		:= $(CC) -shared 
 CC              = /opt/intel/compiler70/ia32/bin/icc
 CXX             = /opt/intel/compiler70/ia32/bin/icc
 DEP             = /opt/intel/compiler70/ia32/bin/icc -E
@@ -86,12 +86,12 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
 ifndef VOCAL_CROSS_ROOT
 VOCAL_CROSS_ROOT = /skiff/local/bin
 endif
-CC		= $(VOCAL_CROSS_ROOT)/arm-linux-gcc
-CXX		= $(VOCAL_CROSS_ROOT)/arm-linux-g++
-MKSHLIB		= $(CC) -fPIC -shared 
-DEP		= $(CXX) 
-LINKER		= $(CXX) 
-AR		= $(VOCAL_CROSS_ROOT)/arm-linux-ar
+CC		:= $(VOCAL_CROSS_ROOT)/arm-linux-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/arm-linux-g++
+MKSHLIB		:= $(CC) -fPIC -shared 
+DEP		:= $(CXX) 
+LINKER		:= $(CXX) 
+AR		:= $(VOCAL_CROSS_ROOT)/arm-linux-ar
 ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
