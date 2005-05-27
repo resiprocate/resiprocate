@@ -9,6 +9,7 @@ namespace resip
 class ExternalTimerHandler
 {
    public:
+      virtual ~ExternalTimerHandler() {}
       virtual void handleTimeout(AsyncID timerID)=0;
 };
 
@@ -16,6 +17,8 @@ class ExternalTimerHandler
 class ExternalTimer
 {
    public:
+      virtual ~ExternalTimer() {}
+
       virtual AsyncID generateAsyncID()=0;
       virtual void setHandler(ExternalTimerHandler* handler)=0;
       

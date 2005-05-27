@@ -12,6 +12,7 @@ class NameAddr;
 class ClientRegistrationHandler
 {
    public:
+      virtual ~ClientRegistrationHandler() { }
       /// Called when registraion succeeds or each time it is sucessfully
       /// refreshed. 
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
@@ -31,6 +32,8 @@ class ClientRegistrationHandler
 class ServerRegistrationHandler
 {
    public:
+      virtual ~ServerRegistrationHandler() {}
+
       /// Called when registration is refreshed
       virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
       

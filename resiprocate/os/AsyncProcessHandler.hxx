@@ -9,6 +9,7 @@ namespace resip
 class AsyncProcessHandler
 {
    public:
+      virtual ~AsyncProcessHandler() {} 
       virtual void handleProcessNotification() = 0; 
 };
 

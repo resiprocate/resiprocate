@@ -14,6 +14,8 @@ class SipMessage;
 class ClientPagerMessageHandler
 {
    public:
+      virtual ~ClientPagerMessageHandler() {}
+
       virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status)=0;
       //call on failure. The usage will be destroyed.  Note that this may not
       //necessarily be 4xx...a malformed 200, etc. could also reach here.
@@ -26,6 +28,8 @@ class ClientPagerMessageHandler
 class ServerPagerMessageHandler
 {
    public:
+      virtual ~ServerPagerMessageHandler() {}
+
       virtual void onMessageArrived(ServerPagerMessageHandle, const SipMessage& message)=0;
 };
 
