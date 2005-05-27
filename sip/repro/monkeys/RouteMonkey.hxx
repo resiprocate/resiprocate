@@ -1,5 +1,5 @@
-#if !defined(RESIP_ROUTEMONKEY_HXX)
-#define RESIP_ROUTEMONKEY_HXX 
+#if !defined(RESIP_STATICROUTE_HXX)
+#define RESIP_STATICROUTE_HXX 
 
 #include "repro/RequestProcessor.hxx"
 
@@ -7,11 +7,11 @@ namespace repro
 {
 class RouteStore;
 
-class RouteMonkey: public RequestProcessor
+class StaticRoute: public RequestProcessor
 {
    public:
-      RouteMonkey(RouteStore& store);
-      virtual ~RouteMonkey();
+      StaticRoute(RouteStore& store);
+      virtual ~StaticRoute();
       
       virtual processor_action_t handleRequest(RequestContext &);
       virtual void dump(std::ostream &os) const;
