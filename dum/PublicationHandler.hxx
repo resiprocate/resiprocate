@@ -15,6 +15,8 @@ class SecurityAttributes;
 class ClientPublicationHandler
 {
    public:
+      virtual ~ClientPublicationHandler() {}
+
       /// Called when the publication succeeds or each time it is sucessfully
       /// refreshed.
       virtual void onSuccess(ClientPublicationHandle, const SipMessage& status)=0;
@@ -38,6 +40,8 @@ class ClientPublicationHandler
 class ServerPublicationHandler
 {
    public:
+      virtual ~ServerPublicationHandler() {}
+
       virtual void onInitial(ServerPublicationHandle,
                              const Data& etag,
                              const SipMessage& pub,

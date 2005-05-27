@@ -27,6 +27,7 @@ class RedirectManager
       class Ordering : public std::binary_function<const NameAddr&, const NameAddr&, bool>
       {
          public:
+            virtual ~Ordering() {}
             virtual bool operator()(const NameAddr& lhs, const NameAddr& rhs) const;
       };
 

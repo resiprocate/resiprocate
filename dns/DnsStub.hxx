@@ -34,6 +34,7 @@ class DNSResult
 class DnsResultSink
 {
    public:
+      virtual ~DnsResultSink() {}
       virtual void onDnsResult(const DNSResult<DnsHostRecord>&) = 0;
 
 #ifdef USE_IPV6
@@ -48,6 +49,7 @@ class DnsResultSink
 class DnsRawSink
 {
    public:
+      virtual ~DnsRawSink() {}
       virtual void onDnsRaw(int statuts, const unsigned char* abuf, int len) = 0;
 };
 
@@ -68,6 +70,7 @@ class DnsStub
       class BlacklistListener
       {
          public:
+            virtual ~BlacklistListener() {}
             virtual void onBlacklisted(int rrType, const Data& target)= 0;
       };
 
