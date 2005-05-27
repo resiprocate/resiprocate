@@ -366,10 +366,28 @@
 				RelativePath=".\DeprecatedDialog.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsAAAARecord.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsCnameRecord.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsHostRecord.cxx">
+			</File>
+			<File
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsNaptrRecord.cxx">
+			</File>
+			<File
 				RelativePath="DnsResult.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsSrvRecord.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsStub.cxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.cxx">
@@ -552,6 +570,9 @@
 				RelativePath="QopParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\QueryTypes.cxx">
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
@@ -574,6 +595,18 @@
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRCache.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRList.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RROverlay.cxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRVip.cxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.cxx">
@@ -820,13 +853,34 @@
 				RelativePath=".\DeprecatedDialog.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsAAAARecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsCnameRecord.hxx">
+			</File>
+			<File
 				RelativePath=".\DnsHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsHostRecord.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsNaptrRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsResourceRecord.hxx">
+			</File>
+			<File
 				RelativePath="DnsResult.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsSrvRecord.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\DnsStub.hxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.hxx">
@@ -1045,6 +1099,9 @@
 				RelativePath="QopParameter.hxx">
 			</File>
 			<File
+				RelativePath=".\dns\QueryTypes.hxx">
+			</File>
+			<File
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
@@ -1067,6 +1124,21 @@
 			</File>
 			<File
 				RelativePath="RportParameter.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRCache.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRFactory.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRList.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RROverlay.hxx">
+			</File>
+			<File
+				RelativePath=".\dns\RRVip.hxx">
 			</File>
 			<File
 				RelativePath="os\RWMutex.hxx">
