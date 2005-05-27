@@ -258,16 +258,16 @@
 				RelativePath=".\ResponseContext.cxx">
 			</File>
 			<File
-				RelativePath=".\monkeys\RouteMonkey.cxx">
-			</File>
-			<File
-				RelativePath=".\monkeys\RouteProcessor.cxx">
-			</File>
-			<File
 				RelativePath=".\RouteStore.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\StaticRoute.cxx">
+			</File>
+			<File
 				RelativePath=".\Store.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\StrictRouteFixup.cxx">
 			</File>
 			<File
 				RelativePath=".\UserStore.cxx">
@@ -352,16 +352,16 @@
 				RelativePath=".\ResponseContext.hxx">
 			</File>
 			<File
-				RelativePath=".\monkeys\RouteMonkey.hxx">
-			</File>
-			<File
-				RelativePath=".\monkeys\RouteProcessor.hxx">
-			</File>
-			<File
 				RelativePath=".\RouteStore.hxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\StaticRoute.hxx">
+			</File>
+			<File
 				RelativePath=".\Store.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\StrictRouteFixup.hxx">
 			</File>
 			<File
 				RelativePath=".\UserStore.hxx">
