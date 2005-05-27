@@ -1,15 +1,15 @@
-#if !defined(RESIP_ROUTE_PROCESSOR_HXX)
-#define RESIP_ROUTE_PROCESSOR_HXX 
+#if !defined(RESIP_STRICT_ROUTE_FIXUP_HXX)
+#define RESIP_STRICT_ROUTE_FIXUP_HXX 
 #include "repro/RequestProcessor.hxx"
 
 namespace repro
 {
 
-  class RouteProcessor: public RequestProcessor
+  class StrictRouteFixup: public RequestProcessor
   {
     public:
-      RouteProcessor();
-      virtual ~RouteProcessor();
+      StrictRouteFixup();
+      virtual ~StrictRouteFixup();
 
       virtual processor_action_t handleRequest(RequestContext &);
       virtual void dump(std::ostream &os) const;
