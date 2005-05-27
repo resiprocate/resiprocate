@@ -31,6 +31,8 @@ ifeq ($(OSTYPE),NetBSD)
 # pull in system-specific changes (if available)
 -include /etc/mk.conf
 
+	CPUFLAGS :=  $(shell test -x /usr/pkg/bin/cpuflags && /usr/pkg/bin/cpuflags)
+
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT
 
@@ -38,8 +40,8 @@ ifeq ($(OSTYPE),NetBSD)
 	LIBDIRS  += /usr/pkg/lib
 
 	LDFLAGS  += -Wl,-rpath=/usr/pkg/lib
-
-	CXXFLAGS += $(shell test -x /usr/pkg/bin/cpuflags && /usr/pkg/bin/cpuflags)
+	CXXFLAGS += $(CPUFLAGS)
+	CFLAGS   += $(CPUFLAGS)
 
 endif
 
