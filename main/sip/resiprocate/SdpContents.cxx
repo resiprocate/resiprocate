@@ -33,6 +33,12 @@ static const Data fmtp("fmtp");
 // newline character"
 void skipEol(ParseBuffer& pb)
 {
+   while(!pb.eof() && (*pb.position() == Symbols::SPACE[0] ||
+                       *pb.position() == Symbols::TAB[0]))
+   {
+      pb.skipChar();
+   }
+   
    if (*pb.position() == Symbols::LF[0])
    {
       pb.skipChar();
