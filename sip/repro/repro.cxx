@@ -36,8 +36,8 @@
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
-#include "repro/monkeys/RouteMonkey.hxx"
-#include "repro/monkeys/RouteProcessor.hxx"
+#include "repro/monkeys/StaticRoute.hxx"
+#include "repro/monkeys/StrictRouteFixup.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -202,8 +202,8 @@ main(int argc, char** argv)
       // Should log about it.
       RequestProcessorChain* locators = new RequestProcessorChain();
       
-      RouteProcessor* rp = new RouteProcessor;
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
+      StrictRouteFixup* srf = new StrictRouteFixup;
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(srf));
       
 #if 0  // this is for request uri manipulation
       ManipulationMonkey* manip = new ManipulationMonkey
@@ -230,8 +230,8 @@ main(int argc, char** argv)
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
      
-      RouteMonkey* routeMonkey = new RouteMonkey(store.mRouteStore);
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
+      StaticRoute* sr = new StaticRoute(store.mRouteStore);
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(sr));
  
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
