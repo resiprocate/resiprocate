@@ -29,6 +29,7 @@ namespace resip
 class ParamBase
 {
    public:
+      virtual ~ParamBase() {}
       virtual ParameterTypes::Type getTypeNum() const = 0;
 };
 

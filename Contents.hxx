@@ -22,6 +22,7 @@ class ParseBuffer;
 class ContentsFactoryBase
 {
    public:
+      virtual ~ContentsFactoryBase() {}
       virtual Contents* create(HeaderFieldValue* hfv, 
                                const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;

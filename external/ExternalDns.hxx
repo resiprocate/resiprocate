@@ -91,6 +91,7 @@ class ExternalDnsHandler
       //virtual void handle_host(ExternalDnsHostResult res) = 0;
 
       // new version
+      virtual ~ExternalDnsHandler() {}
       virtual void handleDnsRaw(ExternalDnsRawResult res) = 0;
 };
 
