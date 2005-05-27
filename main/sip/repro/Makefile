@@ -47,12 +47,12 @@ SRC 	+=   \
         RequestProcessor.cxx \
         RequestProcessorChain.cxx \
 	\
-        monkeys/DigestAuthenticator.cxx \
-	monkeys/RouteProcessor.cxx \
 	monkeys/AmIResponsible.cxx \
-	monkeys/LocationServer.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
-	monkeys/RouteMonkey.cxx \
+	monkeys/DigestAuthenticator.cxx \
+	monkeys/LocationServer.cxx \
+	monkeys/StaticRoute.cxx \
+	monkeys/StrictRouteFixup.cxx \
 	\
 
 
