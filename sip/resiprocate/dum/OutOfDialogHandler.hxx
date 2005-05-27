@@ -11,6 +11,7 @@ namespace resip
 class OutOfDialogHandler
 {
    public:
+      virtual ~OutOfDialogHandler() {}
       // Client Handlers
       virtual void onSuccess(ClientOutOfDialogReqHandle, const SipMessage& successResponse)=0;
       virtual void onFailure(ClientOutOfDialogReqHandle, const SipMessage& errorResponse)=0;

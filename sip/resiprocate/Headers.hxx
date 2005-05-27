@@ -60,6 +60,7 @@ class TypeIf<false>
 class HeaderBase
 {
    public:
+      virtual ~HeaderBase() {}
       virtual Headers::Type getTypeNum() const = 0;
       virtual void merge(SipMessage&, const SipMessage&)=0;
 };

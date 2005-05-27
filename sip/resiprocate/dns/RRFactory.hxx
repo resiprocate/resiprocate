@@ -10,6 +10,7 @@ namespace resip
 class RRFactoryBase
 {
    public:
+      virtual ~RRFactoryBase() {}
       virtual DnsResourceRecord* create(const RROverlay&) const = 0;
 };
 
