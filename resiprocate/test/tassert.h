@@ -42,7 +42,7 @@ const int tassert_max_cases = 100;
 static int tassert_ncases = 0;
 std::list<int> tassert_location;
 
-struct {
+struct _tassert {
       bool ran;
       bool result;
 } tassert_results[tassert_max_cases];
