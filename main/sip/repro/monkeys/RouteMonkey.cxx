@@ -4,7 +4,7 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
-#include "repro/monkeys/RouteMonkey.hxx"
+#include "repro/monkeys/StaticRoute.hxx"
 #include "repro/RequestContext.hxx"
 
 #include "resiprocate/os/Logger.hxx"
@@ -19,17 +19,17 @@ using namespace repro;
 using namespace std;
 
 
-RouteMonkey::RouteMonkey(RouteStore& store) :
+StaticRoute::StaticRoute(RouteStore& store) :
    mRouteStore(store)
 {}
 
 
-RouteMonkey::~RouteMonkey()
+StaticRoute::~StaticRoute()
 {}
 
 
 RequestProcessor::processor_action_t
-RouteMonkey::handleRequest(RequestContext& context)
+StaticRoute::handleRequest(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -72,7 +72,7 @@ RouteMonkey::handleRequest(RequestContext& context)
 }
 
 void
-RouteMonkey::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
+StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 {
    Message *message = rc.getCurrentEvent();
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
@@ -85,9 +85,9 @@ RouteMonkey::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 }
 
 void
-RouteMonkey::dump(std::ostream &os) const
+StaticRoute::dump(std::ostream &os) const
 {
-   os << "Route Monkey" << std::endl;
+   os << "Static Route Monkey" << std::endl;
 }
 
 
