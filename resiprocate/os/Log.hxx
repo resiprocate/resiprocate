@@ -158,6 +158,7 @@ class Log
 class ExternalLogger
 {
    public:
+      virtual ~ExternalLogger() {}
       virtual void operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
