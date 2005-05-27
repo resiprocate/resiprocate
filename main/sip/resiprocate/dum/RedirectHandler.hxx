@@ -11,6 +11,8 @@ class NameAddr;
 class RedirectHandler
 {
    public:
+      virtual ~RedirectHandler() {}
+
 //3xx that isn't 380 or 305 has been received
       virtual void onRedirectReceived(AppDialogSetHandle, const SipMessage& response)=0;
       
