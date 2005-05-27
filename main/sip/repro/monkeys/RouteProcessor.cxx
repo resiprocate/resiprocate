@@ -3,7 +3,7 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
-#include "RouteProcessor.hxx"
+#include "StrictRouteFixup.hxx"
 #include "../RequestContext.hxx"
 
 #include "resiprocate/os/Logger.hxx"
@@ -14,10 +14,10 @@ using namespace repro;
 using namespace std;
 
 
-RouteProcessor::RouteProcessor()
+StrictRouteFixup::StrictRouteFixup()
 {}
 
-RouteProcessor::~RouteProcessor()
+StrictRouteFixup::~StrictRouteFixup()
 {}
 
 /** @brief This monkey looks to see if the request has
@@ -29,7 +29,7 @@ RouteProcessor::~RouteProcessor()
  *        (after the above preprocessing).
  */
 RequestProcessor::processor_action_t
-RouteProcessor::handleRequest(RequestContext& context)
+StrictRouteFixup::handleRequest(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -51,9 +51,9 @@ RouteProcessor::handleRequest(RequestContext& context)
 }
 
 void
-RouteProcessor::dump(std::ostream &os) const
+StrictRouteFixup::dump(std::ostream &os) const
 {
-   os << "RouteProcessor monkey" << std::endl;
+   os << "StrictRouteFixup monkey" << std::endl;
 }
 
 
