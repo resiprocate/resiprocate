@@ -14,6 +14,8 @@ class SipMessage;
 class DialogSetHandler
 {
    public:
+      virtual ~DialogSetHandler() {}
+
       //called when a 100 is received 
       virtual void onTrying(AppDialogSetHandle, const SipMessage& msg)=0;
       

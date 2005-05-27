@@ -12,6 +12,8 @@ class SecurityAttributes;
 class ClientSubscriptionHandler
 {
   public:
+      virtual ~ClientSubscriptionHandler() { }
+
       virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
 
       //Client must call acceptUpdate or rejectUpdate for any onUpdateFoo
@@ -31,6 +33,8 @@ class ClientSubscriptionHandler
 class ServerSubscriptionHandler
 {
   public:   
+      virtual ~ServerSubscriptionHandler() {}
+
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onPublished(ServerSubscriptionHandle associated, 
