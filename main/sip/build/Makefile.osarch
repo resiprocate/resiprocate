@@ -18,6 +18,7 @@ ifeq ($(OSTYPE),FreeBSD)
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
+
 endif
 
 ############################## NetBSD ##############################
@@ -32,8 +33,11 @@ ifeq ($(OSTYPE),NetBSD)
 
 	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT
-        INCDIRS  += /usr/pkg/include
-        LDFLAGS  += -L /usr/pkg/lib -Wl,-rpath=/usr/pkg/lib
+
+	INCDIRS  += /usr/pkg/include
+	LIBDIRS  += /usr/pkg/lib
+
+	LDFLAGS  += -Wl,-rpath=/usr/pkg/lib
 
 	CXXFLAGS += $(shell test -x /usr/pkg/bin/cpuflags && /usr/pkg/bin/cpuflags)
 
@@ -76,6 +80,7 @@ ifeq ($(OSTYPE),QNX)
     LDLIBS_LAST   += -lsocket -lstdc++ 
     USE_SSL = false
     USE_DTLS = false
+
 endif
 
 
@@ -84,9 +89,11 @@ endif
 ifeq ($(OSTYPE),SunOS)
 
     USE_LIBGETOPT = 1
-    CFLAGS   += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
-    CXXFLAGS += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
-    LDFLAGS  += -L/opt/sfw/lib
+    CFLAGS   += -DSUNXIL_WARNING_DISABLE
+    CXXFLAGS += -DSUNXIL_WARNING_DISABLE 
+
+    INCDIRS += /opt/sfw/include
+    LIBDIRS += /opt/sfw/lib
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
         CXXFLAGS += -D_REENTRANT
@@ -108,21 +115,28 @@ endif
 # the 
 
 ifeq ($(OSTYPE),Darwin)
-    CXXFLAGS += -D_REENTRANT -I/sw/include
-    CFLAGS   += -D_REENTRANT -I/sw/include
-    LDFLAGS  += -L/sw/lib
+
+-include /etc/mk.conf
+
+    CXXFLAGS += -D_REENTRANT
+    CFLAGS   += -D_REENTRANT
+
+    INCDIRS += /sw/include
+    LIBDIRS += /sw/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
+
 endif
 
 
 ############################ cygwin ##################################
 
 ifeq ($(OSTYPE),cygwin)
+
     USE_LIBGETOPT = 1
-    CFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
-    CXXFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
+    INCDIRS += $(ROOT)/contrib/win32/mingw/include $(ROOT)/contrib/win32/pthreads
+
 endif
 
 
