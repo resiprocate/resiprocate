@@ -66,14 +66,18 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
       }
       
       // if there was no Proxy-Auth header already, and the request is purportedly From
-      // one of our domains, send a challenge.
+      // one of our domains, send a challenge, unless this is from a trusted node in one
+      // of "our" domains (ex: from a gateway).
       //
       // Note that other monkeys can still challenge the request later if needed 
-      // for other reasons (for example, the RouteMonkey)
+      // for other reasons (for example, the StaticRoute monkey)
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         challengeRequest(rc, false);
-         return SkipAllChains;
+         // if (!rc.fromTrustedNode())
+         // {
+               challengeRequest(rc, false);
+               return SkipAllChains;
+         // }
       }
    }
    else if (userAuthInfo)
@@ -105,26 +109,79 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
          case Helper::Authenticated:
             InfoLog (<< "Authentication ok for " << user);
             
-            // !rwm! Not so fast!  these might be needed by a downstream node!
-            //sipMessage->remove(h_Authorizations);
-            //sipMessage->remove(h_ProxyAuthorizations);
-            
-            for (Auths::iterator i = authHeaders.begin() ; i != authHeaders.end() ; ++i)
+            // Delete the Proxy-Auth header for this realm.  
+            // other Proxy-Auth headers might be needed by a downsteram node
+/*            
+            Auths::iterator i = authHeaders.begin();
+            Auths::iterator j = authHeaders.begin();
+            while( i != authHeaders.end() )
             {
-               // !rwm!  TODO sometime we need to have a separate isMyRealm() function
                if (proxy.isMyDomain(i->param(p_realm)))
                {
-                  // need a safe alternative to delete the Proxy-Auth header used by us
-                  // authHeaders.erase(i);}
-                  ;
+                  j = i++;
+                  authHeaders.erase(j);
+               }
+               else
+               {
+                  ++i;
                }
             }
-
-            
+*/            
+                        
             if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
                rc.setDigestIdentity(user);
+
+               // TODO Need a nerd knob to set PAI
+               if (sipMessage->exists(h_PPreferredIdentities))
+               {
+                  // find the fist sip or sips P-Preferred-Identity header  and the first tel
+                  // bool haveSip = false;
+                  // bool haveTel = false;
+                  // for (;;)
+                  // {
+                  //    if ((i->uri().scheme() == Symbols::SIP) || (i->uri().scheme() == Symbols::SIPS))
+                  //    {
+                  //       if (haveSip)
+                  //       {
+                  //          continue;   // skip all but the first sip: or sips: URL
+                  //       }
+                  //       haveSip = true;
+                  //
+                  //       if (knownSipIdentity( user, realm, i->uri() )  // should be NameAddr?
+                  //       {
+                  //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
+                  //       }
+                  //       else
+                  //       {
+                  //          sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm));
+                  //       }
+                  //    }
+                  //    else if ((i->uri().scheme() == Symbols::TEL))
+                  //    {
+                  //       if (haveTel)
+                  //       {
+                  //          continue;  // skip all but the first tel: URL
+                  //       }
+                  //       haveTel = true;
+                  //
+                  //       if (knownTelIdentity( user, realm, i->uri() ))
+                  //       {
+                  //          sipMessage->header(h_PAssertedIdentities).push_back( i->uri() );
+                  //       }
+                  //    }
+                  // }
+                  // sipMessage->header(h_PPreferredIdentities).erase();
+               }
+               else
+               {
+                  if (!sipMessage->exists(h_PAssertedIdentities))
+                  {
+                     // sipMessage->header(h_PAssertedIdentities).push_back(getDefaultIdentity(user, realm));
+                  }
+               }            
             
+               // TODO need nerd knob to enable/disable adding Identity header
                sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
                static Data post(":5080/cert?domain=");

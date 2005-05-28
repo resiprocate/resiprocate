@@ -32,6 +32,7 @@
 #include "repro/BerkeleyDb.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
+#include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
@@ -209,6 +210,9 @@ main(int argc, char** argv)
       ManipulationMonkey* manip = new ManipulationMonkey
       locators->addProcessor(std::auto_ptr<RequestProcessor>(manip));
 #endif
+
+      IsTrustedNode* isTrusted = new IsTrustedNode;
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(isTrusted));
 
       if (!args.mNoChallenge)
       {
