@@ -2,7 +2,7 @@
 
 using namespace resip;
 
-PagerMessageCreator::PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile& userProfile)
+PagerMessageCreator::PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile>& userProfile)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, MESSAGE);
