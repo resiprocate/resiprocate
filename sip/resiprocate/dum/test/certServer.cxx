@@ -287,18 +287,19 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          addTransport(TCP, 5100);
          addTransport(TLS, 5101, V4, Data::Empty, me.uri().host(), Data::Empty);
          
-         mProfile.clearSupportedMethods();
-         mProfile.addSupportedMethod(PUBLISH);
-         mProfile.addSupportedMethod(SUBSCRIBE);
-         mProfile.validateAcceptEnabled() = true;
-         mProfile.validateContentEnabled() = true;
-         mProfile.addSupportedMimeType(PUBLISH, Pkcs8Contents::getStaticType());
-         mProfile.addSupportedMimeType(SUBSCRIBE, Pkcs8Contents::getStaticType());
-         mProfile.addSupportedMimeType(PUBLISH, X509Contents::getStaticType());
-         mProfile.addSupportedMimeType(SUBSCRIBE, X509Contents::getStaticType());
+         mProfile = new MasterProfile;
+         mProfile->clearSupportedMethods();
+         mProfile->addSupportedMethod(PUBLISH);
+         mProfile->addSupportedMethod(SUBSCRIBE);
+         mProfile->validateAcceptEnabled() = true;
+         mProfile->validateContentEnabled() = true;
+         mProfile->addSupportedMimeType(PUBLISH, Pkcs8Contents::getStaticType());
+         mProfile->addSupportedMimeType(SUBSCRIBE, Pkcs8Contents::getStaticType());
+         mProfile->addSupportedMimeType(PUBLISH, X509Contents::getStaticType());
+         mProfile->addSupportedMimeType(SUBSCRIBE, X509Contents::getStaticType());
          
          mProfile.setDefaultFrom(me);
-         setMasterProfile(&mProfile);
+         setMasterProfile(mProfile);
 
          addServerSubscriptionHandler(Symbols::Credential, &mPrivateKeyServer);
          addServerSubscriptionHandler(Symbols::Certificate, &mCertServer);
@@ -343,7 +344,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
       }
 
    private:
-      MasterProfile mProfile;
+      SharedPtr<MasterProfile> mProfile;
       CertSubscriptionHandler mCertServer;
       PrivateKeySubscriptionHandler mPrivateKeyServer;
       CertPublicationHandler mCertUpdater;

@@ -134,9 +134,9 @@ main (int argc, char** argv)
    DialogUsageManager controller;
    controller.addTransport(UDP, 12005);
 
-   MasterProfile uacMasterProfile;      
+   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);      
    auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
-   controller.setMasterProfile(&uacMasterProfile);
+   controller.setMasterProfile(uacMasterProfile);
    controller.setClientAuthManager(uacAuth);
 
    Controller invSessionHandler;
