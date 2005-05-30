@@ -257,8 +257,6 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else if (code < 300) // success
       {
-         //Profile* profile = mDum.getMasterProfile();
-
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 

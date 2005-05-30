@@ -9,9 +9,19 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-
-UserProfile::UserProfile(Profile *baseProfile) : Profile(baseProfile)
+UserProfile::UserProfile() : Profile()
 {
+    //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
+}
+
+UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile)
+{
+    //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
+}
+
+UserProfile::~UserProfile()
+{
+    //InfoLog (<< "************ UserProfile destroyed!: " << *this);
 }
 
 void

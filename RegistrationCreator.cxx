@@ -6,7 +6,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile& userProfile, int RegistrationTime)
+RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile>& userProfile, int RegistrationTime)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);
