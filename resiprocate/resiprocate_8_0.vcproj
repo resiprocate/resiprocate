@@ -42,7 +42,7 @@
 				AdditionalOptions="/Zm300&#x0A;"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -113,7 +113,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -1163,6 +1163,12 @@
 			</File>
 			<File
 				RelativePath=".\os\SHA1Stream.hxx">
+			</File>
+			<File
+				RelativePath=".\os\SharedCount.hxx">
+			</File>
+			<File
+				RelativePath=".\os\SharedPtr.hxx">
 			</File>
 			<File
 				RelativePath=".\ShutdownMessage.hxx">
