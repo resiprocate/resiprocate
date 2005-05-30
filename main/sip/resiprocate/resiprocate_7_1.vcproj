@@ -1076,6 +1076,12 @@
 				RelativePath=".\os\SHA1Stream.hxx">
 			</File>
 			<File
+				RelativePath=".\os\SharedCount.hxx">
+			</File>
+			<File
+				RelativePath=".\os\SharedPtr.hxx">
+			</File>
+			<File
 				RelativePath=".\ShutdownMessage.hxx">
 			</File>
 			<File
