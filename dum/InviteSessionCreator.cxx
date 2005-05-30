@@ -7,7 +7,7 @@ using namespace resip;
 
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const NameAddr& target,
-                                           UserProfile& userProfile,
+                                           SharedPtr<UserProfile>& userProfile,
                                            const SdpContents* initial,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, userProfile),
@@ -18,9 +18,10 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    makeInitialRequest(target, INVITE);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
-       if(userProfile.getDefaultSessionTime() >= 90)
+       assert(userProfile.get());
+       if(userProfile->getDefaultSessionTime() >= 90)
        {
-           getLastRequest().header(h_SessionExpires).value() = userProfile.getDefaultSessionTime();
+           getLastRequest().header(h_SessionExpires).value() = userProfile->getDefaultSessionTime();
            getLastRequest().header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
        }
    }

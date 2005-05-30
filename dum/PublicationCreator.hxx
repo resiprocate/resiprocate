@@ -13,7 +13,7 @@ class PublicationCreator: public BaseCreator
    public:
       PublicationCreator(DialogUsageManager& dum, 
                          const NameAddr& targetDocument, 
-                         UserProfile& userProfile,
+                         SharedPtr<UserProfile>& userProfile,
                          const Contents& body, 
                          const Data& eventType, 
                          unsigned expireSeconds );
