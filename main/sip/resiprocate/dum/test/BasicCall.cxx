@@ -75,10 +75,10 @@ public:
    {  
       return new testAppDialog(mDum, mSampleAppData);  
    }
-   virtual UserProfile* selectUASUserProfile(const SipMessage& msg) 
+   virtual SharedPtr<UserProfile>& selectUASUserProfile(const SipMessage& msg) 
    { 
       cout << mSampleAppData << ": testAppDialogSet: UAS UserProfile requested for msg: " << msg.brief() << endl;  
-      return mDum.getMasterProfile(); 
+      return mDum.getMasterUserProfile(); 
    }
    Data mSampleAppData;
 };
@@ -415,18 +415,18 @@ class TestShutdownHandler : public DumShutdownHandler
 int 
 main (int argc, char** argv)
 {
-   Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
 
    //set up UAC
    SipStack stackUac;
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
    dumUac->addTransport(UDP, 12005);
 
-   MasterProfile uacMasterProfile;      
+   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
    auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
-   dumUac->setMasterProfile(&uacMasterProfile);
+   dumUac->setMasterProfile(uacMasterProfile);
    dumUac->setClientAuthManager(uacAuth);
 
    TestUac uac;
@@ -454,9 +454,9 @@ main (int argc, char** argv)
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    dumUas->addTransport(UDP, 12010);
    
-   MasterProfile uasMasterProfile;   
+   SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
-   dumUas->setMasterProfile(&uasMasterProfile);
+   dumUas->setMasterProfile(uasMasterProfile);
    dumUas->setClientAuthManager(uasAuth);
 
 #if !defined(NO_REGISTRATION)
