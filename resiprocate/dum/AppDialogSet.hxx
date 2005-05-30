@@ -23,7 +23,7 @@ class AppDialogSet : public Handled
 
       virtual void end();
 
-      virtual UserProfile* getUserProfile();
+      virtual SharedPtr<UserProfile> getUserProfile();
 
       virtual AppDialog* createAppDialog(const SipMessage&);
 
@@ -43,7 +43,7 @@ class AppDialogSet : public Handled
       // This is called by the DialogUsageManager to select an userProfile to assign to a UAS DialogSet.
       // The application should not call this directly, but should override it, in order to assign 
       // an userProfile other than the MasterProfile
-      virtual UserProfile* selectUASUserProfile(const SipMessage&); 
+      virtual SharedPtr<UserProfile>& selectUASUserProfile(const SipMessage&); 
 
    private:
       /// Prepare for association with a different dialog set id.  Need this
