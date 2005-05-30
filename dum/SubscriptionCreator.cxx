@@ -3,7 +3,7 @@
 
 using namespace resip;
 
-SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, int subscriptionTime)
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& event, int subscriptionTime)
    : BaseCreator(dum, userProfile),
      mRefreshInterval(-1)
 {
@@ -13,7 +13,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr
    mLastRequest.header(h_Expires).value() = subscriptionTime;
 }
 
-SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, int subscriptionTime, int refreshInterval)
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& event, int subscriptionTime, int refreshInterval)
    : BaseCreator(dum, userProfile),
      mRefreshInterval(refreshInterval)
 {

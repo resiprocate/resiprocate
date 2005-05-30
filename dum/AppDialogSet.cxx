@@ -36,14 +36,14 @@ AppDialogSet::end()
    }
 }
 
-UserProfile*  
+SharedPtr<UserProfile>&  
 AppDialogSet::selectUASUserProfile(const SipMessage&)
 {
    // Default is Master Profile - override this method to select a different userProfile for UAS DialogSets
-   return mDum.getMasterProfile();
+   return mDum.getMasterUserProfile();
 }
 
-UserProfile* 
+SharedPtr<UserProfile> 
 AppDialogSet::getUserProfile()
 {
    if(mDialogSet)
@@ -52,7 +52,7 @@ AppDialogSet::getUserProfile()
    }
    else
    {
-      return 0;
+      return SharedPtr<UserProfile>();
    }
 }
 

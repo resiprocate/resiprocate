@@ -53,7 +53,6 @@ using namespace resip;
 using namespace std;
 
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
-   mMasterProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -205,17 +204,25 @@ void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactor
    mAppDialogSetFactory = factory;
 }
 
-MasterProfile*
+SharedPtr<MasterProfile>&
 DialogUsageManager::getMasterProfile()
 {
-   assert(mMasterProfile);
+   assert(mMasterProfile.get());
    return mMasterProfile;
 }
 
-void DialogUsageManager::setMasterProfile(MasterProfile* masterProfile)
+SharedPtr<UserProfile>&
+DialogUsageManager::getMasterUserProfile()
 {
-   assert(!mMasterProfile);
+   assert(mMasterUserProfile.get());
+   return mMasterUserProfile;
+}
+
+void DialogUsageManager::setMasterProfile(SharedPtr<MasterProfile>& masterProfile)
+{
+   assert(!mMasterProfile.get());
    mMasterProfile = masterProfile;
+   mMasterUserProfile = masterProfile; // required so that we can return a reference to SharedPtr<UserProfile> in getMasterUserProfile
 }
 
 void DialogUsageManager::setKeepAliveManager(std::auto_ptr<KeepAliveManager> manager)
@@ -411,7 +418,7 @@ DialogUsageManager::sendResponse(SipMessage& response)
 }
 
 SipMessage&
-DialogUsageManager::makeInviteSession(const NameAddr& target, UserProfile& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer), appDs);
    return inv;
@@ -420,7 +427,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target, UserProfile& userP
 SipMessage&
 DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, *getMasterProfile(), initialOffer), appDs);
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, getMasterUserProfile(), initialOffer), appDs);
    return inv;
 }
 
@@ -448,7 +455,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    // !jf! this code assumes you have a UserProfile
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this,
                                                              target,
-                                                             *serverSub->mDialog.mDialogSet.getUserProfile(),
+                                                             serverSub->mDialog.mDialogSet.getUserProfile(),
                                                              initialOffer, serverSub), appDs);
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
@@ -469,20 +476,21 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType, AppDialogSet* appDs)
+DialogUsageManager::makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, userProfile.getDefaultSubscriptionTime()), appDs);
+   assert(userProfile.get());
+   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, userProfile->getDefaultSubscriptionTime()), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType,
+DialogUsageManager::makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType,
                                      int subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType,
+DialogUsageManager::makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType,
                                      int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
@@ -491,31 +499,32 @@ DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userPr
 SipMessage&
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, getMasterProfile()->getDefaultSubscriptionTime()), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, getMasterProfile()->getDefaultSubscriptionTime()), appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
                                      int subscriptionTime, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, subscriptionTime), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime), appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
                                      int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, subscriptionTime, refreshInterval), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime, refreshInterval), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeRegistration(const NameAddr& target, UserProfile& userProfile, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, SharedPtr<UserProfile>& userProfile, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target, userProfile, userProfile.getDefaultRegistrationTime()), appDs);
+   assert(userProfile.get());
+   return makeNewSession(new RegistrationCreator(*this, target, userProfile, userProfile->getDefaultRegistrationTime()), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeRegistration(const NameAddr& target, UserProfile& userProfile, int registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
 }
@@ -523,18 +532,18 @@ DialogUsageManager::makeRegistration(const NameAddr& target, UserProfile& userPr
 SipMessage&
 DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target, *getMasterProfile(), getMasterProfile()->getDefaultRegistrationTime()), appDs);
+   return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), getMasterProfile()->getDefaultRegistrationTime()), appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target, *getMasterProfile(), registrationTime), appDs);
+   return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), registrationTime), appDs);
 }
 
 SipMessage&
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
-                                    UserProfile& userProfile,
+                                    SharedPtr<UserProfile>& userProfile,
                                     const Contents& body,
                                     const Data& eventType,
                                     unsigned expiresSeconds,
@@ -550,11 +559,11 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     unsigned expiresSeconds,
                                     AppDialogSet* appDs)
 {
-   return makeNewSession(new PublicationCreator(*this, targetDocument, *getMasterProfile(), body, eventType, expiresSeconds), appDs);
+   return makeNewSession(new PublicationCreator(*this, targetDocument, getMasterUserProfile(), body, eventType, expiresSeconds), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, UserProfile& userProfile, const MethodTypes meth, AppDialogSet* appDs)
+DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* appDs)
 {
    return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, userProfile), appDs);
 }
@@ -562,11 +571,11 @@ DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, UserProfile& 
 SipMessage&
 DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* appDs)
 {
-   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, *getMasterProfile()), appDs);
+   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, getMasterUserProfile()), appDs);
 }
 
 ClientPagerMessageHandle
-DialogUsageManager::makePagerMessage(const NameAddr& target, UserProfile& userProfile, AppDialogSet* appDs)
+DialogUsageManager::makePagerMessage(const NameAddr& target, SharedPtr<UserProfile>& userProfile, AppDialogSet* appDs)
 {
    if (!mClientPagerMessageHandler)
    {
@@ -581,7 +590,7 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, UserProfile& userPr
 ClientPagerMessageHandle
 DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs)
 {
-   return makePagerMessage(target, *getMasterProfile(), appDs);
+   return makePagerMessage(target, getMasterUserProfile(), appDs);
 }
 
 void
@@ -592,13 +601,14 @@ DialogUsageManager::send(SipMessage& msg)
    UserProfile* userProfile;
    if (ds == 0)
    {
-      userProfile = getMasterProfile();
+      userProfile = getMasterUserProfile().get();
    }
    else
    {
-      userProfile = ds->getUserProfile();
+      userProfile = ds->getUserProfile().get();
    }
 
+   assert(userProfile);
    if (userProfile->hasUserAgent())
    {
       msg.header(h_UserAgent).value() = userProfile->getUserAgent();

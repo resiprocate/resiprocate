@@ -5,6 +5,7 @@
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/os/SharedPtr.hxx"
 
 namespace resip
 {
@@ -14,7 +15,8 @@ class Data;
 class Profile
 {
    public:        
-      Profile(Profile *baseProfile = 0);  // Default to no base profile
+      Profile();  // Default to no base profile
+      Profile(SharedPtr<Profile> baseProfile);
       virtual ~Profile();
 
       // Note:
@@ -192,7 +194,7 @@ class Profile
       bool mHasFixedTransportPort;
       int  mFixedTransportPort;
       
-      Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
+      SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
 
 }

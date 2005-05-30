@@ -6,77 +6,77 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-Profile::Profile(Profile *baseProfile) : 
+Profile::Profile()
+{
+   // Default settings - since a fall through (base) profile was not provided
+   mHasDefaultRegistrationExpires = true;
+   mDefaultRegistrationExpires = 3600; // 1 hour
+
+   mHasDefaultMaxRegistrationExpires = true;
+   mDefaultMaxRegistrationExpires = 0; // No restriction
+
+   mHasDefaultRegistrationRetryInterval = true;
+   mDefaultRegistrationRetryInterval = 0; // Retries disabled
+
+   mHasDefaultSubscriptionExpires = true;
+   mDefaultSubscriptionExpires = 3600; // 1 hour
+
+   mHasDefaultPublicationExpires = true;
+   mDefaultPublicationExpires = 3600;  // 1 hour
+
+   mHasDefaultStaleCallTime = true;
+   mDefaultStaleCallTime = 180;        // 3 minutes
+
+   mHasDefaultSessionExpires = true;
+   mDefaultSessionExpires = 1800;      // 30 minutes
+
+   mHasDefaultSessionTimerMode = true;
+   mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
+
+   mHas1xxRetransmissionTime = true;
+   m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
+
+   mHasOutboundProxy = false;
+
+   mHasAdvertisedCapabilities = true;
+   addAdvertisedCapability(Headers::Allow);  
+   addAdvertisedCapability(Headers::Supported);  
+
+   mHasRportEnabled = true;
+   mRportEnabled = true;
+
+   mHasUserAgent = false;
+
+   mHasOverrideHostPort = false;
+
+   mHasKeepAliveTime = true;
+   mKeepAliveTime = 30;      // 30 seconds
+
+   mHasFixedTransportPort = true;
+   mFixedTransportPort = 0;
+}
+
+Profile::Profile(SharedPtr<Profile> baseProfile) : 
    mBaseProfile(baseProfile)
 {
-   // Default settings - if a fall through profile was not provided
-   if(!baseProfile)
-   {
-      mHasDefaultRegistrationExpires = true;
-      mDefaultRegistrationExpires = 3600; // 1 hour
+   assert(baseProfile.get());
 
-      mHasDefaultMaxRegistrationExpires = true;
-      mDefaultMaxRegistrationExpires = 0; // No restriction
-
-      mHasDefaultRegistrationRetryInterval = true;
-      mDefaultRegistrationRetryInterval = 0; // Retries disabled
-
-      mHasDefaultSubscriptionExpires = true;
-      mDefaultSubscriptionExpires = 3600; // 1 hour
-
-      mHasDefaultPublicationExpires = true;
-      mDefaultPublicationExpires = 3600;  // 1 hour
-
-      mHasDefaultStaleCallTime = true;
-      mDefaultStaleCallTime = 180;        // 3 minutes
-
-      mHasDefaultSessionExpires = true;
-      mDefaultSessionExpires = 1800;      // 30 minutes
-
-      mHasDefaultSessionTimerMode = true;
-      mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
-
-      mHas1xxRetransmissionTime = true;
-      m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
-
-      mHasOutboundProxy = false;
-
-	  mHasAdvertisedCapabilities = true;
-      addAdvertisedCapability(Headers::Allow);  
-      addAdvertisedCapability(Headers::Supported);  
-
-	  mHasRportEnabled = true;
-      mRportEnabled = true;
-
-      mHasUserAgent = false;
-
-      mHasOverrideHostPort = false;
-
-      mHasKeepAliveTime = true;
-      mKeepAliveTime = 30;      // 30 seconds
-
-      mHasFixedTransportPort = true;
-      mFixedTransportPort = 0;
-   }
-   else
-   {
-      mHasDefaultRegistrationExpires = false;
-      mHasDefaultMaxRegistrationExpires = false;
-      mHasDefaultRegistrationRetryInterval = false;
-      mHasDefaultSubscriptionExpires = false;
-      mHasDefaultPublicationExpires = false;
-      mHasDefaultStaleCallTime = false;
-      mHasDefaultSessionExpires = false;
-      mHasDefaultSessionTimerMode = false;
-      mHas1xxRetransmissionTime = false;
-      mHasOutboundProxy = false;
-	  mHasAdvertisedCapabilities = false;
-	  mHasRportEnabled = false;
-      mHasUserAgent = false;
-      mHasOverrideHostPort = false;
-      mHasKeepAliveTime = false;
-      mHasFixedTransportPort = false;
-   }
+   mHasDefaultRegistrationExpires = false;
+   mHasDefaultMaxRegistrationExpires = false;
+   mHasDefaultRegistrationRetryInterval = false;
+   mHasDefaultSubscriptionExpires = false;
+   mHasDefaultPublicationExpires = false;
+   mHasDefaultStaleCallTime = false;
+   mHasDefaultSessionExpires = false;
+   mHasDefaultSessionTimerMode = false;
+   mHas1xxRetransmissionTime = false;
+   mHasOutboundProxy = false;
+   mHasAdvertisedCapabilities = false;
+   mHasRportEnabled = false;
+   mHasUserAgent = false;
+   mHasOverrideHostPort = false;
+   mHasKeepAliveTime = false;
+   mHasFixedTransportPort = false;
 }
 
 Profile::~Profile()
@@ -94,7 +94,7 @@ int
 Profile::getDefaultRegistrationTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultRegistrationExpires && mBaseProfile)
+   if(!mHasDefaultRegistrationExpires && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultRegistrationTime();
    }
@@ -104,7 +104,7 @@ Profile::getDefaultRegistrationTime() const
 void
 Profile::unsetDefaultRegistrationTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultRegistrationExpires = false;
    }
@@ -121,7 +121,7 @@ int
 Profile::getDefaultMaxRegistrationTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultMaxRegistrationExpires && mBaseProfile)
+   if(!mHasDefaultMaxRegistrationExpires && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultMaxRegistrationTime();
    }
@@ -131,7 +131,7 @@ Profile::getDefaultMaxRegistrationTime() const
 void
 Profile::unsetDefaultMaxRegistrationTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultMaxRegistrationExpires = false;
    }
@@ -148,7 +148,7 @@ int
 Profile::getDefaultRegistrationRetryTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultRegistrationRetryInterval && mBaseProfile)
+   if(!mHasDefaultRegistrationRetryInterval && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultRegistrationRetryTime();
    }
@@ -158,7 +158,7 @@ Profile::getDefaultRegistrationRetryTime() const
 void
 Profile::unsetDefaultRegistrationRetryTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultRegistrationRetryInterval = false;
    }
@@ -175,7 +175,7 @@ int
 Profile::getDefaultSubscriptionTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultSubscriptionExpires && mBaseProfile)
+   if(!mHasDefaultSubscriptionExpires && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultSubscriptionTime();
    }
@@ -185,7 +185,7 @@ Profile::getDefaultSubscriptionTime() const
 void
 Profile::unsetDefaultSubscriptionTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultSubscriptionExpires = false;
    }
@@ -202,7 +202,7 @@ int
 Profile::getDefaultPublicationTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultPublicationExpires && mBaseProfile)
+   if(!mHasDefaultPublicationExpires && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultPublicationTime();
    }
@@ -212,7 +212,7 @@ Profile::getDefaultPublicationTime() const
 void
 Profile::unsetDefaultPublicationTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultPublicationExpires = false;
    }
@@ -229,7 +229,7 @@ int
 Profile::getDefaultStaleCallTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultStaleCallTime && mBaseProfile)
+   if(!mHasDefaultStaleCallTime && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultStaleCallTime();
    }
@@ -239,7 +239,7 @@ Profile::getDefaultStaleCallTime() const
 void
 Profile::unsetDefaultStaleCallTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultStaleCallTime = false;
    }
@@ -256,7 +256,7 @@ int
 Profile::getDefaultSessionTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultSessionExpires && mBaseProfile)
+   if(!mHasDefaultSessionExpires && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultSessionTime();
    }
@@ -266,7 +266,7 @@ Profile::getDefaultSessionTime() const
 void
 Profile::unsetDefaultSessionTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultSessionExpires = false;
    }
@@ -283,7 +283,7 @@ Profile::SessionTimerMode
 Profile::getDefaultSessionTimerMode() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultSessionTimerMode && mBaseProfile)
+   if(!mHasDefaultSessionTimerMode && mBaseProfile.get())
    {
        return mBaseProfile->getDefaultSessionTimerMode();
    }
@@ -293,7 +293,7 @@ Profile::getDefaultSessionTimerMode() const
 void
 Profile::unsetDefaultSessionTimerMode()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasDefaultSessionTimerMode = false;
    }
@@ -310,7 +310,7 @@ int
 Profile::get1xxRetransmissionTime() const
 {
    // Fall through seting (if required)
-   if(!mHas1xxRetransmissionTime && mBaseProfile)
+   if(!mHas1xxRetransmissionTime && mBaseProfile.get())
    {
        return mBaseProfile->get1xxRetransmissionTime();
    }
@@ -320,7 +320,7 @@ Profile::get1xxRetransmissionTime() const
 void
 Profile::unset1xxRetransmissionTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHas1xxRetransmissionTime = false;
    }
@@ -337,7 +337,7 @@ bool
 Profile::hasOverrideHostAndPort() const
 {
    // Fall through seting (if required)
-   if(!mHasOverrideHostPort && mBaseProfile)
+   if(!mHasOverrideHostPort && mBaseProfile.get())
    {
        return mBaseProfile->hasOverrideHostAndPort();
    }
@@ -348,7 +348,7 @@ const Uri&
 Profile::getOverrideHostAndPort() const
 {
    // Fall through seting (if required)
-   if(!mHasOverrideHostPort && mBaseProfile)
+   if(!mHasOverrideHostPort && mBaseProfile.get())
    {
        return mBaseProfile->getOverrideHostAndPort();
    }
@@ -358,7 +358,7 @@ Profile::getOverrideHostAndPort() const
 void
 Profile::unsetOverrideHostAndPort()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasOverrideHostPort = false;
    }
@@ -380,7 +380,7 @@ bool
 Profile::isAdvertisedCapability(const Headers::Type header) const
 {
    // Fall through seting (if required)
-   if(!mHasAdvertisedCapabilities && mBaseProfile)
+   if(!mHasAdvertisedCapabilities && mBaseProfile.get())
    {
        return mBaseProfile->isAdvertisedCapability(header);
    }
@@ -397,7 +397,7 @@ Profile::clearAdvertisedCapabilities(void)
 void
 Profile::unsetAdvertisedCapabilities()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasAdvertisedCapabilities = false;
    }
@@ -414,7 +414,7 @@ const NameAddr&
 Profile::getOutboundProxy() const
 {
    // Fall through seting (if required)
-   if(!mHasOutboundProxy && mBaseProfile)
+   if(!mHasOutboundProxy && mBaseProfile.get())
    {
        return mBaseProfile->getOutboundProxy();
    }
@@ -426,7 +426,7 @@ bool
 Profile::hasOutboundProxy() const
 {
    // Fall through seting (if required)
-   if(!mHasOutboundProxy && mBaseProfile)
+   if(!mHasOutboundProxy && mBaseProfile.get())
    {
        return mBaseProfile->hasOutboundProxy();
    }
@@ -436,7 +436,7 @@ Profile::hasOutboundProxy() const
 void
 Profile::unsetOutboundProxy()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasOutboundProxy = false;
    }
@@ -453,7 +453,7 @@ bool
 Profile::getRportEnabled() const
 {
    // Fall through seting (if required)
-   if(!mHasRportEnabled && mBaseProfile)
+   if(!mHasRportEnabled && mBaseProfile.get())
    {
        return mBaseProfile->getRportEnabled();
    }
@@ -463,7 +463,7 @@ Profile::getRportEnabled() const
 void
 Profile::unsetRportEnabled()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasRportEnabled = false;
    }
@@ -480,7 +480,7 @@ const Data&
 Profile::getUserAgent() const
 {
    // Fall through seting (if required)
-   if(!mHasUserAgent && mBaseProfile)
+   if(!mHasUserAgent && mBaseProfile.get())
    {
        return mBaseProfile->getUserAgent();
    }
@@ -492,7 +492,7 @@ bool
 Profile::hasUserAgent() const
 {
    // Fall through seting (if required)
-   if(!mHasUserAgent && mBaseProfile)
+   if(!mHasUserAgent && mBaseProfile.get())
    {
        return mBaseProfile->hasUserAgent();
    }
@@ -502,7 +502,7 @@ Profile::hasUserAgent() const
 void
 Profile::unsetUserAgent()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasUserAgent = false;
    }
@@ -519,7 +519,7 @@ int
 Profile::getKeepAliveTime() const
 {
    // Fall through seting (if required)
-   if(!mHasKeepAliveTime && mBaseProfile)
+   if(!mHasKeepAliveTime && mBaseProfile.get())
    {
        return mBaseProfile->getKeepAliveTime();
    }
@@ -529,7 +529,7 @@ Profile::getKeepAliveTime() const
 void
 Profile::unsetKeepAliveTime()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasKeepAliveTime = false;
    }
@@ -546,7 +546,7 @@ int
 Profile::getFixedTransportPort() const
 {
    // Fall through seting (if required)
-   if(!mHasFixedTransportPort && mBaseProfile)
+   if(!mHasFixedTransportPort && mBaseProfile.get())
    {
        return mBaseProfile->getFixedTransportPort();
    }
@@ -556,7 +556,7 @@ Profile::getFixedTransportPort() const
 void
 Profile::unsetFixedTransportPort()
 {
-   if(mBaseProfile) 
+   if(mBaseProfile.get()) 
    {
       mHasFixedTransportPort = false;
    }
