@@ -20,7 +20,7 @@ using namespace std;
 
 UserAgent::UserAgent(int argc, char** argv) : 
    CommandLineParser(argc, argv),
-   mProfile(),
+   mProfile(new MasterProfile),
 #if defined(USE_SSL)
    mSecurity(new Security(mCertPath)),
    mStack(mSecurity),
@@ -49,25 +49,25 @@ UserAgent::UserAgent(int argc, char** argv) :
    addTransport(DTLS, mDtlsPort);
 #endif
 
-   mProfile.setDefaultRegistrationTime(mRegisterDuration);
-   mProfile.addSupportedMethod(NOTIFY);
-   mProfile.validateAcceptEnabled() = false;
-   mProfile.validateContentEnabled() = false;
-   mProfile.addSupportedMimeType(NOTIFY, Pidf::getStaticType());
-   mProfile.setDefaultFrom(NameAddr(mAor));
-   mProfile.setDigestCredential(mAor.host(), mAor.user(), mPassword);
+   mProfile->setDefaultRegistrationTime(mRegisterDuration);
+   mProfile->addSupportedMethod(NOTIFY);
+   mProfile->validateAcceptEnabled() = false;
+   mProfile->validateContentEnabled() = false;
+   mProfile->addSupportedMimeType(NOTIFY, Pidf::getStaticType());
+   mProfile->setDefaultFrom(NameAddr(mAor));
+   mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);
    
    if (!mContact.host().empty())
    {
-      mProfile.setOverrideHostAndPort(mContact);
+      mProfile->setOverrideHostAndPort(mContact);
    }
    if (!mOutboundProxy.host().empty())
    {
-      mProfile.setOutboundProxy(Uri(mOutboundProxy));
+      mProfile->setOutboundProxy(Uri(mOutboundProxy));
    }
-   mProfile.setUserAgent("limpc/1.0");
+   mProfile->setUserAgent("limpc/1.0");
    
-   mDum.setMasterProfile(&mProfile);
+   mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
    mDum.addClientSubscriptionHandler(Symbols::Presence, this);
    mDum.addClientPublicationHandler(Symbols::Presence, this);
