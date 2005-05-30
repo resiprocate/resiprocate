@@ -9,6 +9,7 @@
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/SharedPtr.hxx"
 
 namespace resip
 {
@@ -32,8 +33,8 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      UserProfile* getUserProfile();
-      void setUserProfile(UserProfile *userProfile);
+      SharedPtr<UserProfile>& getUserProfile();
+      void setUserProfile(SharedPtr<UserProfile>& userProfile);
 
       void end();
       void dispatch(const SipMessage& msg);
@@ -114,7 +115,7 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
-      UserProfile* mUserProfile;
+      SharedPtr<UserProfile> mUserProfile;
 };
  
 }
