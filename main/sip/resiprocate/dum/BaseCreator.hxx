@@ -12,10 +12,10 @@ class DialogUsageManager;
 class BaseCreator
 {
    public:
-      BaseCreator(DialogUsageManager& dum, UserProfile& userProfile);
+      BaseCreator(DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile);
       virtual ~BaseCreator();
       SipMessage& getLastRequest();
-      UserProfile& getUserProfile();
+      SharedPtr<UserProfile>& getUserProfile();
       const SipMessage& getLastRequest() const;
       
    protected:
@@ -26,7 +26,7 @@ class BaseCreator
       // store the credentials and last cseq
       SipMessage mLastRequest;
       DialogUsageManager& mDum;
-      UserProfile& mUserProfile;
+      SharedPtr<UserProfile> mUserProfile;
 };
 
 }

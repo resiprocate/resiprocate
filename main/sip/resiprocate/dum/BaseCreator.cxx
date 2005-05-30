@@ -8,9 +8,8 @@
 
 using namespace resip;
 
-BaseCreator::BaseCreator(DialogUsageManager& dum, UserProfile &userProfile) : mDum(dum), mUserProfile(userProfile)
-{
-}
+BaseCreator::BaseCreator(DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile) : mDum(dum), mUserProfile(userProfile)
+{}
 
 BaseCreator::~BaseCreator()
 {}
@@ -27,7 +26,7 @@ BaseCreator::getLastRequest() const
    return mLastRequest;
 }
 
-UserProfile&
+SharedPtr<UserProfile>&
 BaseCreator::getUserProfile()
 {
    return mUserProfile;
@@ -36,7 +35,8 @@ BaseCreator::getUserProfile()
 void 
 BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
-   makeInitialRequest(target, mUserProfile.getDefaultFrom(), method);
+   assert(mUserProfile.get());
+   makeInitialRequest(target, mUserProfile->getDefaultFrom(), method);
 }
 
 
@@ -56,19 +56,20 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest.header(h_CallId).value() = Helper::computeCallId();
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
-   if (mUserProfile.hasGruu(target.uri().getAor()))
+   assert(mUserProfile.get());
+   if (mUserProfile->hasGruu(target.uri().getAor()))
    {
-      contact = mUserProfile.getGruu(target.uri().getAor());
+      contact = mUserProfile->getGruu(target.uri().getAor());
       mLastRequest.header(h_Contacts).push_front(contact);
    }
    else
    {
-      if (mUserProfile.hasOverrideHostAndPort())
+      if (mUserProfile->hasOverrideHostAndPort())
       {
-         contact.uri() = mUserProfile.getOverrideHostAndPort();
+         contact.uri() = mUserProfile->getOverrideHostAndPort();
       }
       contact.uri().user() = from.uri().user();
-      const Data& instanceId = mUserProfile.getInstanceId();
+      const Data& instanceId = mUserProfile->getInstanceId();
       if (!instanceId.empty())
       {
          contact.param(p_Instance) = instanceId;
@@ -79,10 +80,10 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
 
-   if(mUserProfile.isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-   if(mUserProfile.isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-   if(mUserProfile.isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-   if(mUserProfile.isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+   if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    // Merge Embedded parameters
    mLastRequest.mergeUri(target.uri());
