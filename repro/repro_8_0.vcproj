@@ -225,6 +225,9 @@
 				RelativePath=".\HttpConnection.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\IsTrustedNode.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\LocationServer.cxx">
 			</File>
 			<File
@@ -322,6 +325,9 @@
 				RelativePath=".\HttpConnection.hxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\IsTrustedNode.hxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\LocationServer.hxx">
 			</File>
 			<File
@@ -378,10 +384,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 		</Filter>
-		<File
-			RelativePath="ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
