@@ -3,12 +3,10 @@
 
 #include <map>
 
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
-class Profile;
 class UserAuthInfo;
 class DialogUsageManager;
 

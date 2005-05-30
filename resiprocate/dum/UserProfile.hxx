@@ -15,7 +15,9 @@ class Data;
 class UserProfile : public Profile
 {
    public:  
-      UserProfile(Profile *baseProfile = 0);
+      UserProfile();
+      UserProfile(SharedPtr<Profile> baseProfile);
+      virtual ~UserProfile();
       
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
