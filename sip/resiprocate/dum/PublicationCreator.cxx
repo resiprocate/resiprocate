@@ -5,7 +5,7 @@ using namespace resip;
 
 PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        const NameAddr& target, 
-                                       UserProfile& userProfile,
+                                       SharedPtr<UserProfile>& userProfile,
                                        const Contents& body, 
                                        const Data& eventType, 
                                        unsigned expireSeconds )
