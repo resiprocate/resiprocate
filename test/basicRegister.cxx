@@ -86,7 +86,7 @@ main (int argc, char** argv)
 #endif
 
    DialogUsageManager clientDum(stack);
-   MasterProfile profile;   
+   SharedPtr<MasterProfile> profile(new MasterProfile);
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
    ClientHandler clientHandler;
 
@@ -96,7 +96,7 @@ main (int argc, char** argv)
    // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
    clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
    // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
-   clientDum.setMasterProfile(&profile);
+   clientDum.setMasterProfile(profile);
    clientDum.setClientRegistrationHandler(&clientHandler);
    clientDum.setClientAuthManager(clientAuth);
    clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
@@ -106,7 +106,7 @@ main (int argc, char** argv)
    clientDum.setKeepAliveManager(keepAlive);
 
    clientDum.getMasterProfile()->setDefaultFrom(userAor);
-   profile.setDigestCredential(userAor.uri().host(),
+   profile->setDigestCredential(userAor.uri().host(),
                                      userAor.uri().user(),
                                      passwd);
 

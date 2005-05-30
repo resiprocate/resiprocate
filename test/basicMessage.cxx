@@ -138,13 +138,13 @@ int main(int argc, char *argv[]) {
 	
 	// sip logic
 	RegListener client;
-	MasterProfile profile;   
+	SharedPtr<MasterProfile> profile(new MasterProfile);   
 	auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
 
     SipStack clientStack;
 	DialogUsageManager clientDum(clientStack);
 	clientDum.addTransport(UDP, port);
-	clientDum.setMasterProfile(&profile);
+	clientDum.setMasterProfile(profile);
 
 	clientDum.setClientRegistrationHandler(&client);
 	clientDum.setClientAuthManager(clientAuth);
@@ -158,8 +158,8 @@ int main(int argc, char *argv[]) {
 
 	/////
 	NameAddr naFrom(from.c_str());
-	profile.setDefaultFrom(naFrom);
-	profile.setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
+	profile->setDefaultFrom(naFrom);
+	profile->setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
 	
 	MessageAppDialogSet *mads = new MessageAppDialogSet(clientDum);
 	SipMessage & regMessage = clientDum.makeRegistration(naFrom, mads);
