@@ -159,6 +159,9 @@
 				RelativePath=".\HttpConnection.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\IsTrustedNode.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\LocationServer.cxx">
 			</File>
 			<File
@@ -255,6 +258,9 @@
 			</File>
 			<File
 				RelativePath=".\HttpConnection.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\IsTrustedNode.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx">
