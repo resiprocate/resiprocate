@@ -43,10 +43,9 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0),
-   mUserProfile(0)
+   mServerPagerMessage(0)
 {
-   setUserProfile(&creator->getUserProfile());
+   setUserProfile(creator->getUserProfile());
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
@@ -66,8 +65,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0),
-   mUserProfile(0)
+   mServerPagerMessage(0)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -235,7 +233,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle(*getUserProfile(), getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle(*getUserProfile().get(), getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
@@ -846,24 +844,24 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
    }
 }
 
-UserProfile*
+SharedPtr<UserProfile>&
 DialogSet::getUserProfile()
 {
-   if(mUserProfile)
+   if(mUserProfile.get())
    {
       return mUserProfile;
    }
    else
    {
       // If no UserProfile set then use UserProfile of the MasterProfile
-      return mDum.getMasterProfile();
+      return mDum.getMasterUserProfile();
    }
 }
 
 void
-DialogSet::setUserProfile(UserProfile *userProfile)
+DialogSet::setUserProfile(SharedPtr<UserProfile>& userProfile)
 {
-   assert(!mUserProfile);
+   assert(userProfile.get());
    mUserProfile = userProfile;
 }
 
