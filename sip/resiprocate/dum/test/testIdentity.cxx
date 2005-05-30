@@ -164,11 +164,11 @@ int main(int argc, char *argv[])
    // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
    // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
 
-   MasterProfile clientProfile;   
+   SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
    TestIdentityHandler clientHandler;
 
-   clientDum.setMasterProfile(&clientProfile);
+   clientDum.setMasterProfile(clientProfile);
    clientDum.setClientAuthManager(clientAuth);
    clientDum.setClientRegistrationHandler(&clientHandler);
    clientDum.setClientPagerMessageHandler(&clientHandler);
@@ -177,12 +177,12 @@ int main(int argc, char *argv[])
    clientDum.getMasterProfile()->addSupportedMethod(MESSAGE);
    clientDum.getMasterProfile()->addSupportedMimeType(MESSAGE, Mime("text", "plain"));
 
-   clientProfile.setDefaultFrom(userAor);
+   clientProfile->setDefaultFrom(userAor);
 
    InfoLog( << userAor.uri().host() << " " << userAor.uri().user() 
             << " " << passwd );
 
-   clientProfile.setDigestCredential(userAor.uri().host(),
+   clientProfile->setDigestCredential(userAor.uri().host(),
                                      userAor.uri().user(),
                                      passwd);
 	

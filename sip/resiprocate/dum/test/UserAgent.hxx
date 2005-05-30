@@ -86,7 +86,7 @@ class UserAgent : public CommandLineParser,
       void addTransport(TransportType type, int port);
 
    private:
-      MasterProfile mProfile;
+      SharedPtr<MasterProfile> mProfile;
       Security* mSecurity;
       SipStack mStack;
       DialogUsageManager mDum;
