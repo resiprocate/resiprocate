@@ -70,7 +70,7 @@ class ParameterTypes
          defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????"),
          defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????"),
          defineParam(permission, "permission", DataParameter, "RFC 2046"),
-         defineParam(protocol, "protocol", DataParameter, "RFC 1847"),
+         defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847"),
          defineParam(purpose, "purpose", DataParameter, "RFC ????"),
          defineParam(q, "q", FloatParameter, "RFC 3261"),
 
