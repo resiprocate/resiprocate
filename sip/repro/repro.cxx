@@ -171,7 +171,7 @@ main(int argc, char** argv)
 
    Registrar registrar;
    InMemoryRegistrationDatabase regData;
-   MasterProfile profile;
+   SharedPtr<MasterProfile> profile(new MasterProfile);
  
 
    AbstractDb* db=NULL;
@@ -253,9 +253,9 @@ main(int argc, char** argv)
 #endif
    WebAdminThread adminThread(admin);
 
-   profile.clearSupportedMethods();
-   profile.addSupportedMethod(resip::REGISTER);
-   profile.addSupportedScheme(Symbols::Sips);
+   profile->clearSupportedMethods();
+   profile->addSupportedMethod(resip::REGISTER);
+   profile->addSupportedScheme(Symbols::Sips);
    
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
@@ -265,7 +265,7 @@ main(int argc, char** argv)
    if (!args.mNoRegistrar || args.mCertServer)
    {
       dum = new DialogUsageManager(stack);
-      dum->setMasterProfile(&profile);
+      dum->setMasterProfile(profile);
       addDomains(*dum, args, store);
    }
 
