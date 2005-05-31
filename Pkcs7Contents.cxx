@@ -38,7 +38,6 @@ Pkcs7Contents::Pkcs7Contents()
 {
 }
 
-
 Pkcs7SignedContents::Pkcs7SignedContents()
 {
 }
@@ -46,6 +45,11 @@ Pkcs7SignedContents::Pkcs7SignedContents()
 Pkcs7Contents::Pkcs7Contents(const Data& txt)
    : Contents(getStaticType()),
      mText(txt)
+{
+}
+
+Pkcs7SignedContents::Pkcs7SignedContents(const Data& txt)
+   : Pkcs7Contents(txt, getStaticType())
 {
 }
 
