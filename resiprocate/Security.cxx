@@ -1331,12 +1331,9 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    int flags = 0;
    flags |= PKCS7_BINARY;
    flags |= PKCS7_DETACHED;
-
-#if 0 // TODO !cj! - decide what to do with these 
    flags |= PKCS7_NOCERTS; 
    flags |= PKCS7_NOATTR;
    flags |= PKCS7_NOSMIMECAP;
-#endif
 
    Data bodyData;
    DataStream strm( bodyData );
@@ -1392,7 +1389,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    Data outData(outBuf,size);
    Security::dumpAsn("resip-sign-out-sig",outData);
 
-   Pkcs7Contents* sigBody = new Pkcs7Contents( outData );
+   Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
    assert( sigBody );
 
    //sigBody->header(h_ContentType).type() = "application";
@@ -1940,14 +1937,14 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert( second );
    assert( first );
 
-   InfoLog( << "message to sign is " << *first );
+   InfoLog( << "message to signature-check is " << *first );
 
    Data bodyData;
    DataStream strm( bodyData );
    first->encodeHeaders( strm );
    first->encode( strm );
    strm.flush();
-   InfoLog( << "encoded version to sign is " << bodyData );
+   InfoLog( << "encoded version to signature-check is " << bodyData );
 
    // Data textData = first->getBodyData();
    Data textData = bodyData;
@@ -1969,7 +1966,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
    assert(pkcs7Bio);
-   InfoLog( << "ceated pkcs BIO");
+   InfoLog( << "ceated pkcs7 BIO");
 
    PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
    if ( !pkcs7 )
@@ -2020,7 +2017,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          InfoLog( << "data is pkcs7 digest" );
          break;
       default:
-         InfoLog( << "Unkown pkcs7 type" );
+         InfoLog( << "Unknown pkcs7 type" );
          break;
    }
 
@@ -2029,41 +2026,30 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert( certs );
 
    if ( *signedBy == Data::Empty )
-   {
-#if 0 // CJ TODO FIX 
-      // THIS IS ALL WRONG 
-      *signedBy == Data("kumiko@example.net");
-      
-      if (mUserCerts.count( *signedBy))
-      {
-         X509* cert = mUserCerts[ *signedBy ];
-         assert(cert);
-         sk_X509_push(certs, cert);
-      }
-#else
-      //assert(0);
-       InfoLog( <<"Adding cert from root list to check sig" );  
-
-       sk_X509_push(certs, mRootCerts );
-        // need to add back in code that adds all certs when sender unkonwn
-#endif
+   {   
+       //add all the certificates from mUserCerts stack to 'certs' stack  
+       for(X509Map::iterator it = mUserCerts.begin(); it != mUserCerts.end(); it++)
+       {
+           assert(it->second);
+           sk_X509_push(certs, it->second); 
+       }
    }
    else
    {
       if (mUserCerts.count( *signedBy ))
       {
-         InfoLog( <<"Adding cert from" <<  *signedBy << " to check sig" );
+         InfoLog( <<"Adding cert from " <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
          assert(cert);
          sk_X509_push(certs, cert);
       }
    }
 
-   //flags |= PKCS7_NOINTERN;
+   flags |= PKCS7_NOINTERN;
    //flags |= PKCS7_NOVERIFY;
    //flags |= PKCS7_NOSIGS;
 
-   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7,certs, flags );
+   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, certs, flags);
    if ( signers )
    {
       for (int i=0; i<sk_X509_num(signers); i++)
