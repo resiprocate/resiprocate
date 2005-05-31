@@ -94,7 +94,7 @@ class Contents : public LazyParser
       H_ContentID::Type& header(const H_ContentID& headerType) const;
       H_ContentDescription::Type& header(const H_ContentDescription& headerType) const;
 
-      int& verion() {return mVersion;}
+      int& version() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
 
       static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
