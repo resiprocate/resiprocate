@@ -8,47 +8,25 @@ namespace resip
 class Stun
 {
    public:
-
-      // Define enum with different types of NAT 
-      typedef enum 
+      class StunResult
       {
-         NatTypeUnknown=0,
-         NatTypeOpen,
-         NatTypeConeNat,         
-         NatTypeRestrictedNat,
-         NatTypePortRestrictedNat,
-         NatTypeSymNat,
-         NatTypeSymFirewall,
-         NatTypeBlocked,
-         NatTypeNonBlocked, // this is the result of testI quick test.
-         NatTypeNonSymNat,  // this is the result of symmetric firewall quick test.
-         NatTypeOpenUnknown,// on open internet, but no idea if blocked by symmetric firewall. this is the result of symmetric nat quick test.
-         NatTypeFailure
-      } NatType;
+         public:
+            StunResult() : mBlocked(false), mOpen(false), mSymmetric(false), mIp(0), mPort(0)
+            {}
+            bool mBlocked;     // UDP blocked. 
+            bool mOpen;        // On open internet (firewall type is not tested).
+            bool mSymmetric;   // Behind symmetric NAT.
+            unsigned int mIp;  // in network byte order.
+            unsigned short mPort;
+            std::string mMsg;
+      };
 
-      typedef struct
-      {
-         NatType type;
-         unsigned int ip;
-         unsigned short port;
-         std::string msg;
-      } StunResult;
-
-      Stun() : mQuickTest(false), mSymNatTest(true) {}
-
-      void quickTest(bool quickTest) { mQuickTest = quickTest; }
-      void symNatTest(bool test) { mSymNatTest = test; }
-
-      StunResult NATType(unsigned int destAddr,
-                         unsigned short destPort,
-                         bool* preservePort=0, // if set, is return for if NAT preservers ports or not
-                         bool* hairpin=0 ,  // if set, is the return for if NAT will hairpin packets
-                         unsigned short port=0, // port to use for the test, 0 to choose random port
-                         unsigned int addr=0 // NIC to use
-                         );
+      Stun(Socket fd, UInt32 destAddr, UInt16 destPort, Fifo<StunResult>& fifo);
+      virtual ~Stun();
+      void process(FdSet& fdSet);
+      virtual void buildFdSet(FdSet& fdSet);
 
    private:
-
       static const UInt16 STUN_MAX_STRING = 256;
       static const UInt16 STUN_MAX_UNKNOWN_ATTRIBUTES = 8;
 
@@ -175,44 +153,66 @@ class Stun
          StunAtrAddress4 secondaryAddress;
       } StunMessage; 
 
-      bool mQuickTest;
-      bool mSymNatTest;
-
       bool  parseMessage(char* buf, 
                          unsigned int bufLen, 
-                         StunMessage& message);      
-
-      StunResult result(NatType type, StunAddress4 addr, char* error);
+                         StunMessage& message);
       int stunRand();
-      int randomPort();
       void sendTest(Socket fd, StunAddress4& dest, const StunAtrString& username,
                     const StunAtrString& password, int testNum);
       void buildReqSimple(StunMessage* msg, const StunAtrString& username, bool changePort, bool changeIp, unsigned int id=0);
       unsigned int encodeMessage(const StunMessage& message, char* buf, unsigned int bufLen, const StunAtrString& password);
       char* encode16(char* buf, UInt16 data);
+
       char* encode32(char* buf, UInt32 data);
+
       char* encode(char* buf, const char* data, unsigned int length);
       void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
       char* encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr);
+
       char* encodeAtrChangeRequest(char* ptr, const StunAtrChangeRequest& atr);
+
       char* encodeAtrError(char* ptr, const StunAtrError& atr);
+
       char* encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr);
+
       char* encodeXorOnly(char* ptr);
+
       char* encodeAtrString(char* ptr, UInt16 type, const StunAtrString& atr);
+
       char* encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr);
       bool parseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result );
+
       bool parseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeRequest& result );
+
       bool parseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result );
+
       bool parseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnknown& result );
+
       bool parseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result );
+
       bool parseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& result );
 
       // udp
       Socket openPort(unsigned short port, unsigned int interfaceIp);
       bool getMessage(Socket fd, char* buf, int* len, 
+
                       unsigned int* srcIp, unsigned short* srcPort);
+
       bool sendMessage(Socket fd, char* msg, int len, unsigned int dstIp, unsigned short dstPort);
 
+   private:
+      static const UInt8 MAX_NUM_TIMEOUT = 7;
+      Socket mFd;
+      Fifo<StunResult>& mFifo;
+      int mNumTimeout;
+      bool mTestICompleted;
+      bool mTestI2Completed;
+      bool mMappedIpSame;
+      StunAddress4 mMappedIp;
+      StunAddress4 mTestIDest;
+      StunAddress4 mTestI2Dest;
+
+      void processResult();
 };
 
 }
