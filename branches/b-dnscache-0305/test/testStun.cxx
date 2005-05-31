@@ -1,8 +1,14 @@
 #include <iostream>
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/Stun.hxx"
+#ifndef WIN32
+#include <netdb.h>
+#endif
+
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/Stun.hxx"
 
 using namespace resip;
 using namespace std;
@@ -15,6 +21,7 @@ main(int argc, char* argv[])
    if (argc !=2 )
    {
       cerr << "Usage:" << endl
+
            << "    ./test stunServerHostname" << endl;
       return 0;
    }
@@ -32,56 +39,36 @@ main(int argc, char* argv[])
    in_addr sin_addr;
    unsigned int ip;
 
-   if ( host )
+   if (host)
    {
       sin_addr = *(struct in_addr*)host->h_addr;
       ip = ntohl(sin_addr.s_addr);
-      Stun stun;
-      stun.quickTest(true);
-      stun.symNatTest(false);
-      Stun::StunResult result;
-      result = stun.NATType(ip, 3478);
-      cout << "Quick test:" << endl;
-      if ( result.type == Stun::NatTypeFailure )
+      Socket fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+      assert(fd!=INVALID_SOCKET);
+      struct sockaddr_in addr;
+      memset(&addr, 0, sizeof(addr));
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(5060);
+      addr.sin_addr.s_addr = htonl(INADDR_ANY);
+      assert(bind(fd, (struct sockaddr*)&addr, sizeof(addr))==0);
+      Fifo<Stun::StunResult> fifo;
+      Stun stun(fd, ip, 3478, fifo);
+      while (fifo.empty())
       {
-         cout << result.msg << endl << endl;
+         FdSet fdset;
+         stun.buildFdSet(fdset);
+         fdset.selectMilliSeconds(100);
+         stun.process(fdset);
       }
-      else
-      {
-         cout << result.msg << endl;
-         unsigned long ip = htonl(result.ip);
-         cout << "Address: " << inet_ntoa(*(in_addr*)&ip) << ":" << (result.port) << endl << endl;
-      }
-
-      stun.quickTest(false);
-      stun.symNatTest(true);      
-      result = stun.NATType(ip, 3478);
-      cout << "Symmetric test:" << endl;
-      if ( result.type == Stun::NatTypeFailure )
-      {
-         cout << result.msg << endl << endl;
-      }
-      else
-      {
-         cout << result.msg << endl;
-         unsigned long ip = htonl(result.ip);
-         cout << "Address: " << inet_ntoa(*(in_addr*)&ip) << ":" << (result.port) << endl << endl;
-      }
-
-      stun.quickTest(false);
-      stun.symNatTest(false);
-      result = stun.NATType(ip, 3478);
-      cout << "Full test:" << endl;
-      if ( result.type == Stun::NatTypeFailure )
-      {
-         cout << result.msg << endl << endl;
-      }
-      else
-      {
-         cout << result.msg << endl;
-         unsigned long ip = htonl(result.ip);
-         cout << "Address: " << inet_ntoa(*(in_addr*)&ip) << ":" << (result.port) << endl << endl;
-      }
+      Stun::StunResult* msg;
+      msg = fifo.getNext();
+      cout << "NAT type: " << msg->mMsg << endl;
+      in_addr ip;
+      ip.s_addr = ntohl(msg->mIp);
+      cout << "Ip: " << DnsUtil::inet_ntop(ip) << endl;
+      cout << "Port: " << msg->mPort << endl;
+      delete msg;
+      closeSocket(fd);
    }
    else
    {

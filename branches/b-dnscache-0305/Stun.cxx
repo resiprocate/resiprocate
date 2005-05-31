@@ -7,6 +7,7 @@
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Stun.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -49,305 +50,162 @@ const UInt16 SharedSecretRequestMsg       = 0x0002;
 const UInt16 SharedSecretResponseMsg      = 0x0102;
 const UInt16 SharedSecretErrorResponseMsg = 0x0112;
 
-const UInt8 MaxNumTimeout = 7;
-
-Stun::StunResult Stun::NATType(unsigned int destAddr,
-                               unsigned short destPort,
-                               bool* preservePort,
-                               bool* hairpin,
-                               unsigned short port,
-                               unsigned int addr)
+Stun::Stun(Socket fd,
+           UInt32 destAddr,
+           UInt16 destPort,
+           Fifo<StunResult>& fifo)
+   : mFd(fd),
+     mFifo(fifo),
+     mNumTimeout(0),
+     mTestICompleted(false),
+     mTestI2Completed(false),
+     mMappedIpSame(false)
 {
-   assert(destAddr != 0);
-   assert(destPort != 0);
+   assert(mFd!=INVALID_SOCKET);
+   mTestIDest.addr = destAddr;
+   mTestIDest.port = destPort;
+   memset(&mMappedIp, 0, sizeof(StunAddress4));
+   memset(&mTestI2Dest, 0, sizeof(StunAddress4));
+}
 
-   StunAddress4 dest;
-   dest.addr = destAddr;
-   dest.port = destPort;
+Stun::~Stun()
+{
+}
 
-   StunAddress4 InvalidAddr;
-   InvalidAddr.addr = 0;
-   InvalidAddr.port = 0;
-	
-   if ( hairpin ) 
+void Stun::buildFdSet(FdSet& fdSet)
+{
+   fdSet.setRead(mFd);
+}
+
+void Stun::process(FdSet& fdSet)
+{
+   assert(mFd != INVALID_SOCKET);
+   bool result = false;
+   if (!mTestICompleted || !mTestI2Completed)
    {
-      *hairpin = false;
-   }
-	
-   if ( port == 0 )
-   {
-      port = randomPort();
-   }
-   UInt32 interfaceIp=0;
-   if ( addr )
-   {
-      interfaceIp = addr;
-   }
-
-   int numSockets = 2;
-   Socket fd1 = openPort(port, interfaceIp);
-   Socket fd2 = openPort(port+1, interfaceIp);
-
-   if ( ( fd1 == INVALID_SOCKET) || ( fd2 == INVALID_SOCKET) )
-   {
-      if ( fd1 != INVALID_SOCKET ) closeSocket(fd1);
-      if ( fd2 != INVALID_SOCKET ) closeSocket(fd2);
-      return result(NatTypeFailure, InvalidAddr, "Problem opening port/interface to send on");
-   }
-
-   bool respTestI = false;
-   bool isNat = true;
-   StunAddress4 testIchangedAddr;
-   StunAddress4 testImappedAddr;
-   bool respTestI2 = false; 
-   bool mappedIpSame = true;
-   StunAddress4 testI2mappedAddr;
-   StunAddress4 testI2dest=dest;
-   bool respTestII = false;
-   bool respTestIII = false;
-
-   if (mSymNatTest) mQuickTest = false;
-   bool fullTest = (!mQuickTest)&&(!mSymNatTest);
-
-   memset(&testImappedAddr,0,sizeof(testImappedAddr));
-	
-   StunAtrString username;
-   StunAtrString password;
-	
-   username.sizeValue = 0;
-   password.sizeValue = 0;
-	
-   int count=0;
-   while ( count < MaxNumTimeout )
-   {
-      struct timeval tv;
-      fd_set fdSet; 
-#ifdef WIN32
-      unsigned int fdSetSize;
-#else
-      int fdSetSize;
-#endif
-      FD_ZERO(&fdSet); fdSetSize=0;
-      FD_SET(fd1,&fdSet); fdSetSize = (fd1+1>fdSetSize) ? fd1+1 : fdSetSize;
-      FD_SET(fd2,&fdSet); fdSetSize = (fd2+1>fdSetSize) ? fd2+1 : fdSetSize;
-      tv.tv_sec=0;
-      tv.tv_usec=150*1000; // 150 ms 
-      if ( count == 0 ) tv.tv_usec=0;
-		
-      int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
-      if ( err == SOCKET_ERROR )
+      if (mNumTimeout > MAX_NUM_TIMEOUT)
       {
-         return result(NatTypeFailure, InvalidAddr, strerror(getErrno()));
-      }
-      else if ( err == 0 )
-      {
-         // timeout occured 
-         ++count;
-			
-         if ( !respTestI ) 
-         {
-            sendTest(fd1, dest, username, password, TestI);
-         }
-			
-         if ( mSymNatTest && respTestI && (!respTestI2) )
-         {
-            // check the address to send to if valid.
-            if ( testI2dest.addr != 0 && testI2dest.port != 0 )
-            {
-               sendTest(fd1, testI2dest, username, password, TestIWithChangedIp);
-            }
-         }
-			
-         if ( fullTest && !respTestII )
-         {
-            sendTest(fd2, dest, username, password, TestII);
-         }
-
-         if ( fullTest && !respTestIII )
-         {
-            sendTest( fd2, dest, username, password, TestIII);
-         }
+         result = true;
       }
       else
       {
-         assert(err>0);
-         // data is avialbe on some fd 
-         for ( int i = 0; i < numSockets; ++i )
+         if (!fdSet.readyToRead(mFd))
          {
-            Socket fd;
-            fd = (i==0)? fd1 : fd2;
-				
-            if ( fd!=INVALID_SOCKET ) 
-            {					
-               if ( FD_ISSET(fd,&fdSet) )
+            ++mNumTimeout;
+            StunAtrString username;
+            StunAtrString password;
+            username.sizeValue = 0;
+            password.sizeValue = 0;
+            // NOTE: shared secrect request is not currently support. 
+
+            if (!mTestICompleted ) 
+            {
+               sendTest(mFd, mTestIDest, username, password, TestI);
+            }
+			
+            if ( mTestICompleted && !mTestI2Completed )
+            {
+               // check the address to send to if valid.
+               if ( mTestI2Dest.addr != 0 && mTestI2Dest.port != 0 )
                {
-                  char msg[STUN_MAX_MESSAGE_SIZE];
-                  int msgLen = sizeof(msg);            						
-                  StunAddress4 from;				
-                  getMessage(fd, msg, &msgLen, &from.addr, &from.port);						
-                  StunMessage resp;
-                  memset(&resp, 0, sizeof(StunMessage));
-                  string err;
-                  if (!parseMessage(msg, msgLen, resp)) continue;
+                  sendTest(mFd, mTestI2Dest, username, password, TestIWithChangedIp);
+               }
+            }
+         }
+         else
+         {
+            char msg[STUN_MAX_MESSAGE_SIZE];
+            int msgLen = sizeof(msg);     						
+            StunAddress4 from;				
+            getMessage(mFd, msg, &msgLen, &from.addr, &from.port);
+            StunMessage resp;
+            memset(&resp, 0, sizeof(StunMessage));
+            parseMessage(msg, msgLen, resp);
 						
-                  switch( resp.msgHdr.id.octet[0] )
+            switch(resp.msgHdr.id.octet[0])
+            {
+               case TestI:
+               {
+                  if (!mTestICompleted)
                   {
-                     case TestI:
-                     {
-                        if ( !respTestI )
-                        {
-                           testIchangedAddr.addr = resp.changedAddress.ipv4.addr;
-                           testIchangedAddr.port = resp.changedAddress.ipv4.port;
-                           testImappedAddr.addr = resp.mappedAddress.ipv4.addr;
-                           testImappedAddr.port = resp.mappedAddress.ipv4.port;
-									
-                           if ( preservePort )
-                           {
-                              *preservePort = ( testImappedAddr.port == port );
-                           }								
-									
-                           testI2dest.addr = resp.changedAddress.ipv4.addr;
-
-                           if (mQuickTest)
-                           {
-                              count = MaxNumTimeout;
-                           }
-                           else if (mSymNatTest)
-                           {
-                              count = MaxNumTimeout - (count + 1);
-                           }
-                           else
-                           {
-                              count = 0;
-                           }
-                        }
-                        respTestI = true;
-                     }
-                     break;
-                     case TestII:
-                     {  
-                        respTestII = true;
-                     }
-                     break;
-                     case TestIII:
-                     {
-                        respTestIII = true;
-                     }
-                     break;
-                     case TestIWithChangedIp:
-                     {
-                        if ( !respTestI2 )
-                        {
-                           testI2mappedAddr.addr = resp.mappedAddress.ipv4.addr;
-                           testI2mappedAddr.port = resp.mappedAddress.ipv4.port;
-								
-                           mappedIpSame = false;
-                           if ( (testI2mappedAddr.addr  == testImappedAddr.addr ) &&
-                                (testI2mappedAddr.port == testImappedAddr.port ))
-                           { 
-                              mappedIpSame = true;
-                           }
-                        }
-                        respTestI2=true;
-                     }
-                     break;
+                     mMappedIp.addr = resp.mappedAddress.ipv4.addr;
+                     mMappedIp.port = resp.mappedAddress.ipv4.port;
+                     mTestI2Dest.addr = resp.changedAddress.ipv4.addr;
+                     mTestI2Dest.port = mTestIDest.port;
+                     mNumTimeout = MAX_NUM_TIMEOUT - mNumTimeout;
                   }
-               }
+                  mTestICompleted = true;
+               } break;
+               case TestIWithChangedIp:
+               {
+                  if (!mTestI2Completed)
+                  {
+                     StunAddress4 testI2mappedAddr;
+                     testI2mappedAddr.addr = resp.mappedAddress.ipv4.addr;
+                     testI2mappedAddr.port = resp.mappedAddress.ipv4.port;
+                     if ( (testI2mappedAddr.addr  == mMappedIp.addr ) &&
+                          (testI2mappedAddr.port == mMappedIp.port ))
+                     { 
+                        mMappedIpSame = true;
+                     }
+                  }
+                  mTestI2Completed = true;
+                  result = true;
+               } break;
             }
          }
       }
-   }
-	
-   // see if we can bind to this address 
-   Socket s = openPort(0, testImappedAddr.addr);
-   if ( s != INVALID_SOCKET )
-   {
-      closeSocket(s);
-      isNat = false;
-   }
-   else
-   {
-      isNat = true;
    }
 
-   closeSocket(fd1);
-   closeSocket(fd2);
-	
-   // implement logic flow chart from draft RFC plus the quick test cases.
-   if ( respTestI )
+   if (result)
    {
-      if ( isNat )
-      {
-         if ( mQuickTest )
-         {
-            return result(NatTypeNonBlocked, testImappedAddr, "Non blocked NAT detected");
-         }
-         if (respTestII)
-         {
-            assert(fullTest);
-            return result(NatTypeConeNat, testImappedAddr, "Cone NAT detected");
-         }
-         else
-         {
-            if ( mappedIpSame )
-            {
-               if ( respTestIII )
-               {
-                  assert(fullTest);
-                  return result(NatTypeRestrictedNat, testImappedAddr, "Address restricted NAT detected");
-               }
-               else
-               {
-                  if (mSymNatTest)
-                  {
-                     return result(NatTypeNonSymNat, testImappedAddr, "Non symmetric");
-                  }
-                  else
-                  {
-                     return result(NatTypePortRestrictedNat, testImappedAddr, "Port restricted NAT detected");
-                  }
-               }
-            }
-            else
-            {
-               return result(NatTypeSymNat, testImappedAddr, "Symmetric");
-            }
-         }
-      }
-      else
-      {
-         if (respTestII)
-         {
-            assert(fullTest);
-            return result(NatTypeOpen, testImappedAddr, "Open internet");
-         }
-         else
-         {
-            if (fullTest)
-            {
-               return result(NatTypeSymFirewall, testImappedAddr, "Symmetric firewall");
-            }
-            else
-            {
-               return result(NatTypeOpenUnknown, testImappedAddr, "No NAT detected");
-            }
-         }
-      }
-   }
-   else
-   {
-      return result(NatTypeBlocked, InvalidAddr, "UDP Blocked");
+      processResult();
    }
 }
 
-Stun::StunResult Stun::result(Stun::NatType type, StunAddress4 addr, char* msg)
+void Stun::processResult()
 {
-   StunResult result;   
-   result.type = type;
-   result.ip = addr.addr;
-   result.port = addr.port;
-   result.msg = msg;
-   return result;
+   StunResult* result = new StunResult;
+   if ( mTestICompleted )
+   {
+      bool nat;
+      Socket s = openPort(0, mMappedIp.addr);
+      if ( s != INVALID_SOCKET )
+      {
+         closeSocket(s);
+         nat = false;
+      }
+      else
+      {
+         nat = true;
+      }
+      result->mIp = mMappedIp.addr;
+      result->mPort = mMappedIp.port;
+      if (nat)
+      {
+         if ( mMappedIpSame )
+         {
+            result->mMsg = "Non symmetric";
+         }
+         else
+         {
+            result->mSymmetric = true;
+            result->mMsg = "Symmetric";
+         }
+
+      }
+      else
+      {
+         result->mOpen = true;
+         result->mMsg = "No NAT detected";
+      }
+   }
+   else
+   {
+      result->mBlocked =true;
+      result->mMsg = "UDP blocked";
+   }
+   mFifo.add(result);
 }
 
 int Stun::stunRand()
@@ -360,15 +218,15 @@ int Stun::stunRand()
       init = true;
 		
       UInt64 tick;
-		
+      
 #if defined(WIN32) 
       volatile unsigned int lowtick=0,hightick=0;
       __asm
-         {
-            rdtsc 
-               mov lowtick, eax
-               mov hightick, edx
-               }
+      {
+         rdtsc 
+            mov lowtick, eax
+            mov hightick, edx
+            }
       tick = hightick;
       tick <<= 32;
       tick |= lowtick;
@@ -404,17 +262,6 @@ int Stun::stunRand()
 #endif
 }
 
-int Stun::randomPort()
-{
-   int min=0x4000;
-   int max=0x7FFF;
-	
-   int ret = stunRand();
-   ret = ret|min;
-   ret = ret&max;
-   return ret;
-}
-
 void Stun::sendTest(Socket fd, 
                     StunAddress4& dest,
                     const StunAtrString& username,
@@ -443,7 +290,7 @@ void Stun::sendTest(Socket fd,
       default:
          return;
    }
-	
+
    StunMessage req;
    memset(&req, 0, sizeof(StunMessage));
 	
@@ -607,12 +454,13 @@ Stun::encode(char* buf, const char* data, unsigned int length)
    return buf + length;
 }
 
-#ifndef USE_SSL
+//#ifndef USE_SSL
 void
 Stun::computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
    strncpy(hmac,"hmac-not-implemented",20);
 }
+/*
 #else
 #include <openssl/hmac.h>
 void
@@ -626,6 +474,7 @@ Stun::computeHmac(char* hmac, const char* input, int length, const char* key, in
    assert(resultSize == 20);
 }
 #endif
+*/
 
 char* 
 Stun::encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
@@ -722,7 +571,8 @@ Stun::openPort(unsigned short port, unsigned int interfaceIp)
 	
    if ( bind( fd,(struct sockaddr*)&addr, sizeof(addr)) != 0 )
    {
-      int e = getErrno();        
+      int e = getErrno();
+      closeSocket(fd);
       switch (e)
       {
          case 0:
@@ -735,20 +585,17 @@ Stun::openPort(unsigned short port, unsigned int interfaceIp)
             InfoLog(<< "Port " << port << " for receiving UDP is in use" << endl);
             return INVALID_SOCKET;
          }
-         break;
          case EADDRNOTAVAIL:
          {
             InfoLog(<< "Cannot assign requested address" << endl);          
             return INVALID_SOCKET;
          }
-         break;
          default:
          {
             InfoLog(<< "Could not bind UDP receive port"
                  << "Error=" << e << " " << strerror(e) << endl);
             return INVALID_SOCKET;
          }
-         break;
       }
    }
    
