@@ -155,6 +155,7 @@ SRC = \
 	X509Contents.cxx \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
+	Stun.cxx \
 	\
 	\
 	external/HttpProvider.cxx \
