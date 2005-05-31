@@ -101,7 +101,7 @@ public:
 
    template<class Y, class D> SharedPtr(Y * p, D d): px(p), pn(p, d)
    {
-       detail::sp_enable_shared_from_this( pn, p, p );
+       sp_enable_shared_from_this( pn, p, p );
    }
 
 //  generated copy constructor, assignment, destructor are fine...
@@ -145,7 +145,7 @@ public:
    {
       if(px == 0)
       {
-         throw(std::bad_cast());
+         throw std::bad_cast();
       }
    }
 
@@ -153,8 +153,8 @@ public:
    explicit SharedPtr(std::auto_ptr<Y> & r): px(r.get()), pn()
    {
       Y * tmp = r.get();
-      pn = detail::shared_count(r);
-      detail::sp_enable_shared_from_this( pn, tmp, tmp );
+      pn = shared_count(r);
+      sp_enable_shared_from_this( pn, tmp, tmp );
    }
 
    template<class Y>
