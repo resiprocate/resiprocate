@@ -104,7 +104,8 @@ public:
    void add_ref_lock()
    {
       Lock lock(mMutex); (void)lock;
-      if(use_count_ == 0) throw(resip::bad_weak_ptr());
+      // if(use_count_ == 0) throw(resip::bad_weak_ptr());
+      if (use_count_ == 0) throw resip::bad_weak_ptr();
       ++use_count_;
       //GenericLog(Subsystem::SIP, resip::Log::Info, << "********* SharedCount::add_ref_lock: " << use_count_);
    }
