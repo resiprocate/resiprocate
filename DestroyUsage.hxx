@@ -18,13 +18,13 @@ class DestroyUsage : public ApplicationMessage
       DestroyUsage(Dialog* dialog);
       DestroyUsage(DialogSet* dialogSet);
       
-      ~DestroyUsage();
+      virtual ~DestroyUsage();
 
-      Message* clone() const;
+      virtual Message* clone() const;
       void destroy();
       
-      virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
       DestroyUsage(const DestroyUsage& other);
@@ -40,8 +40,6 @@ class DestroyUsage : public ApplicationMessage
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
