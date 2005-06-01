@@ -69,7 +69,8 @@ DataBuffer::overflow(int c)
 }
 
 iDataStream::iDataStream(Data& str)
-   : DataBuffer(str), std::istream(this)
+   : DataBuffer(str), 
+     std::istream(this)
 {
 }
 
@@ -78,7 +79,8 @@ iDataStream::~iDataStream()
 }
 
 oDataStream::oDataStream(Data& str)
-   : DataBuffer(str), std::ostream(this)
+   : DataBuffer(str), 
+     std::ostream(this)
 {
 }
 
@@ -88,7 +90,8 @@ oDataStream::~oDataStream()
 }
 
 DataStream::DataStream(Data& str)
-   : DataBuffer(str), std::iostream(this)
+   : DataBuffer(str), 
+     std::iostream(this)
 {
 }
 
@@ -98,8 +101,6 @@ DataStream::~DataStream()
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0
- *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
