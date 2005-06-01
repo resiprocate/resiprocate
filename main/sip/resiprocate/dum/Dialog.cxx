@@ -477,7 +477,9 @@ Dialog::dispatch(const SipMessage& msg)
       RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
       if (r != mRequests.end())
       {
-         if (mDum.mClientAuthManager.get() && mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile().get(), r->second, msg))
+	     bool handledByAuth = false;
+         if (mDum.mClientAuthManager.get() && 
+             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << r->second );
@@ -491,8 +493,10 @@ Dialog::dispatch(const SipMessage& msg)
 
             mLocalCSeq++;
             send(r->second);
+			handledByAuth = true;
          }
          mRequests.erase(r);
+		 if (handledByAuth) return;
       }
 
       const SipMessage& response = msg;
