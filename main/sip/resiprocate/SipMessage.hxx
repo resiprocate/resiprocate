@@ -90,8 +90,6 @@ class SipMessage : public TransactionMessage
 
       bool isRequest() const;
       bool isResponse() const;
-      
-      Data brief() const;
 
       const RequestLine& 
       header(const RequestLineType& l) const;
