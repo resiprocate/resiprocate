@@ -2080,7 +2080,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                      InfoLog(<< "choose <" << name << "> signature" );
                  }
                }
-               catch (ParseBuffer::Exception& e)
+               catch (...)
                {
                }
             }

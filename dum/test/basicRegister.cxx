@@ -73,16 +73,15 @@ main (int argc, char** argv)
    NameAddr userAor(argv[1]);
    Data passwd(argv[2]);
 
-#ifdef WIN32
-   WinSecurity* security = new WinSecurity;
-   SipStack stack(security);
-#else
 #ifdef USE_SSL
+#ifdef WIN32
+   Security* security = new WinSecurity;
+#else
    Security* security = new Security;
+#endif
    SipStack stack(security);
 #else
    SipStack stack;
-#endif
 #endif
 
    DialogUsageManager clientDum(stack);
@@ -94,8 +93,10 @@ main (int argc, char** argv)
    // clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
    clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V4);
    // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
+#ifdef USE_SSL
    clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V4);
    // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
+#endif
    clientDum.setMasterProfile(profile);
    clientDum.setClientRegistrationHandler(&clientHandler);
    clientDum.setClientAuthManager(clientAuth);
