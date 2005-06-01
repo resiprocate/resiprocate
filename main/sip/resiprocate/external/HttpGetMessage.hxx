@@ -18,9 +18,9 @@ class HttpGetMessage : public Message
       const Mime& getType() const {return mType;}
       const Data& tid() const { return mTid; } //replace w/ act
 
-      virtual Data brief() const;
       virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
       Data mTid;
       bool mSuccess;
@@ -33,8 +33,6 @@ class HttpGetMessage : public Message
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

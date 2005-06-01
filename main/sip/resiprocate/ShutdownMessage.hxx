@@ -11,9 +11,9 @@ class ShutdownMessage : public ApplicationMessage
    public:
       ShutdownMessage() {};
 
-      virtual Data brief() const { return ("Shutdown"); }
       virtual Message* clone() const { return new ShutdownMessage; }
       virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
+      virtual std::ostream& encodeBrief(std::ostream& str) const {  return str << "Shutdown"; }
 };
  
 }
@@ -21,8 +21,6 @@ class ShutdownMessage : public ApplicationMessage
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
