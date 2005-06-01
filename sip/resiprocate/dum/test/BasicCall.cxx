@@ -178,7 +178,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
+         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
          assert(0); // This is overrideen in UAS and UAC specific handlers
       }
 
@@ -308,7 +308,7 @@ class TestUac : public TestInviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
+         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
          done = true;
       }
 };
@@ -366,7 +366,7 @@ class TestUas : public TestInviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
+         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
          done = true;
       }
 
