@@ -78,6 +78,11 @@ UserAuthInfo::encode(std::ostream& strm) const
    return strm;
 }
 
+std::ostream&
+UserAuthInfo::encodeBrief(std::ostream& strm) const
+{
+   return encode(strm);
+}
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const UserAuthInfo& msg)
