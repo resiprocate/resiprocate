@@ -9,16 +9,16 @@ TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) 
    assert(tu);
 }
 
-Data 
-TransactionUserMessage::brief() const
-{ 
-   return ("TransactionUserMessage");
-}
-
 std::ostream& 
 TransactionUserMessage::encode(std::ostream& strm) const
 {
    return strm << brief(); 
+}
+
+std::ostream&
+TransactionUserMessage::encodeBrief(std::ostream& str) const
+{ 
+   return str << "TransactionUserMessage";
 }
 
 const Data& 
@@ -38,8 +38,6 @@ TransactionUserMessage::isClientTransaction() const
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

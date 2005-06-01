@@ -14,15 +14,10 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
 {
 }
 
-Data 
-HttpGetMessage::brief() const
+std::ostream&
+HttpGetMessage::encodeBrief(std::ostream& str) const
 { 
-   Data ret;   
-   DataStream ds(ret);
-   {
-      ds << "HttpGetMessage: " << mTid << " " << mType;
-   }
-   return ret;   
+   return str << "HttpGetMessage: " << mTid << " " << mType;
 }
 
 std::ostream& 
