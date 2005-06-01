@@ -13,8 +13,6 @@ class ApplicationMessage : public Message
       ApplicationMessage() {};
 
       virtual const Data& getTransactionId() const { assert(0); return Data::Empty; } 
-      virtual Data brief() const=0;
-      virtual Message* clone() const=0;
 };
  
 }
@@ -22,8 +20,6 @@ class ApplicationMessage : public Message
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
