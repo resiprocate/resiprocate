@@ -14,34 +14,28 @@ DestroyUsage::DestroyUsage(BaseUsageHandle target)
    :mHandle(target),
     mDialogSet(0),
     mDialog(0)
-{
-}
+{}
 
 DestroyUsage::DestroyUsage(DialogSet* dialogSet)
    :mHandle(),
     mDialogSet(dialogSet),
     mDialog(0)
-{
-}
+{}
 
 DestroyUsage::DestroyUsage(Dialog* dialog)
    :mHandle(),
     mDialogSet(0),
     mDialog(dialog)
-{
-}
+{}
 
 DestroyUsage::DestroyUsage(const DestroyUsage& other) :
    mHandle(other.mHandle),
    mDialogSet(other.mDialogSet),
    mDialog(other.mDialog)
-{
-}
+{}
 
 DestroyUsage::~DestroyUsage()
-{  
-}
-
+{}
 
 Message* 
 DestroyUsage::clone() const
@@ -49,12 +43,9 @@ DestroyUsage::clone() const
    return new DestroyUsage(*this);
 }
 
-Data
-DestroyUsage::brief() const
+std::ostream& 
+DestroyUsage::encodeBrief(std::ostream& strm) const
 {
-   Data buffer;
-   DataStream strm(buffer);
-   
    if (mDialogSet)
    {
       static Data d("DestroyDialogSet");
@@ -70,15 +61,14 @@ DestroyUsage::brief() const
       static Data d("DestroyUsage");
       strm << d << " " << *mHandle;
    }
-   strm.flush();
-   return buffer;
+
+   return strm;
 }
 
 std::ostream& 
 DestroyUsage::encode(std::ostream& strm) const
 {
-   strm << this->brief();
-   return strm;
+   return strm << brief();
 }
 
 void
@@ -100,8 +90,6 @@ DestroyUsage::destroy()
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

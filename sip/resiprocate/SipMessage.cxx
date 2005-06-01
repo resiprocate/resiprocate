@@ -430,11 +430,9 @@ SipMessage::isResponse() const
    return mResponse;
 }
 
-Data
-SipMessage::brief() const
+std::ostream&
+SipMessage::encodeBrief(std::ostream& str) const
 {
-   Data result(128, true);
-
    static const Data  request("SipReq:  ");
    static const Data response("SipResp: ");
    static const Data tid(" tid=");
@@ -444,72 +442,58 @@ SipMessage::brief() const
    static const Data wire(" from(wire)");
    static const Data tu(" from(tu)");
 
-   // !dlb! should be checked earlier 
-#if 0
-   if (!exists(h_CSeq))
-   {
-      result = "MALFORMED; missing CSeq";
-      return result;
-   }
-   if (!exists(h_CallId))
-   {
-      result = "MALFORMED; missing Call-Id";
-      return result;
-   }
-#endif
-   
    if (isRequest()) 
    {
-      result += request;
+      str << request;
       MethodTypes meth = header(h_RequestLine).getMethod();
       if (meth != UNKNOWN)
       {
-         result += getMethodName(meth);
+         str << getMethodName(meth);
       }
       else
       {
-         result += header(h_RequestLine).unknownMethodName();
+         str << header(h_RequestLine).unknownMethodName();
       }
       
-      result += Symbols::SPACE;
-      result += header(h_RequestLine).uri().getAor();
+      str << Symbols::SPACE;
+      str << header(h_RequestLine).uri().getAor();
    }
    else if (isResponse())
    {
-      result += response;
-      result += Data(header(h_StatusLine).responseCode());
+      str << response;
+      str << header(h_StatusLine).responseCode();
    }
    if (exists(h_Vias) && !this->header(h_Vias).empty())
    {
-      result += tid;
-      result += getTransactionId();
+      str << tid;
+      str << getTransactionId();
    }
    else
    {
-      result += " NO-VIAS ";
+      str << " NO-VIAS ";
    }
 
-   result += cseq;
+   str << cseq;
    if (header(h_CSeq).method() != UNKNOWN)
    {
-      result += getMethodName(header(h_CSeq).method());
+      str << getMethodName(header(h_CSeq).method());
    }
    else
    {
-      result += header(h_CSeq).unknownMethodName();
+      str << header(h_CSeq).unknownMethodName();
    }
 
    if (exists(h_Contacts) && !header(h_Contacts).empty())
    {
-      result += contact;
-      result += header(h_Contacts).front().uri().getAor();
+      str << contact;
+      str << header(h_Contacts).front().uri().getAor();
    }
    
-   result += slash;
-   result += Data(header(h_CSeq).sequence());
-   result += mIsExternal ? wire : tu;
-   
-   return result;
+   str << slash;
+   str << header(h_CSeq).sequence();
+   str << (mIsExternal ? wire : tu);
+
+   return str;
 }
 
 bool

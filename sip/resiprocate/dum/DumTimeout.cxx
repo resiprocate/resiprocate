@@ -13,8 +13,7 @@ DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsageHandle target
       mUsageHandle(targetBu),
       mSeq(seq),
       mSecondarySeq(altSeq)
-{
-}
+{}
 
 DumTimeout::DumTimeout(const DumTimeout& source)
     : mType(source.mType),
@@ -22,19 +21,16 @@ DumTimeout::DumTimeout(const DumTimeout& source)
       mUsageHandle(source.mUsageHandle),
       mSeq(source.mSeq),
       mSecondarySeq(source.mSecondarySeq)
-{
-}
+{}
 
 DumTimeout::~DumTimeout()
-{
-}
+{}
 
 Message*
 DumTimeout::clone() const
 {
    return new DumTimeout(*this);
 }
-
       
 DumTimeout::Type 
 DumTimeout::type() const
@@ -68,14 +64,10 @@ DumTimeout::isClientTransaction() const
    return false;
 }
       
-Data 
-DumTimeout::brief() const
+std::ostream&
+DumTimeout::encodeBrief(std::ostream& strm) const
 {
-   Data data;
-   DataStream strm(data);
-   encode(strm);
-   strm.flush();
-   return data;
+   return encode(strm);
 }
 
 std::ostream& 

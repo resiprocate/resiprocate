@@ -752,7 +752,7 @@ main(int argc, char** argv)
      assert(response->header(h_AllowEvents).size() == 0);
 
      cerr << response->brief() << endl;
-     assert(response->brief() == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
+     assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
      char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
@@ -784,7 +784,7 @@ main(int argc, char** argv)
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
      cerr << r3->brief() << endl;
-     assert(r3->brief() == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
+     assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
      char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
@@ -848,7 +848,7 @@ main(int argc, char** argv)
       assert(message->header(h_To) < message->header(h_From));
 
       cerr << message->brief() << endl;
-      assert(message->brief() == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE contact=ext103@192.168.2.220:5068 / 1 from(tu)");
+      assert(Data::from(message->brief()) == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE contact=ext103@192.168.2.220:5068 / 1 from(tu)");
    }
    
    {
