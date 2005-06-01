@@ -65,6 +65,9 @@ class TimeLimitFifo : public AbstractFifo
 
       void clear();
 
+      virtual size_t getCountDepth() const;
+      virtual time_t getTimeDepth() const;
+
    private:
       time_t timeDepthInternal() const;
       inline bool wouldAcceptInteral(DepthUsage usage) const;
@@ -223,6 +226,20 @@ TimeLimitFifo<Msg>::clear()
    }
    mSize = 0;
 }   
+
+template <class Msg>
+size_t
+TimeLimitFifo<Msg>::getCountDepth() const
+{
+   return size();
+}
+
+template <class Msg>
+time_t 
+TimeLimitFifo<Msg>::getTimeDepth() const
+{
+   return timeDepth();
+}
 
 } // namespace resip
 
