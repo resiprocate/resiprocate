@@ -18,8 +18,7 @@ AbstractFifo ::getNext()
 {
    Lock lock(mMutex); (void)lock;
 
-   // Wait while there are messages available.
-   //
+   // Wait util there are messages available.
    while (mFifo.empty())
    {
       mCondition.wait(mMutex);
@@ -37,11 +36,11 @@ AbstractFifo ::getNext()
 void*
 AbstractFifo::getNext(int ms)
 {
-   Lock lock(mMutex); (void)lock;
-
    const UInt64 end(Timer::getTimeMs() + ms);
 
-   // Wait while there are messages available
+   Lock lock(mMutex); (void)lock;
+
+   // Wait until there are messages available
    while (mFifo.empty())
    {
       // bail if total wait time exceeds limit
@@ -95,7 +94,7 @@ AbstractFifo::getCountDepth() const
    return mSize;
 }
 
-size_t 
+time_t 
 AbstractFifo::getTimeDepth() const
 {
    return 0;
