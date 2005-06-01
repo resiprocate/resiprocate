@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="basicCall"
-	ProjectGUID="{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
+	ProjectGUID="{5973C598-5CB7-4724-A1EB-EBE3D9F84927}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -37,7 +37,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\resiprocate\dum\Debug\dum.lib iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib iphlpapi.lib"
 				OutputFile="$(OutDir)/basicCall.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
