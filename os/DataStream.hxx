@@ -24,16 +24,10 @@ class DataBuffer : public std::streambuf
       DataBuffer& operator=(const DataBuffer&);
 };
 
-// To use:
-// Data result(4096, true); // size zero, capacity 4096
-// {
-//    DataStream ds(result);
-//    msg->encode(ds);
-// }
-//
-// result contains the encoded message
-// -- may be larger than initially allocated
-
+/**
+   DataStream operates on an existing Data.
+   Input to the stream is appended to the existing Data
+ */
 class DataStream : private DataBuffer, public std::iostream
 {
    public:
