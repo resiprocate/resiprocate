@@ -198,7 +198,7 @@ public:
       return ti == typeid(D)? &del: 0;
    }
 
-   void * operator new(std::size_t)
+   void * operator new(size_t)
    {
       return std::allocator<this_type>().allocate(1, static_cast<this_type *>(0));
    }
