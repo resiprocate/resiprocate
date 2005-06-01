@@ -16,7 +16,7 @@ class FifoStatsInterface
    public:
       virtual ~FifoStatsInterface() {}
       virtual size_t getCountDepth() const = 0;
-      virtual size_t getTimeDepth() const = 0;
+      virtual time_t getTimeDepth() const = 0;
 };
 
 /** First in first out queue template hoist.
@@ -45,7 +45,7 @@ class AbstractFifo : public FifoStatsInterface
       virtual void clear() {};
 
       virtual size_t getCountDepth() const;
-      virtual size_t getTimeDepth() const;
+      virtual time_t getTimeDepth() const;
 
    protected:
       /** Returns the first message available. It will wait if no
