@@ -21,9 +21,11 @@ class TransactionTerminated : public TransactionMessage
       }
       virtual const Data& getTransactionId() const { return mTransactionId; }
       virtual bool isClientTransaction() const { return mIsClient; }
-
-      virtual Data brief() const { return (mIsClient ? Data("ClientTransactionTerminated ") : Data("ServerTransactionTerminated ")) + mTransactionId; }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
+      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
+      virtual std::ostream& encodeBrief(std::ostream& str) const 
+      {
+         return str << (mIsClient ? "ClientTransactionTerminated " : "ServerTransactionTerminated ") << mTransactionId;
+      }
       
       Data mTransactionId;
       bool mIsClient;
@@ -34,8 +36,6 @@ class TransactionTerminated : public TransactionMessage
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

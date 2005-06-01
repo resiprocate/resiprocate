@@ -72,10 +72,10 @@ TimerMessage::isClientTransaction() const
 
 
 
-Data 
-TimerMessage::brief() const
+std::ostream&
+TimerMessage::encodeBrief(std::ostream& str) const
 {
-   return Data("Timer: ") + Timer::toData(mType) + Data(" ") + Data(mDuration);
+   return str << "Timer: " << Timer::toData(mType) << " " << mDuration;
 }
 
 std::ostream& TimerMessage::encode(std::ostream& strm) const
@@ -85,13 +85,8 @@ std::ostream& TimerMessage::encode(std::ostream& strm) const
                << " duration[" << mDuration << "]";
 }
 
-
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

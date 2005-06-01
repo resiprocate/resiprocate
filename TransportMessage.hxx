@@ -21,7 +21,7 @@ class TransportMessage : public TransactionMessage
       bool isFailed() const;
       virtual bool isClientTransaction() const;
       
-      virtual Data brief() const;
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
       virtual std::ostream& encode(std::ostream& strm) const;      
       
    private:
@@ -35,8 +35,6 @@ class TransportMessage : public TransactionMessage
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
