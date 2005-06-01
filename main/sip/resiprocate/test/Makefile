@@ -12,7 +12,8 @@ TESTPROGRAMS += makeSelfCert.cxx \
 		testTls.cxx 
 endif
 
-TESTPROGRAMS += testTuple.cxx \
+TESTPROGRAMS += testMD5Stream.cxx \
+		testTuple.cxx \
 		test503Generator.cxx \
 		limpc.cxx \
 		testConnectionBase.cxx \
