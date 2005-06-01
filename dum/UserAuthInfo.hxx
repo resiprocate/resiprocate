@@ -25,7 +25,9 @@ class UserAuthInfo : public resip::ApplicationMessage
 
       virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
+
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
 
    private:
       resip::Data mUser;
