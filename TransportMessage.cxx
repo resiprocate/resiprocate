@@ -27,23 +27,20 @@ TransportMessage::isClientTransaction() const
    return true; 
 } 
       
-Data
-TransportMessage::brief() const 
+std::ostream&
+TransportMessage::encodeBrief(std::ostream& str) const 
 {
-   return "TransportMessage: " + mTransactionId + " " + (mFailure ? "failed" : "succeeded"); 
+   return str << "TransportMessage: " << mTransactionId << " " << (mFailure ? "failed" : "succeeded"); 
 }
       
 std::ostream&
 TransportMessage::encode(std::ostream& strm) const
 {
-   strm << "Transport Failure: " << mTransactionId;
-   return strm;
+   return encodeBrief(strm);
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

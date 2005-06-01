@@ -25,15 +25,15 @@ class AppMessage : public Message
          : mText(text)
       {}
 
-      virtual Data brief() const {return mText;}
       virtual ostream& encode(ostream& s) const {s << mText; return s;}
+      virtual std::ostream& encodeBrief(std::ostream& s) const {return s << mText;}
 
       const Data& getText() const
       {
          return mText;
       }
       
-      Message* clone() const
+      virtual Message* clone() const
       {
          return new AppMessage(mText);
       }

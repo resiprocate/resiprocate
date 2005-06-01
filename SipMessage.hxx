@@ -86,7 +86,7 @@ class SipMessage : public TransactionMessage
       virtual std::ostream& encodeSipFrag(std::ostream& str) const;
       std::ostream& encodeEmbedded(std::ostream& str) const;
       
-      Data brief() const;
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
 
       bool isRequest() const;
       bool isResponse() const;
