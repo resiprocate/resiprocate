@@ -95,9 +95,11 @@ class TestDns : public DnsInterface, public ThreadIf
          addTransportType(TCP, V4);
          addTransportType(UDP, V4);
          addTransportType(TLS, V4);
+#ifdef IPV6
          addTransportType(TCP, V6);
          addTransportType(UDP, V6);
          addTransportType(TLS, V6);
+#endif
       }
 
       void thread()
@@ -177,8 +179,8 @@ main(int argc, const char** argv)
       Query query;
       query.handler = new TestDnsHandler;
       //query.listener = new VipListener;
-      cerr << "Creating Uri" << endl;       
-      uri = Uri(*++args);
+      cerr << "Creating Uri: " << *args << endl;       
+      uri = Uri(*args);
       query.uri = uri;
       cerr << "Creating DnsResult" << endl;      
       DnsResult* res = dns.createDnsResult(query.handler);
@@ -186,6 +188,7 @@ main(int argc, const char** argv)
       queries.push_back(query);
       cerr << rf << "Looking up" << ub << endl;
       dns.lookup(res, uri);
+      args++;
       argc--;
    }
 
