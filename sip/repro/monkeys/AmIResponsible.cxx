@@ -46,9 +46,9 @@ AmIResponsible::handleRequest(RequestContext& context)
       {
          uri.port() = 0;
       }
-      if (!context.getProxy().isMyDomain(uri.host()))
+      if (!context.getProxy().isMyDomain(uri.host()) && !request.header(h_To).exists(p_tag))
       {
-         // if this request is not for a domain for which the proxy is responsible,
+         // if this is an out of dialog request and is not for a domain for which the proxy is responsible,
          // check that we relay from this sender and send to the Request URI
          
          // !rwm! verify the AuthenticatioInfo object here.
