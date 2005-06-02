@@ -366,7 +366,7 @@ class TestUas : public TestInviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
+         cout << name << ": InviteSession-onTerminated - " << endl;
          done = true;
       }
 
@@ -411,13 +411,25 @@ class TestShutdownHandler : public DumShutdownHandler
 };
 
 
-#define NO_REGISTRATION 1
+//#define NO_REGISTRATION 1
 int 
 main (int argc, char** argv)
 {
+
+   if ( argc < 5 ) {
+      cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
+      return 0;
+   }
+
    //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+
+   NameAddr uacAor(argv[1]);
+   Data uacPasswd(argv[2]);
+   NameAddr uasAor(argv[3]);
+   Data uasPasswd(argv[4]);
 
    //set up UAC
    SipStack stackUac;
@@ -439,11 +451,10 @@ main (int argc, char** argv)
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
-   NameAddr uacAor("sip:101@foo.net");
-   dumUac->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
+   //dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
-   NameAddr uacAor("sip:UAC@127.0.0.1:12005");
+   uacAor = NameAddr("sip:UAC@127.0.0.1:1205");
 #endif
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
@@ -460,16 +471,14 @@ main (int argc, char** argv)
    dumUas->setClientAuthManager(uasAuth);
 
 #if !defined(NO_REGISTRATION)
-   //your aor, credentials, etc here
-   NameAddr uasAor("sip:105@foo.net");
-   dumUas->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
+   //dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
-   NameAddr uasAor("sip:UAS@127.0.0.1:12010");
+   uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
 #endif
 
-   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
+   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
