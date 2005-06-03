@@ -213,8 +213,18 @@ ClientSubscription::dispatch(const SipMessage& msg)
          else if (retry == 0)
          {
             DebugLog(<< "Application requested immediate retry on Retry-After");
-            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);
+                   
+            if (mDialog.mRemoteTarget.uri().host().empty())
+            {
+               SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+               mDum.send(sub);
+            }
+            else
+            {
+               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+               mDum.send(sub);
+            }
+            
             return;
          }
          else 
@@ -257,8 +267,18 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);
+  
+            if (mDialog.mRemoteTarget.uri().host().empty())
+            {
+               SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+               mDum.send(sub);
+            }
+            else
+            {
+               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+               mDum.send(sub);
+            }
+            
             delete this;
          }
       }
