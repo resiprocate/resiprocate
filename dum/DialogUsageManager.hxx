@@ -155,7 +155,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                              const SdpContents* initialOffer, AppDialogSet* = 0);
       
       SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, 
+                                   int subscriptionTime, AppDialogSet* = 0);
       SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, 
                                    int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
       SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);

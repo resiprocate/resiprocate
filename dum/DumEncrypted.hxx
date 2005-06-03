@@ -1,50 +1,32 @@
-#if !defined(RESIP_BASEUSAGE_HXX)
-#define RESIP_BASEUSAGE_HXX
+#if !defined(RESIP_DUMENCRYPTED_HXX)
+#define RESIP_DUMENCRYPTED_HXX 
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
 
-class DialogUsageManager;
-class Dialog;
-class DumTimeout;
-class SipMessage;
-class NameAddr;
-class DumEncrypted;
-
-class BaseUsage : public Handled
+class DumEncrypted : public ApplicationMessage
 {
    public:
-      class Exception : public BaseException
-      {
-         public:
-            Exception(const Data& msg,const Data& file,int line);
-            virtual const char* name() const;
-      };
+      DumEncrypted(bool success, const Data& msg, BaseUsageHandle target, std::auto_ptr<Contents> contents);
+      DumEncrypted(const DumEncrypted&);
+      ~DumEncrypted();
 
-      virtual void end()=0;
-      virtual void send(SipMessage& request);
-      virtual std::ostream& dump(std::ostream& strm) const;
+      bool success() const;
+      const Data& error() const;
+      Contents* encrypted() const;
+      Message* clone() const;
+      BaseUsageHandle getBaseUsage() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
-   protected:
-      BaseUsage(DialogUsageManager& dum);      
-      virtual ~BaseUsage();
-
-      virtual void dispatch(const SipMessage& msg) = 0;
-      virtual void dispatch(const DumTimeout& timer) = 0;
-      virtual void dispatch(const DumEncrypted& encrypted) {}
-      
-      BaseUsageHandle getBaseHandle();
-
-      DialogUsageManager& mDum;
    private:
-      BaseUsageHandle mHandle;
-      
-      friend class DestroyUsage;
-      friend class DialogUsageManager;
+      bool mSuccess;
+      Data mErrMsg;
+      BaseUsageHandle mUsageHandle;
+      std::auto_ptr<Contents> mEncrypted;
 };
 
 }
