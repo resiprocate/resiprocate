@@ -1,4 +1,4 @@
-
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/dum/Handles.hxx"
@@ -95,18 +95,18 @@ bool Tu::process()
 int main(int argc, char *argv[])
 {
 
-   if ( argc < 4 ) {
-      cout << "usage: " << argv[0] << " sip:user passwd\n";
-      return 0;
+   if ( argc < 3 ) {
+     cout << "usage: " << argv[0] <<"sip:sender sip:recip" << endl;
+     return 0;
    }
 
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    NameAddr senderAor(argv[1]);
    NameAddr recipAor(argv[2]);
-   Data passwd(argv[3]);
+   //Data passwd(argv[3]);
 
-   InfoLog(<< "sender: " << senderAor << ", passwd: " << passwd << endl);
+   InfoLog(<< "sender: " << senderAor << endl);
    InfoLog(<< "recipient: " << recipAor << endl);
 
 #ifdef WIN32
@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
 #endif
 
    assert(security);
+   SipStack stack(security);
    Tu tu(security, senderAor.uri().getAor(), recipAor.uri().getAor());
    BaseUsageHandle handle;
    PayloadEncrypter encrypter(tu, security);
@@ -131,6 +132,7 @@ int main(int argc, char *argv[])
    while (tu.process())
    {
    }
+
 
    return 0;
 }
