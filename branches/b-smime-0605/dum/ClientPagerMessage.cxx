@@ -1,11 +1,15 @@
+#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/Security.hxx"
 #include "resiprocate/dum/PagerMessageCreator.hxx"
 #include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/PagerMessageHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/PayloadEncrypter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 
@@ -84,8 +88,8 @@ ClientPagerMessage::getHandle()
 
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(dialogSet.getCreator()->getLastRequest())//,
-     //mInTransaction(false)
+     mRequest(dialogSet.getCreator()->getLastRequest()),
+     mEncrypter(dum, dum.getSecurity())
 {
 }
 
@@ -102,16 +106,27 @@ ClientPagerMessage::getMessageRequest()
 }
 
 void
-ClientPagerMessage::page(std::auto_ptr<Contents> contents)
+ClientPagerMessage::page(std::auto_ptr<Contents> contents,
+                         EncryptionLevel level)
 {
     assert(contents.get() != 0);
-
-    bool do_page = mMsgQueue.empty();
-    mMsgQueue.push_back(contents.get());
-    contents.release();
-    if(do_page)
+    if (Plain == level)
     {
-     this->pageFirstMsgQueued();
+       bool do_page = mMsgQueue.empty();
+       mMsgQueue.push_back(contents.get());
+       contents.release();
+       if(do_page)
+       {
+          this->pageFirstMsgQueued();
+       }
+    }
+    else if (Sign == level)
+    {
+       mEncrypter.encrypt(contents, mRequest.header(h_RequestLine).uri().getAor(), this->getBaseHandle());
+    }
+    else
+    {
+       mEncrypter.encrypt(contents, mRequest.header(h_RequestLine).uri().getAor(), mRequest.header(h_From).uri().getAor(), this->getBaseHandle());
     }
 }
 
@@ -163,9 +178,22 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
         }
     }
 }
+
 void
 ClientPagerMessage::dispatch(const DumTimeout& timer)
 {
+}
+
+void
+ClientPagerMessage::dispatch(const DumEncrypted& encrypted)
+{
+   bool do_page = mMsgQueue.empty();
+   Contents* contents = encrypted.encrypted()->clone();
+   mMsgQueue.push_back(contents);
+   if(do_page)
+   {
+      this->pageFirstMsgQueued();
+   }
 }
 
 void

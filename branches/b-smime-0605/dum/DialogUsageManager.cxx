@@ -40,6 +40,7 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -956,6 +957,17 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          }
 
          dumMsg->getBaseUsage()->dispatch(*dumMsg);
+         return;
+      }
+
+      DumEncrypted* encrypted = dynamic_cast<DumEncrypted*>(msg.get());
+      if (encrypted)
+      {
+         InfoLog(<< "Encrypted Message");
+         if (encrypted->getBaseUsage().isValid())
+         {
+            encrypted->getBaseUsage()->dispatch(*encrypted);
+         }
          return;
       }
 
