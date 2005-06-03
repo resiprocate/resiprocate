@@ -21,8 +21,8 @@ class TransportMessage : public TransactionMessage
       bool isFailed() const;
       virtual bool isClientTransaction() const;
       
-      virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;      
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;      
       
    private:
       Data mTransactionId;

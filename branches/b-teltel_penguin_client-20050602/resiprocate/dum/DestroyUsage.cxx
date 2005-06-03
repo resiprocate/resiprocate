@@ -49,12 +49,9 @@ DestroyUsage::clone() const
    return new DestroyUsage(*this);
 }
 
-Data
-DestroyUsage::brief() const
+std::ostream& 
+DestroyUsage::encodeBrief(std::ostream& strm) const
 {
-   Data buffer;
-   DataStream strm(buffer);
-   
    if (mDialogSet)
    {
       static Data d("DestroyDialogSet");
@@ -70,8 +67,7 @@ DestroyUsage::brief() const
       static Data d("DestroyUsage");
       strm << d << " " << *mHandle;
    }
-   strm.flush();
-   return buffer;
+   return strm;
 }
 
 std::ostream& 

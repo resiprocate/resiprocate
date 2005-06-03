@@ -1,8 +1,5 @@
-#if !defined(RESIP_TimeLimitFifo_hxx)
+#ifndef RESIP_TimeLimitFifo_hxx
 #define RESIP_TimeLimitFifo_hxx 
-
-static const char* const resipTimeLimitFifo_h_Version =
-   "$Id: TimeLimitFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
 
 #include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
@@ -42,12 +39,13 @@ class TimeLimitFifo : public AbstractFifo
 
       virtual ~TimeLimitFifo();
       
-      // Add a message to the fifo.
-      // return true iff succeeds
-      // second arg:
-      //    EnforceTimeDepth -- external (non ACK) requests
-      //    IgnoreTimeDepth -- external reponse and ACK
-      //    InternalElement -- internal messages (timers, application postbacks..); used reseved queue space
+      /** Add a message to the fifo.
+          return true iff succeeds
+          second arg:
+            EnforceTimeDepth -- external (non ACK) requests
+            IgnoreTimeDepth -- external reponse and ACK
+            InternalElement -- internal messages (timers, application
+            postbacks..); use reserved queue space */
       bool add(Msg* msg, DepthUsage usage);
 
       /** Returns the first message available. It will wait if no
@@ -60,10 +58,15 @@ class TimeLimitFifo : public AbstractFifo
       Msg* getNext(int ms);
       
       /** Return the time depth of the queue. Zero if no depth. */
-      time_t timeDepth() const;
+      virtual time_t timeDepth() const;
 
-      // would an add called now work?
+      /// would an add called now work?
       bool wouldAccept(DepthUsage usage) const;
+
+      void clear();
+
+      virtual size_t getCountDepth() const;
+      virtual time_t getTimeDepth() const;
 
    private:
       time_t timeDepthInternal() const;
@@ -86,15 +89,8 @@ TimeLimitFifo<Msg>::TimeLimitFifo(unsigned int maxDurationSecs,
 template <class Msg>
 TimeLimitFifo<Msg>::~TimeLimitFifo()
 {
-   Lock lock(mMutex); (void)lock;
-   while (!mFifo.empty())
-   {
-      Timestamped* ts = static_cast<Timestamped*>(mFifo.front());
-      mFifo.pop_front();
-      delete ts->mMsg;
-      delete ts;
-   }
-   assert(mFifo.empty());
+   clear();
+   assert(empty());
    mSize = 0UL - 1;
 }
 
@@ -155,7 +151,7 @@ template <class Msg>
 time_t
 TimeLimitFifo<Msg>::timeDepthInternal() const
 {
-   assert(!empty());
+   assert(!mFifo.empty());
 
    Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
    return time(0) - tm->mTime;
@@ -205,7 +201,7 @@ TimeLimitFifo<Msg>::timeDepth() const
 {
    Lock lock(mMutex); (void)lock;
 
-   if (empty())
+   if (mFifo.empty())
    {
       return 0;
    }
@@ -214,14 +210,43 @@ TimeLimitFifo<Msg>::timeDepth() const
    return time(0) - tm->mTime;
 }   
 
+template <class Msg>
+void
+TimeLimitFifo<Msg>::clear()
+{
+   Lock lock(mMutex); (void)lock;
+
+   while (!mFifo.empty())
+   {
+      Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
+      delete tm->mMsg;
+      delete tm;
+
+      mFifo.pop_front();
+   }
+   mSize = 0;
+}   
+
+template <class Msg>
+size_t
+TimeLimitFifo<Msg>::getCountDepth() const
+{
+   return size();
+}
+
+template <class Msg>
+time_t 
+TimeLimitFifo<Msg>::getTimeDepth() const
+{
+   return timeDepth();
+}
+
 } // namespace resip
 
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

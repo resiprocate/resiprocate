@@ -9,16 +9,17 @@ TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) 
    assert(tu);
 }
 
-Data 
-TransactionUserMessage::brief() const
+
+std::ostream& 
+TransactionUserMessage::encodeBrief(std::ostream& strm) const
 { 
-   return ("TransactionUserMessage");
+   return strm << "TransactionUserMessage";
 }
 
 std::ostream& 
 TransactionUserMessage::encode(std::ostream& strm) const
 {
-   return strm << brief(); 
+   return encodeBrief(strm); 
 }
 
 const Data& 
