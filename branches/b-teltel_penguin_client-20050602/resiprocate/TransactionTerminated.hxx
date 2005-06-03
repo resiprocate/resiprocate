@@ -22,8 +22,11 @@ class TransactionTerminated : public TransactionMessage
       virtual const Data& getTransactionId() const { return mTransactionId; }
       virtual bool isClientTransaction() const { return mIsClient; }
 
-      virtual Data brief() const { return (mIsClient ? Data("ClientTransactionTerminated ") : Data("ServerTransactionTerminated ")) + mTransactionId; }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
+      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
+      virtual std::ostream& encodeBrief(std::ostream& strm) const 
+      { 
+         return strm << (mIsClient ? "ClientTransactionTerminated " : "ServerTransactionTerminated ") << mTransactionId; 
+      }
       
       Data mTransactionId;
       bool mIsClient;

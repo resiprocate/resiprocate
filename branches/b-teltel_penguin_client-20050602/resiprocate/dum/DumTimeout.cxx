@@ -68,14 +68,12 @@ DumTimeout::isClientTransaction() const
    return false;
 }
       
-Data 
-DumTimeout::brief() const
+std::ostream& 
+DumTimeout::encodeBrief(std::ostream& strm) const
 {
-   Data data;
-   DataStream strm(data);
    encode(strm);
    strm.flush();
-   return data;
+   return strm;
 }
 
 std::ostream& 

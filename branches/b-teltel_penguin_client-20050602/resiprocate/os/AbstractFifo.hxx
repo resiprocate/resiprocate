@@ -1,4 +1,4 @@
-#if !defined(RESIP_AbstractFifo_hxx)
+#ifndef RESIP_AbstractFifo_hxx
 #define RESIP_AbstractFifo_hxx 
 
 #include <deque>
@@ -10,10 +10,18 @@
 namespace resip
 {
 
-/** First in first out list interface, with the added functionality of 
- *  being able to handle timed entries.
+/// for statistics gathering
+class FifoStatsInterface
+{
+   public:
+      virtual ~FifoStatsInterface() {}
+      virtual size_t getCountDepth() const = 0;
+      virtual time_t getTimeDepth() const = 0;
+};
+
+/** First in first out queue template hoist.
  */
-class AbstractFifo
+class AbstractFifo : public FifoStatsInterface
 {
    public:
       AbstractFifo(unsigned int maxSize);
@@ -27,9 +35,17 @@ class AbstractFifo
        */
       unsigned int size() const;
 
-      /** Returns true if a message is available.
-       */
+      /// Returns true if a message is available.
       bool messageAvailable() const;
+
+      /// defaults to zero, overridden by TimeLimitFifo<T>
+      virtual time_t timeDepth() const;
+
+      /// remove all elements in the queue (or not)
+      virtual void clear() {};
+
+      virtual size_t getCountDepth() const;
+      virtual time_t getTimeDepth() const;
 
    protected:
       /** Returns the first message available. It will wait if no
@@ -58,6 +74,11 @@ class AbstractFifo
       
       mutable Mutex mMutex;
       Condition mCondition;
+
+   private:
+      // no value semantics
+      AbstractFifo(const AbstractFifo&);
+      AbstractFifo& operator=(const AbstractFifo&);
 };
 
 } // namespace resip
@@ -66,8 +87,6 @@ class AbstractFifo
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

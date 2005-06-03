@@ -22,11 +22,6 @@ StatisticsMessage::StatisticsMessage(const StatisticsMessage& rhs)
 StatisticsMessage::~StatisticsMessage()
 {}
 
-Data 
-StatisticsMessage::brief() const 
-{
-   return "StatisticsMessage";
-}
 
 std::ostream& 
 StatisticsMessage::encode(std::ostream& strm) const 
@@ -38,6 +33,12 @@ StatisticsMessage::encode(std::ostream& strm) const
    strm << payload << "]";
 */
    return strm;
+}
+
+std::ostream& 
+StatisticsMessage::encodeBrief(std::ostream& strm) const 
+{
+   return strm << "StatisticsMessage";
 }
 
 unsigned int
