@@ -42,7 +42,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
 #ifdef WIN32
    noChallenge = 1;
-   logLevel = "ERR";
    strcpy(certPath,"C:\\sipCerts");
 #else
    strcpy(certPath, getenv("HOME"));
@@ -59,7 +58,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"tcp",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tcpPort, 0, "add TCP transport on specified port", "5060"},
       {"tls",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tlsPort, 0, "add TLS transport on specified port", "5061"},
       {"dtls",           0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
-      {"enable-v6",      0,  POPT_ARG_NONE,   &enableV6, 0, "disable IPV6", 0},
+      {"enable-v6",      0,  POPT_ARG_NONE,   &enableV6, 0, "enable IPV6", 0},
       {"disable-v4",     0,  POPT_ARG_NONE,   &disableV4, 0, "disable IPV4", 0},
       {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
