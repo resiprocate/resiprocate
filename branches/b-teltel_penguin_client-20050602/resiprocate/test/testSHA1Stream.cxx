@@ -9,7 +9,7 @@ using namespace std;
 int
 main(void)
 {
-
+#if defined(USE_SSL)
    {
       SHA1Stream str;
       assert(str.getHex() == "da39a3ee5e6b4b0d3255bfef95601890afd80709");
@@ -33,6 +33,8 @@ main(void)
    }
 
    cerr << "All OK" << endl;
-
+#else
+   cerr << "All Skipped -- no SSL" << endl;
+#endif
    return 0;
 }
