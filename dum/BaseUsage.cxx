@@ -1,5 +1,6 @@
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"

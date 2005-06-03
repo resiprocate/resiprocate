@@ -2,6 +2,7 @@
 #define RESIP_CLIENTPAGERMESSAGE_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/PayloadEncrypter.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include <deque>
@@ -10,10 +11,18 @@
 namespace resip
 {
 class SipMessage;
+class PayloadEncrypter;
 
 class ClientPagerMessage : public NonDialogUsage
 {
   public:
+      typedef enum
+      {
+         Plain,
+         Sign,
+         SignAndEncrypt
+      } EncryptionLevel;
+
       ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
       ClientPagerMessageHandle getHandle();
 
@@ -27,10 +36,11 @@ class ClientPagerMessage : public NonDialogUsage
       //queues the message if there is one sent but not yet received a response
       //for it.
       //asserts if contents->get() is NULL.
-      virtual void page(std::auto_ptr<Contents> contents);
+      virtual void page(std::auto_ptr<Contents> contents, EncryptionLevel level);
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+      virtual void dispatch(const DumEncrypted& encrypted);
 
       size_t       msgQueued () const;
 
@@ -52,6 +62,8 @@ class ClientPagerMessage : public NonDialogUsage
 
       void pageFirstMsgQueued ();
       void clearMsgQueued ();
+
+      PayloadEncrypter mEncrypter;
 };
 
 }

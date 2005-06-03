@@ -65,6 +65,8 @@ SRC =   \
 	UInt64Hash.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
-	NetworkAssociation.cxx
+	NetworkAssociation.cxx \
+	PayloadEncrypter.cxx \
+	DumEncrypted.cxx
 
 include $(BUILD)/Makefile.post
