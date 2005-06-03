@@ -10,7 +10,7 @@ DumEncrypted::DumEncrypted(bool success,
                            const Data& msg,
                            BaseUsageHandle targetBu,
                            std::auto_ptr<Contents> encrypted)
-   : mSuccess(false),
+   : mSuccess(success),
      mErrMsg(msg),
      mUsageHandle(targetBu),
      mEncrypted(encrypted)
