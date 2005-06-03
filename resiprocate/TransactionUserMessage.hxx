@@ -23,9 +23,9 @@ class TransactionUserMessage : public TransactionMessage
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const; 
       
-      virtual Data brief() const;
       virtual Message* clone() const { return new TransactionUserMessage(mType, tu); }
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
 
    private:
       Type mType;

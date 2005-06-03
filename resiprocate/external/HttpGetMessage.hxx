@@ -18,9 +18,9 @@ class HttpGetMessage : public Message
       const Mime& getType() const {return mType;}
       const Data& tid() const { return mTid; } //replace w/ act
 
-      virtual Data brief() const;
       virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
       Data mTid;
       bool mSuccess;

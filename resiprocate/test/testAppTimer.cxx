@@ -25,8 +25,8 @@ class AppMessage : public Message
          : mText(text)
       {}
 
-      virtual Data brief() const {return mText;}
       virtual ostream& encode(ostream& s) const {s << mText; return s;}
+      virtual ostream& encodeBrief(ostream& s) const {s << mText; return s;}
 
       const Data& getText() const
       {
