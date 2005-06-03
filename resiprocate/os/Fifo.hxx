@@ -1,5 +1,5 @@
-#if !defined(RESIP_FIFO_HXX)
-#define RESIP_FIFO_HXX 
+#ifndef RESIP_Fifo_hxx
+#define RESIP_Fifo_hxx
 
 #include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
@@ -35,6 +35,9 @@ class Fifo : public AbstractFifo
        */
       Msg* getNext(int ms);
 
+      /// delete all elements in the queue
+      virtual void clear();
+
    private:
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
@@ -44,11 +47,17 @@ class Fifo : public AbstractFifo
 template <class Msg>
 Fifo<Msg>::Fifo() : 
    AbstractFifo(0)
+{}
+
+template <class Msg>
+Fifo<Msg>::~Fifo<Msg>()
 {
+   clear();
 }
 
 template <class Msg>
-Fifo<Msg>::~Fifo()
+void
+Fifo<Msg>::clear()
 {
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
@@ -91,8 +100,6 @@ Fifo<Msg> ::getNext(int ms)
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

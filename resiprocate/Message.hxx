@@ -12,9 +12,23 @@ class Message
    public:
       Message();
       virtual ~Message() {}
-      virtual Data brief() const=0;
-      virtual Message* clone() const=0;
-      virtual std::ostream& encode(std::ostream& strm) const=0;
+
+      /// facet for brief output to streams
+      class Brief
+      {
+         public:
+            Brief(const Message& src);
+            const Message& mSource;
+      };
+
+      /// return a facet for brief encoding of message
+      Brief brief() const;
+      virtual Message* clone() const = 0;
+      /// output the entire message to stream
+      virtual std::ostream& encode(std::ostream& strm) const = 0;
+      /// output a brief description to stream
+      virtual std::ostream& encodeBrief(std::ostream& str) const = 0;
+
    protected:
       friend class TuSelector;      
       friend class TransactionState;
@@ -28,14 +42,15 @@ class Message
 std::ostream& 
 operator<<(std::ostream& strm, const Message& msg);
 
+std::ostream& 
+operator<<(std::ostream& strm, const Message::Brief& brief);
+
 }
 
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

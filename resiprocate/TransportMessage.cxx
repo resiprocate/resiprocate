@@ -27,10 +27,10 @@ TransportMessage::isClientTransaction() const
    return true; 
 } 
       
-Data
-TransportMessage::brief() const 
+std::ostream&
+TransportMessage::encodeBrief(std::ostream& strm) const
 {
-   return "TransportMessage: " + mTransactionId + " " + (mFailure ? "failed" : "succeeded"); 
+   return strm << "TransportMessage: " << mTransactionId << " " << (mFailure ? "failed" : "succeeded"); 
 }
       
 std::ostream&

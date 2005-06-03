@@ -27,14 +27,12 @@ KeepAliveTimeout::clone() const
    return new KeepAliveTimeout(*this);
 }
 
-Data
-KeepAliveTimeout::brief() const
+std::ostream& 
+KeepAliveTimeout::encodeBrief(std::ostream& strm) const
 {
-   Data data;
-   DataStream strm(data);
    encode(strm);
    strm.flush();
-   return data;
+   return strm;
 }
 
 std::ostream& 

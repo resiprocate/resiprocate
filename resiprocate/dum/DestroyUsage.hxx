@@ -23,8 +23,8 @@ class DestroyUsage : public ApplicationMessage
       Message* clone() const;
       void destroy();
       
-      virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
       DestroyUsage(const DestroyUsage& other);

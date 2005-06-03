@@ -13,8 +13,9 @@ class ApplicationMessage : public Message
       ApplicationMessage() {};
 
       virtual const Data& getTransactionId() const { assert(0); return Data::Empty; } 
-      virtual Data brief() const=0;
       virtual Message* clone() const=0;
+      virtual std::ostream& encode(std::ostream& strm) const = 0;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const = 0;
 };
  
 }
