@@ -182,9 +182,11 @@ SipStack::stateMacFifo()
 void
 SipStack::addAlias(const Data& domain, int port)
 {
-   DebugLog (<< "Adding domain alias: " << domain << ":" << port);
+   int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
+   
+   DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
-   mDomains.insert(domain + ":" + Data(port));
+   mDomains.insert(domain + ":" + Data(portToUse));
 }
 
 Data 

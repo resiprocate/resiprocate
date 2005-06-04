@@ -46,7 +46,7 @@ AmIResponsible::handleRequest(RequestContext& context)
       {
          uri.port() = 0;
       }
-      if (!context.getProxy().isMyDomain(uri.host()))
+      if (!context.getProxy().isMyUri(uri))
       {
          // if this is not for a domain for which the proxy is responsible,
          // check that we relay from this sender and send to the Request URI
@@ -59,7 +59,7 @@ AmIResponsible::handleRequest(RequestContext& context)
             // !rwm! TODO check some kind of relay list here
             // for now, just see if the sender claims to be from one of our domains
             // send a 403 if not on the list         
-            if (!context.getProxy().isMyDomain(request.header(h_From).uri().host()))
+            if (!context.getProxy().isMyUri(request.header(h_From).uri()))
             {
                // make 403, send, dispose of memory
                resip::SipMessage response;

@@ -54,7 +54,6 @@ using namespace repro;
 using namespace resip;
 using namespace std;
 
-
 Data
 addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
 {
@@ -109,6 +108,87 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    return realm;
 }
 
+
+//!dcm! -- this type of matching can probably move into TU and be removed from
+//SipStack. Also doesn't  handle ConfigStore properly(configstore doesn't have
+//the ports yet)
+
+void 
+addDomain(Proxy& proxy, const Data& domain, vector<int> portList)
+{
+   for (vector<int>::iterator it = portList.begin(); it != portList.end(); it++)
+   {
+      proxy.addDomainWithPort(domain, *it);
+   }
+   //!dcm! -- get rid of when we have isMyRealm
+   proxy.addDomain(domain);
+}
+
+Data
+addDomainsToProxy(Proxy& proxy, CommandLineParser& args, Store& store)
+{
+   Data realm;
+   vector<int> ports;
+   ports.push_back(0);
+   ports.push_back(args.mUdpPort);
+   ports.push_back(args.mTcpPort);
+   ports.push_back(args.mTlsPort);
+   ports.push_back(args.mDtlsPort);
+   
+   for (std::vector<Data>::const_iterator i=args.mDomains.begin(); 
+        i != args.mDomains.end(); ++i)
+   {
+      InfoLog (<< "Adding domain " << *i << " from command line");
+      
+      addDomain(proxy, *i, ports);
+
+      if ( realm.empty() )
+      {
+         realm = *i;
+      }
+   }
+
+   ConfigStore::DataList dList = store.mConfigStore.getDomains();
+   for (  ConfigStore::DataList::const_iterator i=dList.begin(); 
+           i != dList.end(); ++i)
+   {
+      InfoLog (<< "Adding domain " << *i << " from config");
+
+      proxy.addDomainWithPort(*i, 0);
+
+      if ( realm.empty() )
+      {
+         realm = *i;
+      }
+   }
+
+
+   addDomain(proxy, DnsUtil::getLocalHostName(), ports);
+   
+   if ( realm.empty() )
+   {
+      realm =DnsUtil::getLocalHostName();
+   }
+
+   addDomain(proxy, "localhost", ports);
+   if ( realm.empty() )
+   {
+      realm = "localhost";
+   }
+   
+#ifndef WIN32 // !cj! TODO 
+   list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
+   for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
+   {
+      DebugLog( << "Adding domain for IP " << i->second  );
+      proxy.addDomain(i->second);
+   }
+#endif 
+
+   addDomain(proxy, "127.0.0.1", ports);
+
+   return realm;
+}
 
 int
 main(int argc, char** argv)
@@ -244,7 +324,7 @@ main(int argc, char** argv)
    }
    
    Proxy proxy(stack, requestProcessors, store.mUserStore );
-   Data realm = addDomains(proxy, args, store);
+   Data realm = addDomainsToProxy(proxy, args, store);
    
 #ifdef USE_SSL
    WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm, args.mHttpPort  );
