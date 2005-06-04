@@ -23,7 +23,12 @@ class Random
       static int  getCryptoRandom();
 	
    private:
+#ifdef WIN32
+      // ensure each thread is initialized since windows requires you to call srand for each thread
+      __declspec (thread) static bool mIsInitialized;  
+#else
       static bool  mIsInitialized;
+#endif
       
 };
  
