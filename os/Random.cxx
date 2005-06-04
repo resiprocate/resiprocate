@@ -49,14 +49,16 @@ Random::initialize()
    if (!mIsInitialized)
    {
       Timer::setupTimeOffsets();
-      
-      //throwing away first 32 bits
-      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 
 #ifdef WIN32
       Socket fd = -1;
       // !cj! need to find a better way - use pentium random commands?
+      //throwing away first 32 bits of getTimeMs - !slg! using threadid in seed, since we Initialize once per thread in Win32
+      unsigned int seed = unsigned(Timer::getTimeMs()) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId());
 #else
+      //throwing away first 32 bits
+      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+
       int fd = open("/dev/urandom", O_RDONLY);
       // !ah! blocks on embedded devices -- not enough entropy.
       if ( fd != -1 )
@@ -103,6 +105,7 @@ Random::initialize()
       }
 
 #ifdef WIN32
+      //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
       srand(seed);
 #else
       srandom(seed);
