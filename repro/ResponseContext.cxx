@@ -130,7 +130,6 @@ ResponseContext::processPendingTargets()
          // !jf! This should be the domain of "this" proxy instead of local
          // hostname. 
          rt.uri().host() = DnsUtil::getLocalHostName();
-         rt.uri().port() = 15060;
          rt.uri().param(p_lr);
          request.header(h_RecordRoutes).push_front(rt);
       }
