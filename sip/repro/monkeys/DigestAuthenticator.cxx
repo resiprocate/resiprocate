@@ -49,6 +49,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
    
    if (sipMessage)
    {
+
       if (sipMessage->exists(h_ProxyAuthorizations))
       {
          Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
@@ -64,6 +65,8 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
             }
          }
       }
+      if (sipMessage->header(h_RequestLine).method() == ACK)
+         return Continue;
       
       // if there was no Proxy-Auth header already, and the request is purportedly From
       // one of our domains, send a challenge, unless this is from a trusted node in one
@@ -92,7 +95,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
       pair<Helper::AuthResult,Data> result =
          Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
 
-      Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
+//      Auths &authHeaders = sipMessage->header(h_ProxyAuthorizations);
       switch (result.first)
       {
          case Helper::Failed:

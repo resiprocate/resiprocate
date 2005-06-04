@@ -12,7 +12,7 @@ namespace repro
 {
 class  AbstractDb;
 
-/** The Store contains differnt types of sores such as user, route, etc. These
+/** The Store contains differnt types of stores such as user, route, etc. These
  * use the AbstractDb to persist their data. */
 class Store
 {
