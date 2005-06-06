@@ -113,7 +113,7 @@ class BaseSecurity
       // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
       Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
-      Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
+      MultipartSignedContents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
 
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
@@ -128,7 +128,7 @@ class BaseSecurity
                                 Data* signedBy, SignatureStatus* sigStat );
 
       //returns SubjectAltName or commonName, if subjectAltName does not exist
-      Data getCetName(X509 *cert);
+      Data getCertName(X509 *cert);
 
       //compares (with wildcards) the hostname with the
       //subjectAltName/commonName from the 'cert' certificate
@@ -249,5 +249,3 @@ class Security : public BaseSecurity
  * <http://www.vovida.org/>.
  *
  */
-
-
