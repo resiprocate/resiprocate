@@ -1353,6 +1353,7 @@ extractFromPkcs7Recurse(Contents* tree,
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
    {
+      InfoLog( << "GREG1: " << *pk );
 #if defined(USE_SSL)
       Contents* contents = security.decrypt(receiverAor, pk);
       if (contents)
@@ -1367,13 +1368,14 @@ extractFromPkcs7Recurse(Contents* tree,
    MultipartSignedContents* mps;
    if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
    {
+      InfoLog( << "GREG2: " << *mps );
 #if defined(USE_SSL)
       Data signer;
       SignatureStatus sigStatus;
       Contents* b = extractFromPkcs7Recurse(security.checkSignature(mps, 
                                                                     &signer,
                                                                     &sigStatus),
-                                            signerAor, 
+                                            signerAor,
                                             receiverAor, attributes, security);
       attributes->setSigner(signer);
       attributes->setSignatureStatus(sigStatus);
@@ -1385,6 +1387,7 @@ extractFromPkcs7Recurse(Contents* tree,
    MultipartAlternativeContents* alt;
    if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
    {
+      InfoLog( << "GREG3: " << *alt );
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
@@ -1399,6 +1402,7 @@ extractFromPkcs7Recurse(Contents* tree,
    MultipartMixedContents* mult;
    if ((mult = dynamic_cast<MultipartMixedContents*>(tree)))
    {
+      InfoLog( << "GREG4: " << *mult );
       for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
            i != mult->parts().end(); ++i)
       {
@@ -1424,10 +1428,20 @@ Helper::extractFromPkcs7(const SipMessage& message,
    // .dlb. currently flattening SecurityAttributes?
    //attr->setIdentity(message.getIdentity());
    attr->setIdentity(message.header(h_From).uri().getAor());
-   Contents *b = extractFromPkcs7Recurse(message.getContents(),
-                                         message.header(h_To).uri().getAor(),
-                                         message.header(h_From).uri().getAor(),
-                                         attr, security);
+   Contents *b = message.getContents();
+   if (b) 
+   {
+      Data fromAor(message.header(h_From).uri().getAor());
+      Data toAor(message.header(h_To).uri().getAor());
+      if (message.isRequest())
+      {
+         b = extractFromPkcs7Recurse(b, fromAor, toAor, attr, security);
+      }
+      else // its a response
+      {
+         b = extractFromPkcs7Recurse(b, toAor, fromAor, attr, security);
+      }
+   }
    std::auto_ptr<Contents> c(b);
    std::auto_ptr<SecurityAttributes> a(attr);
    return ContentsSecAttrs(c, a);
