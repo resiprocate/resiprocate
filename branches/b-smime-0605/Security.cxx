@@ -1310,7 +1310,6 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
 MultipartSignedContents*
 BaseSecurity::sign(const Data& senderAor, Contents* contents)
 {
-   DebugLog( << "Doing multipartSign" );
    assert( contents );
 
    // form the multipart
@@ -1320,20 +1319,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 
    // add the main body to it
    Contents* body =  contents->clone();
-
-#if 0
-   // this need to be set in body before it is passed in
-   body->header(h_ContentTransferEncoding).value() = StringCategory(Data("binary"));
-#endif
    multi->parts().push_back( body );
-
-   // compute the signature
-   int flags = 0;
-   flags |= PKCS7_BINARY;
-   flags |= PKCS7_DETACHED;
-   flags |= PKCS7_NOCERTS; 
-   flags |= PKCS7_NOATTR;
-   flags |= PKCS7_NOSMIMECAP;
 
    Data bodyData;
    DataStream strm( bodyData );
@@ -1341,14 +1327,14 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    body->encode( strm );
    strm.flush();
 
-   DebugLog( << "sign the data <" << bodyData << ">" );
+   DebugLog( << "signing data <" << bodyData.escaped() << ">" );
    Security::dumpAsn("resip-sign-out-data",bodyData);
 
    const char* p = bodyData.data();
    int s = bodyData.size();
    BIO* in=BIO_new_mem_buf( (void*)p,s);
    assert(in);
-   DebugLog( << "ceated in BIO");
+   DebugLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem()); // TODO - mem leak 
    assert(out);
@@ -1357,19 +1343,27 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    STACK_OF(X509)* chain = sk_X509_new_null();
    assert(chain);
 
-   DebugLog( << "checking" );
+   DebugLog( << "searching for cert/key for <" << senderAor << ">" );
    if (mUserCerts.count(senderAor) == 0 ||
        mUserPrivateKeys.count(senderAor) == 0)
    {
       WarningLog (<< "Tried to sign with no cert or private key for " << senderAor);
       throw Exception("No cert or private key to sign with",__FILE__,__LINE__);
    }
-
+   
    X509* publicCert = mUserCerts[senderAor];
    EVP_PKEY* privateKey = mUserPrivateKeys[senderAor];
 
-   int i = X509_check_private_key(publicCert, privateKey);
-   DebugLog( << "checked cert and key ret=" << i  );
+   int rv = X509_check_private_key(publicCert, privateKey);
+   assert(rv);
+
+   // compute the signature
+   int flags = 0;
+   flags |= PKCS7_BINARY;
+   flags |= PKCS7_DETACHED;
+   flags |= PKCS7_NOCERTS; 
+   flags |= PKCS7_NOATTR;
+   flags |= PKCS7_NOSMIMECAP;
 
    PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, flags);
    if ( !pkcs7 )
@@ -1392,17 +1386,14 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
    assert( sigBody );
 
-   //sigBody->header(h_ContentType).type() = "application";
-   //sigBody->header(h_ContentType).subType() = "pkcs7-signature";
-   //sigBody->header(h_ContentType).param( "smime-type" ) = "signed-data";
+   // add the signature to it
    sigBody->header(h_ContentType).param( p_name ) = "smime.p7s";
    sigBody->header(h_ContentDisposition).param( p_handling ) = "required";
    sigBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7s";
    sigBody->header(h_ContentDisposition).value() =  "attachment" ;
    sigBody->header(h_ContentTransferEncoding).value() = "binary";
-
-   // add the signature to it
    multi->parts().push_back( sigBody );
+
    assert( multi->parts().size() == 2 );
 
    return multi;
@@ -1416,10 +1407,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    int flags = 0 ;
    flags |= PKCS7_BINARY;
-#if 0 // TODO !cj!
-   // will cause it not to send certs in the signature
    flags |= PKCS7_NOCERTS;
-#endif
 
    Data bodyData;
    DataStream strm(bodyData);
@@ -1434,13 +1422,13 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    BIO* in = BIO_new_mem_buf( (void*)p,s);
    assert(in);
-   DebugLog( << "ceated in BIO");
+   DebugLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem());
    assert(out);
    DebugLog( << "created out BIO" );
 
-   InfoLog( << "target cert name is " << recipCertName );
+   InfoLog( << "target cert name is <" << recipCertName << ">" );
    if (mUserCerts.count(recipCertName) == 0)
    {
       WarningLog (<< "Tried to encrypt with no cert or private key for " << recipCertName);
@@ -1489,32 +1477,31 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    Data outData(outBuf,size);
    assert( (long)outData.size() == size );
 
-   InfoLog( << Data("Encrypted body size is ") << outData.size() );
-   InfoLog( << Data("Encrypted body is <") << outData.escaped() << ">" );
+   InfoLog( << "Encrypted body size is " << outData.size() );
+   InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
 
-   Security::dumpAsn("resip-encrpt-out",outData);
+   Security::dumpAsn("resip-encrypt-out",outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
 
-   //outBody->header(h_ContentType).type() = "application";
-   //outBody->header(h_ContentType).subType() = "pkcs7-mime";
    outBody->header(h_ContentType).param( p_smimeType ) = "enveloped-data";
    outBody->header(h_ContentType).param( p_name ) = "smime.p7m";
    outBody->header(h_ContentDisposition).param( p_handling ) = "required";
    outBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7";
    outBody->header(h_ContentDisposition).value() =  "attachment" ;
+   outBody->header(h_ContentTransferEncoding).value() = "binary";
 
    return outBody;
 }
 
 
-Pkcs7Contents*
+MultipartSignedContents *
 BaseSecurity::signAndEncrypt( const Data& senderAor, Contents* body, const Data& recipCertName )
 {
    assert(0);
-   return 0;
-   //return sign(senderAor, encrypt(body, recipCertName));
+   //return 0;
+   return sign(senderAor, encrypt(body, recipCertName));
 }
 
 
@@ -1709,6 +1696,9 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
 Contents*
 BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 {
+
+   DebugLog( << "decryptor Aor: <" << decryptorAor << ">" );
+
    int flags=0;
    flags |= PKCS7_BINARY;
 
@@ -1721,9 +1711,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 
    Security::dumpAsn("resip-asn-decrypt", text );
 
-   BIO* in = BIO_new_mem_buf( (void*)text.c_str(),text.size());
+   BIO* in = BIO_new_mem_buf( (void*)text.c_str(), text.size());
    assert(in);
-   InfoLog( << "ceated in BIO");
+   InfoLog( << "created in BIO");
 
    BIO* out;
    out = BIO_new(BIO_s_mem());
@@ -1901,6 +1891,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 }
 
 
+
+
+
 Contents*
 BaseSecurity::checkSignature(MultipartSignedContents* multi,
                              Data* signedBy,
@@ -1912,16 +1905,18 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       throw Exception("Invalid contents passed to checkSignature", __FILE__, __LINE__);
    }
 
-   MultipartSignedContents::Parts::const_iterator i = multi->parts().begin();
+   MultipartSignedContents::Parts::const_iterator it = multi->parts().begin();
+   Contents* first = *it;
+   ++it;
+   assert( it != multi->parts().end() );
+   Contents* second = *it;
 
-   Contents* first = *i;
-   ++i;
-   assert( i != multi->parts().end() );
-   Contents* second = *i;
+   assert( second );
+   assert( first );
 
-#if 1
+   InfoLog( << "message to signature-check is " << *first );
+
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
-
    if ( !sig )
    {
       ErrLog( << "Don't know how to deal with signature type " );
@@ -1929,44 +1924,31 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       //__LINE__);
       return first;
    }
-#endif
+   Data sigData = sig->getBodyData();
 
-   int flags=0;
-   flags |= PKCS7_BINARY;
-
-   assert( second );
-   assert( first );
-
-   InfoLog( << "message to signature-check is " << *first );
-
-   Data bodyData;
-   DataStream strm( bodyData );
+   Data textData;
+   DataStream strm( textData );
    first->encodeHeaders( strm );
    first->encode( strm );
    strm.flush();
-   InfoLog( << "encoded version to signature-check is " << bodyData );
 
-   // Data textData = first->getBodyData();
-   Data textData = bodyData;
-   Data sigData = sig->getBodyData();
+   InfoLog( << "text <"    << textData.escaped() << ">" );
+   InfoLog( << "signature <" << sigData.escaped() << ">" );
 
    Security::dumpAsn( "resip-asn-uncode-signed-text", textData );
    Security::dumpAsn( "resip-asn-uncode-signed-sig", sigData );
 
    BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
    assert(in);
-   InfoLog( << "ceated in BIO");
+   InfoLog( << "created in BIO");
 
    BIO* out = BIO_new(BIO_s_mem());
    assert(out);
    InfoLog( << "created out BIO" );
 
-   InfoLog( << "verify <"    << textData.escaped() << ">" );
-   InfoLog( << "signature <" << sigData.escaped() << ">" );
-
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
    assert(pkcs7Bio);
-   InfoLog( << "ceated pkcs7 BIO");
+   InfoLog( << "created pkcs7 BIO");
 
    PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
    if ( !pkcs7 )
@@ -2031,7 +2013,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
        for(X509Map::iterator it = mUserCerts.begin(); it != mUserCerts.end(); it++)
        {
            assert(it->second);
-           sk_X509_push(certs, it->second); 
+           sk_X509_push(certs, it->second);
        }
    }
    else
@@ -2045,32 +2027,31 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       }
    }
 
+   int flags = 0;
    flags |= PKCS7_NOINTERN;
-   //flags |= PKCS7_NOVERIFY;
-   //flags |= PKCS7_NOSIGS;
 
+   // matches on certificate issuer and serial number - they must be unique
    STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, certs, flags);
    if ( signers )
    {
+
+      DebugLog( << "Found " << sk_X509_num(signers) << " signers." );
       for (int i=0; i<sk_X509_num(signers); i++)
       {
-         X509* x = sk_X509_value(signers,i);
-         InfoLog(<< "Got a signer <" << i << ">" );
+         X509* x = sk_X509_value(signers, i);
+         InfoLog(<< "Got a signer <" << i << "> : " << getCertName(x) );
 
-         GENERAL_NAMES* gens=0;
+         GENERAL_NAMES* gens = 0;
          gens = (GENERAL_NAMES*)X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
 
-         for(i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+         for (int j = 0; j < sk_GENERAL_NAME_num(gens); j++)
          {
-            GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
-            if(gen->type == GEN_URI)
+            GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, j);
+            if (gen->type == GEN_URI)
             {
                ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
-               int l = uri->length;
-               unsigned char* dat = uri->data;
-               Data name(dat,l);
+               Data name(uri->data, uri->length);
                InfoLog(<< "subjectAltName of signing cert contains <" << name << ">" );
-
                try
                {
                   Uri n(name);
@@ -2117,7 +2098,8 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          name = ias->issuer;
          asnSerial = ias->serial;
          longSerial = ASN1_INTEGER_get( (ASN1_INTEGER*)asnSerial );
-         InfoLog(<<"Signed with serial " << hex << longSerial );
+         InfoLog( << "Signed with serial " << hex << longSerial );
+         InfoLog( << "Name " << name );
       }
    }
 #endif
@@ -2153,7 +2135,6 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                ErrLog( << buf  );
                InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
             }
-
             return first;
          }
          if ( sigStat )
@@ -2213,7 +2194,7 @@ BaseSecurity::getSslCtx ()
 }
 
 Data 
-BaseSecurity::getCetName(X509 *cert)
+BaseSecurity::getCertName(X509 *cert)
 {
     X509_NAME *subj;
     int       extcount;
@@ -2309,7 +2290,7 @@ BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
 {
    assert(cert);
 
-   Data certName = getCetName(cert);
+   Data certName = getCertName(cert);
    if(Data::Empty == certName)
       return false;
 
