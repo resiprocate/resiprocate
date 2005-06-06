@@ -4,6 +4,7 @@
 
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -179,6 +180,19 @@ Contents*
 SdpContents::clone() const
 {
    return new SdpContents(*this);
+}
+
+Data 
+SdpContents::getBodyData() const
+{
+   checkParsed();
+
+   Data d;
+   DataStream s(d);
+
+   mSession.encode(s);
+
+   return d;
 }
 
 void
