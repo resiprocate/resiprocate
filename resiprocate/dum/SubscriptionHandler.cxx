@@ -1,7 +1,6 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Mime.hxx"
 
 using namespace resip;
 
