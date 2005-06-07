@@ -33,9 +33,6 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the <sys/int_types.h> header file. */
-#undef HAVE_SYS_INT_TYPES_H
-
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
 
@@ -102,6 +99,18 @@
 
 /* Select ARES Resolver */
 #undef USE_ARES
+
+/* Use BOOST */
+#undef USE_BOOST
+
+/* Use CURL */
+#undef USE_CURL
+
+/* Use Google cpuperf */
+#undef USE_GOOGLE_CPUPERF
+
+/* Use Google Malloc */
+#undef USE_GOOGLE_MALLOC
 
 /* Select IPv6 code */
 #undef USE_IPV6

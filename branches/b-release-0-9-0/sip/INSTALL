@@ -1,51 +1,28 @@
-Quick guide to building the libraries and tests:
-------------------------------------------------
+Quick guide to building the resiprocate and dum libraries and tests:
+---------------------------------------------------------------------
 
-1) ./configure
+Unpack the distribution, cd to the sip directory
+$ ./configure
+$ make
 
-Configure Options:
-  --with-shared-libs              only build shared libraries
-  --with-openssl                  include TLS support via OpenSSL
-  --with-distcc                   use distributed compilation tool distcc
 
-2) make
+Try ./configure --help to see what the configurable options are.
+There are many - the most interesting are:
 
-Notes: 
-- all binaries and object files will be placed in a subdirectory of the directory containing the source files.  
-- a symbolic link is made to any target executables in the directory where the main is
-- If you configure --with-shared-libs, it will only build shared libraries so you will need to set LD_LIBRARY_PATH.
-e.g.  BASH example on linux with debug libraries
-export LD_LIBRARY_PATH=$(RESIP_PATH)/lib.debug.Linux.i686 
+  --enable-ssl              Enable use of SSL [default=yes]
+  --enable-distcc           compile in parallel with distcc
+  --enable-ipv6             use IPv6 code [default=no]
+  --enable-google-malloc    use Google malloc [default=no]
+  --enable-google-cpuperf   use Google cpuperf [default=no]
+  --enable-boost            use BOOST [default=no]
+  --enable-curl             use CURL [default=no]
+  --enable-scanner-debug    use new message scanner debug
+  --enable-elog             enable log calls inside exceptions
+  --enable-data-local-size  Define localAlloc size [default 16]
 
-e.g. tcsh example on linux with optimized libraries
-setenv LD_LIBRARY_PATH $(RESIP_PATH)/lib.opt.Linux.i686 
 
-To build with optimization level -O3: 
-% make CODE_OPTIMIZE=3
-
-To build with profiling (gprof) turned on: 
-% make CODE_PROFILE=1
-
-To build with distcc for distributed compilation (assume you have 4 hosts runing distccd)
-See http://distcc.samba.org/
+To build with distcc for distributed compilation  - See http://distcc.samba.org/
+  (assume you have 4 hosts runing distccd)
 % ./configure --with-distcc
 % make -j 8   
-
-
-Supported Systems
------------------
-
-Supported Platforms: (to add new platform support see build/Makefile.osarch)
-FreeBSD
-Linux
-QNX
-SunOS  
-Mac
-cygwin
-
-Supported toolchains: (to add new toolchain support see build/Makefile.tools)
-gnu  (g++)
-Intel (icc)
-ARM cross-compiler (arm-linux-g++)
-Sunpro (CC)
 
