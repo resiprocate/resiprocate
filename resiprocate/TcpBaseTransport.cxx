@@ -182,7 +182,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
       // There is no connection yet, so make a client connection
-      if (conn == 0)
+      if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
          // attempt to open
          Socket sock = InternalTransport::socket( TCP, ipVersion());
