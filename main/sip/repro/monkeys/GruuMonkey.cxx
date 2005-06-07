@@ -32,67 +32,34 @@ GruuMonkey::handleRequest(RequestContext& context)
    resip::SipMessage& request = context.getOriginalRequest();
 
    // This monkey looks for a Request URIs such as:
-   //    sip:alice;instance=uuid:urn:00000-000-0c62f21a;user=gruu@example.com
-   //    sip:alice%40provider.net;instance=...;user=gruu@example.com
+   //    sip:alice;uuid:urn:00000-000-8....@example.com;user=gruu
    //
    // Looking for a Request URI which contains ";user=gruu"
    
    Uri reqUri = request.header(h_RequestLine).uri();
-   Data userParams = reqUri.uriParameters();
-   if (!userParams.empty())
+   
+   if (reqUri.exists(p_user) && (reqUri.param(p_user) == "gruu"))
    {
-      //parse userParams into a map  (lowercase the param names)
-      ParseBuffer pb(userParams);
-      while ( !pb.eof() )
+      int pos = reqUri.user().find(";");
+      if (!pos)
       {
-         const char* anchor1 = pb.position();
-         pb.skipToChar('=');
-         Data key;
-         pb.data(key,anchor1);
- 
-         const char* anchor2 = pb.skipChar('=');
-         pb.skipToChar(';');
-         Data value;
-         pb.data(value,anchor2); 
-           
-         if ( !pb.eof() )
-         {
-            pb.skipChar(';');
-         }
-           
-         DebugLog (<< "Decoding userpart params:  key=" << key << " value=" << value );
+         // can't recognize GRUU, doesn't have a ";" in the userpart
+         // send 404 Not Found
+         resip::SipMessage response;
+         InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu" << uri << ", sending 404");
+         Helper::makeResponse(response, request, 404); 
+         context.sendResponse(response);
+         return RequestProcessor::SkipThisChain;                     
+      }
+      else
+      {
+         aor.user() = reqUri.user().substr(0,pos);
+         instance   = reqUri.user().substr(pos+1);
+         aor.host() = reqUri.host();
 
-         if ( !key.empty() && !value.empty() ) // make sure both exist
-         {
-            params[key.lowercase()] = value;  // add them to the Map
-         }
-      }            
-      
-      if (params["user"].lowercase() == "gruu")
-      {
-         Uri aor;
-         Data userpart = reqUri.user();
-         //  !rwm! Note:  I am assuming here that user() provides the userpart *sans* user params.         
-         
-/*
-   !rwm! are GRUUs with different hostparts than their AOR really needed?
-         // check for an encoded "@" sign in the userpart.  Add default domain if not present
-         int pos = userpart.find("%40")
-         if (pos)
-         {
-            aor.user() = userpart.substr(0, pos);     // everything before %40
-            aor.host() = userpart.substr(pos + 3);    // everything after
-         }
-         else  // string not found. assume the same domain as the GRUU
-         {
-*/
-            aor.user() = userpart;
-            aor.host() = reqUri.host();
-//       }
-         
          // check if AOR is valid in this domain
          // !rwm! TODO - write this aorExists function
-         if (!mStore.mUserStore.aorExists(aor))
+         if (mStore.mUserStore.aorExists(aor))
          {
             // send 404 Not Found
             resip::SipMessage response;
@@ -102,9 +69,7 @@ GruuMonkey::handleRequest(RequestContext& context)
             return RequestProcessor::SkipThisChain;            
          }
          
-         GenericUri instance = GenericUri( params["instance"] );
-
-         if (mStore.isContactRegistered(aor, instance))
+         if (mStore.isContactRegistered(aor.getAor(), instance))
          {
             // grab the grid from the Request URI
             Data grid;
