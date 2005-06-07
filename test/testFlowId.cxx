@@ -1,10 +1,31 @@
 #include "resiprocate/os/FlowId.hxx"
 
+#include <sstream>
+
 using namespace resip;
 using namespace std;
 
 int main()
 {
+#if 0
+   Transport* orig = (Transport*) 0x0077ffee;
+
+
+   Data out;
+   
+   DataStream ds(foo);
+//   stringstream ds;
+   
+   ds << orig;
+
+   Transport* fromStream;
+   ds >> (long)fromStream;
+   cerr << orig << " " << fromStream << endl;   
+   ds.flush();
+   
+   assert(fromStream == orig);
+   
+#else
    Tuple tup;
    tup.transport = (Transport*) 0x0077ffee;
    tup.connectionId = 7;
@@ -19,6 +40,7 @@ int main()
    assert(d == e);
    FlowId flowFromData(e);
    assert(flow == flowFromData);
+#endif
    return 0;   
 }
 
