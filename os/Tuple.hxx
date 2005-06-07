@@ -92,6 +92,7 @@ class Tuple
 
       Transport* transport;
       ConnectionId connectionId;
+      bool onlyUseExistingConnection;      
 
       // special comparitors
       class AnyInterfaceCompare
