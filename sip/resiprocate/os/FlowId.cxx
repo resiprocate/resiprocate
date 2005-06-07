@@ -74,7 +74,7 @@ resip::operator<<(std::ostream& ostrm, const FlowId& f)
    Data res;
    {
       DataStream ds(res);
-      ds << f.transport << ":" << f.connectionId;
+	  ds << std::dec << (int)f.transport << ":" << f.connectionId;
    }
    ostrm << res.base64encode();
    return ostrm;
