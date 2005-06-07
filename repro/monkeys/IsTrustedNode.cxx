@@ -28,7 +28,7 @@ IsTrustedNode::handleRequest(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
 
-   resip::SipMessage& request = context.getOriginalRequest();
+   // resip::SipMessage& request = context.getOriginalRequest();
 
    // check the sender of the message via source IP address or identity from TLS 
    
