@@ -119,6 +119,9 @@ class SipStack
       void sendTo(const SipMessage& msg, const Tuple& tuple,
                   TransactionUser* tu=0);
 
+      void sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
+                                      TransactionUser* tu=0);
+
       // makes the message available to the TU later, TranasctionUser subclasses
       // can just post to themselves
       void post(const ApplicationMessage& message);
@@ -219,6 +222,17 @@ class SipStack
 };
 
 std::ostream& operator<<(std::ostream& strm, const SipStack& stack);
+
+inline void 
+SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
+                                     TransactionUser* tu)
+{
+   assert(tuple.transport);
+   assert(tuple.connectionId);   
+   Tuple tup(tuple);
+   tup.onlyUseExistingConnection = true;   
+   sendTo(msg, tuple, tu);
+}
  
 }
 

@@ -21,6 +21,7 @@ SRC = \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
 	os/FileSystem.cxx \
+	os/FlowId.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
 	os/Logger.cxx \
