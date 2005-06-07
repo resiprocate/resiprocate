@@ -2,8 +2,10 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Transport.hxx"
+#include <iostream>
 
 using namespace resip;
+using namespace std;
 
 FlowId::FlowId(const Tuple& t) :
    transport(t.transport),
@@ -15,17 +17,24 @@ FlowId::FlowId(const Tuple& t) :
 
 FlowId::FlowId(const Data& d)
 {
-   ParseBuffer pb(d.base64decode());
+//   ParseBuffer pb(d.base64decode());
+   ParseBuffer pb(d);
 
    const char* anchor = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
+
    {
       Data intData;
       pb.data(intData, anchor);
-      //!dcm! -- safe on all platfroms?
-      transport = reinterpret_cast<Transport*>(intData.convertInt());
+      DataStream str(intData);
+      str >> (void*) transport;
+      cerr << "IntData is: " << "[" << intData << "]" << endl;
+
+      cerr << "Transport now: " << transport << endl;
    }
+
    pb.skipChar();
+
    anchor = pb.position();
    if (pb.eof())
    {
@@ -35,7 +44,7 @@ FlowId::FlowId(const Data& d)
    {
       Data intData;
       pb.data(intData, anchor);
-      connectionId = intData.convertInt();      
+      connectionId = intData.convertInt();
    }
 }
 
@@ -76,7 +85,9 @@ resip::operator<<(std::ostream& ostrm, const FlowId& f)
       DataStream ds(res);
 	  ds << std::dec << (int)f.transport << ":" << f.connectionId;
    }
-   ostrm << res.base64encode();
+   cerr << "bfore base64 " << res << endl;
+//   ostrm << res.base64encode();
+   ostrm << res;
    return ostrm;
 }
 
