@@ -7,6 +7,9 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 namespace resip
 {

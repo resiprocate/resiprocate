@@ -16,7 +16,7 @@ namespace resip
 
 class Message;
 class TlsConnection;
-
+class ConnectionManager;
 class Connection;
 
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
