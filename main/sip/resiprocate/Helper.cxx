@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "resiprocate/Auth.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/Uri.hxx"
@@ -20,7 +21,8 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/Contents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
