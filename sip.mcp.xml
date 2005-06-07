@@ -60,7 +60,17 @@
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
-                <SETTING><NAME>UserSourceTrees</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>UserSourceTrees</NAME>
+                    <SETTING>
+                        <SETTING><NAME>Name</NAME><VALUE>SDKCurrent</VALUE></SETTING>
+                        <SETTING><NAME>Kind</NAME><VALUE>AbsolutePath</VALUE></SETTING>
+                        <SETTING><NAME>Path</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>/Developer/SDKs/MacOSX10.2.8.sdk</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE></VALUE></SETTING>
+                        </SETTING>
+                    </SETTING>
+                </SETTING>
 
                 <!-- Settings for "Access Paths" panel -->
                 <SETTING><NAME>AlwaysSearchUserPaths</NAME><VALUE>false</VALUE></SETTING>
@@ -82,11 +92,21 @@
                 <SETTING><NAME>SystemSearchPaths</NAME>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:usr:include:</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>usr/include</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>MacOS X Support</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>CodeWarrior</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
                     </SETTING>
@@ -672,7 +692,10 @@
                 <SETTING><NAME>C_CPP_Preprocessor_EmitPragmas</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_KeepWhiteSpace</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_MultiByteEncoding</NAME><VALUE>encASCII_Unicode</VALUE></SETTING>
-                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>#include &lt;MacHeadersMach-O.h&gt;
+
+// set up TARGET_OS_MAC
+#include &lt;TargetConditionals.h&gt;</VALUE></SETTING>
 
                 <!-- Settings for "C/C++ Warnings" panel -->
                 <SETTING><NAME>MWWarning_C_warn_illpragma</NAME><VALUE>1</VALUE></SETTING>
@@ -1406,12 +1429,22 @@
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
-                <SETTING><NAME>UserSourceTrees</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>UserSourceTrees</NAME>
+                    <SETTING>
+                        <SETTING><NAME>Name</NAME><VALUE>SDKCurrent</VALUE></SETTING>
+                        <SETTING><NAME>Kind</NAME><VALUE>AbsolutePath</VALUE></SETTING>
+                        <SETTING><NAME>Path</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>/Developer/SDKs/MacOSX10.2.8.sdk</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE></VALUE></SETTING>
+                        </SETTING>
+                    </SETTING>
+                </SETTING>
 
                 <!-- Settings for "Access Paths" panel -->
                 <SETTING><NAME>AlwaysSearchUserPaths</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>InterpretDOSAndUnixPaths</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>RequireFrameworkStyleIncludes</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>RequireFrameworkStyleIncludes</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>SourceRelativeIncludes</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>UserSearchPaths</NAME>
                     <SETTING>
@@ -1428,9 +1461,19 @@
                 <SETTING><NAME>SystemSearchPaths</NAME>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:usr:include:</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>../../../Works/Library/OpenSSL/openssl-0.9.7g/inc32</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>usr/include</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
@@ -1470,7 +1513,7 @@
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>System/Library/Frameworks</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
@@ -2078,13 +2121,16 @@
                 <SETTING><NAME>C_CPP_Preprocessor_EmitPragmas</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_KeepWhiteSpace</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_MultiByteEncoding</NAME><VALUE>encASCII_Unicode</VALUE></SETTING>
-                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>// set up TARGET_OS_MAC
+                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>#include &lt;MacHeadersMach-O.h&gt;
+
+// set up TARGET_OS_MAC
 #include &lt;TargetConditionals.h&gt;
 
 // voodoo magic
 #define USE_ARES 1
 #define USE_IPV6 1
 #define USE_SSL 1
+#define VONAGE_FIX 1
 
 // Darwin defines assert() to use printf, oddly enough
 #include &lt;stdio.h&gt;
@@ -5529,7 +5575,17 @@
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
-                <SETTING><NAME>UserSourceTrees</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>UserSourceTrees</NAME>
+                    <SETTING>
+                        <SETTING><NAME>Name</NAME><VALUE>SDKCurrent</VALUE></SETTING>
+                        <SETTING><NAME>Kind</NAME><VALUE>AbsolutePath</VALUE></SETTING>
+                        <SETTING><NAME>Path</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>/Developer/SDKs/MacOSX10.2.8.sdk</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE></VALUE></SETTING>
+                        </SETTING>
+                    </SETTING>
+                </SETTING>
 
                 <!-- Settings for "Access Paths" panel -->
                 <SETTING><NAME>AlwaysSearchUserPaths</NAME><VALUE>false</VALUE></SETTING>
@@ -5551,11 +5607,21 @@
                 <SETTING><NAME>SystemSearchPaths</NAME>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:usr:include:</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>usr/include</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>MacOS X Support</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>CodeWarrior</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
                     </SETTING>
@@ -6141,7 +6207,10 @@
                 <SETTING><NAME>C_CPP_Preprocessor_EmitPragmas</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_KeepWhiteSpace</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_MultiByteEncoding</NAME><VALUE>encASCII_Unicode</VALUE></SETTING>
-                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>#include &lt;MacHeadersMach-O.h&gt;
+
+// set up TARGET_OS_MAC
+#include &lt;TargetConditionals.h&gt;</VALUE></SETTING>
 
                 <!-- Settings for "C/C++ Warnings" panel -->
                 <SETTING><NAME>MWWarning_C_warn_illpragma</NAME><VALUE>1</VALUE></SETTING>
@@ -6875,12 +6944,22 @@
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
-                <SETTING><NAME>UserSourceTrees</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>UserSourceTrees</NAME>
+                    <SETTING>
+                        <SETTING><NAME>Name</NAME><VALUE>SDKCurrent</VALUE></SETTING>
+                        <SETTING><NAME>Kind</NAME><VALUE>AbsolutePath</VALUE></SETTING>
+                        <SETTING><NAME>Path</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>/Developer/SDKs/MacOSX10.2.8.sdk</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE></VALUE></SETTING>
+                        </SETTING>
+                    </SETTING>
+                </SETTING>
 
                 <!-- Settings for "Access Paths" panel -->
                 <SETTING><NAME>AlwaysSearchUserPaths</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>InterpretDOSAndUnixPaths</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>RequireFrameworkStyleIncludes</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>RequireFrameworkStyleIncludes</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>SourceRelativeIncludes</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>UserSearchPaths</NAME>
                     <SETTING>
@@ -6897,9 +6976,19 @@
                 <SETTING><NAME>SystemSearchPaths</NAME>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:usr:include:</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>../../../Works/Library/OpenSSL/openssl-0.9.7g/inc32</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>usr/include</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
@@ -6939,7 +7028,7 @@
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>System/Library/Frameworks</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>Unix</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>OS X Volume</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>SDKCurrent</VALUE></SETTING>
                         </SETTING>
                         <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
@@ -7547,13 +7636,16 @@
                 <SETTING><NAME>C_CPP_Preprocessor_EmitPragmas</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_KeepWhiteSpace</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>C_CPP_Preprocessor_MultiByteEncoding</NAME><VALUE>encASCII_Unicode</VALUE></SETTING>
-                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>// set up TARGET_OS_MAC
+                <SETTING><NAME>C_CPP_Preprocessor_PrefixText</NAME><VALUE>#include &lt;MacHeadersMach-O.h&gt;
+
+// set up TARGET_OS_MAC
 #include &lt;TargetConditionals.h&gt;
 
 // voodoo magic
 #define USE_ARES 1
 #define USE_IPV6 1
 #define USE_SSL 1
+#define VONAGE_FIX 1
 
 // Darwin defines assert() to use printf, oddly enough
 #include &lt;stdio.h&gt;
