@@ -1,3 +1,160 @@
+2005-06-07  RjS@estacado.net (editor)
+        Summary of changes between the 0.4.0 release and the 0.9.0 release
+
+    CHANGES/ DEPRECATED THINGS
+      * Renamed h_CallId to h_CallID
+      * TuIM and Dialog (renamed to DeprecatedDialog) are deprecated
+      * Removed all references to Preparser
+      * Removed many unused files
+      * Reorganized ParserCategories into seperate files for each ParserCategory
+      * Renamed Log::CERR to Log::Cerr (similar for DEBUG->Debug, etc)
+      * Removed Executive
+      * Changed the branch parameter encoding (fixed many bugs)
+      * Used HashMap instead of map in many places
+      * Used vector instead of list in many places
+      * Used vector instead of map in many places
+      * Fifo changed to use deque instead of list
+      * Complete reimplementation (and refactoring) of Security
+      * Changed use of windows Mutex to CriticalSection for efficiency
+      * Added IpVersion enum to transports replacing a bool for v4/v6
+      * Increased bits in transaction-id from 31 to 64
+    NEW THINGS
+      * Created a StackThread to run SipStack in its own thread
+      * Added DUM
+      * Added DTLS Transport 
+      * Added support for draft-sip-identity
+      * Added auth-int support
+      * Added Transport abstraction to allow plugging in external
+        transports which may share the process/select/buildfdset of
+        the SipStack or directly insert into the TuFifo
+      * Added abstract connection class to facilitate working with
+        external streaming transports
+      * Added a StackLog logging level
+      * Added Windows memory leak detection mechanism
+      * Implemented a TuSelector to allow more than 
+        one TU to reside above a single instance of a SipStack
+      * Added ExternalLogger to permit custom logging
+      * Added Statistics Collection for SIP Messaging (StatisticsManager)
+      * Added a pluggable DNS interface
+      * Generalized Data's sharing to {Share, Borrow, Take} (read/write overlay) 
+      * Added URL encoding/decoding to Data
+      * Added helper methods to perform DIGEST with A1 instead of password
+      * Added helper methods to build responses on a provided SipMessage object
+        instead of having the helper build a new one on the heap
+      * Improved backpressure support at the transaction layer (503 if too busy)
+      * Added TimeLimitFifo to aid with backpressure
+      * Added a pluggable keep-alive manager (focusing on NAT issues)
+      * Allowed for non-busy, non-blocking wait handshakes with TLS
+      * Included hostname in Call-ID
+      * Added CNAME support to DNS resolution
+      * Added v6 support to DNS resolution (both using DNS over v6 and supporting
+        AAAA records
+      * Added v6 ntop and pton support
+      * Created an application accessible timer queue
+      * Added SipStack::postMS interface to allow application messages to be
+        posted with subsecond timing requirements
+      * Added vs.net project files for 7.0, 7.1, 8.0
+      * Tweaked things to allow compilation with gcc 3.4 and 4.0
+      * Added support for google-perftools and google-malloc
+      * Added a merge interface to Pidf
+      * Added support for message/external-body
+      * Added several test programs (particularly around security objects)
+      * Added Headers:
+            o Accept-Contact
+            o ContentId
+            o Identity
+            o Identity-Info
+            o Join
+            o Min-SE
+            o P-Asserted-Identity
+            o P-Associated-URI
+            o P-Called-Party-ID
+            o P-Media-Authorization
+            o P-Preferred-Identity
+            o Path
+            o Privacy
+            o RAck
+            o Reason
+            o Refer-To
+            o Referred-By
+            o Reject-Contact
+            o Request-Disposition
+            o RSeq
+            o Service-Route
+            o Session-Expires
+            o SIP-ETag
+            o SIP-IfMatch
+            o Target-Dialog
+            o r - Compact form of Refer-To
+            o b - Compact form of Referred-By 
+      * Added parameters:
+            o +sip.instance
+            o actor
+            o app-id
+            o application
+            o control
+            o description
+            o document
+            o early-only
+            o effective-by
+            o events
+            o extensions
+            o gruu
+            o isfocus
+            o language
+            o methods
+            o model
+            o network-user
+            o priority
+            o profile-type
+            o refresher
+            o schemes
+            o text
+            o type
+            o url
+            o vendor
+            o version
+            o video 
+
+    FIXED THINGS
+      * Fixed several memory leaks (TransactionState, SdpContents, others)
+      * Fixed retransmit timers
+      * Fixed several flaws in XMLCursor (simple xml parser)
+      * Fixed mismatched cancel problem with 481 in TransactionState 
+      * Improved graceful shutdown logic in transaction layer
+      * Generalized TimerQueue code
+      * Fixed IPv6 handling errors througout code - tested IPv6 at SIPIts
+        (both windows and *nix)
+      * Fixed problem with TimerF producing a 408 to the TU when not in Calling state
+      * Fixed problem with TransportSelector messing with route headers
+      * Fixed bug in TransactionState where transmissions were being delivered to TU
+      * Fixed assertion bug when trying to retransmit something that hasn't been 
+        transmitted yet
+      * Fixed incompatibilities with earlier versions of windows in
+        TransportSelector::determineSourceInterface
+      * Fixed windows use of udp sendto
+      * Corrected use of sip:/sips: and their effect on DNS lookups (3263)
+      * Corrected use of resolver to do appropriate things for the 
+        currently available transports (per interface)
+      * Fixed a SipFrag encoding problem
+      * Added a Warning header to 503 responses
+      * Improved robustness of QuotedDataParameter (will accept unquoted arguments
+        and automatically add the needed quotes)
+      * Fixed many S/MIME issues (and tested the results at SIPIts)
+      * Throws when no Via appears in a message (instead of asserting)
+      * Improved robustness of SDP parser (survives lack of final \r\n,
+          survives lack of m lines, better e and p line parsing)
+      * Reworked ThreadIf
+      * Fixed a nasty bug in Condition::wait that was passing an 
+        incorrectly rounded value of tv_nsec into pthread_cond_timedwait 
+        and causing an assertion in some versions of linux 
+      * Removed unnecessary recomputations of 2543 transaction ids
+      * Fixed socket leak in ares (close vs socketclose on windows)
+      * Several fixes (particularly around USE_IPV6) to keep objects from
+        changing size depending on stack configuration
+      * Many fixes to TLS (tested at SIPITs) - In particular, fixed checks
+        of subjectaltname/cname during TLS setup
+
 2004-01-12    <alan@jasomi.com>
 	* os/Timer.cxx:
 		Minor timer cleanup.
@@ -9504,3 +9661,62 @@
 
 	* Makefile: [no log message]
 
+2003-10-16 Alan Hawrylyshen <alan@jasomi.com>
+	* Embedded.cxx (decode): Pointer checking made stronger
+	
+	* MultipartMixedContents.cxx : Added comments for assertion
+	verification.
+
+	* Preparse.cxx : Upgraded to handle SipFrags.
+	
+	* SdpContents.cxx : Made asserts less odious. (Open to discussion)
+
+	* SdpContents.hxx : Constification. Added methods for encryption
+	keys.
+
+	* Security.cxx : Narrowed scope of const - error check ifdef.
+
+	* SipFrag.cxx : Plumbed in new Preparse stuff.
+
+	* TransactionState.cxx : Various assertions promoted / demoted.
+			(Open for discussion)
+
+	* Data.hxx : Added truncate method.
+
+	* os/Random.cxx : Changed to /dev/urandom for seed. Fixes embedded
+		blocking problems.
+
+	* test/testSipFrag.cxx : Added test that fails with
+		MsgHeaderScanner and works with Preparser.  Message is
+		example from real UA in real scenario.
+	
+2003-08-14  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (rpms): added "make rpms" to build RPM packages.
+
+	* resip.spec.in: added the RPM spec file to build RPM packages.
+
+2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
+
+	* README: added some description how to build and install the
+	resip library using the configure.ac and automake files.
+
+	* configure.ac: added major, minor and micro version number of the
+	resip library package.
+
+	* configure.in: recovered for the original configure system, and
+	moved the new configure.in to configure.ac.
+
+2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
+
+	* acinclude.m4: fixed not to add -I/usr/include into CPPFLAGS and
+	not to add -L/usr/lib into LDFLAGS, which avoid a lot of compiling
+	warnings.
+
+	* configure.in: most stuff of configure.ac is merged in the
+	configure.in. configure.ac should be of no use now.
+
+	* acinclude.m4: fixed to look up contrib/ares automatically when
+	the --with-ares is specified.
+
+	* Makefile.am (EXTRA_DIST): fixed to use the right directory.
