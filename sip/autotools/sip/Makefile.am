@@ -1,9 +1,9 @@
 AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = resiprocate .
-EXTRA_DIST = contrib/ares certs README.windows \
+EXTRA_DIST = contrib/ares certs \
 		ReSIProcate_7_0.sln  ReSIProcate_7_1.sln  ReSIProcate_8_0.sln \
-		README.autotools sip.mcp.xml
+		sip.mcp.xml
 
 dist-hook:
 	if [ -f $(distdir)/contrib/ares/Makefile ]; then \
