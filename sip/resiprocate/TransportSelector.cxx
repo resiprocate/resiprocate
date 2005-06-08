@@ -50,26 +50,22 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #endif
 }
 
+template<class T> void 
+deleteMap(T& m)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      delete it->second;
+   }
+   m.clear();
+}
+
 TransportSelector::~TransportSelector()
 {
-   while (!mExactTransports.empty())
-   {
-      ExactTupleMap::iterator i = mExactTransports.begin();
-      Transport* t = i->second;
-      mExactTransports.erase(i);
-      delete t;
-   }
-
-   //InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
-   
-   while (!mAnyInterfaceTransports.empty())
-   {
-      AnyInterfaceTupleMap::iterator i = mAnyInterfaceTransports.begin();
-      Transport* t = i->second;
-      mAnyInterfaceTransports.erase(i);
-      //InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
-      delete t;
-   }
+   deleteMap(mExactTransports);
+   deleteMap(mAnyInterfaceTransports);
+   deleteMap(mTlsTransports);
+   deleteMap(mDtlsTransports);
 }
 
 void
