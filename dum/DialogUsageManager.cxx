@@ -66,7 +66,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mStack(stack),
    mDumShutdownHandler(0),
    mShutdownState(Running),
-   mPayloadHandler(*mStack.getSecurity())
+   mEncryptionManager(*mStack.getSecurity())
 {
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
@@ -615,15 +615,15 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
       }
       if (Sign == level)
       {
-         contents = mPayloadHandler.sign(contents, senderAor);
+         contents = mEncryptionManager.sign(contents, senderAor);
       }
       else if (Encrypt == level)
       {
-         contents = mPayloadHandler.encrypt(contents, recipAor);
+         contents = mEncryptionManager.encrypt(contents, recipAor);
       }
       else if (SignAndEncrypt == level)
       {
-         contents = mPayloadHandler.signAndEncrypt(contents, senderAor, recipAor);
+         contents = mEncryptionManager.signAndEncrypt(contents, senderAor, recipAor);
       }
 
       if (!contents)
@@ -884,7 +884,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          // Todo: based on the return, do accordingly.
          // for now, the return is ignored.
-         mPayloadHandler.decrypt(*sipMsg);
+         mEncryptionManager.decrypt(*sipMsg);
          //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
          if (sipMsg->isRequest())
          {
