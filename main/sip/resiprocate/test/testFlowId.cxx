@@ -31,7 +31,7 @@ int main()
    tup.connectionId = 7;
    
    FlowId flow(tup);
-   Data d = flow.toData();
+   Data d = Data::from(flow);
    Data e;
    {
       DataStream ds(e);
@@ -39,6 +39,8 @@ int main()
    }
    assert(d == e);
    FlowId flowFromData(e);
+
+   std::cerr << "flow: " << flow << " flowFromData: " << flowFromData << std::endl;
    assert(flow == flowFromData);
 #endif
    return 0;   
