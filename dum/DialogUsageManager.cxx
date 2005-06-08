@@ -13,7 +13,6 @@
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
@@ -21,6 +20,7 @@
 #include "resiprocate/dum/DestroyUsage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
@@ -40,7 +40,6 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
-#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -66,7 +65,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
-   mShutdownState(Running)
+   mShutdownState(Running),
+   mPayloadHandler(*mStack.getSecurity())
 {
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
@@ -595,8 +595,46 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs
 }
 
 void
-DialogUsageManager::send(SipMessage& msg)
+DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
 {
+   Contents* contents = msg.getContents();
+
+   if (contents)
+   {
+      Data senderAor;
+      Data recipAor;
+      if (msg.isResponse())
+      {
+         senderAor = msg.header(h_From).uri().getAor();
+         recipAor = msg.header(h_To).uri().getAor();
+      }
+      else
+      {
+         senderAor = msg.header(h_To).uri().getAor();
+         recipAor = msg.header(h_From).uri().getAor();
+      }
+      if (Sign == level)
+      {
+         contents = mPayloadHandler.sign(contents, senderAor);
+      }
+      else if (Encrypt == level)
+      {
+         contents = mPayloadHandler.encrypt(contents, recipAor);
+      }
+      else if (SignAndEncrypt == level)
+      {
+         contents = mPayloadHandler.signAndEncrypt(contents, senderAor, recipAor);
+      }
+
+      if (!contents)
+      {
+         // for now, generate a 415 response.
+         SipMessage* response = Helper::makeResponse(msg, 415);
+         post(response);
+         return;
+      }
+   }
+
    // !slg! There is probably a more efficient way to get the userProfile here (pass it in?)
    DialogSet* ds = findDialogSet(DialogSetId(msg));
    UserProfile* userProfile;
@@ -844,6 +882,9 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
       if (sipMsg)
       {
+         // Todo: based on the return, do accordingly.
+         // for now, the return is ignored.
+         mPayloadHandler.decrypt(*sipMsg);
          //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
          if (sipMsg->isRequest())
          {
@@ -957,17 +998,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          }
 
          dumMsg->getBaseUsage()->dispatch(*dumMsg);
-         return;
-      }
-
-      DumEncrypted* encrypted = dynamic_cast<DumEncrypted*>(msg.get());
-      if (encrypted)
-      {
-         InfoLog(<< "Encrypted Message");
-         if (encrypted->getBaseUsage().isValid())
-         {
-            encrypted->getBaseUsage()->dispatch(*encrypted);
-         }
          return;
       }
 
