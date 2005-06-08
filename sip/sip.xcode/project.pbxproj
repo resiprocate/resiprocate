@@ -1770,8 +1770,6 @@
 				372331E7085637E7006148AE,
 				372331E8085637E7006148AE,
 				372331E9085637E7006148AE,
-				372331EA085637E7006148AE,
-				372331EB085637E7006148AE,
 				372331EC085637E7006148AE,
 				372331ED085637E7006148AE,
 				372331EE085637E7006148AE,
@@ -1815,8 +1813,6 @@
 				37233214085637E7006148AE,
 				37233215085637E7006148AE,
 				37233216085637E7006148AE,
-				37233217085637E7006148AE,
-				37233218085637E7006148AE,
 				37233219085637E7006148AE,
 				3723321A085637E7006148AE,
 				3723321B085637E7006148AE,
@@ -2251,24 +2247,6 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
-		372331EA085637E7006148AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			name = DumEncrypted.cxx;
-			path = resiprocate/dum/DumEncrypted.cxx;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		372331EB085637E7006148AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.h;
-			name = DumEncrypted.hxx;
-			path = resiprocate/dum/DumEncrypted.hxx;
-			refType = 4;
-			sourceTree = "<group>";
-		};
 		372331EC085637E7006148AE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -2653,24 +2631,6 @@
 			lastKnownFileType = sourcecode.cpp.h;
 			name = PagerMessageHandler.hxx;
 			path = resiprocate/dum/PagerMessageHandler.hxx;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		37233217085637E7006148AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			name = PayloadEncrypter.cxx;
-			path = resiprocate/dum/PayloadEncrypter.cxx;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		37233218085637E7006148AE = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.h;
-			name = PayloadEncrypter.hxx;
-			path = resiprocate/dum/PayloadEncrypter.hxx;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -3068,7 +3028,6 @@
 				372332F808564635006148AE,
 				372332FA08564635006148AE,
 				372332FC08564635006148AE,
-				372332FE08564635006148AE,
 				372332FF08564635006148AE,
 				3723330108564635006148AE,
 				3723330208564635006148AE,
@@ -3093,7 +3052,6 @@
 				3723332608564635006148AE,
 				3723332808564635006148AE,
 				3723332908564635006148AE,
-				3723332B08564635006148AE,
 				3723332D08564635006148AE,
 				3723332F08564635006148AE,
 				3723333008564635006148AE,
@@ -3147,7 +3105,6 @@
 				372332F708564635006148AE,
 				372332F908564635006148AE,
 				372332FB08564635006148AE,
-				372332FD08564635006148AE,
 				3723330008564635006148AE,
 				3723330308564635006148AE,
 				3723330508564635006148AE,
@@ -3167,7 +3124,6 @@
 				3723332208564635006148AE,
 				3723332508564635006148AE,
 				3723332708564635006148AE,
-				3723332A08564635006148AE,
 				3723332C08564635006148AE,
 				3723332E08564635006148AE,
 				3723333208564635006148AE,
@@ -3489,18 +3445,6 @@
 			settings = {
 			};
 		};
-		372332FD08564635006148AE = {
-			fileRef = 372331EA085637E7006148AE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		372332FE08564635006148AE = {
-			fileRef = 372331EB085637E7006148AE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		372332FF08564635006148AE = {
 			fileRef = 372331EC085637E7006148AE;
 			isa = PBXBuildFile;
@@ -3755,18 +3699,6 @@
 		};
 		3723332908564635006148AE = {
 			fileRef = 37233216085637E7006148AE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3723332A08564635006148AE = {
-			fileRef = 37233217085637E7006148AE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3723332B08564635006148AE = {
-			fileRef = 37233218085637E7006148AE;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4042,7 +3974,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "USE_SSL USE_IPV6";
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ldum -lresiprocate -lares -lssl -lcrypto";
 				OTHER_REZFLAGS = "";
@@ -4189,7 +4120,6 @@
 			);
 			buildSettings = {
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ldum -lresiprocate -lares -lssl -lcrypto";
 				OTHER_REZFLAGS = "";
@@ -4811,7 +4741,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "USE_ARES USE_SSL USE_IPV6 USE_CURL";
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ldum -lresiprocate -lares -lcurl -lssl -lcrypto";
 				OTHER_REZFLAGS = "";
@@ -4897,7 +4826,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "USE_ARES USE_SSL USE_IPV6";
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ldum -lresiprocate -lares -lssl -lcrypto";
 				OTHER_REZFLAGS = "";
@@ -4953,7 +4881,6 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "USE_ARES USE_SSL USE_IPV6";
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ldum -lresiprocate -lares -lssl -lcrypto";
 				OTHER_REZFLAGS = "";

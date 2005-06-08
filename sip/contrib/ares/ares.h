@@ -26,9 +26,7 @@
 
 #if defined(__APPLE__)
 #include <arpa/nameser.h>
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2
 #include <arpa/nameser_compat.h>
-#endif
 #endif
 
 #include <sys/types.h>
