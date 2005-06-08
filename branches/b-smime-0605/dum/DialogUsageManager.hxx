@@ -12,7 +12,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/dum/PayloadHandler.hxx"
+#include "resiprocate/dum/EncryptionManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -368,7 +368,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
 
-      PayloadHandler mPayloadHandler;
+      EncryptionManager mEncryptionManager;
 };
 
 }
