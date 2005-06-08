@@ -11,30 +11,30 @@
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/MultipartAlternativeContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/dum/PayloadHandler.hxx"
+#include "resiprocate/dum/EncryptionManager.hxx"
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-PayloadHandler::PayloadHandler(Security& security)
+EncryptionManager::EncryptionManager(Security& security)
    : mSecurity(security)
 {
 }
 
-PayloadHandler::~PayloadHandler()
+EncryptionManager::~EncryptionManager()
 {
 }
 
-PayloadHandler::Exception::Exception(const Data& msg, const Data& file, const int line)
+EncryptionManager::Exception::Exception(const Data& msg, const Data& file, const int line)
    : BaseException(msg,file,line)
 {
 }
 
 //Todo: complete async part.
-Contents* PayloadHandler::sign(Contents* src, 
-                               const Data& senderAor)
+Contents* EncryptionManager::sign(Contents* src, 
+                                  const Data& senderAor)
 {
    bool async  = false;
 
@@ -65,8 +65,8 @@ Contents* PayloadHandler::sign(Contents* src,
 }
 
 //Todo: complete async part.
-Contents* PayloadHandler::encrypt(Contents* src,
-                                  const Data& recipAor)
+Contents* EncryptionManager::encrypt(Contents* src,
+                                     const Data& recipAor)
 {
    if (!mSecurity.hasUserCert(recipAor))
    {
@@ -82,9 +82,9 @@ Contents* PayloadHandler::encrypt(Contents* src,
 }
 
 //Todo: complete async part.
-Contents* PayloadHandler::signAndEncrypt(Contents* src,
-                                         const Data& senderAor,
-                                         const Data& recipAor)
+Contents* EncryptionManager::signAndEncrypt(Contents* src,
+                                            const Data& senderAor,
+                                            const Data& recipAor)
 {
    bool async = false;
 
@@ -120,7 +120,7 @@ Contents* PayloadHandler::signAndEncrypt(Contents* src,
 }
 
 //Todo: complete async part.
-bool PayloadHandler::decrypt(SipMessage& msg)
+bool EncryptionManager::decrypt(SipMessage& msg)
 {
    Data decryptor;
    Data signer;
@@ -172,18 +172,18 @@ bool PayloadHandler::decrypt(SipMessage& msg)
    return false;
 }
 
-bool PayloadHandler::isEncrypted(SipMessage& msg)
+bool EncryptionManager::isEncrypted(SipMessage& msg)
 {
    return isEncryptedRecurse(msg.getContents());
 }
 
-bool PayloadHandler::isSigned(SipMessage& msg,
+bool EncryptionManager::isSigned(SipMessage& msg,
                               const Data& decryptorAor)
 {
    return isSignedRecurse(msg.getContents(), decryptorAor);
 }
 
-bool PayloadHandler::isEncryptedRecurse(Contents* contents)
+bool EncryptionManager::isEncryptedRecurse(Contents* contents)
 {
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(contents)))
@@ -237,8 +237,8 @@ bool PayloadHandler::isEncryptedRecurse(Contents* contents)
    return false;
 }
 
-bool PayloadHandler::isSignedRecurse(Contents* contents,
-                                     const Data& decryptorAor)
+bool EncryptionManager::isSignedRecurse(Contents* contents,
+                                        const Data& decryptorAor)
 {
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(contents)))
