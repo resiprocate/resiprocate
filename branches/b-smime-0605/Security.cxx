@@ -1462,7 +1462,8 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 encrypt object" );
-      throw Exception("Can't encrypt",__FILE__,__LINE__);
+      //throw Exception("Can't encrypt",__FILE__,__LINE__);
+      return 0;
    }
    DebugLog( << "created PKCS7 encrypt object " );
 

@@ -1,15 +1,13 @@
-#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/dum/PagerMessageCreator.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/PagerMessageHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/PayloadEncrypter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 
@@ -88,8 +86,7 @@ ClientPagerMessage::getHandle()
 
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(dialogSet.getCreator()->getLastRequest()),
-     mEncrypter(dum, dum.getSecurity())
+     mRequest(dialogSet.getCreator()->getLastRequest())
 {
 }
 
@@ -107,26 +104,19 @@ ClientPagerMessage::getMessageRequest()
 
 void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents,
-                         EncryptionLevel level)
+                         DialogUsageManager::EncryptionLevel level)
 {
     assert(contents.get() != 0);
-    if (Plain == level)
+    bool do_page = mMsgQueue.empty();
+    Item item;
+    item.contents = contents.get();
+    item.encryptionLevel = level;
+    //mMsgQueue.push_back(contents.get());
+    mMsgQueue.push_back(item);
+    contents.release();
+    if(do_page)
     {
-       bool do_page = mMsgQueue.empty();
-       mMsgQueue.push_back(contents.get());
-       contents.release();
-       if(do_page)
-       {
-          this->pageFirstMsgQueued();
-       }
-    }
-    else if (Sign == level)
-    {
-       mEncrypter.encrypt(contents, mRequest.header(h_RequestLine).uri().getAor(), this->getBaseHandle());
-    }
-    else
-    {
-       mEncrypter.encrypt(contents, mRequest.header(h_RequestLine).uri().getAor(), mRequest.header(h_From).uri().getAor(), this->getBaseHandle());
+       this->pageFirstMsgQueued();
     }
 }
 
@@ -151,7 +141,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
         {
            if(mMsgQueue.empty() == false)
            {
-              delete mMsgQueue.front();
+              delete mMsgQueue.front().contents;
               mMsgQueue.pop_front();
               if(mMsgQueue.empty() == false)
               {
@@ -167,11 +157,11 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
            MsgQueue::iterator contents;
            for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
            {
-               Contents* p = *contents;
+               Contents* p = contents->contents;
                WarningLog ( << "Paging failed" << *p );
                Helper::makeResponse(errResponse, mRequest, code);
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
-               *contents = 0;
+               contents->contents = 0;
            }
 
            mMsgQueue.clear();
@@ -182,18 +172,6 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
 void
 ClientPagerMessage::dispatch(const DumTimeout& timer)
 {
-}
-
-void
-ClientPagerMessage::dispatch(const DumEncrypted& encrypted)
-{
-   bool do_page = mMsgQueue.empty();
-   Contents* contents = encrypted.encrypted()->clone();
-   mMsgQueue.push_back(contents);
-   if(do_page)
-   {
-      this->pageFirstMsgQueued();
-   }
 }
 
 void
@@ -213,9 +191,9 @@ ClientPagerMessage::pageFirstMsgQueued ()
 {
    assert(mMsgQueue.empty() == false);
    mRequest.header(h_CSeq).sequence()++;
-   mRequest.setContents(mMsgQueue.front());
+   mRequest.setContents(mMsgQueue.front().contents);
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
-   mDum.send(mRequest);
+   mDum.send(mRequest, mMsgQueue.front().encryptionLevel);
 }
 
 void
@@ -224,7 +202,7 @@ ClientPagerMessage::clearMsgQueued ()
    MsgQueue::iterator   contents;
    for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
    {
-      Contents* p = *contents;
+      Contents* p = contents->contents;
       delete p;
    }
    mMsgQueue.clear();
