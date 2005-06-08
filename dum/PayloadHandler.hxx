@@ -1,22 +1,40 @@
-#if !defined(RESIP_PAYLOADENCRYPTER_HXX)
-#define RESIP_PAYLOADENCRYPTER_HXX
+#if !defined(RESIP_PAYLOADHANDLER_HXX)
+#define RESIP_PAYLOADHANDLER_HXX
 
+#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/Security.hxx"
 
 namespace resip
 {
 
-class PayloadEncrypter
+class PayloadHandler
 {
    public:
-      PayloadEncrypter(TransactionUser& tu, Security* security);
-      virtual ~PayloadEncrypter();
-      void encrypt(std::auto_ptr<Contents> contents, const Data& senderAor, BaseUsageHandle handle);
-      void encrypt(std::auto_ptr<Contents> contents, const Data& senderAor, const Data& recipAor, BaseUsageHandle hanlde);
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line);
+            const char* name() const { return "PayloadHandlerException"; }
+      };
+
+      PayloadHandler(Security& security);
+      virtual ~PayloadHandler();
+      Contents* sign(Contents* contents, const Data& senderAor);
+      Contents* encrypt(Contents* contents, const Data& senderAor);
+      Contents* signAndEncrypt(Contents* contents, const Data& senderAor, const Data& recipAor);
+      bool decrypt(SipMessage& msg);
 
    private:
-      TransactionUser& mTu;
-      Security* mSecurity;
+      Security& mSecurity;
+
+      bool isEncrypted(SipMessage& msg);
+      bool isSigned(SipMessage& msg, const Data& decryptorAor);
+
+      bool isEncryptedRecurse(Contents*);
+      bool isSignedRecurse(Contents*, const Data& decryptorAor);
+
+
 };
 
 }
