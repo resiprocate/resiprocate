@@ -11,8 +11,8 @@ FlowId::FlowId(const Tuple& t) :
    transport(t.transport),
    connectionId(t.connectionId)
 {
-   assert(t.transport);
-   assert(t.connectionId);
+   assert(transport);
+   assert(connectionId);
 }
 
 FlowId::FlowId(const Data& d)
@@ -66,26 +66,14 @@ FlowId::pointTupleToFlow(Tuple& t) const
    return t;
 }
 
-Data 
-FlowId::toData() const
-{
-   Data res;
-   {
-      DataStream ds(res);
-      ds << *this;
-   }
-   return res;
-} 
-
 std::ostream&
 resip::operator<<(std::ostream& ostrm, const FlowId& f)
 {
    Data res;
    {
       DataStream ds(res);
-	  ds << std::dec << (int)f.transport << ":" << f.connectionId;
+      ds << std::dec << f.transport << ":" << f.connectionId;
    }
-   cerr << "bfore base64 " << res << endl;
 //   ostrm << res.base64encode();
    ostrm << res;
    return ostrm;
