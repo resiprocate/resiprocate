@@ -1,5 +1,5 @@
-#if !defined(RESIP_PAYLOADHANDLER_HXX)
-#define RESIP_PAYLOADHANDLER_HXX
+#if !defined(RESIP_ENCRYPTIONMANAGER_HXX)
+#define RESIP_ENCRYPTIONMANAGER__HXX
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Contents.hxx"
@@ -8,7 +8,7 @@
 namespace resip
 {
 
-class PayloadHandler
+class EncryptionManager
 {
    public:
       class Exception : public BaseException
@@ -18,8 +18,8 @@ class PayloadHandler
             const char* name() const { return "PayloadHandlerException"; }
       };
 
-      PayloadHandler(Security& security);
-      virtual ~PayloadHandler();
+      EncryptionManager(Security& security);
+      virtual ~EncryptionManager();
       Contents* sign(Contents* contents, const Data& senderAor);
       Contents* encrypt(Contents* contents, const Data& senderAor);
       Contents* signAndEncrypt(Contents* contents, const Data& senderAor, const Data& recipAor);
