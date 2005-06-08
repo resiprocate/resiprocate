@@ -12,6 +12,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/dum/PayloadHandler.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -66,6 +67,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
+
+      typedef enum
+      {
+         None,
+         Sign,
+         Encrypt,
+         SignAndEncrypt
+         } EncryptionLevel;
 
       DialogUsageManager(SipStack& stack);
       virtual ~DialogUsageManager();
@@ -192,7 +201,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
       
       void end(DialogSetId invSessionId);
-      void send(SipMessage& request); 
+      void send(SipMessage& request, EncryptionLevel level=None);
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
@@ -358,6 +367,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
+
+      PayloadHandler mPayloadHandler;
 };
 
 }

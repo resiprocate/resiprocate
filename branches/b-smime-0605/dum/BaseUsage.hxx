@@ -13,7 +13,6 @@ class Dialog;
 class DumTimeout;
 class SipMessage;
 class NameAddr;
-class DumEncrypted;
 
 class BaseUsage : public Handled
 {
@@ -35,8 +34,7 @@ class BaseUsage : public Handled
 
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimeout& timer) = 0;
-      virtual void dispatch(const DumEncrypted& encrypted) {}
-      
+            
       BaseUsageHandle getBaseHandle();
 
       DialogUsageManager& mDum;
