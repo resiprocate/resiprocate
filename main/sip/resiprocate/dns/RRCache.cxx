@@ -41,6 +41,7 @@ extern "C"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
 #include "resiprocate/dns/RRCache.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
