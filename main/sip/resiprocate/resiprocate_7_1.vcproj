@@ -337,9 +337,6 @@
 				RelativePath="FloatParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\os\FlowId.cxx">
-			</File>
-			<File
 				RelativePath="GenericContents.cxx">
 			</File>
 			<File
@@ -840,9 +837,6 @@
 			</File>
 			<File
 				RelativePath="FloatParameter.hxx">
-			</File>
-			<File
-				RelativePath=".\os\FlowId.hxx">
 			</File>
 			<File
 				RelativePath="GenericContents.hxx">
