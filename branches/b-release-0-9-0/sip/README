@@ -47,5 +47,6 @@ Supported Platforms:
        FedoraCore 3
        Suse 9.2
      FreeBSD 5.3
+     NetBSD 2.0
      OS/X 10.3
      Windows (Note: VS6.0 is not supported)
