@@ -28,28 +28,33 @@ class InviteSession : public DialogUsage
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer(const SdpContents& answer)
-;
-      /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
+      virtual void provideAnswer(const SdpContents& answer);
+
+      /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end();
 
-      /** Rejects an offer at the SIP level. So this can send a 488 to a
-          reINVITE or UPDATE */
+      /** Rejects an offer at the SIP level.  Can also be used to 
+          send a 488 to a reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      /// will resend the current sdp in an UPDATE or reINVITE
+      /** will resend the current sdp in an UPDATE or reINVITE */
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
 
-      ///
+      /** sends a refer request */
       virtual void refer(const NameAddr& referTo);
-      ///
+
+      /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-      ///
+
+      /** sends an info request */
       virtual void info(const Contents& contents);
 
+      /** accepts an info request with a 2xx */
       virtual void acceptInfo(int statusCode = 200);
+
+      /** rejects an info request with an error status code */
       virtual void rejectInfo(int statusCode = 488);
 
       // Convenience methods for accessing attributes of a dialog. 
