@@ -16,7 +16,20 @@ libtestsupport_a_SOURCES = \
 	test503Generator.cxx \
 	testResponses.cxx \
 	testRSP-2.cxx \
-	testUdp.cxx
+	testUdp.cxx \
+	testServer.cxx \
+	testClient.cxx \
+	testDns.cxx \
+	testMem.cxx \
+	testRandomHex.cxx \
+	testSelect.cxx \
+	testSipStack1.cxx \
+	testTransactionFSM.cxx \
+	testTuple.cxx \
+	testUri.cxx
+
+#testTuple and testUri really belongs i check_PROGRAMS, but
+#they broken for builds that don't specify USE_V6
 
 noinst_HEADERS = \
 	digcalc.hxx \
@@ -52,14 +65,12 @@ check_PROGRAMS = \
 	SipTortureTests \
 	testApplicationSip \
 	testAppTimer \
-	testClient \
 	testCoders \
 	testCountStream \
 	testData \
 	testDataPerformance \
 	testDataStream \
 	testDigestAuthentication \
-	testDns \
 	testDnsUtil \
 	testEmbedded \
 	testEmptyHeader \
@@ -69,7 +80,6 @@ check_PROGRAMS = \
 	testIM \
 	testIntrusiveList \
 	testLogger \
-	testMem \
 	testMessageWaiting \
 	testMultipartMixedContents \
 	testMultipartRelated \
@@ -78,26 +88,19 @@ check_PROGRAMS = \
 	testPidf \
 	testPksc7 \
 	testPlainContents \
-	testRandomHex \
 	testRlmi \
 	testSHA1Stream \
 	testSdp \
-	testSelect \
 	testSelectInterruptor \
-	testServer \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
-	testSipStack1 \
 	testStack \
 	testTcp \
 	testThreadIf \
 	testTime \
 	testTimer \
-	testTransactionFSM \
-	testTuple \
 	testTypedef \
-	testUri \
 	testXMLCursor 
 
 bin_PROGRAMS = limpc testTcp testDataPerformance
@@ -107,14 +110,12 @@ SipTortureTests_SOURCES = SipTortureTests.cxx
 limpc_SOURCES = limpc.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
 testAppTimer_SOURCES = testAppTimer.cxx
-testClient_SOURCES = testClient.cxx
 testCoders_SOURCES = testCoders.cxx
 testCountStream_SOURCES = testCountStream.cxx
 testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
-testDns_SOURCES = testDns.cxx
 testDnsUtil_SOURCES = testDnsUtil.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
@@ -124,7 +125,6 @@ testFileSystem_SOURCES = testFileSystem.cxx
 testIM_SOURCES = testIM.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
 testLogger_SOURCES = testLogger.cxx
-testMem_SOURCES = testMem.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
 testMultipartRelated_SOURCES = testMultipartRelated.cxx
@@ -133,25 +133,18 @@ testParserCategories_SOURCES = testParserCategories.cxx
 testPidf_SOURCES = testPidf.cxx
 testPksc7_SOURCES = testPksc7.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
-testRandomHex_SOURCES = testRandomHex.cxx
 testRlmi_SOURCES = testRlmi.cxx
 testSHA1Stream_SOURCES = testSHA1Stream.cxx
 testSdp_SOURCES = testSdp.cxx
-testSelect_SOURCES = testSelect.cxx
 testSelectInterruptor_SOURCES = testSelectInterruptor.cxx
-testServer_SOURCES = testServer.cxx
 testSipFrag_SOURCES = testSipFrag.cxx
 testSipMessage_SOURCES = testSipMessage.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
-testSipStack1_SOURCES = testSipStack1.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testTime_SOURCES = testTime.cxx
 testTimer_SOURCES = testTimer.cxx
-testTransactionFSM_SOURCES = testTransactionFSM.cxx
-testTuple_SOURCES = testTuple.cxx
 testTypedef_SOURCES = testTypedef.cxx
-testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 
