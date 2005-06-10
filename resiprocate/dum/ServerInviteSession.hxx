@@ -15,29 +15,31 @@ class ServerInviteSession: public InviteSession
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
-      // send a 3xx
+      /** send a 3xx */
       void redirect(const NameAddrs& contacts, int code=302);
 
-      /// send a 1xx - provisional response
+      /** send a 1xx - provisional response */
       void provisional(int code=180);
       
-      /** Called to set the offer that will be used in the next messages that
-          sends and offer. Does not send an offer */
+      /** Called to set the offer that will be used in the next message that
+          sends an offer. If possible, this will synchronously send the
+          appropriate request or response. In some cases, the UAS might have to
+          call accept in order to cause the message to be sent. */
       virtual void provideOffer(const SdpContents& offer);
 
-      /** Called to set the answer that will be used in the next messages that
-          sends an offer. Does not send an answer */
+      /** Similar to provideOffer - called to set the answer to be signalled to
+          the peer. May result in message being sent synchronously depending on
+          the state. */
       virtual void provideAnswer(const SdpContents& answer);
 
-      /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
+      /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end();
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      /** accept a re-invite, etc.  Always 200? this is only applicable to the
-          UAS */
+      /** accept an initial invite (2xx) - this is only applicable to the UAS */
       virtual void accept(int statusCode=200);
             
    private:
