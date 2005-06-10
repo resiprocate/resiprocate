@@ -668,7 +668,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                if ((unsigned int)then.convertUInt64() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
-                  return make_pair(BadlyFormed,username);
+                  return make_pair(Expired,username);
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
