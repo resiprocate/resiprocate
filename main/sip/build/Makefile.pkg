@@ -27,7 +27,7 @@ endif
 ifeq ($(USE_SSL),true)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS :=
+OPENSSL_INCLUDEDIRS := /usr/kerberos/include/
 OPENSSL_LIBDIRS :=
 OPENSSL_DEFINES += USE_SSL
 endif
