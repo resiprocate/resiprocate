@@ -16,7 +16,16 @@ class TestData
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
          {
-            Data httpString("-_.~!$+'()*,;=:@/?");
+            Data httpString("safe");
+
+            Data enc;
+            enc = httpString.urlEncoded();
+
+            cerr << "res: " << enc << endl;
+         }
+
+         {
+            Data httpString("-_.~!$'()*,;=:@/?");
             httpString += "0123456789";
 
             Data result;
@@ -24,8 +33,11 @@ class TestData
                DataStream str(result);
                httpString.urlEncode(str);
             }
-            cerr << result << endl;
             assert(result == httpString.urlEncoded());
+            cerr << ">> " << httpString.urlEncoded() << endl;
+            cerr << "<< " << httpString.urlEncoded().urlDecoded() << endl;
+            cerr << ".. " << httpString << endl;
+
             assert(httpString == httpString.urlEncoded().urlDecoded());
             assert(result == httpString);
          }
@@ -40,8 +52,13 @@ class TestData
             }
 
             cerr << result << endl;
-            assert(result == "http::/foo.com/in+word?arg1=%22quote%25%22&arg2=%22%25%25%25%25%25%22");
+            assert(result == "http::/foo.com/in+word?arg1=%22quote%25%22%26arg2=%22%25%25%25%25%25%22");
             assert(result == httpString.urlEncoded());
+
+            cerr << ">> " << httpString.urlEncoded() << endl;
+            cerr << "<< " << httpString.urlEncoded().urlDecoded() << endl;
+            cerr << ".. " << httpString << endl;
+
             assert(httpString == httpString.urlEncoded().urlDecoded());
          }
 
