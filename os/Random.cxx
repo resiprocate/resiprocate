@@ -222,6 +222,17 @@ Random::getRandomHex(unsigned int numBytes)
 }
 
 Data 
+Random::getRandomBase64(unsigned int numBytes)
+{
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
+   assert( mIsInitialized == true );
+   return Random::getRandom(numBytes).base64encode();
+}
+
+Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
    if (!mIsInitialized)
@@ -230,6 +241,17 @@ Random::getCryptoRandomHex(unsigned int numBytes)
    }
    assert( mIsInitialized == true );
    return Random::getCryptoRandom(numBytes).hex();
+}
+
+Data 
+Random::getCryptoRandomBase64(unsigned int numBytes)
+{
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
+   assert( mIsInitialized == true );
+   return Random::getCryptoRandom(numBytes).base64encode();
 }
 
 /* ====================================================================
