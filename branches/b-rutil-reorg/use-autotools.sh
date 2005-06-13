@@ -26,12 +26,11 @@ AUTOTOOLS_CONFLICTS="
 # are part of the autotools generation stuff.
 # These files are source files in autotools/* parallel tree.
 
-# Need to add resiprocate/dum/Makefile.am resiprocate/dum/test/Makefile.am
 AUTOTOOLS_USED="Makefile.am
                 resiprocate/Makefile.am 
                 resiprocate/test/Makefile.am 
-                resiprocate/dum/Makefile.am
-                resiprocate/dum/test/Makefile.am
+                dum/Makefile.am
+                dum/test/Makefile.am
                 configure.ac 
                 acinclude.m4
                 autogen.sh
@@ -39,7 +38,6 @@ AUTOTOOLS_USED="Makefile.am
 		repro/acinclude.m4
 		repro/configure.ac
 		repro/autogen.sh
-
             "
 
 AUTOTOOLS_ARTIFACTS="config.guess
