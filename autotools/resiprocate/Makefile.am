@@ -1,4 +1,4 @@
-SUBDIRS = .  dum test
+SUBDIRS = .  test
 CXX = ${DISTCC} @CXX@
 # INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
