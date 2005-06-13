@@ -27,7 +27,14 @@ FlowId::FlowId(const Data& d)
       Data intData;
       pb.data(intData, anchor);
       DataStream str(intData);
-      str >> (void*) transport;
+
+      // !kh!
+      // needs a reference for stream extraction operator
+      // str >> (void*) transport;
+      void* p = 0;
+      str >> p;
+      transport = reinterpret_cast<Transport*>(p);
+
       cerr << "IntData is: " << "[" << intData << "]" << endl;
 
       cerr << "Transport now: " << transport << endl;
