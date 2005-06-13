@@ -16,8 +16,11 @@ class Random
       
       static Data getRandom(unsigned int numBytes);
       static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
+      static Data getRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
+
       static Data getCryptoRandom(unsigned int numBytes);
       static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
+      static Data getCryptoRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
 
       static int  getRandom();
       static int  getCryptoRandom();
