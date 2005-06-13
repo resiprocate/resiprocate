@@ -1,6 +1,7 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = resiprocate .
+SUBDIRS = resiprocate repro rutil .
+
 EXTRA_DIST = contrib/ares certs README.windows \
 		ReSIProcate_7_0.sln  ReSIProcate_7_1.sln  ReSIProcate_8_0.sln \
 		README.autotools sip.mcp.xml
