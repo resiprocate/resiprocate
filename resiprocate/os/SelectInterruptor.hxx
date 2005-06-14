@@ -15,16 +15,36 @@
 namespace resip
 {
 
+/**
+    Used to 'artificially' interrupt a select call
+*/
 class SelectInterruptor : public AsyncProcessHandler
 {
    public:
       SelectInterruptor();
       virtual ~SelectInterruptor();
       
+      /** 
+          Called by the stack when messages are posted to it.
+          Calls interrupt.  
+      */
       virtual void handleProcessNotification(); 
       
+      /** 
+          cause the 'artificial' fd to signal 
+      */
       void interrupt();      
+
+      /** 
+          Used to add the 'artificial' fd to the fdset that
+          will be responsible for interrupting a subsequent select
+          call.  
+      */
       void buildFdSet(FdSet& fdset);
+
+      /** 
+          cleanup signalled fd
+      */
       void process(FdSet& fdset);
    private:
 #ifndef WIN32
