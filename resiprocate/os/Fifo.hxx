@@ -14,7 +14,7 @@ class Fifo : public AbstractFifo
       Fifo();
       virtual ~Fifo();
       
-      // Add a message to the fifo.
+      /// Add a message to the fifo.
       void add(Msg* msg);
 
       /** Returns the first message available. It will wait if no
