@@ -8,6 +8,8 @@ namespace resip
 
 class Data;
 
+/** DataBuffer is used to back the DataStream, iDataStream, and oDataStream.
+ */
 class DataBuffer : public std::streambuf
 {
    public:
@@ -25,13 +27,22 @@ class DataBuffer : public std::streambuf
 };
 
 /**
-   DataStream operates on an existing Data.
-   Input to the stream is appended to the existing Data
+   DataStream is an iostream that operates on an existing Data.  The data
+   written to the stream is appended to the reference passed to the
+   constructor.  The data is valid after DataStream's destructor is called. 
+   Data read from the stream is read from the reference passed to the
+   constructor.
  */
 class DataStream : private DataBuffer, public std::iostream
 {
    public:
+      /** Constructs a DataStream with a Data to operate on.
+          @param str A Data to operate on.
+       */
       DataStream(Data& str);
+      /** Calls flush on itself to force the update to the Data reference
+        passed into the constructor.
+       */
       ~DataStream();
 
    private:
@@ -39,9 +50,15 @@ class DataStream : private DataBuffer, public std::iostream
       DataStream& operator=(const DataStream&);
 };
 
+/**
+   iDataStream is an istream that operates on an existing Data.
+ */
 class iDataStream : private DataBuffer, public std::istream
 {
    public:
+      /** Constructs a iDataStream with a Data to operate on.
+          @param str A Data to operate on.
+       */
       iDataStream(Data& str);
       ~iDataStream();
       
@@ -51,9 +68,20 @@ class iDataStream : private DataBuffer, public std::istream
 
 };
 
+/**
+   oDataStream operates on an existing Data.  The data is appended to the
+   reference passed to the constructor.  The data is valid after DataStream's
+   destructor is called.
+ */
 class oDataStream : private DataBuffer, public std::ostream {
    public:
+      /** Constructs a oDataStream with a Data to operate on.
+          @param str A Data to operate on.
+       */
       oDataStream(Data& str);
+      /** Calls flush on itself to force the update to the Data reference
+        passed into the constructor.
+       */
       ~oDataStream();
 
    private:
