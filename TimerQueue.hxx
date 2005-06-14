@@ -20,16 +20,30 @@ class Message;
 class TransactionMessage;
 class TuSelector;
 
+/**
+  * This class takes a fifo as a place to where you can write your stuff.
+  * In the main loop when using this you need to call process() on this.
+  * During Transaction processing, TimerMessages and SIP messages get generated.
+  **/
+
 class BaseTimerQueue
 {
    public:
+      /// deletes the message associated with the timer as well.
       virtual ~BaseTimerQueue()=0;
+	  
+      /// gets the set of timers that have fired and inserts TimerMsg into the state
+      /// machine fifo and application messages into the TU fifo
       virtual void process()=0;
+
       int size() const;
       bool empty() const;
       
-      // returns ms until the next timer will fire, returns 0 if timers occur in
-      // the past and returs INT_MAX if there are no timers 
+	  /** Give me the time before the next timer will fire in milliseconds
+        *  @retval milliseconds (time until the next timer will fire)
+	    *  @retval 0 (implies that timers occur in the past)
+	    * @retval INT_MAX (implies that there are no timers)
+	   **/
       unsigned int msTillNextTimer();
       
    protected:

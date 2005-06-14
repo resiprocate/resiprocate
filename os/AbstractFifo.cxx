@@ -5,6 +5,7 @@
 
 using namespace resip;
 
+
 AbstractFifo::AbstractFifo(unsigned int maxSize)
    : mSize(0),
      mMaxSize(maxSize)
@@ -12,6 +13,7 @@ AbstractFifo::AbstractFifo(unsigned int maxSize)
 
 AbstractFifo::~AbstractFifo()
 {}
+
 
 void*
 AbstractFifo ::getNext()
@@ -66,6 +68,7 @@ AbstractFifo::empty() const
    Lock lock(mMutex); (void)lock;
    return mSize == 0;
 }
+
 
 unsigned int
 AbstractFifo ::size() const
