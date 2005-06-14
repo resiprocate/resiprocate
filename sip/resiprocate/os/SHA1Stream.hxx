@@ -18,12 +18,18 @@ typedef int SHA_CTX;
 namespace resip
 {
 
+/** SHA1Buffer is used to back the SHA1Stream.
+ */
 class SHA1Buffer : public std::streambuf
 {
    public:
       SHA1Buffer();
       virtual ~SHA1Buffer();
+      /** @returns the SHA1 hexadecimal representation of the data from the buffer
+       */
       Data getHex();
+      /** @returns the SHA1 binary representation of the data from the buffer
+       */
       Data getBin();
    protected:
       virtual int sync();
@@ -38,15 +44,22 @@ class SHA1Buffer : public std::streambuf
       std::vector<char> mBuf;
 };
 
+/** SHA1Stream is used to accumlate data written to the stream in a SHA1Buffer and
+    convert the data to SHA1.
+ */
 class SHA1Stream : private SHA1Buffer, public std::ostream
 {
    public:
       SHA1Stream();
       ~SHA1Stream();
+      /** Calls flush() on itself and returns the SHA1 data in hex format.
+          @returns the SHA1 hexadecimal representation of the data written to the stream
+       */
       Data getHex();
+      /** Calls flush() on itself and returns the SHA1 data in binary format.
+          @returns the SHA1 binary representation of the data written to the stream
+       */
       Data getBin();
-   private:
-      //SHA1Buffer mStreambuf;
 };
 
 }
