@@ -471,6 +471,9 @@
 				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\InterruptableStackThread.cxx">
+			</File>
+			<File
 				RelativePath=".\KeepAliveMessage.cxx">
 			</File>
 			<File
@@ -980,6 +983,9 @@
 			</File>
 			<File
 				RelativePath=".\InternalTransport.hxx">
+			</File>
+			<File
+				RelativePath=".\InterruptableStackThread.hxx">
 			</File>
 			<File
 				RelativePath="os\IntrusiveListElement.hxx">
