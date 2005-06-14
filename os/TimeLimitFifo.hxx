@@ -47,7 +47,19 @@ class TimeLimitFifo : public AbstractFifo
       ///    EnforceTimeDepth -- external (non ACK) requests
       ///    IgnoreTimeDepth -- external reponse and ACK
       ///    InternalElement -- internal messages (timers, application postbacks..); use reserved queue space
-      bool add(Msg* msg, DepthUsage usage);
+      ///
+	  ///    +------------------------------------------------------+
+	  ///    |                                |          |          |
+	  ///    +------------------------------------------------------+
+	  ///    <-----enforce------------------->
+	  ///    <---------------ignoreTimeDepth------------>
+	  ///    <--------------------- internalElement---------------->
+	  ///
+	  ///    enforce will drop things that exceed the queue 
+	  ///    ignore will go past that limit to the extent of the queue (eg. 
+	  ///    internal will basically not drop anything
+	  ///
+	  bool add(Msg* msg, DepthUsage usage);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
