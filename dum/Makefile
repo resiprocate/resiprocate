@@ -66,7 +66,8 @@ SRC =   \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
 	NetworkAssociation.cxx \
-	PayloadEncrypter.cxx \
-	DumEncrypted.cxx
+	EncryptionManager.cxx \
+	DumDecrypted.cxx \
+	CertMessage.cxx
 
 include $(BUILD)/Makefile.post
