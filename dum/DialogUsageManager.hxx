@@ -74,7 +74,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          Sign,
          Encrypt,
          SignAndEncrypt
-         } EncryptionLevel;
+      } EncryptionLevel;
 
       DialogUsageManager(SipStack& stack);
       virtual ~DialogUsageManager();
