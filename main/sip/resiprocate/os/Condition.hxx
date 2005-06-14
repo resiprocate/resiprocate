@@ -17,15 +17,47 @@ namespace resip
 
 class Mutex;
 
+/**
+  A condition variable that can be signaled or waited on.  Used for scheduling.
+Here's an example (from ThreadIf):
+
+@code
+  void
+  ThreadIf::shutdown()
+  {
+     Lock lock(mShutdownMutex);
+     if (!mShutdown)
+     {
+        mShutdown = true;
+        mShutdownCondition.signal();
+     }
+  }
+
+  bool
+  ThreadIf::waitForShutdown(int ms) const
+  {
+     Lock lock(mShutdownMutex);
+     mShutdownCondition.wait(mShutdownMutex, ms);
+     return mShutdown;
+  }
+  @endcode
+
+  @see Mutex
+*/
 class Condition
 {
    public:
       Condition();
       virtual ~Condition();
 
+	  /** wait for the condition to be signaled
+		@param mtx	The mutex associated with the condition variable
+	 */
       void wait (Mutex& mtx);
-      /** returns true if the condition was woken up by activity, false if timeout.
-       *  or interrupt.
+	  /** wait for the condition to be signaled
+		  @param mtx	The mutex associated with the condition variable
+          @retval true The condition was woken up by activity
+		  @retval false Timeout or interrupt.
        */
       bool wait (Mutex& mutex, unsigned int ms);
 
@@ -35,12 +67,14 @@ class Condition
       bool wait (Mutex* mutex, unsigned int ms);
 
       /** Signal one waiting thread.
-       *  Returns 0, if successful, or an errorcode.
+			@return 0 Success
+			@return errorcode The error code of the failure
        */
       void signal();
 
       /** Signal all waiting threads.
-       *  Returns 0, if successful, or an errorcode.
+			@return 0 Success
+			@return errorcode The error code of the failure
        */
       void broadcast();
 
