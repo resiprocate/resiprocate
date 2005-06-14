@@ -24,9 +24,16 @@ class FifoStatsInterface
 class AbstractFifo : public FifoStatsInterface
 {
    public:
+	  /** 
+	   * Constructor : 
+	   * @param maxSize (int value to specify a max number of messages to keep)
+	   **/
       AbstractFifo(unsigned int maxSize);
       virtual ~AbstractFifo();
 
+      /** 
+       * @retval bool (Check if the queue of messages is empty ?)                   
+       **/
       bool empty() const;
             
       /** Get the current size of the fifo. Note you should not use this function
@@ -35,7 +42,8 @@ class AbstractFifo : public FifoStatsInterface
        */
       unsigned int size() const;
 
-      /// Returns true if a message is available.
+      /** @retval true (is a message is available ?)
+       */
       bool messageAvailable() const;
 
       /// defaults to zero, overridden by TimeLimitFifo<T>
