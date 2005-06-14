@@ -32,7 +32,7 @@ CertMessage::clone() const
    return new CertMessage(mId, mSuccess, mBody);
 }
 
-ostream& operator<<(ostream& strm, const MessageId& id)
+ostream& resip::operator<<(ostream& strm, const MessageId& id)
 {
    strm << endl;
    strm << "Id: " << id.mId << "Aor :" << id.mAor << "Type: " << ((id.mType==MessageId::UserCert)? "Cert" : "Private Key") << endl;
