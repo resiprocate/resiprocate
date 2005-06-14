@@ -9,6 +9,12 @@ namespace resip
 
 class SipStack;
 
+/** 
+    This class is used to create a thread to run the SipStack in.  The
+    thread provides cycles to the SipStack by calling process.  Process
+    is called at least every 25ms, or sooner if select returns a signaled
+    file descriptor.
+*/
 class StackThread : public ThreadIf
 {
    public:
