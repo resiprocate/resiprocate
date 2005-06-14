@@ -13,9 +13,19 @@ enum LockType
    VOCAL_WRITELOCK
 };
 
+/**
+  A convenience class to lock a Lockable (such as a Mutex) on object creation,
+and unlock on destruction.
+
+  @see Mutex
+*/
 class Lock
 {
    public:
+     /**
+	  @param	Lockable&	The object to lock
+	  @param	LockType	one of VOCAL_LOCK, VOCAL_READLOCK, VOCAL_WRITELOCK
+	*/
       Lock(Lockable &, LockType = VOCAL_LOCK);
       virtual ~Lock();
 
