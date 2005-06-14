@@ -470,8 +470,7 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
                                     SipMessage& msg, 
                                     UInt32 id)
-   : Request(dum, store, msg, id),
-     mContents(msg.getContents()->clone())
+   : Request(dum, store, msg, id)
 {
    if (msg.isResponse())
    {
@@ -482,6 +481,11 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
    {
       mDecryptor = msg.header(h_To).uri().getAor();
       mSigner = msg.header(h_From).uri().getAor();
+   }
+
+   if (msg.getContents())
+   {
+      mContents.reset(msg.getContents());
    }
 }
 
