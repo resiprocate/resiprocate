@@ -40,6 +40,9 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/dum/EncryptionManager.hxx"
+#include "resiprocate/dum/DumDecrypted.hxx"
+#include "resiprocate/dum/CertMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -65,11 +68,11 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
-   mShutdownState(Running),
-   mEncryptionManager(*mStack.getSecurity())
+   mShutdownState(Running)
 {
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
+   mEncryptionManager.setDialogUsageManager(this);
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -597,41 +600,47 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs
 void
 DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
 {
-   Contents* contents = msg.getContents();
-
-   if (contents)
+   if (None != level)
    {
-      Data senderAor;
-      Data recipAor;
-      if (msg.isResponse())
-      {
-         senderAor = msg.header(h_From).uri().getAor();
-         recipAor = msg.header(h_To).uri().getAor();
-      }
-      else
-      {
-         senderAor = msg.header(h_To).uri().getAor();
-         recipAor = msg.header(h_From).uri().getAor();
-      }
-      if (Sign == level)
-      {
-         contents = mEncryptionManager.sign(contents, senderAor);
-      }
-      else if (Encrypt == level)
-      {
-         contents = mEncryptionManager.encrypt(contents, recipAor);
-      }
-      else if (SignAndEncrypt == level)
-      {
-         contents = mEncryptionManager.signAndEncrypt(contents, senderAor, recipAor);
-      }
+      Contents* contents = msg.getContents();
 
-      if (!contents)
+      if (contents)
       {
-         // for now, generate a 415 response.
-         SipMessage* response = Helper::makeResponse(msg, 415);
-         post(response);
-         return;
+         Data senderAor;
+         Data recipAor;
+         if (msg.isResponse())
+         {
+            senderAor = msg.header(h_From).uri().getAor();
+            recipAor = msg.header(h_To).uri().getAor();
+         }
+         else
+         {
+            senderAor = msg.header(h_To).uri().getAor();
+            recipAor = msg.header(h_From).uri().getAor();
+         }
+
+         if (Sign == level)
+         {
+            contents = mEncryptionManager.sign(msg, senderAor);
+         }
+         else if (Encrypt == level)
+         {
+            contents = mEncryptionManager.encrypt(msg, recipAor);
+         }
+         else if (SignAndEncrypt == level)
+         {
+            contents = mEncryptionManager.signAndEncrypt(msg, senderAor, recipAor);
+         }
+
+         if (contents)
+         {
+            msg.setContents(auto_ptr<Contents>(contents));
+         }
+         else
+         {
+            // async.
+            return;
+         }
       }
    }
 
@@ -882,9 +891,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
       if (sipMsg)
       {
-         // Todo: based on the return, do accordingly.
-         // for now, the return is ignored.
-         mEncryptionManager.decrypt(*sipMsg);
          //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
          if (sipMsg->isRequest())
          {
@@ -948,12 +954,18 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             }
             else
             {
-               processRequest(*sipMsg);
+               if (mEncryptionManager.decrypt(*sipMsg))
+               {
+                  processRequest(*sipMsg);
+               }
             }
          }
          else
          {
-            processResponse(*sipMsg);
+            if (mEncryptionManager.decrypt(*sipMsg))
+            {
+               processResponse(*sipMsg);
+            }
          }
          return;
       }
@@ -963,6 +975,27 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          processIdentityCheckResponse(*httpMsg);         
          return;         
+      }
+
+      DumDecrypted* decryptedMsg = dynamic_cast<DumDecrypted*>(msg.get());
+      if (decryptedMsg)
+      {
+         if (decryptedMsg->decrypted()->isRequest())
+         {
+            processRequest(*decryptedMsg->decrypted());
+         }
+         else
+         {
+            processResponse(*decryptedMsg->decrypted());
+         }
+         return;
+      }
+
+      CertMessage* certMsg = dynamic_cast<CertMessage*>(msg.get());
+      if (certMsg)
+      {
+         mEncryptionManager.processCertMessage(*certMsg);
+         return;
       }
 
       TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
@@ -1027,8 +1060,12 @@ DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
    if (it != mRequiresCerts.end())
    {
       getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
-      processRequest(*it->second);
+      InfoLog(<< "Decrypting msg" << endl);
+      if (mEncryptionManager.decrypt(*it->second))
+      {
+         InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
+         processRequest(*it->second);
+      }
       delete it->second;
       mRequiresCerts.erase(it);
    }
