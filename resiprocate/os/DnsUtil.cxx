@@ -39,6 +39,9 @@ DnsUtil::getLocalHostName()
          int err = getErrno();
          switch (err)
          {
+// !RjS! This makes no sense for non-windows. The
+//       current hack (see the #define in .hxx) needs
+//       to be reworked.
             case WSANOTINITIALISED:
                CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
                break;
@@ -376,7 +379,7 @@ DnsUtil::getInterfaces(const Data& matching)
    }
 
    close(s);
-#else // !WIN32
+#else
    assert(0);
 #endif
 
