@@ -16,7 +16,7 @@
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
@@ -149,7 +149,7 @@ Transport::fail(const Data& tid)
 {
    if (!tid.empty())
    {
-      mStateMachineFifo.add(new TransportMessage(tid, true));
+      mStateMachineFifo.add(new TransportFailure(tid));
    }
 }
 
