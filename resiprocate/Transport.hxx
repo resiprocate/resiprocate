@@ -73,8 +73,15 @@ class Transport
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
-      //true: will run in the SipStack's processing context
-      //false: provides own cycles, just puts messages in rxFifo
+	  /**
+	  Returns true if this Transport should be included in the FdSet processing
+	  loop, false if the Transport will provide its own cycles.  If the Transport
+	  is going to provide its own cycles, the startOwnProcessing() and
+	  shutdown() will be called to tell the Transport when to process.
+      
+	  @retval true will run in the SipStack's processing context
+      @retval false provides own cycles, just puts messages in rxFifo
+	  */
       virtual bool shareStackProcessAndSelect() const=0;
       
       //transports that returned false to shareStackProcessAndSelect() shouldn't
@@ -88,11 +95,7 @@ class Transport
       
       //overriding implementations should chain through to this
       //?dcm? pure virtual protected method to enforce this?
-      virtual void shutdown()
-      {
-         // !jf! should use the fifo to pass this in
-         mShuttingDown = true;
-      }
+      virtual void stopOwnProcessing()=0;
 
       // also used by the TransportSelector. 
       // requires that the two transports be 
@@ -106,7 +109,7 @@ class Transport
       Tuple mTuple;
 
       Fifo<TransactionMessage>& mStateMachineFifo; // passed in
-      bool mShuttingDown;
+      //bool mShuttingDown;
 
       //not a great name, just adds the message to the fifo in the synchronous(default) case,
       //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
