@@ -229,9 +229,18 @@ int main(int argc, char *argv[])
                   case 1:
                   {
                      InfoLog( << "Sending encrypted message" );
-                     Contents* contents = new PlainContents(Data("secret message"));
+                     Contents* contents = new PlainContents(Data("encrypted message"));
                      auto_ptr<Contents> content(contents);
                      cpmh.get()->page(content, DialogUsageManager::Encrypt);
+                     sent = true;
+                     break;
+                  }
+                  case 2:
+                  {
+                     InfoLog( << "Sending signed message" );
+                     Contents* contents = new PlainContents(Data("signed message"));
+                     auto_ptr<Contents> content(contents);
+                     cpmh.get()->page(content, DialogUsageManager::Sign);
                      sent = true;
                      break;
                   }
