@@ -193,6 +193,8 @@ NameAddr::parse(ParseBuffer& pb)
       }
       else
       {
+         // deal with Uri/NameAddr parameter ambiguity
+         // heuristically assign Uri parameters to the Uri
          swap(mParameters, mUri.mParameters);
          swap(mUnknownParameters, mUri.mUnknownParameters);
          for (ParameterList::iterator it = mParameters.begin(); 
