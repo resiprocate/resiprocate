@@ -142,7 +142,8 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 
 bool EncryptionManager::decrypt(SipMessage& msg)
 {
-   Decrypt* request = new Decrypt(*mDum, mRemoteCertStore.get(), msg, getNextId());
+   SipMessage copy(msg);
+   Decrypt* request = new Decrypt(*mDum, mRemoteCertStore.get(), copy, getNextId());
    Helper::ContentsSecAttrs csa;
    bool ret = request->decrypt(csa);
    if (ret)
@@ -468,7 +469,7 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
 
 EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
-                                    SipMessage& msg, 
+                                    const SipMessage& msg, 
                                     UInt32 id)
    : Request(dum, store, msg, id)
 {
@@ -485,7 +486,7 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
 
    if (msg.getContents())
    {
-      mContents.reset(msg.getContents());
+      mContents.reset(msg.getContents()->clone());
    }
 }
 
