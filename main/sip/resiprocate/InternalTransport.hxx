@@ -35,7 +35,7 @@ class InternalTransport : public Transport, public ThreadIf
       virtual bool isFinished() const;
       virtual bool hasDataToSend() const;
 
-      virtual bool shareStackProcessAndSelect() const { return !mHasOwnThread; }
+      virtual bool shareStackProcessAndSelect() const { return true; }
 
       virtual void startOwnProcessing() { run(); }
 
@@ -54,7 +54,6 @@ class InternalTransport : public Transport, public ThreadIf
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
-      bool mHasOwnThread;      
 };
 
 
