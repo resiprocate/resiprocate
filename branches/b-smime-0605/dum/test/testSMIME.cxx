@@ -244,6 +244,15 @@ int main(int argc, char *argv[])
                      sent = true;
                      break;
                   }
+                  case 3:
+                  {
+                     InfoLog( << "Sending encrypted and signed  message" );
+                     Contents* contents = new PlainContents(Data("encrypted and signed message"));
+                     auto_ptr<Contents> content(contents);
+                     cpmh.get()->page(content, DialogUsageManager::Sign);
+                     sent = true;
+                     break;
+                  }
                   default:
                   {
                      InfoLog( << "Finished!" );
