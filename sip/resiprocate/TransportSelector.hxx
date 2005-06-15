@@ -54,10 +54,13 @@ class TransportSelector
 		Shuts down all transports.
 	  */
       void shutdown();
+      
       /// Returns true if all Transports have their buffers cleared, false otherwise.
       bool isFinished() const;
       
+      /// Calls process on all suitable transports and the DNSInterface
       void process(FdSet& fdset);
+      /// Builds an FdSet comprised of all FDs from all suitable Transports and the DNSInterface
       void buildFdSet(FdSet& fdset);
      
       void addTransport( std::auto_ptr<Transport> transport);
@@ -66,12 +69,14 @@ class TransportSelector
 
       void dnsResolve(DnsResult* result, SipMessage* msg);
 
-      // this will result in msg->resolve() being called to either
-      // kick off dns resolution or to pick the next tuple , will cause the
-      // message to be encoded and via updated
+      /**
+       Results in msg->resolve() being called to either
+       kick off dns resolution or to pick the next tuple and will cause the
+       message to be encoded and via updated
+	  */
       void transmit( SipMessage* msg, Tuple& target );
       
-      // just resend to the same transport as last time
+      /// Resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
       
       unsigned int sumTransportFifoSizes() const;
