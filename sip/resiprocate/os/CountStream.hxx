@@ -4,7 +4,6 @@
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
 
-// !dlb! Much more efficient to implement ostream::operator<<
 namespace resip
 {
 
