@@ -68,12 +68,6 @@ class SipStack
             const char* name() const { return "SipStack::Exception"; }
       };
 
-      //enum TransportProcessApproach
-     // {
-      //   SharesStackProcessAndSelect,
-      //   RunsInOwnThread
-      //};
-
       /** 
          Used by the application to add in a new built-in transport.  The transport is
          created and then added to the Transport Selector.
@@ -100,8 +94,6 @@ class SipStack
                                       certificates.
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
-
-         @todo ?dcm?  TransportProcessApproach almost definitely not required in the factory constructor
       */      
       void addTransport( TransportType protocol,
                          int port=0, 
@@ -113,67 +105,203 @@ class SipStack
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
       
+      /**
+          Used to plug-in custom transports.  Adds the transport to the Transport
+          Selector.
+
+          @param transport Pointer to an externally created transport.  SipStack 
+                           assumes ownership.
+      */
       void addTransport( std::auto_ptr<Transport> transport);
       
-      //this is the fifo subclasses of Transport should use for the rxFifo
-      //cons. param
+      /** 
+          Returns the fifo that subclasses of Transport should use for the rxFifo
+          cons. param.
+
+          @returns A fifo of TransactionMessage's
+      */
       Fifo<TransactionMessage>& stateMacFifo();      
 
-      // used to add an alias for this sip element. e.g. foobar.com and boo.com
-      // are both handled by this proxy. 
-      // not threadsafe
+      /**
+          Used to add an alias for this sip element. e.g. foobar.com and boo.com
+          are both handled by this proxy.  Not threadsafe.  Alias is added to 
+          internal list of Domains and can be checked with isMyDomain.
+
+          @param domain   Domain name that this stack is responsible for.
+
+          @param port     Port for domain that this stack is responsible for.
+      */
       void addAlias(const Data& domain, int port);
       
-      // return true if domain is handled by this stack. convenience for
-      // Transaction Users. 
+      /** 
+          Returns true if domain is handled by this stack.  Convenience for
+          Transaction Users. 
+
+          @param domain   Domain name to check.
+
+          @param port     Port number to check.
+      */
       bool isMyDomain(const Data& domain, int port) const;
       
-      // get one of the names for this host (calls through to gethostbyname) and
-      // is not threadsafe
+      /** 
+          Get one of the names for this host (calls through to gethostbyname) and
+          is not threadsafe.
+      */
       static Data getHostname();
 
-      // get one of the IP address for this host (calls through to gethostbyname) and
-      // is not threadsafe
+      /**
+          Get one of the IP address for this host (calls through to gethostbyname) and
+          is not threadsafe.
+      */
       static Data getHostAddress();
 
-      // get one of the Uris for this host
-      // not threadsafe
+      /** 
+          Get one of the domains/ports that are handled by this stack in Uri form. 
+          "sip:" scheme is assumed.
+      */
       const Uri& getUri() const;
 
-      // interface for the TU to send a message. makes a copy of the
-      // SipMessage. Caller is responsible for deleting the memory and may do
-      // so as soon as it returns. Loose Routing processing as per RFC3261 must
-      // be done before calling send by the TU. See Helper::processStrictRoute
+      /** 
+          Interface for the TU to send a message.  Makes a copy of the
+          SipMessage.  Caller is responsible for deleting the memory and may do
+          so as soon as it returns.  Loose Routing processing as per RFC3261 must
+          be done before calling send by the TU. See Helper::processStrictRoute
+
+          @param msg SipMessage to send.
+
+          @param tu  TransactionUser to send from.
+      */
       void send(const SipMessage& msg, TransactionUser* tu=0);
 
-      // this is only if you want to send to a destination not in the route. You
-      // probably don't want to use it. 
+      /**
+          This is only if you want to send to a destination not in the route.
+          Useful for implementing Outbound Proxy use.  Makes a copy of the
+          SipMessage.  Caller is responsible for deleting the memory and may 
+          do so as soon as it returns.
+
+          @param msg SipMessage to send.
+
+          @param uri Destination to send to, specified as a Uri.
+
+          @param tu  TransactionUser to send from.
+      */
       void sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu=0);
 
+      /**
+          This is only if you want to send to a destination not in the route. 
+          Useful for implementing Outbound Proxy use.  Makes a copy of the
+          SipMessage.  Caller is responsible for deleting the memory and may 
+          do so as soon as it returns.
+
+          @param msg   SipMessage to send.
+
+          @param tuple Destination to send to, specified as a Tuple.
+
+          @param tu    TransactionUser to send from.
+      */
       void sendTo(const SipMessage& msg, const Tuple& tuple,
                   TransactionUser* tu=0);
 
+      /**
+          This is only if you want to force send to only send over an existing 
+          connection.  If there is no connection, then it will try the next tuple.  
+          If there are no more Tuples to try, then a 503 is sent to the TU.  Makes 
+          a copy of the SipMessage.  Caller is responsible for deleting the memory 
+          and may  do so as soon as it returns.
+
+          @param msg   SipMessage to send.
+
+          @param tuple Destination to send to, specified as a Tuple.  A
+                       connection to this destination must exist.  
+
+          @param tu    TransactionUser to send from.
+      */
       void sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                       TransactionUser* tu=0);
 
-      // makes the message available to the TU later, TranasctionUser subclasses
-      // can just post to themselves
+      /**
+          Makes the message available to the TU later.  Makes a copy of the
+          Message.  Caller is responsible for deleting the memory and may 
+          do so as soon as it returns.  Since the addition of TransactionUsers, 
+          this method is deprecated.  Calling this will cause the TuSelector to 
+          post to the old TuFifo that is not associated with any 
+          TransactionUser.
+
+          Note:  TranasctionUser subclasses can just post to themselves.
+          
+          @deprecated
+
+          @param message ApplicationMessage to post
+      */
       void post(const ApplicationMessage& message);
 
+      /**
+          Makes the message available to the TU at some later time - specified in
+          seconds.  Makes a copy of the ApplicationMessage.  Caller is responsible 
+          for deleting the memory and may do so as soon as it returns.  
+          Note:  TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post
+
+          @param secondsLater Number of seconds before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
       void post(const ApplicationMessage& message, unsigned int secondsLater,
                 TransactionUser* tu=0);
 
+      /**
+          Makes the message available to the TU at some later time - specified in
+          milli-seconds.  Makes a copy of the ApplicationMessage.  Caller is 
+          responsible for deleting the memory and may do so as soon as it returns.  
+          Note:  TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post
+
+          @param ms      Number of milli-seconds before message is to be posted.
+
+          @param tu      TransactionUser to post to.
+      */
       void postMS(const ApplicationMessage& message, unsigned int ms,
                   TransactionUser* tu=0);
 
-      // Return true if the stack has new messages for the TU
+      /**
+          Return true if the stack has new messages for the TU.  Since the addition 
+          of TransactionUsers, this method is deprecated.  This only looks into the 
+          old TuFifo that is not associated with any TransactionUser.
+
+          @deprecated
+      */
       bool hasMessage() const;
       
-      // applications posting non-sip messages must use receive any.
-      // caller now owns the memory. returns 0 if nothing there
+      /** Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns 
+          0 if nothing there.  Since the addition of TransactionUsers, this method 
+          is deprecated.  This only looks into the old TuFifo that is not associated 
+          with any TransactionUser.
+
+          Note:  Applications posting non-sip messages must use receive any.  If non 
+                 SipMessages are on the Fifo, then they are just deleted.
+                    
+          @deprecated
+
+          @returns pointer to received SipMessage, 0 if nothing there.
+      */
       SipMessage* receive(); 
 
-      // May return TransactionTerminated* or SipMessage* or derived ApplicationMessage*
+      /** Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
+          0 if nothing there.  Since the addition of TransactionUsers, this method 
+          is deprecated.  This only looks into the old TuFifo that is not associated 
+          with any TransactionUser.
+
+          Note:  Applications posting non-sip messages must use receive any.  If non 
+                 SipMessages are on the Fifo, then they are just deleted.
+                    
+          @deprecated
+
+          @returns pointer to received Message, 0 if nothing there.  May return 
+                   TransactionTerminated*, TimerMessage*, SipMessage* or derived 
+                   ApplicationMessage* 
+      */
       Message* receiveAny(); 
       
       // build the FD set to use in a select to find out when process bust be
