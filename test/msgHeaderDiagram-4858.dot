@@ -149,4 +149,20 @@ digraph MsgHeaderScannerFSM {
     AfterLineBreakInQuotesInNValue -> ScanNValueInQuotes [label="WS\nNone" ]
 
   ScanNValueInAngles [ label = "24|ScanNValueInAngles" ]
-    Sca
+    ScanNValueInAngles -> ScanNValueInAngles [label="TERM\nSentinel" ]
+    ScanNValueInAngles -> ScanNValue [label="\">\"\nNone" ]
+    ScanNValueInAngles -> HalfLineBreakInAnglesInNValue [label="CR\nNone" ]
+
+  HalfLineBreakInAnglesInNValue [ label = "25|HalfLineBreakInAnglesInNValue" ]
+    HalfLineBreakInAnglesInNValue -> HalfLineBreakInAnglesInNValue [label="TERM\nSentinel" ]
+    HalfLineBreakInAnglesInNValue -> AfterLineBreakInAnglesInNValue [label="LF\nNone" ]
+
+  AfterLineBreakInAnglesInNValue [ label = "26|AfterLineBreakInAnglesInNValue" ]
+    AfterLineBreakInAnglesInNValue -> AfterLineBreakInAnglesInNValue [label="TERM\nSentinel" ]
+    AfterLineBreakInAnglesInNValue -> ScanNValueInAngles [label="WS\nNone" ]
+
+  HalfLineBreakAfterLineBreak [ label = "27|HalfLineBreakAfterLineBreak" ]
+    HalfLineBreakAfterLineBreak -> HalfLineBreakAfterLineBreak [label="TERM\nSentinel" ]
+    HalfLineBreakAfterLineBreak -> MsgStart [label="LF\nEndHeader" ]
+
+}
