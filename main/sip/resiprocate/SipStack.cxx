@@ -100,8 +100,7 @@ SipStack::addTransport( TransportType protocol,
                         const Data& ipInterface, 
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
-                        SecurityTypes::SSLType sslType,
-                        TransportProcessApproach threadApproach)
+                        SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
    assert( port >  0 );
@@ -157,8 +156,6 @@ SipStack::addTransport( TransportType protocol,
              << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
       throw;
    }
-   //!dcm! -- prob. should be cons param or exposed method
-   transport->mHasOwnThread = (threadApproach == RunsInOwnThread);   
    addTransport(std::auto_ptr<Transport>(transport));   
 }
 

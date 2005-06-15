@@ -30,16 +30,33 @@ class AsyncProcessHandler;
 class SipStack
 {
    public:
-      // Set stateless=true, if you want to use the stack for a stateless proxy
-      // (no transactions)
+      /** 
+          Constructor
+
+          @param security   Security Object required by the stack for TLS, DTLS, SMIME
+                            and Identity-draft compliance.  If 0 is passed in 
+                            the stack will not support these advanced security 
+                            features.  The compile flag USE_SSL is also required.
+                            The security object will be owned by the SipStack and
+                            deleted in the SipStack destructor.  Default is 0.
+
+          @param handler    AsyncProcessHandler that will be invoked when Messages 
+                            are posted to the stack.  For example:  SelectInterruptor.
+                            Default is 0.
+
+          @param stateless  Set stateless=true, if you want to use the stack for a 
+                            stateless proxy (no transactions).  Default is false.
+      */
       SipStack(Security* security=0, AsyncProcessHandler* handler = 0, 
                bool stateless=false);
 
       virtual ~SipStack();
 
-      // inform the transaction state machine processor that it should not
-      // create any new transactions and to perform an orderly shutdown. When
-      // the transactions are all terminated, return a ShutdownMessage to the TU
+      /** 
+         Inform the transaction state machine processor that it should not
+         create any new transactions and to perform an orderly shutdown. When
+         the transactions are all terminated, return a ShutdownMessage to the TU
+      */
       void shutdown();
 
       class Exception : public BaseException
@@ -50,25 +67,42 @@ class SipStack
 
             const char* name() const { return "SipStack::Exception"; }
       };
-      
-      // Used by the application to add in a new transport
-      // ipInterface parameter is used to specify which ethernet interface to
-      // bind to. If set to Data::Empty, bind to all interfaces 
-      // If port = 0, use DNS to lookup the port number for the specified
-      // domain. Only allow messages to be sent as the specified domain. 
-      // For default case, you can pass in domainname =
-      // DnsUtil::getLocalDomainName().
 
-      enum TransportProcessApproach
-      {
-         SharesStackProcessAndSelect,
-         RunsInOwnThread
-      };
-      
-      /**factory method to construct built-in transports.  A Transport::Exception
-         will be thrown if the transport couldn't be added, usually because the
-         port was already bound.
+      //enum TransportProcessApproach
+     // {
+      //   SharesStackProcessAndSelect,
+      //   RunsInOwnThread
+      //};
+
+      /** 
+         Used by the application to add in a new built-in transport.  The transport is
+         created and then added to the Transport Selector.
+
+         @throws Transport::Exception If the transport couldn't be added, usually
+                                      because the port was already bound.
+
+         @param protocol              TCP, UDP, TLS, DTLS, etc.
+
+         @param port                  Specifies which port to bind to.  See sipDomainname
+                                      parameter for more info.
+
+         @param version               Protocol Version:  V4 or V6
+
+         @param ipInterface           Specifies which ethernet interface to bind to. If set to 
+                                      Data::Empty, bind to all interfaces.
+
+         @param sipDomainname         For TLS only, if port = 0, use DNS to lookup the port number 
+                                      for the specified domain. Only allow messages to 
+                                      be sent as the specified domain.  For default case, 
+                                      you can pass in domainname = DnsUtil::getLocalDomainName().
+
+         @param privateKeyPassPhrase  Private key pass phrase used to decrypt private key 
+                                      certificates.
+
+         @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
+
          @todo ?dcm?  TransportProcessApproach almost definitely not required in the factory constructor
+      */      
       void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
@@ -77,8 +111,7 @@ class SipStack
                                                                   // for TLS
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
-                         TransportProcessApproach threadApproach = SharesStackProcessAndSelect);
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
       
       void addTransport( std::auto_ptr<Transport> transport);
       
