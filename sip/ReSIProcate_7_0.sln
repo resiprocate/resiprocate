@@ -1,13 +1,11 @@
 Microsoft Visual Studio Solution File, Format Version 7.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SipIMP", "SipIMP\SipIMP_7_0.vcproj", "{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "resiprocate\dum\dum_7_0.vcproj", "{31B0654F-E08E-405F-909F-80F86CB14B9D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "resiprocate\resiprocate_7_0.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares_7_0.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "limpc", "resiprocate\test\test_7_0.vcproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "repro", "repro\repro_7_0.vcproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
@@ -26,14 +24,6 @@ Global
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.1 = {2A8BE839-6466-4001-B224-8F1C3168D04A}
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.Debug.ActiveCfg = Debug|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.Debug.Build.0 = Debug|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.Release.ActiveCfg = Release|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.Release.Build.0 = Release|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Debug.ActiveCfg = SSL-Debug|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Debug.Build.0 = SSL-Debug|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Release.ActiveCfg = SSL-Release|Win32
-		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Release.Build.0 = SSL-Release|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug.ActiveCfg = Debug|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug.Build.0 = Debug|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Release.ActiveCfg = Release|Win32
