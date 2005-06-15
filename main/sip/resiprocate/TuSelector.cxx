@@ -4,7 +4,6 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
-
 #include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
