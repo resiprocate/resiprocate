@@ -253,7 +253,7 @@ Poll::wait(int timeoutMilliSeconds)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Jacob Butcher
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -290,12 +290,5 @@ Poll::wait(int timeoutMilliSeconds)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
- * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
  *
  */
