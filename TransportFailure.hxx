@@ -1,5 +1,5 @@
-#ifndef RESIP_TransportMessage_hxx
-#define RESIP_TransportMessage_hxx
+#ifndef RESIP_TransportFailure_hxx
+#define RESIP_TransportFailure_hxx
 
 #include <iosfwd>
 #include "resiprocate/TransactionMessage.hxx"
@@ -9,19 +9,16 @@
 namespace resip
 {
 
-// This message is used to indicate that the TransportSelector has sent a sip
-// message using either reliable or unreliable transport
-class TransportMessage : public TransactionMessage
+/** This message is used to indicate that the TransportSelector has sent a sip
+    message using either reliable or unreliable transport
+*/
+class TransportFailure : public TransactionMessage
 {
    public:
-      RESIP_HeapCount(TransportMessage);
-      /** @todo   enum for is success or failure
-          or possibly just wrong?(remove isFailure)
-      */
-      TransportMessage(const Data& transactionId, bool isFailure);
+      RESIP_HeapCount(TransportFailure);
+      TransportFailure(const Data& transactionId);
 
       virtual const Data& getTransactionId() const;
-      bool isFailed() const;
       virtual bool isClientTransaction() const;
       
       virtual std::ostream& encodeBrief(std::ostream& str) const;
@@ -29,7 +26,6 @@ class TransportMessage : public TransactionMessage
       
    private:
       Data mTransactionId;
-      bool mFailure;
 };
 
 }

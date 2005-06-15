@@ -11,7 +11,6 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
