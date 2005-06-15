@@ -65,9 +65,10 @@ class SipStack
          RunsInOwnThread
       };
       
-      //factory method to construct built-in transports.  A Transport::Exception
-      //will be thrown if the transport couldn't be added, usually because the
-      //port was already bound. 
+      /**factory method to construct built-in transports.  A Transport::Exception
+         will be thrown if the transport couldn't be added, usually because the
+         port was already bound.
+         @todo ?dcm?  TransportProcessApproach almost definitely not required in the factory constructor
       void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
