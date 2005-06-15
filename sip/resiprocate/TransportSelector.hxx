@@ -28,15 +28,34 @@ class SipMessage;
 class TransactionController;
 class Security;
 
+/**
+  TransportSelector has two distinct roles.  The first is transmit on the best
+outgoing Transport for a given SipMessage based on the target's TransportType
+and the hints present in the topmost Via in the SipMessage.  The second role
+is to hold all Transports added to the SipStack, and if a given Transport returns
+true for shareStackProcessAndSelect(), TransportSelector will include the
+Transport in the FdSet processing loop.  If the Transport returns false for
+shareStackProcessAndSelect(), TransportSelector will call startOwnProcessing
+on Transport add.
+
+*/
 class TransportSelector 
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security);
       virtual ~TransportSelector();
+      /**
+	    @retval true	Some transport in the transport list has data to send
+	    @retval false	No transport in the transport list has data to send
+	  */
       bool hasDataToSend() const;
       
+      /**
+		Shuts down all transports.
+	  */
       void shutdown();
-      bool isFinished() const; // anything pending to send? 
+      /// Returns true if all Transports have their buffers cleared, false otherwise.
+      bool isFinished() const;
       
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
