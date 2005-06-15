@@ -73,13 +73,9 @@ TransportSelector::~TransportSelector()
 void
 TransportSelector::shutdown()
 {
-   for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+   for (TransportList::iterator i=mHasOwnProcessTransports.begin(); i!=mHasOwnProcessTransports.end(); ++i)
    {
-      i->second->shutdown();
-   }
-   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
-   {
-      i->second->shutdown();
+      i->stopOwnProcessing();
    }
 }
 
