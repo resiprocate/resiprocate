@@ -69,8 +69,6 @@ TcpBaseTransport::~TcpBaseTransport()
       delete data;
    }
    DebugLog (<< "Shutting down " << mTuple);
-   ThreadIf::shutdown();  
-   join();
    //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
