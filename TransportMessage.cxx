@@ -3,7 +3,7 @@
 
 using namespace resip;
 
-TransportMessage::TransportMessage(Data transactionId, bool isFailure) 
+TransportMessage::TransportMessage(const Data& transactionId, bool isFailure) 
    : mTransactionId(transactionId), 
      mFailure(isFailure) 
 {}
