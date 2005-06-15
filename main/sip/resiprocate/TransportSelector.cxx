@@ -98,9 +98,6 @@ TransportSelector::isFinished() const
 }
 
 
-//!dcm! Refactor wrt factory addtransport; do DtlsTransport/TlsTransport maps
-//need to be specially typed. Deal w/ transports that desire their own thread,
-//thread shutdown via destructor?
 void
 TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
@@ -584,7 +581,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   {
                      contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
-                  DebugLog(<<"!sipit! Populated Contact: " << contact);
                }
             }
          }
@@ -592,11 +588,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // See draft-ietf-sip-identity
          if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
          {
-            if (!msg->exists(h_Date))
-            {
-               DateCategory now;
-               msg->header(h_Date) = now;
-            }
+            DateCategory now;
+            msg->header(h_Date) = now;
 #if defined(USE_SSL)
             try
             {

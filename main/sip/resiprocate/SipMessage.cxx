@@ -1346,41 +1346,6 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
    mSecurityAttributes = sec;   
 }
 
-
-#if defined(DEBUG) && defined(DEBUG_MEMORY)
-namespace resip
-{
-
-void*
-operator new(size_t size)
-{
-   void * p = std::operator new(size);
-   DebugLog(<<"operator new | " << hex << p << " | "
-            << dec << size);
-   if (size == 60)
-   {
-      3;
-   }
-   
-   return p;
-}
-
-void operator delete(void* p)
-{
-   DebugLog(<<"operator delete | " << hex << p << dec);
-   return std::operator delete( p );
-}
-
-void operator delete[](void* p)
-{
-   DebugLog(<<"operator delete [] | " << hex << p << dec);
-   return std::operator delete[] ( p );
-}
- 
-}
-
-#endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
