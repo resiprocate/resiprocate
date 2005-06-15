@@ -73,9 +73,14 @@ TransportSelector::~TransportSelector()
 void
 TransportSelector::shutdown()
 {
-   for (TransportList::iterator i=mHasOwnProcessTransports.begin(); i!=mHasOwnProcessTransports.end(); ++i)
+    //!dcm! repeat shutodwn template pattern in all loop over all tranport functions, refactor to functor?
+    for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
    {
-      i->stopOwnProcessing();
+      i->second->shutdown();
+   }
+   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      i->second->shutdown();
    }
 }
 
