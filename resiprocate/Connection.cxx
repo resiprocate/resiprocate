@@ -21,8 +21,8 @@ Connection::Connection()
 }
 
 Connection::Connection(const Tuple& who, Socket socket)
-  : ConnectionBase(who),
-    mSocket(socket)
+   : ConnectionBase(who),
+     mSocket(socket)
 {
    getConnectionManager().addConnection(this);
 }
@@ -72,9 +72,9 @@ Connection::performWrite()
    }
    else
    {
-     // Safe because of the conditional above ( < 0 ).
-     Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
-     mSendPos += bytesWritten;
+      // Safe because of the conditional above ( < 0 ).
+      Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
+      mSendPos += bytesWritten;
       if (mSendPos == data.size())
       {
          mSendPos = 0;
@@ -115,19 +115,19 @@ Connection::transport()
 int
 Connection::read(Fifo<TransactionMessage>& fifo)
 {
-  std::pair<char*, size_t> writePair = getWriteBuffer();
-  size_t bytesToRead = resipMin(writePair.second, 
-				static_cast<size_t>(Connection::ChunkSize));
+   std::pair<char*, size_t> writePair = getWriteBuffer();
+   size_t bytesToRead = resipMin(writePair.second, 
+                                 static_cast<size_t>(Connection::ChunkSize));
          
-  assert(bytesToRead > 0);
-  int bytesRead = read(writePair.first, bytesToRead);
-  if (bytesRead <= 0)
-  {
-     return bytesRead;
-  }  
-  preparseNewBytes(bytesRead, fifo);
-  getConnectionManager().touch(this);
-  return bytesRead;
+   assert(bytesToRead > 0);
+   int bytesRead = read(writePair.first, bytesToRead);
+   if (bytesRead <= 0)
+   {
+      return bytesRead;
+   }  
+   preparseNewBytes(bytesRead, fifo);
+   getConnectionManager().touch(this);
+   return bytesRead;
 }
 
 bool 
