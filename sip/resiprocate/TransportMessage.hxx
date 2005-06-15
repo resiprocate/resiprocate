@@ -15,7 +15,10 @@ class TransportMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(TransportMessage);
-      TransportMessage(Data transactionId, bool isFailure);
+      /** @todo   enum for is success or failure
+          or possibly just wrong?(remove isFailure)
+      */
+      TransportMessage(const Data& transactionId, bool isFailure);
 
       virtual const Data& getTransactionId() const;
       bool isFailed() const;
