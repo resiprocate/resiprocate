@@ -1143,7 +1143,9 @@ Data::urlDecode(std::ostream& s) const
       {
          if (i+2 < size())
          {
-            s << (char) hexpair2int( *(++p), *(++p));
+            s << (char) hexpair2int( *(p+1), *(p+2));
+            p += 2;
+
          }
          else
          {
