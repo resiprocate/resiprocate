@@ -55,7 +55,6 @@ SipStack::SipStack(Security* pSecurity,
    mAppTimers(mTuSelector),
    mStatsManager(*this),
    mTransactionController(*this),
-   mStrictRouting(false),
    mShuttingDown(false),
    mTuSelector(mTUFifo)
 {
@@ -491,7 +490,7 @@ std::ostream&
 SipStack::dump(std::ostream& strm)  const
 {
    Lock lock(mAppTimerMutex);
-   strm << "SipStack: " << (this->mStrictRouting ? "strict router " : "loose router ")
+   strm << "SipStack: " << (this->mSecurity ? "with security " : "without security ")
         << std::endl
         << "domains: " << Inserter(this->mDomains)
         << std::endl
