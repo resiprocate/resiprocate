@@ -67,7 +67,7 @@ class EncryptionManager
                  const Data& senderAor);
             ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool sign(Contents*);
+            bool sign(Contents**);
 
          protected:
             Data mSenderAor;
@@ -80,7 +80,7 @@ class EncryptionManager
                     const Data& recipientAor);
             ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool encrypt(Contents*);
+            bool encrypt(Contents**);
 
          protected:
             Data mRecipientAor;
@@ -93,7 +93,7 @@ class EncryptionManager
                            const Data& senderAor, const Data& recipientAor);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool signAndEncrypt(Contents*);
+            bool signAndEncrypt(Contents**);
 
          protected:
             Data mSenderAor;
