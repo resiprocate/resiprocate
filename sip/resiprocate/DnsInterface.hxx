@@ -17,7 +17,6 @@ namespace resip
 class DnsHandler;
 class DnsResultSink;
 class DnsResult;
-class TransactionState;
 class Uri;
 class Via;
 class ExternalDns;
