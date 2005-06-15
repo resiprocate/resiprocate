@@ -27,7 +27,7 @@ class AppDialog;
 class Dialog 
 {
    public:
-      class Exception : BaseException
+      class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, int line);
