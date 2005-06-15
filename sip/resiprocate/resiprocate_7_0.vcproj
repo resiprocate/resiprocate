@@ -178,6 +178,11 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+			Name="ares"/>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
@@ -409,9 +414,6 @@
 			</File>
 			<File
 				RelativePath="os\ParseBuffer.cxx">
-			</File>
-			<File
-				RelativePath="ParserCategories.cxx">
 			</File>
 			<File
 				RelativePath="ParserCategory.cxx">
