@@ -83,8 +83,8 @@ Contents* EncryptionManager::sign(const SipMessage& msg,
 {
    assert(mDum);
    Sign* request = new Sign(*mDum, mRemoteCertStore.get(), msg, getNextId(), senderAor);
-   Contents* contents = 0;
-   bool async = request->sign(contents);
+   Contents* contents;
+   bool async = request->sign(&contents);
    if (async)
    {
       InfoLog(<< "Async sign" << endl);
@@ -103,8 +103,8 @@ Contents* EncryptionManager::encrypt(const SipMessage& msg,
 {
    assert(mDum);
    Encrypt* request = new Encrypt(*mDum, mRemoteCertStore.get(), msg, getNextId(), recipientAor);
-   Contents* contents = 0;
-   bool async = request->encrypt(contents);
+   Contents* contents;
+   bool async = request->encrypt(&contents);
    if (async)
    {
       InfoLog(<< "Async encrypt" << endl);
@@ -124,8 +124,8 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 {
    assert(mDum);
    SignAndEncrypt* request = new SignAndEncrypt(*mDum, mRemoteCertStore.get(), msg, getNextId(), senderAor, recipAor);
-   Contents* contents = 0;
-   bool async = request->signAndEncrypt(contents);
+   Contents* contents;
+   bool async = request->signAndEncrypt(&contents);
    if (!async)
    {
       delete request;
@@ -213,9 +213,9 @@ EncryptionManager::Sign::~Sign()
 {
 }
 
-bool EncryptionManager::Sign::sign(Contents* contents)
+bool EncryptionManager::Sign::sign(Contents** contents)
 {
-   contents = 0;
+   *contents = 0;
    bool async = false;
    if (0 != mPendingRequests) return 0;
 
@@ -227,7 +227,7 @@ bool EncryptionManager::Sign::sign(Contents* contents)
    {
       InfoLog(<< "Signing message" << endl);
       msc =  mDum.getSecurity()->sign(mSenderAor, mMsg.getContents());
-      contents = msc;
+      *contents = msc;
    }
    else
    {
@@ -312,9 +312,9 @@ EncryptionManager::Encrypt::~Encrypt()
 {
 }
 
-bool EncryptionManager::Encrypt::encrypt(Contents* contents)
+bool EncryptionManager::Encrypt::encrypt(Contents** contents)
 {
-   contents = 0;
+   *contents = 0;
    bool async = false;
    if (0 != mPendingRequests) return 0;
 
@@ -324,7 +324,7 @@ bool EncryptionManager::Encrypt::encrypt(Contents* contents)
    {
       InfoLog(<< "Encrypting message" << endl);
       pkcs7 =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
-      contents = pkcs7;
+      *contents = pkcs7;
    }
    else
    {
@@ -388,9 +388,9 @@ EncryptionManager::SignAndEncrypt::~SignAndEncrypt()
 {
 }
 
-bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents* contents)
+bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
 {
-   contents = 0;
+   *contents = 0;
    bool async = false;
    if (0 != mPendingRequests) return 0;
 
@@ -404,7 +404,7 @@ bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents* contents)
    {
       InfoLog(<< "Encrypting and signing message" << endl);
       msc =  mDum.getSecurity()->signAndEncrypt(mSenderAor, mMsg.getContents(), mRecipientAor);
-      contents = msc;
+      *contents = msc;
    }
    else
    {
