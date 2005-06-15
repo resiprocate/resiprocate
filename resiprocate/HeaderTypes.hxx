@@ -27,11 +27,17 @@
 namespace resip
 {
 
+/**
+   Maps from header name to derived ParserCategory. Determines whether the
+   header is single or multiple valued.
+
+   The Type enum controls the order of output of the headers in the encoded
+   SipMessage.  Put headers that you want to appear early in the message early
+   in this list.
+*/
 class Headers
 {
    public:
-      // put headers that you want to appear early in the message early in
-      // this set
       enum Type
       {
          UNKNOWN = -1,
