@@ -95,7 +95,11 @@ class Transport
       
       //overriding implementations should chain through to this
       //?dcm? pure virtual protected method to enforce this?
-      virtual void stopOwnProcessing()=0;
+      virtual void shutdown()
+      {
+         // !jf! should use the fifo to pass this in
+         mShuttingDown = true;
+      }
 
       // also used by the TransportSelector. 
       // requires that the two transports be 
@@ -109,7 +113,7 @@ class Transport
       Tuple mTuple;
 
       Fifo<TransactionMessage>& mStateMachineFifo; // passed in
-      //bool mShuttingDown;
+      bool mShuttingDown;
 
       //not a great name, just adds the message to the fifo in the synchronous(default) case,
       //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
