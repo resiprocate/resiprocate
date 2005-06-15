@@ -634,13 +634,10 @@
 				RelativePath="Transport.cxx">
 			</File>
 			<File
-				RelativePath=".\TransportMessage.cxx">
+				RelativePath=".\TransportFailure.cxx">
 			</File>
 			<File
 				RelativePath="TransportSelector.cxx">
-			</File>
-			<File
-				RelativePath="TuIM.cxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.cxx">
