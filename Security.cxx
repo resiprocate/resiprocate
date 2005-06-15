@@ -893,20 +893,20 @@ BaseSecurity::BaseSecurity () :
       DES-CBC3-SHA            SSLv3 Kx=RSA       Au=RSA  Enc=3DES(168) Mac=SHA1
       EDH-DSS-DES-CBC3-SHA    SSLv3 Kx=DH        Au=DSS  Enc=3DES(168) Mac=SHA1
     */
-     
+   
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-      verifyCallback);
+                      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
-    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-       verifyCallback);
+   SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+                      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
    assert(ret);
 }
@@ -2288,7 +2288,10 @@ BaseSecurity::getCetName(X509 *cert)
     ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
     return Data::Empty;
 }
-
+/**
+   Matchtes subjectAltName and cnames 
+   @todo    looks incomplete, make better
+*/
 static int 
 matchHostName(char *certName, const char *domainName)
 {

@@ -23,6 +23,7 @@ typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 
+/** @todo reads are a linear walk -- integrate with epoll */
 class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;

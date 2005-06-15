@@ -278,7 +278,6 @@ TlsConnection::checkState()
    }
    else
    {
-      //!dcm! -- add 'require mutual tls' logic here
       if (!mServer)
       {
          ErrLog(<< "No server certificate in TLS connection" );
