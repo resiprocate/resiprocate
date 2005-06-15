@@ -146,7 +146,7 @@ SRC = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
-	TransportMessage.cxx \
+	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
 	TuSelector.cxx \

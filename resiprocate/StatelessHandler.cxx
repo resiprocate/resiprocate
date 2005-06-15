@@ -29,7 +29,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TransactionController.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 
@@ -49,7 +49,7 @@ StatelessHandler::process()
    assert(msg);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   TransportMessage* transport = dynamic_cast<TransportMessage*>(msg);
+   TransportFailure* transport = dynamic_cast<TransportFailure*>(msg);
    
    if (sip)
    {
@@ -109,11 +109,7 @@ StatelessHandler::process()
    else if (transport)
    {
       DebugLog (<< "Processing Transport result: " << msg->brief());
-      
-      if (transport->isFailed())
-      {
-         InfoLog (<< "Not yet supported");
-      }
+      InfoLog (<< "Not yet supported");
    }
    else
    {

@@ -15,7 +15,7 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/Uri.hxx"
@@ -622,14 +622,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
-         mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+         mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
       }
 
    }
    catch (Transport::Exception& )
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
-      mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+      mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
       return;
    }
 }
