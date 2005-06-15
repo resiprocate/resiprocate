@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "resiprocate/Auth.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/Uri.hxx"
@@ -20,7 +21,8 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/Contents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
@@ -662,11 +664,11 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             pb.data(then, anchor);
             if (expiresDelta > 0)
             {
-               int now = (int)(Timer::getTimeMs()/1000);
-               if (then.convertInt() + expiresDelta < now)
+               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
+               if ((unsigned int)then.convertUInt64() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
-                  return make_pair(BadlyFormed,username);
+                  return make_pair(Expired,username);
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
@@ -772,8 +774,8 @@ Helper::authenticateRequest(const SipMessage& request,
             pb.data(then, anchor);
             if (expiresDelta > 0)
             {
-               int now = (int)(Timer::getTimeMs()/1000);
-               if (then.convertInt() + expiresDelta < now)
+               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
+               if ((unsigned int)then.convertUInt64() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
@@ -888,7 +890,7 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
 {
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp((int)(Timer::getTimeMs()/1000));
+   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
    auth.param(p_nonce) = makeNonce(request, timestamp);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = realm;
