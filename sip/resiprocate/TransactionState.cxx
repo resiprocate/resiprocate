@@ -14,7 +14,7 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/TransactionUser.hxx"
@@ -1644,8 +1644,7 @@ TransactionState::isFromWire(TransactionMessage* msg) const
 bool
 TransactionState::isTransportError(TransactionMessage* msg) const
 {
-   TransportMessage* t = dynamic_cast<TransportMessage*>(msg);
-   return (t && t->isFailed());
+   return dynamic_cast<TransportFailure*>(msg) != 0;
 }
 
 const Data&
