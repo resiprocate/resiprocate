@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="repro"
+	Name="resip_test"
 	ProjectGUID="{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
 	Keyword="Win32Proj"
 	>
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\contrib\db\build_win32&quot;;&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -62,9 +62,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Ws2_32.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Dnsapi.lib&quot; $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\contrib\db\build_win32\Debug_static\libdb43sd.lib &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Iphlpapi.lib&quot; &quot;C:\Program Files\Microsoft Visual Studio .NET\Vc7\PlatformSDK\Lib\Advapi32.lib&quot;"
-				ShowProgress="0"
-				OutputFile="$(OutDir)/repro.exe"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
+				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/test.pdb"
@@ -122,10 +121,11 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				OptimizeForProcessor="2"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_ARES"
 				StringPooling="TRUE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="0"
@@ -145,7 +145,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -182,187 +182,9 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
-			>
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="..\..\repro\monkeys\AmIResponsible.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\AmIResponsible.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\CommandLineParser.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\CommandLineParser.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\ConstantLocationMonkey.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\ConstantLocationMonkey.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\DigestAuthenticator.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\DigestAuthenticator.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\HttpBase.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\HttpBase.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\HttpConnection.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\HttpConnection.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\LocationServer.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\LocationServer.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\Proxy.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\Proxy.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\Registrar.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\Registrar.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\repro.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\ReproServerAuthManager.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\ReproServerAuthManager.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestContext.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestContext.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestProcessor.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestProcessor.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestProcessorChain.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RequestProcessorChain.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\ResponseContext.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\ResponseContext.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RouteAbstractDb.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RouteAbstractDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RouteDbMemory.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\RouteDbMemory.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\RouteMonkey.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\RouteMonkey.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\RouteProcessor.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\monkeys\RouteProcessor.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\UserAbstractDb.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\UserAbstractDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\UserDb.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\UserDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\WebAdmin.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\WebAdmin.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\WebAdminThread.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\repro\WebAdminThread.hxx"
-				>
+				RelativePath=".\testStack.cxx">
 			</File>
 		</Filter>
 		<Filter
