@@ -77,17 +77,8 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
          _rcvd = true;
 
          InfoLog( << "received: " << message);
-         InfoLog( << "received type " << message.header(h_ContentType) );
-
-         //Helper::ContentsSecAttrs csa(Helper::extractFromPkcs7(message, *security));
-         //message.setSecurityAttributes(csa.mAttributes);
-
-         //InfoLog( << "Body: " << *csa.mContents << "\n" );
-
-         //const SecurityAttributes *attr = message.getSecurityAttributes();
-         //InfoLog( << *attr );
-         InfoLog( << "Body: " << *message.getContents() << "\n" );
-         
+         InfoLog( << "received type " << message.header(h_ContentType) );       
+         InfoLog( << "Body: " << *message.getContents() << "\n" );         
       }
 
       virtual void onSuccess(ClientPagerMessageHandle,
@@ -151,7 +142,8 @@ int main(int argc, char *argv[])
       return 0;
    }
 
-   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   //Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    NameAddr userAor(argv[1]);
    Data passwd(argv[2]);
@@ -222,33 +214,27 @@ int main(int argc, char *argv[])
          {
             try 
             {
-               ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			
-               //Contents* mcontent = new PlainContents(Data("message"));
-               //auto_ptr<Contents> content(new PlainContents(Data("message")));
+               ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			               
 
                switch (iteration) 
                {
                   case 0:
                   {
-                     //InfoLog( << "Sending PKCS7 encrypted data" );
-                     //Pkcs7Contents* pkcs7 = security->encrypt(mcontent, userAor.uri().getAor());
-                     //content = auto_ptr<Contents>(static_cast<Contents *>(pkcs7));
-
                      Contents* contents = new PlainContents(Data("message"));
                      auto_ptr<Contents> content(contents);
                      cpmh.get()->page(content, DialogUsageManager::None);
+                     sent = true;
                      break;
                   }
-                  /*
                   case 1:
                   {
-                     //InfoLog( << "Sending PKCS7 signed data" );
-                     //MultipartSignedContents* mpc = security->sign(userAor.uri().getAor(), mcontent);
-                     //content = auto_ptr<Contents>(static_cast<Contents *>(mpc));
-                     //cpmh.get()->page(content);
+                     InfoLog( << "Sending encrypted message" );
+                     Contents* contents = new PlainContents(Data("secret message"));
+                     auto_ptr<Contents> content(contents);
+                     cpmh.get()->page(content, DialogUsageManager::Encrypt);
+                     sent = true;
                      break;
                   }
-                  */
                   default:
                   {
                      InfoLog( << "Finished!" );
@@ -259,10 +245,6 @@ int main(int argc, char *argv[])
                
                if (finished)
                   break;
-               
-               //cpmh.get()->page(content);
-               //sent = true;
-               
             }
                
             catch (...)
@@ -270,9 +252,7 @@ int main(int argc, char *argv[])
                InfoLog( << "failure to send message at iteration " << iteration );
                break;
             }
-
          }
-
       }
       ++iteration;
    }
