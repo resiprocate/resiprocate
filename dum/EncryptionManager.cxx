@@ -34,13 +34,6 @@ EncryptionManager::EncryptionManager()
 
 EncryptionManager::~EncryptionManager()
 {
-   /*
-   for (std::set<Request*, CompareT>::iterator it = mRequests.begin(); it != mRequests.end(); it++)
-   {
-      delete *it;
-   }
-   mRequests.clear();
-   */
    for (list<Request*>::iterator it = mRequests.begin(); it != mRequests.end(); ++it)
    {
       delete *it;
@@ -90,10 +83,12 @@ Contents* EncryptionManager::sign(const SipMessage& msg,
 {
    assert(mDum);
    Sign* request = new Sign(*mDum, mRemoteCertStore.get(), msg, getNextId(), senderAor);
-   Contents* contents = request->sign();
-   if (!contents)
+   Contents* contents = 0;
+   bool async = request->sign(contents);
+   if (async)
    {
       InfoLog(<< "Async sign" << endl);
+      incrementId();
       mRequests.push_back(request);
    }
    else
@@ -108,10 +103,12 @@ Contents* EncryptionManager::encrypt(const SipMessage& msg,
 {
    assert(mDum);
    Encrypt* request = new Encrypt(*mDum, mRemoteCertStore.get(), msg, getNextId(), recipientAor);
-   Contents* contents = request->encrypt();
-   if (!contents)
+   Contents* contents = 0;
+   bool async = request->encrypt(contents);
+   if (async)
    {
       InfoLog(<< "Async encrypt" << endl);
+      incrementId();
       mRequests.push_back(request);
    }
    else
@@ -127,14 +124,16 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 {
    assert(mDum);
    SignAndEncrypt* request = new SignAndEncrypt(*mDum, mRemoteCertStore.get(), msg, getNextId(), senderAor, recipAor);
-   Contents* contents = request->signAndEncrypt();
-   if (contents)
+   Contents* contents = 0;
+   bool async = request->signAndEncrypt(contents);
+   if (!async)
    {
       delete request;
    }
    else
    {
       InfoLog(<< "Async sign and encrypt" << endl);
+      incrementId();
       mRequests.push_back(request);
    }
    return contents;
@@ -161,6 +160,7 @@ bool EncryptionManager::decrypt(SipMessage& msg)
    else
    {
       InfoLog(<< "Async decrypt" << endl);
+      incrementId();
       mRequests.push_back(request);
    }
    return ret;
@@ -168,7 +168,12 @@ bool EncryptionManager::decrypt(SipMessage& msg)
 
 UInt32 EncryptionManager::getNextId()
 {
-   return mCounter++;
+   return mCounter+1;
+}
+
+void EncryptionManager::incrementId()
+{
+   ++mCounter;
 }
 
 EncryptionManager::Request::Request(DialogUsageManager& dum,
@@ -208,18 +213,21 @@ EncryptionManager::Sign::~Sign()
 {
 }
 
-Contents* EncryptionManager::Sign::sign()
+bool EncryptionManager::Sign::sign(Contents* contents)
 {
+   contents = 0;
+   bool async = false;
    if (0 != mPendingRequests) return 0;
 
-   MultipartSignedContents* contents = 0;
+   MultipartSignedContents* msc = 0;
    bool missingCert = !mDum.getSecurity()->hasUserCert(mSenderAor);
    bool missingKey = !mDum.getSecurity()->hasUserPrivateKey(mSenderAor);
 
    if (!missingCert && !missingKey)
    {
       InfoLog(<< "Signing message" << endl);
-      contents =  mDum.getSecurity()->sign(mSenderAor, mMsg.getContents());
+      msc =  mDum.getSecurity()->sign(mSenderAor, mMsg.getContents());
+      contents = msc;
    }
    else
    {
@@ -239,6 +247,7 @@ Contents* EncryptionManager::Sign::sign()
             MessageId id(mId, mSenderAor, MessageId::UserPrivateKey);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
+         async = true;
       }
       else
       {
@@ -247,7 +256,7 @@ Contents* EncryptionManager::Sign::sign()
       }
    }
 
-   return contents;
+   return async;
 }
 
 EncryptionManager::Result EncryptionManager::Sign::received(bool success, 
@@ -303,16 +312,19 @@ EncryptionManager::Encrypt::~Encrypt()
 {
 }
 
-Contents* EncryptionManager::Encrypt::encrypt()
+bool EncryptionManager::Encrypt::encrypt(Contents* contents)
 {
+   contents = 0;
+   bool async = false;
    if (0 != mPendingRequests) return 0;
 
-   Pkcs7Contents* contents = 0;
+   Pkcs7Contents* pkcs7 = 0;
 
    if (mDum.getSecurity()->hasUserCert(mRecipientAor))
    {
       InfoLog(<< "Encrypting message" << endl);
-      contents =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
+      pkcs7 =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
+      contents = pkcs7;
    }
    else
    {
@@ -322,6 +334,7 @@ Contents* EncryptionManager::Encrypt::encrypt()
          ++mPendingRequests;
          MessageId id(mId, mRecipientAor, MessageId::UserCert);
          mStore->fetch(mRecipientAor, MessageId::UserCert, id, mDum);
+         async = true;
       }
       else
       {
@@ -329,7 +342,7 @@ Contents* EncryptionManager::Encrypt::encrypt()
          response415();
       }
    }
-   return contents;
+   return async;
 }
 
 EncryptionManager::Result EncryptionManager::Encrypt::received(bool success, 
@@ -375,11 +388,13 @@ EncryptionManager::SignAndEncrypt::~SignAndEncrypt()
 {
 }
 
-Contents* EncryptionManager::SignAndEncrypt::signAndEncrypt()
+bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents* contents)
 {
+   contents = 0;
+   bool async = false;
    if (0 != mPendingRequests) return 0;
 
-   MultipartSignedContents* contents = 0;
+   MultipartSignedContents* msc = 0;
 
    bool missingCert = !mDum.getSecurity()->hasUserCert(mSenderAor);
    bool missingKey = !mDum.getSecurity()->hasUserPrivateKey(mSenderAor);
@@ -388,7 +403,8 @@ Contents* EncryptionManager::SignAndEncrypt::signAndEncrypt()
    if (!missingCert && !missingKey && !missingRecipCert)
    {
       InfoLog(<< "Encrypting and signing message" << endl);
-      contents =  mDum.getSecurity()->signAndEncrypt(mSenderAor, mMsg.getContents(), mRecipientAor);
+      msc =  mDum.getSecurity()->signAndEncrypt(mSenderAor, mMsg.getContents(), mRecipientAor);
+      contents = msc;
    }
    else
    {
@@ -415,6 +431,7 @@ Contents* EncryptionManager::SignAndEncrypt::signAndEncrypt()
             MessageId id(mId, mRecipientAor, MessageId::UserCert);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
+         async = true;
       }
       else
       {
@@ -423,7 +440,7 @@ Contents* EncryptionManager::SignAndEncrypt::signAndEncrypt()
       }
    }
 
-   return contents;
+   return async;
 }
 
 EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool success, 

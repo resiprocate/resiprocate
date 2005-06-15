@@ -67,7 +67,7 @@ class EncryptionManager
                  const Data& senderAor);
             ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            Contents* sign();
+            bool sign(Contents*);
 
          protected:
             Data mSenderAor;
@@ -80,7 +80,7 @@ class EncryptionManager
                     const Data& recipientAor);
             ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            Contents* encrypt();
+            bool encrypt(Contents*);
 
          protected:
             Data mRecipientAor;
@@ -93,7 +93,7 @@ class EncryptionManager
                            const Data& senderAor, const Data& recipientAor);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            Contents* signAndEncrypt();
+            bool signAndEncrypt(Contents*);
 
          protected:
             Data mSenderAor;
@@ -137,13 +137,11 @@ class EncryptionManager
       UInt32 mCounter;
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
 
-      //typedef std::set<Request*, CompareT> RequestSet;
-      //RequestSet mRequests;
-
       typedef std::list<Request*> RequestList;
       RequestList mRequests;
 
       UInt32 getNextId();
+      void incrementId();
 };
 
 }
