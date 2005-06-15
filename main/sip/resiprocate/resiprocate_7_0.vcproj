@@ -605,7 +605,7 @@
 				RelativePath="Transport.cxx">
 			</File>
 			<File
-				RelativePath=".\TransportMessage.cxx">
+				RelativePath=".\TransportFailure.cxx">
 			</File>
 			<File
 				RelativePath="TransportSelector.cxx">
