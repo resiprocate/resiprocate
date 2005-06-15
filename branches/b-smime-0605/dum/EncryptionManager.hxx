@@ -103,7 +103,7 @@ class EncryptionManager
       class Decrypt : public Request
       {
          public:
-            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage& msg, UInt32 id);
+            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id);
             ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);

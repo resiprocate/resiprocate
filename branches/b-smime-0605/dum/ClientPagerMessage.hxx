@@ -50,9 +50,8 @@ class ClientPagerMessage : public NonDialogUsage
             Contents* contents;
       } Item;
 
-      //typedef std::deque<Contents*> MsgQueue;
       typedef std::deque<Item> MsgQueue;
-      MsgQueue                      mMsgQueue;
+      MsgQueue mMsgQueue;
 
       // disabled
       ClientPagerMessage(const ClientPagerMessage&);

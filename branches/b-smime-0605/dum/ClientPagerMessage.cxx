@@ -109,11 +109,9 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
     assert(contents.get() != 0);
     bool do_page = mMsgQueue.empty();
     Item item;
-    item.contents = contents.get();
+    item.contents = contents.release();
     item.encryptionLevel = level;
-    //mMsgQueue.push_back(contents.get());
     mMsgQueue.push_back(item);
-    contents.release();
     if(do_page)
     {
        this->pageFirstMsgQueued();
