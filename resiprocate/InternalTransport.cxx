@@ -29,8 +29,7 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      IpVersion version,
                                      const Data& interfaceObj) :
    Transport(rxFifo, portNum, version, interfaceObj),
-   mFd(-1),
-   mHasOwnThread(false)
+   mFd(-1)
 {
 }
 
