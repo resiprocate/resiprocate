@@ -21,6 +21,32 @@ class TestData;
 namespace resip
 {
 
+/**
+  This class encapsulates an arbitrary buffer of bytes.
+  It has a variety of memory management styles that can be
+  established at contruction time.
+
+  Three modes of allocation are currently available:
+
+    @li 'Borrow' - The Data instance is borrowing the memory from the passed
+                   in buffer. It will modify its contents as necessary,
+                   but will not deallocate it.
+            
+    @li 'Share'  - The Data instance will use the buffer in a read-only mode.
+                   If any attempt is made to modify the contents of
+                   the Data, it will copy the buffer and modify it.
+           
+    @li 'Take'   - The Data instance takes complete ownership of the
+                   buffer. The buffer is deallocated using delete[].
+
+  @see RESIP_HeapCount
+
+  @todo It might be worthwhile examining the heap usage of this
+        class in the context of using realloc everywhere appropriate.
+        (realloc is defined in ANSI C, SVID, and the OpenGroup "Single
+        Unix Specification").
+*/
+
 class Data 
 {
    public:
@@ -29,41 +55,174 @@ class Data
       typedef size_t size_type;
 
       Data();
-      Data(int capacity, bool);
+
+      /**
+        Creates a data with a specified initial capacity.
+
+        @deprecated      This constructor shouldn't really exist;
+                         it would be far better to add a value
+                         to "ShareEnum" (e.g. "Allocate") which
+                         indicates that the Data should allocated
+                         its own buffer.
+
+        @param capacity  The initial capacity of the buffer
+
+        @param foo       This parameter is ignored; it is merely
+                         used to disambuguate this constructor
+                         from the constructor that takes a single
+                         int. Yes, it's ugly -- that's why it's
+                         deprecated.
+
+        @todo Remove this constructor
+      */
+      Data(int capacity, bool foo);
+
+      /**
+        Creates a data with the contents of the null-terminated
+        string. This constructor uses "share" mode.
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+      */
       Data(const char* str);// Uses share mode
+
+      /**
+        Creates a data with the contents of the buffer.
+        This constructor uses "share" mode.
+
+        @param length Number of bytes in the buffer
+      */
       Data(const char* buffer, int length); // Uses share mode
+
+      /**
+        Creates a data with the contents of the buffer.
+        This constructor uses "share" mode.
+
+        @param length Number of bytes in the buffer
+      */
       Data(const unsigned char* buffer, int length);// Uses share mode
+
       Data(const Data& data);
+
+      /**
+        Creates a data with the contents of the string.
+        This constructor uses "share" mode.
+
+        @param length Number of bytes in the buffer
+      */
       explicit Data(const std::string& str);
+
+
+      /**
+        Converts the passed in value into ascii-decimal
+        representation, and then creates a "Data" containing
+        that value. (E.g. "Data(75)" will create a Data
+        with length=2, and contents of 0x37 0x35).
+      */
       explicit Data(int value);
+
+
+      /**
+        Converts the passed in value into ascii-decimal
+        representation, and then creates a "Data" containing
+        that value. (E.g. "Data(75)" will create a Data
+        with length=2, and contents of 0x37 0x35).
+      */
       explicit Data(unsigned long value);
+
+      /**
+        Converts the passed in value into ascii-decimal
+        representation, and then creates a "Data" containing
+        that value. (E.g. "Data(75)" will create a Data
+        with length=2, and contents of 0x37 0x35).
+      */
       explicit Data(unsigned int value);
+
+      /**
+        Converts the passed in value into ascii-decimal
+        representation, and then creates a "Data" containing
+        that value. (E.g. "Data(75.4,2)" will create a Data
+        with length=4, and contents of 0x37 0x35 0x2E 0x34).
+
+        @param precision  Number of digits after the decimal point.
+                          Trailing zeros will be removed.
+      */
       explicit Data(double value, int precision = 4);
+
+      /**
+        Creates a buffer containing "true" or "false", depending
+        on the value of "value".
+      */
       explicit Data(bool value);
+
+      /**
+        Creates a buffer containing a single character. Is this silly?
+        Maybe. Perhaps it can be removed.
+      */
       explicit Data(char c);
 
-      // construct a Data that shares memory; the passed characters MUST be
-      // immutable and in a longer lasting scope -- or take the buffer
-      // as thine own.
-      /** 
-          'Borrow' means that the Data instance MAY write to the buffer and MUST
-          NOT delete the buffer.
-           
-          'Share' means that the Data instance MUST NOT write to the buffer and
-          MUST NOT delete the buffer.
-          
-          'Take' means that the Data instance MAY write to the buffer and MUST
-          delete the buffer.
-    */
-      enum  ShareEnum {Share, Borrow, Take};
+      /**
+        The various memory management behaviors.
+      */
+      enum ShareEnum 
+      {
+        /** The Data instance is borrowing the memory from the passed
+            in buffer. It will modify its contents as necessary,
+            but will not deallocate it.
+        */
+        Share,
+
+        /** The Data instance will use the buffer in a read-only mode.
+            If any attempt is made to modify the contents of
+            the Data, it will copy the buffer and modify it.
+        */
+        Borrow,
+
+        /** The Data instance takes complete ownership of the
+            buffer.
+        */
+        Take
+      };
+
+      /**
+        Creates a Data from the passed-in buffer.
+
+        @see ShareEnum
+      */
 
       Data(ShareEnum, const char* buffer, int length);
+
+      /**
+        Takes a null-terminated string and creates a buffer.
+
+        @see ShareEnum
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+      */
       Data(ShareEnum, const char* buffer);
+
+      /**
+        Lazily creates a Data from the passed-in Data. 
+
+        @see ShareEnum
+
+        @warning Calling this with "Take" or "Borrow" is invalid and will
+                 cause an assertion or crash.
+
+        @todo This implementation has some confusing and conflicting
+              comments. (e.g. is Borrow actually okay? Can there be some
+              way to use it with Take as long as you play with mMine
+              correctly?)
+      */
       Data(ShareEnum, const Data& staticData); // Cannot call with 'Take'
 
       ~Data();
 
-      // convert from something to a Data -- requires 'something' has operator<<
+      /**
+        Converts from arbitrary other type to Data. Requires the other
+        type to have an operator<<.
+      */
       template<class T>
       static Data from(const T& x)
       {
@@ -77,11 +236,9 @@ class Data
 
       bool operator==(const Data& rhs) const;
       bool operator==(const char* rhs) const;
-      //bool operator==(const std::string& rhs) const;
 
       bool operator!=(const Data& rhs) const { return !(*this == rhs); }
       bool operator!=(const char* rhs) const { return !(*this == rhs); }
-      //bool operator!=(const std::string& rhs) const { return !(*this == rhs); }
 
       bool operator<(const Data& rhs) const;
       bool operator<=(const Data& rhs) const;
@@ -93,59 +250,227 @@ class Data
       bool operator>=(const char* rhs) const;
 
       Data& operator=(const Data& data);
+
+      /**
+        Assigns a null-terminated string to the buffer.
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+      */
       Data& operator=(const char* str);
 
+      /**
+        Concatenates two Data objects.
+      */
       Data operator+(const Data& rhs) const;
+
+      /**
+        Concatenates a null-terminated string after the Data object.
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+      */
       Data operator+(const char* str) const;
+
+
+      /**
+        Concatenates a single byte after Data object.
+      */
       Data operator+(char c) const;
 
-      Data& operator+=(const char* str);
+
+      /**
+        Appends a data object to this one.
+      */
       Data& operator+=(const Data& rhs);
+
+      /**
+        Appends a null-terminated string to the end of the Data
+        object.
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+      */
+      Data& operator+=(const char* str);
+
+
+      /**
+        Appends a single byte to the Data object.
+      */
       Data& operator+=(char c);
 
+
+      /**
+        Performs an in-place exclusive-or of this buffer
+        buffer with the specified buffer. If the specifed
+        buffer is longer than this buffer, then this buffer
+        will first be expanded and zero-padded.
+      */
       Data& operator^=(const Data& rhs);
 
       char& operator[](size_type p);
       char operator[](size_type p) const;
+
+      /**
+        Returns the character at the specified position.
+      */
       char& at(size_type p);
 
+      /**
+        Guarantees that the underlying buffer used by the Data
+        is at least the number of bytes specified. May cause
+        reallocation of the buffer.
+      */
       void reserve(size_type capacity);
+
+      /**
+        Appends the specified number of bytes to the end of
+        this Data.
+      */
       Data& append(const char* str, size_type len);
+
+      /**
+        Shortens the size of this Data. Does not
+        impact the size of the allocated buffer.
+
+        @deprecated dlb says that no one uses this and
+                    it should be removed.
+
+        @todo Remove this at some point.
+      */
       size_type truncate(size_t len);
 
+      /**
+        Checks whether the Data is empty.
+      */
       bool empty() const { return mSize == 0; }
+
+
+      /**
+        Returns the number of bytes in this Data.
+
+        @note This does NOT indicate the capacity of the
+              underlying buffer.
+      */
       size_type size() const { return mSize; }
 
-      // preferred -- not necessarily NULL terminated
+      /**
+        Returns a pointer to the contents of this Data. This
+        is the preferred mechanism for accessing the bytes inside
+        the Data.
+
+        @note The value returned is NOT necessarily null-terminated.
+      */
       const char* data() const;
 
-      // necessarily NULL terminated -- often copies
+      /**
+        Returns a null-terminated string representing 
+
+        @note    Depending on the memory management scheme being used,
+                 this method often copies the contents of the Data;
+                 consequently, this method is rather expensive and should
+                 be avoided when possible.
+
+        @warning Calling this method is a pretty bad idea if the
+                 contents of Data are binary (i.e. may contain
+                 a null in the middle of the Data).
+      */
       const char* c_str() const;
 
+      /**
+        Returns a pointer to the beginning of the buffer used by the Data.
+      */
       const char* begin() const;
+
+      /**
+        Returns a pointer to the end of the buffer used by the Data.
+      */
       const char* end() const;
-      
-      // compute an md5 hash (return in asciihex)
+
+      /**
+        Computes the MD5 hash of the current data.
+
+        @return ASCII hexadecimal representation of the MD5 hash
+      */      
       Data md5() const;
-      
-      // convert this data in place to lower/upper case
+
+      /**
+        Converts this Data to lowercase.
+
+        @note This is silly unless the contents are ASCII.
+      */      
       Data& lowercase();
+
+      /**
+        Converts this Data to uppercase.
+
+        @note This is silly unless the contents are ASCII.
+      */      
       Data& uppercase();
 
-      // return a HEX representation of binary data
+      /**
+        Returns a hexadecimal representation of the contents of
+        this Data.
+      */
       Data hex() const;
-	
-      // return a representation with any non printable characters escaped - very
-      // slow only use for debug stuff 
+
+      /**	
+        Returns a representation of the contents of the data
+        with any non-printable characters escaped.
+
+        @warning This is extremely slow, and should not be called
+                 except for debugging purposes.
+      */
       Data escaped() const;
 
-      /// encodes with %hex for special characters
+      /**
+        Performs RFC 3261 escaping of SIP URIs.
+
+        @note This method is relatively inefficient
+
+        @deprecated Use escapeToStream instead
+
+        @todo This method should be removed
+      */
       Data charEncoded() const;
+
+      /**
+        Performs RFC 3261 un-escaping of SIP URIs.
+
+        @note This method is relatively inefficient
+
+        @warning This method can assert if a "%00" comes
+                 in off the wire. That's really bad form.
+
+        @deprecated Use escapeToStream instead
+
+        @todo This method should be removed
+
+        @see escapeToStream
+      */
       Data charUnencoded() const;
+
+      /**
+      */
       Data urlEncoded() const;
+
+      /**
+      */
       Data urlDecoded() const;
-      std::ostream& urlDecode(std::ostream& s) const;
+
+      /**
+      */
       std::ostream& urlEncode(std::ostream& s) const;
+
+      /**
+      */
+      std::ostream& urlDecode(std::ostream& s) const;
+
+      /**
+        Shortens the size of this Data. If the contents are truncated,
+        this method appends two dot ('.') characters to the end.
+        Presumably, this is used for output purposes.
+      */
       Data trunc(size_type trunc) const;
 	
       // resize to zero without changing capacity
@@ -184,6 +509,10 @@ class Data
 
       // copy if not mine
       void own() const;
+
+      /**
+        @note Always allocates a new buffer
+      */
       void resize(size_type newSize, bool copy);
 
       static bool isHex(char c);      
