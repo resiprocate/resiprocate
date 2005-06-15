@@ -274,7 +274,8 @@ class SipStack
       */
       bool hasMessage() const;
       
-      /** Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns 
+      /** 
+          Retrieve a SipMessage off the old TuFifo.  Caller now owns the memory.  Returns 
           0 if nothing there.  Since the addition of TransactionUsers, this method 
           is deprecated.  This only looks into the old TuFifo that is not associated 
           with any TransactionUser.
@@ -288,7 +289,8 @@ class SipStack
       */
       SipMessage* receive(); 
 
-      /** Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
+      /** 
+          Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
           0 if nothing there.  Since the addition of TransactionUsers, this method 
           is deprecated.  This only looks into the old TuFifo that is not associated 
           with any TransactionUser.
@@ -303,74 +305,125 @@ class SipStack
                    ApplicationMessage* 
       */
       Message* receiveAny(); 
-      
-      // build the FD set to use in a select to find out when process bust be
-      // called again. This must be called prior to calling process. 
+
+      /**  
+          Build the FD set to use in a select to find out when process must be
+          called again. This must be called prior to calling process.
+          Note:  select must also be called on the fdset prior to process.
+
+          @param fdset an empty or partially populated fdset, fd's are added
+                       to the fdset on return
+      */
       virtual void buildFdSet(FdSet& fdset);
 	
-      // should call buildFdSet before calling process. This allows the
-      // executive to give processing time to stack components. 
+      /**  
+          This allows the executive to give processing time to stack components. 
+          Must call buildFdSet and select before calling this.
+
+          @param fdset a populated and 'select'ed fdset
+      */
       virtual void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
       virtual unsigned int getTimeTillNextProcessMS(); 
 
-      // Inform the TU that whenever a transaction has been terminated. 
+      /**
+          Used to enable notification of transaction termination to the TU's.  TU's
+          are send a TransactionTerminated message when enabled.
+
+          @todo This should likely be changed so that the TU for which this should 
+                apply can be specified.  ie.  In the repro case, the proxy TU needs to 
+                see these messages, but the DUM TU does not.
+      */
       void registerForTransactionTermination();
 
-      // Allow the application to specify strict routing behavior, by default
-      // loose routing policy is used. 
-      void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
-      bool isStrictRouting() const { return mStrictRouting; }
-
+      /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
 
-      // output current state of the stack - for debug
+      /// output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
+      /// Returns a pointer to the embedded Security object, 0 if not set
       Security* getSecurity() const;
 
-      //adds a Tu to the tu selection chain. Tu do not call receive or
-      //receiveAny, the SipStack will call postToTu on the appropriate
-      //Tu. Messages no associated with a registered TU go into SipStack::mTuFifo
+      /** 
+          Adds a TU to the TU selection chain.  Tu's do not call receive or
+          receiveAny, the SipStack will call postToTu on the appropriate
+          Tu. Messages not associated with a registered TU go into SipStack::mTuFifo.
+      */
       void registerTransactionUser(TransactionUser&);
+
+      /// Queue a shutdown request to the specified TU
       void requestTransactionUserShutdown(TransactionUser&);
+
+      /// Removes a TU from the TU selection chain
       void unregisterTransactionUser(TransactionUser&);
 
+      /**
+          Register a handler with the DNS Interface for notifications of when a Dns 
+          Resource Record has been blacklisted.
+
+          @param rrType Resource Record type you are interested in receiving 
+                        notifications for
+
+          @param BlackListListener Class implementing the onBlacklisted callback 
+                                   event sink defined in BlackListListener
+      */
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+
+      /**
+          Removed a registered BlacklistListener handler from the DNS Interface
+          for a particualr Resource Record type and handler pointer.
+
+          @param rrType Resource Record type
+
+          @param BlackListListener Pointer to the class implementing the 
+                                   BlackListListener event sink
+      */
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       
    private:
+      /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
 
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
+
+      /// if this object exists, it get's notified when ApplicationMessage's get posted
       AsyncProcessHandler* mAsyncProcessHandler;
 
+      /// Disallow copy, by not implementing
       SipStack(const SipStack& copy);
+
+      /// Disallow assignment, by not implementing
       SipStack& operator=(const SipStack& rhs);         
       
-      // fifo used to communicate between the TU (Transaction User) and stack 
+      /** fifo used to communicate between the TU (Transaction User) and stack 
+          Note:  since the introduction of multiple TU's this Fifo should no 
+          longer be used by most applications - each TU now owns it's own Fifo. */
       TimeLimitFifo<Message> mTUFifo;
 
-      // timers associated with the application. When a timer fires, it is
-      // placed in the mTUFifo
+      /// Protection for AppTimerQueue
       mutable Mutex mAppTimerMutex;
+
+      /** timers associated with the application. When a timer fires, it is
+          placed in the mTUFifo (if there is not associated TU), or it is placed
+          on the fifo of the appropriate TU */
       TuSelectorTimerQueue  mAppTimers;
       
-      // Track stack statistics
+      /// Used to Track stack statistics
       StatisticsManager mStatsManager;
 
-      // All aspects of the Transaction State Machine / DNS resolver
+      /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
 
-      // store all domains that this stack is responsible for. Controlled by
-      // addAlias and addTransport interfaces and checks can be made with isMyDomain()
+      /** store all domains that this stack is responsible for. Controlled by
+          addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
 
-      bool mStrictRouting;
       bool mShuttingDown;
 
+      /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
 
       friend class Executive;
