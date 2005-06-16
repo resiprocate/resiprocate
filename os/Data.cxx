@@ -1357,7 +1357,8 @@ Data::convertUInt64() const
       l--;
    }
    p--;
-   
+
+   // ?abr? Doesn't the "U" in "UInt" mean unsigned?   
    if (*p == '-')
    {
       s = -1;
