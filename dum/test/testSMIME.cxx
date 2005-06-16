@@ -136,6 +136,19 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
       
 };
 
+class MyCertStore : public RemoteCertStore
+{
+   public:
+      MyCertStore() {}
+      ~MyCertStore() {}
+      void fetch(const Data& target, MessageId::Type type, const MessageId& id, TransactionUser& tu)
+      {
+         Data empty;
+         CertMessage* msg = new CertMessage(id, false, empty);
+         tu.post(msg);
+      }
+};
+
 int main(int argc, char *argv[])
 {
 
@@ -168,6 +181,9 @@ int main(int argc, char *argv[])
    // clientDum.addTransport(UDP, 10000 + rand()&0x7fff, V6);
    // clientDum.addTransport(TCP, 10000 + rand()&0x7fff, V6);
    // clientDum.addTransport(TLS, 10000 + rand()&0x7fff, V6);
+
+   MyCertStore* store = new MyCertStore;
+   clientDum.setRemoteCertStore(auto_ptr<RemoteCertStore>(store));
 
    SharedPtr<MasterProfile> clientProfile(new MasterProfile);   
    auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager());   
