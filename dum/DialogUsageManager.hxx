@@ -150,6 +150,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       /// Sets a manager to handle storage of registration state
       void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
+
+      void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The

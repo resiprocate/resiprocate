@@ -296,6 +296,11 @@ DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceMan
    mRegistrationPersistenceManager = manager;
 }
 
+void
+DialogUsageManager::setRemoteCertStore(auto_ptr<RemoteCertStore> store)
+{
+   mEncryptionManager.setRemoteCertStore(store);
+}
 
 void
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
