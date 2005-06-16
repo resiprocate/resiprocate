@@ -23,6 +23,9 @@
 #include "resiprocate/WinSecurity.hxx"
 #endif
 
+#include "resiprocate/dum/CertMessage.hxx"
+#include "resiprocate/dum/RemoteCertStore.hxx"
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -93,7 +96,9 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
                              std::auto_ptr<Contents> contents)
       {
          InfoLog( << "ClientMessageHandler::onFailure\n" );
+         InfoLog( << endl << status << endl);
          _ended = true;
+         _rcvd = true;
       }
 
       virtual void onSuccess(ClientRegistrationHandle,
@@ -130,9 +135,6 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
       bool _rcvd;
       
 };
-
-
-/*****************************************************************************/
 
 int main(int argc, char *argv[])
 {
@@ -201,7 +203,6 @@ int main(int argc, char *argv[])
       while (!clientHandler.isEnded() || !clientHandler.isRcvd() )
       {
          FdSet fdset;
-
          clientStack.buildFdSet(fdset);
 
          int err = fdset.selectMilliSeconds(100);
@@ -249,7 +250,7 @@ int main(int argc, char *argv[])
                      InfoLog( << "Sending encrypted and signed  message" );
                      Contents* contents = new PlainContents(Data("encrypted and signed message"));
                      auto_ptr<Contents> content(contents);
-                     cpmh.get()->page(content, DialogUsageManager::Sign);
+                     cpmh.get()->page(content, DialogUsageManager::SignAndEncrypt);
                      sent = true;
                      break;
                   }
