@@ -32,29 +32,111 @@ class Helper
 {
    public:
 
-      const static int tagSize;  //bytes in to-tag& from-tag, should prob. live
-      //somewhere else
+      /// bytes in to-tag& from-tag, should prob. live somewhere else
+      const static int tagSize;  
 
-      // Sorry if this doesn't build in Win32, let me know  (jf)
+      /** 
+          Used by Registration, Publication and Subscription refreshes, to
+          calculate the time at which a refresh should be performed (which
+          is some time, that is a bit smaller than the Expiration interval).
+          The recommended caluclation from the RFC's is the minimnum of the 
+          Exipiration interval less 5 seconds and nine tenths of the exipiration 
+          interval.
+      */
       template<typename T>
       static T aBitSmallerThan(T secs)
       {
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
 
-      // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
+      /**
+           Used to jitter the expires in a SUBSCRIBE or REGISTER expires header
+
+           @param input            Value to jitter
+
+           @param lowerPercentage  The lower range of the random percentage by which 
+                                   to jitter the value by.
+
+           @param upperPercentage  The upper range of the random percentage by which
+                                   to jitter the value by.  Must be greater than or equal 
+                                   to lowerPercentage
+
+           @param minimum          Only jitter the input if greater than minimum
+       */
       static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
 
-      //in general content length handled automatically by SipMessage?
+      /**
+          Make an invite request - Empty Contact and Via is added and will be populated 
+          by the stack when sent.
+            
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+      */
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
+      
+      /**
+          Make an invite request using a overridden contact header - Empty Via is added 
+          and will be populated by the stack when sent.
+            
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+
+          @param contact Ends up in the Contact header.  Stack will not change this
+                         when sent.
+      */
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
-      static SipMessage* makeForwardedInvite(const SipMessage& invite);
+      
+      /**
+          Make a response to a provided request.  Adds a To tag, Contact and Record-Route
+          headers appropriately.
+            
+          @param response SipMessage populated with the appropriate response
+
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header.
+      */
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
                                const Data& reason = Data::Empty,
                                const Data& hostname = Data::Empty,
                                const Data& warning=Data::Empty);
+
+      /**
+          Make a response to a provided request with an overridden Contact.  
+          Adds a To tag, Contact and Record-Route headers appropriately.
+            
+          @param response SipMessage populated with the appropriate response
+
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param myContact Contact header to add to response.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header.
+      */
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
