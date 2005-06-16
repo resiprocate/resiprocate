@@ -10,8 +10,8 @@ namespace resip
 class RemoteCertStore
 {
    public:
-      RemoteCertStore();
-      virtual ~RemoteCertStore();
+      RemoteCertStore() {}
+      virtual ~RemoteCertStore() {}
       virtual void fetch(const Data& target, MessageId::Type type, const MessageId& id, TransactionUser& tu) = 0;
 };
 
