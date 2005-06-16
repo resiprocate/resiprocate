@@ -431,6 +431,8 @@ class Data
         @deprecated Use escapeToStream instead
 
         @todo This method should be removed
+
+        @see escapeToStream
       */
       Data charEncoded() const;
 
@@ -439,10 +441,10 @@ class Data
 
         @note This method is relatively inefficient
 
-        @warning This method can assert if a "%00" comes
-                 in off the wire. That's really bad form.
+        @bug This method can assert if a "%00" comes
+             in off the wire. That's really bad form.
 
-        @deprecated Use escapeToStream instead
+        @deprecated Use something more in the spirit of escapeToStream instead
 
         @todo This method should be removed
 
@@ -451,18 +453,22 @@ class Data
       Data charUnencoded() const;
 
       /**
+        Performs in-place HTTP URL escaping of a Data.
       */
       Data urlEncoded() const;
 
       /**
+        Performs in-place HTTP URL un-escaping of a Data.
       */
       Data urlDecoded() const;
 
       /**
+        Escapes a Data to a stream according to HTTP URL encoding rules.
       */
       std::ostream& urlEncode(std::ostream& s) const;
 
       /**
+        Un-escapes a Data to a stream according to HTTP URL encoding rules.
       */
       std::ostream& urlDecode(std::ostream& s) const;
 
@@ -472,42 +478,196 @@ class Data
         Presumably, this is used for output purposes.
       */
       Data trunc(size_type trunc) const;
-	
-      // resize to zero without changing capacity
+
+      /**
+        Clears the contents of this Data. This call does not modify
+        the capacity of the Data.
+      */	
       void clear();
+
+      /**
+        Takes the contents of the Data and converts them to an 
+        integer. Will strip leading whitespace. This method stops
+        upon encountering the first non-decimal digit (with exceptions
+        made for leading negative signs).
+      */ 
       int convertInt() const;
+
+      /**
+        Takes the contents of the Data and converts them to a 
+        size_t. Will strip leading whitespace. This method stops
+        upon encountering the first non-decimal digit.
+      */ 
       size_t convertSize() const;
+
+
+      /**
+        Takes the contents of the Data and converts them to a 
+        double precision floating point value. Will strip leading
+        whitespace. This method stops upon encountering the first
+        non-decimal digit (with exceptions made for decimal points
+        and leading negative signs).
+      */ 
       double convertDouble() const;
+
+
+      /**
+        Takes the contents of the Data and converts them to an
+        unsigned 64-bit integer. Will strip leading whitespace.
+        This method stops upon encountering the first non-decimal digit.
+      */ 
       UInt64 convertUInt64() const;
-      
+
+      /**
+        Returns true if this Data starts with the bytes indicated by
+        the passed-in Data. For example, if this Data is "abc", then
+        prefix(Data("ab")) would be true; however, prefix(Data("abcd"))
+        would be false.
+      */
       bool prefix(const Data& pre) const;
+
+
+      /**
+        Returns true if this Data ends with the bytes indicated by
+        the passed-in Data. For example, if this Data is "abc", then
+        postfix(Data("bc")) would be true; however, postfix(Data("ab"))
+        would be false.
+      */
       bool postfix(const Data& post) const;
+
+      /**
+        Copies a portion of this Data into a new Data.
+ 
+        @param first Index of the first byte to copy
+        @param count Number of bytes to copy
+      */
       Data substr(size_type first, size_type count = Data::npos) const;
+
+      /**
+        Finds a specified sequence of bytes in this Data.
+
+        @param match The bytes to be found
+
+        @param start Offset into this Data to start the search
+
+        @returns An index to the start of the found bytes.
+
+        @bug The match parameter must be null-terminated, which is
+             basically impossible to ensure for a Data. This
+             method is consequently an ideal candidate for a
+             gaping security hole.
+
+        @todo Rewrite this method to use the lentgth of the match
+              Data instead of relying on null-termination
+      */
       size_type find(const Data& match, size_type start = 0) const;
+
+
+      /**
+        Finds a specified sequence of bytes in this Data.
+
+        @param match A null-terminated string representing the bytes
+                     to be found
+
+        @param start Offset into this Data to start the search
+
+        @returns An index to the start of the found bytes.
+
+        @warning Passing a non-null-terminated string to this
+                 method would be a Really Bad Thing.
+
+      */
       size_type find(const char* match, size_type start = 0) const;
 
+      /**
+        Constant that represents a zero-length data.
+      */
       static const Data Empty;
+
+      /**
+        Represents the maximum number of bytes there can be in a Data.
+      */
       static const size_type npos;
 
+
+      /**
+        Initializes this Data.
+
+        @note Doesn't actually do anything
+
+        @todo Remove this?
+      */
       static bool init();
 
-      /// return base64 decode as specified in RFC 3548
+      /**
+        Performs RFC 3548 Base 64 decoding of the contents of this data.
+
+        @returns A new buffer containing the unencoded representation
+      */
       Data base64decode() const;
 
-      /// return base64 encode as specified in RFC 3548
+      /**
+        Performs RFC 3548 Base 64 encoding of the contents of this data.
+
+        @returns A new buffer containing the base64 representation
+      */
       Data base64encode(bool useUrlSafe=false) const;
 
-      static size_t rawHash(const char* c, size_t size);
-      size_t hash() const;
-      static size_t rawCaseInsensitiveHash(const char* c, size_t size);
-      size_t caseInsensitivehash() const;
-      
-      template<class Predicate> std::ostream& escapeToStream(std::ostream& str, 
-                                                             Predicate shouldEscape) const;            
-   private:
-      Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
+      /**
+        Creates a 32-bit hash based on the contents of the indicated
+        buffer.
 
-      // copy if not mine
+        @param c Pointer to the buffer to hash
+        @param size Number of bytes to be hashed
+      */
+      static size_t rawHash(const char* c, size_t size);
+
+      /**
+        Creates a 32-bit hash based on the contents of this Data.
+      */
+      size_t hash() const;
+
+      /**
+        Creates a 32-bit hash based on the contents of the indicated
+        buffer, after normalizing any alphabetic characters to lowercase.
+
+        @param c Pointer to the buffer to hash
+        @param size Number of bytes to be hashed
+      */
+      static size_t rawCaseInsensitiveHash(const char* c, size_t size);
+
+      /**
+        Creates a 32-bit hash based on the contents of this Data, after
+        normalizing any alphabetic characters to lowercase.
+      */
+      size_t caseInsensitivehash() const;
+
+      /**
+        Performs escaping of this Data according to the indicated
+        Predicate.
+
+        @param str          A stream to which the escaped representation
+                            should be added.
+
+        @param shouldEscape A functor which takes a single character
+                            as a parameter, and returns true if the
+                            character should be escaped, false if
+                            it should not.
+      */      
+      template<class Predicate> std::ostream& 
+          escapeToStream(std::ostream& str, 
+                         Predicate shouldEscape) const;
+
+   private:
+      /**
+        @deprecated use Data(ShareEnum ...)
+      */
+      Data(const char* buffer, int length, bool);
+
+      /**
+        Copies the contents of this data to a new buffer if the
+        Data does not own the current buffer.
+      */
       void own() const;
 
       /**
@@ -588,6 +748,8 @@ Data::escapeToStream(std::ostream& str, Predicate shouldEscape) const
 
    while (p < e)
    {
+      // ?abr? Why is this special cased? Removing this code
+      // does not change the behavior of this method.
       if (*p == '%' 
           && e - p > 2 
           && isHex(*(p+1)) 
