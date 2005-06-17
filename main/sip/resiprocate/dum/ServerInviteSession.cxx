@@ -909,9 +909,18 @@ void
 ServerInviteSession::sendProvisional(int code)
 {
    mDialog.makeResponse(m1xx, mFirstRequest, code);
-   if (mProposedLocalSdp.get()) // early media
+   switch (mState)
    {
-      setSdp(m1xx, *mProposedLocalSdp);
+      case UAS_OfferProvidedAnswer:
+      case UAS_EarlyProvidedAnswer:
+         if (mCurrentLocalSdp.get()) // early media
+         {
+             setSdp(m1xx, *mCurrentLocalSdp);
+         }
+         break;
+
+      default:
+         break;
    }
    startRetransmit1xxTimer();
    mDialog.send(m1xx);
