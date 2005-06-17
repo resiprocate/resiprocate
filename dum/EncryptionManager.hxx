@@ -118,21 +118,6 @@ class EncryptionManager
             Data mSigner;
       };
 
-      /*
-      class CompareT : public std::binary_function<const Request*, const Request*, bool>
-      {
-         public:
-            bool operator()(Request* lhs, Request* rhs) const
-            {
-               if (lhs->getId() < rhs->getId())
-               {
-                  return true;
-               }
-               return false;
-            }
-      };
-      */
-
       DialogUsageManager* mDum;
       UInt32 mCounter;
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
