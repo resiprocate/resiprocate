@@ -141,6 +141,7 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 
 bool EncryptionManager::decrypt(SipMessage& msg)
 {
+   assert(mDum);
    SipMessage copy(msg);
    Decrypt* request = new Decrypt(*mDum, mRemoteCertStore.get(), copy, getNextId());
    Helper::ContentsSecAttrs csa;
@@ -516,7 +517,6 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
    if (0 != mPendingRequests) return false;
 
    bool encrypted = false;
-   bool issigned  = false;
    if ((encrypted = isEncrypted()))
    {
       bool missingDecryptorCert = !mDum.getSecurity()->hasUserCert(mDecryptor);
@@ -550,6 +550,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
       }
    }
 
+   bool issigned  = false;
    if ((issigned = isSigned()))
    {
       if (!mDum.getSecurity()->hasUserCert(mSigner))
