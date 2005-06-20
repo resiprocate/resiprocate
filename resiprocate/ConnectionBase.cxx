@@ -271,24 +271,18 @@ ConnectionBase::transport()
 }
 
 std::ostream& 
-
-resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
+resip::operator<<(std::ostream& strm, 
+                  const resip::ConnectionBase& c)
 
 {
-
    strm << "CONN_BASE: " << &c << " " << c.mWho;
-
    return strm;
-
 }
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
