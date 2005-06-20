@@ -201,7 +201,13 @@ Timer::getTimeMicroSec()
 UInt64 
 Timer::getTimeMs()
 {
-    return getSystemTime()/1000;
+    return getSystemTime()/1000LL;
+}
+
+UInt64 
+Timer::getTimeSecs()
+{
+    return getSystemTime()/1000000LL;
 }
 
 
