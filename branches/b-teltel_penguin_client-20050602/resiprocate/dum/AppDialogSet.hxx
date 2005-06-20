@@ -50,12 +50,14 @@ class AppDialogSet : public Handled
       /// when the initial message changes (408/Retry-After) but the application
       /// doesn't want to know.
       AppDialogSet* reuse();
+      bool isReUsed() const;
       
       friend class DialogUsageManager;
       friend class AppDialogSetFactory;
       friend class ClientSubscription;
 
       DialogSet* mDialogSet;
+      bool mIsReUsed;
 };
 
 }
