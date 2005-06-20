@@ -46,7 +46,7 @@ int debugLogsInCall()
 
 class ExampleExternalLogger : public ExternalLogger
 {
-      virtual void operator()(Log::Level level,
+      virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
                               const char* file,
@@ -59,6 +59,9 @@ class ExampleExternalLogger : public ExternalLogger
                    << file << ":" << line
                    << " $ "
                    << message << std::endl;
+
+         // supress normal logging
+         return false;
       }
 };
 
