@@ -68,21 +68,28 @@ do                                                                              
       char _resip_buffer[8096];                                                                 \
       resip::Data _resip_result(resip::Data::Share, _resip_buffer, sizeof(_resip_buffer));      \
       _resip_result.clear();                                                                    \
+      resip::Data::size_type _resip_headerLength;                                               \
       {                                                                                         \
          resip::DataStream _resip_strm(_resip_result);                                          \
          if (!resip::Log::getExternal())                                                        \
          {                                                                                      \
             resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                  \
-               << " | ";                                                                        \
+               << resip::Log::delim;                                                            \
          }                                                                                      \
+         _resip_strm.flush();                                                                   \
+         _resip_headerLength = _resip_result.size();                                            \
          _resip_strm args_;                                                                     \
       }                                                                                         \
-      /* checking external twice is better than repeating macro args */                         \
       if (resip::Log::getExternal())                                                            \
       {                                                                                         \
-         (*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),                \
-                                      __FILE__, __LINE__, _resip_result);                       \
-          break;                                                                                \
+         const resip::Data _resip_rest(resip::Data::Share,                                      \
+                                       _resip_result.data() + _resip_headerLength,              \
+                                       _resip_result.size() - _resip_headerLength);             \
+         if (!(*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),           \
+                                           __FILE__, __LINE__, _resip_rest))                    \
+         {                                                                                      \
+            break;                                                                              \
+         }                                                                                      \
       }                                                                                         \
                                                                                                 \
       resip::Lock lock(resip::Log::_mutex);                                                     \
