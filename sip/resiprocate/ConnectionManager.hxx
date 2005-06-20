@@ -1,4 +1,4 @@
-#if !defined(RESIP_ConnectionMgr_hxx)
+#ifndef RESIP_ConnectionMgr_hxx
 #define RESIP_ConnectionMgr_hxx 
 
 #include <map>
@@ -8,31 +8,46 @@
 namespace resip
 {
 
+/**
+   Collection of Connection per Transport. Maintains round-robin
+   orders for read and write.  Maintains least-recently-used connections list
+   for garbage collection.
+
+   Maintains mapping from Tuple to Connection.
+ */
 class ConnectionManager
 {
       friend class Connection;
    public:
-      // smallest time to reuse
-      static const UInt64 MinLastUsed;
-      // largest unused time to reclaim
-      static const UInt64 MaxLastUsed;
- 
+      /** connection must older than this value to be removed to make room for
+          another connection. */
+      static const UInt64 MinimumGcAge;
+
       ConnectionManager();
       ~ConnectionManager();
 
+      /// may return 0
       Connection* findConnection(const Tuple& tuple);
 
-      // Return 0 if nothing to do
+      /**
+         return the next Connection that is ready to read.
+         return 0 if nothing to do.
+      */
       Connection* getNextRead(FdSet &fdset);
+      /**
+         return the next Connection that has recently called addToWritable (is
+         in the write list).
+       */
       Connection* getNextWrite();
+      /// populate the fdset againt the read and write lists
       void buildFdSet(FdSet& fdset);
       
    private:
-      void addToWritable(Connection* conn); // add the specified conn to end
-      void removeFromWritable(); // remove the current mWriteMark
+      void addToWritable(Connection* conn); ///< add the specified conn to end
+      void removeFromWritable(); ///< remove the current mWriteMark
 
-      // release excessively old connections (free up file descriptors)
-      void gc(UInt64 threshhold = ConnectionManager::MaxLastUsed);
+      /// release excessively old connections (free up file descriptors)
+      void gc(UInt64 threshhold);
 
       typedef std::map<Tuple, Connection*> AddrMap;
       typedef std::map<ConnectionId, Connection*> IdMap;
@@ -40,28 +55,25 @@ class ConnectionManager
       void addConnection(Connection* connection);
       void removeConnection(Connection* connection);
 
-      // move to youngest 
-      // !jf! I think it would be reasonable to look for oldest when time comes
-      // to delete rather than touch each time
+      /// move to youngest 
       void touch(Connection* connection);
       
       AddrMap mAddrMap;
       IdMap mIdMap;
 
-      //>>---------------------------------
-      // intrusive list management
+      /// all intrusive lists based on the same element type
       Connection mHead;
 
+      /// ready to write list
       ConnectionWriteList* mWriteHead;
       ConnectionWriteList::iterator mWriteIter;
 
+      /// ready to read list
       ConnectionReadList* mReadHead;
       ConnectionReadList::iterator mReadIter;
 
+      /// least recently used list
       ConnectionLruList* mLRUHead;
-
-      // reset iterators if they've been invalidated
-      void checkIterators();
       //<<---------------------------------
 
       ConnectionId mConnectionIdGenerator;
