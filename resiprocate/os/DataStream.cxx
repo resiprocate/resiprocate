@@ -93,6 +93,8 @@ DataStream::DataStream(Data& str)
    : DataBuffer(str), 
      std::iostream(this)
 {
+   // don't call this with a read-only buffer!
+   assert(str.mMine != Data::Share);
 }
 
 DataStream::~DataStream()
