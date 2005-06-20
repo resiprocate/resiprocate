@@ -16,11 +16,10 @@
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
-#define DELIM " | "
-
 using namespace resip;
 using namespace std;
 
+const Data Log::delim(" | ");
 Log::Level Log::_level = Log::Info;
 Log::Type Log::_type = Cout;
 Data Log::_appName;
@@ -90,15 +89,11 @@ Log::initialize(Type type, Level level, const Data& appName,
    _type = type;
    _level = level;
 
-    if (logFileName)
-    {
-       _logFileName = logFileName;
-    }
-    
-    if (externalLogger)
-    {
-       _externalLogger = externalLogger;
-    }
+   if (logFileName)
+   {
+      _logFileName = logFileName;
+   }
+    _externalLogger = externalLogger;
 
    string::size_type pos = copy.find_last_of('/');
    if ( pos == string::npos || pos == copy.size())
@@ -140,10 +135,12 @@ Log::setLevel(Level level)
    _level = level; 
 }
 
+const static Data log_("LOG_");
+
 Data
 Log::toString(Level l)
 {
-   return Data("LOG_") + _descriptions[l+1];
+   return log_ + _descriptions[l+1];
 }
 
 Log::Level
@@ -198,10 +195,10 @@ Log::tags(Log::Level level,
           ostream& strm) 
 {
 #if defined( __APPLE__ )
-   strm << _descriptions[level+1] << DELIM 
-        << time(0) << DELIM 
-        << _appName << DELIM
-        << subsystem << DELIM
+   strm << _descriptions[level+1] << Log::delim 
+        << time(0) << Log::delim 
+        << _appName << Log::delim
+        << subsystem << Log::delim
         << pfile << ":" << line;
 #else   
    char buffer[256];
@@ -217,24 +214,102 @@ Log::tags(Log::Level level,
    {
       ++file;
    }
-   strm << _descriptions[level+1] << DELIM
-        << timestamp(tstamp) << DELIM  
-        << _appName << DELIM
-        << subsystem << DELIM 
-        << GetCurrentThreadId() << DELIM
+   strm << _descriptions[level+1] << Log::delim
+        << timestamp(tstamp) << Log::delim  
+        << _appName << Log::delim
+        << subsystem << Log::delim 
+        << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
 #else
-   strm << _descriptions[level+1] << DELIM
-        << timestamp() << DELIM  
-        << _hostname << DELIM  
-        << _appName << DELIM
-        << subsystem << DELIM 
-        << _pid << DELIM
-        << pthread_self() << DELIM
+   strm << _descriptions[level+1] << Log::delim
+        << timestamp(tstamp) << Log::delim  
+        << _hostname << Log::delim  
+        << _appName << Log::delim
+        << subsystem << Log::delim 
+        << _pid << Log::delim
+        << pthread_self() << Log::delim
         << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 
 #endif // #if defined( __APPLE__ )
   return strm;
+}
+
+Data&
+Log::tags(Log::Level level, 
+          const Subsystem& subsystem, 
+          const char* pfile,
+          int line,
+          Data& out) 
+{
+   char obuffer[128];
+   
+#if defined( __APPLE__ )
+   out += _descriptions[level+1] ;
+   out += Log::delim;
+   sprintf(obuffer, "%d", time(0));
+   out += obuffer;
+   out += Log::delim;
+   out += _appName;
+   out += Log::delim;
+   out += subsystem;
+   out += Log::delim;
+   out += pfile;
+   out += ':';
+   sprintf(obuffer, "%d", line);
+   out += obuffer;
+#else   
+   char buffer[256];
+   Data tstamp(Data::Borrow, buffer, sizeof(buffer));
+#if defined( WIN32 )
+   const char* file = pfile + strlen(pfile);
+   while (file != pfile &&
+          *file != '\\')
+   {
+      --file;
+   }
+   if (file != pfile)
+   {
+      ++file;
+   }
+   out += _descriptions[level+1];
+   out += Log::delim;
+   out += timestamp(tstamp);
+   out += Log::delim;
+   out += _appName;
+   out += Log::delim;
+   out += subsystem.getSubsystem();
+   out += Log::delim;
+   sprintf(obuffer, "%d", GetCurrentThreadId());
+   out += obuffer;
+   out += Log::delim;
+   out += file;
+   out += ':';
+   sprintf(obuffer, "%d", line);
+   out += obuffer;
+#else
+   out += _descriptions[level+1];
+   out += Log::delim;
+   out += timestamp(tstamp);
+   out += Log::delim;
+   out += _hostname;
+   out += Log::delim;
+   out += _appName;
+   out += Log::delim;
+   out += subsystem.getSubsystem();
+   out += Log::delim;
+   sprintf(obuffer, "%d", _pid);
+   out += buffer;
+   out += Log::delim;
+   sprintf(obuffer, "%u", pthread_self()); // .dlb. dicey - consider Data::from();
+   out += obuffer;
+   out += Log::delim;
+   out += pfile;
+   out += ':';
+   sprintf(obuffer, "%d", line);
+   out += obuffer;
+#endif // #if defined( WIN32 ) 
+#endif // #if defined( __APPLE__ )
+   return out;
 }
 
 Data
@@ -407,11 +482,8 @@ Log::setServiceLevel(int service, Level l)
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
 
-   
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
