@@ -11,7 +11,20 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Info, argv[0]);
+   
+   {
+      const char buf[] = "Ducky%20%26";
+      ParseBuffer pb(buf, strlen(buf));
 
+      const char* start = pb.skipWhitespace();
+      pb.skipToEnd();
+      
+      Data target;
+      pb.dataUnescaped(target, start);
+      
+      assert(target == "Ducky &");
+   }
+   
    {
       const char buf[] = "  \r\t\r\n\t  !";
       ParseBuffer pb(buf, strlen(buf));
