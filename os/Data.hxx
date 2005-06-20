@@ -696,6 +696,8 @@ class Data
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
+      friend class DataStream;
+      friend class oDataStream;
       friend class ::TestData;
       friend class MD5Buffer;
       friend class Contents;
