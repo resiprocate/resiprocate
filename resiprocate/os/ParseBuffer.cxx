@@ -582,25 +582,38 @@ static const unsigned char hexToByte[128] =
 };
 
 void
-ParseBuffer::dataUnescaped(Data& data, const char* start) const
+ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
 {
    if (!(mBuff <= start && start <= mPosition))
    {
-      fail(__FILE__, __LINE__,"Bad anchor position");
+      fail(__FILE__, __LINE__, "Bad anchor position");
    }
 
-   if (data.mMine == Data::Take)
    {
-      delete[] data.mBuf;
+      const char* current = start;   
+      while (current < mPosition)
+      {
+         if (*current == '%')
+         {
+            // needs to be unencoded
+            goto copy;
+         }
+         current++;
+      }
+      // can use an overlay
+      data(dataToUse, start);
+      return;
    }
-   data.mSize = (unsigned int)(mPosition - start);
-   data.mBuf = new char[data.mSize + 1];
-   data.mCapacity = data.mSize;
-   data.mMine = Data::Take;
 
-   char* target = data.mBuf;
+  copy:
+   if (mPosition-start > dataToUse.mCapacity)
+   {
+      dataToUse.resize(mPosition-start, false);
+   }
+
+   char* target = dataToUse.mBuf;
    const char* current = start;   
-   while(current < mPosition)
+   while (current < mPosition)
    {
       if (*current == '%')
       {
@@ -641,7 +654,7 @@ ParseBuffer::dataUnescaped(Data& data, const char* start) const
       }
    }
    *target = 0;
-   data.mSize = target - data.mBuf;   
+   dataToUse.mSize = target - dataToUse.mBuf;   
 }
 
 Data
