@@ -153,6 +153,7 @@ Transport::fail(const Data& tid)
    }
 }
 
+/// @todo unify w/ tramsit
 void 
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
