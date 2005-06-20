@@ -81,12 +81,18 @@ class Log
             Level level;
       };
 
-      /// Return the loglevel, hostname, appname, pid, tid, subsystem
+      /// output the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, 
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
                                 std::ostream& strm);
+      /// output the loglevel, hostname, appname, pid, tid, subsystem
+      static Data& tags(Log::Level level, 
+                        const Subsystem& subsystem, 
+                        const char* file,
+                        int line,
+                        Data& out);
       static Data& timestamp(Data& result);
       static Data timestamp();
       static ExternalLogger* getExternal()
@@ -132,6 +138,7 @@ class Log
       static void setThreadSetting(int serv);
       static volatile short touchCount;
       static Type _type;
+      static const Data delim;
    protected:
       static Level _level;
       static Data _appName;
@@ -158,7 +165,8 @@ class Log
 class ExternalLogger
 {
    public:
-      virtual void operator()(Log::Level level,
+      /** return true to also do default logging, false to supress default logging. */
+      virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
                               const char* file,
@@ -172,8 +180,6 @@ class ExternalLogger
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
