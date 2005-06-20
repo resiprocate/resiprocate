@@ -52,7 +52,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- heavy, should just store enough information to make response
       mLastNotify = msg;
 
-      if (!mOnNewSubscriptionCalled)
+      if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
          mDialog.mRemoteTarget = msg.header(h_Contacts).front();
@@ -164,13 +164,11 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
       // to ignore this case
-      if (msg.header(h_StatusLine).statusCode() == 481)
+      if (msg.header(h_StatusLine).statusCode() == 481 &&
+          msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
       {
          InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                   << mDialog.mRemoteTarget);
-         // !kh!
-         // why not absorb this error if DUM reSUBs for user?
-         handler->onTerminated(getHandle(), msg);
 
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
          mDum.send(sub);
