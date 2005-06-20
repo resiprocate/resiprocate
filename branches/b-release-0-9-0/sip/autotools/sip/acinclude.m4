@@ -37,7 +37,6 @@ AC_DEFUN([RESIP_SSL_ENABLE],
               AC_MSG_RESULT([SSL Enabled])
 	      RESIP_LIB_OPENSSL
             else
-              AC_DEFINE([USE_SSL],[0],[SSL Disabled])
               AC_MSG_RESULT([SSL Disabled])
             fi
         ],
