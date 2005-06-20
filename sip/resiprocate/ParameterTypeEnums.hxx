@@ -38,7 +38,9 @@ class ParameterTypes
          defineParam(actor, "actor", QuotedDataParameter, "callee-caps"), // principal|msg-taker|attendant|information
          defineParam(text, "text", ExistsParameter, "callee-caps"),
          defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"), //list
+
          defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu"),  // <> quoted
+         defineParam(FlowId, "+sip.flowId", IntegerParameter, "outbound"),  
          defineParam(gruu, "gruu", QuotedDataParameter, "gruu"),
 
          defineParam(accessType, "access-type", DataParameter, "RFC 2046"),
