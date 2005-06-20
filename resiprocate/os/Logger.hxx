@@ -66,7 +66,7 @@ do                                                                              
        (!setting && resip::GenericLogImpl::isLogging(level_)))                                  \
    {                                                                                            \
       char _resip_buffer[8096];                                                                 \
-      resip::Data _resip_result(resip::Data::Share, _resip_buffer, sizeof(_resip_buffer));      \
+      resip::Data _resip_result(resip::Data::Borrow, _resip_buffer, sizeof(_resip_buffer));     \
       _resip_result.clear();                                                                    \
       Data::size_type _resip_headerLength;                                                      \
       {                                                                                         \
