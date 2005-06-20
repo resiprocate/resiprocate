@@ -81,7 +81,15 @@ AppDialogSet::reuse()
    assert(mDialogSet);
    mDialogSet->appDissociate();
    mDialogSet = 0;
+   
+   mIsReUsed = true;
    return this;
+}
+
+bool
+AppDialogSet::isReUsed() const
+{
+   return mIsReUsed;
 }
 
 const Data 
