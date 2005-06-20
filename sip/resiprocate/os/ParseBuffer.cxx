@@ -606,7 +606,7 @@ ParseBuffer::dataUnescaped(Data& dataToUse, const char* start) const
    }
 
   copy:
-   if (mPosition-start > dataToUse.mCapacity)
+   if ((size_t)(mPosition-start) > dataToUse.mCapacity)
    {
       dataToUse.resize(mPosition-start, false);
    }
