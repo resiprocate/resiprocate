@@ -1208,9 +1208,6 @@
 				RelativePath=".\os\TransportType.hxx">
 			</File>
 			<File
-				RelativePath="TuIM.hxx">
-			</File>
-			<File
 				RelativePath="os\Tuple.hxx">
 			</File>
 			<File
