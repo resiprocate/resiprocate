@@ -611,9 +611,6 @@
 				RelativePath="TransportSelector.cxx">
 			</File>
 			<File
-				RelativePath="TuIM.cxx">
-			</File>
-			<File
 				RelativePath="os\Tuple.cxx">
 			</File>
 			<File
@@ -1168,6 +1165,9 @@
 			</File>
 			<File
 				RelativePath="Transport.hxx">
+			</File>
+			<File
+				RelativePath=".\TransportFailure.hxx">
 			</File>
 			<File
 				RelativePath="TransportMessage.hxx">
