@@ -1,3 +1,4 @@
+#include <cassert>
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
 
