@@ -1,0 +1,38 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+digraph UAC {
+  rankdir=LR;
+  node [shape = box];
+
+  Start -> WaitingForProvisional [ label = "dum::create" ];
+
+  WaitingForProvisional -> CancelledWaitingForProvisional [ label = "dum::cancel" ];
+  WaitingForProvisional -> Terminated                     [ label = "on3xx/redirect" ];
+  WaitingForProvisional -> Terminated                     [ label = "on3xx,on4xx/dispatch-dialog" ];
+  WaitingForProvisional -> Provisional                    [ label = "on100/create-T2" ];
+  WaitingForProvisional -> Provisional                    [ label = "on1xx/create-T2,dispatch-dialog" ];
+  WaitingForProvisional -> Connected1                     [ label = "on2xx/create-T1,dispatch-dialog" ];
+
+  CancelledWaitingForProvisional -> Cancelled             [ label = "dum::cancel" ];
+  CancelledWaitingForProvisional -> Terminated            [ label = "onFailure" ];
+
+  // will create a dialog/usage in the UAC_Cancelled state
+  Cancelled -> Cancelled                                  [ label = "on2xx/create-T1,dispatch-dialog" ];
+  Cancelled -> Terminated                                 [ label = "onT3" ];
+
+  Provisional -> Provisional                              [ label = "on1xx/dispatch-dialog" ];
+  Provisional -> Connected1                               [ label = "on2xx/create-T1,dispatch-dialog" ];
+  Provisional -> Cancelled                                [ label = "dum::cancel/create-T3,send::cancel" ];
+  Provisional -> Terminated                               [ label = "on3xx,on4xx" ];
+
+  Connected1 -> Connected1                                [ label = "on2xx/dispatch-dialog" ];
+  Connected1 -> Connected2                                [ label = "onT1/delete-early-dialogs" ];
+  Connected1 -> ???                                       [ label = "on3xx/???" ];
+
+  Connected2 -> Connected2                                [ label = "onSIP/dispatch-dialog" ];
+  Connected2 -> ???                                       [ label = "on3xx/???" ];
+}
