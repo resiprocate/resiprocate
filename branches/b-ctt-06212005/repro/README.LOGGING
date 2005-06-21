@@ -1,0 +1,5 @@
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
+// DebugLog (<< "this is a DEBUG log " << a);
+// InfoLog (<< "this is an INFO log " << complexObj);
