@@ -44,8 +44,11 @@ Supported Platforms:
 
   This tarball has been successfully built on
      Linux 
+       Redhat 9
        FedoraCore 3
        Suse 9.2
+       Debian Sarge
+       Gentoo (PPC and x86)
      FreeBSD 5.3
      NetBSD 2.0
      OS/X 10.3
