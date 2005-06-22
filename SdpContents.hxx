@@ -356,7 +356,7 @@ class SdpContents : public Contents
                   void addAttribute(const Data& key, const Data& value = Data::Empty);
 
                   const Data& name() const {return mName;}
-                  Data name() {return mName;}
+                  Data& name() {return mName;}
 
                   int port() const {return mPort;}
                   unsigned long& port() {return mPort;}
