@@ -40,10 +40,13 @@ If you have problems:
   Read through the documentation at http://www.sipfoundry.org/resiprocate
   Send email to resip-devel@list.sipfoundry.org
 
+KNOWN ISSUES:
+  This distribution will not pass make check using gcc 4.0.
+
 Supported Platforms:
 
   This tarball has been successfully built on
-     Linux 
+     Linux (gcc 3.x)
        Redhat 9
        FedoraCore 3
        Suse 9.2
