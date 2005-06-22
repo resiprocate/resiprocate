@@ -71,11 +71,8 @@ do                                                                              
       Data::size_type _resip_headerLength;                                                      \
       {                                                                                         \
          resip::DataStream _resip_strm(_resip_result);                                          \
-         if (!resip::Log::getExternal())                                                        \
-         {                                                                                      \
-            resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                  \
+         resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                     \
                << resip::Log::delim;                                                            \
-         }                                                                                      \
          _resip_strm.flush();                                                                   \
          _resip_headerLength = _resip_result.size();                                            \
          _resip_strm args_;                                                                     \
