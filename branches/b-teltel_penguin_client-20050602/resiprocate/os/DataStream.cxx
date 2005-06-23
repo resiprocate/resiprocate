@@ -1,6 +1,6 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
-
+#include <cassert>
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
