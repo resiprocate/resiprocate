@@ -112,6 +112,11 @@ class Helper
                                             const Data& realm,
                                             const Data& password,
                                             int expiresDelta = 0);
+
+      static AuthResult authenticateRequestWithA1(const SipMessage& request, 
+                                                  const Data& realm,
+                                                  const Data& hA1,
+                                                  int expiresDelta = 0);
       
       static std::pair<AuthResult,Data> 
                 advancedAuthenticateRequest(const SipMessage& request, 
