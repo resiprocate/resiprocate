@@ -303,8 +303,7 @@ resiprocate_include_HEADERS = \
 	WarningCategory.hxx \
 	X509Contents.hxx \
 	XMLCursor.hxx \
-	X_msMsgsInvite.hxx \
-	config.hxx
+	X_msMsgsInvite.hxx 
 
 resiprocate_external_includedir=$(includedir)/resiprocate/external
 resiprocate_external_include_HEADERS = \
