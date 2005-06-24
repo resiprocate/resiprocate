@@ -906,14 +906,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       // This means that dns / NAPTR is misconfigured for this client 
       if (mPreferredNAPTR.key.empty())
       {
-         StackLog (<< "No NAPTR records that are supported by this client");
-         transition(Finished);
-         mHandler->handle(this);
-         return;
-      }
-
-      if (result.records.size() == 0) // didn't find any NAPTR records
-      {
          StackLog (<< "There are no NAPTR records so do an SRV lookup instead");
          bFail = true;
       }
