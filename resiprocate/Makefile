@@ -116,7 +116,6 @@ SRC = \
 	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
 	RAckCategory.cxx \
-	Registration.cxx \
 	Rlmi.cxx \
 	RportParameter.cxx \
 	SdpContents.cxx \
