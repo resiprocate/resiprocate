@@ -155,7 +155,7 @@ main(int argc, char** argv)
       SdpContents csdp;
       csdp = *sdp;
       SdpContents::Session::Medium& my1Medium = csdp.session().media().front();
-      cerr << myMedium.protocol() << endl;
+      cerr << myMedium.protocol() << " : " << my1Medium.protocol() << endl;
 
       SdpContents c2sdp;
       c2sdp = *sdp;
