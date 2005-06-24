@@ -56,13 +56,10 @@ void *poller(void *arg)
 int main(int argc, char* argv[])
 {
   resip::Log::initialize(Log::Cout, Log::Stack, *argv);
-  SipStack::TransportProcessApproach ta = argc < 2 ? SipStack::SharesStackProcessAndSelect
-     : SipStack::RunsInOwnThread;
-  
   SipStack stack1;  
   //pthread_t tid;
-  stack1.addTransport(UDP, 5060, V4, Data::Empty, Data::Empty, Data::Empty, SecurityTypes::TLSv1, ta);
-  stack1.addTransport(TCP, 5060, V4, Data::Empty, Data::Empty, Data::Empty, SecurityTypes::TLSv1, ta);
+  stack1.addTransport(UDP, 5060, V4, Data::Empty, Data::Empty, Data::Empty, SecurityTypes::TLSv1);
+  stack1.addTransport(TCP, 5060, V4, Data::Empty, Data::Empty, Data::Empty, SecurityTypes::TLSv1);
   //pthread_create(&tid, NULL, poller, &stack1);
   //pthread_join(tid, &retval);
   poller((void*)&stack1);
