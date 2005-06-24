@@ -30,14 +30,6 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-class MessageAppDialogSet : public AppDialogSet
-{
-   public:
-      MessageAppDialogSet(DialogUsageManager& dum) : AppDialogSet(dum) 
-      {}      
-};
-
-
 class RegListener : public ClientRegistrationHandler {
 public:
 	RegListener() : _registered(false) {};
@@ -161,8 +153,7 @@ int main(int argc, char *argv[]) {
 	profile->setDefaultFrom(naFrom);
 	profile->setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
 	
-	MessageAppDialogSet *mads = new MessageAppDialogSet(clientDum);
-	SipMessage & regMessage = clientDum.makeRegistration(naFrom, mads);
+	SipMessage & regMessage = clientDum.makeRegistration(naFrom);
 	
 	InfoLog( << regMessage << "Generated register: " << endl << regMessage );
 	clientDum.send( regMessage );
@@ -188,7 +179,7 @@ int main(int argc, char *argv[]) {
 			InfoLog(<<"client registered!!\n");
 			InfoLog(<< "Sending MESSAGE\n");
 			NameAddr naTo(to.c_str());
-			ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(naTo, mads);
+			ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(naTo);
 			
 			auto_ptr<Contents> content(new PlainContents(Data("my first message!")));
 			cpmh.get()->page(content); 
