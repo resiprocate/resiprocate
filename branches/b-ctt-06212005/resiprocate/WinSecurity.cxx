@@ -1,5 +1,7 @@
 #include "resiprocate/WinSecurity.hxx"
 #include <sys/types.h>
+
+#ifdef USE_SSL
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -10,6 +12,8 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
+#endif
+
 #include <Wincrypt.h>
 #include "resiprocate/os/Logger.hxx"
 
@@ -26,10 +30,12 @@ WinSecurity::preload()
 {
    HCERTSTORE storeHandle = NULL;
 
+#ifdef USE_SSL
    getCerts(WinSecurity::ROOT_CA_STORE);
    //getCerts(WinSecurity::CA_STORE);
    //getCredentials(WinSecurity::PRIVATE_STORE);
    //getCerts(WinSecurity::USERS_STORE);   
+#endif
 }
 
 void
@@ -49,6 +55,8 @@ WinSecurity::onRemovePEM(const Data& name, PEMType type)
 {
    throw;
 }
+
+#ifdef USE_SSL
 
 static const Data 
 certStoreTypes(  WinSecurity::MsCertStoreType pType )
@@ -210,6 +218,8 @@ WinSecurity::getCerts(MsCertStoreType eType)
   }
   closeCertifStore(storeHandle);
   }*/
+
+#endif // ifdef USE_SSL
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
