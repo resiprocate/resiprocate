@@ -1,5 +1,5 @@
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "PresConfig.h"
 #include "TuPresSvr.h"
 

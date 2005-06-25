@@ -5,7 +5,7 @@ BUILD = ../build
 include $(BUILD)/Makefile.pre
 
 # All of these packages are prerequisites for resiprocate
-PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += RESIPROCATE RDNS RUTIL OPENSSL ARES PTHREAD
 
 # Add an entry to TESTPROGRAMS for each target that has a main in it
 # On linux this will generate an executable in bin.debug.Linux.i686/main

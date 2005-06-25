@@ -1,6 +1,6 @@
 #include "DialogSetMgr.h"
 
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/MD5Stream.hxx"
 
 DialogSetMgr::~DialogSetMgr() {
   DialogSetMap_iter iter = mDialogSetMap.begin();

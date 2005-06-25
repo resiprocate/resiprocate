@@ -1,6 +1,6 @@
 #include "Resource.h"
 
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 
 using namespace resip;
 
