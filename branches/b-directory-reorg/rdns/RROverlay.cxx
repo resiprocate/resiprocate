@@ -17,8 +17,8 @@ extern "C"
 #endif
 
 #include <vector>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
 #include "RROverlay.hxx"
 
 using namespace resip;

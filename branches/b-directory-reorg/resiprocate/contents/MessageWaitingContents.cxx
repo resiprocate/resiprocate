@@ -2,9 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/MessageWaitingContents.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/contents/MessageWaitingContents.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

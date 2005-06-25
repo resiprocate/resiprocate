@@ -1,7 +1,7 @@
 #if !defined(RESIP_DIALOG_ID_HXX)
 #define RESIP_DIALOG_ID_HXX
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "dum/DialogSetId.hxx"
 
 namespace resip

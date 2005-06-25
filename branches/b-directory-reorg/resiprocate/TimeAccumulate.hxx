@@ -3,10 +3,10 @@
 
 #include <map>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Timer.hxx"
 
 namespace resip
 {

@@ -4,10 +4,10 @@
 
 #include "resiprocate/RportParameter.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

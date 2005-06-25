@@ -2,7 +2,7 @@
 
 #include "TestSupport.hxx"
 #include "resiprocate/ParseUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

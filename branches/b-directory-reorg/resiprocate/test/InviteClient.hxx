@@ -1,7 +1,7 @@
 #ifndef InviteClient_hxx
 #define InviteClient_hxx
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 #include "resiprocate/Uri.hxx"
 
 namespace Loadgen

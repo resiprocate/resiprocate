@@ -1,7 +1,7 @@
 #if !defined(RESIP_EXTERNAL_DNS_HXX)
 #define RESIP_EXTERNAL_DNS_HXX
 
-#include "resiprocate/external/AsyncID.hxx"
+#include "rdns/external/AsyncID.hxx"
 
 struct hostent;
 

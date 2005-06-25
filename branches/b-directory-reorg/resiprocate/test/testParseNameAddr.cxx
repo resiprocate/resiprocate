@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/ParserCategories.hxx"
 using namespace resip;
 using namespace std;

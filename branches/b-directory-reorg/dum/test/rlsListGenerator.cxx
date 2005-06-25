@@ -8,8 +8,8 @@
 #include "resiprocate/MultipartRelatedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/CountStream.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/CountStream.hxx"
 
 
 #include <iostream>

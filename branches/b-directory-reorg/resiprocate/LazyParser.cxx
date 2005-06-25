@@ -8,8 +8,8 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/LazyParser.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

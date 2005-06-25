@@ -1,8 +1,8 @@
 #ifndef RESIP_DNS_RR_LIST
 #define RESIP_DNS_RR_LIST
 
-#include "resiprocate/os/IntrusiveListElement.hxx"
-#include "resiprocate/dns/RRFactory.hxx"
+#include "rutil/IntrusiveListElement.hxx"
+#include "rdns/RRFactory.hxx"
 
 namespace resip
 {

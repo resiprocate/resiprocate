@@ -1,18 +1,18 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 #include "resiprocate/UnknownHeaderType.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

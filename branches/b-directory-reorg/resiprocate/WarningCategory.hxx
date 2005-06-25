@@ -2,7 +2,7 @@
 #define RESIP_WARNING_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
 

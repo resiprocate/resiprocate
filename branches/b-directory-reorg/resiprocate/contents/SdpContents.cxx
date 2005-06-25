@@ -2,11 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 

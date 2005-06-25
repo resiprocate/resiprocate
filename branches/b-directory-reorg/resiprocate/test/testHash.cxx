@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/fcntl.h>
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/ParameterTypes.hxx"

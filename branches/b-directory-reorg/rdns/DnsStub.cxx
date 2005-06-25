@@ -20,12 +20,12 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Inserter.hxx"
+#include "rdns/DnsStub.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
 using namespace resip;

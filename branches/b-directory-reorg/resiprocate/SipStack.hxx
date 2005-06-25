@@ -4,10 +4,10 @@
 #include <set>
 #include <iosfwd>
 
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/BaseException.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/StatisticsManager.hxx"

@@ -1,7 +1,7 @@
 #if !defined(RESIP_HEADERTYPES_HXX)
 #define RESIP_HEADERTYPES_HXX 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 //****************************************************************************
 //

@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Timer.hxx"
 #include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"

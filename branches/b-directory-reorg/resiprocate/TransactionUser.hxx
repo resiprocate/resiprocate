@@ -3,8 +3,8 @@
 
 #include <iosfwd>
 #include <set>
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/MessageFilterRule.hxx"
 

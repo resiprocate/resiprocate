@@ -4,7 +4,7 @@
 
 #include "resiprocate/ApplicationMessage.hxx"
 #include "dum/Handles.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

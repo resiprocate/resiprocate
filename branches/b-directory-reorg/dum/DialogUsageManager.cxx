@@ -40,12 +40,12 @@
 #include "dum/SubscriptionCreator.hxx"
 #include "dum/SubscriptionHandler.hxx"
 #include "dum/UserAuthInfo.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/external/HttpProvider.hxx"
-#include "resiprocate/external/HttpGetMessage.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rdns/external/HttpProvider.hxx"
+#include "rdns/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

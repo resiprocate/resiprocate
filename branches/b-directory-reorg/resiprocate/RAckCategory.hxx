@@ -2,7 +2,7 @@
 #define RESIP_RAckCategory_hxx
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/MethodTypes.hxx"
 

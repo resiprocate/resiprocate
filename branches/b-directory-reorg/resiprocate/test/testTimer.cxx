@@ -2,8 +2,8 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TuSelector.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/TimeLimitFifo.hxx"
 #include <unistd.h>
 
 using namespace resip;

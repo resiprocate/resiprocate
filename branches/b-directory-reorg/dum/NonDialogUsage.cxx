@@ -2,7 +2,7 @@
 #include "dum/NonDialogUsage.hxx"
 #include "dum/DialogSet.hxx"
 #include "dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

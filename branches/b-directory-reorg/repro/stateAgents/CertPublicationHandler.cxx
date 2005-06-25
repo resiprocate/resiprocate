@@ -1,7 +1,7 @@
 #if defined(USE_SSL)
 
 #include "resiprocate/Security.hxx"
-#include "resiprocate/X509Contents.hxx"
+#include "resiprocate/contents/X509Contents.hxx"
 #include "dum/ServerPublication.hxx"
 #include "repro/stateAgents/CertPublicationHandler.hxx"
 

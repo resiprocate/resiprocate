@@ -2,7 +2,7 @@
 #define TlsConnection_hxx
 
 #include "resiprocate/Connection.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 
 #ifdef USE_SSL

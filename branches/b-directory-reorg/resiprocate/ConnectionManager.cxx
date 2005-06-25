@@ -3,8 +3,8 @@
 #endif
 
 #include "resiprocate/ConnectionManager.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #include <vector>
 

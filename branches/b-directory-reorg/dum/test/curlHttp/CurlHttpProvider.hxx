@@ -2,10 +2,10 @@
 #define RESIP_CurlHttpProvider
 
 
-#include "resiprocate/external/HttpProvider.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rdns/external/HttpProvider.hxx"
+#include "rutil/ThreadIf.hxx"
 #include "resiprocate/GenericUri.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

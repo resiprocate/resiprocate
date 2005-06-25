@@ -9,7 +9,7 @@
 #include "dum/MergedRequestKey.hxx"
 #include "dum/Handles.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

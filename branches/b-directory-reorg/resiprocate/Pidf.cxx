@@ -6,9 +6,9 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/XMLCursor.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

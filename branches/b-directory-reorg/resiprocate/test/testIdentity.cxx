@@ -3,7 +3,7 @@
 #include <fstream>
 #include <ostream>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/Security.hxx"
 
 

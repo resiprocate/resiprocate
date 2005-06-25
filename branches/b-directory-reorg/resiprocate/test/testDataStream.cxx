@@ -1,6 +1,6 @@
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "assert.h"
 #include <iostream>
 

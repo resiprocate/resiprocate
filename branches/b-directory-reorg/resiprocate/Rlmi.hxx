@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/contents/Contents.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

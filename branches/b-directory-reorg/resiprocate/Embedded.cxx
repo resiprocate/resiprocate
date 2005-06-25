@@ -6,9 +6,9 @@
 #include <cassert>
 
 #include "resiprocate/Embedded.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

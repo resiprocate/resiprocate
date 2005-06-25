@@ -2,7 +2,7 @@
 #define RESIP_ConnectionMgr_hxx 
 
 #include <map>
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/HashMap.hxx"
 #include "resiprocate/Connection.hxx"
 
 namespace resip

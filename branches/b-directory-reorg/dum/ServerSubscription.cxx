@@ -4,7 +4,7 @@
 #include "dum/SubscriptionHandler.hxx"
 #include "dum/UsageUseException.hxx"
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #include <time.h>
 

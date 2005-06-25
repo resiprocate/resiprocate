@@ -4,7 +4,7 @@
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

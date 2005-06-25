@@ -7,7 +7,7 @@
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Timer.hxx"
 
 namespace resip
 {

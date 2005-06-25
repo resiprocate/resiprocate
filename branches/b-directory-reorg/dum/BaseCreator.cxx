@@ -1,5 +1,5 @@
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "dum/DialogUsageManager.hxx"
 #include "dum/MasterProfile.hxx"
 #include "dum/BaseCreator.hxx"

@@ -10,15 +10,15 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Uri.hxx"
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 #include "Resolver.hxx"
 

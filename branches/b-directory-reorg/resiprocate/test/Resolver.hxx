@@ -2,7 +2,7 @@
 #define Resolver_hxx
 
 #include <list>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/Transport.hxx"
 
 #include "Resolver.hxx"

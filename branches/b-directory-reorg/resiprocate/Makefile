@@ -5,45 +5,11 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os external dns
+CODE_SUBDIRS = contents
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
 SRC = \
-	os/HeapInstanceCounter.cxx \
-	\
-	os/AbstractFifo.cxx \
-	os/BaseException.cxx \
-	os/Coders.cxx \
-	os/Condition.cxx \
-	os/CountStream.cxx \
-	os/Data.cxx \
-	os/DataStream.cxx \
-	os/DnsUtil.cxx \
-	os/FileSystem.cxx \
-	os/FlowId.cxx \
-	os/Lock.cxx \
-	os/Log.cxx \
-	os/Logger.cxx \
-	os/MD5Stream.cxx \
-	os/Mutex.cxx \
-	os/Poll.cxx \
-	os/RecursiveMutex.cxx \
-	os/ParseBuffer.cxx \
-	os/RWMutex.cxx \
-	os/Random.cxx \
-	os/SelectInterruptor.cxx \
-	os/SHA1Stream.cxx \
-	os/Socket.cxx \
-	os/Subsystem.cxx \
-	os/SysLogBuf.cxx \
-	os/SysLogStream.cxx \
-	os/ThreadIf.cxx \
-	os/Timer.cxx \
-	os/Tuple.cxx \
-	os/vmd5.cxx \
-	\
-	\
 	AresDns.cxx \
 	Auth.cxx \
 	CSeqCategory.cxx \
@@ -68,8 +34,6 @@ SRC = \
 	Connection.cxx \
 	ConnectionBase.cxx \
 	ConnectionManager.cxx \
-	Contents.cxx \
-	CpimContents.cxx \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
@@ -79,10 +43,8 @@ SRC = \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
 	ExistsParameter.cxx \
-	ExternalBodyContents.cxx \
 	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
-	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	HeaderHash.cxx \
@@ -94,23 +56,14 @@ SRC = \
 	LazyParser.cxx \
 	LazyParser.cxx \
 	Message.cxx \
-	MessageWaitingContents.cxx \
 	MethodHash.cxx \
 	MethodTypes.cxx \
 	MsgHeaderScanner.cxx \
-	MultipartAlternativeContents.cxx \
-	MultipartMixedContents.cxx \
-	MultipartRelatedContents.cxx \
-	MultipartSignedContents.cxx \
-	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
 	Pidf.cxx \
-	Pkcs7Contents.cxx \
-	Pkcs8Contents.cxx \
-	PlainContents.cxx \
 	QopParameter.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
@@ -118,7 +71,6 @@ SRC = \
 	RAckCategory.cxx \
 	Rlmi.cxx \
 	RportParameter.cxx \
-	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \
 	SipFrag.cxx \
@@ -152,24 +104,25 @@ SRC = \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
-	X509Contents.cxx \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	\
+	contents/Contents.cxx \
+	contents/CpimContents.cxx \
+	contents/ExternalBodyContents.cxx \
+	contents/GenericContents.cxx \
+	contents/MessageWaitingContents.cxx \
+	contents/MultipartAlternativeContents.cxx \
+	contents/MultipartMixedContents.cxx \
+	contents/MultipartRelatedContents.cxx \
+	contents/MultipartSignedContents.cxx \
+	contents/OctetContents.cxx \
+	contents/Pkcs7Contents.cxx \
+	contents/Pkcs8Contents.cxx \
+	contents/PlainContents.cxx \
+	contents/SdpContents.cxx \
+	contents/X509Contents.cxx \
 	\
-	external/HttpProvider.cxx \
-	external/HttpGetMessage.cxx \
-	dns/DnsAAAARecord.cxx \
-	dns/DnsCnameRecord.cxx \
-	dns/DnsHostRecord.cxx \
-	dns/DnsNaptrRecord.cxx \
-	dns/DnsSrvRecord.cxx \
-	dns/DnsStub.cxx \
-	dns/RRCache.cxx \
-	dns/RRList.cxx \
-	dns/RRVip.cxx \
-	dns/QueryTypes.cxx \
-	dns/RROverlay.cxx \
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

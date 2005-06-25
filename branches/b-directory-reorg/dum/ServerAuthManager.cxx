@@ -2,7 +2,7 @@
 
 #include "dum/ServerAuthManager.hxx"
 #include "dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "dum/UserAuthInfo.hxx"
 #include "resiprocate/Helper.hxx"
 

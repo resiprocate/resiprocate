@@ -3,7 +3,7 @@
 #endif
 
 #include "resiprocate/Message.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 #include <cassert>
 
 using namespace resip;

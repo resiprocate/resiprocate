@@ -14,9 +14,9 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"

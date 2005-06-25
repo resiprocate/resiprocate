@@ -1,7 +1,7 @@
 #if !defined(RESIP_PARAMETERTYPEENUMS_HXX)
 #define RESIP_PARAMETERTYPEENUMS_HXX 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #define defineParam(_enum, _name, _type, _rfc) _enum
 #define UNUSED_defineParam(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1

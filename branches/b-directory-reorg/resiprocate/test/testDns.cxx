@@ -13,16 +13,16 @@
 #include <iostream>
 #include <list>
 
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/dns/RRVip.hxx"
+#include "rdns/RRVip.hxx"
 
 using namespace std;
 

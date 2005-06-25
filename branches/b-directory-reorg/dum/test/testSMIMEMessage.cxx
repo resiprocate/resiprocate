@@ -16,8 +16,8 @@
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Helper.hxx"
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #ifdef WIN32
 #include "resiprocate/WinSecurity.hxx"
