@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ConnectionBase.hxx"
 
@@ -14,9 +14,9 @@
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/UnknownHeaderType.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Random.hxx"
 
 
 using namespace resip;

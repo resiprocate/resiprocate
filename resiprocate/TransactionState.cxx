@@ -18,12 +18,12 @@
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/MD5Stream.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/WinLeakCheck.hxx"
 #include "resiprocate/KeepAliveMessage.hxx"
 
 using namespace resip;

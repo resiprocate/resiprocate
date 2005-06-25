@@ -6,7 +6,7 @@
 #include "dum/Dialog.hxx"
 #include "dum/DialogUsageManager.hxx"
 #include "dum/DumTimeout.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "dum/PublicationHandler.hxx"
 
 

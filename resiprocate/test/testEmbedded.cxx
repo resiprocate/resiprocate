@@ -1,10 +1,10 @@
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Embedded.hxx"
 #include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

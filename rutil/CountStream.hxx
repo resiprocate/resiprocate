@@ -29,7 +29,7 @@ class CountBuffer : public std::streambuf
 
 /** CountStream is used to count the amount of data written to the stream.  The
     actual data written to the stream is not accumulated anywhere.  It follows
-    the general pattern of DataStream in sip/resiprocate/os where the
+    the general pattern of DataStream in sip/rutil where the
     data is accumulated into the reference passed to the constructor.  The data
     is valid after CountStream's destructor is called.
 */

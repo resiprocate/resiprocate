@@ -24,19 +24,19 @@ extern "C"
 }
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Socket.hxx"
 
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/dns/RRVip.hxx"
+#include "rdns/DnsStub.hxx"
+#include "rdns/RRVip.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
 
 #include "resiprocate/ExternalDnsFactory.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

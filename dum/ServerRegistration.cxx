@@ -4,7 +4,7 @@
 #include "dum/Dialog.hxx"
 #include "dum/RegistrationHandler.hxx"
 #include "dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

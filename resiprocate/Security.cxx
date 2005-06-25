@@ -5,24 +5,24 @@
 #include <ostream>
 #include <fstream>
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/Contents.hxx"
+#include "resiprocate/contents/MultipartSignedContents.hxx"
+#include "resiprocate/contents/Pkcs7Contents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/SHA1Stream.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/FileSystem.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/SHA1Stream.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/FileSystem.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 #if defined(USE_SSL)

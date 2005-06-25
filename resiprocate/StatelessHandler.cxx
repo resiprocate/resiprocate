@@ -21,8 +21,8 @@
 #endif
 #endif
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
 
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/DnsResult.hxx"
@@ -30,7 +30,7 @@
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransportFailure.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 

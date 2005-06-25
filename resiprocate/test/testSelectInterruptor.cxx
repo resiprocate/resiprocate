@@ -12,10 +12,10 @@
 #endif
 #endif
 
-#include "resiprocate/os/SelectInterruptor.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rutil/SelectInterruptor.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ThreadIf.hxx"
 
 using namespace resip;
 using namespace std;

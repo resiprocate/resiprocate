@@ -5,8 +5,8 @@
 #include <list>
 
 #include "resiprocate/NameAddr.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

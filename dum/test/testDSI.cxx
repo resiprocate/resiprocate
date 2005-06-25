@@ -1,7 +1,7 @@
 #include "dum/DialogUsageManager.hxx"
 
 #include "dum/Profile.hxx"
-#include "resiprocate/os/Log.hxx"
+#include "rutil/Log.hxx"
 
 using namespace resip;
 

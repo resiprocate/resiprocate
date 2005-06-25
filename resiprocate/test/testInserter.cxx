@@ -4,8 +4,8 @@
 #include <map>
 #include <list>
 
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Data.hxx"
 
 using namespace resip;
 using namespace std;

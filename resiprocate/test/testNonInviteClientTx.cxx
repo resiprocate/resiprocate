@@ -3,8 +3,8 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
 
 using namespace resip;
 using namespace std;

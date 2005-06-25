@@ -3,7 +3,7 @@
 
 #include "resiprocate/TcpBaseTransport.hxx"
 #include "resiprocate/SecurityTypes.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

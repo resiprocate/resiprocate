@@ -2,11 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/GenericContents.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/contents/Contents.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "resiprocate/contents/GenericContents.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

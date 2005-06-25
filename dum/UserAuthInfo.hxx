@@ -1,7 +1,7 @@
 #if !defined(RESIP_USER_AUTH_INFO_HXX)
 #define RESIP_USER_AUTH_INFO_HXX 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 

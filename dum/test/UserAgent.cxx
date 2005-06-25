@@ -1,5 +1,5 @@
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/Pidf.hxx"
 #include "dum/ClientAuthManager.hxx"
 #include "dum/ClientInviteSession.hxx"

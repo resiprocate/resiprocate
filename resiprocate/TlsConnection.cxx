@@ -4,9 +4,9 @@
 
 #include "resiprocate/TlsConnection.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/e_os2.h>

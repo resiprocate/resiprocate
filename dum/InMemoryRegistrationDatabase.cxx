@@ -1,5 +1,5 @@
 #include "dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

@@ -20,15 +20,15 @@
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/Uri.hxx"
 
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #ifdef WIN32
-#include "resiprocate/os/WinCompat.hxx"
+#include "rutil/WinCompat.hxx"
 #endif
 
 #include <sys/types.h>

@@ -1,5 +1,5 @@
 #include "HttpProvider.hxx"
-#include "resiprocate/os/Lock.hxx"
+#include "rutil/Lock.hxx"
 
 using namespace resip;
 

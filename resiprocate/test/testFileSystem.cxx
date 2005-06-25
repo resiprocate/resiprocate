@@ -1,6 +1,6 @@
-#include "resiprocate/MessageWaitingContents.hxx"
+#include "resiprocate/contents/MessageWaitingContents.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/os/FileSystem.hxx"
+#include "rutil/FileSystem.hxx"
 #include <iostream>
 
 using namespace resip;

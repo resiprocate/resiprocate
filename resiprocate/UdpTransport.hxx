@@ -3,7 +3,7 @@
 
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

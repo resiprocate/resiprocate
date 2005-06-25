@@ -6,8 +6,8 @@
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/CallId.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Timer.hxx"
 
 namespace resip
 {

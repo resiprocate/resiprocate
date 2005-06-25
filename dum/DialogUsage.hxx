@@ -1,7 +1,7 @@
 #if !defined(RESIP_DIALOGUSAGE_HXX)
 #define RESIP_DIALOGUSAGE_HXX
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 #include "dum/BaseUsage.hxx"
 #include "dum/Handles.hxx"
 

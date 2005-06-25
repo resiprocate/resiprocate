@@ -5,9 +5,9 @@
 #include "resiprocate/FloatParameter.hxx"
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

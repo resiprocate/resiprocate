@@ -9,8 +9,8 @@
 #include "resiprocate/StringCategory.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HashMap.hxx"
 
 namespace resip
 {

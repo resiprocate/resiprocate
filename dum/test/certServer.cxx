@@ -25,10 +25,10 @@
 #include "dum/ServerPublication.hxx"
 #include "dum/ServerSubscription.hxx"
 #include "dum/SubscriptionHandler.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Subsystem.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Subsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

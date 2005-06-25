@@ -12,8 +12,8 @@
 #include "dum/Handles.hxx"
 #include "dum/MergedRequestKey.hxx"
 #include "dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionUser.hxx"
 

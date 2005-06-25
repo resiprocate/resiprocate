@@ -8,7 +8,7 @@
 
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 using namespace resip;
 

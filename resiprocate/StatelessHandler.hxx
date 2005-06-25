@@ -1,7 +1,7 @@
 #if !defined(RESIP_STATELESS_HANDLER_HXX)
 #define RESIP_STATELESS_HANDLER_HXX
 
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/HashMap.hxx"
 #include "resiprocate/DnsHandler.hxx"
 
 namespace resip

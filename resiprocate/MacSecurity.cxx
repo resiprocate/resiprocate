@@ -1,5 +1,5 @@
 #include "resiprocate/MacSecurity.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>

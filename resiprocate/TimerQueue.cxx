@@ -10,9 +10,9 @@
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TuSelector.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

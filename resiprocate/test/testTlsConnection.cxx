@@ -10,8 +10,8 @@
 #include <unistd.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Security.hxx"

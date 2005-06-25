@@ -2,9 +2,9 @@
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 using namespace resip;

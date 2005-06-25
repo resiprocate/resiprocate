@@ -1,9 +1,9 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
 #include <sys/socket.h>
 #include <netinet/in.h>

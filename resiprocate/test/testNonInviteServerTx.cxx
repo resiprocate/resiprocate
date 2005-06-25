@@ -4,8 +4,8 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/UdpTransport.hxx"
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
 
 #include <sys/socket.h>
 #include <netinet/in.h>

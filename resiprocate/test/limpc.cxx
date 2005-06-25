@@ -69,8 +69,8 @@ void mvvline(...) {};
 #include <stdlib.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/TuIM.hxx"

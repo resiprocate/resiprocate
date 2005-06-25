@@ -1,8 +1,8 @@
 #ifndef RESIP_StatisticsManager_hxx
 #define RESIP_StatisticsManager_hxx
 
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/StatisticsMessage.hxx"
 
 // !dlb! part of the build script

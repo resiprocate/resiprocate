@@ -5,8 +5,8 @@
 #include <map>
 #include <vector>
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/BaseException.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 

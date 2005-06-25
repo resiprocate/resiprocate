@@ -77,16 +77,30 @@ RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
 RESIPROCATE_LIBNAME := resiprocate
 RESIPROCATE_LDFLAGS :=
-
-DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
-DUM_LIBNAME := dum
-DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
-$(DUM_DEPENDS): 
-	cd $(ROOT)/resiprocate/dum; $(MAKE)
-
 RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
 $(RESIPROCATE_DEPENDS): 
 	cd $(ROOT)/resiprocate; $(MAKE)
+
+DUM_INCLUDEDIRS := $(ROOT)
+DUM_LIBDIRS := $(ROOT)/dum/obj.$(TARGET_NAME) 
+DUM_LIBNAME := dum
+DUM_DEPENDS := $(ROOT)/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
+$(DUM_DEPENDS): 
+	cd $(ROOT)/dum; $(MAKE)
+
+RUTIL_INCLUDEDIRS := $(ROOT)
+RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME) 
+RUTIL_LIBNAME := rutil
+RUTIL_DEPENDS := $(ROOT)/rutil/obj.$(TARGET_NAME)/librutil.$(LIBSUFFIX)
+$(RUTIL_DEPENDS): 
+	cd $(ROOT)/rutil; $(MAKE)
+
+RDNS_INCLUDEDIRS := $(ROOT)
+RDNS_LIBDIRS := $(ROOT)/rdns/obj.$(TARGET_NAME) 
+RDNS_LIBNAME := rdns
+RDNS_DEPENDS := $(ROOT)/rdns/obj.$(TARGET_NAME)/librdns.$(LIBSUFFIX)
+$(RDNS_DEPENDS): 
+	cd $(ROOT)/rdns; $(MAKE)
 
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),true)

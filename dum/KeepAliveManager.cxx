@@ -2,7 +2,7 @@
 #include "dum/KeepAliveManager.hxx"
 #include "dum/KeepAliveTimeout.hxx"
 #include "dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/SipStack.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

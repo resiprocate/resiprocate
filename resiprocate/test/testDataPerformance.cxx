@@ -1,5 +1,5 @@
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Random.hxx"
 
 using namespace resip;
 

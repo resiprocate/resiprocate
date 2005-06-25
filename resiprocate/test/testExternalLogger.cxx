@@ -1,7 +1,7 @@
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Timer.hxx"
 
 using namespace resip;
 using namespace std;

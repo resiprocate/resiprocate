@@ -2,7 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransactionState.hxx"
 
