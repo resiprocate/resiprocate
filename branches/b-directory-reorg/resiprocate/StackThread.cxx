@@ -1,7 +1,7 @@
 #include "resiprocate/StackThread.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

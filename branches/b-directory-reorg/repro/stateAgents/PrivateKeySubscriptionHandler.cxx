@@ -1,6 +1,6 @@
 #if defined(USE_SSL)
 
-#include "resiprocate/Pkcs8Contents.hxx"
+#include "resiprocate/contents/Pkcs8Contents.hxx"
 #include "resiprocate/Security.hxx"
 #include "dum/ServerSubscription.hxx"
 #include "dum/ServerPublication.hxx"

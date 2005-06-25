@@ -2,7 +2,7 @@
 #define RESIP_INVITESESSION_HXX
 
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "dum/DialogUsage.hxx"
 
 #include <map>

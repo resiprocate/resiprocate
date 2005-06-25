@@ -8,11 +8,14 @@ endif
 
 all: repro dum tests 
 
-resiprocate: contrib 
+rutil: contrib
+	cd rutil; $(MAKE)
+
+resiprocate: contrib rutil
 	cd resiprocate; $(MAKE)
 
 dum: resiprocate
-	cd resiprocate/dum; $(MAKE)
+	cd dum; $(MAKE)
 
 repro: dum
 	cd repro; $(MAKE)

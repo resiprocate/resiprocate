@@ -2,12 +2,12 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/contents/MultipartSignedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 //#include "resiprocate/EncodingContext.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

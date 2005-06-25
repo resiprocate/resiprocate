@@ -2,8 +2,8 @@
 #define RESIP_MIME_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HashMap.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
 

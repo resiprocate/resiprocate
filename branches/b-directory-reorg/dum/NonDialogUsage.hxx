@@ -1,7 +1,7 @@
 #if !defined(RESIP_NONDIALOGUSAGE_HXX)
 #define RESIP_NONDIALOGUSAGE_HXX
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 #include "dum/BaseUsage.hxx"
 #include "dum/Handles.hxx"
 

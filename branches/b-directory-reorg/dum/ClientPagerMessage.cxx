@@ -6,7 +6,7 @@
 #include "dum/DialogUsageManager.hxx"
 #include "dum/Dialog.hxx"
 #include "dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 
 using namespace resip;

@@ -2,7 +2,7 @@
 #define RESIP_CSEQ_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/MethodTypes.hxx"
 

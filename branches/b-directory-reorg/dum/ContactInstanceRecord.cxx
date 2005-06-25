@@ -1,5 +1,5 @@
 #include "dum/ContactInstanceRecord.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Timer.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 using namespace resip;

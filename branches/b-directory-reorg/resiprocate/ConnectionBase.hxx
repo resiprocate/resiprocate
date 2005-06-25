@@ -11,8 +11,8 @@
 
 #include <list>
 
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Fifo.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/SendData.hxx"

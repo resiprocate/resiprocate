@@ -15,8 +15,8 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/DeprecatedDialog.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ThreadIf.hxx"
 
 using namespace resip;
 using namespace std;

@@ -10,9 +10,9 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "digcalc.hxx"
 
 using namespace std;

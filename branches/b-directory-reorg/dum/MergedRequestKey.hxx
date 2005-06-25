@@ -1,7 +1,7 @@
 #if !defined(RESIP_MERGEDREQUESTKEY_HXX)
 #define RESIP_MERGEDREQUESTKEY_HXX
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

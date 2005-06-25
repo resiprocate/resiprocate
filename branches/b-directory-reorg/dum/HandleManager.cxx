@@ -1,6 +1,6 @@
 #include <cassert>
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 #include "dum/HandleManager.hxx"
 #include "dum/HandleException.hxx"
 

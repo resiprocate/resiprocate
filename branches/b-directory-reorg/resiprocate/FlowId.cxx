@@ -1,5 +1,5 @@
-#include "resiprocate/os/FlowId.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/FlowId.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Transport.hxx"
 #include <iostream>

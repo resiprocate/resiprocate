@@ -1,4 +1,4 @@
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"

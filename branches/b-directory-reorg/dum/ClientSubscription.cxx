@@ -1,5 +1,5 @@
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "dum/ClientSubscription.hxx"

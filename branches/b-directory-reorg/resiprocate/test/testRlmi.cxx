@@ -5,7 +5,7 @@
 #include "resiprocate/Rlmi.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

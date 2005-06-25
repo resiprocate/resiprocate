@@ -1,7 +1,7 @@
 #if !defined(RESIP_PLAINCONTENTS_HXX)
 #define RESIP_PLAINCONTENTS_HXX 
 
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 
 namespace resip
 {

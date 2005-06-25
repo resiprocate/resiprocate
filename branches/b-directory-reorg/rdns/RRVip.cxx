@@ -31,14 +31,14 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/RRVip.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/BaseException.hxx"
+#include "rdns/DnsResourceRecord.hxx"
+#include "rdns/DnsAAAARecord.hxx"
+#include "rdns/DnsHostRecord.hxx"
+#include "rdns/DnsNaptrRecord.hxx"
+#include "rdns/DnsSrvRecord.hxx"
+#include "rdns/RRVip.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

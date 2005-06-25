@@ -10,9 +10,9 @@
 #include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace std;
 using namespace resip;

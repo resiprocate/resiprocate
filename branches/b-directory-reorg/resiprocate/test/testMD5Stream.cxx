@@ -1,6 +1,6 @@
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
-#include "resiprocate/os/Log.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/MD5Stream.hxx"
+#include "rutil/Log.hxx"
 #include "assert.h"
 
 using namespace resip;

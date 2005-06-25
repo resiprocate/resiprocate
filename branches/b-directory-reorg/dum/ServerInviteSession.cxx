@@ -5,9 +5,9 @@
 #include "dum/ServerInviteSession.hxx"
 #include "dum/MasterProfile.hxx"
 #include "dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

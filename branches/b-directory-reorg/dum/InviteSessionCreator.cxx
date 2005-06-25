@@ -1,5 +1,5 @@
 #include "InviteSessionCreator.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "dum/DialogUsageManager.hxx"
 #include "dum/MasterProfile.hxx"
 

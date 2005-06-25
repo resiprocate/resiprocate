@@ -15,12 +15,12 @@
 #include "dum/PagerMessageHandler.hxx"
 #include "resiprocate/PlainContents.hxx"
 
-#include "resiprocate/external/HttpGetMessage.hxx"
+#include "rdns/external/HttpGetMessage.hxx"
 #include "curlHttp/CurlHttpProvider.hxx"
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Subsystem.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Subsystem.hxx"
 
 #ifdef WIN32
 #include "resiprocate/WinSecurity.hxx"

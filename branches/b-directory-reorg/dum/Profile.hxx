@@ -5,7 +5,7 @@
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

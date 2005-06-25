@@ -11,11 +11,11 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

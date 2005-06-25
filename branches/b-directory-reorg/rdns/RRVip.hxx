@@ -1,7 +1,7 @@
 #ifndef RESIP_RRVIP_HXX
 #define RESIP_RRVIP_HXX
 
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rdns/DnsStub.hxx"
 
 namespace resip
 {

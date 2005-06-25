@@ -1,5 +1,5 @@
 #include "dum/SubscriptionState.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 using namespace resip;
 

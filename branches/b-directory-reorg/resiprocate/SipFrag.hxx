@@ -3,9 +3,9 @@
 
 #include <map>
 
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

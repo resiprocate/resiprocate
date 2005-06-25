@@ -4,8 +4,8 @@
 #include "resiprocate/SipMessage.hxx"
 #include "dum/ClientAuthManager.hxx"
 #include "dum/UserProfile.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

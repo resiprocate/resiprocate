@@ -9,13 +9,13 @@
 #include <arpa/inet.h>
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
 
 #include "resiprocate/Message.hxx"
 #include "resiprocate/Security.hxx"
@@ -23,16 +23,16 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Inserter.hxx"
 #include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/os/AsyncProcessHandler.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/DtlsTransport.hxx"
 #include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )

@@ -4,8 +4,8 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Fifo.hxx"
 
 namespace resip
 {

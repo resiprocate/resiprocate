@@ -1,8 +1,8 @@
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 #include <iostream>
 #include "TestSupport.hxx"

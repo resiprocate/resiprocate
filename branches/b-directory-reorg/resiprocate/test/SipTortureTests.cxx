@@ -2,12 +2,12 @@
 #include <memory>
 
 #include "TestSupport.hxx"
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "tassert.h"
 
 using namespace resip;

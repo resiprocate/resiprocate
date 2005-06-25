@@ -1,5 +1,5 @@
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/MultipartMixedContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "dum/Dialog.hxx"
@@ -12,12 +12,12 @@
 #include "dum/InviteSessionHandler.hxx"
 #include "dum/MasterProfile.hxx"
 #include "dum/UsageUseException.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)

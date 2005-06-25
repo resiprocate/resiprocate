@@ -1,14 +1,14 @@
 #ifndef RESIP_RRCACHE_HXX
 #define RESIP_RRCACHE_HXX
 
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/dns/RRList.hxx"
+#include "rdns/RRFactory.hxx"
+#include "rdns/DnsResourceRecord.hxx"
+#include "rdns/DnsAAAARecord.hxx"
+#include "rdns/DnsHostRecord.hxx"
+#include "rdns/DnsNaptrRecord.hxx"
+#include "rdns/DnsSrvRecord.hxx"
+#include "rdns/DnsCnameRecord.hxx"
+#include "rdns/RRList.hxx"
 
 namespace resip
 {

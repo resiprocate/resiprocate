@@ -7,7 +7,7 @@
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Random.hxx"
 
 using namespace resip;
 

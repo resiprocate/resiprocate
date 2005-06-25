@@ -2,7 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/SipMessage.hxx"

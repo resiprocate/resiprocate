@@ -5,11 +5,11 @@
 #include <cassert>
 #include "resiprocate/QopParameter.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/DataParameter.hxx"
 #include "resiprocate/QuotedDataParameter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

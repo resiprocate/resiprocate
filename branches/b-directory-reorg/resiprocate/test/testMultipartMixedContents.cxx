@@ -1,12 +1,12 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/MultipartRelatedContents.hxx"
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/MultipartMixedContents.hxx"
+#include "resiprocate/contents/MultipartRelatedContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

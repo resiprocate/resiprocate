@@ -2,10 +2,10 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/Pkcs8Contents.hxx"
+#include "resiprocate/contents/Pkcs8Contents.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

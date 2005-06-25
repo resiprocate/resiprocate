@@ -3,7 +3,7 @@
 #endif
 
 #include "resiprocate/ParameterTypes.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 #include <iostream>
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \

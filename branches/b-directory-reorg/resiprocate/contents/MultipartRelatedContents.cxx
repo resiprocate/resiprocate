@@ -2,8 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/MultipartRelatedContents.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/contents/MultipartRelatedContents.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

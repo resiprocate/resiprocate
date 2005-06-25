@@ -4,12 +4,12 @@
 #include <list>
 
 #include "resiprocate/ConnectionBase.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/os/IntrusiveListElement.hxx"
+#include "rutil/IntrusiveListElement.hxx"
 
 namespace resip
 {

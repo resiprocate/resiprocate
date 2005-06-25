@@ -2,7 +2,7 @@
 #ifndef WIN32
 #include <unistd.h>
 #endif
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 using namespace resip;
 using namespace std;

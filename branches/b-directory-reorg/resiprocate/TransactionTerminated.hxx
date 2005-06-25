@@ -2,7 +2,7 @@
 #define RESIP_TRANSACTIONTERMINATED_HXX 
 
 #include "TransactionMessage.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

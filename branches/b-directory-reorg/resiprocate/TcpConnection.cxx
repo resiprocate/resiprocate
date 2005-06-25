@@ -3,9 +3,9 @@
 #endif
 
 #include "resiprocate/TcpConnection.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/Socket.hxx"
 
 using namespace resip;
 

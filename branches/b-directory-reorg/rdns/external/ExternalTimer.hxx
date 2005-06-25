@@ -1,7 +1,7 @@
 #if !defined(RESIP_EXTERNAL_TIMER_HXX)
 #define RESIP_EXTERNAL_TIMER_HXX
 
-#include "resiprocate/external/AsyncID.hxx"
+#include "rdns/external/AsyncID.hxx"
 
 namespace resip
 {

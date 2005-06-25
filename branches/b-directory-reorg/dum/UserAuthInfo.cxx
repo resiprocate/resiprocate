@@ -2,8 +2,8 @@
 #include <cassert>
 
 #include "dum/UserAuthInfo.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

@@ -5,10 +5,10 @@
 #include <cassert>
 #include "resiprocate/DataParameter.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/ParseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
