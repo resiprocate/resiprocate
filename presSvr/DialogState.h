@@ -2,7 +2,7 @@
 #define DIALOGSTATE
 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 using namespace resip;

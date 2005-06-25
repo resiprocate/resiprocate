@@ -2,7 +2,7 @@
 #define RESOURCE
 
 #include <set>
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 #include "SubDialog.h"
 
 typedef std::set<SubDialog *> PDocObserverSet_t;
