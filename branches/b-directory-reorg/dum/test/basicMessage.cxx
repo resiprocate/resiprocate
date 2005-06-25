@@ -19,7 +19,7 @@
 #include "dum/AppDialog.hxx"
 #include "dum/RegistrationHandler.hxx"
 #include "dum/PagerMessageHandler.hxx"
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 
 #include <iostream>
 #include <string>
