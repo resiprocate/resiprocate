@@ -7,8 +7,8 @@
 #endif
 
 #include "CommandLineParser.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "resiprocate/ParseException.hxx"
 
 using namespace resip;

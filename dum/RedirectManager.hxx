@@ -7,10 +7,10 @@
 #include <functional>
 #include <vector>
 
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
+#include "dum/DialogSetId.hxx"
 #include "resiprocate/os/HashMap.hxx"
 
 //8.1.3.4

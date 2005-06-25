@@ -1,9 +1,9 @@
 #include <ostream>
 #include <fstream>
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/SysLogStream.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/SysLogStream.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

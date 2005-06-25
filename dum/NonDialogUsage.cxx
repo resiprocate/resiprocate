@@ -1,7 +1,7 @@
-#include "resiprocate/dum/AppDialogSet.hxx"
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/AppDialogSet.hxx"
+#include "dum/NonDialogUsage.hxx"
+#include "dum/DialogSet.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

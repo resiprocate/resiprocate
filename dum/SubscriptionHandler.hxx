@@ -1,7 +1,7 @@
 #if !defined(RESIP_SUBSCRIPTIONHANDLER_HXX)
 #define RESIP_SUBSCRIPTIONHANDLER_HXX
 
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/Mime.hxx"
 #include "resiprocate/Contents.hxx"
 

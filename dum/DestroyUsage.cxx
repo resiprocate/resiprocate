@@ -1,8 +1,8 @@
-#include "resiprocate/dum/DestroyUsage.hxx"
+#include "dum/DestroyUsage.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/Dialog.hxx"
+#include "dum/BaseUsage.hxx"
+#include "dum/DialogSet.hxx"
+#include "dum/Dialog.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 #include <cassert>
 

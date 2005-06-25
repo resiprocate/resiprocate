@@ -1,4 +1,4 @@
-#include "resiprocate/dum/ContactInstanceRecord.hxx"
+#include "dum/ContactInstanceRecord.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/SipMessage.hxx"
 

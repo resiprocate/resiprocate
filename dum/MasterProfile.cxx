@@ -1,6 +1,6 @@
 
-#include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "dum/Profile.hxx"
+#include "dum/MasterProfile.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 
 using namespace resip;

@@ -3,7 +3,7 @@
 
 #if defined(USE_SSL)
 
-#include "resiprocate/dum/PublicationHandler.hxx"
+#include "dum/PublicationHandler.hxx"
 
 namespace resip
 {

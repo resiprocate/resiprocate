@@ -9,8 +9,8 @@
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

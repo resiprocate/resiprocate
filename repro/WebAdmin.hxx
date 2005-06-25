@@ -2,10 +2,10 @@
 #define RESIP_WEBADMIN_HXX 
 
 #include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-//#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Data.hxx"
+//#include "rutil/Socket.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/Tuple.hxx"
 
 //#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"

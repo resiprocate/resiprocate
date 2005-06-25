@@ -1,4 +1,4 @@
-#include "resiprocate/dum/MergedRequestKey.hxx"
+#include "dum/MergedRequestKey.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 

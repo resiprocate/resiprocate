@@ -1,5 +1,5 @@
-#include "resiprocate/os/FileSystem.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/FileSystem.hxx"
+#include "rutil/Logger.hxx"
 
 #include <cassert>
 using namespace resip;

@@ -12,12 +12,12 @@
 
 #include <stdio.h>
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 

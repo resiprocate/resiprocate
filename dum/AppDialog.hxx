@@ -1,9 +1,9 @@
 #if !defined(RESIP_APPDIALOG_HXX)
 #define RESIP_APPDIALOG_HXX
 
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/dum/DialogId.hxx"
+#include "dum/Handles.hxx"
+#include "dum/Handled.hxx"
+#include "dum/DialogId.hxx"
 
 
 #include <vector>

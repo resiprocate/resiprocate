@@ -7,7 +7,7 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/Token.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "dum/UserProfile.hxx"
 
 namespace resip
 {

@@ -1,7 +1,7 @@
 #if !defined(RESIP_LOCK_HXX)
 #define RESIP_LOCK_HXX  
 
-#include "resiprocate/os/Lockable.hxx"
+#include "rutil/Lockable.hxx"
 
 namespace resip
 {

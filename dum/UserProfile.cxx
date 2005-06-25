@@ -1,6 +1,6 @@
 
-#include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "dum/Profile.hxx"
+#include "dum/UserProfile.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"

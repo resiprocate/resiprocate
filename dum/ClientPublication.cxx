@@ -2,12 +2,12 @@
 
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/DumTimeout.hxx"
+#include "dum/ClientPublication.hxx"
+#include "dum/Dialog.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/DumTimeout.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/PublicationHandler.hxx"
+#include "dum/PublicationHandler.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

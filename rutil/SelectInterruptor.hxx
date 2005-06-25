@@ -1,8 +1,8 @@
 #ifndef RESIP_SelectInterruptor_HXX
 #define RESIP_SelectInterruptor_HXX
 
-#include "resiprocate/os/AsyncProcessHandler.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
+#include "rutil/Socket.hxx"
 
 #if 0
 #if defined(WIN32)

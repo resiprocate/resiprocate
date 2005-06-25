@@ -11,7 +11,7 @@
 #include <cassert>
 
 #include "HashMap.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be

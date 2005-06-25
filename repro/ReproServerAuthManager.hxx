@@ -4,8 +4,8 @@
 #include <map>
 
 #include "resiprocate/Message.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "dum/UserProfile.hxx"
+#include "dum/ServerAuthManager.hxx"
 //#include "repro/UserStore.hxx"
 
 namespace resip

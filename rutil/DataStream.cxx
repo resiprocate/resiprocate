@@ -1,6 +1,6 @@
 #include <cassert>
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Data.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)

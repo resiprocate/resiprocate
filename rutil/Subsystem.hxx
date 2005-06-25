@@ -2,7 +2,7 @@
 #define RESIP_SUBSYSTEM_HXX 
 
 #include <iostream>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {
@@ -40,8 +40,8 @@ class Subsystem
 
 // in order to have subsystems in your application, subclass from this class
 /*
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Subsystem.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Subsystem.hxx"
 
 namespace MyNamespace
 {
