@@ -1,6 +1,6 @@
 #include <cassert>
 #include "DumTimeout.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 #include "dum/BaseUsage.hxx"
 
 using namespace resip;

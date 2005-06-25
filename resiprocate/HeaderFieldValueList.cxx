@@ -9,7 +9,7 @@
 #include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/ParserContainerBase.hxx"
 #include "resiprocate/Embedded.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

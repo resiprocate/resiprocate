@@ -1,7 +1,7 @@
 #if !defined(RESIP_PARSEEXCEPTION_HXX)
 #define RESIP_PARSEEXCEPTION_HXX 
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 
 namespace resip
 {

@@ -1,20 +1,20 @@
 #ifndef RESIP_DNS_STUB_HXX
 #define RESIP_DNS_STUB_HXX
 
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Fifo.hxx"
 
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/RRList.hxx"
-#include "resiprocate/dns/RRCache.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsCnameRecord.hxx"
+#include "rdns/RROverlay.hxx"
+#include "rdns/RRList.hxx"
+#include "rdns/RRCache.hxx"
+#include "rdns/DnsResourceRecord.hxx"
+#include "rdns/DnsNaptrRecord.hxx"
+#include "rdns/DnsAAAARecord.hxx"
+#include "rdns/DnsHostRecord.hxx"
+#include "rdns/DnsSrvRecord.hxx"
+#include "rdns/DnsHostRecord.hxx"
+#include "rdns/DnsCnameRecord.hxx"
 
 namespace resip
 {

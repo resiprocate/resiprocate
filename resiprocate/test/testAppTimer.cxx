@@ -2,8 +2,8 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TuSelector.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Logger.hxx"
 #include <unistd.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST

@@ -2,8 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Symbols.hxx"

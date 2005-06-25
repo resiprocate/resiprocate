@@ -1,8 +1,8 @@
 #if !defined(RESIP_DIALOGSETID_HXX)
 #define RESIP_DIALOGSETID_HXX
 
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

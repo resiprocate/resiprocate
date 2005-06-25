@@ -1,4 +1,4 @@
-#include "resiprocate/external/HttpGetMessage.hxx"
+#include "rdns/external/HttpGetMessage.hxx"
 
 using namespace resip;
 

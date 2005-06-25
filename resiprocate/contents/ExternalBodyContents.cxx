@@ -2,9 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/ExternalBodyContents.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/contents/ExternalBodyContents.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

@@ -1,7 +1,7 @@
 #if !defined(RESIP_FLOWID_HXX)
 #define RESIP_FLOWID_HXX
 
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

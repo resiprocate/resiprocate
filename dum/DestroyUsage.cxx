@@ -1,9 +1,9 @@
 #include "dum/DestroyUsage.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "dum/BaseUsage.hxx"
 #include "dum/DialogSet.hxx"
 #include "dum/Dialog.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 #include <cassert>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

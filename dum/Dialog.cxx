@@ -1,4 +1,4 @@
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "dum/AppDialog.hxx"
@@ -15,9 +15,9 @@
 #include "dum/ServerSubscription.hxx"
 #include "dum/SubscriptionHandler.hxx"
 #include "dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

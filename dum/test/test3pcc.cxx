@@ -16,9 +16,9 @@
 #include "dum/AppDialog.hxx"
 #include "dum/AppDialogSet.hxx"
 #include "dum/AppDialogSetFactory.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 
 #include <sstream>
 #include <time.h>

@@ -3,7 +3,7 @@
 
 #include "dum/Handles.hxx"
 #include "resiprocate/Mime.hxx"
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 
 namespace resip
 {

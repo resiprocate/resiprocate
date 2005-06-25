@@ -1,10 +1,10 @@
 
 #include "dum/Profile.hxx"
 #include "dum/UserProfile.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/MD5Stream.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

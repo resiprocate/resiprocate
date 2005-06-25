@@ -1,7 +1,7 @@
 #ifndef InviteServer_hxx
 #define InviteServer_hxx
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipMessage.hxx"
 

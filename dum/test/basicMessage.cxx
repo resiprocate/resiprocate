@@ -1,8 +1,8 @@
 // made by Andrea Ghittino - andrea.ghittino@csp.it
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Subsystem.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Subsystem.hxx"
 #include "dum/ClientAuthManager.hxx"
 #include "dum/ClientRegistration.hxx"
 #include "dum/DialogUsageManager.hxx"

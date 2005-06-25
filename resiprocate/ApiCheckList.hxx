@@ -16,7 +16,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 // Make an entry in the table
 #define RESIP_TENT(x,y) { #x, sizeof(resip::x), y }

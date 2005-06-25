@@ -4,8 +4,8 @@
 #include <iostream>
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

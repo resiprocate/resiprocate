@@ -18,9 +18,9 @@
 #include "dum/UsageUseException.hxx"
 #include "dum/ServerOutOfDialogReq.hxx"
 #include "dum/ServerRegistration.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

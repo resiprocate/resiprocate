@@ -8,8 +8,8 @@
 #include "dum/Dialog.hxx"
 #include "dum/MasterProfile.hxx"
 #include "dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

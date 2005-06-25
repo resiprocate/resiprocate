@@ -7,8 +7,8 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 #include "resiprocate/SipStack.hxx"
 
 using namespace resip;

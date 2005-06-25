@@ -8,18 +8,18 @@
 #include <utility>
 #include <memory> 
 
-#include "resiprocate/Contents.hxx"
+#include "resiprocate/contents/Contents.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/ParserContainer.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

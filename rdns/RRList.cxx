@@ -5,12 +5,12 @@
 #include <vector>
 #include <list>
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/RRList.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Timer.hxx"
+#include "rdns/DnsResourceRecord.hxx"
+#include "rdns/RRFactory.hxx"
+#include "rdns/RRList.hxx"
 
 using namespace resip;
 using namespace std;

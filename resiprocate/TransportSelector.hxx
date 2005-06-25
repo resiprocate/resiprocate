@@ -8,8 +8,8 @@
 #include <map>
 #include <vector>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/GenericIPAddress.hxx"

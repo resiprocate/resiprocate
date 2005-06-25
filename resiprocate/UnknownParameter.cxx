@@ -3,9 +3,9 @@
 #endif
 
 #include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

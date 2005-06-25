@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include "resiprocate/Message.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

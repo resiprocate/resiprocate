@@ -16,9 +16,9 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/BaseException.hxx"
 #include "RROverlay.hxx"
 #include "DnsResourceRecord.hxx"
 #include "DnsHostRecord.hxx"

@@ -2,8 +2,8 @@
 #include <cassert>
 #include <iostream>
 
-#include <resiprocate/os/Timer.hxx>
-#include <resiprocate/os/Random.hxx>
+#include <rutil/Timer.hxx>
+#include <rutil/Random.hxx>
 
 
 using namespace resip;

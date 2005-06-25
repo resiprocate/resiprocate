@@ -3,9 +3,9 @@
 
 #include <iosfwd>
 #include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

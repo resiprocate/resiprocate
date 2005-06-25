@@ -2,8 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/GenericContents.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/contents/GenericContents.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

@@ -1,7 +1,7 @@
 #if !defined(RESIP_BASEUSAGE_HXX)
 #define RESIP_BASEUSAGE_HXX
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 #include "dum/Handled.hxx"
 #include "dum/Handles.hxx"
 

@@ -8,23 +8,23 @@
 #include <memory>
 
 #ifndef RESIP_COMPAT_HXX
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 #endif
 
 #ifndef RESIP_DATA_HXX
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #endif
 
 #ifndef RESIP_DNSUTIL_HXX
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/DnsUtil.hxx"
 #endif
 
 #ifndef RESIP_SOCKET_HXX
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 #endif
 
 #ifndef RESIP_LOGGER_HXX
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #endif
 
 #ifndef RESIP_SIPMESSAGE_HXX
@@ -47,7 +47,7 @@
 #include "resiprocate/DtlsTransport.hxx"
 #endif
 
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>

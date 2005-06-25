@@ -3,14 +3,14 @@
 #include <memory>
 #include <list>
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/test/tassert.h"
 
 using namespace resip;

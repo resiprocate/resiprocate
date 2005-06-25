@@ -3,7 +3,7 @@
 
 #include "resiprocate/Message.hxx"
 #include "resiprocate/Mime.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

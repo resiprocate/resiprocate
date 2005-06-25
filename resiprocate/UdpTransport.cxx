@@ -3,15 +3,15 @@
 #endif
 
 #include <memory>
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 #include "resiprocate/SendData.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT

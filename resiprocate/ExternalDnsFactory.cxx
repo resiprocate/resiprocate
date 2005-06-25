@@ -1,6 +1,6 @@
 #include "resiprocate/AresDns.hxx"
 #include "resiprocate/ExternalDnsFactory.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

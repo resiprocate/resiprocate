@@ -4,11 +4,11 @@
 
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/compat.hxx"
 
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/ExtensionParameter.hxx"
@@ -16,9 +16,9 @@
 #include <iostream>
 #include <cassert>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

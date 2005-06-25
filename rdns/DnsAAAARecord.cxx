@@ -16,13 +16,13 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/BaseException.hxx"
+#include "rdns/RROverlay.hxx"
+#include "rdns/DnsResourceRecord.hxx"
+#include "rdns/DnsAAAARecord.hxx"
 
 using namespace resip;
 

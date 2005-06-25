@@ -2,11 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

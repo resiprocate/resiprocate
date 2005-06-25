@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/Transport.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {
