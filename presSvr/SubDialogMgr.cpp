@@ -1,5 +1,5 @@
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "SubDialogMgr.h"
 
 using namespace resip;

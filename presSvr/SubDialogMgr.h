@@ -3,7 +3,7 @@
 
 #include <map>
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "SubDialog.h"
 #include "DialogSetMgr.h"
 
