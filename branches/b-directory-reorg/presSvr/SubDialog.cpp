@@ -1,6 +1,6 @@
 #include "SubDialog.h"
 #include "ResourceMgr.h"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "resiprocate/Helper.hxx"
 
 SubDialog::SubDialog(Data key, SipStack* stack, DialogState *dlgState)

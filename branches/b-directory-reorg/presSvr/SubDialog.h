@@ -3,7 +3,7 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #include "SubscriptionState.h"
 #include "DialogState.h"
