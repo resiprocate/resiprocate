@@ -1,13 +1,13 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/MultipartRelatedContents.hxx"
-#include "resiprocate/GenericContents.hxx"
+#include "resiprocate/contents/MultipartMixedContents.hxx"
+#include "resiprocate/contents/MultipartRelatedContents.hxx"
+#include "resiprocate/contents/GenericContents.hxx"
 #include "resiprocate/Rlmi.hxx"
 #include "resiprocate/Pidf.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/contents/Pkcs7Contents.hxx"
+#include "resiprocate/contents/MultipartSignedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
 #include "rutil/ParseBuffer.hxx"

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/contents/Pkcs7Contents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
 #include "rutil/Logger.hxx"
