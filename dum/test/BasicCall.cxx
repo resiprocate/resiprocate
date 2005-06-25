@@ -1,4 +1,4 @@
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipStack.hxx"

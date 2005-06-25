@@ -8,9 +8,9 @@
 #include "dum/RegistrationHandler.hxx"
 #include "dum/PagerMessageHandler.hxx"
 
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/contents/PlainContents.hxx"
+#include "resiprocate/contents/Pkcs7Contents.hxx"
+#include "resiprocate/contents/MultipartSignedContents.hxx"
 #include "resiprocate/Mime.hxx"
 
 #include "resiprocate/SecurityAttributes.hxx"
