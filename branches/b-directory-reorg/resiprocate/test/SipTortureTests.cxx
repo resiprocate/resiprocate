@@ -3,7 +3,7 @@
 
 #include "TestSupport.hxx"
 #include "resiprocate/contents/Contents.hxx"
-#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/contents/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/Uri.hxx"
