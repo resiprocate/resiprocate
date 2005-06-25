@@ -2,14 +2,14 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientSubscription.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/SubscriptionCreator.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
+#include "dum/ClientSubscription.hxx"
+#include "dum/Dialog.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/SubscriptionHandler.hxx"
+#include "dum/SubscriptionCreator.hxx"
+#include "dum/UsageUseException.hxx"
 
-#include "resiprocate/dum/AppDialogSet.hxx"
+#include "dum/AppDialogSet.hxx"
 
 using namespace resip;
 

@@ -4,13 +4,13 @@
 #include "CommandLineParser.hxx"
 
 #include "resiprocate/StackThread.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/PublicationHandler.hxx"
-#include "resiprocate/dum/OutOfDialogHandler.hxx"
-#include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/MasterProfile.hxx"
+#include "dum/RegistrationHandler.hxx"
+#include "dum/SubscriptionHandler.hxx"
+#include "dum/PublicationHandler.hxx"
+#include "dum/OutOfDialogHandler.hxx"
+#include "dum/InviteSessionHandler.hxx"
+#include "dum/DialogUsageManager.hxx"
 
 namespace resip
 {

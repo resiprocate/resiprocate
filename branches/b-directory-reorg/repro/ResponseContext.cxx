@@ -5,10 +5,10 @@
 #include <iostream>
 
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"

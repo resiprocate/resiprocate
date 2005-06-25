@@ -1,5 +1,5 @@
-#include "resiprocate/dum/RegistrationCreator.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/RegistrationCreator.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;

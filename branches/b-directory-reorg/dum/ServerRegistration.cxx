@@ -1,9 +1,9 @@
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/ServerRegistration.hxx"
+#include "dum/Dialog.hxx"
+#include "dum/RegistrationHandler.hxx"
+#include "dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

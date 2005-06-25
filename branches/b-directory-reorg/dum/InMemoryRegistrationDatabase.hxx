@@ -4,7 +4,7 @@
 #include <map>
 #include <set>
 
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Lock.hxx"

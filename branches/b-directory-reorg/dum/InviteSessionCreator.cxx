@@ -1,7 +1,7 @@
 #include "InviteSessionCreator.hxx"
 #include "resiprocate/SdpContents.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/MasterProfile.hxx"
 
 using namespace resip;
 

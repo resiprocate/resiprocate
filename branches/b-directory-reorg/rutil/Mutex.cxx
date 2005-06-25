@@ -8,7 +8,7 @@ typedef unsigned int size_t;
 */
 #include <cassert>
 #include <cerrno>
-#include "resiprocate/os/Mutex.hxx"
+#include "rutil/Mutex.hxx"
 
 #if defined(WIN32)
 #  include <windows.h>

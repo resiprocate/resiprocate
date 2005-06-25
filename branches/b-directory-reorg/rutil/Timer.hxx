@@ -1,8 +1,8 @@
 #if !defined(RESIP_TIMER_HXX)
 #define RESIP_TIMER_HXX 
      
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 #include <iostream>
 
 namespace resip

@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handles.hxx"
 
 namespace resip
 {

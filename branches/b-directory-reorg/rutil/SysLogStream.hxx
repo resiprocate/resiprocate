@@ -1,7 +1,7 @@
 #if !defined(RESIP_SYSLOGSTREAM_HXX)
 #define RESIP_SYSLOGSTREAM_HXX 
 
-#include "resiprocate/os/SysLogBuf.hxx"
+#include "rutil/SysLogBuf.hxx"
 
 namespace resip
 {

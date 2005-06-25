@@ -2,8 +2,8 @@
 #define RESIP_BASEUSAGE_HXX
 
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handled.hxx"
+#include "dum/Handles.hxx"
 
 namespace resip
 {

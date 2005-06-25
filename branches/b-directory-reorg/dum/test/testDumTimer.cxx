@@ -1,6 +1,6 @@
 #include "resiprocate/SipStack.hxx"
 
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Data.hxx"
 
 using namespace resip;

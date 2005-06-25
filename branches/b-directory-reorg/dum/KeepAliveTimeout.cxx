@@ -1,6 +1,6 @@
 #include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/KeepAliveTimeout.hxx"
+#include "dum/Handles.hxx"
+#include "dum/KeepAliveTimeout.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"

@@ -1,8 +1,8 @@
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
+#include "dum/Dialog.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/ServerSubscription.hxx"
+#include "dum/SubscriptionHandler.hxx"
+#include "dum/UsageUseException.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
 

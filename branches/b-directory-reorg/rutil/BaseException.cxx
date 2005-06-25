@@ -1,5 +1,5 @@
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

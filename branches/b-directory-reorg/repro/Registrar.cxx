@@ -3,8 +3,8 @@
 #endif
 
 #include "repro/Registrar.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "dum/ServerRegistration.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

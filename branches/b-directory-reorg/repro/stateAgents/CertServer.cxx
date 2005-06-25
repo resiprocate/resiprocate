@@ -3,9 +3,9 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/X509Contents.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "repro/stateAgents/CertServer.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "dum/MasterProfile.hxx"
 
 using namespace resip;
 using namespace repro;

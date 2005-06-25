@@ -5,7 +5,7 @@
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "dum/Profile.hxx"
 
 namespace resip
 {

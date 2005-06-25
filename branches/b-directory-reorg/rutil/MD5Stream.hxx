@@ -2,8 +2,8 @@
 #define RESIP_MD5STREAM_HXX 
 
 #include <iostream>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/vmd5.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/vmd5.hxx"
 
 namespace resip
 {

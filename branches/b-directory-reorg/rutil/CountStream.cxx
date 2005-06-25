@@ -1,4 +1,4 @@
-#include "resiprocate/os/CountStream.hxx"
+#include "rutil/CountStream.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)

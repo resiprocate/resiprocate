@@ -3,9 +3,9 @@
 
 #if defined(USE_SSL)
 
-#include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "dum/ServerPublication.hxx"
+#include "dum/ServerSubscription.hxx"
+#include "dum/SubscriptionHandler.hxx"
 
 namespace resip
 {

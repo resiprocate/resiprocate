@@ -1,5 +1,5 @@
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
+#include "dum/SubscriptionHandler.hxx"
+#include "dum/ServerSubscription.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 
 using namespace resip;

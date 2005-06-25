@@ -3,14 +3,14 @@
 
 #include <iosfwd>
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Lock.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Lock.hxx"
 
 #ifdef WIN32
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #include <windows.h>
 

@@ -1,7 +1,7 @@
 #if !defined(RESIP_THREADIF_HXX)
 #define RESIP_THREADIF_HXX
 
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 
 #ifdef WIN32
 #  include <BaseTsd.h>
@@ -10,8 +10,8 @@
 #  include <pthread.h>
 #endif
 
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Condition.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Condition.hxx"
 
 namespace resip
 {

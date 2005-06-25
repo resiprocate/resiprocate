@@ -1,6 +1,6 @@
-#include "resiprocate/dum/BaseSubscription.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
+#include "dum/BaseSubscription.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/Dialog.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 using namespace resip;

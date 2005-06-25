@@ -6,12 +6,12 @@
 #include <map>
 
 #include "resiprocate/Headers.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/DumTimeout.hxx"
-#include "resiprocate/dum/HandleManager.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/MergedRequestKey.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "dum/DialogSet.hxx"
+#include "dum/DumTimeout.hxx"
+#include "dum/HandleManager.hxx"
+#include "dum/Handles.hxx"
+#include "dum/MergedRequestKey.hxx"
+#include "dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"

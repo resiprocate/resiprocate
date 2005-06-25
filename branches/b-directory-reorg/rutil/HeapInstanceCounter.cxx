@@ -1,7 +1,7 @@
 #include "HeapInstanceCounter.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Data.hxx"
 
 #include <assert.h>
 #include <map>
