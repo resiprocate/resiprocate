@@ -11,9 +11,9 @@
 #include <new>              // std::bad_alloc
 #include <typeinfo>         // std::type_info in get_deleter
 #include <cstddef>          // std::size_t
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Mutex.hxx"
-//#include "resiprocate/os/Logger.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Mutex.hxx"
+//#include "rutil/Logger.hxx"
 
 #ifdef __BORLANDC__
 # pragma warn -8026     // Functions with excep. spec. are not expanded inline

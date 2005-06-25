@@ -3,8 +3,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
 #ifndef WIN32
 #include <unistd.h>

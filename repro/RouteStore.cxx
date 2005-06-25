@@ -1,6 +1,6 @@
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "repro/RouteStore.hxx"

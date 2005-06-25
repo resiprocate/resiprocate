@@ -3,7 +3,7 @@
 
 
 #include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/os/Tuple.hxx"
 
 namespace resip

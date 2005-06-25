@@ -7,10 +7,10 @@
 #include "repro/monkeys/GruuMonkey.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
-#include "resiprocate/dum/RegistrationPersistence
+#include "dum/RegistrationPersistence
 #include <ostream>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;

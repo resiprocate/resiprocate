@@ -1,13 +1,13 @@
 #include <iterator>
 
 #include "resiprocate/Helper.hxx"
-#include "resiprocate/dum/BaseCreator.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
+#include "dum/BaseCreator.hxx"
+#include "dum/ClientRegistration.hxx"
+#include "dum/RegistrationHandler.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/Dialog.hxx"
+#include "dum/MasterProfile.hxx"
+#include "dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 

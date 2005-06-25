@@ -3,11 +3,11 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/vmd5.hxx"
-#include "resiprocate/os/Coders.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/vmd5.hxx"
+#include "rutil/Coders.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

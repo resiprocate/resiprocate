@@ -5,7 +5,7 @@
 #include <cassert>
 
 #ifdef WIN32
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -13,11 +13,11 @@
 #include <fcntl.h>
 #endif
 
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Logger.hxx"
 
 #ifdef USE_SSL
 #  define USE_OPENSSL 1

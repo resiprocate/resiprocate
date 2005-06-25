@@ -1,8 +1,8 @@
 #if !defined(RESIP_CLIENTAUTHMANAGER_HXX)
 #define RESIP_CLIENTAUTHMANAGER_HXX
 
-#include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "dum/DialogSetId.hxx"
+#include "dum/UserProfile.hxx"
 
 #include <map>
 #include <functional>

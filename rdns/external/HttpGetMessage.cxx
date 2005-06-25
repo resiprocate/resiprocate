@@ -1,35 +1,37 @@
-#if !defined(RESIP_FLOWID_HXX)
-#define RESIP_FLOWID_HXX
+#include "resiprocate/external/HttpGetMessage.hxx"
 
-#include "resiprocate/os/Tuple.hxx"
+using namespace resip;
 
-namespace resip
+
+HttpGetMessage::HttpGetMessage(const Data& tid, 
+                               bool success, 
+                               const Data& body,
+                               const Mime& type) :
+   mTid(tid),
+   mSuccess(success),
+   mBody(body),
+   mType(type)
 {
-
-class FlowId
-{
-   public:
-      FlowId(const Tuple& t);
-      
-      //can throw a ParseBuffer::Exception, inverse of toData/operator<<
-      FlowId(const Data& d);      
-
-      //.dcm. -- I suspect we only will need one of these
-      Tuple makeConnectionTuple() const;
-      Tuple& pointTupleToFlow(Tuple& t) const;      
-
-      Data toData() const;
-      bool operator==(const FlowId& rhs) const;
-      bool operator<(const FlowId& rhs) const;
-   private:
-      Transport* transport;
-      ConnectionId connectionId;
-      friend std::ostream& operator<<(std::ostream& strm, const FlowId& f);
-};
-
 }
 
-#endif
+std::ostream&
+HttpGetMessage::encodeBrief(std::ostream& str) const
+{ 
+   return str << "HttpGetMessage: " << mTid << " " << mType;
+}
+
+std::ostream& 
+HttpGetMessage::encode(std::ostream& strm) const
+{
+   return strm << brief() << "body: " << mBody;   
+}
+
+Message* 
+HttpGetMessage::clone() const 
+{ 
+   return new HttpGetMessage(mTid, mSuccess, mBody, mType); 
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

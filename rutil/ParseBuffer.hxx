@@ -1,8 +1,8 @@
 #if !defined(RESIP_PARSEBUFFER_HXX)
 #define RESIP_PARSEBUFFER_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
 
 namespace resip
 {

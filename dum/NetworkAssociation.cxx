@@ -1,8 +1,8 @@
 
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/NetworkAssociation.hxx"
-#include "resiprocate/dum/KeepAliveManager.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/NetworkAssociation.hxx"
+#include "dum/KeepAliveManager.hxx"
 
 using namespace resip;
 

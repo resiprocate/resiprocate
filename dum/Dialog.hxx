@@ -6,13 +6,13 @@
 #include <list>
 #include <map>
 
-#include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/DialogId.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/CallId.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/NetworkAssociation.hxx"
+#include "dum/NetworkAssociation.hxx"
 
 namespace resip
 {

@@ -4,9 +4,9 @@
 #include <iostream>
 #include <string>
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 #include "HashMap.hxx"
 #if defined(HAVE_CONFIG_HXX)

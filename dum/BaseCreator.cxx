@@ -1,8 +1,8 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/BaseCreator.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/MasterProfile.hxx"
+#include "dum/BaseCreator.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

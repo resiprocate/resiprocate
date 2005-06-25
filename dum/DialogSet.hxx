@@ -4,10 +4,10 @@
 #include <map>
 #include <list>
 
-#include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/dum/MergedRequestKey.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/DialogId.hxx"
+#include "dum/DialogSetId.hxx"
+#include "dum/MergedRequestKey.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 

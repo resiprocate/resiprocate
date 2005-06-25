@@ -1,7 +1,7 @@
 #include "resiprocate/KeepAliveMessage.hxx"
-#include "resiprocate/dum/KeepAliveManager.hxx"
-#include "resiprocate/dum/KeepAliveTimeout.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/KeepAliveManager.hxx"
+#include "dum/KeepAliveTimeout.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipStack.hxx"
 

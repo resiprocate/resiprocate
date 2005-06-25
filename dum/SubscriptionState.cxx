@@ -1,4 +1,4 @@
-#include "resiprocate/dum/SubscriptionState.hxx"
+#include "dum/SubscriptionState.hxx"
 #include "resiprocate/os/Data.hxx"
 
 using namespace resip;

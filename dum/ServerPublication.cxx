@@ -1,8 +1,8 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/PublicationHandler.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/ServerPublication.hxx"
+#include "dum/PublicationHandler.hxx"
+#include "dum/ServerSubscription.hxx"
+#include "dum/SubscriptionHandler.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 

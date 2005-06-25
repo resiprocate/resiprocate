@@ -2,8 +2,8 @@
 
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "dum/ClientAuthManager.hxx"
+#include "dum/UserProfile.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 

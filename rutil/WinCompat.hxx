@@ -3,9 +3,9 @@
 
 #include <Iphlpapi.h>
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

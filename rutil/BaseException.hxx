@@ -4,7 +4,7 @@
 #include <exception>
 #include <iostream>
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

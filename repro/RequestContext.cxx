@@ -4,12 +4,12 @@
 
 #include <iostream>
 
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 

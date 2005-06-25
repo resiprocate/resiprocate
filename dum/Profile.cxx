@@ -1,5 +1,5 @@
 
-#include "resiprocate/dum/Profile.hxx"
+#include "dum/Profile.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 

@@ -1,4 +1,4 @@
-#include "resiprocate/dum/HandleException.hxx"
+#include "dum/HandleException.hxx"
 
 using namespace resip;
 

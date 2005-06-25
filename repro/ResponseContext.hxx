@@ -2,7 +2,7 @@
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/HashMap.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Via.hxx"
