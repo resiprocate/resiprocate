@@ -39,7 +39,6 @@ TESTPROGRAMS += testMD5Stream.cxx \
 		testDigestAuthentication.cxx \
 		testEmbedded.cxx \
 		testEmptyHeader.cxx \
-		testFlowId.cxx \
 		testIM.cxx \
 		testSHA1Stream.cxx \
 		testIntrusiveList.cxx \
