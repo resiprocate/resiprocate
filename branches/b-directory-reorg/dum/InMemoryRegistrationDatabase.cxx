@@ -1,4 +1,4 @@
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
+#include "dum/InMemoryRegistrationDatabase.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;

@@ -23,7 +23,7 @@
  * Still in the public domain.
  */
 
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 
 namespace resip
 {

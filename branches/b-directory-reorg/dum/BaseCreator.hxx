@@ -2,7 +2,7 @@
 #define RESIP_BASECREATOR_HXX
 
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "dum/UserProfile.hxx"
 
 namespace resip
 {

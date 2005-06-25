@@ -1,5 +1,5 @@
-#include "resiprocate/dum/DumThread.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/DumThread.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

@@ -2,8 +2,8 @@
 
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
+#include "dum/ServerSubscription.hxx"
+#include "dum/ServerPublication.hxx"
 #include "repro/stateAgents/PrivateKeySubscriptionHandler.hxx"
 
 using namespace repro;

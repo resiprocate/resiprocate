@@ -1,6 +1,6 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/DialogUsageManager.hxx"
 
-#include "resiprocate/dum/Profile.hxx"
+#include "dum/Profile.hxx"
 #include "resiprocate/os/Log.hxx"
 
 using namespace resip;

@@ -1,7 +1,7 @@
-#include "resiprocate/os/SelectInterruptor.hxx"
+#include "rutil/SelectInterruptor.hxx"
 
 #include <cassert>
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #ifndef WIN32
 #include <unistd.h>

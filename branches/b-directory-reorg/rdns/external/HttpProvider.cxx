@@ -1,5 +1,34 @@
-#if !defined(RESIP_ID_HXX)
-#define RESIP_ID_HXX
+#include "HttpProvider.hxx"
+#include "resiprocate/os/Lock.hxx"
+
+using namespace resip;
+
+HttpProvider* HttpProvider::mInstance = 0;
+HttpProviderFactory* HttpProvider::mFactory = 0;
+Mutex HttpProvider::mMutex;      
+
+void 
+HttpProvider::setFactory(std::auto_ptr<HttpProviderFactory> fact)
+{
+   mFactory = fact.release();
+}
+
+HttpProvider* 
+HttpProvider::instance()
+{
+   if (mFactory && mInstance == 0)
+   {
+      Lock lock(mMutex);
+      if (mInstance == 0)
+      {
+         mInstance = mFactory->createHttpProvider();
+      }
+   }
+   return mInstance;   
+}
+
+
+      
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -50,40 +79,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-#include <map>
-#include "resiprocate/os/Data.hxx"
-
-namespace resip
-{
-
-// Id class for D's. 
-    template <typename D>
-    class Id 
-    {
-        public:
-            typedef unsigned int value_type;
-            Id<D> (D* data);            // make an Id for data
-            Id<D> ();                   // uninitialised Id.
-            ~Id<D> ();                  // remove Id
-            Id<D> (const Id<D>& other);
-            void operator=(const Id<D>& other);
-            const value_type value() const;
-            D* operator->() const;
-            D& operator*() const;
-            bool valid() const;
-        private:
-            value_type mId;
-            typedef std::map<value_type, D*> map_type;
-
-            bool mAuthoritative;
-            static value_type theGenerator;
-            static map_type theIdMap;
-            const Data& myname() const;
-            mutable Data mName;
-
-    };
-
-}
-
-#endif

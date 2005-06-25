@@ -1,5 +1,5 @@
-#include "resiprocate/dum/HandleManager.hxx"
-#include "resiprocate/dum/Handled.hxx"
+#include "dum/HandleManager.hxx"
+#include "dum/Handled.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 

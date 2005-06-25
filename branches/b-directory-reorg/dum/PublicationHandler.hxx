@@ -1,7 +1,7 @@
 #if !defined(RESIP_PUBLICATIONHANDLER_HXX)
 #define RESIP_PUBLICATIONHANDLER_HXX
 
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/Handles.hxx"
 #include "resiprocate/Mime.hxx"
 
 namespace resip

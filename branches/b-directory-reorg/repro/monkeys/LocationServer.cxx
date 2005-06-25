@@ -7,7 +7,7 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;

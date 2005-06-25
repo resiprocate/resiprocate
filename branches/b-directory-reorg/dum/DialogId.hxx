@@ -2,7 +2,7 @@
 #define RESIP_DIALOG_ID_HXX
 
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
+#include "dum/DialogSetId.hxx"
 
 namespace resip
 {

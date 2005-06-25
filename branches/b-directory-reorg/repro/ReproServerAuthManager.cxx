@@ -10,10 +10,10 @@
 
 #include <cassert>
 
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/ServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "dum/ServerAuthManager.hxx"
 #include "repro/UserStore.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

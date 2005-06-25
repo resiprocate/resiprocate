@@ -1,5 +1,5 @@
-#include "resiprocate/os/SysLogBuf.hxx"
-#include "resiprocate/os/SysLogStream.hxx"
+#include "rutil/SysLogBuf.hxx"
+#include "rutil/SysLogStream.hxx"
 
 using resip::SysLogStream;
 using resip::SysLogBuf;

@@ -2,7 +2,7 @@
 #define RESIP_HandleManager_HXX
 
 #include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/dum/Handled.hxx"
+#include "dum/Handled.hxx"
 
 namespace resip
 {

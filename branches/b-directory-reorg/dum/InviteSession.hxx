@@ -3,7 +3,7 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
-#include "resiprocate/dum/DialogUsage.hxx"
+#include "dum/DialogUsage.hxx"
 
 #include <map>
 

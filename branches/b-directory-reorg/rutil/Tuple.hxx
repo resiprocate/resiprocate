@@ -1,13 +1,13 @@
 #if !defined(RESIP_TUPLE_HXX)
 #define RESIP_TUPLE_HXX
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/Data.hxx"
 
 #if defined(WIN32)
 #include <Ws2tcpip.h>

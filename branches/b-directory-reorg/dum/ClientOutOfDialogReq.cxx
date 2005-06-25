@@ -1,9 +1,9 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/OutOfDialogHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
+#include "dum/ClientOutOfDialogReq.hxx"
+#include "dum/OutOfDialogHandler.hxx"
+#include "dum/DialogUsageManager.hxx"
+#include "dum/Dialog.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;

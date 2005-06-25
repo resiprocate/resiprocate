@@ -1,7 +1,7 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "dum/BaseUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 

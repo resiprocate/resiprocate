@@ -1,4 +1,4 @@
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/MD5Stream.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)

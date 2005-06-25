@@ -1,7 +1,7 @@
 
 #include <cassert>
 
-#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "dum/UserAuthInfo.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Logger.hxx"
 

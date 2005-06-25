@@ -3,8 +3,8 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/ThreadIf.hxx"
 #include "repro/RequestContext.hxx"
 
 namespace resip

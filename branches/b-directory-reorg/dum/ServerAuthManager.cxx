@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "resiprocate/dum/ServerAuthManager.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "dum/ServerAuthManager.hxx"
+#include "dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "dum/UserAuthInfo.hxx"
 #include "resiprocate/Helper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

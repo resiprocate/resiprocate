@@ -1,7 +1,7 @@
 #if !defined(RESIP_SERVERSUBSCRIPTION_HXX)
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
-#include "resiprocate/dum/BaseSubscription.hxx"
+#include "dum/BaseSubscription.hxx"
 
 namespace resip
 {

@@ -2,8 +2,8 @@
 #define RESIP_DIALOGUSAGE_HXX
 
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "dum/BaseUsage.hxx"
+#include "dum/Handles.hxx"
 
 namespace resip
 {

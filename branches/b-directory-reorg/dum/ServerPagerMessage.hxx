@@ -1,7 +1,7 @@
 #if !defined(RESIP_SERVERPAGERMESSAGE_HXX)
 #define RESIP_SERVERPAGERMESSAGE_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+#include "dum/NonDialogUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 namespace resip

@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTPAGERMESSAGE_HXX)
 #define RESIP_CLIENTPAGERMESSAGE_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+#include "dum/NonDialogUsage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include <deque>
