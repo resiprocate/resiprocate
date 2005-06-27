@@ -1082,10 +1082,6 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                sendToWire(mMsgToRetransmit, true);
                mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  // !slg! TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
-            else
-            {
-               delete msg;
-            }
             break;
 
             /*
@@ -1106,31 +1102,27 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             terminateServerTransaction(mId);
             delete this;
-            delete msg;
             break;
-            
-     
+
          case Timer::TimerTrying:
             if (mState == Trying)
             {
                //StackLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
                mState = Proceeding;
-               delete msg;
             }
             else
             {
                //StackLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
-               delete msg;
             }
             break;
             
          default:
             CritLog(<<"unexpected timer fired: " << timer->getType());
             assert(0); // programming error if any other timer fires
-            delete msg;
             break;
       }
+      delete timer;
    }
    else if (isTransportError(msg))
    {
