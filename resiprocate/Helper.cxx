@@ -478,11 +478,6 @@ Helper::makeCancel(const SipMessage& request)
 }
 
 
-// This interface should be used by the stack (TransactionState) to create an
-// AckMsg to a failure response
-// See RFC3261 section 17.1.1.3
-// Note that the branch in this ACK needs to be the 
-// For TU generated ACK, see Dialog::makeAck(...)
 SipMessage*
 Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
@@ -964,14 +959,14 @@ Helper::make405(const SipMessage& request,
     if (len < 0)
     {
         int upperBound = static_cast<int>(MAX_METHODS);
-	// The UNKNOWN method name marks the end of the enum
-        
-        for (int i = 0 ; i < upperBound; i ++)
+
+        // The UNKNOWN method name is the first in the enum
+        for (int i = 1 ; i < upperBound; i ++)
         {
             int last = 0;
+
             // ENUMS must be contiguous in order for this to work.
             assert( i - last <= 1);
-            //MethodTypes type = static_cast<MethodTypes>(i);
             Token t;
             t.value() = getMethodName(static_cast<resip::MethodTypes>(i));
             resp->header(h_Allows).push_back(t);
