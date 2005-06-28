@@ -349,9 +349,6 @@
 				RelativePath=".\SubscriptionState.cxx">
 			</File>
 			<File
-				RelativePath=".\UInt64Hash.cxx">
-			</File>
-			<File
 				RelativePath=".\UserAuthInfo.cxx">
 			</File>
 			<File
@@ -559,9 +556,6 @@
 			</File>
 			<File
 				RelativePath=".\SubscriptionState.hxx">
-			</File>
-			<File
-				RelativePath=".\UInt64Hash.hxx">
 			</File>
 			<File
 				RelativePath=".\UsageUseException.hxx">
