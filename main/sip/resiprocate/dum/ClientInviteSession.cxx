@@ -122,7 +122,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
          sendAck(&answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
-         // mLastSessionModification = ack;  // !slg! is this needed?
+         // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
 
@@ -522,7 +522,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    InviteSession::setSdp(prack, sdp);
 
    //  Remember last session modification.
-   // mLastSessionModification = prack; // !slg! is this needed?
+   // mLastSessionModification = prack; // ?slg? is this needed?
 
    mDialog.send(prack);
 }
