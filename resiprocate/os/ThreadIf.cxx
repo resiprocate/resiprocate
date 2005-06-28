@@ -28,7 +28,7 @@ threadWrapper( void* threadParm )
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
 
    assert( t );
-//#if defined(WIN32) // !slg! No longer required since Random will now initialize once per thread
+//#if defined(WIN32) // No longer required since Random will now initialize once per thread
 //   srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 //#endif
    t->thread();
