@@ -212,7 +212,7 @@ Condition::wait(Mutex& mutex,
    bool ret = false;
    unsigned int res = 0;
 
-#if 0  /*  !slg! unnecessary time stuff - used in BOOST implementation because expiry time is provided to do_timed_wait - we pass in an interval */
+#if 0  /*  unnecessary time stuff - used in BOOST implementation because expiry time is provided to do_timed_wait - we pass in an interval */
    UInt64  start = Timer::getTimeMs();
 
    for (;;)
