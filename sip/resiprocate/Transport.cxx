@@ -197,7 +197,7 @@ Transport::stampReceived(SipMessage* message)
    {
       const Tuple& tuple = message->getSource();
 	  Data received = DnsUtil::inet_ntop(tuple);
-	  if(message->header(h_Vias).front().sentHost() != received)  // !slg! only add if received address is different from sent-by in Via
+	  if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
 	  {
          message->header(h_Vias).front().param(p_received) = received;
 	  }

@@ -451,7 +451,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       {
          if (mState == Trying || mState == Proceeding)
          {
-            //!slg! if we set the timer in Proceeding, then every 1xx response will cause another TimerE2 to be set and many retransmissions will occur - which is not correct
+            //?slg? if we set the timer in Proceeding, then every 1xx response will cause another TimerE2 to be set and many retransmissions will occur - which is not correct
             // Should we restart the E2 timer though?  If so, we need to use somekind of timer sequence number so that previous E2 timers get discarded.
             if (!mIsReliable && mState == Trying)
             {
@@ -718,7 +718,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             if (mState == Calling)
             {
                unsigned long d = timer->getDuration()*2;
-               //if (d < Timer::T2) d *= 2;     !slg! TimerA is supposed to double with each retransmit RFC3261 17.1.1          
+               // TimerA is supposed to double with each retransmit RFC3261 17.1.1          
 
                mController.mTimers.add(Timer::TimerA, mId, d);
                InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
@@ -1080,7 +1080,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             {
                StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
                sendToWire(mMsgToRetransmit, true);
-               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  // !slg! TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
+               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  //  TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
             break;
 
