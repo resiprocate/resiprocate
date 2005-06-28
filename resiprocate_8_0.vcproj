@@ -552,9 +552,6 @@
 				RelativePath="ParserCategory.cxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.cxx">
-			</File>
-			<File
 				RelativePath="Pidf.cxx">
 			</File>
 			<File
@@ -586,9 +583,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.cxx">
-			</File>
-			<File
-				RelativePath="Registration.cxx">
 			</File>
 			<File
 				RelativePath="RequestLine.cxx">
@@ -658,9 +652,6 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
-			</File>
-			<File
-				RelativePath=".\Subscription.cxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.cxx">
@@ -1081,9 +1072,6 @@
 				RelativePath="ParserContainerBase.hxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.hxx">
-			</File>
-			<File
 				RelativePath="Pidf.hxx">
 			</File>
 			<File
@@ -1115,9 +1103,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.hxx">
-			</File>
-			<File
-				RelativePath="Registration.hxx">
 			</File>
 			<File
 				RelativePath="RequestLine.hxx">
@@ -1183,9 +1168,6 @@
 				RelativePath="SipMessage.hxx">
 			</File>
 			<File
-				RelativePath="SipMessageExplicit.hxx">
-			</File>
-			<File
 				RelativePath="SipStack.hxx">
 			</File>
 			<File
@@ -1208,9 +1190,6 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
-			</File>
-			<File
-				RelativePath="Subscription.hxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.hxx">
