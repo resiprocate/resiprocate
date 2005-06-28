@@ -112,7 +112,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             if (msg.exists(h_MinExpires))
             {
                mPublish.header(h_Expires).value() = msg.header(h_MinExpires).value();
-               refresh();
+               update(mDocument);
             }
             else
             {
