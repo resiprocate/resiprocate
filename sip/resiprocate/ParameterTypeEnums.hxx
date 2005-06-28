@@ -17,8 +17,10 @@ class ParameterTypes
   
    public:
       // !dlb! until automated, must ensure that this set is consistent with
-      // gperf in ParameterTypes.cxx and ParameterTypes.hxx
+      // gperf in ParameterTypes.cxx, ParameterTypes.hxx, Parameters.gperf
+      // NOTE: !!Parameters.gperf must have lowercase parameters!!
       // Also needs to be in ParserCategory.hxx/cxx
+      // PLEASE compile and run testParserCategories after changing this file.
       enum Type
       {
          UNKNOWN = -1,
