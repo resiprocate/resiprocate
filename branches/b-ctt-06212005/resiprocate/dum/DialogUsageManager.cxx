@@ -768,7 +768,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
 {
    //486/481/603 decision making logic where?  App may not wish to keep track of
    //invitesession state
-   // !slg! Logic is here for now.
+   //Logic is here for now.
    InviteSessionHandle is = findInviteSession(DialogId(replaces.value(),
                                                        replaces.param(p_toTag),
                                                        replaces.param(p_fromTag)));
@@ -1388,13 +1388,6 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
-
-   // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
-   //if (mShutdownState != Running)
-   //{
-   //   InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
-   //   return;
-   //}
 
    if (response.header(h_CSeq).method() != CANCEL)
    {

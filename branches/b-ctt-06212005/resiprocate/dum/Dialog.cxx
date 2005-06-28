@@ -427,7 +427,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                BaseCreator* creator = mDialogSet.getCreator();
                if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // !slg! OOD Refer?  Click-to-Call?
+                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
                {
                   DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
