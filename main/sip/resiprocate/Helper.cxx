@@ -847,6 +847,113 @@ Helper::authenticateRequest(const SipMessage& request,
    return Failed;
 }
 
+Helper::AuthResult
+Helper::authenticateRequestWithA1(const SipMessage& request, 
+                                  const Data& realm,
+                                  const Data& hA1,
+                                  int expiresDelta)
+{
+   DebugLog(<< "Authenticating with HA1: realm=" << realm << " expires=" << expiresDelta);
+   //DebugLog(<< request);
+   
+   if (request.exists(h_ProxyAuthorizations))
+   {
+      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      {
+         if (i->exists(p_realm) && 
+             i->exists(p_nonce) &&
+             i->exists(p_response) &&
+             i->param(p_realm) == realm)
+         {
+            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            if (!pb.eof() && !isdigit(*pb.position()))
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp.");
+               return BadlyFormed;
+            }
+            const char* anchor = pb.position();
+            pb.skipToChar(Symbols::COLON[0]);
+
+            if (pb.eof())
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+               return BadlyFormed;
+            }
+
+            Data then;
+            pb.data(then, anchor);
+            if (expiresDelta > 0)
+            {
+               int now = (int)(Timer::getTimeMs()/1000);
+               if (then.convertInt() + expiresDelta < now)
+               {
+                  DebugLog(<< "Nonce has expired.");
+                  return Expired;
+               }
+            }
+            if (i->param(p_nonce) != makeNonce(request, then))
+            {
+               InfoLog(<< "Not my nonce.");
+               return Failed;
+            }
+         
+            InfoLog (<< " username=" << (i->param(p_username))
+                     << " H(A1)=" << hA1
+                     << " realm=" << realm
+                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                     << " uri=" << i->param(p_uri)
+                     << " nonce=" << i->param(p_nonce));
+            
+            if (i->exists(p_qop))
+            {
+               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
+               {
+                  if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
+                                                                    getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                    i->param(p_uri),
+                                                                    i->param(p_nonce),
+                                                                    i->param(p_qop),
+                                                                    i->param(p_cnonce),
+                                                                    i->param(p_nc),
+                                                                    request.getContents()))
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
+               }
+               else
+               {
+                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+                  return Failed;
+               }
+            }
+            else if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+                                                                   getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                   i->param(p_uri),
+                                                                   i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
+            else
+            {
+               return Failed;
+            }
+         }
+         else
+         {
+            return BadlyFormed;
+         }
+      }
+      return BadlyFormed;
+   }
+   DebugLog (<< "No authentication headers. Failing request.");
+   return Failed;
+}
+
 SipMessage*
 Helper::make405(const SipMessage& request,
                 const int* allowedMethods,
