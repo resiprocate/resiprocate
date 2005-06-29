@@ -171,9 +171,10 @@ hexpair2int(char high, char low)
 }
 
 bool
-Data::init()
+Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg)
 {
    // !dlb! how do I init?
+   std::cerr << "RESIP_DATA_LOCAL_SIZE: " << RESIP_DATA_LOCAL_SIZE << std::endl;
    return true;
 }
 
