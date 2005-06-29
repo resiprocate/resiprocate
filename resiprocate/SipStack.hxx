@@ -172,6 +172,13 @@ class SipStack
           @param tu  TransactionUser to send from.
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
+      
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. */
+      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. */
+      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /**
           This is only if you want to send to a destination not in the route.
@@ -218,6 +225,36 @@ class SipStack
       */
       void sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                       TransactionUser* tu=0);
+
+      /**
+          Makes the message available to the TU at some later time - specified in
+          seconds.  
+          Note:  TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post
+
+          @param secondsLater Number of seconds before message is to be posted.
+
+          @param tu    TransactionUser to post to.
+      */
+      void post(const std::auto_ptr<ApplicationMessage> message, 
+                unsigned int secondsLater,
+                TransactionUser* tu=0);
+
+      /**
+          Makes the message available to the TU at some later time - specified in
+          milli-seconds.  
+          Note: TranasctionUser subclasses can just post to themselves.
+          
+          @param message ApplicationMessage to post
+
+          @param ms      Number of milli-seconds before message is to be posted.
+
+          @param tu      TransactionUser to post to.
+      */
+      void postMS(const std::auto_ptr<ApplicationMessage> message, 
+                  unsigned int ms,
+                  TransactionUser* tu=0);
 
       /**
           Makes the message available to the TU later.  Makes a copy of the
