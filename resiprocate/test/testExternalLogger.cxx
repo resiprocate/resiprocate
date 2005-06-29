@@ -46,7 +46,7 @@ int debugLogsInCall()
 
 class ExampleExternalLogger : public ExternalLogger
 {
-      virtual void operator()(Log::Level level,
+      virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
                               const char* file,
@@ -59,6 +59,9 @@ class ExampleExternalLogger : public ExternalLogger
                    << file << ":" << line
                    << " $ "
                    << message << std::endl;
+
+         // supress normal logging
+         return false;
       }
 };
 
@@ -148,8 +151,6 @@ main(int argc, char* argv[])
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
