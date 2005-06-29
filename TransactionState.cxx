@@ -1498,7 +1498,14 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
       if (resend)
       {
-         mController.mTransportSelector.retransmit(sip, mTarget);
+         if (mTarget.transport)
+         {
+            mController.mTransportSelector.retransmit(sip, mTarget);
+         }
+         else
+         {
+            DebugLog (<< "No transport found(network could be down) for " << sip->brief());
+         }
       }
       else
       {
