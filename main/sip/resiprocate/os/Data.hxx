@@ -21,6 +21,12 @@ class TestData;
 namespace resip
 {
 
+template <int S>
+struct DataLocalSize
+{
+      explicit DataLocalSize(size_t) {}
+};
+
 /**
   This class encapsulates an arbitrary buffer of bytes.
   It has a variety of memory management styles that can be
@@ -597,7 +603,7 @@ class Data
 
         @todo Remove this?
       */
-      static bool init();
+      static bool init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg);
 
       /**
         Performs RFC 3548 Base 64 decoding of the contents of this data.
@@ -703,7 +709,7 @@ class Data
       friend class Contents;
 };
 
-static bool invokeDataInit = Data::init();
+static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0));
 
 inline bool Data::isHex(char c)
 {
