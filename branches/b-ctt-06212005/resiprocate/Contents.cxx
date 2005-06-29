@@ -26,7 +26,7 @@ Contents::Contents(HeaderFieldValue* headerFieldValue,
      mLanguages(0),
      mId(0),
      mDescription(0),
-	 mLength(0),
+     mLength(0),
      mVersion(1),
      mMinorVersion(0)
 {}
@@ -38,7 +38,7 @@ Contents::Contents(const Mime& contentType)
      mLanguages(0),
      mId(0),
      mDescription(0),
-	 mLength(0),
+     mLength(0),
      mVersion(1),
      mMinorVersion(0)
 {}
@@ -51,7 +51,7 @@ Contents::Contents(const Contents& rhs)
       mLanguages(0),
       mId(0),
       mDescription(0),
-	  mLength(0),
+      mLength(0),
       mVersion(1),
       mMinorVersion(0)
 {
@@ -71,6 +71,7 @@ Contents::clear()
    delete mLanguages;
    delete mId;
    delete mDescription;
+   delete mLength;
 
    mDisposition = 0;
    mTransferEncoding = 0;
