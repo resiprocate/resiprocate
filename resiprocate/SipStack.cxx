@@ -264,6 +264,20 @@ SipStack::getUri() const
 }
 
 void 
+SipStack::send(std::auto_ptr<SipMessage> msg, 
+               TransactionUser* tu)
+{
+   DebugLog (<< "SEND: " << msg->brief());
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   }         
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
+
+void 
 SipStack::send(const SipMessage& msg, TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg.brief());
@@ -280,6 +294,42 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    mTransactionController.send(toSend);
 }
 
+// this is only if you want to send to a destination not in the route. You
+// probably don't want to use it. 
+void 
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
+                 const Uri& uri, 
+                 TransactionUser* tu)
+{
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   }
+   msg->setForceTarget(uri);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
+
+// this is only if you want to send to a destination not in the route. You
+// probably don't want to use it. 
+void 
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
+                 const Tuple& destination, 
+                 TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   assert(destination.transport);
+
+   if (tu)
+   {
+      msg->setTransactionUser(tu);
+   }
+   msg->setDestination(destination);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
 
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
@@ -289,7 +339,10 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
    //assert(!mShuttingDown);
 
    SipMessage* toSend = new SipMessage(msg);
-   if (tu) toSend->setTransactionUser(tu);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   }
    toSend->setForceTarget(uri);
    toSend->setFromTU();
 
@@ -306,7 +359,10 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    
    //SipMessage* toSend = new SipMessage(msg);
    SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
-   if (tu) toSend->setTransactionUser(tu);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   }
    toSend->setDestination(destination);
    toSend->setFromTU();
 
@@ -320,6 +376,40 @@ SipStack::checkAsyncProcessHandler()
    {
       mAsyncProcessHandler->handleProcessNotification();
    }
+}
+
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message)
+{
+   assert(!mShuttingDown);
+   //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   mTuSelector.add(message.release(), TimeLimitFifo<Message>::InternalElement);
+}
+
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message,
+               unsigned int secondsLater,
+               TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   postMS(message, secondsLater*1000, tu);
+}
+
+void
+SipStack::postMS(std::auto_ptr<ApplicationMessage> message, 
+                 unsigned int ms,
+                 TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   if (tu) 
+   {
+      message->setTransactionUser(tu);
+   }
+   Lock lock(mAppTimerMutex);
+   mAppTimers.add(Timer(ms, message.release()));
+   //.dcm. timer update rather than process cycle...optimize by checking if sooner
+   //than current timeTillNextProcess?
+   checkAsyncProcessHandler();
 }
 
 void

@@ -106,29 +106,60 @@ class SipStack
       // not threadsafe
       const Uri& getUri() const;
 
-      // interface for the TU to send a message. makes a copy of the
-      // SipMessage. Caller is responsible for deleting the memory and may do
-      // so as soon as it returns. Loose Routing processing as per RFC3261 must
-      // be done before calling send by the TU. See Helper::processStrictRoute
+      /** interface for the TU to send a message.Loose Routing processing as per
+          RFC3261 must be done before calling send by the TU. See
+          Helper::processStrictRoute */
+      void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu=0);
+
+      /** interface for the TU to send a message. makes a copy of the
+          SipMessage. Caller is responsible for deleting the memory and may do
+          so as soon as it returns. Loose Routing processing as per RFC3261 must
+          be done before calling send by the TU. See Helper::processStrictRoute */
       void send(const SipMessage& msg, TransactionUser* tu=0);
+      
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. */
+      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. */
+      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
-      // this is only if you want to send to a destination not in the route. You
-      // probably don't want to use it. 
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. message is copied. */
       void sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu=0);
-
+      /** this is only if you want to send to a destination not in the route. You
+          probably don't want to use it. message is copied. */
       void sendTo(const SipMessage& msg, const Tuple& tuple,
                   TransactionUser* tu=0);
 
-      // makes the message available to the TU later, TranasctionUser subclasses
-      // can just post to themselves
+      /** makes the message available to the TU, TranasctionUser subclasses
+          can just post to themselves. */
+      void post(std::auto_ptr<ApplicationMessage> message);
+
+      /** makes the message available to the TU later, TranasctionUser subclasses
+          can just post to themselves. */
+      void post(std::auto_ptr<ApplicationMessage>, 
+                unsigned int secondsLater,
+                TransactionUser* tu=0);
+
+      /** makes the message available to the TU later, TranasctionUser subclasses
+          can just post to themselves. */
+      void postMS(std::auto_ptr<ApplicationMessage> message, 
+                  unsigned int ms,
+                  TransactionUser* tu=0);
+      /** makes the message available to the TU, TranasctionUser subclasses
+          can just post to themselves. message is copied. */
       void post(const ApplicationMessage& message);
 
+      /** makes the message available to the TU later, TranasctionUser subclasses
+          can just post to themselves. message is copied. */
       void post(const ApplicationMessage& message, unsigned int secondsLater,
                 TransactionUser* tu=0);
 
+      /** makes the message available to the TU later, TranasctionUser subclasses
+          can just post to themselves. message is copied. */
       void postMS(const ApplicationMessage& message, unsigned int ms,
                   TransactionUser* tu=0);
-
       // Return true if the stack has new messages for the TU
       bool hasMessage() const;
       
