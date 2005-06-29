@@ -1665,7 +1665,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
    else
    {
-      assert(0); 
+      //assert(0);   // dispatchOthers will throw if the message type is really unknown
       return Unknown;
    }
 }
