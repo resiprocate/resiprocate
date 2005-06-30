@@ -14,7 +14,7 @@
 #endif
 
 #if !defined(RESIP_DATA_LOCAL_SIZE)
-#define RESIP_DATA_LOCAL_SIZE 128
+#define RESIP_DATA_LOCAL_SIZE 16
 #endif
 
 class TestData;
