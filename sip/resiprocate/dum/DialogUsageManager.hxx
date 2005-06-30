@@ -216,6 +216,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
+      // will apply the specified function to each matching ServerSubscription
+      void applyToServerSubscriptions(const Data& aor, 
+                                      const Data& eventType, 
+                                      void(*applyFn)(ServerSubscriptionHandle));
+      
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
