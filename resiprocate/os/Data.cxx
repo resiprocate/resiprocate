@@ -171,9 +171,8 @@ hexpair2int(char high, char low)
 }
 
 bool
-Data::init()
+Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg)
 {
-   // !dlb! how do I init?
    return true;
 }
 
