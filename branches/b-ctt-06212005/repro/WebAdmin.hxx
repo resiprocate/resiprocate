@@ -70,7 +70,15 @@ class WebAdmin: public HttpBase
       Dictionary mHttpParams;
       
       // list of the keys of records that should be deleted
-      std::set<resip::Data> mRemoveSet;
+      class RemoveKey
+      {
+      public:
+         RemoveKey(const resip::Data &key1, const resip::Data &key2);
+         bool operator<(const RemoveKey& rhs) const;
+         resip::Data mKey1;
+         resip::Data mKey2;
+      };
+      std::set<RemoveKey> mRemoveSet;
 };
 
 
