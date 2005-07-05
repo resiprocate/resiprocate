@@ -31,15 +31,8 @@ HandleManager::~HandleManager()
 Handled::Id
 HandleManager::create(Handled* handled)
 {
-   if (!mShuttingDown)
-   {
-      mHandleMap[++mLastId] = handled;
-      return mLastId;
-   }
-   else
-   {
-      return Handled::npos;
-   }
+   mHandleMap[++mLastId] = handled;
+   return mLastId;
 }
 
 void HandleManager::shutdownWhenEmpty()
