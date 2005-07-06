@@ -529,6 +529,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
             sendToWire(msg); // don't delete msg
+	    mState = Calling;
             break;
             
          case CANCEL:
@@ -1028,10 +1029,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                sendToWire(mMsgToRetransmit, true);
                mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  // !slg! TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
-            else
-            {
-               delete msg;
-            }
+	    delete msg;
             break;
 
             /*
