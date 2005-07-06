@@ -628,7 +628,20 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // are received while in the "Completed" state MUST
                      // cause the ACK to be re-passed to the transport
                      // layer for retransmission.
-                     assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
+                     //assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
+		     if (mMsgToRetransmit->header(h_RequestLine).getMethod() != ACK)
+		     {
+			ErrLog(<< "!BUG! in processClientInvite(): state: "
+			       << *this);
+			ErrLog(<< "!BUG! in processClientInvite(): mMsgToRetransmit: "
+			       << mMsgToRetransmit);
+			
+			ErrLog(<< " --- received msg: " << sip);
+			ErrLog(<< "!BUG! in processClientInvite(): Call-ID: "
+			       << sip->header(h_CallId));
+			usleep(500);
+			assert(0);
+		     }
                      sendToWire(mMsgToRetransmit, true);
                   }
                   else
