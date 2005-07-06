@@ -100,24 +100,31 @@ AresDns::aresHostCallback(void *arg, int status, struct hostent* result)
    {
       thisp->handle_host(ExternalDnsHostResult(result, userArg));
    }
+   delete p;
 }
 
 void
 AresDns::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    getHandler(arg)->handle_NAPTR(makeRawResult(arg, status, abuf, alen));
+   Payload* p = reinterpret_cast<Payload*>(arg);
+   delete p;
 }
 
 void
 AresDns::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    getHandler(arg)->handle_SRV(makeRawResult(arg, status, abuf, alen));
+   Payload* p = reinterpret_cast<Payload*>(arg);
+   delete p;
 }
 
 void
 AresDns::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    getHandler(arg)->handle_AAAA(makeRawResult(arg, status, abuf, alen));
+   Payload* p = reinterpret_cast<Payload*>(arg);
+   delete p;
 }                             
       
 bool 
