@@ -1,0 +1,47 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+digraph UAC {
+        rankdir=LR;
+        node [shape = box];
+
+        Connected -> Updating [ label = "dum::provideOffer/send::UPDATE" ];
+        Updating -> Connected [ label = "on200U/app::onAnswer" ];
+        Updating -> Connected [ label = "on4XXU/app::onOfferRejected" ];
+        Updating -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
+        Updating -> Terminated [ label = "dum::end/app::onTerminated" ];
+
+        Connected -> Reinviting [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
+        Reinviting -> Connected [ label = "on200I/app::onAnswer,send::ACK" ];
+        Reinviting -> Connected [ label = "on4XXI/app::onOfferRejected" ];
+        Reinviting -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
+        Reinviting -> WaitingToTerminate [ label = "dum::end" ]; 
+
+        Connected -> UpdatePending [ label = "onUPDATE/app::onOffer" ];
+        UpdatePending -> Connected [ label = "dum::provideAnswer/send::200U" ];
+        UpdatePending -> Connected [ label = "dum::reject/send::488U" ];
+        UpdatePending -> Terminated [ label = "dum::end/send::488U,send::BYE" ];
+
+        Connected -> ReinvitePending [ label = "onINVITE/app::onOffer" ];
+        ReinvitePending -> Connected [ label = "dum::provideAnswer/send::200I" ];
+        ReinvitePending -> Connected [ label = "dum::reject/send::488U" ];
+        ReinvitePending -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
+
+        Connected -> ReinvitePendingNoOffer [ label = "onINVITE/app::onDialogModified" ];
+        ReinvitePendingNoOffer -> Connected [ label = "dum::provideOffer/send::200-offer" ];
+        ReinvitePendingNoOffer -> Connected [ label = "dum::reject/send::488I" ];
+        ReinvitePendingNoOffer -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
+
+        Connected -> Connected [ label = "onCANCEL/send::200C" ]; // is this right?
+
+        Connected -> Terminated [ label = "dum::end/send::BYE" ];
+        Connected -> Terminated [ label = "onBYE/send::200B" ];
+
+        WaitingToTerminate -> Terminated [ label = "on200I/send::ACK,send::BYE" ];
+        WaitingToTerminate -> Terminated [ label = "onFailureI/send::BYE" ];
+
+        Terminated -> Terminated [ label = "on200I/send::ACK" ];
+}

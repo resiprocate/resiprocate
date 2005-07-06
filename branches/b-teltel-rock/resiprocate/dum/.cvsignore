@@ -1,0 +1,10 @@
+.dependlibs
+bin.debug.Darwin.ppc
+bin.debug.Linux.i686
+html
+obj.debug.Darwin.ppc
+obj.debug.Linux.i686
+bin.debug.Darwin.Power_Macintosh
+obj.debug.Darwin.Power_Macintosh
+.gdb_history
+Makefile.in
