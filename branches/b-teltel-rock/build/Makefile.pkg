@@ -1,0 +1,76 @@
+######################################################################
+
+# include files from other directories.  right now, this is only the
+# contrib directory, but there are a number that are there.  if we can
+# move the rules out toward the edges, it will be easier for others to
+# add elements.
+
+######################################################################
+
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+LIBSUFFIX := so
+else
+LIBSUFFIX := a
+endif
+
+ifneq ($(OSTYPE),FreeBSD)
+PTHREAD_LIBNAME := pthread
+else
+PTHREAD_LDFLAGS := -pthread
+PTHREAD_LIBNAME := c_r
+endif
+
+ifeq ($(OSTYPE),IRIX64)
+PTHREAD_LDFLAGS := 
+elif ($(OSCLASS),VXWORKS)
+PTHREAD_LDFLAGS :=
+PTHREAD_LIBNAME :=
+elif ($(OSTYPE),Linux)
+PTHREAD_LDFLAGS := #--thread
+elif ($(OSTYPE),Solaris)
+PTHREAD_LDFLAGS := --thread
+elif ($(OSTYPE),QNX)
+PTHREAD_DEFINES := 
+PTHREAD_LDFLAGS := 
+PTHREAD_LIBNAME :=
+endif
+
+ifneq ($(USE_DTLS),true)
+OPENSSL_LIBNAME := ssl crypto
+OPENSSL_LDFLAGS :=
+OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
+OPENSSL_LIBDIRS := /usr/local/ssl/lib
+else
+OPENSSL_LDLIBS_LAST := $(ROOT)/contrib/dtls/libssl.a $(ROOT)/contrib/dtls/libcrypto.a
+OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
+endif
+
+ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
+ARES_LIBDIRS := $(ROOT)/contrib/ares
+ARES_LIBNAME := ares
+ARES_DEFINES := 
+
+RESIPROCATE_INCLUDEDIRS := $(ROOT)
+RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
+RESIPROCATE_LIBNAME := resiprocate
+RESIPROCATE_LDFLAGS :=
+#ifneq ($(RESIP_DATA_LOCAL_SIZE),)
+#        RESIP_DATA_LOCAL_SIZE=128
+#endif
+CXXFLAGS += -DRESIP_DATA_LOCAL_SIZE=$(RESIP_DATA_LOCAL_SIZE)
+
+DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
+DUM_LIBNAME := dum
+DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
+$(DUM_DEPENDS): 
+	cd $(ROOT)/resiprocate/dum; $(MAKE)
+
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
+$(RESIPROCATE_DEPENDS): 
+	cd $(ROOT)/resiprocate; $(MAKE)
+
+DEFINES += USE_ARES
+ifeq ($(USE_IPV6),true)
+DEFINES += USE_IPV6
+endif
+
