@@ -15,6 +15,26 @@ using namespace std;
 const Data Data::Empty("", 0);
 const Data::size_type Data::npos = UINT_MAX;
 
+const bool Data::isCharHex[256] = 
+{
+// 0       1       2       3       4       5       6       7       8       9       a   b   c   d   e   f
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //0
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //1
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //2
+    true,   true,   true,   true,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  //3
+   false,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //4
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //5
+   false,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //6
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //8
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //9
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //a
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //b
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //c
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //d
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //e
+   false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false   //f
+};
+
 bool
 Data::init()
 {
@@ -632,6 +652,9 @@ Data::operator^=(const Data& rhs)
    if (mCapacity < rhs.mSize)
    {
       resize(rhs.mSize, true);
+   }
+   if (mSize < rhs.mSize)
+   {
       memset(mBuf+mSize, 0, mCapacity - mSize);
    }
 
@@ -823,7 +846,8 @@ Data::own() const
 
 // generate additional capacity
 void
-Data::resize(size_type newCapacity, bool copy)
+Data::resize(size_type newCapacity, 
+             bool copy)
 {
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
@@ -929,7 +953,7 @@ Data::charEncoded() const
       
       if ( !isprint(c) ||
            // rfc 3261 reserved + mark + space + tab
-           strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
+           strchr(" \";/?:@&=+%$,\t-_.!~*'()", c))
       {
          ret +='%';
          
