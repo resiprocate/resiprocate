@@ -45,6 +45,8 @@ class DialogSet
       ClientOutOfDialogReqHandle getClientOutOfDialog();
       ServerOutOfDialogReqHandle getServerOutOfDialog();
 
+      bool isDestroying() { return mState == Destroying; };
+
    private:
       friend class Dialog;
       friend class DialogUsage;
@@ -66,7 +68,8 @@ class DialogSet
          WaitingToEnd,
          ReceivedProvisional,
          Established,
-         Terminating
+         Terminating,
+         Destroying
       } State;
 
       void possiblyDie();
