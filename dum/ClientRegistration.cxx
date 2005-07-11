@@ -57,16 +57,23 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 {
    if (mState != Registered)
    {
-      if (mQueuedState != None)
+      if(mState != RetryAdding && mState != RetryRefreshing)
       {
-         WarningLog (<< "Trying to modify bindings when another request is already queued");
-         throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
+         if (mQueuedState != None)
+         {
+            WarningLog (<< "Trying to modify bindings when another request is already queued");
+            throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
+         }
+
+         mQueuedRequest = mLastRequest;
+         mQueuedState = state;
+
+         return mQueuedRequest;
       }
-
-      mQueuedRequest = mLastRequest;
-      mQueuedState = state;
-
-      return mQueuedRequest;
+      else
+      {
+          ++mTimerSeq;  // disable retry timer
+      }
    }
 
    assert(mQueuedState == None);
@@ -335,43 +342,58 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else
       {
-         if (code == 423) // interval too short
+         if((mState == Adding || mState == Refreshing) && !mEndWhenDone)
          {
-            int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
-            if (msg.exists(h_MinExpires) && 
-                (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
+            if (code == 423) // interval too short
             {
-               mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
-               mLastRequest.header(h_CSeq).sequence()++;
-               mDum.send(mLastRequest);
-               return;
+               int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               if (msg.exists(h_MinExpires) && 
+                   (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
+               {
+                  mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
+                  mLastRequest.header(h_CSeq).sequence()++;
+                  mDum.send(mLastRequest);
+                  return;
+               }
             }
-         }
-         else if (code == 408)
-         {
-            int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
+            else if (code == 408)
+            {
+               int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
             
-            if (retry < 0)
-            {
-               DebugLog(<< "Application requested failure on Retry-After");
-            }
-            else if (retry == 0)
-            {
-               DebugLog(<< "Application requested immediate retry on 408");
+               if (retry < 0)
+               {
+                  DebugLog(<< "Application requested failure on Retry-After");
+               }
+               else if (retry == 0)
+               {
+                  DebugLog(<< "Application requested immediate retry on 408");
                
-               mLastRequest.header(h_CSeq).sequence()++;
-               mDum.send(mLastRequest);
-               return;
-            }
-            else
-            {
-               DebugLog(<< "Application requested delayed retry on 408: " << retry);
-               mExpires = 0;
-               mDum.addTimer(DumTimeout::RegistrationRetry, 
-                             retry, 
-                             getBaseHandle(),
-                             ++mTimerSeq);       
-               return;
+                  mLastRequest.header(h_CSeq).sequence()++;
+                  mDum.send(mLastRequest);
+                  return;
+               }
+               else
+               {
+                  DebugLog(<< "Application requested delayed retry on 408: " << retry);
+                  mExpires = 0;
+                  switch(mState)
+                  {
+                  case Adding:
+                     mState = RetryAdding;
+                     break;
+                  case Refreshing:
+                     mState = RetryRefreshing;
+                     break;
+                  default:
+                     assert(false);
+                     break;
+                  }
+                  mDum.addTimer(DumTimeout::RegistrationRetry, 
+                                retry, 
+                                getBaseHandle(),
+                                ++mTimerSeq);       
+                  return;
+               }
             }
          }
          
@@ -382,19 +404,32 @@ ClientRegistration::dispatch(const SipMessage& msg)
              (mState == Adding || mState == Refreshing) &&
              !mEndWhenDone)
          {
-             unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
-             if (msg.exists(h_RetryAfter))
-             {
-                 // Use retry interval from error response
-                 retryInterval = msg.header(h_RetryAfter).value();
-             }
-             mExpires = 0;
-             mDum.addTimer(DumTimeout::RegistrationRetry,
-                           retryInterval,
-                           getBaseHandle(),
-                           ++mTimerSeq);
-             InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
-             return;
+            unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
+            if (msg.exists(h_RetryAfter))
+            {
+               // Use retry interval from error response
+               retryInterval = msg.header(h_RetryAfter).value();
+            }
+            mExpires = 0;
+            switch(mState)
+            {
+            case Adding:
+               mState = RetryAdding;
+               break;
+            case Refreshing:
+               mState = RetryRefreshing;
+               break;
+            default:
+               assert(false);
+               break;
+            }
+
+            mDum.addTimer(DumTimeout::RegistrationRetry,
+                          retryInterval,
+                          getBaseHandle(),
+                          ++mTimerSeq);
+            InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
+            return;
          }
 
          // assume that if a failure occurred, the bindings are gone
@@ -433,7 +468,18 @@ ClientRegistration::dispatch(const DumTimeout& timer)
       case DumTimeout::RegistrationRetry:
          if (timer.seq() == mTimerSeq)
          {
-            assert(mState == Adding || mState == Refreshing);
+            switch(mState)
+            {
+            case RetryAdding:
+               mState = Adding;
+               break;
+            case RetryRefreshing:
+               mState = Refreshing;
+               break;
+            default:
+              assert(false);
+              break;
+            }
 
             // Resend last request
             mLastRequest.header(h_CSeq).sequence()++;
