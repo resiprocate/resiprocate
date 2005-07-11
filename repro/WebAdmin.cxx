@@ -615,7 +615,9 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mRegDb.removeContact(Uri(i->mKey1), Uri(i->mKey2));
+         Uri key(i->mKey1);
+         Uri contact(i->mKey2);
+         mRegDb.removeContact(key, contact);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
