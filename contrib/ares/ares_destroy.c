@@ -30,7 +30,8 @@ void ares_destroy(ares_channel channel)
     free(channel->domains[i]);
   free(channel->domains);
   free(channel->sortlist);
-  free(channel->lookups);
+  // !NASH! - Temp fix to avoid shutdown crash
+  //free(channel->lookups);
   while (channel->queries)
     {
       query = channel->queries;
