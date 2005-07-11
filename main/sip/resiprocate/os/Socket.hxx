@@ -58,9 +58,9 @@ inline int getErrno() { return WSAGetLastError(); }
 
 #else
 
-#ifdef __APPLE__
-typedef int socklen_t;
-#endif
+//#ifdef __APPLE__
+//typedef int socklen_t;
+//#endif
 
 #define WSANOTINITIALISED  EPROTONOSUPPORT
 
