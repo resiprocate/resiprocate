@@ -70,6 +70,8 @@ class Dialog
       void onForkAccepted();      
       void cancel();
 
+      bool isDestroying() { return mDestroying; };
+
    private:
       virtual ~Dialog();
       friend class DialogUsage;
@@ -125,8 +127,6 @@ class Dialog
       } DialogType;
       
       DialogType mType; // !jf! is this necessary?
-//      Data mLocalTag;
-//      Data mRemoteTag;
       NameAddrs mRouteSet;
       
       //variants
