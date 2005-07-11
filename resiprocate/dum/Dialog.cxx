@@ -984,6 +984,7 @@ void Dialog::possiblyDie()
           mServerSubscriptions.empty() &&
           !mInviteSession)
       {
+         mDestroying = true;
          mDum.destroy(this);
       }
    }

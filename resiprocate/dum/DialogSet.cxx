@@ -127,6 +127,7 @@ DialogSet::~DialogSet()
 void DialogSet::possiblyDie()
 {
    if(mState != Initial &&  // !jf! may not be correct
+      mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -136,6 +137,7 @@ void DialogSet::possiblyDie()
         mClientRegistration ||
         mServerRegistration))
    {
+      mState = Destroying;
       mDum.destroy(this);
    }
 }
@@ -225,7 +227,7 @@ DialogSet::empty() const
 bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
+   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -661,7 +663,14 @@ DialogSet::findDialog(const DialogId id)
    }
    else
    {
-      return i->second;
+      if(i->second->isDestroying())
+      {
+         return 0;
+      }
+      else
+      {
+         return i->second;
+      }
    }
 }
 
@@ -726,6 +735,7 @@ DialogSet::end()
          break;
       }
       case Terminating:
+      case Destroying:
          assert(0);
    }
 }
