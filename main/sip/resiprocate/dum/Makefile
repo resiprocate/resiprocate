@@ -62,7 +62,6 @@ SRC =   \
 	SubscriptionHandler.cxx \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
-	UInt64Hash.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
 	NetworkAssociation.cxx
