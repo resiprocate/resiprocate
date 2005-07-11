@@ -1506,7 +1506,14 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
    }
    else
    {
-      return it->second;
+      if(it->second->isDestroying())
+      {
+         return 0;
+      }
+      else
+      {
+         return it->second;
+      }
    }
 }
 
