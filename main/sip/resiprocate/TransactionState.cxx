@@ -112,6 +112,7 @@ TransactionState::process(TransactionController& controller)
       Tuple target(sip->getSource());
       delete sip;
       controller.mTransportSelector.transmit(tryLater, target);
+      delete tryLater;
       return;
    }
 
