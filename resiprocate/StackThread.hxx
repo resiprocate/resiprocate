@@ -17,8 +17,7 @@ class StackThread : public ThreadIf
       virtual void thread();
 
    protected:
-      virtual void buildFdSet(FdSet& fdset);
-      virtual int getTimeTillNextProcessMS() const;
+      virtual void buildFdSet(FdSet& fdset);      virtual unsigned int getTimeTillNextProcessMS() const;
 
    private:
       SipStack& mStack;

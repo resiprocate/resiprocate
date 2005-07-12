@@ -70,12 +70,10 @@ TimerMessage::isClientTransaction() const
    return false;
 }
 
-
-
-Data 
-TimerMessage::brief() const
+std::ostream&
+TimerMessage::encodeBrief(std::ostream& strm) const
 {
-   return Data("Timer: ") + Timer::toData(mType) + Data(" ") + Data(mDuration);
+   return strm << "Timer: " << Timer::toData(mType) << " " << mDuration;
 }
 
 std::ostream& TimerMessage::encode(std::ostream& strm) const

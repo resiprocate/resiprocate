@@ -1,5 +1,5 @@
-#if !defined(RESIP_DATA_HXX)
-#define RESIP_DATA_HXX 
+#ifndef RESIP_Data_hxx
+#define RESIP_Data_hxx
 
 static const char* const resipDataHeaderVersion =
    "$Id: Data.hxx,v 1.78 2004/05/19 02:11:36 davidb Exp $";
@@ -151,6 +151,8 @@ class Data
       int convertInt() const;
       size_t convertSize() const;
       double convertDouble() const;
+      UInt64 convertUInt64() const;
+
 
       bool prefix(const Data& pre) const;
       bool postfix(const Data& post) const;
@@ -201,9 +203,12 @@ class Data
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
+      friend class oDataBuffer;
       friend class ::TestData;
       friend class MD5Buffer;
       friend class Contents;
+      friend class oDataStream;
+      friend class DataStream;
 };
 
 static bool invokeDataInit = Data::init();

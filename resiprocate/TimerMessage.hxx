@@ -22,7 +22,7 @@ class TimerMessage : public TransactionMessage
       unsigned long getDuration() const;
       bool isClientTransaction() const;
       
-      virtual Data brief() const;
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
       virtual std::ostream& encode(std::ostream& strm) const;
       
    private:

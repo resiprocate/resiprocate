@@ -233,6 +233,25 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
    return request;
 }
 
+int
+Helper::jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum)
+{
+   assert(upperPercentage >= lowerPercentage);
+   if (input < minimum)
+   {
+      return input;
+   }
+   else if (lowerPercentage == 100 && upperPercentage == 100)
+   {
+      return input;
+   }
+   else
+   {
+      const int rnd = Random::getRandom() % (upperPercentage-lowerPercentage) + lowerPercentage;
+      return (input * rnd) / 100;
+   }
+}
+
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from)
 {
@@ -566,6 +585,37 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
    return r.getHex();
 }
 
+Data 
+Helper::makeResponseMD5WithA1(const Data& a1,
+                              const Data& method, const Data& digestUri, const Data& nonce,
+                              const Data& qop, const Data& cnonce, const Data& cnonceCount,
+                              const Contents* entityBody)
+{
+   MD5Stream a2;
+   a2 << method
+      << Symbols::COLON
+      << digestUri;
+
+   MD5Stream r;
+   r << a1
+     << Symbols::COLON
+     << nonce
+     << Symbols::COLON;
+
+   if (!qop.empty())
+   {
+      r << cnonceCount
+        << Symbols::COLON
+        << cnonce
+        << Symbols::COLON
+        << qop
+        << Symbols::COLON;
+   }
+   r << a2.getHex();
+
+   return r.getHex();
+}
+
 // !jf! note that this only authenticates a ProxyAuthenticate header, need to
 // add support for WWWAuthenticate as well!!
 Helper::AuthResult
@@ -652,6 +702,113 @@ Helper::authenticateRequest(const SipMessage& request,
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                              i->param(p_uri),
                                                              i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
+            else
+            {
+               return Failed;
+            }
+         }
+         else
+         {
+            return BadlyFormed;
+         }
+      }
+      return BadlyFormed;
+   }
+   DebugLog (<< "No authentication headers. Failing request.");
+   return Failed;
+}
+
+Helper::AuthResult
+Helper::authenticateRequestWithA1(const SipMessage& request, 
+                                  const Data& realm,
+                                  const Data& hA1,
+                                  int expiresDelta)
+{
+   DebugLog(<< "Authenticating with HA1: realm=" << realm << " expires=" << expiresDelta);
+   //DebugLog(<< request);
+   
+   if (request.exists(h_ProxyAuthorizations))
+   {
+      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      {
+         if (i->exists(p_realm) && 
+             i->exists(p_nonce) &&
+             i->exists(p_response) &&
+             i->param(p_realm) == realm)
+         {
+            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            if (!pb.eof() && !isdigit(*pb.position()))
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp.");
+               return BadlyFormed;
+            }
+            const char* anchor = pb.position();
+            pb.skipToChar(Symbols::COLON[0]);
+
+            if (pb.eof())
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+               return BadlyFormed;
+            }
+
+            Data then;
+            pb.data(then, anchor);
+            if (expiresDelta > 0)
+            {
+               int now = (int)(Timer::getTimeMs()/1000);
+               if (then.convertInt() + expiresDelta < now)
+               {
+                  DebugLog(<< "Nonce has expired.");
+                  return Expired;
+               }
+            }
+            if (i->param(p_nonce) != makeNonce(request, then))
+            {
+               InfoLog(<< "Not my nonce.");
+               return Failed;
+            }
+         
+            InfoLog (<< " username=" << (i->param(p_username))
+                     << " H(A1)=" << hA1
+                     << " realm=" << realm
+                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                     << " uri=" << i->param(p_uri)
+                     << " nonce=" << i->param(p_nonce));
+            
+            if (i->exists(p_qop))
+            {
+               if (i->param(p_qop) == Symbols::auth)
+               {
+                  if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
+                                                                    getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                    i->param(p_uri),
+                                                                    i->param(p_nonce),
+                                                                    i->param(p_qop),
+                                                                    i->param(p_cnonce),
+                                                                    i->param(p_nc),
+                                                                    request.getContents()))
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
+               }
+               else
+               {
+                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+                  return Failed;
+               }
+            }
+            else if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+                                                                   getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                   i->param(p_uri),
+                                                                   i->param(p_nonce)))
             {
                return Authenticated;
             }
@@ -827,7 +984,53 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
    
    return auth;
 }
+
+Auth 
+Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                        const Data& username,
+                                        const Data& a1,
+                                        const Auth& challenge,
+                                        const Data& cnonce,
+                                        unsigned int& nonceCount,
+                                        Data& nonceCountString)
+{
+   Auth auth;
+   auth.scheme() = "Digest";
+   auth.param(p_username) = username;
+   assert(challenge.exists(p_realm));
+   auth.param(p_realm) = challenge.param(p_realm);
+   assert(challenge.exists(p_nonce));
+   auth.param(p_nonce) = challenge.param(p_nonce);
+   Data digestUri;
+   {
+      DataStream s(digestUri);
+      //s << request.header(h_RequestLine).uri().host(); // wrong 
+      s << request.header(h_RequestLine).uri(); // right 
+   }
+   auth.param(p_uri) = digestUri;
+
+   assert(challenge.exists(p_realm));
+   auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+                                                          getMethodName(request.header(h_RequestLine).getMethod()),
+                                                          digestUri, 
+                                                          challenge.param(p_nonce));
    
+   if (challenge.exists(p_algorithm))
+   {
+      auth.param(p_algorithm) = challenge.param(p_algorithm);
+   }
+   else
+   {
+      auth.param(p_algorithm) = "MD5";
+   }
+
+   if (challenge.exists(p_opaque))
+   {
+      auth.param(p_opaque) = challenge.param(p_opaque);
+   }
+   
+   return auth;
+}   
 
 SipMessage& 
 Helper::addAuthorization(SipMessage& request,

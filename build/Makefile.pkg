@@ -7,11 +7,11 @@
 
 ######################################################################
 
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+#ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 LIBSUFFIX := so
-else
-LIBSUFFIX := a
-endif
+#else
+#LIBSUFFIX := a
+#endif
 
 ifneq ($(OSTYPE),FreeBSD)
 PTHREAD_LIBNAME := pthread
@@ -57,7 +57,7 @@ RESIPROCATE_LDFLAGS :=
 #ifneq ($(RESIP_DATA_LOCAL_SIZE),)
 #        RESIP_DATA_LOCAL_SIZE=128
 #endif
-CXXFLAGS += -DRESIP_DATA_LOCAL_SIZE=$(RESIP_DATA_LOCAL_SIZE)
+CXXFLAGS += -DWITH_OPENSSL -DRESIP_DATA_LOCAL_SIZE=$(RESIP_DATA_LOCAL_SIZE)
 
 DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
 DUM_LIBNAME := dum
