@@ -41,6 +41,7 @@ LocalDns::init()
 LocalDns::LocalDns()
 {
    files["yahoo.com"] = "yahoo.dns";
+   files["demo.xten.com"] = "demo.naptr";
    files["_ldap._tcp.openldap.org"] = "openldap.srv";
    files["quartz"] = "quartz.aaaa";
    files["crystal"] = "crystal.aaaa";

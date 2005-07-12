@@ -1,6 +1,7 @@
 //#define USE_LOCAL_DNS 
 
 #ifdef USE_LOCAL_DNS
+#include <map>
 #include "resiprocate/LocalDns.hxx"
 #else
 #include "resiprocate/AresDns.hxx"

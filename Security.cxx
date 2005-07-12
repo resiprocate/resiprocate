@@ -1118,7 +1118,7 @@ BaseSecurity::getUserCertDER(const Data& aor) const
 void
 BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
 {
-   assert(aor.empty());
+   assert(!aor.empty());
 
    PassPhraseMap::iterator iter = mUserPassPhrases.find(aor);
    if (iter == mUserPassPhrases.end())
@@ -1500,7 +1500,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 MultipartSignedContents *
 BaseSecurity::signAndEncrypt( const Data& senderAor, Contents* body, const Data& recipCertName )
 {
-   assert(0);
+   //assert(0);
    //return 0;
    return sign(senderAor, encrypt(body, recipCertName));
 }
@@ -1695,7 +1695,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
 
 
 Contents*
-BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
+BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 {
 
    DebugLog( << "decryptor Aor: <" << decryptorAor << ">" );
@@ -1834,17 +1834,15 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
          throw Exception("Unsupported PKCS7 data type", __FILE__, __LINE__);
    }
 
-   BIO_flush(out);
-   char* outBuf=0;
-   long size = BIO_get_mem_data(out,&outBuf);
-   assert( size >= 0 );
-
-   Data outData(outBuf,size);
-   DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
+   BIO_flush(out);   
+   BUF_MEM* bufMem;
+   BIO_get_mem_ptr(out, &bufMem);
+   BIO_set_close(out, BIO_NOCLOSE);
+   BIO_free(out);
 
    // parse out the header information and form new body.
-   // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff
-   ParseBuffer pb( outData.data(), outData.size() );
+   // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff 
+   ParseBuffer pb(bufMem->data, bufMem->length);
 
    const char* headerStart = pb.position();
 
@@ -1882,11 +1880,13 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
    pb.data(tmp, bodyStart);
    // create contents against body
    Contents* ret = Contents::createContents(contentType, tmp);
+   ret->addBuffer(bufMem->data);
+   
    // pre-parse headers
    ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
    ret->preParseHeaders(headersPb);
 
-   DebugLog( << "Got body data of " << ret->getBodyData() );
+   InfoLog( << "Got body data of " << ret->getBodyData() );
 
    return ret;
 }
@@ -2111,6 +2111,13 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    {
       case NID_pkcs7_signed:
       {
+         int flags = 0;
+
+         if (isSelfSigned(sk_X509_value(signers,0)))
+         {
+            flags |= PKCS7_NOVERIFY;
+         }
+
          if ( PKCS7_verify(pkcs7, certs, mRootCerts, pkcs7Bio, out, flags ) != 1 )
          {
             ErrLog( << "Problems doing PKCS7_verify" );
@@ -2140,10 +2147,18 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          }
          if ( sigStat )
          {
-            if ( flags & PKCS7_NOVERIFY )
+            if ( (flags & PKCS7_NOVERIFY) )
             {
-               DebugLog( << "Signature is notTrusted" );
-               *sigStat = SignatureNotTrusted;
+               if (isSelfSigned(sk_X509_value(signers,0)))
+               {
+                  DebugLog( << "Signature is selfSigned");
+                  *sigStat = SignatureSelfSigned;
+               }
+               else
+               {
+                  DebugLog( << "Signature is notTrusted" );
+                  *sigStat = SignatureNotTrusted;
+               }
             }
             else
             {
@@ -2298,6 +2313,13 @@ BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
    bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
 
    return isMatching;
+}
+
+bool
+BaseSecurity::isSelfSigned(X509 *cert)
+{
+   int iRet = X509_NAME_cmp(cert->cert_info->issuer, cert->cert_info->subject);
+   return (iRet == 0);
 }
 
 void

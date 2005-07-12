@@ -1,6 +1,7 @@
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
+#include "resiprocate/MultipartAlternativeContents.hxx"
 #include "resiprocate/Mime.hxx"
 
 #include "resiprocate/SecurityAttributes.hxx"
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
    Security* security = new Security;
 #endif
 
-   Data aor = "daniel@internal.xten.net";
+   Data aor("jdoe@internal.xten.net");
 
    security->preload();
    security->hasUserPrivateKey(aor);
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
                         "a=rtpmap:97 speex/8000\r\n"
                         "a=rtpmap:101 telephone-event/8000\r\n"
                         "a=fmtp:101 0-15\r\n"));
+
    //Pkcs7Contents* encrypted = security->encrypt(contents, aor);
    //InfoLog(<< "Encrytped content: " << *encrypted );
    //Contents* decrypted = security->decrypt(aor, encrypted);

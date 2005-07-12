@@ -4,6 +4,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/DialogUsage.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
 #include <map>
 
@@ -24,6 +25,7 @@ class InviteSession : public DialogUsage
           appropriate request or response. In some cases, the UAS might have to
           call accept in order to cause the message to be sent. */
       virtual void provideOffer(const SdpContents& offer);
+      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
@@ -177,7 +179,7 @@ class InviteSession : public DialogUsage
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       virtual ~InviteSession();
-      virtual void dialogDestroyed(const SipMessage& msg);      
+      virtual void dialogDestroyed(const SipMessage& msg);
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -209,13 +211,18 @@ class InviteSession : public DialogUsage
       std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
       bool isReliable(const SipMessage& msg);
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
-      static void setSdp(SipMessage& msg, const SdpContents& sdp);
+      static std::auto_ptr<Contents> makeSdp(const SdpContents& sdp, const SdpContents* alternative);
+      static void setSdp(SipMessage& msg, const SdpContents& sdp, const SdpContents* alternative = 0);
+      static void setSdp(SipMessage& msg, const Contents* sdp);
 
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
 
       void sendAck(const SdpContents *sdp=0);
       void sendBye();
+
+      DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
+      void setCurrentLocalSdp(const SipMessage& msg);
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
@@ -229,8 +236,9 @@ class InviteSession : public DialogUsage
       NitState mNitState;
 
       std::auto_ptr<SdpContents> mCurrentLocalSdp;
+      std::auto_ptr<Contents> mProposedLocalSdp;
+
       std::auto_ptr<SdpContents> mCurrentRemoteSdp;
-      std::auto_ptr<SdpContents> mProposedLocalSdp;
       std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
@@ -246,6 +254,9 @@ class InviteSession : public DialogUsage
       int  mSessionTimerSeq;
 
       bool mSentRefer;
+
+      DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
+      DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
       
    private:
       friend class Dialog;
@@ -262,6 +273,7 @@ class InviteSession : public DialogUsage
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
+
 };
 
 }
