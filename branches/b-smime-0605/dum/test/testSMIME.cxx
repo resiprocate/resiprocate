@@ -20,7 +20,7 @@
 #include "resiprocate/os/Logger.hxx"
 
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resiprocate/XWinSecurity.hxx"
 #endif
 
 #include "resiprocate/dum/CertMessage.hxx"
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
    InfoLog(<< "user: " << userAor << ", passwd: " << passwd << "\n");
 
 #ifdef WIN32
-   Security* security = new WinSecurity;
+   Security* security = new XWinSecurity;
 #else
    Security* security = new Security;
 #endif
@@ -235,6 +235,7 @@ int main(int argc, char *argv[])
 
                switch (iteration) 
                {
+                  /*
                   case 0:
                   {
                      Contents* contents = new PlainContents(Data("message"));
@@ -242,8 +243,8 @@ int main(int argc, char *argv[])
                      cpmh.get()->page(content, DialogUsageManager::None);
                      sent = true;
                      break;
-                  }
-                  case 1:
+                  }*/
+                  case 0:
                   {
                      InfoLog( << "Sending encrypted message" );
                      Contents* contents = new PlainContents(Data("encrypted message"));
@@ -252,6 +253,7 @@ int main(int argc, char *argv[])
                      sent = true;
                      break;
                   }
+                  /*
                   case 2:
                   {
                      InfoLog( << "Sending signed message" );
@@ -270,6 +272,7 @@ int main(int argc, char *argv[])
                      sent = true;
                      break;
                   }
+                  */
                   default:
                   {
                      InfoLog( << "Finished!" );

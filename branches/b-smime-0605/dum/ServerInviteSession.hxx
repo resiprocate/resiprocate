@@ -24,6 +24,7 @@ class ServerInviteSession: public InviteSession
       /** Called to set the offer that will be used in the next messages that
           sends and offer. Does not send an offer */
       virtual void provideOffer(const SdpContents& offer);
+      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
 
       /** Called to set the answer that will be used in the next messages that
           sends an offer. Does not send an answer */
@@ -69,7 +70,7 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
-      void sendAccept(int code, SdpContents* sdp); // sends 2xxI
+      void sendAccept(int code, Contents* sdp); // sends 2xxI
       void sendProvisional(int code);
       void sendUpdate(const SdpContents& sdp);
 

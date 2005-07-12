@@ -11,6 +11,7 @@
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/MultipartAlternativeContents.hxx"
+#include "resiprocate/MultipartRelatedContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/dum/RemoteCertStore.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
@@ -319,13 +320,28 @@ bool EncryptionManager::Encrypt::encrypt(Contents** contents)
    bool async = false;
    if (0 != mPendingRequests) return 0;
 
-   Pkcs7Contents* pkcs7 = 0;
-
    if (mDum.getSecurity()->hasUserCert(mRecipientAor))
    {
       InfoLog(<< "Encrypting message" << endl);
-      pkcs7 =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
-      *contents = pkcs7;
+      MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(mMsg.getContents());
+      if (alt)
+      {
+         // encrypt the last part.
+         MultipartMixedContents::Parts parts = alt->parts();
+         Contents* last = mDum.getSecurity()->encrypt(parts.back(), mRecipientAor);
+         if (last)
+         {
+            MultipartAlternativeContents* mac = new MultipartAlternativeContents(*alt);
+            delete mac->parts().back();
+            mac->parts().pop_back();
+            mac->parts().push_back(last);
+            *contents = mac;
+         }
+      }
+      else
+      {
+         *contents =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
+      }
    }
    else
    {
@@ -395,7 +411,7 @@ bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
    bool async = false;
    if (0 != mPendingRequests) return 0;
 
-   MultipartSignedContents* msc = 0;
+   //MultipartSignedContents* msc = 0;
 
    bool missingCert = !mDum.getSecurity()->hasUserCert(mSenderAor);
    bool missingKey = !mDum.getSecurity()->hasUserPrivateKey(mSenderAor);
@@ -404,8 +420,7 @@ bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
    if (!missingCert && !missingKey && !missingRecipCert)
    {
       InfoLog(<< "Encrypting and signing message" << endl);
-      msc =  mDum.getSecurity()->signAndEncrypt(mSenderAor, mMsg.getContents(), mRecipientAor);
-      *contents = msc;
+      *contents = doWork();
    }
    else
    {
@@ -469,9 +484,9 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
       if (--mPendingRequests == 0)
       {
          InfoLog(<< "Encrypting and signing message" << endl);
-         MultipartSignedContents* msc = mDum.getSecurity()->signAndEncrypt(mSenderAor, mMsg.getContents(), mRecipientAor);
-         auto_ptr<Contents> contents(msc);
-         mMsg.setContents(contents);
+         Contents* contents = doWork();
+         auto_ptr<Contents> c(contents);
+         mMsg.setContents(c);
          mDum.send(mMsg, DialogUsageManager::None);
          result = Complete;
       }
@@ -483,6 +498,36 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
       result = Complete;
    }
    return result;
+}
+
+Contents* EncryptionManager::SignAndEncrypt::doWork()
+{
+   Contents* contents = 0;
+   MultipartAlternativeContents* mac = dynamic_cast<MultipartAlternativeContents*>(mMsg.getContents());
+   if (mac)
+   {
+      MultipartMixedContents::Parts parts = mac->parts();
+      Pkcs7Contents* pkcs7 = mDum.getSecurity()->encrypt(parts.back(), mRecipientAor);
+      if (pkcs7)
+      {
+         MultipartAlternativeContents* alt = new MultipartAlternativeContents(*mac);
+         delete alt->parts().back();
+         alt->parts().pop_back();
+         alt->parts().push_back(pkcs7);
+         contents = alt;
+      }
+   }
+   else
+   {
+      contents = mDum.getSecurity()->encrypt(mMsg.getContents() , mRecipientAor);
+   }
+
+   if (contents)
+   {
+      contents = mDum.getSecurity()->sign(mSenderAor, contents);
+   }
+
+   return contents;
 }
 
 EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
@@ -516,8 +561,10 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
 {
    if (0 != mPendingRequests) return false;
 
-   bool encrypted = false;
-   if ((encrypted = isEncrypted()))
+   bool noDecryptionKey = false;
+   //bool noCertForSigVeri = false;
+
+   if (isEncrypted())
    {
       bool missingDecryptorCert = !mDum.getSecurity()->hasUserCert(mDecryptor);
       bool missingDecryptorKey = !mDum.getSecurity()->hasUserPrivateKey(mDecryptor);
@@ -545,15 +592,15 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
          else
          {
             InfoLog(<< "No remote cert store installed" << endl);
-            return true;
+            noDecryptionKey = true;
          }
       }
    }
 
-   bool issigned  = false;
-   if ((issigned = isSigned()))
+   //noCertForSigVeri = !mDum.getSecurity()->hasUserCert(mSigner);
+   if (!noDecryptionKey && isSigned())
    {
-      if (!mDum.getSecurity()->hasUserCert(mSigner))
+      if (!!mDum.getSecurity()->hasUserCert(mSigner))
       {
          if (mStore)
          {
@@ -566,16 +613,12 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
          else
          {
             InfoLog(<< "No remote cert store installed" << endl);
-            return true;
          }
       }
    }
 
-   if (encrypted || issigned)
-   {
-      InfoLog(<< "Decrypting message" << endl);
-      csa = Helper::extractFromPkcs7(mMsg, *mDum.getSecurity());
-   }
+   csa = getContents(mMsg, *mDum.getSecurity(), noDecryptionKey);
+
    return true;
 }
 
@@ -629,29 +672,28 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
             result = Pending;
          }
       }
-
-      if (result == Complete)
-      {
-         // decrypt the message and post it to dum.
-         InfoLog(<< "Decrypting message" << endl);
-         Helper::ContentsSecAttrs csa;
-         csa = Helper::extractFromPkcs7(mMsg, *mDum.getSecurity());
-         if (csa.mContents.get())
-         {
-            mMsg.setContents(csa.mContents);
-         }
-         if (csa.mAttributes.get()) 
-         {
-            mMsg.setSecurityAttributes(csa.mAttributes);
-         }
-         SipMessage* msg = dynamic_cast<SipMessage*>(mMsg.clone());
-         DumDecrypted* decrypted = new DumDecrypted(auto_ptr<SipMessage>(msg));
-         mDum.post(decrypted);
-      }
    }
    else
    {
       InfoLog(<< "Failed to fetch cert for " << aor << endl);
+   }
+
+   if (Complete == result)
+   {
+      Helper::ContentsSecAttrs csa;
+      csa = getContents(mMsg, *mDum.getSecurity(), 
+                        (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
+      if (csa.mContents.get())
+      {
+         mMsg.setContents(csa.mContents);
+      }
+      if (csa.mAttributes.get()) 
+      {
+         mMsg.setSecurityAttributes(csa.mAttributes);
+      }
+      SipMessage* msg = dynamic_cast<SipMessage*>(mMsg.clone());
+      DumDecrypted* decrypted = new DumDecrypted(auto_ptr<SipMessage>(msg));
+      mDum.post(decrypted);
    }
 
    return result;
@@ -755,6 +797,84 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
    }
 
    return false;
+}
+
+Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(const SipMessage& message,
+                                                                 Security& security,
+                                                                 bool noDecryptionKey)
+{
+   SecurityAttributes* attr = new SecurityAttributes;
+   attr->setIdentity(message.header(h_From).uri().getAor());
+   Contents* contents = message.getContents();
+   if (contents)
+   {
+      contents = getContentsRecurse(contents, security, noDecryptionKey, attr);
+   }
+
+   std::auto_ptr<Contents> c(contents);
+   std::auto_ptr<SecurityAttributes> a(attr);
+   return Helper::ContentsSecAttrs(c, a);
+}
+
+Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents* tree,
+                                                         Security& security,
+                                                         bool noDecryptionKey,
+                                                         SecurityAttributes* attributes)
+{
+   Pkcs7Contents* pk;
+   if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
+   {
+      if (noDecryptionKey) return 0;
+      Contents* contents = security.decrypt(mDecryptor, pk);
+      if (contents)
+      {
+         attributes->setEncrypted();
+      }
+      return contents;
+   }
+
+   MultipartSignedContents* mps;
+   if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
+   {
+      Data signer;
+      SignatureStatus sigStatus = SignatureIsBad;
+      Contents* contents = getContentsRecurse(security.checkSignature(mps, &signer, &sigStatus),
+                                              security, noDecryptionKey, attributes);
+      attributes->setSigner(signer);
+      attributes->setSignatureStatus(sigStatus);
+      return contents;
+   }
+
+   MultipartAlternativeContents* alt;
+   if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
+   {
+      for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
+           i != alt->parts().rend(); ++i)
+      {
+         Contents* contents = getContentsRecurse(*i, security, noDecryptionKey, attributes);
+         if (contents)
+         {
+            return contents;
+         }
+      }
+   }
+
+   MultipartMixedContents* mult;
+   if ((mult = dynamic_cast<MultipartMixedContents*>(tree)))
+   {
+      for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
+           i != mult->parts().end(); ++i)
+      {
+         Contents* contents = getContentsRecurse(*i, security, noDecryptionKey, attributes);
+         if (contents)
+         {
+            return contents;
+         }
+      }
+   }
+
+   return tree->clone();
+
 }
 
 #endif
