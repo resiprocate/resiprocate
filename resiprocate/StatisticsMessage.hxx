@@ -68,7 +68,7 @@ class StatisticsMessage : public ApplicationMessage
       static void logStats(const Subsystem& subsystem, const Payload& stats);
 
 
-      virtual Data brief() const;
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
       virtual std::ostream& encode(std::ostream& strm) const;
 
       Message* clone() const;

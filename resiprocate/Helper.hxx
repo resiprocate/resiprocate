@@ -39,6 +39,9 @@ class Helper
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
       
+      // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
+      static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
+
       //in general content length handled automatically by SipMessage?
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
@@ -109,6 +112,11 @@ class Helper
                                             const Data& realm,
                                             const Data& password,
                                             int expiresDelta = 0);
+
+      static AuthResult authenticateRequestWithA1(const SipMessage& request, 
+                                                  const Data& realm,
+                                                  const Data& hA1,
+                                                  int expiresDelta = 0);
       
       // create a 407 response with Proxy-Authenticate header filled in
       static SipMessage* makeProxyChallenge(const SipMessage& request, 
@@ -130,12 +138,25 @@ class Helper
                                             const Auth& challenge,
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
-                                            Data& nonceCountString);      
+                                            Data& nonceCountString);
+
+      static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
+                                                  const Data& username,
+                                                  const Data& passwordHashA1,
+                                                  const Auth& challenge,
+                                                  const Data& cnonce,
+                                                  unsigned int& nonceCount,
+                                                  Data& nonceCountString);
 
       static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                                   const Data& method, const Data& digestUri, const Data& nonce,
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
                                   const Data& cnonceCount = Data::Empty);
+
+      static Data makeResponseMD5WithA1(const Data& a1,
+                                        const Data& method, const Data& digestUri, const Data& nonce,
+                                        const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
+                                        const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
       
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 

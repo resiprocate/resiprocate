@@ -8,6 +8,16 @@
 
 using namespace resip;
 
+Message::Brief
+Message::brief() const
+{
+   return Message::Brief(*this);
+}
+
+Message::Brief::Brief(const Message& source) :
+   mSource(source)
+{}
+
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {
@@ -33,10 +43,17 @@ resip::operator<<(std::ostream& strm, const resip::Message& msg)
    return strm;
 }
 
+std::ostream& 
+resip::operator<<(std::ostream& strm, 
+                  const resip::Message::Brief& brief)
+{
+   return brief.mSource.encodeBrief(strm);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

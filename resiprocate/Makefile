@@ -67,9 +67,10 @@ SRC = \
 	Rlmi.cxx \
 	GenericContents.cxx \
 	XMLCursor.cxx \
-	UnknownHeaderType.cxx \
 	UnknownParameterType.cxx \
 	Embedded.cxx \
+	ExtensionParameter.cxx \
+	ExtensionHeader.cxx \
 	Pidf.cxx \
 	MultipartSignedContents.cxx \
 	LazyParser.cxx \
@@ -77,6 +78,7 @@ SRC = \
 	Connection.cxx \
 	Contents.cxx \
 	DataParameter.cxx \
+	DeprecatedDialog.cxx \
 	Dialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \

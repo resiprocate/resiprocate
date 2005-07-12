@@ -24,6 +24,8 @@ class Subsystem
       static const Subsystem TRANSPORT;
       static const Subsystem STATS;
       
+      const Data& getSubsystem() const;
+
    protected:
       Subsystem(const char* rhs) : mSubsystem(rhs) {};
       Subsystem(const Data& rhs) : mSubsystem(rhs) {};

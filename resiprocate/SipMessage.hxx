@@ -32,7 +32,7 @@ namespace resip
 {
 
 class Contents;
-class UnknownHeaderType;
+class ExtensionHeader;
 class SecurityAttributes;
 
 class SipMessage : public TransactionMessage
@@ -92,7 +92,7 @@ class SipMessage : public TransactionMessage
       virtual std::ostream& encodeSipFrag(std::ostream& str) const;
       std::ostream& encodeEmbedded(std::ostream& str) const;
       
-      Data brief() const;
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
 
       bool isRequest() const;
       bool isResponse() const;
@@ -219,10 +219,10 @@ class SipMessage : public TransactionMessage
 #endif // METHOD_TEMPLATES
 
       // unknown header interface
-      const StringCategories& header(const UnknownHeaderType& symbol) const;
-      StringCategories& header(const UnknownHeaderType& symbol);
-      bool exists(const UnknownHeaderType& symbol) const;
-      void remove(const UnknownHeaderType& symbol);
+      const StringCategories& header(const ExtensionHeader& symbol) const;
+      StringCategories& header(const ExtensionHeader& symbol);
+      bool exists(const ExtensionHeader& symbol) const;
+      void remove(const ExtensionHeader& symbol);
 
       // typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;

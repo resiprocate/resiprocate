@@ -6,7 +6,7 @@ ifeq ($(USE_DTLS),true)
 BUILD_DTLS = dtls
 endif
 
-all: resiprocate dum tests 
+all: resiprocate tests 
 
 resiprocate: contrib 
 	cd resiprocate; $(MAKE)
