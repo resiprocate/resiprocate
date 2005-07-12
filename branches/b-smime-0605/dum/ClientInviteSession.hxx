@@ -15,13 +15,15 @@ class ClientInviteSession : public InviteSession
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
-                          const SdpContents* initialOffer,
+                          const Contents* initialOffer,
+                          DialogUsageManager::EncryptionLevel level,
                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
       ClientInviteSessionHandle getHandle();
 
    public:
       virtual void provideOffer (const SdpContents& offer);
+      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
       virtual void provideAnswer (const SdpContents& answer);
       virtual void end ();
       virtual void reject (int statusCode, WarningCategory *warning = 0);

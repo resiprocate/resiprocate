@@ -99,6 +99,8 @@ class Contents : public LazyParser
 
       static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
 
+      void addBuffer(char* buf);
+
    protected:
       void clear();
       virtual const Data& errorContext() const;
@@ -116,6 +118,8 @@ class Contents : public LazyParser
 
    private:
       static HashMap<Mime, ContentsFactoryBase*>* FactoryMap;
+
+      std::vector<char*> mBufferList;
 };
 
 template<class T>

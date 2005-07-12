@@ -1,4 +1,6 @@
-#include "InviteSessionCreator.hxx"
+#include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/MultipartAlternativeContents.hxx"
+#include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
@@ -9,11 +11,14 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const NameAddr& target,
                                            SharedPtr<UserProfile>& userProfile,
                                            const SdpContents* initial,
+                                           DialogUsageManager::EncryptionLevel level,
+                                           const SdpContents* alternative,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, userProfile),
      mState(Initialized),
-     mServerSub(serverSub),
-     mInitialOffer(0)
+     mInitialOffer(0),
+     mEncryptionLevel(level),
+     mServerSub(serverSub)
 {
    makeInitialRequest(target, INVITE);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
@@ -27,7 +32,17 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    }
    if (initial)
    {
-      mInitialOffer = static_cast<SdpContents*>(initial->clone());
+      if (alternative)
+      {
+         MultipartAlternativeContents* mac = new MultipartAlternativeContents;
+         mac->parts().push_back(alternative->clone());
+         mac->parts().push_back(initial->clone());
+         mInitialOffer = mac;
+      }
+      else
+      {
+         mInitialOffer = initial->clone();
+      }
       getLastRequest().setContents(mInitialOffer);
    }
 }
@@ -50,10 +65,16 @@ InviteSessionCreator::dispatch(const SipMessage& msg)
    // with a single invite request
 }
 
-const SdpContents*
+const Contents*
 InviteSessionCreator::getInitialOffer() const
 {
    return mInitialOffer;
+}
+
+DialogUsageManager::EncryptionLevel
+InviteSessionCreator::getEncryptionLevel() const
+{
+   return mEncryptionLevel;
 }
 
 

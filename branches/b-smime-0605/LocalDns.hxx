@@ -1,6 +1,7 @@
 #if !defined(RESIP_LOCAL_DNS_HXX)
 #define RESIP_LOCAL_DNS_HXX
 
+#include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
 

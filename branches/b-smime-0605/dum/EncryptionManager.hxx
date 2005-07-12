@@ -98,6 +98,9 @@ class EncryptionManager
          protected:
             Data mSenderAor;
             Data mRecipientAor;
+
+         private:
+            Contents* doWork();
       };
 
       class Decrypt : public Request
@@ -114,6 +117,8 @@ class EncryptionManager
             bool isSigned();
             bool isEncryptedRecurse(Contents*);
             bool isSignedRecurse(Contents*, const Data& decryptorAor);
+            Helper::ContentsSecAttrs getContents(const SipMessage& msg, Security& security, bool noDecryptionKey);
+            Contents* getContentsRecurse(Contents*, Security&, bool, SecurityAttributes* attr);
             Data mDecryptor;
             Data mSigner;
       };

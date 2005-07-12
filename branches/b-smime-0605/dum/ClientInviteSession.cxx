@@ -16,11 +16,13 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+using namespace std;
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          Dialog& dialog,
                                          const SipMessage& request,
-                                         const SdpContents* initialOffer,
+                                         const Contents* initialOffer,
+                                         DialogUsageManager::EncryptionLevel level,
                                          ServerSubscriptionHandle serverSub) :
    InviteSession(dum, dialog),
    mLastReceivedRSeq(-1),
@@ -29,7 +31,8 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mServerSub(serverSub)
 {
    assert(request.isRequest());
-   mProposedLocalSdp = InviteSession::makeSdp(*initialOffer);
+   mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
+   mProposedEncryptionLevel = level;
    mInvite = request;
 
    mState=UAC_Start;
@@ -48,7 +51,7 @@ ClientInviteSession::getEarlyMedia() const
 }
 
 void
-ClientInviteSession::provideOffer (const SdpContents& offer)
+ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
 
@@ -67,17 +70,19 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
          mLastSessionModification = req;
 
          //  Remember proposed local SDP.
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         mDialog.send(req);
+         mDialog.send(req, mProposedEncryptionLevel);
          break;
       }
 
       case UAC_SentAnswer:
          // just queue it for later
          transition(UAC_QueuedUpdate);
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
          break;
 
       case UAC_Start:
@@ -91,9 +96,15 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
          break;
 
       default:
-         InviteSession::provideOffer(offer);
+         InviteSession::provideOffer(offer, level, alternative);
          break;
    }
+}
+
+void
+ClientInviteSession::provideOffer (const SdpContents& offer)
+{
+   this->provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
 
 void
@@ -480,13 +491,16 @@ ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents& sdp)
 
    handleProvisional(msg);
    mProposedRemoteSdp = InviteSession::makeSdp(sdp);
+   mCurrentEncryptionLevel = getEncryptionLevel(msg);
    handler->onOffer(getSessionHandle(), msg, sdp);
 }
 
 void
 ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp)
 {
-   mCurrentLocalSdp = mProposedLocalSdp;
+   //mCurrentLocalSdp = mProposedLocalSdp;
+   setCurrentLocalSdp(msg);
+   mCurrentEncryptionLevel = getEncryptionLevel(msg);
    mCurrentRemoteSdp = InviteSession::makeSdp(sdp);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -524,7 +538,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    //  Remember last session modification.
    // mLastSessionModification = prack; // !slg! is this needed?
 
-   mDialog.send(prack);
+   mDialog.send(prack, mCurrentEncryptionLevel);
 }
 
 
@@ -611,6 +625,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -625,7 +640,9 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(Connected);
          sendAck();
          handleFinalResponse(msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
+         //mCurrentLocalSdp = mProposedLocalSdp;
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
@@ -711,6 +728,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          handleFinalResponse(msg);
 
          assert(mProposedLocalSdp.get() == 0);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
 
          handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -724,7 +742,9 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          transition(Connected);
          sendAck();
          handleFinalResponse(msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
+         //mCurrentLocalSdp = mProposedLocalSdp;
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
@@ -922,12 +942,12 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          {
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
-            InviteSession::setSdp(update, *mProposedLocalSdp);
+            InviteSession::setSdp(update, mProposedLocalSdp.get());
 
             //  Remember last seesion modification.
             mLastSessionModification = update;
 
-            mDialog.send(update);
+            mDialog.send(update, mProposedEncryptionLevel);
          }
          break;
 
@@ -938,7 +958,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
-            InviteSession::setSdp(update, *mProposedLocalSdp);
+            InviteSession::setSdp(update, mProposedLocalSdp.get());
             mDialog.send(update);
          }
          handleFinalResponse(msg);
