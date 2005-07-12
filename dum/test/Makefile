@@ -8,7 +8,7 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD POPT
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += testPayloadEncrypter.cxx
+TESTPROGRAMS += testSMIME.cxx
 
 TESTPROGRAMS += limpc.cxx
 SRC = CommandLineParser.cxx UserAgent.cxx

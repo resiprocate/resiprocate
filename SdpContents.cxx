@@ -188,10 +188,10 @@ SdpContents::getBodyData() const
    checkParsed();
 
    Data d;
-   DataStream s(d);
-
-   mSession.encode(s);
-
+   {
+      DataStream s(d);
+      mSession.encode(s);
+   }   
    return d;
 }
 
