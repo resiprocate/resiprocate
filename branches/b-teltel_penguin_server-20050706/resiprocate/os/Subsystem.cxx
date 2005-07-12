@@ -14,6 +14,11 @@ const Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
 const Subsystem Subsystem::STATS("RESIP:STATS");
 const Subsystem Subsystem::NONE("UNDEFINED");
 
+const Data& Subsystem::getSubsystem() const
+{
+    return mSubsystem;
+}
+
 std::ostream& 
 resip::operator<<(std::ostream& strm, const Subsystem& ss)
 {

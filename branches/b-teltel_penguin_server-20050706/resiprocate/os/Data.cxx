@@ -1095,6 +1095,45 @@ Data::convertInt() const
    return s*val;
 }
 
+UInt64
+Data::convertUInt64() const
+{
+   UInt64 val = 0;
+   char* p = mBuf;
+   int l = mSize;
+   int s = 1;
+
+   while (isspace(*p++))
+   {
+      l--;
+   }
+   p--;
+   
+   if (*p == '-')
+   {
+      s = -1;
+      ++p;
+      l--;
+   }
+   
+   while (l--)
+   {
+      char c = *p++;
+      if (!isdigit(c)) break;
+      if ((c >= '0') && (c <= '9'))
+      {
+         val *= 10;
+         val += c - '0';
+      }
+      else
+      {
+         return s*val;
+      }
+   }
+
+   return s*val;
+}
+
 size_t
 Data::convertSize() const
 {

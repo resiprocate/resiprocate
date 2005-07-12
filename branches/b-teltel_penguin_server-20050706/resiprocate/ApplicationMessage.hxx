@@ -11,7 +11,7 @@ class ApplicationMessage : public Message
    public:
       ApplicationMessage() {};
 
-      virtual Data brief() const=0;
+      virtual std::ostream& encodeBrief(std::ostream& str) const = 0;
       virtual Message* clone() const=0;
 };
  

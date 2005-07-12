@@ -1,6 +1,6 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
-
+#include <cassert>
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
@@ -80,6 +80,8 @@ iDataStream::~iDataStream()
 oDataStream::oDataStream(Data& str)
    : DataBuffer(str), std::ostream(this)
 {
+   // don't call this with a read-only buffer!
+   assert(str.mMine != Data::Share);
 }
 
 oDataStream::~oDataStream()
@@ -90,6 +92,8 @@ oDataStream::~oDataStream()
 DataStream::DataStream(Data& str)
    : DataBuffer(str), std::iostream(this)
 {
+   // don't call this with a read-only buffer!
+   assert(str.mMine != Data::Share);
 }
 
 DataStream::~DataStream()
@@ -99,7 +103,7 @@ DataStream::~DataStream()
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
