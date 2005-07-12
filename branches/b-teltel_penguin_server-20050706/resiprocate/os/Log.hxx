@@ -1,7 +1,5 @@
-#if !defined(RESIP_LOG_HXX)
-#define RESIP_LOG_HXX 
-
-#define DELIM ' ' << '|' << ' '
+#ifndef RESIP_Log_hx
+#define RESIP_Log_hx
 
 #include "resiprocate/os/Data.hxx"
 
@@ -20,6 +18,8 @@
 
 namespace resip
 {
+
+class ExternalLogger;
 
 class Log
 {
@@ -81,17 +81,34 @@ class Log
             Level level;
       };
 
-      /// Return the loglevel, hostname, appname, pid, tid, subsystem
+      /// output the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, 
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
-                                std::ostream& strm); 
+                                std::ostream& strm);
+      /// output the loglevel, hostname, appname, pid, tid, subsystem
+      static Data& tags(Log::Level level, 
+                        const Subsystem& subsystem, 
+                        const char* file,
+                        int line,
+                        Data& out);
+      static Data& timestamp(Data& result);
       static Data timestamp();
+      static ExternalLogger* getExternal()
+      {
+         return _externalLogger;
+      }
+      static Data getAppName()
+      {
+         return _appName;
+      }
+
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
-                             const char * logFileName = 0);
+                             const char * logFileName = 0,
+                             ExternalLogger* externalLogger = 0);
       static void initialize(const Data& type,
                              const Data& level,
                              const Data& appName,
@@ -100,6 +117,10 @@ class Log
                              const char* level,
                              const char* appName,
                              const char * logFileName = 0);
+      static void initialize(Type type,
+                             Level level,
+                             const Data& appName,
+                             ExternalLogger& logger);
 
       static void setLevel(Level level);
       static Level level() { return _level; }
@@ -117,11 +138,13 @@ class Log
       static void setThreadSetting(int serv);
       static volatile short touchCount;
       static Type _type;
+      static const Data delim;
    protected:
       static Level _level;
       static Data _appName;
       static Data _hostname;
       static Data _logFileName;
+      static ExternalLogger* _externalLogger;
 #ifndef WIN32
       static pid_t _pid;
 #else   
@@ -135,6 +158,20 @@ class Log
       static HashMap<int, std::set<pthread_t> > _serviceToThreads;
       static pthread_key_t _levelKey;
 #endif
+      ExternalLogger* mExternalLogger;
+};
+
+/** Interface functor for external logging. */
+class ExternalLogger
+{
+   public:
+      /** return true to also do default logging, false to supress default logging. */
+      virtual bool operator()(Log::Level level,
+                              const Subsystem& subsystem, 
+                              const Data& appName,
+                              const char* file,
+                              int line,
+                              const Data& message) = 0;
 };
 
 }

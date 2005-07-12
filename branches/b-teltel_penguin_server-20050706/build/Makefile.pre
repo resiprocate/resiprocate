@@ -138,9 +138,10 @@ endif
 # pre tools
 ######################################################################
 
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
-CONFIGURE_ARGS += --disable-shared
-endif
-CONFIGURE = ./configure $(CONFIGURE_ARGS)
+#ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+#ifeq ($(BUILD_SHARED_LIBS),yes)
+#CONFIGURE_ARGS += --disable-shared
+#endif
+#CONFIGURE = ./configure $(CONFIGURE_ARGS)
 
 default: code

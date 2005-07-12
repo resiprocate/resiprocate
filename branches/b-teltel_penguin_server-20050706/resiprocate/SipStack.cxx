@@ -184,6 +184,15 @@ SipStack::getUri() const
 }
 
 void 
+SipStack::send(std::auto_ptr<SipMessage> msg)
+{
+   DebugLog (<< "SEND: " << msg->brief());
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
+
+void 
 SipStack::send(const SipMessage& msg)
 {
    DebugLog (<< "SEND: " << msg.brief());
@@ -196,6 +205,32 @@ SipStack::send(const SipMessage& msg)
    mTransactionController.send(toSend);
 }
 
+
+// this is only if you want to send to a destination not in the route. You
+// probably don't want to use it. 
+void 
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
+                 const Uri& uri)
+{
+   msg->setForceTarget(uri);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
+
+// this is only if you want to send to a destination not in the route. You
+// probably don't want to use it. 
+void 
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
+                 const Tuple& destination)
+{
+   assert(!mShuttingDown);
+   assert(destination.transport);
+   msg->setDestination(destination);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+}
 
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
@@ -224,6 +259,31 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
+}
+
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message)
+{
+   assert(!mShuttingDown);
+   mTUFifo.add(message.release(), TimeLimitFifo<Message>::InternalElement);
+}
+
+void
+SipStack::post(std::auto_ptr<ApplicationMessage> message,
+               unsigned int secondsLater)
+{
+   assert(!mShuttingDown);
+   postMS(message, secondsLater*1000);
+}
+
+void
+SipStack::postMS(std::auto_ptr<ApplicationMessage> message, 
+                 unsigned int ms)
+{
+   assert(!mShuttingDown);
+
+   Lock lock(mAppTimerMutex);
+   mAppTimers.add(Timer(ms, message.release()));
 }
 
 void
@@ -322,7 +382,7 @@ SipStack::process(FdSet& fdset)
 }
 
 /// returns time in milliseconds when process next needs to be called 
-int 
+unsigned int 
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
