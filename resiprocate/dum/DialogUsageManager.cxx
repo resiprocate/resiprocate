@@ -156,7 +156,7 @@ DialogUsageManager::onAllHandlesDestroyed()
       {
          case ShutdownRequested:
             InfoLog (<< "DialogUsageManager::onAllHandlesDestroyed: removing TU");
-            assert(mHandleMap.empty());
+            //assert(mHandleMap.empty());
             mShutdownState = RemovingTransactionUser;
             mStack.unregisterTransactionUser(*this);
             break;
