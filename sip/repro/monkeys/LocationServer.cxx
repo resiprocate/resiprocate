@@ -44,7 +44,7 @@ LocationServer::handleRequest(RequestContext& context)
         else
         {
             // remove expired contact 
-            mStore.removeContact(inputUri, Uri(contact.first));
+            mStore.removeContact(inputUri, contact.first);
         }
      }
 	 // if target list is empty return a 480
