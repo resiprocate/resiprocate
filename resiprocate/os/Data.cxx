@@ -173,7 +173,6 @@ hexpair2int(char high, char low)
 bool
 Data::init()
 {
-   // !dlb! how do I init?
    return true;
 }
 
@@ -875,11 +874,7 @@ Data::append(const char* str, size_type len)
    {
       if (mMine == Share)
       {
-         char *oldBuf = mBuf;
-         mCapacity = mSize + len;
-         mBuf = new char[mSize + len];
-         memcpy(mBuf, oldBuf, mSize);
-         mMine = Take;
+         resize(mSize + len, true);
       }
    }
 
