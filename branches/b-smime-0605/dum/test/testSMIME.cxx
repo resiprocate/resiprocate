@@ -234,8 +234,7 @@ int main(int argc, char *argv[])
                ClientPagerMessageHandle cpmh = clientDum.makePagerMessage(userAor);			               
 
                switch (iteration) 
-               {
-                  /*
+               {  
                   case 0:
                   {
                      Contents* contents = new PlainContents(Data("message"));
@@ -243,8 +242,8 @@ int main(int argc, char *argv[])
                      cpmh.get()->page(content, DialogUsageManager::None);
                      sent = true;
                      break;
-                  }*/
-                  case 0:
+                  }
+                  case 1:
                   {
                      InfoLog( << "Sending encrypted message" );
                      Contents* contents = new PlainContents(Data("encrypted message"));
@@ -253,7 +252,6 @@ int main(int argc, char *argv[])
                      sent = true;
                      break;
                   }
-                  /*
                   case 2:
                   {
                      InfoLog( << "Sending signed message" );
@@ -272,7 +270,6 @@ int main(int argc, char *argv[])
                      sent = true;
                      break;
                   }
-                  */
                   default:
                   {
                      InfoLog( << "Finished!" );
