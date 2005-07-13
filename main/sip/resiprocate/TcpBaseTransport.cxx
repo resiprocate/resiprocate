@@ -25,16 +25,18 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
    mFd = InternalTransport::socket(TCP, version);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
-#if !defined(WIN32)
    int on = 1;
+#if !defined(WIN32)
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
+#else
+   if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
+#endif
    {
 	   int e = getErrno();
        InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
-#endif
 
    bind();
    makeSocketNonBlocking(mFd);
