@@ -876,7 +876,7 @@ Data::append(const char* str, size_type len)
       {
          char *oldBuf = mBuf;
          mCapacity = mSize + len;
-         mBuf = new char[mSize + len];
+         mBuf = new char[mSize + len + 1];
          memcpy(mBuf, oldBuf, mSize);
          mMine = Take;
       }
