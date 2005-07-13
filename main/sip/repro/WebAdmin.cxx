@@ -8,6 +8,7 @@
 #endif
 
 #include <cassert>
+#include <time.h>
 
 #include "resiprocate/Symbols.hxx"
 
@@ -633,6 +634,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
       "  <td>Contact</td>" << endl << 
+      "  <td>Expires In</td>" << endl << 
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
   
@@ -649,25 +651,34 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                  = contacts.begin();
               i != contacts.end(); ++i )
          {
-            s << "<tr>" << endl
-              << "  <td>" ;
-            if (first) 
-            { 
-               s << uri;
-               first = false;
-            }
-            s << "</td>" << endl
-              << "  <td>";
+            if(i->second >= time(NULL))
+            {
+               s << "<tr>" << endl
+                 << "  <td>" ;
+               if (first) 
+               { 
+                  s << uri;
+                  first = false;
+               }
+               s << "</td>" << endl
+                 << "  <td>";
             
-            const RegistrationPersistenceManager::ContactPair& p = *i;
-            const Uri& contact = p.first; 
+               const RegistrationPersistenceManager::ContactPair& p = *i;
+               const Uri& contact = p.first; 
 
-            s << contact;
-            s <<"</td>" << endl 
-              << "  <td>"
-              << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
-              << "\"/></td>" << endl
-              << "</tr>" << endl;
+               s << contact;
+               s <<"</td>" << endl 
+                 <<"<td>" << i->second - time(NULL) << "s</td>" << endl
+                 << "  <td>"
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
+                 << "\"/></td>" << endl
+                 << "</tr>" << endl;
+            }
+            else
+            {
+               // remove expired contact 
+               mRegDb.removeContact(uri, static_cast<Uri>(i->first));
+            }
          }
       }
                   
