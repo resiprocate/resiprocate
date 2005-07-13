@@ -195,7 +195,14 @@ main(int argc, char** argv)
 {
    /* Initialize a stack */
    CommandLineParser args(argc, argv);
-   Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
+   if(args.mLogType.lowercase() == "file")
+   {
+      Log::initialize("file", args.mLogLevel, argv[0], "repro_log.txt");
+   }
+   else
+   {
+      Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
+   }
 
 #ifdef USE_SSL
    Security security(args.mCertPath);
