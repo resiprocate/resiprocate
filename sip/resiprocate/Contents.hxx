@@ -1,32 +1,23 @@
-#if !defined(RESIP_CONTENTS_HXX)
-#define RESIP_CONTENTS_HXX 
+#ifndef RESIP_Contents_hxx
+#define RESIP_Contents_hxx
 
 #include <iosfwd>
 
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/Mime.hxx"
-#include "resiprocate/Token.hxx"
 #include "resiprocate/StringCategory.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/ContentsFactory.hxx"
 
 namespace resip
 {
 
+class Token;
 class Contents;
 class HeaderFieldValue;
 class ParseBuffer;
-
-class ContentsFactoryBase
-{
-   public:
-      virtual ~ContentsFactoryBase() {}
-      virtual Contents* create(HeaderFieldValue* hfv, 
-                               const Mime& contentType) const = 0;
-      virtual Contents* convert(Contents* c) const = 0;
-};
 
 // MIME header types
 class MIME_Header
@@ -97,8 +88,6 @@ class Contents : public LazyParser
       int& version() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
 
-      static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
-
    protected:
       void clear();
       virtual const Data& errorContext() const;
@@ -113,49 +102,6 @@ class Contents : public LazyParser
 
       mutable int mVersion;
       mutable int mMinorVersion;
-
-   private:
-      static HashMap<Mime, ContentsFactoryBase*>* FactoryMap;
-};
-
-template<class T>
-class ContentsFactory : public ContentsFactoryBase
-{
-   public:
-      ContentsFactory()
-      {
-         HeaderFieldValue hfv;
-         assert(Contents::getFactoryMap().count(T::getStaticType()) == 0);
-         Contents::getFactoryMap()[T::getStaticType()] = this;
-      }
-
-      explicit ContentsFactory(const Mime& nonStandardType)
-      {
-         HeaderFieldValue hfv;
-         Contents::getFactoryMap()[nonStandardType] = this;
-      }
-
-      virtual ~ContentsFactory()
-      {
-         HashMap<Mime, ContentsFactoryBase*>::iterator i;
-         i = Contents::getFactoryMap().find(T::getStaticType());
-         Contents::getFactoryMap().erase(i);
-         if (Contents::getFactoryMap().size() == 0)
-         {
-            delete &Contents::getFactoryMap();
-         }
-      }
-      
-      // pass Mime instance for parameters
-      virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
-      {
-         return new T(hfv, contentType);
-      }
-
-      virtual Contents* convert(Contents* c) const
-      {
-         return dynamic_cast<T*>(c);
-      }
 };
 
 }
@@ -165,7 +111,7 @@ class ContentsFactory : public ContentsFactoryBase
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

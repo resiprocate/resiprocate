@@ -1,47 +1,36 @@
-#ifndef RESIP_ParserContainerBase_hxx
-#define RESIP_ParserContainerBase_hxx
+#include "resiprocate/ContentsFactoryBase.hxx"
 
-#include "resiprocate/ParserCategory.hxx"
-#include <iosfwd>
-#include "resiprocate/HeaderTypes.hxx"
-#include <vector>
+using namespace resip;
 
-namespace resip
+HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
+
+ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
+   : mContentType(contentType)
 {
-
-class HeaderFieldValueList;
-
-class ParserContainerBase
-{
-   public:
-      typedef size_t size_type;
-
-      ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
-         : mType(type)
-      {}
-      ParserContainerBase(const ParserContainerBase& rhs)
-         : mType(rhs.mType)
-      {}
-      virtual ~ParserContainerBase();
-      void clear();
-      virtual ParserContainerBase* clone() const = 0;
-      size_t size() const;
-      bool empty() const;
-      std::ostream& encode(const Data& headerName, std::ostream& str) const;
-      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const;
-
-      ParserCategory* front();
-      void pop_front();
-      void pop_back();
-
-   protected:
-      const Headers::Type mType;
-      std::vector<ParserCategory*> mParsers;
-};
- 
+   assert(ContentsFactoryBase::getFactoryMap().count(contentType) == 0);
+   ContentsFactoryBase::getFactoryMap()[contentType] = this;
 }
 
-#endif
+ContentsFactoryBase::~ContentsFactoryBase()
+{
+   HashMap<Mime, ContentsFactoryBase*>::iterator i;
+   i = ContentsFactoryBase::getFactoryMap().find(mContentType);
+   ContentsFactoryBase::getFactoryMap().erase(i);
+   if (ContentsFactoryBase::getFactoryMap().size() == 0)
+   {
+      delete &ContentsFactoryBase::getFactoryMap();
+   }
+}
+
+HashMap<Mime, ContentsFactoryBase*>& 
+ContentsFactoryBase::getFactoryMap()
+{
+   if (ContentsFactoryBase::FactoryMap == 0)
+   {
+      ContentsFactoryBase::FactoryMap = new HashMap<Mime, ContentsFactoryBase*>();
+   }
+   return *ContentsFactoryBase::FactoryMap;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -53,10 +42,10 @@ class ParserContainerBase
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
