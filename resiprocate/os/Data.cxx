@@ -945,6 +945,8 @@ void
 Data::resize(size_type newCapacity, 
              bool copy)
 {
+   assert(newCapacity > mCapacity);
+
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
    if (copy)
