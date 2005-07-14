@@ -1,12 +1,8 @@
-#if !defined(RESIP_PARSERCONTAINER_HXX)
-#define RESIP_PARSERCONTAINER_HXX 
+#ifndef RESIP_ParserContainer_hxx
+#define RESIP_ParserContainer_hxx
 
 #include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/ParserContainerBase.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/Embedded.hxx"
-#include <cassert>
-#include <vector>
 
 namespace resip
 {
@@ -20,7 +16,6 @@ class ParserContainer : public ParserContainerBase
       typedef const value_type* const_pointer;
       typedef value_type& reference;
       typedef const value_type& const_reference;
-      typedef size_t size_type;
       typedef ptrdiff_t difference_type;
 
       ParserContainer()
@@ -44,16 +39,11 @@ class ParserContainer : public ParserContainerBase
       ParserContainer(const ParserContainer& other)
          : ParserContainerBase(other)
       {
-         for (typename std::vector<T*>::const_iterator i = other.mParsers.begin(); 
+         for (typename std::vector<ParserCategory*>::const_iterator i = other.mParsers.begin(); 
               i != other.mParsers.end(); ++i)
          {
-            mParsers.push_back(new T(**i));
+            mParsers.push_back(new T(*static_cast<T*>(*i)));
          }
-      }
-
-      ~ParserContainer()
-      {
-         clear();
       }
       
       ParserContainer& operator=(const ParserContainer& other)
@@ -61,51 +51,37 @@ class ParserContainer : public ParserContainerBase
          if (this != &other)
          {
             clear();
-            for (typename std::vector<T*>::const_iterator i = other.mParsers.begin(); 
+            for (typename std::vector<ParserCategory*>::const_iterator i = other.mParsers.begin(); 
                  i != other.mParsers.end(); ++i)
             {
-               mParsers.push_back(new T(**i));
+               mParsers.push_back(new T(*static_cast<T*>(*i)));
             }
          }
          return *this;
       }
-      
-      virtual bool empty() const { return mParsers.empty(); }
-      size_type size() const { return mParsers.size(); }
-      void clear()
-      {
-         for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
-              i != mParsers.end(); i++)
-         {
-            delete *i;
-         }
-         mParsers.clear();
-      }
-      
-      T& front() { return *mParsers.front();}
-      T& back() { return *mParsers.back();}
-      const T& front() const { return *mParsers.front();}
-      const T& back() const { return *mParsers.back();}
+            
+      T& front() { return *static_cast<T*>(mParsers.front());}
+      T& back() { return *static_cast<T*>(mParsers.back());}
+      const T& front() const { return *static_cast<T*>(mParsers.front());}
+      const T& back() const { return *static_cast<T*>(mParsers.back());}
       
       void push_front(const T & t) { mParsers.insert(mParsers.begin(), new T(t)); }
       void push_back(const T & t) { mParsers.push_back(new T(t)); }
-      
-      void pop_front() { delete mParsers.front(); mParsers.erase(mParsers.begin()); }
-      void pop_back() { delete mParsers.back(); mParsers.pop_back(); }                
-      
+            
       ParserContainer reverse() const
       {
          ParserContainer tmp(*this);
          std::reverse(tmp.mParsers.begin(), tmp.mParsers.end());
          return tmp;
       }
-      
+
+      // .dlb. these can be partially hoisted as well
       class const_iterator;
       
       class iterator
       {
          public:
-            iterator(typename std::vector<T*>::iterator i) : mIt(i){}
+            iterator(typename std::vector<ParserCategory*>::iterator i) : mIt(i){}
             iterator() {}
 
             iterator operator++() {iterator it(++mIt); return it;}
@@ -117,10 +93,10 @@ class ParserContainer : public ParserContainerBase
             bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
             iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
-            T& operator*() {return **mIt;}
-            T* operator->() {return *mIt;}
+            T& operator*() {return *static_cast<T*>(*mIt);}
+            T* operator->() {return static_cast<T*>(*mIt);}
          private:
-            typename std::vector<T*>::iterator mIt;
+            typename std::vector<ParserCategory*>::iterator mIt;
             friend class const_iterator;
             friend class ParserContainer;
       };
@@ -128,7 +104,7 @@ class ParserContainer : public ParserContainerBase
       class const_iterator
       {
          public:
-            const_iterator(typename std::vector<T*>::const_iterator i) : mIt(i) {}
+            const_iterator(std::vector<ParserCategory*>::const_iterator i) : mIt(i) {}
             const_iterator() {}
 
             const_iterator operator++() {const_iterator it(++mIt); return it;}
@@ -141,11 +117,11 @@ class ParserContainer : public ParserContainerBase
             bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
             const_iterator& operator=(const const_iterator& rhs) { mIt = rhs.mIt; return *this;}
             const_iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
-            const T& operator*() {return **mIt;}
-            const T* operator->() {return *mIt;}
+            const T& operator*() {return *static_cast<T*>(*mIt);}
+            const T* operator->() {return static_cast<T*>(*mIt);}
          private:
             friend class iterator;
-            typename std::vector<T*>::const_iterator mIt;
+            typename std::vector<ParserCategory*>::const_iterator mIt;
       };
       
       iterator begin() { return iterator(mParsers.begin()); }
@@ -159,10 +135,10 @@ class ParserContainer : public ParserContainerBase
 
       bool find(const T& rhs) const
       {
-         for (typename std::vector<T*>::const_iterator i = mParsers.begin();
+         for (typename std::vector<ParserCategory*>::const_iterator i = mParsers.begin();
               i != mParsers.end(); ++i)
          {
-            if (rhs == **i)
+            if (rhs == *static_cast<T*>(*i))
             {
                return true;
             }
@@ -177,10 +153,10 @@ class ParserContainer : public ParserContainerBase
       //non-stl, would be accomlished through insert in stl
       void append(const ParserContainer& source) 
       {
-         for (typename std::vector<T*>::const_iterator i = source.mParsers.begin(); 
+         for (typename std::vector<ParserCategory*>::const_iterator i = source.mParsers.begin(); 
               i != source.mParsers.end(); ++i)
          {
-            mParsers.push_back(new T(**i));
+            mParsers.push_back(new T(*static_cast<T*>(*i)));
          }
       }
 
@@ -188,77 +164,6 @@ class ParserContainer : public ParserContainerBase
       {
          return new ParserContainer(*this);
       }
-
-      virtual std::ostream& encode(const Data& headerName, std::ostream& str) const
-      {
-         // !jf! this is not strictly correct since some headers are allowed to
-         // be empty: Supported, Accept-Encoding, Allow-Events, Allow,
-         // Accept,Accept-Language 
-         if (!mParsers.empty())
-         {
-            if (!headerName.empty())
-            {
-               str << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
-            }
-         
-            for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
-                 i != mParsers.end(); ++i)
-            {
-               if (i != mParsers.begin())
-               {
-                  if (Headers::isCommaEncoding(mType))
-                  {
-                     str << Symbols::COMMA[0] << Symbols::SPACE[0];
-                  }
-                  else
-                  {
-                     str << Symbols::CRLF << headerName << Symbols::COLON[0] << Symbols::SPACE[0];
-                  }
-               }
-
-               (*i)->encode(str);
-            }
-
-            str << Symbols::CRLF;
-         }
-         
-         return str;
-      }
-
-      virtual std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const
-      {
-         assert(!headerName.empty());
-
-         if (!mParsers.empty())
-         {
-
-            bool first = true;
-            for (typename std::vector<T*>::const_iterator i = mParsers.begin(); 
-                 i != mParsers.end(); ++i)
-            {
-               if (first)
-               {
-                  first = false;
-               }
-               else
-               {
-                  str << Symbols::AMPERSAND;
-               }
-
-               str << headerName << Symbols::EQUALS;
-               Data buf;
-               {
-                  DataStream s(buf);
-                  (*i)->encode(s);
-               }
-               str << Embedded::encode(buf);
-            }
-         }
-         return str;
-      }
-
-   private:
-      std::vector<T*> mParsers;
 };
  
 }
@@ -268,7 +173,7 @@ class ParserContainer : public ParserContainerBase
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -15,8 +15,6 @@ using namespace resip;
 H_ContentID resip::h_ContentID;
 H_ContentDescription resip::h_ContentDescription;
 
-HashMap<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
-
 Contents::Contents(HeaderFieldValue* headerFieldValue,
                    const Mime& contentType) 
    : LazyParser(headerFieldValue),
@@ -128,30 +126,6 @@ Contents::operator=(const Contents& rhs)
    return *this;
 }
 
-HashMap<Mime, ContentsFactoryBase*>& 
-Contents::getFactoryMap()
-{
-   if (Contents::FactoryMap == 0)
-   {
-      Contents::FactoryMap = new HashMap<Mime, ContentsFactoryBase*>();
-   }
-   return *Contents::FactoryMap;
-}
-
-Contents*
-Contents::getContents(const Mime& m)
-{
-   if (Contents::getFactoryMap().find(m) != Contents::getFactoryMap().end())
-   {
-      return Contents::getFactoryMap()[m]->convert(getContents());
-   }
-   else
-   {
-      // return a generic contents and hope for the best
-      return new GenericContents(mHeaderField, m);
-   }
-}
-
 Contents*
 Contents::createContents(const Mime& contentType, 
                          const Data& contents)
@@ -166,9 +140,9 @@ Contents::createContents(const Mime& contentType,
    HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
 
    Contents* c;
-   if (Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end())
+   if (ContentsFactoryBase::getFactoryMap().find(contentType) != ContentsFactoryBase::getFactoryMap().end())
    {
-      c = Contents::getFactoryMap()[contentType]->create(hfv, contentType);
+      c = ContentsFactoryBase::getFactoryMap()[contentType]->create(hfv, contentType);
    }
    else
    {
@@ -541,11 +515,10 @@ Contents::getBodyData() const
    return Data::Empty;
 }
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
