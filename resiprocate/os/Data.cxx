@@ -903,11 +903,9 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   own();
-
-   if (mSize >= mCapacity)      // !ah! we were overwritting the end
-   {                            // !ah! when mSize == mCapacity !!
-       const_cast<Data*>(this)->resize(mSize+1,true);
+   if (mCapacity == mSize)
+   {
+      const_cast<Data*>(this)->resize(mSize+1,true);
    }
    // mostly is zero terminated, but not by DataStream
    mBuf[mSize] = 0;
