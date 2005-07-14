@@ -77,14 +77,6 @@ DialogUsageManager::~DialogUsageManager()
    mShutdownState = Destroying;
    //InfoLog ( << "~DialogUsageManager" );
 
-#if(0)
-   // !kh!
-   DialogSetMap::iterator dialogSet = mDialogSetMap.begin();
-   for (; dialogSet != mDialogSetMap.end(); ++dialogSet)
-   {
-      delete dialogSet->second;
-   }
-#endif
    if(!mDialogSetMap.empty())
    {
       InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
