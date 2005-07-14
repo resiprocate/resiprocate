@@ -69,6 +69,7 @@ SRC = \
 	ConnectionBase.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
+	ContentsFactoryBase.cxx \
 	CpimContents.cxx \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
@@ -107,6 +108,7 @@ SRC = \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
+	ParserContainerBase.cxx \
 	Pidf.cxx \
 	Pkcs7Contents.cxx \
 	Pkcs8Contents.cxx \

@@ -1,44 +1,37 @@
-#ifndef RESIP_ParserContainerBase_hxx
-#define RESIP_ParserContainerBase_hxx
+#ifndef RESIP_ContentsFactory
+#define RESIP_ContentsFactory
 
-#include "resiprocate/ParserCategory.hxx"
-#include <iosfwd>
-#include "resiprocate/HeaderTypes.hxx"
-#include <vector>
+#include "resiprocate/ContentsFactoryBase.hxx"
 
 namespace resip
 {
 
-class HeaderFieldValueList;
+class Contents;
 
-class ParserContainerBase
+template<class T>
+class ContentsFactory : public ContentsFactoryBase
 {
    public:
-      typedef size_t size_type;
-
-      ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
-         : mType(type)
+      ContentsFactory()
+         : ContentsFactoryBase(T::getStaticType())
       {}
-      ParserContainerBase(const ParserContainerBase& rhs)
-         : mType(rhs.mType)
+
+      explicit ContentsFactory(const Mime& nonStandardType)
+         : ContentsFactoryBase(nonStandardType)
       {}
-      virtual ~ParserContainerBase();
-      void clear();
-      virtual ParserContainerBase* clone() const = 0;
-      size_t size() const;
-      bool empty() const;
-      std::ostream& encode(const Data& headerName, std::ostream& str) const;
-      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const;
 
-      ParserCategory* front();
-      void pop_front();
-      void pop_back();
+      // pass Mime instance for parameters
+      virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
+      {
+         return new T(hfv, contentType);
+      }
 
-   protected:
-      const Headers::Type mType;
-      std::vector<ParserCategory*> mParsers;
+      virtual Contents* convert(Contents* c) const
+      {
+         return dynamic_cast<T*>(c);
+      }
 };
- 
+
 }
 
 #endif
@@ -53,10 +46,10 @@ class ParserContainerBase
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
