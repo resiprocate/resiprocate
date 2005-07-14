@@ -1,44 +1,30 @@
-#ifndef RESIP_ParserContainerBase_hxx
-#define RESIP_ParserContainerBase_hxx
+#ifndef RESIP_ContentsFactoryBase_hxx
+#define RESIP_ContentsFactoryBase_hxx
 
-#include "resiprocate/ParserCategory.hxx"
-#include <iosfwd>
-#include "resiprocate/HeaderTypes.hxx"
-#include <vector>
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 namespace resip
 {
 
-class HeaderFieldValueList;
-
-class ParserContainerBase
+/**
+   Hoist for template mapping from Mime to derived content.
+*/
+class ContentsFactoryBase
 {
    public:
-      typedef size_t size_type;
+      ContentsFactoryBase(const Mime& contentType);
+      virtual ~ContentsFactoryBase();
+      virtual Contents* create(HeaderFieldValue* hfv, 
+                               const Mime& contentType) const = 0;
+      virtual Contents* convert(Contents* c) const = 0;
 
-      ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
-         : mType(type)
-      {}
-      ParserContainerBase(const ParserContainerBase& rhs)
-         : mType(rhs.mType)
-      {}
-      virtual ~ParserContainerBase();
-      void clear();
-      virtual ParserContainerBase* clone() const = 0;
-      size_t size() const;
-      bool empty() const;
-      std::ostream& encode(const Data& headerName, std::ostream& str) const;
-      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const;
-
-      ParserCategory* front();
-      void pop_front();
-      void pop_back();
-
-   protected:
-      const Headers::Type mType;
-      std::vector<ParserCategory*> mParsers;
+      static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
+   private:
+      Mime mContentType;
+      static HashMap<Mime, ContentsFactoryBase*>* FactoryMap;
 };
- 
+
 }
 
 #endif
@@ -46,17 +32,17 @@ class ParserContainerBase
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005
+ * Copyright (c) 2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
@@ -92,3 +78,4 @@ class ParserContainerBase
  * <http://www.vovida.org/>.
  *
  */
+
