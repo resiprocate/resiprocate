@@ -1,88 +1,63 @@
-#if !defined(RESIP_CLIENTPAGERMESSAGE_HXX)
-#define RESIP_CLIENTPAGERMESSAGE_HXX
+#ifndef RESIP_CertMessage_hxx
+#define RESIP_CertMessage_hxx 
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/CSeqCategory.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include <deque>
-#include <memory>
+#include "resiprocate/Message.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
-class SipMessage;
 
-class ClientPagerMessage : public NonDialogUsage
+class MessageId
 {
-  public:
-      ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
-      ClientPagerMessageHandle getHandle();
-
-      //allow the user to adorn the MESSAGE message if desired
-      //!kh!
-      //I don't know how this would interact with the queuing mechanism.
-      //Will come back to re-visit this in the future.
-      SipMessage& getMessageRequest();
-
-      //!kh!
-      //queues the message if there is one sent but not yet received a response
-      //for it.
-      //asserts if contents->get() is NULL.
-      virtual void page(std::auto_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level=DialogUsageManager::None);
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
-      size_t       msgQueued () const;
-
-   protected:
-      virtual ~ClientPagerMessage();
-
-   private:
-      friend class DialogSet;
-
-      //uses memory from creator
-	  SipMessage& mRequest;
-
-      typedef struct
+   public:
+      typedef enum
       {
-            DialogUsageManager::EncryptionLevel encryptionLevel;
-            Contents* contents;
-      } Item;
+         UserCert,
+         UserPrivateKey
+      } Type;
 
-      typedef std::deque<Item> MsgQueue;
-      MsgQueue mMsgQueue;
-
-      // disabled
-      ClientPagerMessage(const ClientPagerMessage&);
-      ClientPagerMessage& operator=(const ClientPagerMessage&);
-
-      void pageFirstMsgQueued ();
-      void clearMsgQueued ();
+      MessageId(UInt32 id, const Data& aor, Type type) : mId(id), mAor(aor), mType(type) {}
+      friend std::ostream& operator<<(std::ostream& strm, const MessageId& id);
+      UInt32 mId;
+      Data mAor;
+      Type mType;
 };
 
+class CertMessage : public Message
+{
+   public:
+      CertMessage(const MessageId& id, bool success, const Data& body);
+      bool success() const { return mSuccess; }
+      const Data& body() const { return mBody; }
+      const MessageId& id() const { return mId; }
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+
+   private:
+      MessageId mId;
+      bool mSuccess;
+      Data mBody;
+};
+ 
 }
 
 #endif
-
 /* ====================================================================
- * The Vovida Software License, Version 1.0
- *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- *
+ * The Vovida Software License, Version 1.0 
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- *
+ * 
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
- *
+ * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -92,7 +67,7 @@ class ClientPagerMessage : public NonDialogUsage
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -106,9 +81,9 @@ class ClientPagerMessage : public NonDialogUsage
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- *
+ * 
  * ====================================================================
- *
+ * 
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
