@@ -1,3 +1,5 @@
+#include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/MultipartAlternativeContents.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
@@ -140,31 +142,37 @@ ServerInviteSession::provisional(int code)
    }
 }
 
-void 
-ServerInviteSession::provideOffer(const SdpContents& offer)
+void
+ServerInviteSession::provideOffer(const SdpContents& offer,
+                                  DialogUsageManager::EncryptionLevel level, 
+                                  const SdpContents* alternative)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
    switch (mState)
    {
       case UAS_NoOffer:
          transition(UAS_ProvidedOffer);
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
          break;
 
       case UAS_EarlyNoOffer:
          transition(UAS_EarlyProvidedOffer);
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
          break;
          
       case UAS_NoOfferReliable:
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
          // !jf! transition ? 
          break;
 
       case UAS_EarlyReliable:
          // queue offer
          transition(UAS_SentUpdate);
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
+         mProposedEncryptionLevel = level;
          sendUpdate(offer);
          break;
          
@@ -172,6 +180,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          // queue the offer to be sent after the ACK is received
          transition(UAS_WaitingToOffer);
          mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mProposedEncryptionLevel = level;
          break;
 
       case UAS_WaitingToOffer:
@@ -192,9 +201,15 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          assert(0);
          break;
       default:
-         InviteSession::provideOffer(offer);
+         InviteSession::provideOffer(offer, level, alternative);
          break;
    }
+}
+
+void 
+ServerInviteSession::provideOffer(const SdpContents& offer)
+{
+   this->provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
 
 void 
@@ -548,6 +563,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), Offer, msg);
          if(!isTerminated())  
          {
@@ -567,6 +583,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), Offer, msg);
          if(!isTerminated())  
          {
@@ -676,8 +693,18 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    {
       case OnAck:
       {
+         assert(mProposedLocalSdp.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         InviteSession::provideOffer(*mProposedLocalSdp);
+         if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
+         {
+            provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
+                          mProposedEncryptionLevel,
+                          dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
+         }
+         else
+         {
+            provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
+         }
          break;
       }
 
@@ -731,7 +758,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       case OnAckAnswer:
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         mCurrentLocalSdp = mProposedLocalSdp;
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
@@ -915,7 +943,7 @@ ServerInviteSession::sendProvisional(int code)
       case UAS_EarlyProvidedAnswer:
          if (mCurrentLocalSdp.get()) // early media
          {
-             setSdp(m1xx, *mCurrentLocalSdp);
+            setSdp(m1xx, mProposedLocalSdp.get());
          }
          break;
 
@@ -923,22 +951,21 @@ ServerInviteSession::sendProvisional(int code)
          break;
    }
    startRetransmit1xxTimer();
-   mDialog.send(m1xx);
+   mDialog.send(m1xx, mProposedEncryptionLevel);
 }
 
 void
-ServerInviteSession::sendAccept(int code, SdpContents* sdp)
+ServerInviteSession::sendAccept(int code, Contents* sdp)
 {
    mDialog.makeResponse(mInvite200, mFirstRequest, code);
    handleSessionTimerRequest(mInvite200, mFirstRequest);
    if (sdp)
    {
-      assert(sdp->session().getTimes().size() <= 1);
-      setSdp(mInvite200, *sdp);
+      setSdp(mInvite200, sdp);
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
-   mDialog.send(mInvite200);
+   mDialog.send(mInvite200, mCurrentEncryptionLevel);
 }
 
 void
@@ -949,7 +976,7 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       SipMessage update;
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
-      mDialog.send(update);
+      mDialog.send(update, mProposedEncryptionLevel);
       mLastSessionModification = update;
    }
    else

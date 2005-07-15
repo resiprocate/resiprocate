@@ -13,7 +13,6 @@
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
@@ -21,6 +20,7 @@
 #include "resiprocate/dum/DestroyUsage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
@@ -40,6 +40,9 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/dum/EncryptionManager.hxx"
+#include "resiprocate/dum/DumDecrypted.hxx"
+#include "resiprocate/dum/CertMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -69,6 +72,10 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
 {
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
+
+#if defined (USE_SSL)
+   mEncryptionManager.setDialogUsageManager(this);
+#endif
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -292,6 +299,13 @@ DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceMan
    mRegistrationPersistenceManager = manager;
 }
 
+void
+DialogUsageManager::setRemoteCertStore(auto_ptr<RemoteCertStore> store)
+{
+#if defined (USE_SSL)
+   mEncryptionManager.setRemoteCertStore(store);
+#endif
+}
 
 void
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
@@ -420,21 +434,60 @@ DialogUsageManager::sendResponse(SipMessage& response)
 SipMessage&
 DialogUsageManager::makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer), appDs);
-   return inv;
+   //SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer), appDs);
+   //return inv;
+   return makeInviteSession(target, userProfile, initialOffer, None, 0, appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, getMasterUserProfile(), initialOffer), appDs);
+   //SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, getMasterUserProfile(), initialOffer), appDs);
+   //return inv;
+   return makeInviteSession(target, getMasterUserProfile(), initialOffer, None, 0, appDs);
+}
+
+SipMessage& 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      SharedPtr<UserProfile>& userProfile, 
+                                      const SdpContents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const SdpContents* alternative, 
+                                      AppDialogSet* appDs)
+{
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
+   if (None != level)
+   {
+      mEncryptionLevels.insert(InviteSessionEncryptionLevelMap::value_type((UInt32)&inv, level));
+   }
    return inv;
+}
+
+SipMessage& 
+DialogUsageManager::makeInviteSession(const NameAddr& target, 
+                                      const SdpContents* initialOffer, 
+                                      EncryptionLevel level, 
+                                      const SdpContents* alternative,
+                                      AppDialogSet* appDs)
+{
+   return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
                                                const SdpContents* initialOffer,
+                                               AppDialogSet* appDs)
+{
+   return makeInviteSessionFromRefer(refer, serverSub, initialOffer, None, 0, appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               ServerSubscriptionHandle serverSub,
+                                               const SdpContents* initialOffer,
+                                               EncryptionLevel level,
+                                               const SdpContents* alternative,
                                                AppDialogSet* appDs)
 {
    //generate and send 100
@@ -456,7 +509,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this,
                                                              target,
                                                              serverSub->mDialog.mDialogSet.getUserProfile(),
-                                                             initialOffer, serverSub), appDs);
+                                                             initialOffer, level, alternative, serverSub), appDs);
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
@@ -596,6 +649,67 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs
 void
 DialogUsageManager::send(SipMessage& msg)
 {
+   InviteSessionEncryptionLevelMap::iterator it = mEncryptionLevels.find((UInt32)&msg);
+   if (it != mEncryptionLevels.end())
+   {
+      send(msg, it->second);
+      mEncryptionLevels.erase(it);
+   }
+   else
+   {
+      send(msg, None);
+   }
+}
+
+void
+DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
+{
+#if defined (USE_SSL)
+   if (None != level)
+   {
+      Contents* contents = msg.getContents();
+
+      if (contents)
+      {
+         Data senderAor;
+         Data recipAor;
+         if (msg.isRequest())
+         {
+            senderAor = msg.header(h_From).uri().getAor();
+            recipAor = msg.header(h_To).uri().getAor();
+         }
+         else
+         {
+            senderAor = msg.header(h_To).uri().getAor();
+            recipAor = msg.header(h_From).uri().getAor();
+         }
+
+         if (Sign == level)
+         {
+            contents = mEncryptionManager.sign(msg, senderAor);
+         }
+         else if (Encrypt == level)
+         {
+            contents = mEncryptionManager.encrypt(msg, recipAor);
+         }
+         else if (SignAndEncrypt == level)
+         {
+            contents = mEncryptionManager.signAndEncrypt(msg, senderAor, recipAor);
+         }
+
+         if (contents)
+         {
+            msg.setContents(auto_ptr<Contents>(contents));
+         }
+         else
+         {
+            // async.
+            return;
+         }
+      }
+   }
+#endif
+
    // !slg! There is probably a more efficient way to get the userProfile here (pass it in?)
    DialogSet* ds = findDialogSet(DialogSetId(msg));
    UserProfile* userProfile;
@@ -909,12 +1023,22 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             }
             else
             {
-               processRequest(*sipMsg);
+#if defined (USE_SSL)
+               if (mEncryptionManager.decrypt(*sipMsg))
+#endif
+               {
+                  processRequest(*sipMsg);
+               }
             }
          }
          else
          {
-            processResponse(*sipMsg);
+#if defined (USE_SSL)
+            if (mEncryptionManager.decrypt(*sipMsg))
+#endif
+            {
+               processResponse(*sipMsg);
+            }
          }
          return;
       }
@@ -924,6 +1048,29 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          processIdentityCheckResponse(*httpMsg);         
          return;         
+      }
+
+      DumDecrypted* decryptedMsg = dynamic_cast<DumDecrypted*>(msg.get());
+      if (decryptedMsg)
+      {
+         if (decryptedMsg->decrypted()->isRequest())
+         {
+            processRequest(*decryptedMsg->decrypted());
+         }
+         else
+         {
+            processResponse(*decryptedMsg->decrypted());
+         }
+         return;
+      }
+
+      CertMessage* certMsg = dynamic_cast<CertMessage*>(msg.get());
+      if (certMsg)
+      {
+#if defined (USE_SSL)
+         mEncryptionManager.processCertMessage(*certMsg);
+#endif
+         return;
       }
 
       TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
@@ -988,8 +1135,12 @@ DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
    if (it != mRequiresCerts.end())
    {
       getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
-      processRequest(*it->second);
+      InfoLog(<< "Decrypting msg" << endl);
+      if (mEncryptionManager.decrypt(*it->second))
+      {
+         InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
+         processRequest(*it->second);
+      }
       delete it->second;
       mRequiresCerts.erase(it);
    }

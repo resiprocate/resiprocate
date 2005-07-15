@@ -1,88 +1,87 @@
-#if !defined(RESIP_CLIENTPAGERMESSAGE_HXX)
-#define RESIP_CLIENTPAGERMESSAGE_HXX
+#if !defined(RESIP_LOCAL_DNS_HXX)
+#define RESIP_LOCAL_DNS_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/CSeqCategory.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include <deque>
-#include <memory>
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
+
+
+extern "C"
+{
+struct ares_channeldata;
+}
+
 
 namespace resip
 {
-class SipMessage;
-
-class ClientPagerMessage : public NonDialogUsage
+class LocalDns : public ExternalDns
 {
-  public:
-      ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
-      ClientPagerMessageHandle getHandle();
+   public:
+      LocalDns();
+      virtual ~LocalDns();
 
-      //allow the user to adorn the MESSAGE message if desired
-      //!kh!
-      //I don't know how this would interact with the queuing mechanism.
-      //Will come back to re-visit this in the future.
-      SipMessage& getMessageRequest();
+      virtual int init(); 
+      virtual bool requiresProcess();
+      virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
+      virtual void process(fd_set& read, fd_set& write);
 
-      //!kh!
-      //queues the message if there is one sent but not yet received a response
-      //for it.
-      //asserts if contents->get() is NULL.
-      virtual void page(std::auto_ptr<Contents> contents, DialogUsageManager::EncryptionLevel level=DialogUsageManager::None);
-      virtual void end();
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
+      virtual void freeResult(ExternalDnsRawResult /* res */) {}
+      virtual void freeResult(ExternalDnsHostResult /* res */) {}
 
-      size_t       msgQueued () const;
+      void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
-   protected:
-      virtual ~ClientPagerMessage();
+      virtual void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual char* errorMessage(long errorCode) 
+      {
+         const char* msg = "Local Dns";
+
+         int len = strlen(msg);
+         char* errorString = new char[len+1];
+
+         strncpy(errorString, msg, len);
+         errorString[len] = '\0';
+         return errorString;
+      }
 
    private:
-      friend class DialogSet;
 
-      //uses memory from creator
-	  SipMessage& mRequest;
+	   struct ares_channeldata* mChannel;
 
-      typedef struct
-      {
-            DialogUsageManager::EncryptionLevel encryptionLevel;
-            Contents* contents;
-      } Item;
+      typedef std::pair<ExternalDnsHandler*, void*> Payload;
+      static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
+      static ExternalDnsHandler* getHandler(void* arg);
 
-      typedef std::deque<Item> MsgQueue;
-      MsgQueue mMsgQueue;
+      static void localCallback(void *arg, int status, unsigned char* abuf, int alen);
 
-      // disabled
-      ClientPagerMessage(const ClientPagerMessage&);
-      ClientPagerMessage& operator=(const ClientPagerMessage&);
-
-      void pageFirstMsgQueued ();
-      void clearMsgQueued ();
+      static void message(const char* file, unsigned char* buf, int& len);
+      static std::map<Data, Data> files;
+      static Data mTarget;
 };
-
+   
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0
- *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- *
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- *
+ * 
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
-
  *    distribution.
- *
+ * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -92,7 +91,7 @@ class ClientPagerMessage : public NonDialogUsage
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -106,9 +105,9 @@ class ClientPagerMessage : public NonDialogUsage
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- *
+ * 
  * ====================================================================
- *
+ * 
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
