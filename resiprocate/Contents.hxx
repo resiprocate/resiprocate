@@ -88,6 +88,8 @@ class Contents : public LazyParser
       int& version() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
 
+      void addBuffer(char* buf);
+
    protected:
       void clear();
       virtual const Data& errorContext() const;
@@ -102,6 +104,8 @@ class Contents : public LazyParser
 
       mutable int mVersion;
       mutable int mMinorVersion;
+
+      std::vector<char*> mBufferList;
 };
 
 }

@@ -12,6 +12,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/dum/EncryptionManager.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -66,6 +67,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
+
+      typedef enum
+      {
+         None = 0,
+         Sign,
+         Encrypt,
+         SignAndEncrypt
+      } EncryptionLevel;
 
       DialogUsageManager(SipStack& stack);
       virtual ~DialogUsageManager();
@@ -141,21 +150,29 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       /// Sets a manager to handle storage of registration state
       void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
+
+      void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* = 0);
-      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* ads = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* ads = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
+      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
+
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
                                              const SdpContents* initialOffer, AppDialogSet* = 0);
+      SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                             const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
       
       SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, 
+                                   int subscriptionTime, AppDialogSet* = 0);
       SipMessage& makeSubscription(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const Data& eventType, 
                                    int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
       SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
@@ -191,7 +208,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
       
       void end(DialogSetId invSessionId);
-      void send(SipMessage& request); 
+      void send(SipMessage& request);
+      void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
@@ -362,6 +380,13 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
+
+#if defined (USE_SSL)
+      EncryptionManager mEncryptionManager;
+#endif
+
+      typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
+      InviteSessionEncryptionLevelMap mEncryptionLevels;
 };
 
 }

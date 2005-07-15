@@ -1,82 +1,86 @@
-#include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartAlternativeContents.hxx"
-#include "resiprocate/dum/InviteSessionCreator.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/Mime.hxx"
 
+#include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/Helper.hxx"
+
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#ifdef WIN32
+#include "resiprocate/XWinSecurity.hxx"
+#endif
+
+#include <iostream>
+#include <string>
+#include <sstream>
+
+using namespace std;
 using namespace resip;
 
-InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
-                                           const NameAddr& target,
-                                           SharedPtr<UserProfile>& userProfile,
-                                           const SdpContents* initial,
-                                           DialogUsageManager::EncryptionLevel level,
-                                           const SdpContents* alternative,
-                                           ServerSubscriptionHandle serverSub)
-   : BaseCreator(dum, userProfile),
-     mState(Initialized),
-     mInitialOffer(0),
-     mEncryptionLevel(level),
-     mServerSub(serverSub)
-{
-   makeInitialRequest(target, INVITE);
-   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
-   {
-       assert(userProfile.get());
-       if(userProfile->getDefaultSessionTime() >= 90)
-       {
-           getLastRequest().header(h_SessionExpires).value() = userProfile->getDefaultSessionTime();
-           getLastRequest().header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
-       }
-   }
-   if (initial)
-   {
-      if (alternative)
-      {
-         MultipartAlternativeContents* mac = new MultipartAlternativeContents;
-         mac->parts().push_back(alternative->clone());
-         mac->parts().push_back(initial->clone());
-         mInitialOffer = mac;
-      }
-      else
-      {
-         mInitialOffer = initial->clone();
-      }
-      getLastRequest().setContents(mInitialOffer);
-   }
-}
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-InviteSessionCreator::~InviteSessionCreator()
-{
-	delete mInitialOffer;
-}
 
-void
-InviteSessionCreator::end()
+int main(int argc, char *argv[])
 {
-   assert(0);
-}
 
-void
-InviteSessionCreator::dispatch(const SipMessage& msg)
-{
-   // !jf! does this have to do with CANCELing all of the branches associated
-   // with a single invite request
-}
+   //Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
-const Contents*
-InviteSessionCreator::getInitialOffer() const
-{
-   return mInitialOffer;
-}
 
-DialogUsageManager::EncryptionLevel
-InviteSessionCreator::getEncryptionLevel() const
-{
-   return mEncryptionLevel;
-}
+#ifdef WIN32
+   Security* security = new XWinSecurity;
+#else
+   Security* security = new Security;
+#endif
 
+   Data aor("jdoe@internal.xten.net");
+
+   security->preload();
+   security->hasUserPrivateKey(aor);
+   security->hasUserCert(aor);
+
+   Contents* contents = new PlainContents(Data("v=0\r\n"
+                        "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
+                        "s=X-Lite\r\n"
+                        "c=IN IP4 192.168.2.15\r\n"
+                        "t=0 0\r\n"
+                        "m=audio 8001 RTP/AVP 8 3 98 97 101\r\n"
+                        "a=rtpmap:8 pcma/8000\r\n"
+                        "a=rtpmap:3 gsm/8000\r\n"
+                        "a=rtpmap:98 iLBC\r\n"
+                        "a=rtpmap:97 speex/8000\r\n"
+                        "a=rtpmap:101 telephone-event/8000\r\n"
+                        "a=fmtp:101 0-15\r\n"));
+
+   //Pkcs7Contents* encrypted = security->encrypt(contents, aor);
+   //InfoLog(<< "Encrytped content: " << *encrypted );
+   //Contents* decrypted = security->decrypt(aor, encrypted);
+   //if (decrypted) 
+   //{
+   //   InfoLog(<< "Decrypted content: " << decrypted->getBodyData() );
+   //}
+   MultipartSignedContents* msc = security->sign(aor, contents);
+   InfoLog(<< "Signed: " << *msc);
+
+
+   SecurityAttributes attr;
+   Data signer;
+   SignatureStatus sigStatus;
+   Contents* ret = security->checkSignature(msc, &signer, &sigStatus);
+   assert(ret);
+   InfoLog(<< "Signature status:" << sigStatus);   
+   
+   delete contents;
+   delete msc;
+   //delete decrypted;
+   //delete encrypted;
+   delete security;
+   return 0;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
