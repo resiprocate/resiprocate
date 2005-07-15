@@ -882,21 +882,31 @@ BaseSecurity::BaseSecurity () :
    // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
    //static char* cipher="ALL";
    //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
-   static char* cipher="TLSv1";
-     
+   static char* cipher="!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES";
+    /* 
+      use: openssl ciphers -v <string>  to test cipher string
+      The resulting cipher suite using OpenSSL 0.97g is:
+      AES256-SHA              SSLv3 Kx=RSA       Au=RSA  Enc=AES(256)  Mac=SHA1
+      AES128-SHA              SSLv3 Kx=RSA       Au=RSA  Enc=AES(128)  Mac=SHA1
+      DHE-DSS-AES256-SHA      SSLv3 Kx=DH        Au=DSS  Enc=AES(256)  Mac=SHA1
+      DHE-DSS-AES128-SHA      SSLv3 Kx=DH        Au=DSS  Enc=AES(128)  Mac=SHA1
+      DES-CBC3-SHA            SSLv3 Kx=RSA       Au=RSA  Enc=3DES(168) Mac=SHA1
+      EDH-DSS-DES-CBC3-SHA    SSLv3 Kx=DH        Au=DSS  Enc=3DES(168) Mac=SHA1
+    */
+   
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-      verifyCallback);
+                      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
-    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-       verifyCallback);
+   SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+                      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
    assert(ret);
 }
@@ -1446,16 +1456,16 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 // the value of OPENSSL_VERSION_NUMBER ( in opensslv.h ) and the signature of
 // PKCS_encrypt found ( in pkcs7.h ) and the OS you are using
 #if (  OPENSSL_VERSION_NUMBER > 0x009060ffL )
-   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
+//   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
+   const EVP_CIPHER* cipher =  EVP_aes_128_cbc(); 
 #else
+   //const EVP_CIPHER* cipher = EVP_enc_null();
    EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
 #endif
-   //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
-   //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090705fL )
-#error PKCS7_encrypt() is broken in OpenSSL 0.9.7d
+#warning PKCS7_encrypt() is broken in OpenSSL 0.9.7d
 #endif
 
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
@@ -2275,7 +2285,10 @@ BaseSecurity::getCertName(X509 *cert)
     ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
     return Data::Empty;
 }
-
+/**
+   Matchtes subjectAltName and cnames 
+   @todo    looks incomplete, make better
+*/
 static int 
 matchHostName(char *certName, const char *domainName)
 {

@@ -3,6 +3,7 @@
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Data.hxx"
+#include <cassert>
 
 namespace resip
 {
@@ -16,14 +17,34 @@ class Random
       
       static Data getRandom(unsigned int numBytes);
       static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
+      static Data getRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
+
       static Data getCryptoRandom(unsigned int numBytes);
       static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
+      static Data getCryptoRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
 
       static int  getRandom();
       static int  getCryptoRandom();
-	
+
    private:
+      static bool isInitialized();
+
+#ifdef WIN32
+      // ensure each thread is initialized since windows requires you to call srand for each thread
+      class TlsInitializer
+      {
+      public:
+          TlsInitializer() { mIsInitializedTLSIndex = ::TlsAlloc(); 
+                             assert(mIsInitializedTLSIndex != TLS_OUT_OF_INDEXES);};
+          ~TlsInitializer() { ::TlsFree(mIsInitializedTLSIndex); };
+          void setInitialized() { ::TlsSetValue(mIsInitializedTLSIndex, (LPVOID) TRUE);};
+          bool isInitialized() { return (BOOL)::TlsGetValue(mIsInitializedTLSIndex) == TRUE; };  // Note:  if value is not set yet then 0 (false) is returned
+          DWORD mIsInitializedTLSIndex;
+      };
+      static TlsInitializer tlsInitializer;
+#else
       static bool  mIsInitialized;
+#endif
       
 };
  
@@ -34,7 +55,7 @@ class Random
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2005.   All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

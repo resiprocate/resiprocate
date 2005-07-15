@@ -17,10 +17,10 @@ class TcpBaseTransport : public InternalTransport
      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName );
       virtual  ~TcpBaseTransport();
       
-      void process(FdSet& fdset);
-      void buildFdSet( FdSet& fdset);
-      bool isReliable() const { return true; }
-      int maxFileDescriptors() const { return MaxFileDescriptors; }
+      virtual void process(FdSet& fdset);
+      virtual void buildFdSet( FdSet& fdset);
+      virtual bool isReliable() const { return true; }
+      virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
 
@@ -29,6 +29,10 @@ class TcpBaseTransport : public InternalTransport
       
       void processSomeWrites(FdSet& fdset);
       void processSomeReads(FdSet& fdset);
+      
+      /** Forms a connection if one doesn't exist, moves requests to the
+      appropriate connection's fifo.
+      */
       void processAllWriteRequests(FdSet& fdset);
       void sendFromRoundRobin(FdSet& fdset);
       void processListen(FdSet& fdSet);

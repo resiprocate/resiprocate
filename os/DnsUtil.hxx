@@ -13,6 +13,11 @@ namespace resip
 
 class Tuple;
 
+/** DnsUtil provides a collection of utility functions for
+  * manipulating DNS names and IP addresses and discovering
+  * details about the local interfaces
+  */
+
 class DnsUtil
 {
    public:
@@ -27,15 +32,29 @@ class DnsUtil
             virtual const char* name() const { return "DnsUtil::Exception"; }
       };
 
+      /** @returns the fully qualified local host name as the host
+       *   currently knows it ala gethostname(3) 
+       */
+
       static Data getLocalHostName();
+
+      /** @returns the suffix after the first "." in whatever getLocalHostName returns */
       static Data getLocalDomainName();
 
-      // Note that this will not work on systems with more than one ethernet
-      // interface. You are advised to use getInterfaces instead in those
-      // cases. 
+      /** Gets the IP address of "the" local interface. Note that this will not work
+       *  on systems with more than one ethernet interface.
+       *  @deprecated Very few real systems have only one interface (loopback plus
+       *              physical, vpns, wireless and wired, etc.) Use getInterfaces
+       *              instead.
+       */
+
       static Data getLocalIpAddress(const Data& defaultInterface=Data::Empty) ;
 
       // returns pair of interface name, ip address
+      /** @returns a list of interface name, IP addresses pairs of all available 
+       *           interfaces (note that some of these may be v4 and others v6.
+       *  @todo Provide a windows implementation (will currently assert(0) on windows)
+       */
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
 
       // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
@@ -58,9 +77,15 @@ class DnsUtil
       static int inet_pton(int af, const char * src, void * dst);
       
 
-      // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
       // so string (case) comparison will work
       // or something
+      /** Converts the printable form of an IPv6 address into
+       *  consistent format so that string comparisons will do
+       *  what you expect.
+       *  For instance, XXXX:0:0:0:YYYY:192.168.2.233 will be
+       *  converted to  XXXX::::YYYY:192.168.2.233.
+       *  Currently, this is realized by (inet_ntop(inet_pton(input)).
+       */
       static Data canonicalizeIpV6Address(const Data& ipV6Address);
 };
 

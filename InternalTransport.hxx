@@ -10,7 +10,6 @@
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/SendData.hxx"
 
 namespace resip
@@ -20,7 +19,7 @@ class TransactionMessage;
 class SipMessage;
 class Connection;
 
-class InternalTransport : public Transport, public ThreadIf
+class InternalTransport : public Transport
 {
    public:
       // sendHost what to put in the Via:sent-by
@@ -35,15 +34,12 @@ class InternalTransport : public Transport, public ThreadIf
       virtual bool isFinished() const;
       virtual bool hasDataToSend() const;
 
-      virtual bool shareStackProcessAndSelect() const { return !mHasOwnThread; }
-
-      virtual void startOwnProcessing() { run(); }
-
+      virtual bool shareStackProcessAndSelect() const { return true; }
+      virtual void startOwnProcessing() {}
 
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, IpVersion ipVer);
       void bind();      
-      void thread();
       
       //used for epoll
       virtual int maxFileDescriptors() const { return 1; }
@@ -54,7 +50,6 @@ class InternalTransport : public Transport, public ThreadIf
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport
-      bool mHasOwnThread;      
 };
 
 

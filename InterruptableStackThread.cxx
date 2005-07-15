@@ -1,6 +1,7 @@
 #include "resiprocate/InterruptableStackThread.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/SelectInterruptor.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -35,7 +36,7 @@ InterruptableStackThread::thread()
             // .dlb. use return value to peak at the message to see if it is a
             // shutdown, and call shutdown if it is
             // .dcm. how will this interact w/ TuSelector?
-            mSelectInterruptor.buildFdSet(fdset);
+            mSelectInterruptor.process(fdset);
             mStack.process(fdset);
          }
       }

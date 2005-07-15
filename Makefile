@@ -21,6 +21,7 @@ SRC = \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
 	os/FileSystem.cxx \
+	os/FlowId.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
 	os/Logger.cxx \
@@ -68,6 +69,7 @@ SRC = \
 	ConnectionBase.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
+	ContentsFactoryBase.cxx \
 	CpimContents.cxx \
 	DataParameter.cxx \
 	DeprecatedDialog.cxx \
@@ -106,6 +108,7 @@ SRC = \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategory.cxx \
+	ParserContainerBase.cxx \
 	Pidf.cxx \
 	Pkcs7Contents.cxx \
 	Pkcs8Contents.cxx \
@@ -115,7 +118,6 @@ SRC = \
 	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
 	RAckCategory.cxx \
-	Registration.cxx \
 	Rlmi.cxx \
 	RportParameter.cxx \
 	SdpContents.cxx \
@@ -145,7 +147,7 @@ SRC = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
-	TransportMessage.cxx \
+	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
 	TuSelector.cxx \

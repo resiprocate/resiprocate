@@ -12,7 +12,9 @@ TESTPROGRAMS += makeSelfCert.cxx \
 		testTls.cxx 
 endif
 
-TESTPROGRAMS += testMD5Stream.cxx \
+TESTPROGRAMS += testStun.cxx \
+#		testTuple.cxx \
+		testMD5Stream.cxx \
 		testTuple.cxx \
 		test503Generator.cxx \
 		limpc.cxx \
@@ -39,6 +41,7 @@ TESTPROGRAMS += testMD5Stream.cxx \
 		testDigestAuthentication.cxx \
 		testEmbedded.cxx \
 		testEmptyHeader.cxx \
+		testFlowId.cxx \
 		testIM.cxx \
 		testSHA1Stream.cxx \
 		testIntrusiveList.cxx \
@@ -74,7 +77,7 @@ TESTPROGRAMS += testMD5Stream.cxx \
 	        testSipStack1.cxx \
 	        test503Generator.cxx \
 		testSelectInterruptor.cxx \
-#		testTransportSelector.cxx
+		testTransportSelector.cxx
 
 
 SRC = 		TestSupport.cxx

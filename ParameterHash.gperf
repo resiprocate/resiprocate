@@ -24,6 +24,7 @@ actor, ParameterTypes::actor
 text, ParameterTypes::text
 extensions, ParameterTypes::extensions
 +sip.instance, ParameterTypes::Instance
++sip.flowid, ParameterTypes::FlowId
 gruu, ParameterTypes::gruu
 name, ParameterTypes::name
 transport, ParameterTypes::transport

@@ -162,7 +162,7 @@ DialogUsageManager::onAllHandlesDestroyed()
       {
          case ShutdownRequested:
             InfoLog (<< "DialogUsageManager::onAllHandlesDestroyed: removing TU");
-            assert(mHandleMap.empty());
+            //assert(mHandleMap.empty());
             mShutdownState = RemovingTransactionUser;
             mStack.unregisterTransactionUser(*this);
             break;
@@ -784,11 +784,14 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, Sip
    DialogId id(msg);
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
-      DebugLog ( << "Using outbound proxy");
+      DebugLog ( << "Using outbound proxy: " 
+                 << userProfile.getOutboundProxy().uri() 
+                 << " -> " << msg.brief());
       mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
    }
    else
    {
+      DebugLog (<< "Send: " << msg.brief());
       mStack.send(msg, this);
    }
 }
@@ -882,7 +885,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
 {
    //486/481/603 decision making logic where?  App may not wish to keep track of
    //invitesession state
-   // !slg! Logic is here for now.
+   //Logic is here for now.
    InviteSessionHandle is = findInviteSession(DialogId(replaces.value(),
                                                        replaces.param(p_toTag),
                                                        replaces.param(p_fromTag)));
@@ -1540,13 +1543,6 @@ DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
 
-   // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
-   //if (mShutdownState != Running)
-   //{
-   //   InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
-   //   return;
-   //}
-
    if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
@@ -1661,7 +1657,14 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
    }
    else
    {
-      return it->second;
+      if(it->second->isDestroying())
+      {
+         return 0;
+      }
+      else
+      {
+         return it->second;
+      }
    }
 }
 
@@ -1762,7 +1765,20 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
    }
 }
 
-
+void 
+DialogUsageManager::applyToServerSubscriptions(const Data& documentKey, 
+                                               const Data& eventType, 
+                                               void(*applyFn)(ServerSubscriptionHandle))
+{
+   Data key = eventType + documentKey;
+   std::pair<ServerSubscriptions::iterator,ServerSubscriptions::iterator> 
+      range = mServerSubscriptions.equal_range(key);
+   for (ServerSubscriptions::iterator i=range.first; i!=range.second; ++i)
+   {
+      ServerSubscriptionHandle h = i->second->getHandle();
+      applyFn(h);
+   }
+}
 
 
 

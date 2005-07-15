@@ -16,7 +16,7 @@
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
@@ -149,10 +149,11 @@ Transport::fail(const Data& tid)
 {
    if (!tid.empty())
    {
-      mStateMachineFifo.add(new TransportMessage(tid, true));
+      mStateMachineFifo.add(new TransportFailure(tid));
    }
 }
 
+/// @todo unify w/ tramsit
 void 
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
@@ -196,7 +197,7 @@ Transport::stampReceived(SipMessage* message)
    {
       const Tuple& tuple = message->getSource();
 	  Data received = DnsUtil::inet_ntop(tuple);
-	  if(message->header(h_Vias).front().sentHost() != received)  // !slg! only add if received address is different from sent-by in Via
+	  if(message->header(h_Vias).front().sentHost() != received)  // only add if received address is different from sent-by in Via
 	  {
          message->header(h_Vias).front().param(p_received) = received;
 	  }

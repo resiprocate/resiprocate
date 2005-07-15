@@ -14,7 +14,7 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/TransactionUser.hxx"
@@ -112,6 +112,7 @@ TransactionState::process(TransactionController& controller)
       Tuple target(sip->getSource());
       delete sip;
       controller.mTransportSelector.transmit(tryLater, target);
+      delete tryLater;
       return;
    }
 
@@ -451,7 +452,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       {
          if (mState == Trying || mState == Proceeding)
          {
-            //!slg! if we set the timer in Proceeding, then every 1xx response will cause another TimerE2 to be set and many retransmissions will occur - which is not correct
+            //?slg? if we set the timer in Proceeding, then every 1xx response will cause another TimerE2 to be set and many retransmissions will occur - which is not correct
             // Should we restart the E2 timer though?  If so, we need to use somekind of timer sequence number so that previous E2 timers get discarded.
             if (!mIsReliable && mState == Trying)
             {
@@ -718,7 +719,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             if (mState == Calling)
             {
                unsigned long d = timer->getDuration()*2;
-               //if (d < Timer::T2) d *= 2;     !slg! TimerA is supposed to double with each retransmit RFC3261 17.1.1          
+               // TimerA is supposed to double with each retransmit RFC3261 17.1.1          
 
                mController.mTimers.add(Timer::TimerA, mId, d);
                InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
@@ -1080,11 +1081,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             {
                StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
                sendToWire(mMsgToRetransmit, true);
-               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  // !slg! TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
-            }
-            else
-            {
-               delete msg;
+               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  //  TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
             break;
 
@@ -1106,31 +1103,27 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             terminateServerTransaction(mId);
             delete this;
-            delete msg;
             break;
-            
-     
+
          case Timer::TimerTrying:
             if (mState == Trying)
             {
                //StackLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
                mState = Proceeding;
-               delete msg;
             }
             else
             {
                //StackLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
-               delete msg;
             }
             break;
             
          default:
             CritLog(<<"unexpected timer fired: " << timer->getType());
             assert(0); // programming error if any other timer fires
-            delete msg;
             break;
       }
+      delete timer;
    }
    else if (isTransportError(msg))
    {
@@ -1506,7 +1499,14 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
       if (resend)
       {
-         mController.mTransportSelector.retransmit(sip, mTarget);
+         if (mTarget.transport)
+         {
+            mController.mTransportSelector.retransmit(sip, mTarget);
+         }
+         else
+         {
+            DebugLog (<< "No transport found(network could be down) for " << sip->brief());
+         }
       }
       else
       {
@@ -1644,8 +1644,7 @@ TransactionState::isFromWire(TransactionMessage* msg) const
 bool
 TransactionState::isTransportError(TransactionMessage* msg) const
 {
-   TransportMessage* t = dynamic_cast<TransportMessage*>(msg);
-   return (t && t->isFailed());
+   return dynamic_cast<TransportFailure*>(msg) != 0;
 }
 
 const Data&

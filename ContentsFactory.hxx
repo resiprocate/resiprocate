@@ -1,35 +1,55 @@
-#include "UInt64Hash.hxx"
-#include "resiprocate/os/Data.hxx"
+#ifndef RESIP_ContentsFactory
+#define RESIP_ContentsFactory
 
-#if defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<UInt64>::operator()(const UInt64& v) const
-{
-   return resip::Data::rawHash((const char*)&v, sizeof(v));
-}
-#endif
+#include "resiprocate/ContentsFactoryBase.hxx"
 
-#if defined(__INTEL_COMPILER)
-size_t std::hash_value(const UInt64& v)
+namespace resip
 {
-   return resip::Data::rawHash((const char*)v,
-                               sizeof(v));
+
+class Contents;
+
+template<class T>
+class ContentsFactory : public ContentsFactoryBase
+{
+   public:
+      ContentsFactory()
+         : ContentsFactoryBase(T::getStaticType())
+      {}
+
+      explicit ContentsFactory(const Mime& nonStandardType)
+         : ContentsFactoryBase(nonStandardType)
+      {}
+
+      // pass Mime instance for parameters
+      virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
+      {
+         return new T(hfv, contentType);
+      }
+
+      virtual Contents* convert(Contents* c) const
+      {
+         return dynamic_cast<T*>(c);
+      }
+};
+
 }
+
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 

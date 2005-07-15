@@ -81,7 +81,7 @@ class Log
             Level level;
       };
 
-      /// Return the loglevel, hostname, appname, pid, tid, subsystem
+      /// output the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, 
                                 const Subsystem& subsystem, 
                                 const char* file,
@@ -132,6 +132,7 @@ class Log
       static void setThreadSetting(int serv);
       static volatile short touchCount;
       static Type _type;
+      static const Data delim;
    protected:
       static Level _level;
       static Data _appName;
@@ -158,8 +159,8 @@ class Log
 class ExternalLogger
 {
    public:
-      virtual ~ExternalLogger() {}
-      virtual void operator()(Log::Level level,
+      /** return true to also do default logging, false to supress default logging. */
+      virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
                               const char* file,

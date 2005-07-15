@@ -17,8 +17,10 @@ class ParameterTypes
   
    public:
       // !dlb! until automated, must ensure that this set is consistent with
-      // gperf in ParameterTypes.cxx and ParameterTypes.hxx
+      // gperf in ParameterTypes.cxx, ParameterTypes.hxx, Parameters.gperf
+      // NOTE: !!Parameters.gperf must have lowercase parameters!!
       // Also needs to be in ParserCategory.hxx/cxx
+      // PLEASE compile and run testParserCategories after changing this file.
       enum Type
       {
          UNKNOWN = -1,
@@ -38,7 +40,9 @@ class ParameterTypes
          defineParam(actor, "actor", QuotedDataParameter, "callee-caps"), // principal|msg-taker|attendant|information
          defineParam(text, "text", ExistsParameter, "callee-caps"),
          defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"), //list
+
          defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu"),  // <> quoted
+         defineParam(FlowId, "+sip.flowId", IntegerParameter, "outbound"),  
          defineParam(gruu, "gruu", QuotedDataParameter, "gruu"),
 
          defineParam(accessType, "access-type", DataParameter, "RFC 2046"),

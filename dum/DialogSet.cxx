@@ -127,6 +127,7 @@ DialogSet::~DialogSet()
 void DialogSet::possiblyDie()
 {
    if(mState != Initial &&  // !jf! may not be correct
+      mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -136,6 +137,7 @@ void DialogSet::possiblyDie()
         mClientRegistration ||
         mServerRegistration))
    {
+      mState = Destroying;
       mDum.destroy(this);
    }
 }
@@ -225,7 +227,7 @@ DialogSet::empty() const
 bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
+   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -258,14 +260,6 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                {
                   it->second->redirected(msg);         
                }
-               
-			   /* !slg! this won't allow any redirections - since Dialog destruction is delayed by queueing a destroy event
-               if (!mDialogs.empty())
-               {
-                  //a dialog is refusing this 3xx(only implemented for INVITE,
-                  //Subscribe dialogs always refuse as they don't have an early state)
-                  return true; //(toss 3xx) !dcm! -- might leak dialog
-               }*/
 
                InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
@@ -669,7 +663,14 @@ DialogSet::findDialog(const DialogId id)
    }
    else
    {
-      return i->second;
+      if(i->second->isDestroying())
+      {
+         return 0;
+      }
+      else
+      {
+         return i->second;
+      }
    }
 }
 
@@ -734,6 +735,7 @@ DialogSet::end()
          break;
       }
       case Terminating:
+      case Destroying:
          assert(0);
    }
 }

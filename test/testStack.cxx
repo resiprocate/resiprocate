@@ -43,8 +43,8 @@ main(int argc, char* argv[])
 
 #ifdef WIN32
    //logLevel = "ALERT";
-  logLevel = "INFO";
-  //logLevel = "DEBUG";
+  //logLevel = "INFO";
+  logLevel = "DEBUG";
 #endif
 
 #if defined(HAVE_POPT_H)
