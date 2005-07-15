@@ -29,6 +29,7 @@ using namespace resip;
 Tuple::Tuple() : 
    transport(0),
    connectionId(0),
+   onlyUseExistingConnection(false),
    mTransportType(UNKNOWN_TRANSPORT)
 {
    sockaddr_in* addr4 = (sockaddr_in*)&mSockaddr;
@@ -40,6 +41,7 @@ Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type,
              const Data& targetDomain) : 
    transport(0),
    connectionId(0),
+   onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
@@ -67,6 +69,7 @@ Tuple::Tuple(const Data& printableAddr,
              const Data& targetDomain) :
    transport(0),
    connectionId(0),
+   onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
@@ -111,6 +114,7 @@ Tuple::Tuple(const Data& printableAddr,
              const Data& targetDomain) : 
    transport(0),
    connectionId(0),
+   onlyUseExistingConnection(false),
    mTransportType(ptype),
    mTargetDomain(targetDomain)
 {
@@ -141,6 +145,7 @@ Tuple::Tuple(const in_addr& ipv4,
              const Data& targetDomain)
    : transport(0),
      connectionId(0),
+     onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomain)
 {
@@ -157,6 +162,7 @@ Tuple::Tuple(const in6_addr& ipv6,
              const Data& targetDomaina)
    : transport(0),
      connectionId(0),
+     onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomaina)
 {
@@ -172,6 +178,7 @@ Tuple::Tuple(const struct sockaddr& addr,
              const Data& targetDomain) : 
    transport(0),
    connectionId(0),
+   onlyUseExistingConnection(false),
    mSockaddr(addr),
    mTransportType(ptype),
    mTargetDomain(targetDomain)

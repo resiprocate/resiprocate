@@ -25,16 +25,18 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
    mFd = InternalTransport::socket(TCP, version);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
-#if !defined(WIN32)
    int on = 1;
+#if !defined(WIN32)
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
+#else
+   if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
+#endif
    {
 	   int e = getErrno();
        InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
        error(e);
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
-#endif
 
    bind();
    makeSocketNonBlocking(mFd);
@@ -69,8 +71,6 @@ TcpBaseTransport::~TcpBaseTransport()
       delete data;
    }
    DebugLog (<< "Shutting down " << mTuple);
-   ThreadIf::shutdown();  
-   join();
    //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
@@ -110,11 +110,10 @@ TcpBaseTransport::processListen(FdSet& fdset)
       createConnection(tuple, sock, true);
    }
 }
-
+/// @todo  only inspects the first element in ConnectionManager::getNextWrite(lame) 
 void
 TcpBaseTransport::processSomeWrites(FdSet& fdset)
 {
-   // !jf! may want to do a roundrobin later
    Connection* curr = mConnectionManager.getNextWrite(); 
    if (curr && fdset.readyToWrite(curr->getSocket()))
    {
@@ -182,7 +181,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
       // There is no connection yet, so make a client connection
-      if (conn == 0)
+      if (conn == 0 && !data->destination.onlyUseExistingConnection)
       {
          // attempt to open
          Socket sock = InternalTransport::socket( TCP, ipVersion());
@@ -193,7 +192,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
             int e = getErrno();
             InfoLog (<< "Failed to create a socket " << strerror(e));
             error(e);
-            mConnectionManager.gc(ConnectionManager::MinLastUsed); // free one up
+            mConnectionManager.gc(ConnectionManager::MinimumGcAge); // free one up
 
             sock = InternalTransport::socket( TCP, ipVersion());
             if ( sock == INVALID_SOCKET )

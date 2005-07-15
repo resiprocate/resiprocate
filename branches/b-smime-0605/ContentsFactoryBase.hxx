@@ -1,70 +1,30 @@
-#if !defined(RESIP_REGISTRATION_HXX)
-#define RESIP_REGISTRATION_HXX
+#ifndef RESIP_ContentsFactoryBase_hxx
+#define RESIP_ContentsFactoryBase_hxx
 
-#include <time.h>
-#include <memory>
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/NameAddr.hxx"
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 namespace resip
 {
 
-class SipMessage;
-class CallID;
-
-class Registration 
+/**
+   Hoist for template mapping from Mime to derived content.
+*/
+class ContentsFactoryBase
 {
-   public: 
-      // Register a binding from aor to default contact
-      Registration(const Uri& aor, const Data& instance=Data::Empty);
+   public:
+      ContentsFactoryBase(const Mime& contentType);
+      virtual ~ContentsFactoryBase();
+      virtual Contents* create(HeaderFieldValue* hfv, 
+                               const Mime& contentType) const = 0;
+      virtual Contents* convert(Contents* c) const = 0;
 
-      // Register a binding from aor to specified contact
-      Registration(const Uri& aor, const Uri& contact, const Data& instance=Data::Empty);
-
-      // Register a binding from aor to specified contact as third party from
-      Registration(const Uri& from, const Uri& aor, const Uri& contact, const Data& instance=Data::Empty);
-
-      void setExpiration(int secs);
-
-      // returns time (in secs) when REGISTER should be refreshed
-      time_t getTimeToRefresh() const;
-      const CallID& getCallID() const;
-      bool isRegistered() const;
-      
-      // Returns the current register request
-      SipMessage& getRegistration();
-
-      // Will increment CSeq and return an updated register request
-      SipMessage& refreshRegistration();
-
-      // Will modify the register request to unregister
-      SipMessage& unregister();
-      
-      void handleResponse(const SipMessage& response);
-      
-   private:  
-      NameAddr mAor;
-      NameAddr mContact;
-      NameAddr mFrom;
-      Data mInstance;
-      
-      time_t mTimeTillExpiration;
-      
-      typedef enum 
-      {
-         Invalid=0,
-         Initialized,
-         Active,
-         Refreshing,
-         Terminating,
-         Terminated
-      } State;
-      
-      State mState;
-      std::auto_ptr<SipMessage> mRegister;
-      NameAddrs mContacts;
+      static HashMap<Mime, ContentsFactoryBase*>& getFactoryMap();
+   private:
+      Mime mContentType;
+      static HashMap<Mime, ContentsFactoryBase*>* FactoryMap;
 };
- 
+
 }
 
 #endif
@@ -72,17 +32,17 @@ class Registration
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
@@ -118,3 +78,4 @@ class Registration
  * <http://www.vovida.org/>.
  *
  */
+

@@ -20,6 +20,10 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
+#ifdef WIN32
+#include "resiprocate/XWinSecurity.hxx"
+#endif
+
 #include <sstream>
 #include <time.h>
 
@@ -87,7 +91,8 @@ class testAppDialogSetFactory : public AppDialogSetFactory
 {
 public:
    virtual AppDialogSet* createAppDialogSet(DialogUsageManager& dum, const SipMessage& msg) 
-   {  return new testAppDialogSet(dum, Data("UAS") + Data("(") + getMethodName(msg.header(h_RequestLine).getMethod()) + Data(")"));  }
+   {  
+      return new testAppDialogSet(dum, Data("UAS") + Data("(") + getMethodName(msg.header(h_RequestLine).getMethod()) + Data(")"));  }
    // For a UAS the testAppDialogSet will be created by DUM using this function.  If you want to set 
    // Application Data, then one approach is to wait for onNewSession(ServerInviteSessionHandle ...) 
    // to be called, then use the ServerInviteSessionHandle to get at the AppDialogSet or AppDialog,
@@ -273,8 +278,11 @@ class TestUac : public TestInviteSessionHandler
    public:
       bool done;
       SdpContents* sdp;     
-      HeaderFieldValue* hfv;      
-      Data* txt;      
+      SdpContents* alternative;
+      HeaderFieldValue* hfv;    
+      HeaderFieldValue* hfv2;
+      Data* txt;   
+      Data* alt;
 
       TestUac() 
          : TestInviteSessionHandler("UAC"), 
@@ -299,11 +307,24 @@ class TestUac : public TestInviteSessionHandler
          hfv = new HeaderFieldValue(txt->data(), txt->size());
          Mime type("application", "sdp");
          sdp = new SdpContents(hfv, type);
+
+         alt = new Data("v=0\r\n"
+                        "o=1900 369696565 369696565 IN IP4 192.168.2.108\r\n"
+                        "s=X-Lite\r\n"
+                        "c=IN IP4 192.168.2.108\r\n"
+                        "t=0 0\r\n"
+                        "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
+                        "a=rtpmap:8 pcma/8000\r\n"
+                        "a=fmtp:101 0-15\r\n");
+         
+         hfv2 = new HeaderFieldValue(alt->data(), alt->size());
+         alternative = new SdpContents(hfv2, type);
       }
 
       virtual ~TestUac()
       {
          delete sdp;
+         delete alternative;
       }
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
@@ -366,7 +387,7 @@ class TestUas : public TestInviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
+         cout << name << ": InviteSession-onTerminated - " << endl;
          done = true;
       }
 
@@ -411,16 +432,40 @@ class TestShutdownHandler : public DumShutdownHandler
 };
 
 
-#define NO_REGISTRATION 1
+//#define NO_REGISTRATION 1
 int 
 main (int argc, char** argv)
 {
+
+   if ( argc < 5 ) {
+      cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
+      return 0;
+   }
+
    //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+
+   Security* securityUac = 0;
+   Security* securityUas = 0;
+#ifdef USE_SSL
+#ifdef WIN32
+   securityUac = new XWinSecurity;
+   securityUas = new XWinSecurity;
+#else
+   securityUac = new Security;
+   securityUas = new Security;
+#endif
+#endif
+
+   NameAddr uacAor(argv[1]);
+   Data uacPasswd(argv[2]);
+   NameAddr uasAor(argv[3]);
+   Data uasPasswd(argv[4]);
 
    //set up UAC
-   SipStack stackUac;
+   SipStack stackUac(securityUac);
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
    dumUac->addTransport(UDP, 12005);
 
@@ -439,18 +484,23 @@ main (int argc, char** argv)
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
-   NameAddr uacAor("sip:101@foo.net");
-   dumUac->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   //NameAddr uacAor("sip:daniel@booze.internal.xten.net");
+   //dumUac->getMasterProfile()->setDigestCredential( "booze.internal.xten.net", "daniel", "daniel" );
+   NameAddr uacAor("sip:daniel2@booze.internal.xten.net");
+   dumUac->getMasterProfile()->setDigestCredential( "booze.internal.xten.net", "daniel2", "daniel2" );
+   //dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));
 #else
-   NameAddr uacAor("sip:UAC@127.0.0.1:12005");
+   uacAor = NameAddr("sip:UAC@127.0.0.1:1205");
 #endif
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
+   dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
+   dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-signature"));
+   dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
 
    //set up UAS
-   SipStack stackUas;
+   SipStack stackUas(securityUas);
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    dumUas->addTransport(UDP, 12010);
    
@@ -461,15 +511,20 @@ main (int argc, char** argv)
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
-   NameAddr uasAor("sip:105@foo.net");
-   dumUas->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   //NameAddr uasAor("sip:daniel2@booze.internal.xten.net");
+   //dumUas->getMasterProfile()->setDigestCredential( "booze.internal.xten.net", "daniel2", "daniel2" );
+   NameAddr uasAor("sip:daniel@internal.xten.net");
+   dumUas->getMasterProfile()->setDigestCredential( "internal.xten.net", "daniel", "daniel" );
+   //dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));
 #else
-   NameAddr uasAor("sip:UAS@127.0.0.1:12010");
+   uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
 #endif
 
-   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
+   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
+   dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
+   dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "signed"));
+   dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
@@ -482,14 +537,15 @@ main (int argc, char** argv)
 
 #if !defined(NO_REGISTRATION)
    {
-      SipMessage& regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      SipMessage& regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUas, "UAS(Registration)"));
       cout << "Sending register for Uas: " << endl << regMessage << endl;
       dumUas->send(regMessage);
    }
    {
-      SipMessage& regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      /*SipMessage& regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
-      dumUac->send(regMessage);
+      dumUac->send(regMessage);*/
+      uac.registered = true;
    }
 #else
    uac.registered = true;
@@ -536,11 +592,15 @@ main (int argc, char** argv)
 #endif
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
-              cout << "UAC: Sending Options Request to UAS." << endl;
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+              //cout << "UAC: Sending Options Request to UAS." << endl;
+			     //dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
-              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+
+              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::None, 0, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::Encrypt, 0, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::Encrypt, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::SignAndEncrypt, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
         }
 
@@ -564,7 +624,7 @@ main (int argc, char** argv)
            dumUac->shutdown(&uacShutdownHandler);
 #if !defined(NO_REGISTRATION)
            uas.registerHandle->stopRegistering();
-           uac.registerHandle->stopRegistering();
+           //uac.registerHandle->stopRegistering();
 #endif
         }
      }

@@ -28,17 +28,39 @@ class SipMessage;
 class TransactionController;
 class Security;
 
+/**
+  TransportSelector has two distinct roles.  The first is transmit on the best
+outgoing Transport for a given SipMessage based on the target's TransportType
+and the hints present in the topmost Via in the SipMessage.  The second role
+is to hold all Transports added to the SipStack, and if a given Transport returns
+true for shareStackProcessAndSelect(), TransportSelector will include the
+Transport in the FdSet processing loop.  If the Transport returns false for
+shareStackProcessAndSelect(), TransportSelector will call startOwnProcessing
+on Transport add.
+
+*/
 class TransportSelector 
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security);
       virtual ~TransportSelector();
+      /**
+	    @retval true	Some transport in the transport list has data to send
+	    @retval false	No transport in the transport list has data to send
+	  */
       bool hasDataToSend() const;
       
+      /**
+		Shuts down all transports.
+	  */
       void shutdown();
-      bool isFinished() const; // anything pending to send? 
       
+      /// Returns true if all Transports have their buffers cleared, false otherwise.
+      bool isFinished() const;
+      
+      /// Calls process on all suitable transports and the DNSInterface
       void process(FdSet& fdset);
+      /// Builds an FdSet comprised of all FDs from all suitable Transports and the DNSInterface
       void buildFdSet(FdSet& fdset);
      
       void addTransport( std::auto_ptr<Transport> transport);
@@ -47,12 +69,14 @@ class TransportSelector
 
       void dnsResolve(DnsResult* result, SipMessage* msg);
 
-      // this will result in msg->resolve() being called to either
-      // kick off dns resolution or to pick the next tuple , will cause the
-      // message to be encoded and via updated
+      /**
+       Results in msg->resolve() being called to either
+       kick off dns resolution or to pick the next tuple and will cause the
+       message to be encoded and via updated
+	  */
       void transmit( SipMessage* msg, Tuple& target );
       
-      // just resend to the same transport as last time
+      /// Resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
       
       unsigned int sumTransportFifoSizes() const;

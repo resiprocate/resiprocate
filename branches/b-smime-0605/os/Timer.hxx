@@ -57,6 +57,7 @@ class Timer
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
+      static UInt64 getTimeSecs(); // in secs
 
       /// returns an absolute time in ms that is between 50% and 90% of
       /// passed in ms from now 

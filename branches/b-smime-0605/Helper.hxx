@@ -7,6 +7,9 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 namespace resip
 {
@@ -29,29 +32,111 @@ class Helper
 {
    public:
 
-      const static int tagSize;  //bytes in to-tag& from-tag, should prob. live
-      //somewhere else
+      /// bytes in to-tag& from-tag, should prob. live somewhere else
+      const static int tagSize;  
 
-      // Sorry if this doesn't build in Win32, let me know  (jf)
+      /** 
+          Used by Registration, Publication and Subscription refreshes, to
+          calculate the time at which a refresh should be performed (which
+          is some time, that is a bit smaller than the Expiration interval).
+          The recommended caluclation from the RFC's is the minimnum of the 
+          Exipiration interval less 5 seconds and nine tenths of the exipiration 
+          interval.
+      */
       template<typename T>
       static T aBitSmallerThan(T secs)
       {
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
 
-      // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
+      /**
+           Used to jitter the expires in a SUBSCRIBE or REGISTER expires header
+
+           @param input            Value to jitter
+
+           @param lowerPercentage  The lower range of the random percentage by which 
+                                   to jitter the value by.
+
+           @param upperPercentage  The upper range of the random percentage by which
+                                   to jitter the value by.  Must be greater than or equal 
+                                   to lowerPercentage
+
+           @param minimum          Only jitter the input if greater than minimum
+       */
       static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
 
-      //in general content length handled automatically by SipMessage?
+      /**
+          Make an invite request - Empty Contact and Via is added and will be populated 
+          by the stack when sent.
+            
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+      */
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
+      
+      /**
+          Make an invite request using a overridden contact header - Empty Via is added 
+          and will be populated by the stack when sent.
+            
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+
+          @param contact Ends up in the Contact header.  Stack will not change this
+                         when sent.
+      */
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
-      static SipMessage* makeForwardedInvite(const SipMessage& invite);
+      
+      /**
+          Make a response to a provided request.  Adds a To tag, Contact and Record-Route
+          headers appropriately.
+            
+          @param response SipMessage populated with the appropriate response
+
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header.
+      */
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
                                const Data& reason = Data::Empty,
                                const Data& hostname = Data::Empty,
                                const Data& warning=Data::Empty);
+
+      /**
+          Make a response to a provided request with an overridden Contact.  
+          Adds a To tag, Contact and Record-Route headers appropriately.
+            
+          @param response SipMessage populated with the appropriate response
+
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param myContact Contact header to add to response.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header.
+      */
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
@@ -59,11 +144,59 @@ class Helper
                                const Data& reason = Data::Empty,
                                const Data& hostname = Data::Empty,
                                const Data& warning=Data::Empty);
+
+      /**
+          Make a new response to a provided request.  Adds a To tag, Contact and 
+          Record-Route headers appropriately.  Caller owns the returned pointer and
+          is responsible for deleting it.
+            
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header
+
+          @returns SipMessage populated with the appropriate response.
+                   Caller must deallocate.
+      */
       static SipMessage* makeResponse(const SipMessage& request,
                                       int responseCode,
                                       const Data& reason = Data::Empty, 
                                       const Data& hostname = Data::Empty,
                                       const Data& warning=Data::Empty);
+
+      /**
+          Make a new response to a provided request with an overridden Contact.  
+          Adds a To tag, Contact and Record-Route headers appropriately.
+          Caller owns the returned pointer and is responsible for deleting it.
+
+          @param request  SipMessage request from which to generate the response
+
+          @param responseCode Response code to use on status line.
+
+          @param myContact Contact header to add to response.
+
+          @param reason   Optional reason string to use on status line.  If not provided
+                          then a default reason string will be added for well defined
+                          response codes.
+
+          @param hostname Optional hostname to use in Warning header.  Only used if
+                          warning is also provided.
+
+          @param warning  Optional warning text.  If present a Warning header is added
+                          and hostname is used in warning header.
+
+          @returns SipMessage populated with the appropriate response.
+                   Caller must deallocate.
+      */
       static SipMessage* makeResponse(const SipMessage& request, 
                                       int responseCode, 
                                       const NameAddr& myContact, 
@@ -71,35 +204,136 @@ class Helper
                                       const Data& hostname = Data::Empty,
                                       const Data& warning=Data::Empty);
 
-      //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
-      //static SipMessage* makeRequest(const NameAddr& target, MethodTypes method); // deprecated
 
-      //to, maxforward=70, requestline created, cseq method set, cseq sequence
-      //is 1, from and from tag set, contact set, CallId created
-      //while contact is only necessary for requests that establish a dialog,
-      //those ar the requests most likely created by this method, others will
-      //be generated by the dialog.
+      /**
+          Make a 405 response to a provided request.  Allows header is added
+          with specified methods, or with all methods the stack knows about.
+          Caller owns the returned pointer and is responsible for deleting it.
+
+          @param request  SipMessage request from which to generate the response
+
+          @param allowedMethods Array of integers representing a list of Method 
+                                Types to add to the generated Allows header. 
+                                See MethodTypes.hxx.
+
+          @param nMethods Number of methods specified in the allowedMethods 
+                          integer array.  Specify -1 to have this method fill
+                          in the Allows header automatically with each method
+                          supported by the stack.
+
+          @returns SipMessage populated with the appropriate response.    
+                   Caller must deallocate.
+      */
       static SipMessage* make405(const SipMessage& request,
                                  const int* allowedMethods = 0,
                                  int nMethods = -1);
         
+      /**
+          Make a new request with a overridden Contact.  To, maxforward=70, requestline 
+          created, cseq method set, cseq sequence is 1, from and from tag set, contact 
+          set, CallId created.  Caller owns the returned pointer and is responsible for 
+          deleting it.
+
+          @note While contact is only necessary for requests that establish a dialog,
+                those are the requests most likely created by this method, others will
+                be generated by the dialog.
+
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+
+          @param contact Ends up in the Contact header.  Stack will not change this
+                         when sent.
+
+          @param method Type of request to create.  Methos is used in the Request Line
+                        and the CSeq.
+
+          @returns SipMessage request created.  Caller must deallocate.         
+      */
       static SipMessage* makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method);
+
+      /**
+          Make a new request.  To, maxforward=70, requestline created, cseq method set, 
+          cseq sequence is 1, from and from tag set, CallId created.  Caller owns the 
+          returned pointer and is responsible for deleting it.
+
+          @note An empty contact header is added.  This signals to the stack that it
+                should be populated by the transports when sent.
+
+          @param target Ends up in the RequestURI and To header
+
+          @param from   Ends up in the From header
+
+          @param method Type of request to create.  Methos is used in the Request Line
+                        and the CSeq.
+
+          @returns SipMessage request created.  Caller must deallocate.         
+      */
       static SipMessage* makeRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
+
+      /**
+          Make a new Cancel request for the specified request.  Caller owns the 
+          returned pointer and is responsible for deleting it.
+
+          @param request Request for which the Cancel will apply. ie. Invite request.
+
+          @returns Created Cancel request.  Caller must deallocate.         
+      */
       static SipMessage* makeCancel(const SipMessage& request);
       
-      //creates to, from with tag, cseq method set, cseq sequence is 1
+      /// Create a Register request with an overriden Contact.  See makeRequest.
       static SipMessage* makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact);
+
+      /// Create a Register request with an empty Contact.  See makeRequest.
       static SipMessage* makeRegister(const NameAddr& to, const NameAddr& from);
+
+      /// Create a Register request with an overriden Contact, transport is added to Request URI.  See makeRequest.
       static SipMessage* makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact);
+
+      /// Create a Register request with an empty Contact, transport is added to Request URI.  See makeRequest.
       static SipMessage* makeRegister(const NameAddr& to, const Data& transport);
+
+      /// Create a Subscribe request with an overriden Contact.  See makeRequest.
       static SipMessage* makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+
+      /// Create a Subscribe request with an empty Contact.  See makeRequest.
       static SipMessage* makeSubscribe(const NameAddr& target, const NameAddr& from);
+
+      /// Create a Message request with an overriden Contact.  See makeRequest.
       static SipMessage* makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+
+      /// Create a Message request with an empty Contact.  See makeRequest.
       static SipMessage* makeMessage(const NameAddr& target, const NameAddr& from);
+
+      /// Create a Publish request with an overriden Contact.  See makeRequest.
       static SipMessage* makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+
+      /// Create a Publish request with an empty Contact.  See makeRequest.
       static SipMessage* makePublish(const NameAddr& target, const NameAddr& from);
+
+      /**
+          This interface should be used by the stack (TransactionState) to create an
+          AckMsg to a failure response.  See RFC3261 section 17.1.1.3.  Caller owns the 
+          returned pointer and is responsible for deleting it.
+          
+          @note The branch in this ACK needs to be the one from the request. 
+                For TU generated ACK, see Dialog::makeAck(...)
+
+          @param request Request that this ACK applies to.
+
+          @param response Response that we are ACKing - required so that we can get the To tag
+                          into the generated ACK.
+
+          @returns Created Ack request.  Caller must deallocate.         
+       */
       static SipMessage* makeFailureAck(const SipMessage& request, const SipMessage& response);
-      
+
+      /** 
+          Creates and returns a unique branch parameter.  Generated branch will contain
+          the RFC3261 magic cookie + 4 randome hex characters + "C1" + 2 random hex characters.
+
+          @deprecated Not used by stack.
+      */
       static Data computeUniqueBranch();
       static Data computeProxyBranch(const SipMessage& request);
 
@@ -112,6 +346,11 @@ class Helper
                                             const Data& realm,
                                             const Data& password,
                                             int expiresDelta = 0);
+
+      static AuthResult authenticateRequestWithA1(const SipMessage& request, 
+                                                  const Data& realm,
+                                                  const Data& hA1,
+                                                  int expiresDelta = 0);
       
       static std::pair<AuthResult,Data> 
                 advancedAuthenticateRequest(const SipMessage& request, 

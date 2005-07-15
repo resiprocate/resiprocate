@@ -171,9 +171,8 @@ hexpair2int(char high, char low)
 }
 
 bool
-Data::init()
+Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg)
 {
-   // !dlb! how do I init?
    return true;
 }
 
@@ -587,14 +586,14 @@ Data::operator==(const Data& rhs) const
    {
       return false;
    }
-   return strncmp(mBuf, rhs.mBuf, mSize) == 0;
+   return memcmp(mBuf, rhs.mBuf, mSize) == 0;
 }
 
 bool 
 Data::operator==(const char* rhs) const
 {
    assert(rhs); // .dlb. not consistent with constructor
-   if (strncmp(mBuf, rhs, mSize) != 0)
+   if (memcmp(mBuf, rhs, mSize) != 0)
    {
       return false;
    }
@@ -608,7 +607,7 @@ Data::operator==(const char* rhs) const
 bool
 Data::operator<(const Data& rhs) const
 {
-   int res = strncmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
+   int res = memcmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
 
    if (res < 0)
    {
@@ -635,7 +634,7 @@ Data::operator<(const char* rhs) const
 {
    assert(rhs);
    size_type l = strlen(rhs);
-   int res = strncmp(mBuf, rhs, resipMin(mSize, l));
+   int res = memcmp(mBuf, rhs, resipMin(mSize, l));
 
    if (res < 0)
    {
@@ -714,8 +713,11 @@ Data::operator=(const Data& data)
 size_t
 Data::truncate(size_type len)
 {
-   (*this)[len] = 0;
-   mSize = len;
+   if (len < mSize)
+   {
+     (*this)[len] = 0;
+     mSize = len;
+   }
 
    return mSize;
 }
@@ -874,7 +876,7 @@ Data::append(const char* str, size_type len)
       {
          char *oldBuf = mBuf;
          mCapacity = mSize + len;
-         mBuf = new char[mSize + len];
+         mBuf = new char[mSize + len + 1];
          memcpy(mBuf, oldBuf, mSize);
          mMine = Take;
       }
@@ -1354,7 +1356,8 @@ Data::convertUInt64() const
       l--;
    }
    p--;
-   
+
+   // ?abr? Doesn't the "U" in "UInt" mean unsigned?   
    if (*p == '-')
    {
       s = -1;
@@ -1460,7 +1463,7 @@ Data::prefix(const Data& pre) const
       return false;
    }
 
-   return strncmp(data(), pre.data(), pre.size()) == 0;
+   return memcmp(data(), pre.data(), pre.size()) == 0;
 }
 
 bool
@@ -1471,7 +1474,7 @@ Data::postfix(const Data& post) const
       return false;
    }
 
-   return strncmp(data() + (size()-post.size()), post.data(), post.size()) == 0;
+   return memcmp(data() + (size()-post.size()), post.data(), post.size()) == 0;
 }
 
 Data 
@@ -1521,7 +1524,7 @@ bool
 resip::operator==(const char* s, const Data& d)
 {
    assert(s);
-   return ((strncmp(s, d.data(), d.size()) == 0) &&
+   return ((memcmp(s, d.data(), d.size()) == 0) &&
            strlen(s) == d.size() );
 }
 
@@ -1536,7 +1539,7 @@ resip::operator<(const char* s, const Data& d)
 {
    assert(s);
    Data::size_type l = strlen(s);
-   int res = strncmp(s, d.data(), resipMin(d.size(), l));
+   int res = memcmp(s, d.data(), resipMin(d.size(), l));
 
    if (res < 0)
    {
