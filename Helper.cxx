@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "resiprocate/Auth.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/Uri.hxx"
@@ -20,7 +21,8 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/SecurityAttributes.hxx"
+//#include "resiprocate/Contents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
@@ -476,11 +478,6 @@ Helper::makeCancel(const SipMessage& request)
 }
 
 
-// This interface should be used by the stack (TransactionState) to create an
-// AckMsg to a failure response
-// See RFC3261 section 17.1.1.3
-// Note that the branch in this ACK needs to be the 
-// For TU generated ACK, see Dialog::makeAck(...)
 SipMessage*
 Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
@@ -662,11 +659,11 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             pb.data(then, anchor);
             if (expiresDelta > 0)
             {
-               int now = (int)(Timer::getTimeMs()/1000);
-               if (then.convertInt() + expiresDelta < now)
+               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
+               if ((unsigned int)then.convertUInt64() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
-                  return make_pair(BadlyFormed,username);
+                  return make_pair(Expired,username);
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
@@ -772,8 +769,8 @@ Helper::authenticateRequest(const SipMessage& request,
             pb.data(then, anchor);
             if (expiresDelta > 0)
             {
-               int now = (int)(Timer::getTimeMs()/1000);
-               if (then.convertInt() + expiresDelta < now)
+               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
+               if ((unsigned int)then.convertUInt64() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
@@ -845,6 +842,113 @@ Helper::authenticateRequest(const SipMessage& request,
    return Failed;
 }
 
+Helper::AuthResult
+Helper::authenticateRequestWithA1(const SipMessage& request, 
+                                  const Data& realm,
+                                  const Data& hA1,
+                                  int expiresDelta)
+{
+   DebugLog(<< "Authenticating with HA1: realm=" << realm << " expires=" << expiresDelta);
+   //DebugLog(<< request);
+   
+   if (request.exists(h_ProxyAuthorizations))
+   {
+      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      {
+         if (i->exists(p_realm) && 
+             i->exists(p_nonce) &&
+             i->exists(p_response) &&
+             i->param(p_realm) == realm)
+         {
+            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            if (!pb.eof() && !isdigit(*pb.position()))
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp.");
+               return BadlyFormed;
+            }
+            const char* anchor = pb.position();
+            pb.skipToChar(Symbols::COLON[0]);
+
+            if (pb.eof())
+            {
+               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+               return BadlyFormed;
+            }
+
+            Data then;
+            pb.data(then, anchor);
+            if (expiresDelta > 0)
+            {
+               int now = (int)(Timer::getTimeMs()/1000);
+               if (then.convertInt() + expiresDelta < now)
+               {
+                  DebugLog(<< "Nonce has expired.");
+                  return Expired;
+               }
+            }
+            if (i->param(p_nonce) != makeNonce(request, then))
+            {
+               InfoLog(<< "Not my nonce.");
+               return Failed;
+            }
+         
+            InfoLog (<< " username=" << (i->param(p_username))
+                     << " H(A1)=" << hA1
+                     << " realm=" << realm
+                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                     << " uri=" << i->param(p_uri)
+                     << " nonce=" << i->param(p_nonce));
+            
+            if (i->exists(p_qop))
+            {
+               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
+               {
+                  if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
+                                                                    getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                    i->param(p_uri),
+                                                                    i->param(p_nonce),
+                                                                    i->param(p_qop),
+                                                                    i->param(p_cnonce),
+                                                                    i->param(p_nc),
+                                                                    request.getContents()))
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
+               }
+               else
+               {
+                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+                  return Failed;
+               }
+            }
+            else if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+                                                                   getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                   i->param(p_uri),
+                                                                   i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
+            else
+            {
+               return Failed;
+            }
+         }
+         else
+         {
+            return BadlyFormed;
+         }
+      }
+      return BadlyFormed;
+   }
+   DebugLog (<< "No authentication headers. Failing request.");
+   return Failed;
+}
+
 SipMessage*
 Helper::make405(const SipMessage& request,
                 const int* allowedMethods,
@@ -855,14 +959,14 @@ Helper::make405(const SipMessage& request,
     if (len < 0)
     {
         int upperBound = static_cast<int>(MAX_METHODS);
-	// The UNKNOWN method name marks the end of the enum
-        
-        for (int i = 0 ; i < upperBound; i ++)
+
+        // The UNKNOWN method name is the first in the enum
+        for (int i = 1 ; i < upperBound; i ++)
         {
             int last = 0;
+
             // ENUMS must be contiguous in order for this to work.
             assert( i - last <= 1);
-            //MethodTypes type = static_cast<MethodTypes>(i);
             Token t;
             t.value() = getMethodName(static_cast<resip::MethodTypes>(i));
             resp->header(h_Allows).push_back(t);
@@ -888,7 +992,7 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
 {
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp((int)(Timer::getTimeMs()/1000));
+   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
    auth.param(p_nonce) = makeNonce(request, timestamp);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = realm;

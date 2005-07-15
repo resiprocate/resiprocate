@@ -638,7 +638,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         // handler->onConnected(getSessionHandle(), msg);  // !slg! not needed since onConnected is called when 200 is sent
+         // handler->onConnected(getSessionHandle(), msg);  // not needed since onConnected is called when 200 is sent
          break;
       }
 
@@ -758,7 +758,6 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       case OnAckAnswer:
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -938,9 +937,18 @@ void
 ServerInviteSession::sendProvisional(int code)
 {
    mDialog.makeResponse(m1xx, mFirstRequest, code);
-   if (mProposedLocalSdp.get()) // early media
+   switch (mState)
    {
-      setSdp(m1xx, mProposedLocalSdp.get());
+      case UAS_OfferProvidedAnswer:
+      case UAS_EarlyProvidedAnswer:
+         if (mCurrentLocalSdp.get()) // early media
+         {
+            setSdp(m1xx, mProposedLocalSdp.get());
+         }
+         break;
+
+      default:
+         break;
    }
    startRetransmit1xxTimer();
    mDialog.send(m1xx, mProposedEncryptionLevel);
@@ -953,7 +961,6 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    handleSessionTimerRequest(mInvite200, mFirstRequest);
    if (sdp)
    {
-      //assert(sdp->session().getTimes().size() <= 1);
       setSdp(mInvite200, sdp);
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer

@@ -353,6 +353,9 @@
 				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\InterruptableStackThread.cxx">
+			</File>
+			<File
 				RelativePath=".\KeepAliveMessage.cxx">
 			</File>
 			<File
@@ -431,9 +434,6 @@
 				RelativePath="ParserCategory.cxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.cxx">
-			</File>
-			<File
 				RelativePath="Pidf.cxx">
 			</File>
 			<File
@@ -465,9 +465,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.cxx">
-			</File>
-			<File
-				RelativePath="Registration.cxx">
 			</File>
 			<File
 				RelativePath="RequestLine.cxx">
@@ -539,9 +536,6 @@
 				RelativePath=".\StringCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\Subscription.cxx">
-			</File>
-			<File
 				RelativePath="os\Subsystem.cxx">
 			</File>
 			<File
@@ -602,13 +596,10 @@
 				RelativePath="Transport.cxx">
 			</File>
 			<File
-				RelativePath=".\TransportMessage.cxx">
+				RelativePath=".\TransportFailure.cxx">
 			</File>
 			<File
 				RelativePath="TransportSelector.cxx">
-			</File>
-			<File
-				RelativePath="TuIM.cxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.cxx">
@@ -864,6 +855,9 @@
 				RelativePath=".\InternalTransport.hxx">
 			</File>
 			<File
+				RelativePath=".\InterruptableStackThread.hxx">
+			</File>
+			<File
 				RelativePath="os\IntrusiveListElement.hxx">
 			</File>
 			<File
@@ -960,9 +954,6 @@
 				RelativePath="ParserContainerBase.hxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.hxx">
-			</File>
-			<File
 				RelativePath="Pidf.hxx">
 			</File>
 			<File
@@ -994,9 +985,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.hxx">
-			</File>
-			<File
-				RelativePath="Registration.hxx">
 			</File>
 			<File
 				RelativePath="RequestLine.hxx">
@@ -1062,9 +1050,6 @@
 				RelativePath="SipMessage.hxx">
 			</File>
 			<File
-				RelativePath="SipMessageExplicit.hxx">
-			</File>
-			<File
 				RelativePath="SipStack.hxx">
 			</File>
 			<File
@@ -1087,9 +1072,6 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
-			</File>
-			<File
-				RelativePath="Subscription.hxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.hxx">
@@ -1164,6 +1146,9 @@
 				RelativePath="Transport.hxx">
 			</File>
 			<File
+				RelativePath=".\TransportFailure.hxx">
+			</File>
+			<File
 				RelativePath="TransportMessage.hxx">
 			</File>
 			<File
@@ -1171,9 +1156,6 @@
 			</File>
 			<File
 				RelativePath=".\os\TransportType.hxx">
-			</File>
-			<File
-				RelativePath="TuIM.hxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.hxx">

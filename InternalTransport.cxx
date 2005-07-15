@@ -11,7 +11,6 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
@@ -29,8 +28,7 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      IpVersion version,
                                      const Data& interfaceObj) :
    Transport(rxFifo, portNum, version, interfaceObj),
-   mFd(-1),
-   mHasOwnThread(false)
+   mFd(-1)
 {
 }
 
@@ -123,91 +121,6 @@ unsigned int
 InternalTransport::getFifoSize() const
 {
    return mTxFifo.size();
-}
-
-void
-InternalTransport::thread()
-{
-   InfoLog (<< "Starting transport thread for " << mTuple);
-#if defined(USE_EPOLL)
-   int epollfd = ::open("/dev/epoll", O_RDWR);
-   if (epollfd < 0)
-   {
-      int e = getErrno();
-      Transport::error( e );
-      ErrLog (<< "Can't find epoll on this system");
-      assert(0);
-   }
-   
-   int ret = ::ioctl(epollfd, EP_ALLOC, maxFileDescriptors());
-   if (ret != 0)
-   {
-      int e = getErrno();
-      Transport::error( e );
-      ErrLog (<< "Failed to define for " << maxFileDescriptors() << " descriptors");
-      assert(0);
-   }
-
-   char *map = (char *)mmap(NULL, EP_MAP_SIZE(maxFileDescriptors(), 
-                                              PROT_READ | PROT_WRITE, MAP_PRIVATE, n
-                                              epollfd, 0));
-   if (map <= 0)
-   {
-      ErrLog (<< "Failed to allocate space for epoll in kernel for " << maxFileDescriptors() << " descriptors");
-      assert(0);
-   }
-   
-   while (!mShutdown)
-   {
-      struct pollfd pfd;
-      pfd.fd = fd;
-      pfd.events = POLLIN | POLLOUT | POLLERR | POLLHUP;
-      pfd.revents = 0;
-      
-      if (write(kdpfd, &pfd, sizeof(pfd)) != sizeof(pfd)) 
-      {
-         
-         /* report error */
-      }
-      
-
-
-
-      FdSet fdset; 
-      buildFdSet(fdset);
-      int  err = fdset.selectMilliSeconds(100);
-      if (err >= 0)
-      {
-         try
-         {
-            process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-   }
-#else // !USE_EPOLL
-   while (!mShutdown)
-   {
-      FdSet fdset; 
-      buildFdSet(fdset);
-      int  err = fdset.selectMilliSeconds(100);
-      if (err >= 0)
-      {
-         try
-         {
-            process(fdset);
-         }
-         catch (BaseException& e)
-         {
-            InfoLog (<< "Uncaught exception: " << e);
-         }
-      }
-   }
-#endif
-   InfoLog (<< "shutdown: ");
 }
 
 bool 

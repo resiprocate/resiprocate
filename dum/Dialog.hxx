@@ -28,7 +28,7 @@ class AppDialog;
 class Dialog 
 {
    public:
-      class Exception : BaseException
+      class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, int line);
@@ -70,6 +70,8 @@ class Dialog
 
       void onForkAccepted();      
       void cancel();
+
+      bool isDestroying() { return mDestroying; };
 
    private:
       virtual ~Dialog();
@@ -126,8 +128,6 @@ class Dialog
       } DialogType;
       
       DialogType mType; // !jf! is this necessary?
-//      Data mLocalTag;
-//      Data mRemoteTag;
       NameAddrs mRouteSet;
       
       //variants

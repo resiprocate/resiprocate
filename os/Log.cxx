@@ -16,11 +16,10 @@
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
-#define DELIM " | "
-
 using namespace resip;
 using namespace std;
 
+const Data Log::delim(" | ");
 Log::Level Log::_level = Log::Info;
 Log::Type Log::_type = Cout;
 Data Log::_appName;
@@ -90,15 +89,11 @@ Log::initialize(Type type, Level level, const Data& appName,
    _type = type;
    _level = level;
 
-    if (logFileName)
-    {
-       _logFileName = logFileName;
-    }
-    
-    if (externalLogger)
-    {
-       _externalLogger = externalLogger;
-    }
+   if (logFileName)
+   {
+      _logFileName = logFileName;
+   }
+    _externalLogger = externalLogger;
 
    string::size_type pos = copy.find_last_of('/');
    if ( pos == string::npos || pos == copy.size())
@@ -140,10 +135,12 @@ Log::setLevel(Level level)
    _level = level; 
 }
 
+const static Data log_("LOG_");
+
 Data
 Log::toString(Level l)
 {
-   return Data("LOG_") + _descriptions[l+1];
+   return log_ + _descriptions[l+1];
 }
 
 Log::Level
@@ -198,10 +195,10 @@ Log::tags(Log::Level level,
           ostream& strm) 
 {
 #if defined( __APPLE__ )
-   strm << _descriptions[level+1] << DELIM 
-        << time(0) << DELIM 
-        << _appName << DELIM
-        << subsystem << DELIM
+   strm << _descriptions[level+1] << Log::delim 
+        << time(0) << Log::delim 
+        << _appName << Log::delim
+        << subsystem << Log::delim
         << pfile << ":" << line;
 #else   
    char buffer[256];
@@ -217,20 +214,20 @@ Log::tags(Log::Level level,
    {
       ++file;
    }
-   strm << _descriptions[level+1] << DELIM
-        << timestamp(tstamp) << DELIM  
-        << _appName << DELIM
-        << subsystem << DELIM 
-        << GetCurrentThreadId() << DELIM
+   strm << _descriptions[level+1] << Log::delim
+        << timestamp(tstamp) << Log::delim  
+        << _appName << Log::delim
+        << subsystem << Log::delim 
+        << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
 #else
-   strm << _descriptions[level+1] << DELIM
-        << timestamp() << DELIM  
-        << _hostname << DELIM  
-        << _appName << DELIM
-        << subsystem << DELIM 
-        << _pid << DELIM
-        << pthread_self() << DELIM
+   strm << _descriptions[level+1] << Log::delim
+        << timestamp(tstamp) << Log::delim  
+        << _hostname << Log::delim  
+        << _appName << Log::delim
+        << subsystem << Log::delim 
+        << _pid << Log::delim
+        << pthread_self() << Log::delim
         << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 
 #endif // #if defined( __APPLE__ )

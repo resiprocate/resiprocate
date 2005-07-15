@@ -1,50 +1,35 @@
-#if !defined(RESIP_X_msMsgsInvite_hxx) 
-#define RESIP_X_msMsgsInvite_hxx 
+#if !defined(RESIP_FLOWID_HXX)
+#define RESIP_FLOWID_HXX
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Tuple.hxx"
 
 namespace resip
 {
 
-class X_msMsgsInvite : public Contents
+class FlowId
 {
    public:
-      X_msMsgsInvite();
-      X_msMsgsInvite(const Data& text);
-      X_msMsgsInvite(HeaderFieldValue* hfv, const Mime& contentType);
-      X_msMsgsInvite(const Data& data, const Mime& contentType);
-      X_msMsgsInvite(const X_msMsgsInvite& rhs);
-      virtual ~X_msMsgsInvite();
-      X_msMsgsInvite& operator=(const X_msMsgsInvite& rhs);
-      virtual Contents* clone() const;
+      FlowId(const Tuple& t);
+      
+      //can throw a ParseBuffer::Exception, inverse of toData/operator<<
+      FlowId(const Data& d);      
 
-      static const Mime& getStaticType() ;
+      //.dcm. -- I suspect we only will need one of these
+      Tuple makeConnectionTuple() const;
+      Tuple& pointTupleToFlow(Tuple& t) const;      
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      int& port() {checkParsed(); return mPort;}
-      Data& host() {checkParsed(); return mHost;}
-
-      typedef std::list< std::pair<Data, Data> > Attributes;
-      Attributes& attributtes() {return mAttributes;}
- 
-      static bool init();
-     
+      Data toData() const;
+      bool operator==(const FlowId& rhs) const;
+      bool operator<(const FlowId& rhs) const;
    private:
- 
-      mutable Attributes mAttributes;
-      mutable int mPort;
-      mutable Data mHost;
+      Transport* transport;
+      ConnectionId connectionId;
+      friend std::ostream& operator<<(std::ostream& strm, const FlowId& f);
 };
-
-static bool invokeX_msMsgsInviteInit = X_msMsgsInvite::init();
 
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

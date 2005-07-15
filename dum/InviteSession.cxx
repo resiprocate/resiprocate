@@ -247,7 +247,7 @@ InviteSession::provideOffer(const SdpContents& offer,
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          break;
 
-      // !slg! Can we handle all of the states listed in isConnected() ???
+      // ?slg? Can we handle all of the states listed in isConnected() ???
       default:
          WarningLog (<< "Can't provideOffer when not in Connected state");
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
@@ -388,7 +388,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
 void
 InviteSession::targetRefresh(const NameAddr& localUri)
 {
-   if (isConnected()) // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       // !jf! add interface to Dialog
       //mDialog.setLocalContact(localUri);
@@ -410,7 +410,7 @@ InviteSession::refer(const NameAddr& referTo)
       throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
    }
 
-   if (isConnected()) // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       mSentRefer = true;
       SipMessage refer;
@@ -440,14 +440,14 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
    }
 
-   if (isConnected())  // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       mSentRefer = true;
       SipMessage refer;
       mDialog.makeRequest(refer, REFER);
 
       refer.header(h_ReferTo) = referTo;
-      refer.header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
+      refer.header(h_ReferredBy) = mDialog.mLocalContact; // ?slg? is it ok to do this - should it be an option?
       CallId replaces;
       DialogId id = sessionToReplace->mDialog.getId();
       replaces.value() = id.getCallId();
@@ -470,7 +470,7 @@ InviteSession::info(const Contents& contents)
 {
    if (mNitState == NitComplete)
    {
-      if (isConnected())  // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+      if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
       {
          mNitState = NitProceeding;
          SipMessage info;
@@ -653,7 +653,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdate:
       {
-         // !slg! no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
+         // ?slg? no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
          SipMessage response;
          mLastSessionModification = msg;
          mDialog.makeResponse(response, mLastSessionModification, 200);
@@ -735,7 +735,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          else
          {
             // Response must contact Min_SE - if not - just ignore
-            // !slg! callback?
+            // ?slg? callback?
             transition(Connected);
             mProposedLocalSdp.release();
             mProposedEncryptionLevel = DialogUsageManager::None;
@@ -784,7 +784,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case On1xx:
       case On1xxEarly:
-         // !slg! Some UA's send a 100 response to a ReInvite - just ignore it
+         // Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
       case On2xxAnswer:
@@ -825,7 +825,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          else
          {
             // Response must contact Min_SE - if not - just ignore
-            // !slg! callback?
+            // ?slg? callback?
             transition(Connected);
             mProposedLocalSdp.release();
             mProposedEncryptionLevel = DialogUsageManager::None;
@@ -1729,7 +1729,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
    else
    {
-      assert(0); 
+      //assert(0);   // dispatchOthers will throw if the message type is really unknown
       return Unknown;
    }
 }

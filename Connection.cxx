@@ -21,8 +21,8 @@ Connection::Connection()
 }
 
 Connection::Connection(const Tuple& who, Socket socket)
-  : ConnectionBase(who),
-    mSocket(socket)
+   : ConnectionBase(who),
+     mSocket(socket)
 {
    getConnectionManager().addConnection(this);
 }
@@ -42,7 +42,6 @@ Connection::getId() const
    return mWho.connectionId;
 }
 
-
 void
 Connection::requestWrite(SendData* sendData)
 {
@@ -57,8 +56,6 @@ Connection::requestWrite(SendData* sendData)
 void
 Connection::performWrite()
 {
-   //assert(hasDataToWrite());
-
    assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
    DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
@@ -72,9 +69,9 @@ Connection::performWrite()
    }
    else
    {
-     // Safe because of the conditional above ( < 0 ).
-     Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
-     mSendPos += bytesWritten;
+      // Safe because of the conditional above ( < 0 ).
+      Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
+      mSendPos += bytesWritten;
       if (mSendPos == data.size())
       {
          mSendPos = 0;
@@ -108,26 +105,25 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
 Transport* 
 Connection::transport()
 {
-   assert(this);
    return mWho.transport;
 }
 
 int
 Connection::read(Fifo<TransactionMessage>& fifo)
 {
-  std::pair<char*, size_t> writePair = getWriteBuffer();
-  size_t bytesToRead = resipMin(writePair.second, 
-				static_cast<size_t>(Connection::ChunkSize));
+   std::pair<char*, size_t> writePair = getWriteBuffer();
+   size_t bytesToRead = resipMin(writePair.second, 
+                                 static_cast<size_t>(Connection::ChunkSize));
          
-  assert(bytesToRead > 0);
-  int bytesRead = read(writePair.first, bytesToRead);
-  if (bytesRead <= 0)
-  {
-     return bytesRead;
-  }  
-  preparseNewBytes(bytesRead, fifo);
-  getConnectionManager().touch(this);
-  return bytesRead;
+   assert(bytesToRead > 0);
+   int bytesRead = read(writePair.first, bytesToRead);
+   if (bytesRead <= 0)
+   {
+      return bytesRead;
+   }  
+   preparseNewBytes(bytesRead, fifo);
+   getConnectionManager().touch(this);
+   return bytesRead;
 }
 
 bool 
@@ -146,7 +142,7 @@ Connection::isGood()
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

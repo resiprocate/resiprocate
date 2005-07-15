@@ -37,8 +37,6 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 UdpTransport::~UdpTransport()
 {
    DebugLog (<< "Shutting down " << mTuple);
-   ThreadIf::shutdown();  
-   join();
 }
 
 void 

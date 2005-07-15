@@ -200,7 +200,7 @@ DnsResult::lookup(const Uri& uri)
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          transition(Available);
-         mHandler->handle(this);         
+         if (mHandler) mHandler->handle(this);         
       }
       else if (uri.port() != 0)
       {
@@ -217,7 +217,7 @@ DnsResult::lookup(const Uri& uri)
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
-                  mHandler->handle(this);
+                  if (mHandler) mHandler->handle(this);
                   return;
                }
                mSRVCount++;
@@ -229,7 +229,7 @@ DnsResult::lookup(const Uri& uri)
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
-                  mHandler->handle(this);
+                  if (mHandler) mHandler->handle(this);
                   return;
                }
                mSRVCount++;
@@ -241,7 +241,7 @@ DnsResult::lookup(const Uri& uri)
             if (!mInterface.isSupportedProtocol(mTransport))
             {
                transition(Finished);
-               mHandler->handle(this);
+               if (mHandler) mHandler->handle(this);
                return;
             }
 
@@ -289,7 +289,7 @@ DnsResult::lookup(const Uri& uri)
             mResults.push_back(tuple);
             transition(Available);
             DebugLog (<< "Numeric result so return immediately: " << tuple);
-            mHandler->handle(this);
+            if (mHandler) mHandler->handle(this);
          }
          else // port specified so we know the transport
          {
@@ -301,7 +301,7 @@ DnsResult::lookup(const Uri& uri)
             else
             {
                assert(0);
-               mHandler->handle(this);
+               if (mHandler) mHandler->handle(this);
             }
          }
       }
@@ -421,7 +421,7 @@ DnsResult::primeResults()
       else
       {
          assert(0);
-         mHandler->handle(this);
+         if (mHandler) mHandler->handle(this);
       }
       // don't call primeResults since we need to wait for the response to
       // AAAA/A query first
@@ -442,7 +442,7 @@ DnsResult::primeResults()
             mCurrResultPath.pop();
          }
       }
-      if (changed) mHandler->handle(this);
+      if (changed && mHandler) mHandler->handle(this);
    }
 
    // Either we are finished or there are results primed
@@ -711,7 +711,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          }
          addToPath(mResults);
       }
-      if (changed) mHandler->handle(this);
+      if (changed && mHandler) mHandler->handle(this);
    }
 }
 
@@ -906,7 +906,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       // This means that dns / NAPTR is misconfigured for this client 
       if (mPreferredNAPTR.key.empty())
       {
-         StackLog (<< "No NAPTR records that are supported by this client, trying srv");
+         StackLog (<< "There are no NAPTR records supported by this client so do an SRV lookup instead");
          bFail = true;
       }
       else
@@ -943,7 +943,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          if (!mInterface.isSupportedProtocol(TLS))
          {
             transition(Finished);
-            mHandler->handle(this);
+            if (mHandler) mHandler->handle(this);
             return;
          }
 

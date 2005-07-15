@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	RootNamespace="resiprocate"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -21,8 +22,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm300"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6"
+				AdditionalIncludeDirectories=".\openssl-0.9.7g\inc32;&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -70,8 +71,8 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6"
+				AdditionalIncludeDirectories=".\openssl-0.9.7g\inc32;&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6;USE_SSL"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
@@ -382,10 +383,16 @@
 				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\InterruptableStackThread.cxx">
+			</File>
+			<File
 				RelativePath=".\KeepAliveMessage.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
+			</File>
+			<File
+				RelativePath=".\LocalDns.cxx">
 			</File>
 			<File
 				RelativePath="os\Lock.cxx">
@@ -460,9 +467,6 @@
 				RelativePath="ParserCategory.cxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.cxx">
-			</File>
-			<File
 				RelativePath="Pidf.cxx">
 			</File>
 			<File
@@ -494,9 +498,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.cxx">
-			</File>
-			<File
-				RelativePath="Registration.cxx">
 			</File>
 			<File
 				RelativePath="RequestLine.cxx">
@@ -568,9 +569,6 @@
 				RelativePath=".\StringCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\Subscription.cxx">
-			</File>
-			<File
 				RelativePath="os\Subsystem.cxx">
 			</File>
 			<File
@@ -607,6 +605,9 @@
 				RelativePath="TimerQueue.cxx">
 			</File>
 			<File
+				RelativePath=".\TlsConnection.cxx">
+			</File>
+			<File
 				RelativePath="TlsTransport.cxx">
 			</File>
 			<File
@@ -631,13 +632,10 @@
 				RelativePath="Transport.cxx">
 			</File>
 			<File
-				RelativePath=".\TransportMessage.cxx">
+				RelativePath=".\TransportFailure.cxx">
 			</File>
 			<File
 				RelativePath="TransportSelector.cxx">
-			</File>
-			<File
-				RelativePath="TuIM.cxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.cxx">
@@ -671,6 +669,9 @@
 			</File>
 			<File
 				RelativePath="XMLCursor.cxx">
+			</File>
+			<File
+				RelativePath=".\XWinSecurity.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -893,6 +894,9 @@
 				RelativePath=".\InternalTransport.hxx">
 			</File>
 			<File
+				RelativePath=".\InterruptableStackThread.hxx">
+			</File>
+			<File
 				RelativePath="os\IntrusiveListElement.hxx">
 			</File>
 			<File
@@ -900,6 +904,9 @@
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
+			</File>
+			<File
+				RelativePath=".\LocalDns.hxx">
 			</File>
 			<File
 				RelativePath="os\Lock.hxx">
@@ -989,9 +996,6 @@
 				RelativePath="ParserContainerBase.hxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.hxx">
-			</File>
-			<File
 				RelativePath="Pidf.hxx">
 			</File>
 			<File
@@ -1023,9 +1027,6 @@
 			</File>
 			<File
 				RelativePath="os\RecursiveMutex.hxx">
-			</File>
-			<File
-				RelativePath="Registration.hxx">
 			</File>
 			<File
 				RelativePath="RequestLine.hxx">
@@ -1091,9 +1092,6 @@
 				RelativePath="SipMessage.hxx">
 			</File>
 			<File
-				RelativePath="SipMessageExplicit.hxx">
-			</File>
-			<File
 				RelativePath="SipStack.hxx">
 			</File>
 			<File
@@ -1116,9 +1114,6 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
-			</File>
-			<File
-				RelativePath="Subscription.hxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.hxx">
@@ -1193,6 +1188,9 @@
 				RelativePath="Transport.hxx">
 			</File>
 			<File
+				RelativePath=".\TransportFailure.hxx">
+			</File>
+			<File
 				RelativePath="TransportMessage.hxx">
 			</File>
 			<File
@@ -1200,9 +1198,6 @@
 			</File>
 			<File
 				RelativePath=".\os\TransportType.hxx">
-			</File>
-			<File
-				RelativePath="TuIM.hxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.hxx">
@@ -1242,6 +1237,9 @@
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
+			</File>
+			<File
+				RelativePath=".\XWinSecurity.hxx">
 			</File>
 		</Filter>
 	</Files>

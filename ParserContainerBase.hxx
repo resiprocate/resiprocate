@@ -1,9 +1,10 @@
-#if !defined(RESIP_PARSERCONTAINERBASE_HXX)
-#define RESIP_PARSERCONTAINERBASE_HXX 
+#ifndef RESIP_ParserContainerBase_hxx
+#define RESIP_ParserContainerBase_hxx
 
 #include "resiprocate/ParserCategory.hxx"
 #include <iosfwd>
 #include "resiprocate/HeaderTypes.hxx"
+#include <vector>
 
 namespace resip
 {
@@ -13,21 +14,29 @@ class HeaderFieldValueList;
 class ParserContainerBase
 {
    public:
+      typedef size_t size_type;
+
       ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
          : mType(type)
       {}
       ParserContainerBase(const ParserContainerBase& rhs)
          : mType(rhs.mType)
       {}
-      virtual ~ParserContainerBase() {}
+      virtual ~ParserContainerBase();
+      void clear();
       virtual ParserContainerBase* clone() const = 0;
-      virtual bool empty() const = 0;
-      virtual std::ostream& encode(const Data& headerName, std::ostream& str) const = 0;
-      virtual std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const = 0;
+      size_t size() const;
+      bool empty() const;
+      std::ostream& encode(const Data& headerName, std::ostream& str) const;
+      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const;
+
+      ParserCategory* front();
+      void pop_front();
+      void pop_back();
 
    protected:
       const Headers::Type mType;
-
+      std::vector<ParserCategory*> mParsers;
 };
  
 }
@@ -37,7 +46,7 @@ class ParserContainerBase
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

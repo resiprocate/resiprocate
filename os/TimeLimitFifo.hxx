@@ -34,30 +34,43 @@ class TimeLimitFifo : public AbstractFifo
    public:
       typedef enum {EnforceTimeDepth, IgnoreTimeDepth, InternalElement} DepthUsage;
 
-      TimeLimitFifo(unsigned int maxDurationSecs,
+      /// After it runs out of the lesser of these limits it will start to refuse messages
+	  TimeLimitFifo(unsigned int maxDurationSecs,
                     unsigned int maxSize);
 
       virtual ~TimeLimitFifo();
       
-      /** Add a message to the fifo.
-          return true iff succeeds
-          second arg:
-            EnforceTimeDepth -- external (non ACK) requests
-            IgnoreTimeDepth -- external reponse and ACK
-            InternalElement -- internal messages (timers, application
-            postbacks..); use reserved queue space */
-      bool add(Msg* msg, DepthUsage usage);
+      /// Add a message to the fifo.
+      /// return true iff succeeds
+	  /// @param Msg* 'Message pointer'
+      /// @param DepthUsage : (Needs work...)
+      ///    EnforceTimeDepth -- external (non ACK) requests
+      ///    IgnoreTimeDepth -- external reponse and ACK
+      ///    InternalElement -- internal messages (timers, application postbacks..); use reserved queue space
+      ///
+	  ///    +------------------------------------------------------+
+	  ///    |                                |          |          |
+	  ///    +------------------------------------------------------+
+	  ///    <-----enforce------------------->
+	  ///    <---------------ignoreTimeDepth------------>
+	  ///    <--------------------- internalElement---------------->
+	  ///
+	  ///    enforce will drop things that exceed the queue 
+	  ///    ignore will go past that limit to the extent of the queue (eg. 
+	  ///    internal will basically not drop anything
+	  ///
+	  bool add(Msg* msg, DepthUsage usage);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
        *  it will retry the wait. Signals can therefore not be caught
        *  via getNext. If you need to detect a signal, use block
        *  prior to calling getNext.
-       */
+       **/
       Msg* getNext();
       Msg* getNext(int ms);
       
-      /** Return the time depth of the queue. Zero if no depth. */
+      /// Return the time depth of the queue. Zero if no depth.
       virtual time_t timeDepth() const;
 
       /// would an add called now work?

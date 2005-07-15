@@ -8,11 +8,15 @@
 namespace resip
 {
 
+/** MD5Buffer is used to back the SHA1Stream.
+ */
 class MD5Buffer : public std::streambuf
 {
    public:
       MD5Buffer();
       virtual ~MD5Buffer();
+      /** @returns the MD5 hexadecimal representation of the data from the buffer
+       */
       Data getHex();
    protected:
       virtual int sync();
@@ -22,11 +26,18 @@ class MD5Buffer : public std::streambuf
       MD5Context mContext;
 };
 
+/** MD5Stream is used to accumlate data written to the stream in a MD5Buffer and
+    convert the data to MD5.
+ */
 class MD5Stream : private MD5Buffer, public std::ostream
 {
    public:
       MD5Stream();
       ~MD5Stream();
+      /** Calls flush() on itself and returns the MD5 data in hex format.
+          @returns the MD5 hexadecimal representation of the data written to the
+          stream and convert the data to MD5.
+       */
       Data getHex();
    private:
       //MD5Buffer mStreambuf;

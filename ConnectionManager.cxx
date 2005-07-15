@@ -13,14 +13,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-
-// smallest time to reuse
-const UInt64 
-ConnectionManager::MinLastUsed = 1;
-
-// largest unused time to reclaim
-const UInt64 
-ConnectionManager::MaxLastUsed = 1000;
+const UInt64 ConnectionManager::MinimumGcAge = 1;
 
 ConnectionManager::ConnectionManager() : 
    mHead(),
@@ -231,7 +224,7 @@ ConnectionManager::touch(Connection* connection)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c)
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

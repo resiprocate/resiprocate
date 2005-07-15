@@ -1,40 +1,33 @@
-#include "TransportMessage.hxx"
-
+#include "TransportFailure.hxx"
 
 using namespace resip;
 
-TransportMessage::TransportMessage(Data transactionId, bool isFailure) 
-   : mTransactionId(transactionId), 
-     mFailure(isFailure) 
-{}
+TransportFailure::TransportFailure(const Data& transactionId)
+   : mTransactionId(transactionId) 
+{
+}
 
 const Data&
-TransportMessage::getTransactionId() const
+TransportFailure::getTransactionId() const
 {
    return mTransactionId;
 }
 
 bool
-TransportMessage::isFailed() const 
-{
-   return mFailure; 
-}
-
-bool
-TransportMessage::isClientTransaction() const 
+TransportFailure::isClientTransaction() const 
 {
    // !jf! not strictly true
    return true; 
 } 
       
 std::ostream&
-TransportMessage::encodeBrief(std::ostream& str) const 
+TransportFailure::encodeBrief(std::ostream& str) const 
 {
-   return str << "TransportMessage: " << mTransactionId << " " << (mFailure ? "failed" : "succeeded"); 
+   return str << "TransportFailure: " << mTransactionId;
 }
       
 std::ostream&
-TransportMessage::encode(std::ostream& strm) const
+TransportFailure::encode(std::ostream& strm) const
 {
    return encodeBrief(strm);
 }
