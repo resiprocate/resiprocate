@@ -14,7 +14,8 @@ enum SignatureStatus
    SignatureIsBad,
    SignatureTrusted, // It is signed with trusted signature
    SignatureCATrusted, // signature is new and is signed by a root we trust
-   SignatureNotTrusted // signature is new and is not signed by a CA we
+   SignatureNotTrusted, // signature is new and is not signed by a CA we
+   SignatureSelfSigned
 };
 
 class SecurityAttributes

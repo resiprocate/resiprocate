@@ -15,7 +15,8 @@ class ClientInviteSession : public InviteSession
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
-                          const SdpContents* initialOffer,
+                          const Contents* initialOffer,
+                          DialogUsageManager::EncryptionLevel level,
                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
       ClientInviteSessionHandle getHandle();
@@ -25,6 +26,7 @@ class ClientInviteSession : public InviteSession
           sends an offer.  For a UAC in an early dialog, this can be used to send
           an UPDATE request with an SDP offer. */
       virtual void provideOffer (const SdpContents& offer);
+      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on

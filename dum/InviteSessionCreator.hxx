@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
 namespace resip
 {
@@ -18,13 +19,16 @@ class InviteSessionCreator : public BaseCreator
                            const NameAddr& target,
                            SharedPtr<UserProfile>& userProfile,
                            const SdpContents* initial, 
-                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());      
+                           DialogUsageManager::EncryptionLevel level,
+                           const SdpContents* alternative,
+                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
 
 	  virtual ~InviteSessionCreator();
       void end();
 
       virtual void dispatch(const SipMessage& msg);
-      const SdpContents* getInitialOffer() const;
+      const Contents* getInitialOffer() const;
+      DialogUsageManager::EncryptionLevel getEncryptionLevel() const;
       
       ServerSubscriptionHandle getServerSubscription() { return mServerSub; }
       
@@ -37,8 +41,10 @@ class InviteSessionCreator : public BaseCreator
       } State;
       
       State mState;
+      //SdpContents* mInitialOffer;
+      Contents* mInitialOffer;
+      DialogUsageManager::EncryptionLevel mEncryptionLevel;
       ServerSubscriptionHandle mServerSub;
-      SdpContents* mInitialOffer;
 };
 
 }
