@@ -113,7 +113,7 @@ class BaseSecurity
       // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
       Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
-      Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
+      MultipartSignedContents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
 
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
@@ -121,18 +121,20 @@ class BaseSecurity
       void checkAndSetIdentity( const SipMessage& msg, const Data& derCert=Data::Empty ) const;
 
       // returns NULL if it fails
-      Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
+      Contents* decrypt( const Data& decryptorAor, const Pkcs7Contents* );
       
       // returns NULL if fails. returns the data that was originally signed
       Contents* checkSignature( MultipartSignedContents*, 
                                 Data* signedBy, SignatureStatus* sigStat );
 
       //returns SubjectAltName or commonName, if subjectAltName does not exist
-      Data getCetName(X509 *cert);
+      Data getCertName(X509 *cert);
 
       //compares (with wildcards) the hostname with the
       //subjectAltName/commonName from the 'cert' certificate
       bool compareCertName(X509 *cert, const Data& hostname);
+
+      bool isSelfSigned(X509* cert);
 
       // allow particular classes to acces the fucntions below 
       // friend class TlsConnection;
@@ -177,7 +179,6 @@ class BaseSecurity
       Data getPrivateKeyPEM (PEMType type, const Data& name) const;
       Data getPrivateKeyDER (PEMType type, const Data& name) const;
       void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
-      
 };
 
 class Security : public BaseSecurity
@@ -249,5 +250,3 @@ class Security : public BaseSecurity
  * <http://www.vovida.org/>.
  *
  */
-
-
