@@ -1,7 +1,10 @@
+#include <cassert>
+
 #include "ParserContainerBase.hxx"
 #include "resiprocate/Embedded.hxx"
 
 using namespace resip;
+using namespace std;;
 
 ParserContainerBase::~ParserContainerBase()
 {
