@@ -1,4 +1,4 @@
-#include "resiprocate/Security.hxx"
+ #include "resiprocate/Security.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipFrag.hxx"
@@ -23,6 +23,7 @@
 #include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
+#include "resiprocate/dum/DumFeatureMessage.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/KeepAliveManager.hxx"
@@ -47,15 +48,13 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/external/HttpProvider.hxx"
-#include "resiprocate/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager(SipStack& stack) :
+DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -70,6 +69,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mDumShutdownHandler(0),
    mShutdownState(Running)
 {
+   //TODO -- create default features
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
 
@@ -112,6 +112,12 @@ DialogUsageManager::~DialogUsageManager()
       DialogSet*  ds = mDialogSetMap.begin()->second;
       delete ds;
    }
+
+   for (DumFeatureChain::FeatureList::iterator it = mFeatureList.begin(); it != mFeatureList.end(); ++it)
+   {
+     delete *it;
+   }
+
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
@@ -911,8 +917,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
             ErrorStatusCode = 486; // Busy Here
             is = InviteSessionHandle::NotValid();
          }
-      }
-      else if(!is->isEarly())
+      }      else if(!is->isEarly())
       {
          // replaces can't be used on early dialogs that were not initiated by this UA - ie. InviteSession::Proceeding state
          ErrorStatusCode = 481; // Call/Transaction Does Not Exist
@@ -922,7 +927,6 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
-// !jf! When should this function return false?
 void
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
@@ -932,26 +936,102 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       return;
    }
 
-   bool authorized = false;
-   if (mServerAuthManager.get())
+   TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
+   if (tuMsg)
    {
-      UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg.get());
-      if (userAuth)
+      InfoLog (<< "TU unregistered ");
+      assert(mShutdownState == RemovingTransactionUser);
+      assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
+      mShutdownState = Shutdown;
+      if (mDumShutdownHandler)
       {
-         Message* result = mServerAuthManager->handleUserAuthInfo(userAuth);
-         if (result)
-         {
-            authorized = true;
-            msg = std::auto_ptr<Message>(result);
-         }
-         else
-         {
-            InfoLog(<< "ServerAuth rejected request " << *userAuth);
-            return;
-         }
+         mDumShutdownHandler->onDumCanBeDeleted();
+         mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
+      }
+      return;
+   }
+   
+   DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
+   if (destroyUsage)
+   {
+      InfoLog(<< "Destroying usage" );
+      destroyUsage->destroy();
+      return;
+   }
+
+   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+   if (dumMsg)
+   {
+      InfoLog(<< "Timeout Message" );
+      if (!dumMsg->getBaseUsage().isValid())
+      {
+         return;
+      }
+      
+      dumMsg->getBaseUsage()->dispatch(*dumMsg);
+      return;
+   }
+
+   KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
+   if (keepAliveMsg)
+   {
+      InfoLog(<< "Keep Alive Message" );
+      if (mKeepAliveManager.get())
+      {
+         mKeepAliveManager->process(*keepAliveMsg);
       }
    }
 
+   //call or create feature chain if appropriate
+
+   Data tid = Data::Empty;
+   {
+      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+      if (sipMsg)
+      {
+         tid = sipMsg->getTransactionId();
+      }
+      
+      DumFeatureMessage* featureMsg = dynamic_cast<DumFeatureMessage*>(msg.get());
+      if (featureMsg)
+      {
+         tid = featureMsg->getTransactionId();
+      }
+   }
+   if (tid != Data::Empty && !mFeatureList.empty())
+   {
+      FeatureChainMap::iterator it;     
+      //efficiently find or create FeatureChain, should prob. be a utility template
+      {
+         FeatureChainMap::iterator lb = mFeatureChainMap.lower_bound(tid);
+         if (lb != mFeatureChainMap.end() && !(mFeatureChainMap.key_comp()(tid, lb->first)))
+         {
+            it = lb;
+         }
+         else
+         {
+            it = mFeatureChainMap.insert(lb, FeatureChainMap::value_type(
+                                            tid, 
+                                            new DumFeatureChain(mFeatureList)));            
+         }
+      }
+      
+      DumFeatureChain::ProcessingResult res = it->second->process(msg.get());
+      
+      if (res & DumFeatureChain::ChainDoneBit)
+      {
+         delete it->second;
+         mFeatureChainMap.erase(it);
+      }
+      
+      if (res & DumFeatureChain::EventTakenBit)
+      {
+         msg.release();
+         return;
+      }
+   }
+   
+   //normal dum message processing
    try
    {
       InfoLog (<< "Got: " << msg->brief());
@@ -999,36 +1079,11 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                }
             }
 
-            if (mServerAuthManager.get() && !authorized)
-            {
-               switch ( mServerAuthManager->handle(*sipMsg) )
-               {
-                  case ServerAuthManager::Challenged:
-                     InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
-                     return;
-                  case ServerAuthManager::RequestedCredentials:
-                     InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
-                     return;
-                  case ServerAuthManager::Rejected:
-                     InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
-                     return;
-                  default:
-                     break;
-               }
-            }
-      
-            if (queueForIdentityCheck(sipMsg))
-            {
-               msg.release();
-            }
-            else
-            {
 #if defined (USE_SSL)
-               if (mEncryptionManager.decrypt(*sipMsg))
+            if (mEncryptionManager.decrypt(*sipMsg))
 #endif
-               {
-                  processRequest(*sipMsg);
-               }
+            {
+               processRequest(*sipMsg);
             }
          }
          else
@@ -1041,13 +1096,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             }
          }
          return;
-      }
-
-      HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg.get());
-      if (httpMsg)
-      {
-         processIdentityCheckResponse(*httpMsg);         
-         return;         
       }
 
       DumDecrypted* decryptedMsg = dynamic_cast<DumDecrypted*>(msg.get());
@@ -1073,123 +1121,12 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          return;
       }
 
-      TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
-      if (tuMsg)
-      {
-         InfoLog (<< "TU unregistered ");
-         assert(mShutdownState == RemovingTransactionUser);
-         assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
-         mShutdownState = Shutdown;
-         if (mDumShutdownHandler)
-         {
-            mDumShutdownHandler->onDumCanBeDeleted();
-            mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
-         }
-         return;
-      }
-
-      DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
-      if (destroyUsage)
-      {
-         InfoLog(<< "Destroying usage" );
-         destroyUsage->destroy();
-         return;
-      }
-
-      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-      if (dumMsg)
-      {
-         InfoLog(<< "Timeout Message" );
-         if (!dumMsg->getBaseUsage().isValid())
-         {
-            return;
-         }
-
-         dumMsg->getBaseUsage()->dispatch(*dumMsg);
-         return;
-      }
-
-      KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
-      if (keepAliveMsg)
-      {
-          InfoLog(<< "Keep Alive Message" );
-        if (mKeepAliveManager.get())
-         {
-            mKeepAliveManager->process(*keepAliveMsg);
-         }
-      }
    }
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
-}
-
-void
-DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
-{
-#if defined(USE_SSL)
-   InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
-   RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
-   if (it != mRequiresCerts.end())
-   {
-      getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      InfoLog(<< "Decrypting msg" << endl);
-      if (mEncryptionManager.decrypt(*it->second))
-      {
-         InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
-         processRequest(*it->second);
-      }
-      delete it->second;
-      mRequiresCerts.erase(it);
-   }
-#endif
-}
-
-bool
-DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
-{
-#if defined(USE_SSL)
-   if (sipMsg->exists(h_Identity) &&
-       sipMsg->exists(h_IdentityInfo) &&
-       sipMsg->exists(h_Date))
-   {
-      if (getSecurity()->hasDomainCert(sipMsg->header(h_From).uri().host()))
-      {
-         getSecurity()->checkAndSetIdentity(*sipMsg);
-         return false;
-      }
-      else
-      {
-         if (!HttpProvider::instance())
-         {
-            return false;
-         }
-         
-         try
-         {
-            mRequiresCerts[sipMsg->getTransactionId()] = sipMsg;
-            InfoLog( << "Dum::queueForIdentityCheck, sending http request to: " 
-                     << sipMsg->header(h_IdentityInfo));
-            
-            HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
-                                          sipMsg->getTransactionId(),
-                                          *this);
-            return true;
-         }
-         catch (BaseException&)
-         {
-         }
-      }
-   }
-#endif
-
-   std::auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
-   sec->setIdentity(sipMsg->header(h_From).uri().getAor());
-   sec->setIdentityStrength(SecurityAttributes::From);
-   sipMsg->setSecurityAttributes(sec);
-   return false;
 }
 
 // return false if there is more to do
@@ -1780,7 +1717,12 @@ DialogUsageManager::applyToServerSubscriptions(const Data& documentKey,
    }
 }
 
-
+void 
+DialogUsageManager::addFeature(std::auto_ptr<DumFeature> feat)
+{
+   mFeatureList.push_back(feat.get());
+   feat.release();   
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
