@@ -98,7 +98,7 @@ do                                                                              
       else                                                                                      \
       {                                                                                         \
          /* endl is magic in syslog -- so put it here */                                        \
-         resip::GenericLogImpl::Instance() << _resip_result << std::endl;                       \
+         resip::GenericLogImpl::Instance() << _resip_result.escaped() << std::endl;             \
       }                                                                                         \
    }                                                                                            \
 } while (0)
