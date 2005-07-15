@@ -46,7 +46,6 @@ class DumTimeout : public ApplicationMessage
 
       BaseUsageHandle getBaseUsage() const;
 
-      virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
       
       virtual std::ostream& encode(std::ostream& strm) const;
