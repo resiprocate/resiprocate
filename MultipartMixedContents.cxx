@@ -172,7 +172,7 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 
    do
    {
-      // skip over boudary
+      // skip over boundary
  
       if( pb.eof() || *pb.position() != Symbols::CR[0] )
       {
@@ -244,8 +244,6 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    }
    while ( !pb.eof() );
 
-   // replace the boundary
-   setBoundary();
 }
 
 /* ====================================================================
