@@ -926,7 +926,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
    assert(creator); // !jf! this maybe can assert by evil UAS
    //return mDum.createAppClientInviteSession(*this, *creator);
    return new ClientInviteSession(mDum, *this, creator->getLastRequest(),
-                                  creator->getInitialOffer(), creator->getServerSubscription());
+                                  creator->getInitialOffer(), creator->getEncryptionLevel(), creator->getServerSubscription());
 }
 
 
@@ -957,13 +957,14 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
-Dialog::send(SipMessage& msg)
+Dialog::send(SipMessage& msg,
+             DialogUsageManager::EncryptionLevel level)
 {
    if (msg.isRequest() && msg.header(h_CSeq).method() != ACK)
    {
       mRequests[msg.header(h_CSeq).sequence()] = msg;
    }
-   mDum.send(msg);
+   mDum.send(msg, level);
 }
 
 void

@@ -26,6 +26,7 @@ class ServerInviteSession: public InviteSession
           appropriate request or response. In some cases, the UAS might have to
           call accept in order to cause the message to be sent. */
       virtual void provideOffer(const SdpContents& offer);
+      virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
@@ -71,7 +72,7 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
-      void sendAccept(int code, SdpContents* sdp); // sends 2xxI
+      void sendAccept(int code, Contents* sdp); // sends 2xxI
       void sendProvisional(int code);
       void sendUpdate(const SdpContents& sdp);
 

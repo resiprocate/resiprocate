@@ -1,3 +1,5 @@
+#include <vector>
+
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
@@ -9,6 +11,7 @@
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
+using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
@@ -70,6 +73,12 @@ Contents::clear()
    delete mId;
    delete mDescription;
    delete mLength;
+
+   for (vector<char*>::iterator i = mBufferList.begin();
+        i != mBufferList.end(); i++)
+   {
+      delete [] *i;
+   }
 
    mDisposition = 0;
    mTransferEncoding = 0;
@@ -513,6 +522,12 @@ Contents::getBodyData() const
    ErrLog( << "Need to implement getBodyData function for " << getType() );
    assert(0);
    return Data::Empty;
+}
+
+void
+Contents::addBuffer(char* buf)
+{
+   mBufferList.push_back(buf);
 }
 
 /* ====================================================================

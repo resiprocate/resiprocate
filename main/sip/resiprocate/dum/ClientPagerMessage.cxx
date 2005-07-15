@@ -1,9 +1,11 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/Security.hxx"
 #include "resiprocate/dum/PagerMessageCreator.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ClientPagerMessage.hxx"
 #include "resiprocate/dum/PagerMessageHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -84,8 +86,7 @@ ClientPagerMessage::getHandle()
 
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(dialogSet.getCreator()->getLastRequest())//,
-     //mInTransaction(false)
+     mRequest(dialogSet.getCreator()->getLastRequest())
 {
 }
 
@@ -102,16 +103,18 @@ ClientPagerMessage::getMessageRequest()
 }
 
 void
-ClientPagerMessage::page(std::auto_ptr<Contents> contents)
+ClientPagerMessage::page(std::auto_ptr<Contents> contents,
+                         DialogUsageManager::EncryptionLevel level)
 {
     assert(contents.get() != 0);
-
     bool do_page = mMsgQueue.empty();
-    mMsgQueue.push_back(contents.get());
-    contents.release();
+    Item item;
+    item.contents = contents.release();
+    item.encryptionLevel = level;
+    mMsgQueue.push_back(item);
     if(do_page)
     {
-     this->pageFirstMsgQueued();
+       this->pageFirstMsgQueued();
     }
 }
 
@@ -136,7 +139,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
         {
            if(mMsgQueue.empty() == false)
            {
-              delete mMsgQueue.front();
+              delete mMsgQueue.front().contents;
               mMsgQueue.pop_front();
               if(mMsgQueue.empty() == false)
               {
@@ -152,17 +155,18 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
            MsgQueue::iterator contents;
            for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
            {
-               Contents* p = *contents;
+               Contents* p = contents->contents;
                WarningLog ( << "Paging failed" << *p );
                Helper::makeResponse(errResponse, mRequest, code);
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
-               *contents = 0;
+               contents->contents = 0;
            }
 
            mMsgQueue.clear();
         }
     }
 }
+
 void
 ClientPagerMessage::dispatch(const DumTimeout& timer)
 {
@@ -185,9 +189,9 @@ ClientPagerMessage::pageFirstMsgQueued ()
 {
    assert(mMsgQueue.empty() == false);
    mRequest.header(h_CSeq).sequence()++;
-   mRequest.setContents(mMsgQueue.front());
+   mRequest.setContents(mMsgQueue.front().contents);
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
-   mDum.send(mRequest);
+   mDum.send(mRequest, mMsgQueue.front().encryptionLevel);
 }
 
 void
@@ -196,7 +200,7 @@ ClientPagerMessage::clearMsgQueued ()
    MsgQueue::iterator   contents;
    for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
    {
-      Contents* p = *contents;
+      Contents* p = contents->contents;
       delete p;
    }
    mMsgQueue.clear();
