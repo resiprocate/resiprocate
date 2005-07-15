@@ -35,10 +35,21 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+#ifdef WIN32
+Random::TlsInitializer Random::tlsInitializer;
+#else
 bool Random::mIsInitialized = false;
-#if 0
-Random::Init Random::initer;
 #endif
+
+bool
+Random::isInitialized()
+{
+#ifdef WIN32
+   return tlsInitializer.isInitialized();
+#else
+   return mIsInitialized;
+#endif
+}
 
 void
 Random::initialize()
@@ -46,17 +57,19 @@ Random::initialize()
    static Mutex mutex;
    Lock lock(mutex);
 
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
       Timer::setupTimeOffsets();
-      
-      //throwing away first 32 bits
-      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 
 #ifdef WIN32
       Socket fd = -1;
       // !cj! need to find a better way - use pentium random commands?
+      //throwing away first 32 bits of getTimeMs - using threadid in seed, since we Initialize once per thread in Win32
+      unsigned int seed = unsigned(Timer::getTimeMs()) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId());
 #else
+      //throwing away first 32 bits
+      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+
       int fd = open("/dev/urandom", O_RDONLY);
       // !ah! blocks on embedded devices -- not enough entropy.
       if ( fd != -1 )
@@ -103,23 +116,26 @@ Random::initialize()
       }
 
 #ifdef WIN32
+      //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
       srand(seed);
+      tlsInitializer.setInitialized();
 #else
       srandom(seed);
-#endif
       mIsInitialized = true;
+#endif
    }
 }
 
 int
 Random::getRandom()
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
    // !dlb! Lock
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
+
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
    int r1 = rand();
@@ -136,11 +152,12 @@ Random::getRandom()
 int
 Random::getCryptoRandom()
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
+
 #if USE_OPENSSL
    int ret;
    int e = RAND_bytes( (unsigned char*)&ret , sizeof(ret) );
@@ -164,11 +181,11 @@ Random::getCryptoRandom()
 Data 
 Random::getRandom(unsigned int len)
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
    assert(len < Random::maxLength+1);
    
    union 
@@ -187,11 +204,11 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
    assert(len < Random::maxLength+1);
    
    union 
@@ -210,29 +227,55 @@ Random::getCryptoRandom(unsigned int len)
 Data 
 Random::getRandomHex(unsigned int numBytes)
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
+
    return Random::getRandom(numBytes).hex();
+}
+
+Data 
+Random::getRandomBase64(unsigned int numBytes)
+{
+   if ( !Random::isInitialized() )
+   {
+      initialize();
+   }
+   assert( Random::isInitialized() );
+
+   return Random::getRandom(numBytes).base64encode();
 }
 
 Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
-   if (!mIsInitialized)
+   if ( !Random::isInitialized() )
    {
-     initialize();
+      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( Random::isInitialized() );
+
    return Random::getCryptoRandom(numBytes).hex();
+}
+
+Data 
+Random::getCryptoRandomBase64(unsigned int numBytes)
+{
+   if ( !Random::isInitialized() )
+   {
+      initialize();
+   }
+   assert( Random::isInitialized() );
+
+   return Random::getCryptoRandom(numBytes).base64encode();
 }
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2005.   All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

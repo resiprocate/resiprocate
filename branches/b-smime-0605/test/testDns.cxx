@@ -77,16 +77,6 @@ class TestDnsHandler : public DnsHandler
       Mutex mutex;
 };
 
-/*
-class VipListener : public RRVip::Listener
-{
-   void onVipInvalidated(int rrType, const Data& vip) const
-   {
-      cout << rf << "VIP " << " -> " << vip << " type" << " -> " << rrType << " has been invalidated." << ub << endl;
-   }
-};
-*/
-	
 class TestDns : public DnsInterface, public ThreadIf
 {
    public:
@@ -95,9 +85,11 @@ class TestDns : public DnsInterface, public ThreadIf
          addTransportType(TCP, V4);
          addTransportType(UDP, V4);
          addTransportType(TLS, V4);
+#ifdef IPV6
          addTransportType(TCP, V6);
          addTransportType(UDP, V6);
          addTransportType(TLS, V6);
+#endif
       }
 
       void thread()
@@ -120,15 +112,15 @@ typedef struct
 {
       DnsResult* result;
       Uri uri;
-      TestDnsHandler* handler;
-      //VipListener* listener;
+      TestDnsHandler* handler;      
 } Query;
 
 int 
 main(int argc, const char** argv)
 {
    char* logType = "cout";
-   char* logLevel = "STACK";
+   //char* logLevel = "STACK";
+   char* logLevel = "INFO";
 
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
@@ -159,8 +151,7 @@ main(int argc, const char** argv)
    if (argc == 1)
    {
       Query query;
-      query.handler = new TestDnsHandler;
-      //query.listener = new VipListener;
+      query.handler = new TestDnsHandler;      
       cerr << "Creating Uri" << endl;       
       uri = Uri("sip:yahoo.com");
       query.uri = uri;
@@ -168,6 +159,7 @@ main(int argc, const char** argv)
       DnsResult* res = dns.createDnsResult(query.handler);
       query.result = res;      
       queries.push_back(query);
+      
       cerr << rf << "Looking up" << ub << endl;
       dns.lookup(res, uri);
    }
@@ -176,16 +168,18 @@ main(int argc, const char** argv)
    {
       Query query;
       query.handler = new TestDnsHandler;
-      //query.listener = new VipListener;
-      cerr << "Creating Uri" << endl;       
-      uri = Uri(*++args);
+      
+      cerr << "Creating Uri: " << *args << endl;       
+      uri = Uri(*args);
       query.uri = uri;
       cerr << "Creating DnsResult" << endl;      
       DnsResult* res = dns.createDnsResult(query.handler);
       query.result = res;      
       queries.push_back(query);
+      
       cerr << rf << "Looking up" << ub << endl;
       dns.lookup(res, uri);
+      args++;
       argc--;
    }
 
@@ -208,18 +202,8 @@ main(int argc, const char** argv)
 
    for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
    {
-      cerr << rf << "DNS results for " << (*it).uri << ub << endl;
-      for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
-      {
-         cerr << rf << (*i) << ub << endl;
-      }
-   }
-
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
-   {
       (*it).result->destroy();
       delete (*it).handler;
-      //delete (*it).listener;
    }
 
    dns.shutdown();

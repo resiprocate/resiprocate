@@ -1,20 +1,12 @@
-#if !defined(RESIP_CONNECTION_BASE_HXX)
-#define RESIP_CONNECTION_BASE_HXX 
+#ifndef RESIP_ConnectionBase_hxx
+#define RESIP_ConnectionBase_hxx
 
 /**
-   !dlb!
-   Relationship between buffer allocation and parsing is broken.
+   Abstracts some of the connection functionality. Managed connections (@see
+   ConnectionManager) derive from Connection. Non-managed connections may be
+   derived from ConnectionBase.
 
-   If the read returns with a few bytes, a new buffer is allocated in performRead.
-
-   performRead should handle allocation, read, and parsing. it should be the only
-   public read accessor in Connection. read should be protected.
-
-   !dcm! -- reworking Connection.  Friendship is gone unless a
-   compelling arguement can be made, as ConnectionManager will now
-   have subclasses.  Accessors now instead of direct access to private
-   memebers.  All buffer stuff is hidden in read for synchronous
-   connections and handleRead for async connections.
+   @todo check id connectionId makes sense here
 */
 
 #include <list>
@@ -91,7 +83,7 @@ operator<<(std::ostream& strm, const resip::ConnectionBase& c);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

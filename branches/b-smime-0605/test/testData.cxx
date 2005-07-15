@@ -117,7 +117,6 @@ class TestData
            Data d;
            char *q = "\0";
            d += q;
-           std::cout << "You don't see this " << std::endl;
            
            for(char *p = 
                  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

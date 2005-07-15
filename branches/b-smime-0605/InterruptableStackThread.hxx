@@ -1,5 +1,5 @@
-#ifndef RESIP_NonPollingStackThread__hxx
-#define RESIP_NonPollingStackThread__hxx
+#ifndef RESIP_InterruptableStackThread__hxx
+#define RESIP_InterruptableStackThread__hxx
 
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Socket.hxx"
@@ -10,11 +10,26 @@ namespace resip
 class SipStack;
 class SelectInterruptor;
 
-class NonPollingStackThread : public ThreadIf
+/** 
+    This class is used to create a thread to run the SipStack in.  The
+    thread provides cycles to the SipStack by calling process.  Process
+    is called when select returns a signaled file descriptor.
+
+    This implementation improves on StackThread, by providing a fully
+    blocking architecture (ie. no need to wake up every 25ms), since 
+    posting to TransactionState will cause the SelectInterruptor to
+    be invoked.
+
+    You must register SelectInterrupter as an AsyncProcessHandler on the 
+    SipStack in order to use this class.  This is done by providing 
+    SelectInterrupter to the constructor of SipStack.  This should be 
+    the same SelectInterrupter provided when constructing this class.
+*/
+class InterruptableStackThread : public ThreadIf
 {
    public:
-      NonPollingStackThread(SipStack& stack, SelectInterruptor& si);
-      virtual ~NonPollingStackThread();
+      InterruptableStackThread(SipStack& stack, SelectInterruptor& si);
+      virtual ~InterruptableStackThread();
       
       virtual void thread();
 

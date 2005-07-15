@@ -15,7 +15,7 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
-#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransportFailure.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/Uri.hxx"
@@ -52,32 +52,29 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #endif
 }
 
+template<class T> void 
+deleteMap(T& m)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      delete it->second;
+   }
+   m.clear();
+}
+
 TransportSelector::~TransportSelector()
 {
-   while (!mExactTransports.empty())
-   {
-      ExactTupleMap::iterator i = mExactTransports.begin();
-      Transport* t = i->second;
-      mExactTransports.erase(i);
-      delete t;
-   }
-
-   //InfoLog( << "Deleting mAnyInterfaceTransports, size: " << mAnyInterfaceTransports.size());
-   
-   while (!mAnyInterfaceTransports.empty())
-   {
-      AnyInterfaceTupleMap::iterator i = mAnyInterfaceTransports.begin();
-      Transport* t = i->second;
-      mAnyInterfaceTransports.erase(i);
-      //InfoLog( << "Erased an element, size: " << mAnyInterfaceTransports.size());
-      delete t;
-   }
+   deleteMap(mExactTransports);
+   deleteMap(mAnyInterfaceTransports);
+   deleteMap(mTlsTransports);
+   deleteMap(mDtlsTransports);
 }
 
 void
 TransportSelector::shutdown()
 {
-   for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+    //!dcm! repeat shutodwn template pattern in all loop over all tranport functions, refactor to functor?
+    for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
    {
       i->second->shutdown();
    }
@@ -102,9 +99,6 @@ TransportSelector::isFinished() const
 }
 
 
-//!dcm! Refactor wrt factory addtransport; do DtlsTransport/TlsTransport maps
-//need to be specially typed. Deal w/ transports that desire their own thread,
-//thread shutdown via destructor?
 void
 TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
@@ -588,7 +582,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   {
                      contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
-                  DebugLog(<<"!sipit! Populated Contact: " << contact);
                }
             }
          }
@@ -596,11 +589,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // See draft-ietf-sip-identity
          if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
          {
-            if (!msg->exists(h_Date))
-            {
-               DateCategory now;
-               msg->header(h_Date) = now;
-            }
+            DateCategory now;
+            msg->header(h_Date) = now;
 #if defined(USE_SSL)
             try
             {
@@ -632,14 +622,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
-         mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+         mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
       }
 
    }
    catch (Transport::Exception& )
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
-      mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+      mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
       return;
    }
 }

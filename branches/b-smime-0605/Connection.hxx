@@ -1,5 +1,5 @@
-#if !defined(RESIP_CONNECTION_HXX)
-#define RESIP_CONNECTION_HXX 
+#ifndef RESIP_Connection_hxx
+#define RESIP_Connection_hxx
 
 #include <list>
 
@@ -16,13 +16,20 @@ namespace resip
 
 class Message;
 class TlsConnection;
-
+class ConnectionManager;
 class Connection;
 
+/// three intrusive list types for in-place reference
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 
+/** @todo reads are a linear walk -- integrate with epoll 
+    Connection implements, via sockets, ConnectionBase for managed
+    connections. Connections are managed for apprximate fairness and least
+    recently used garbage collection.
+    Connection inherits three different instantiations of intrusive lists.
+*/
 class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
@@ -35,20 +42,28 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       ConnectionId getId() const;
       Socket getSocket() const {return mSocket;}
 
-      virtual bool hasDataToRead(); // has data that can be read 
-      virtual bool isGood(); // has valid connection
+      /// always true -- always add to fdset as read ready
+      virtual bool hasDataToRead();
+      /// has valid connection
+      virtual bool isGood(); 
 
-      //bool hasDataToWrite() const;
+      /// queue data to write and add this to writable list
       void requestWrite(SendData* sendData);
 
+      /// send some or all of a queued data; remove from writable if completely written
       void performWrite();
 
+      /** move data from the connection to the buffer; move this to front of
+          least recently used list. when the message is complete, send to fifo.
+          @todo store fifo rather than pass */
       int read(Fifo<TransactionMessage>& fifo);
 
-      // pure virtual, but need concrete Connection
+      /// @todo should be reference
       Transport* transport();
    protected:
+      /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }
+      /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
 
       Connection();
@@ -60,10 +75,9 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
 
       void remove(); // called by ConnectionManager
 
-      // no value semantics
+      /// no value semantics
       Connection(const Connection&);
       Connection& operator=(const Connection&);
-
 };
 
 std::ostream& 
@@ -75,7 +89,7 @@ operator<<(std::ostream& strm, const resip::Connection& c);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

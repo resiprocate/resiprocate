@@ -50,6 +50,8 @@ class ClientRegistration: public NonDialogUsage
          Refreshing,
          Registered,
          Removing,
+         RetryAdding,    // Waiting to retry an add
+         RetryRefreshing, // Waiting to retry a refresh
          None // for queued only
       } State;
 

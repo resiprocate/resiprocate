@@ -20,10 +20,12 @@
 #endif
 
 typedef void WINDOW;
-
-#ifndef __APPLE__
-bool TRUE=true;
-bool FALSE=false;
+// !ah! Really ought to check for ncurses and be a bit better behaved than this.
+#if !defined(TRUE)
+#define TRUE true
+#endif
+#if !defined(FALSE)
+#define FALSE false
 #endif
 
 char ACS_HLINE=1;

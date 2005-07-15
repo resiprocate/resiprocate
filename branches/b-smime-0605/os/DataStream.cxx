@@ -1,3 +1,4 @@
+#include <cassert>
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
 
@@ -82,6 +83,8 @@ oDataStream::oDataStream(Data& str)
    : DataBuffer(str), 
      std::ostream(this)
 {
+   // don't call this with a read-only buffer!
+   assert(str.mMine != Data::Share);
 }
 
 oDataStream::~oDataStream()
@@ -93,6 +96,8 @@ DataStream::DataStream(Data& str)
    : DataBuffer(str), 
      std::iostream(this)
 {
+   // don't call this with a read-only buffer!
+   assert(str.mMine != Data::Share);
 }
 
 DataStream::~DataStream()

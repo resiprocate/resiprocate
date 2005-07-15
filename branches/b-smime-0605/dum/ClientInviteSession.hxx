@@ -22,10 +22,23 @@ class ClientInviteSession : public InviteSession
       ClientInviteSessionHandle getHandle();
 
    public:
+      /** Called to set the offer that will be used in the next message that
+          sends an offer.  For a UAC in an early dialog, this can be used to send
+          an UPDATE request with an SDP offer. */
       virtual void provideOffer (const SdpContents& offer);
       virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+
+      /** Similar to provideOffer - called to set the answer to be signalled to
+          the peer. May result in message being sent synchronously depending on
+          the state. */
       virtual void provideAnswer (const SdpContents& answer);
+
+      /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end ();
+
+      /** Rejects an offer at the SIP level.  For a UAC in an early dialog 
+          this typically only makes sense, when rejecting an UPDATE request
+          that contains an offer in an early dialog. */
       virtual void reject (int statusCode, WarningCategory *warning = 0);
 
       const SdpContents& getEarlyMedia() const;

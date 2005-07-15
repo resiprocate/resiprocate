@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/Embedded.hxx"
 #include "resiprocate/OctetContents.hxx"
 #include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/SipMessage.hxx"
@@ -773,7 +774,7 @@ SipMessage::getContents() const
                << "/"
                << header(h_ContentType).subType());
 
-      if ( Contents::getFactoryMap().find(header(h_ContentType)) == Contents::getFactoryMap().end() )
+      if ( ContentsFactoryBase::getFactoryMap().find(header(h_ContentType)) == ContentsFactoryBase::getFactoryMap().end() )
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
                  << header(h_ContentType).type()
@@ -781,11 +782,11 @@ SipMessage::getContents() const
                  << header(h_ContentType).subType()
                  << ") that is not known, "
                  << "returning as opaque application/octet-stream");
-         mContents = Contents::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
+         mContents = ContentsFactoryBase::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
       else
       {
-         mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
+         mContents = ContentsFactoryBase::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
       }
       assert( mContents );
       
@@ -1345,41 +1346,6 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
 {
    mSecurityAttributes = sec;   
 }
-
-
-#if defined(DEBUG) && defined(DEBUG_MEMORY)
-namespace resip
-{
-
-void*
-operator new(size_t size)
-{
-   void * p = std::operator new(size);
-   DebugLog(<<"operator new | " << hex << p << " | "
-            << dec << size);
-   if (size == 60)
-   {
-      3;
-   }
-   
-   return p;
-}
-
-void operator delete(void* p)
-{
-   DebugLog(<<"operator delete | " << hex << p << dec);
-   return std::operator delete( p );
-}
-
-void operator delete[](void* p)
-{
-   DebugLog(<<"operator delete [] | " << hex << p << dec);
-   return std::operator delete[] ( p );
-}
- 
-}
-
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

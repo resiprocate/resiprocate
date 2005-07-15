@@ -1,42 +1,51 @@
-#if !defined(RESIP_SUBSCRIPTION_HXX)
-#define RESIP_SUBSCRIPTION_HXX
+#include "resiprocate/os/FlowId.hxx"
 
+#include <sstream>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Timer.hxx"
+using namespace resip;
+using namespace std;
 
-
-namespace resip
+int main()
 {
-class SipMessage;
+#if 0
+   Transport* orig = (Transport*) 0x0077ffee;
 
-class Subscription
-{
-   public: 
-      void processRequest(SipMessage* msg);   
-      void processResponse(SipMessage* msg);
-      
-   private:
-      UInt64 mTimeTillExpiration;
-      Data mSubscriptionID;
-      Data mEventType;
-      
-      typedef enum 
-      {
-         Invalid=0,
-         Init,
-         Pending,
-         Acitve,
-         Waiting,
-         Terminated
-      } State;
-      
-      State mState;
-};
- 
+
+   Data out;
+   
+   DataStream ds(foo);
+//   stringstream ds;
+   
+   ds << orig;
+
+   Transport* fromStream;
+   ds >> (long)fromStream;
+   cerr << orig << " " << fromStream << endl;   
+   ds.flush();
+   
+   assert(fromStream == orig);
+   
+#else
+   Tuple tup;
+   tup.transport = (Transport*) 0x0077ffee;
+   tup.connectionId = 7;
+   
+   FlowId flow(tup);
+   Data d = Data::from(flow);
+   Data e;
+   {
+      DataStream ds(e);
+      ds << flow;
+   }
+   assert(d == e);
+   FlowId flowFromData(e);
+
+   std::cerr << "flow: " << flow << " flowFromData: " << flowFromData << std::endl;
+   assert(flow == flowFromData);
+#endif
+   return 0;   
 }
 
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,37 +1,54 @@
-#if !defined(ParseUtil_hxx)
-#define ParseUtil_hxx
+#include <cassert>
 
-namespace resip 
+#include "resiprocate/ContentsFactoryBase.hxx"
+
+using namespace resip;
+using namespace std;
+
+HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
+
+ContentsFactoryBase::ContentsFactoryBase(const Mime& contentType)
+   : mContentType(contentType)
 {
-
-class Data;
-
-class ParseUtil
-{
-   public:
-      // full parse
-      static bool isIpV6Address(const Data& addr);
-      // fast and dirty
-      static bool fastRejectIsIpV6Address(const Data& addr);
-};
-
+   assert(ContentsFactoryBase::getFactoryMap().count(contentType) == 0);
+   ContentsFactoryBase::getFactoryMap()[contentType] = this;
 }
-#endif
- 
+
+ContentsFactoryBase::~ContentsFactoryBase()
+{
+   HashMap<Mime, ContentsFactoryBase*>::iterator i;
+   i = ContentsFactoryBase::getFactoryMap().find(mContentType);
+   ContentsFactoryBase::getFactoryMap().erase(i);
+   if (ContentsFactoryBase::getFactoryMap().size() == 0)
+   {
+      delete &ContentsFactoryBase::getFactoryMap();
+   }
+}
+
+HashMap<Mime, ContentsFactoryBase*>& 
+ContentsFactoryBase::getFactoryMap()
+{
+   if (ContentsFactoryBase::FactoryMap == 0)
+   {
+      ContentsFactoryBase::FactoryMap = new HashMap<Mime, ContentsFactoryBase*>();
+   }
+   return *ContentsFactoryBase::FactoryMap;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this std::list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
+ *    notice, this std::list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 

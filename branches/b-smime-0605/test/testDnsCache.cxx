@@ -36,7 +36,7 @@ class MyDnsSink : public DnsResultSink
    void onDnsResult(const DNSResult<DnsAAAARecord>&); 
 #endif
    void onDnsResult(const DNSResult<DnsSrvRecord>&);
-   void onDnsResult(const DNSResult<DnsNaptrRecord>&) {}
+   void onDnsResult(const DNSResult<DnsNaptrRecord>&);
    void onDnsResult(const DNSResult<DnsCnameRecord>&);
 };
 
@@ -50,6 +50,21 @@ void MyDnsSink::onDnsResult(const DNSResult<DnsHostRecord>& result)
       for (vector<DnsHostRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          cout << (*it).host() << endl;
+      }
+   }
+   cout << endl;
+}
+
+void MyDnsSink::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
+{
+   cout << "Naptr records" << endl;
+   cout << "Status: " << result.status << endl;
+   cout << "Domain: " << result.domain << endl;
+   if (result.status == 0)
+   {
+      for (vector<DnsNaptrRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
+      {
+         cout << (*it).name() << endl;
       }
    }
    cout << endl;
@@ -224,12 +239,23 @@ void MyDnsSink::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 main(int argc, char* argv[])
 {
    {
+      const char* const key = "demo.xten.com";
+      MyDnsSink sink;
+      DnsInterface dns;
+      DnsStub stub(&dns);
+      stub.lookup<RR_NAPTR>(key, 0, &sink);
+      stub.process();
+   }
+
+   /*
+   {
       const char* const key = "yahoo.com";
       MyDnsSink sink;
       DnsInterface dns;
       DnsStub stub(&dns);
-      stub.lookup<RR_A, DnsResultSink>(key, &sink);
-      stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+      stub.lookup<RR_A>(key, 0, &sink);
+      //stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+      stub.process();
    }
 
    {
@@ -258,6 +284,7 @@ main(int argc, char* argv[])
       DnsStub stub(&dns);
       stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
    }
+   */
 
    return 0;
 }
