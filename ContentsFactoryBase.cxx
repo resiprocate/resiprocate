@@ -1,6 +1,9 @@
+#include <cassert>
+
 #include "resiprocate/ContentsFactoryBase.hxx"
 
 using namespace resip;
+using namespace std;
 
 HashMap<Mime, ContentsFactoryBase*>* ContentsFactoryBase::FactoryMap = 0;
 
