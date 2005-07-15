@@ -48,15 +48,7 @@ int
 DumTimeout::secondarySeq() const
 {
    return mSecondarySeq;
-}
-      
-const Data& 
-DumTimeout::getTransactionId() const
-{
-   assert(0);
-   return Data::Empty;
-}
-
+}      
 bool 
 DumTimeout::isClientTransaction() const
 {

@@ -17,6 +17,9 @@
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/dum/DumFeature.hxx"
+#include "resiprocate/dum/DumFeatureChain.hxx"
+#include "resiprocate/dum/DumFeatureMessage.hxx"
 
 namespace resip 
 {
@@ -75,8 +78,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          Encrypt,
          SignAndEncrypt
       } EncryptionLevel;
+  
 
-      DialogUsageManager(SipStack& stack);
+      // If createDefaultFeatures is true dum will construct a
+      // IdentityHandler->EncryptionManager auth chain.
+      DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
       virtual ~DialogUsageManager();
             
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
@@ -234,6 +240,13 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
+      //DUM will delete features in its destructor. Feature manipulation should
+      //be done before any processing starts.
+      //ServerAuthManager is now a DumFeature; setServerAuthManager is a special
+      //case of addFeature; the ServerAuthManager should always be the first
+      //feature in the chain.
+      void addFeature(std::auto_ptr<DumFeature> feat);
+
       // will apply the specified function to each matching ServerSubscription
       void applyToServerSubscriptions(const Data& aor, 
                                       const Data& eventType, 
@@ -245,7 +258,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       virtual const Data& name() const;
       void internalProcess(std::auto_ptr<Message> msg);
       friend class DumThread;
-      
+
+      DumFeatureChain::FeatureList mFeatureList;
+      typedef std::map<Data, DumFeatureChain*> FeatureChainMap;
+      FeatureChainMap mFeatureChainMap;
+  
    private:
       friend class Dialog;
       friend class DialogSet;
