@@ -64,6 +64,9 @@ SRC =   \
 	SubscriptionState.cxx \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
-	NetworkAssociation.cxx
+	NetworkAssociation.cxx \
+	EncryptionManager.cxx \
+	DumDecrypted.cxx \
+	CertMessage.cxx
 
 include $(BUILD)/Makefile.post
