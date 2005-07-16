@@ -555,7 +555,7 @@ void test7()
       tassert(message->header(h_ContentType).subType() == "sdp");
       
       DebugLog( << "start map dump" );
-      HashMap<Mime, ContentsFactoryBase*>& m = Contents::getFactoryMap();
+      HashMap<Mime, ContentsFactoryBase*>& m = ContentsFactoryBase::getFactoryMap();
       HashMap<Mime, ContentsFactoryBase*>::iterator i;
       i = m.begin();
       while ( i != m.end() )
