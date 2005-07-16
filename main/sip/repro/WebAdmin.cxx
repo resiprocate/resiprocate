@@ -647,11 +647,10 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactPairList::const_iterator i 
-                 = contacts.begin();
+         for (RegistrationPersistenceManager::ContactPairList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            if(i->second >= time(NULL))
+            if (i->second >= time(NULL))
             {
                s << "<tr>" << endl
                  << "  <td>" ;
@@ -677,7 +676,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             else
             {
                // remove expired contact 
-               mRegDb.removeContact(uri, static_cast<Uri>(i->first));
+               mRegDb.removeContact(uri, i->first);
             }
          }
       }
