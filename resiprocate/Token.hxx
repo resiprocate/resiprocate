@@ -23,6 +23,7 @@ class Token : public ParserCategory
       Token(HeaderFieldValue* hfv, Headers::Type type);
       Token(const Token&);
       Token& operator=(const Token&);
+      bool isEqual(const Token& rhs) const;
       bool operator==(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
