@@ -16,13 +16,11 @@ class ParserContainerBase
    public:
       typedef size_t size_type;
 
-      ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
-         : mType(type)
-      {}
-      ParserContainerBase(const ParserContainerBase& rhs)
-         : mType(rhs.mType)
-      {}
+      ParserContainerBase(Headers::Type type = Headers::UNKNOWN);
+      ParserContainerBase(const ParserContainerBase& rhs);
+      ParserContainerBase& operator=(const ParserContainerBase& rhs);
       virtual ~ParserContainerBase();
+
       void clear();
       virtual ParserContainerBase* clone() const = 0;
       size_t size() const;
@@ -33,6 +31,8 @@ class ParserContainerBase
       ParserCategory* front();
       void pop_front();
       void pop_back();
+
+      void append(const ParserContainerBase& rhs);
 
    protected:
       const Headers::Type mType;
