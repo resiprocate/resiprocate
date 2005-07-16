@@ -6,6 +6,20 @@
 using namespace resip;
 using namespace std;;
 
+ParserContainerBase::ParserContainerBase(Headers::Type type)
+   : mType(type)
+{}
+
+ParserContainerBase::ParserContainerBase(const ParserContainerBase& rhs)
+   : mType(rhs.mType)
+{
+   for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
+        i != rhs.mParsers.end(); ++i)
+   {
+      mParsers.push_back((*i)->clone());
+   }
+}
+
 ParserContainerBase::~ParserContainerBase()
 {
    clear();
@@ -20,6 +34,21 @@ ParserContainerBase::clear()
       delete *i;
    }
    mParsers.clear();
+}
+
+ParserContainerBase&
+ParserContainerBase::operator=(const ParserContainerBase& rhs)
+{
+   if (this != &rhs)
+   {
+      clear();
+      for (std::vector<ParserCategory*>::const_iterator i = rhs.mParsers.begin(); 
+           i != rhs.mParsers.end(); ++i)
+      {
+         mParsers.push_back((*i)->clone());
+      }
+   }
+   return *this;
 }
 
 bool 
@@ -52,6 +81,16 @@ ParserContainerBase::pop_back()
 {
    delete mParsers.back();
    mParsers.pop_back(); 
+}
+
+void
+ParserContainerBase::append(const ParserContainerBase& source) 
+{
+   for (std::vector<ParserCategory*>::const_iterator i = source.mParsers.begin(); 
+        i != source.mParsers.end(); ++i)
+   {
+      mParsers.push_back((*i)->clone());
+   }
 }
 
 std::ostream& 
