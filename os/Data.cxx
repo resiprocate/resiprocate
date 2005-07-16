@@ -874,11 +874,7 @@ Data::append(const char* str, size_type len)
    {
       if (mMine == Share)
       {
-         char *oldBuf = mBuf;
-         mCapacity = mSize + len;
-         mBuf = new char[mSize + len + 1];
-         memcpy(mBuf, oldBuf, mSize);
-         mMine = Take;
+         resize(mSize + len, true);
       }
    }
 
@@ -907,11 +903,9 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   own();
-
-   if (mSize >= mCapacity)      // !ah! we were overwritting the end
-   {                            // !ah! when mSize == mCapacity !!
-       const_cast<Data*>(this)->resize(mSize+1,true);
+   if (mMine == Data::Share)
+   {
+      const_cast<Data*>(this)->resize(mSize+1,true);
    }
    // mostly is zero terminated, but not by DataStream
    mBuf[mSize] = 0;
@@ -951,6 +945,8 @@ void
 Data::resize(size_type newCapacity, 
              bool copy)
 {
+   assert(newCapacity >= mCapacity || mMine == Data::Share);
+
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
    if (copy)
