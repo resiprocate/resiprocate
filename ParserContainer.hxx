@@ -38,28 +38,13 @@ class ParserContainer : public ParserContainerBase
 
       ParserContainer(const ParserContainer& other)
          : ParserContainerBase(other)
-      {
-         for (typename std::vector<ParserCategory*>::const_iterator i = other.mParsers.begin(); 
-              i != other.mParsers.end(); ++i)
-         {
-            mParsers.push_back(new T(*static_cast<T*>(*i)));
-         }
-      }
-      
+      {}
+
       ParserContainer& operator=(const ParserContainer& other)
       {
-         if (this != &other)
-         {
-            clear();
-            for (typename std::vector<ParserCategory*>::const_iterator i = other.mParsers.begin(); 
-                 i != other.mParsers.end(); ++i)
-            {
-               mParsers.push_back(new T(*static_cast<T*>(*i)));
-            }
-         }
-         return *this;
+         return static_cast<ParserContainer&>(ParserContainerBase::operator=(other));
       }
-            
+      
       T& front() { return *static_cast<T*>(mParsers.front());}
       T& back() { return *static_cast<T*>(mParsers.back());}
       const T& front() const { return *static_cast<T*>(mParsers.front());}
@@ -138,7 +123,8 @@ class ParserContainer : public ParserContainerBase
          for (typename std::vector<ParserCategory*>::const_iterator i = mParsers.begin();
               i != mParsers.end(); ++i)
          {
-            if (rhs == *static_cast<T*>(*i))
+            // operator== defined by default, but often not usefully
+            if (rhs.isEqual(*static_cast<T*>(*i)))
             {
                return true;
             }
@@ -149,16 +135,6 @@ class ParserContainer : public ParserContainerBase
 
       const_iterator begin() const { return const_iterator(mParsers.begin()); }
       const_iterator end() const { return const_iterator(mParsers.end()); }
-
-      //non-stl, would be accomlished through insert in stl
-      void append(const ParserContainer& source) 
-      {
-         for (typename std::vector<ParserCategory*>::const_iterator i = source.mParsers.begin(); 
-              i != source.mParsers.end(); ++i)
-         {
-            mParsers.push_back(new T(*static_cast<T*>(*i)));
-         }
-      }
 
       virtual ParserContainerBase* clone() const
       {
