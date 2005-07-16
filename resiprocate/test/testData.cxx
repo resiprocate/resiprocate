@@ -16,6 +16,27 @@ class TestData
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
          {
+            const char* s = "a";
+            const char* ss = "bb";
+            const char* sss = "ccc";
+
+            Data one;
+            Data two;
+            Data three;
+
+            for (int i = 0; i < 100; ++i)
+            {
+               one.append(s, strlen(s));
+               two.append(ss, strlen(ss));
+               three.append(sss, strlen(sss));
+            }
+
+            assert(one.size() == 100);
+            assert(two.size() == 200);
+            assert(three.size() == 300);
+         }
+
+         {
             Data httpString("safe");
 
             Data enc;
@@ -552,39 +573,43 @@ class TestData
             d1 ^= Data("0");
             cerr << d1.hex() << endl;
 
+            {
+               Data buffer;
+               Data working;
 
-            Data buffer;
-            Data working;
-            DataStream strm(buffer);
-            
-            buffer.clear();
-            strm << "user=phone";
-            strm.flush();
-            working ^= buffer;
+               {
+                  DataStream strm(buffer);
+                  strm << "user=phone";
+               }
+               working ^= buffer;
 
-            buffer.clear();
-            strm << "maddr=192.168.1.1";
-            strm.flush();
-            working ^= buffer;
+               buffer.clear();
+               {
+                  DataStream strm(buffer);
+                  strm << "maddr=192.168.1.1";
+               }
+               working ^= buffer;
 
+               Data result = working;
+               working.clear();
 
-            Data result = working;
-            working.clear();
+               buffer.clear();
+               {
+                  DataStream strm(buffer);
+                  strm << "maddr=192.168.1.1";
+               }
+               working ^= buffer;
 
-            buffer.clear();
-            strm << "maddr=192.168.1.1";
-            strm.flush();
-            working ^= buffer;
+               buffer.clear();
+               {
+                  DataStream strm(buffer);
+                  strm << "user=phone";
+               }
+               working ^= buffer;
 
-            buffer.clear();
-            strm << "user=phone";
-            strm.flush();
-            working ^= buffer;
-
-            assert(result == working);
+               assert(result == working);
+            }
          }
-
-
          
          {
             Data d("012345");
