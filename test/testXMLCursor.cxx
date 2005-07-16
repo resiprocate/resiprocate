@@ -18,10 +18,61 @@ using namespace std;
   <foo bar="baz" qwerty = "quux"/>
   <foo bar="baz" qwerty = "quux">contents</foo>
  */
+
+void traverse(XMLCursor& c)
+{
+   if (c.firstChild())
+   {
+      traverse(c);
+      c.parent();
+   }
+
+   // process(c);
+   std::cerr << c.getTag() << std::endl;
+   
+   if (c.nextSibling())
+   {
+      traverse(c);
+   }
+}
+
 int
 main()
 {
-   //Log::initialize(Log::Cout, Log::Debug, "testXMLCursor");
+   Log::initialize(Log::Cout, Log::Stack, "testXMLCursor");
+
+   {
+      const Data test(
+         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+         "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"\r\n"
+         "          xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\"\r\n"
+         "          xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\"\r\n"
+         "          entity=\"sip:chris@xxx.xx.xxx.xx\">\r\n"
+         "  <pp:person>\r\n"
+         "   <status>\r\n"
+         "    <ep:activities>\r\n"
+         "     <ep:activity>away</ep:activity>\r\n"
+         "    </ep:activities>\r\n"
+         "   </status>\r\n"
+         "  </pp:person>\r\n"
+         "  <tuple id=\"9b6yhF2Gk37o4\" >\r\n"
+         "     <status><basic>open</basic></status>\r\n"
+         "  </tuple>\r\n"
+         "</presence>");
+
+      try
+      {
+         XMLCursor xmlc(ParseBuffer(test.data(), test.size()));
+
+         assert(xmlc.getTag() == "presence");
+         traverse(xmlc);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << e << endl;
+         assert(false);
+      }
+   }
 
    // test assume that whitespace is not significant
    //   may eventually be controlled by the document/element
