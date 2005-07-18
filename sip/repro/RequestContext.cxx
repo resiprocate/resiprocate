@@ -11,6 +11,11 @@
 #include "repro/Proxy.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+// Remove warning about 'this' use in initiator list
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace resip;
