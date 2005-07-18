@@ -104,7 +104,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm300"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -145,7 +145,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;;;&quot;$(ProjectDir)../contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -174,6 +174,11 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+			Name="ares"/>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
@@ -222,6 +227,9 @@
 			</File>
 			<File
 				RelativePath="Contents.cxx">
+			</File>
+			<File
+				RelativePath=".\ContentsFactoryBase.cxx">
 			</File>
 			<File
 				RelativePath="os\CountStream.cxx">
@@ -362,6 +370,9 @@
 				RelativePath="LazyParser.cxx">
 			</File>
 			<File
+				RelativePath=".\LocalDns.cxx">
+			</File>
+			<File
 				RelativePath="os\Lock.cxx">
 			</File>
 			<File
@@ -432,6 +443,9 @@
 			</File>
 			<File
 				RelativePath="ParserCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\ParserContainerBase.cxx">
 			</File>
 			<File
 				RelativePath="Pidf.cxx">
@@ -629,6 +643,9 @@
 				RelativePath=".\os\WinCompat.cxx">
 			</File>
 			<File
+				RelativePath=".\WinSecurity.cxx">
+			</File>
+			<File
 				RelativePath=".\X509Contents.cxx">
 			</File>
 			<File
@@ -700,6 +717,9 @@
 			</File>
 			<File
 				RelativePath="Contents.hxx">
+			</File>
+			<File
+				RelativePath=".\ContentsFactoryBase.hxx">
 			</File>
 			<File
 				RelativePath="os\CountStream.hxx">
@@ -865,6 +885,9 @@
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
+			</File>
+			<File
+				RelativePath=".\LocalDns.hxx">
 			</File>
 			<File
 				RelativePath="os\Lock.hxx">
@@ -1189,6 +1212,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\WinSecurity.hxx">
 			</File>
 			<File
 				RelativePath=".\X509Contents.hxx">
