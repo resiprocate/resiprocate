@@ -107,6 +107,9 @@
 				RelativePath=".\BaseUsage.cxx">
 			</File>
 			<File
+				RelativePath=".\CertMessage.cxx">
+			</File>
+			<File
 				RelativePath=".\ClientAuthManager.cxx">
 			</File>
 			<File
@@ -152,6 +155,12 @@
 				RelativePath=".\DialogUsageManager.cxx">
 			</File>
 			<File
+				RelativePath=".\DumDecrypted.cxx">
+			</File>
+			<File
+				RelativePath=".\DumEncrypted.cxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.cxx">
 			</File>
 			<File
@@ -159,6 +168,9 @@
 			</File>
 			<File
 				RelativePath=".\DumTimeout.cxx">
+			</File>
+			<File
+				RelativePath=".\EncryptionManager.cxx">
 			</File>
 			<File
 				RelativePath=".\Handled.cxx">
@@ -277,6 +289,9 @@
 				RelativePath=".\BaseUsage.hxx">
 			</File>
 			<File
+				RelativePath=".\CertMessage.hxx">
+			</File>
+			<File
 				RelativePath=".\ClientAuthManager.hxx">
 			</File>
 			<File
@@ -325,6 +340,12 @@
 				RelativePath=".\DialogUsageManager.hxx">
 			</File>
 			<File
+				RelativePath=".\DumDecrypted.hxx">
+			</File>
+			<File
+				RelativePath=".\DumEncrypted.hxx">
+			</File>
+			<File
 				RelativePath=".\DumException.hxx">
 			</File>
 			<File
@@ -338,6 +359,9 @@
 			</File>
 			<File
 				RelativePath=".\DumTimeout.hxx">
+			</File>
+			<File
+				RelativePath=".\EncryptionManager.hxx">
 			</File>
 			<File
 				RelativePath=".\Handle.hxx">
@@ -422,6 +446,9 @@
 			</File>
 			<File
 				RelativePath=".\RegistrationPersistenceManager.hxx">
+			</File>
+			<File
+				RelativePath=".\RemoteCertStore.hxx">
 			</File>
 			<File
 				RelativePath=".\ServerAuthManager.hxx">
