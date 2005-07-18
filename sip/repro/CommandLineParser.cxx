@@ -41,7 +41,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int httpPort = 5080;
    
 #ifdef WIN32
-   noChallenge = 1;
+#ifndef HAVE_POPT_H
+   noChallenge = 1;  // If no POPT, then default to no digest challenges
+#endif
    strcpy(certPath,"C:\\sipCerts");
 #else
    strcpy(certPath, getenv("HOME"));
