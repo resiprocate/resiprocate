@@ -1,4 +1,4 @@
-#include "HeapInstanceCounter.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -11,8 +11,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
 
-namespace   //  unnamed namespace
-{
+//namespace   //  unnamed namespace
+//{
 struct InstanceCounts
 {
       InstanceCounts()
@@ -28,7 +28,7 @@ struct InstanceCounts
 typedef	map<Data, InstanceCounts> AllocationMap;
 Mutex allocationMutex;
 AllocationMap allocationMap;
-}
+//}
 
 #ifdef RESIP_HEAP_COUNT
 void
