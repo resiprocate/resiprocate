@@ -28,6 +28,72 @@
 using namespace resip;
 using namespace std;
 
+
+list<Data> 
+DnsUtil::lookupARecords(const Data& host)
+{
+   list<Data> names;
+
+   if (DnsUtil::isIpV4Address(host))
+   {
+      names.push_back(host);
+      return names;
+   }
+
+   struct hostent* result=0;
+   int ret=0;
+   int herrno=0;
+
+#if defined(__linux__)
+   struct hostent hostbuf; 
+   char buffer[8192];
+   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   assert (ret != ERANGE);
+#elif defined(__QNX__) || defined(__SUNPRO_CC)
+   struct hostent hostbuf; 
+   char buffer[8192];
+   result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
+#else
+#error "need to define some version of gethostbyname for your arch"
+#endif
+   
+   if (ret != 0 || result == 0)
+   {
+      Data msg;
+      switch (herrno)
+      {
+         case HOST_NOT_FOUND:
+            msg = "host not found: ";
+            break;
+         case NO_DATA:
+            msg = "no data found for: ";
+            break;
+         case NO_RECOVERY:
+            msg = "no recovery lookup up: ";
+            break;
+         case TRY_AGAIN:
+            msg = "try again: ";
+            break;
+      }
+      msg += host;
+      throw Exception("no dns resolution:" + msg, __FILE__, __LINE__);
+   }
+   else
+   {
+      assert(result);
+      assert(result->h_length == 4);
+      //DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
+      char str[256];
+      for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
+      {
+         inet_ntop(result->h_addrtype, (u_int32_t*)(*pptr), str, sizeof(str));
+         names.push_back(str);
+      }
+      return names;
+   }
+}
+
+
 Data
 DnsUtil::getLocalHostName()
 {
