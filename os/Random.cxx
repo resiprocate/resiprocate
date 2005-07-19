@@ -121,11 +121,12 @@ Random::initialize()
             RAND_add(buf,sizeof(buf),double(s*8));
          }
 #endif
-
+#ifndef WIN32 
          if (fd != -1 )
          {
             ::close(fd);
          }
+#endif
       }
    }
 }
@@ -260,7 +261,7 @@ bool
 Random::Initializer::isInitialized() 
 { 
    // Note:  if value is not set yet then 0 (false) is returned
-   return ::TlsGetValue(mIsInitializedTLSIndex) == TRUE; 
+   return (BOOL) ::TlsGetValue(mThreadStorage) == TRUE; 
 }
 #endif
 
