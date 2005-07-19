@@ -37,110 +37,102 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 #ifdef WIN32
-Random::TlsInitializer Random::tlsInitializer;
-#else
-bool Random::mIsInitialized = false;
+Random::Initializer Random::mInitializer;
 #endif
 
-bool
-Random::isInitialized()
-{
-#ifdef WIN32
-   return tlsInitializer.isInitialized();
-#else
-   return mIsInitialized;
-#endif
-}
+bool Random::mIsInitialized = false;
 
 void
 Random::initialize()
 {  
-   static Mutex mutex;
-   Lock lock(mutex);
-
-   if ( !Random::isInitialized() )
-   {
-      Timer::setupTimeOffsets();
-
 #ifdef WIN32
-      Socket fd = -1;
-      // !cj! need to find a better way - use pentium random commands?
-      Data buffer;
-      DataStream strm(buffer);
-      strm << GetTickCount() << ":";
-      strm << GetCurrentProcessId() << ":";
-      strm << GetCurrentThreadId();
-      strm.flush();
-      unsigned int seed = buffer.hash();
-#else
-      //throwing away first 32 bits
-      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
-
-      int fd = open("/dev/urandom", O_RDONLY);
-      // !ah! blocks on embedded devices -- not enough entropy.
-      if ( fd != -1 )
+   if (!Random::mInitializer.isInitialized())
+   {
+      Lock lock(mMutex);      
+      if (!Random::mInitializer.isInitialized())
       {
-        int s = read( fd,&seed,sizeof(seed) ); //!ah! blocks if /dev/random on embedded sys
+         Random::mInitializer.setInitialized();
+         // !cj! need to find a better way - use pentium random commands?
+         Data buffer;
+         DataStream strm(buffer);
+         strm << GetTickCount() << ":";
+         strm << GetCurrentProcessId() << ":";
+         strm << GetCurrentThreadId();
+         strm.flush();
+         unsigned int seed = buffer.hash();
 
-         if ( s != sizeof(seed) )
+         //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
+         srand(seed);
+      }
+   }
+#endif
+   
+   if ( !Random::mIsInitialized)
+   {
+      Lock lock(mMutex);
+      if (!Random::mIsInitialized)
+      {
+         mIsInitialized = true;
+         Timer::setupTimeOffsets();
+
+#ifndef WIN32      
+         //throwing away first 32 bits
+         unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+         srandom(seed);
+
+         int fd = open("/dev/urandom", O_RDONLY);
+         // !ah! blocks on embedded devices -- not enough entropy.
+         if ( fd != -1 )
          {
-//            ErrLog( << "System is short of randomness" ); // !ah! never prints
+            int s = read( fd,&seed,sizeof(seed) ); //!ah! blocks if /dev/random on embedded sys
+
+            if ( s != sizeof(seed) )
+            {
+               ErrLog( << "System is short of randomness" ); // !ah! never prints
+            }
          }
-      }
-      else
-      {
-//         ErrLog( << "Could not open /dev/urandom" );
-      }
+         else
+         {
+            ErrLog( << "Could not open /dev/urandom" );
+         }
+
 #endif
 
 #if USE_OPENSSL
-      if (fd == -1 )
-      {
-         // really bad sign - /dev/random does not exist so need to intialize
-         // OpenSSL some other way
-
-// !cj! need to fix         assert(0);
-      }
-      else
-      {
-         char buf[1024/8]; // size is number byes used for OpenSSL init 
-
-         int s = read( fd,&buf,sizeof(buf) );
-
-         if ( s != sizeof(buf) )
+         if (fd == -1 )
          {
-//            ErrLog( << "System is short of randomness" );
+            // really bad sign - /dev/random does not exist so need to intialize
+            // OpenSSL some other way
+
+            // !cj! need to fix         assert(0);
          }
+         else
+         {
+            char buf[1024/8]; // size is number byes used for OpenSSL init 
+
+            int s = read( fd,&buf,sizeof(buf) );
+
+            if ( s != sizeof(buf) )
+            {
+               ErrLog( << "System is short of randomness" );
+            }
          
-         RAND_add(buf,sizeof(buf),double(s*8));
-      }
+            RAND_add(buf,sizeof(buf),double(s*8));
+         }
 #endif
 
-      if (fd != -1 )
-      {
-         ::close(fd);
+         if (fd != -1 )
+         {
+            ::close(fd);
+         }
       }
-
-#ifdef WIN32
-      //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
-      srand(seed);
-      tlsInitializer.setInitialized();
-#else
-      srandom(seed);
-      mIsInitialized = true;
-#endif
    }
 }
 
 int
 Random::getRandom()
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   // !dlb! Lock
-   assert( Random::isInitialized() );
+   initialize();
 
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
@@ -158,11 +150,7 @@ Random::getRandom()
 int
 Random::getCryptoRandom()
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
+   initialize();
 
 #if USE_OPENSSL
    int ret;
@@ -187,11 +175,7 @@ Random::getCryptoRandom()
 Data 
 Random::getRandom(unsigned int len)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
+   initialize();
    assert(len < Random::maxLength+1);
    
    union 
@@ -210,11 +194,7 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
+   initialize();
    assert(len < Random::maxLength+1);
    
    union 
@@ -233,50 +213,56 @@ Random::getCryptoRandom(unsigned int len)
 Data 
 Random::getRandomHex(unsigned int numBytes)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
-
+   initialize();
    return Random::getRandom(numBytes).hex();
 }
 
 Data 
 Random::getRandomBase64(unsigned int numBytes)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
-
+   initialize();
    return Random::getRandom(numBytes).base64encode();
 }
 
 Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
-
+   initialize();
    return Random::getCryptoRandom(numBytes).hex();
 }
 
 Data 
 Random::getCryptoRandomBase64(unsigned int numBytes)
 {
-   if ( !Random::isInitialized() )
-   {
-      initialize();
-   }
-   assert( Random::isInitialized() );
-
+   initialize();
    return Random::getCryptoRandom(numBytes).base64encode();
 }
+
+#ifdef WIN32
+Random::Initializer::Initializer()  : mThreadStorage(::TlsAlloc())
+{ 
+   assert(mThreadStorage != TLS_OUT_OF_INDEXES);
+}
+
+Random::Initializer::~Initializer() 
+{ 
+   ::TlsFree(mThreadStorage); 
+}
+
+void 
+Random::Initializer::setInitialized() 
+{ 
+   ::TlsSetValue(mThreadStorage, (LPVOID) TRUE);
+}
+
+bool 
+Random::Initializer::isInitialized() 
+{ 
+   // Note:  if value is not set yet then 0 (false) is returned
+   return ::TlsGetValue(mIsInitializedTLSIndex) == TRUE; 
+}
+#endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
