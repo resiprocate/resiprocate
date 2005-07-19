@@ -54,7 +54,8 @@ DnsUtil::lookupARecords(const Data& host)
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
 #else
-#error "need to define some version of gethostbyname for your arch"
+   assert(0);
+   return names;
 #endif
    
    if (ret != 0 || result == 0)
