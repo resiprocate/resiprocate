@@ -10,16 +10,16 @@ using namespace resip;
 
 int main(int argc, char** argv)
 {
-   if(argc != 3)
+   int runs = 1000;
+   int length = 8;
+
+   if(argc == 3)
    {
-      cerr << "usage: testRandomHex number_of_tries string_length" << endl;
-      exit(-1);
+      int runs = atoi(argv[1]);
+      int length = atoi(argv[2]);
    }
 
-   int runs = atoi(argv[1]);
-   int length = atoi(argv[2]);
-
-   Random::initialize();
+   //Random::initialize();
    
 
    if (runs <= 0 || length <= 0)
