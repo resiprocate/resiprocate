@@ -7,6 +7,7 @@
 namespace resip
 {
 
+class Contents;
 /**
    Hoist for template mapping from Mime to derived content.
 */
