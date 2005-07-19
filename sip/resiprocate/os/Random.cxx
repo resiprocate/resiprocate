@@ -40,6 +40,7 @@ using namespace resip;
 Random::Initializer Random::mInitializer;
 #endif
 
+Mutex Random::mMutex;
 bool Random::mIsInitialized = false;
 
 void
