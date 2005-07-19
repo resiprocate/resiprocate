@@ -6,6 +6,8 @@
 
 #ifdef WIN32
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Data.hxx"
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,7 +34,6 @@
 #endif
 
 using namespace resip;
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 #ifdef WIN32
@@ -64,8 +65,13 @@ Random::initialize()
 #ifdef WIN32
       Socket fd = -1;
       // !cj! need to find a better way - use pentium random commands?
-      //throwing away first 32 bits of getTimeMs - using threadid in seed, since we Initialize once per thread in Win32
-      unsigned int seed = unsigned(Timer::getTimeMs()) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId());
+      Data buffer;
+      DataStream strm(buffer);
+      strm << GetTickCount() << ":";
+      strm << GetCurrentProcessId() << ":";
+      strm << GetCurrentThreadId();
+      strm.flush();
+      unsigned int seed = buffer.hash();
 #else
       //throwing away first 32 bits
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
