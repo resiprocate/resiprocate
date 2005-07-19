@@ -160,6 +160,7 @@ class ExternalLogger
 {
    public:
       /** return true to also do default logging, false to supress default logging. */
+      virtual ~ExternalLogger()=0;
       virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
