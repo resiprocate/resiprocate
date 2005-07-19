@@ -97,8 +97,6 @@ Random::initialize()
             ErrLog( << "Could not open /dev/urandom" );
          }
 
-#endif
-
 #if USE_OPENSSL
          if (fd == -1 )
          {
@@ -121,7 +119,6 @@ Random::initialize()
             RAND_add(buf,sizeof(buf),double(s*8));
          }
 #endif
-#ifndef WIN32 
          if (fd != -1 )
          {
             ::close(fd);
