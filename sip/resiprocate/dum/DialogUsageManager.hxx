@@ -234,11 +234,27 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
-      // will apply the specified function to each matching ServerSubscription
-      void applyToServerSubscriptions(const Data& aor, 
-                                      const Data& eventType, 
-                                      void(*applyFn)(ServerSubscriptionHandle));
-      
+
+      // will apply the specified functor(which takes a
+      //ServerSubscriptionHandle) to each matching ServerSubscription.  
+      //Returns the functor after the last application.
+      template<typename UnaryFunction>
+      UnaryFunction applyToServerSubscriptions(const Data& aor, 
+                                               const Data& eventType, 
+                                               UnaryFunction applyFn)
+      {
+         Data key = eventType + documentKey;
+         std::pair<ServerSubscriptions::iterator,ServerSubscriptions::iterator> 
+            range = mServerSubscriptions.equal_range(key);
+         
+         for (ServerSubscriptions::iterator i=range.first; i!=range.second; ++i)
+         {
+            ServerSubscriptionHandle h = i->second->getHandle();
+            applyFn(h);
+         }
+         return applyFn;         
+      }
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals

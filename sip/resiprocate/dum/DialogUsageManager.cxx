@@ -1765,23 +1765,6 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
    }
 }
 
-void 
-DialogUsageManager::applyToServerSubscriptions(const Data& documentKey, 
-                                               const Data& eventType, 
-                                               void(*applyFn)(ServerSubscriptionHandle))
-{
-   Data key = eventType + documentKey;
-   std::pair<ServerSubscriptions::iterator,ServerSubscriptions::iterator> 
-      range = mServerSubscriptions.equal_range(key);
-   for (ServerSubscriptions::iterator i=range.first; i!=range.second; ++i)
-   {
-      ServerSubscriptionHandle h = i->second->getHandle();
-      applyFn(h);
-   }
-}
-
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
