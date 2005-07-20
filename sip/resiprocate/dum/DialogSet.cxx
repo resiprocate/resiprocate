@@ -846,7 +846,7 @@ void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
    }
 }
 
-SharedPtr<UserProfile>&
+SharedPtr<UserProfile>
 DialogSet::getUserProfile()
 {
    if(mUserProfile.get())
@@ -861,7 +861,7 @@ DialogSet::getUserProfile()
 }
 
 void
-DialogSet::setUserProfile(SharedPtr<UserProfile>& userProfile)
+DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
 {
    assert(userProfile.get());
    mUserProfile = userProfile;
