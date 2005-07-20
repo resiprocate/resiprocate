@@ -12,7 +12,7 @@ ftp://rpmfind.net/linux/fedora/core/updates/testing/3/i386/boost-devel-1.32.0-6.
 
 3. Build Netxx
 cd sip/contrib/Netxx-0.3.2
-./configure.pl --contrib --disable-examples
+perl configure.pl --contrib --disable-examples
 make
 
 4. Build cppunit
