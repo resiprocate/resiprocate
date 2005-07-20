@@ -73,6 +73,11 @@ CURL_LIBNAME := curl
 CURL_DEFINES := USE_CURL
 endif
 
+ifeq ($(OSTYPE),NetBSD)
+BOOST_INCLUDEDIRS := /usr/pkg/include/boost-1_31
+endif
+
+
 RESIPROCATE_INCLUDEDIRS := $(ROOT)
 RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
 RESIPROCATE_LIBNAME := resiprocate
@@ -99,6 +104,10 @@ POPT_LIBNAME := popt
 endif
 
 TFMLIBS_INCLUDEDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/include $(ROOT)/tfm/contrib $(ROOT)/tfm/contrib/cppunit/include
-TFMLIBS_LIBDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/src $(ROOT)/tfm/contrib/cppunit/.libs
-TFMLIBS_LIBNAME := cppunit Netxx boost_regex
+TFMLIBS_LIBDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/src $(ROOT)/tfm/contrib/cppunit/src/cppunit/.libs
 
+ifneq ($(OSTYPE),NetBSD)
+TFMLIBS_LIBNAME := cppunit Netxx boost_regex-gcc
+else
+TFMLIBS_LIBNAME :+ cppunit Netxx boost_regex
+endif
