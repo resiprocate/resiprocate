@@ -67,7 +67,7 @@ class SingleThreaded
       { lval = val; }
 };
 
-#ifdef __linux__
+#ifndef WIN32
 template <class Host>
 class ClassLevelLockable
 {
