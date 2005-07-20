@@ -632,6 +632,9 @@ Data::operator^=(const Data& rhs)
    if (mCapacity < rhs.mSize)
    {
       resize(rhs.mSize, true);
+   }
+   if (mSize < rhs.mSize)
+   {
       memset(mBuf+mSize, 0, mCapacity - mSize);
    }
 
@@ -929,7 +932,7 @@ Data::charEncoded() const
       
       if ( !isprint(c) ||
            // rfc 3261 reserved + mark + space + tab
-           strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
+           strchr(" \";/?:@&=+%$,\t-_.!~*'()", c))
       {
          ret +='%';
          
