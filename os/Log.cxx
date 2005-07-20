@@ -404,6 +404,10 @@ Log::setServiceLevel(int service, Level l)
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
 
+ExternalLogger::~ExternalLogger()
+{
+}
+
    
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
