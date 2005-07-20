@@ -13,6 +13,7 @@
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/dum/EncryptionManager.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -243,7 +244,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                                const Data& eventType, 
                                                UnaryFunction applyFn)
       {
-         Data key = eventType + documentKey;
+         Data key = eventType + aor;
          std::pair<ServerSubscriptions::iterator,ServerSubscriptions::iterator> 
             range = mServerSubscriptions.equal_range(key);
          
