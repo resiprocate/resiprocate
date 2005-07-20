@@ -15,7 +15,7 @@ class BaseCreator
       BaseCreator(DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile);
       virtual ~BaseCreator();
       SipMessage& getLastRequest();
-      SharedPtr<UserProfile>& getUserProfile();
+      SharedPtr<UserProfile> getUserProfile();
       const SipMessage& getLastRequest() const;
       
    protected:
