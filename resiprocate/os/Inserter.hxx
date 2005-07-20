@@ -12,6 +12,7 @@
 
 #include "HashMap.hxx"
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/ParserContainer.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be
@@ -82,6 +83,26 @@ insert(std::ostream& s, const std::vector <T>& c)
    s << "]";
    return s;
 }
+
+template <class T>
+std::ostream&
+insert(std::ostream& s, const resip::ParserContainer<T>& c)
+{
+   s << "[";
+   for (typename resip::ParserContainer <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      // recurse
+      insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
+
 
 template <class T>
 std::ostream&
