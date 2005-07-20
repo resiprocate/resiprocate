@@ -64,9 +64,11 @@ Random::initialize()
 
          //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
          srand(seed);
+         mIsInitialized = true;
       }
    }
-#endif
+
+#else
    
    if ( !Random::mIsInitialized)
    {
@@ -76,7 +78,6 @@ Random::initialize()
          mIsInitialized = true;
          Timer::setupTimeOffsets();
 
-#ifndef WIN32      
          //throwing away first 32 bits
          unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
          srandom(seed);
@@ -123,9 +124,9 @@ Random::initialize()
          {
             ::close(fd);
          }
-#endif
       }
    }
+#endif
 }
 
 int
