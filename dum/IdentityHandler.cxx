@@ -1,14 +1,26 @@
-#include "IdentityHandler.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/IdentityHandler.hxx"
 #include "resiprocate/external/HttpProvider.hxx"
 #include "resiprocate/external/HttpGetMessage.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
-ProcessingResult 
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+IdentityHandler::IdentityHandler(DialogUsageManager& dum)
+   : DumFeature(dum)
+{
+}
+
+DumFeature::ProcessingResult 
 IdentityHandler::process(Message* msg)
 {
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
    if (sipMsg)
    {
-      if (queueForIdentityCheck)
+      if (queueForIdentityCheck(sipMsg))
       {
          return EventTaken;
       }
@@ -18,7 +30,7 @@ IdentityHandler::process(Message* msg)
       }
    }
    
-   HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg.get());
+   HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg);
    if (httpMsg)
    {
       processIdentityCheckResponse(*httpMsg);         
@@ -29,16 +41,16 @@ IdentityHandler::process(Message* msg)
 }
 
 bool
-DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
+IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
 {
 #if defined(USE_SSL)
    if (sipMsg->exists(h_Identity) &&
        sipMsg->exists(h_IdentityInfo) &&
        sipMsg->exists(h_Date))
    {
-      if (getSecurity()->hasDomainCert(sipMsg->header(h_From).uri().host()))
+      if (mDum.getSecurity()->hasDomainCert(sipMsg->header(h_From).uri().host()))
       {
-         getSecurity()->checkAndSetIdentity(*sipMsg);
+         mDum.getSecurity()->checkAndSetIdentity(*sipMsg);
          return false;
       }
       else
@@ -56,7 +68,7 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
             
             HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
                                           sipMsg->getTransactionId(),
-                                          *this);
+                                          mDum);
             return true;
          }
          catch (BaseException&)
@@ -74,14 +86,14 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 }
 
 void
-DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
+IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
 #if defined(USE_SSL)
    InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
    RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
    if (it != mRequiresCerts.end())
    {
-      getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
+      mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
       mRequiresCerts.erase(it);
       mDum.post(it->second);
    }
