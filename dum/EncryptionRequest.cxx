@@ -1,52 +1,55 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DumDecrypted.hxx"
+#include "resiprocate/dum/EncryptionRequest.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
-DumDecrypted::DumDecrypted(const SipMessage& msg)
-   : mDecrypted(msg)
+EncryptionRequest::EncryptionRequest(const SipMessage& msg, DialogUsageManager::EncryptionLevel level)
+   : mMessage(msg),
+     mLevel(level)
 {
 }
 
-DumDecrypted::DumDecrypted(const DumDecrypted& src)
-   : mDecrypted(src.mDecrypted)
+EncryptionRequest::EncryptionRequest(const EncryptionRequest& from)
+   : mMessage(from.mMessage),
+     mLevel(from.mLevel)
 {
 }
 
-DumDecrypted::~DumDecrypted()
+EncryptionRequest::~EncryptionRequest()
 {
 }
 
 Message*
-DumDecrypted::clone() const
+EncryptionRequest::clone() const
 {
-   return new DumDecrypted(*this);
+   return new EncryptionRequest(*this);
 }
 
-const SipMessage&
-DumDecrypted::decrypted() const
+SipMessage& 
+EncryptionRequest::message()
 {
-   return mDecrypted;
+   return mMessage;
 }
 
-SipMessage*
-DumDecrypted::decrypted() 
+DialogUsageManager::EncryptionLevel 
+EncryptionRequest::encryptionLevel() const
 {
-   return &mDecrypted;
+   return mLevel;
 }
      
 std::ostream&
-DumDecrypted::encodeBrief(std::ostream& strm) const
+EncryptionRequest::encodeBrief(std::ostream& strm) const
 {
    return encode(strm);
 }
 
 std::ostream& 
-DumDecrypted::encode(std::ostream& strm) const
+EncryptionRequest::encode(std::ostream& strm) const
 {
-   return mDecrypted.encode(strm);
+   mMessage.encode(strm); 
+   strm << "Encryption level: " << mLevel << endl;
+   return strm;
 }
 
 /* ====================================================================

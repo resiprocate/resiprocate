@@ -245,12 +245,15 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //ServerAuthManager is now a DumFeature; setServerAuthManager is a special
       //case of addFeature; the ServerAuthManager should always be the first
       //feature in the chain.
-      void addFeature(std::auto_ptr<DumFeature> feat);
+      void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
+      void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
 
       // will apply the specified function to each matching ServerSubscription
       void applyToServerSubscriptions(const Data& aor, 
                                       const Data& eventType, 
                                       void(*applyFn)(ServerSubscriptionHandle));
+
+      void processDumFeatureResult(std::auto_ptr<Message> msg);
       
    protected:
       virtual void onAllHandlesDestroyed();      
@@ -259,9 +262,12 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void internalProcess(std::auto_ptr<Message> msg);
       friend class DumThread;
 
-      DumFeatureChain::FeatureList mFeatureList;
+      DumFeatureChain::FeatureList mIncomingFeatureList;
+      DumFeatureChain::FeatureList mOutgoingFeatureList;
+
       typedef std::map<Data, DumFeatureChain*> FeatureChainMap;
-      FeatureChainMap mFeatureChainMap;
+      FeatureChainMap mIncomingFeatureChainMap;
+      FeatureChainMap mOutgoingFeatureChainMap;
   
    private:
       friend class Dialog;
@@ -293,9 +299,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                         int responseCode, 
                         const Data& reason = Data::Empty) const;
       // May call a callback to let the app adorn
-      void sendResponse(SipMessage& response);
+      void sendResponse(const SipMessage& response);
 
-      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, SipMessage& msg);      
+      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, const SipMessage& msg);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
@@ -398,9 +404,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
 
-#if defined (USE_SSL)
-      EncryptionManager mEncryptionManager;
-#endif
+//#if defined (USE_SSL)
+//      EncryptionManager* mEncryptionManager;
+//#endif
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
       InviteSessionEncryptionLevelMap mEncryptionLevels;

@@ -1,53 +1,35 @@
+#if !defined(RESIP_ENCRYPTIONREQUEST_HXX)
+#define RESIP_ENCRYPTIONREQUEST_HXX 
+
+#include "resiprocate/Message.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DumDecrypted.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
-using namespace resip;
-using namespace std;
-
-DumDecrypted::DumDecrypted(const SipMessage& msg)
-   : mDecrypted(msg)
+namespace resip
 {
+
+class EncryptionRequest : public Message
+{
+   public:
+      EncryptionRequest(const SipMessage& msg, DialogUsageManager::EncryptionLevel level);
+      EncryptionRequest(const EncryptionRequest&);
+      ~EncryptionRequest();
+
+      SipMessage& message();
+      DialogUsageManager::EncryptionLevel encryptionLevel() const;
+
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      
+   private:
+      SipMessage mMessage;
+      DialogUsageManager::EncryptionLevel mLevel;
+};
+
 }
 
-DumDecrypted::DumDecrypted(const DumDecrypted& src)
-   : mDecrypted(src.mDecrypted)
-{
-}
-
-DumDecrypted::~DumDecrypted()
-{
-}
-
-Message*
-DumDecrypted::clone() const
-{
-   return new DumDecrypted(*this);
-}
-
-const SipMessage&
-DumDecrypted::decrypted() const
-{
-   return mDecrypted;
-}
-
-SipMessage*
-DumDecrypted::decrypted() 
-{
-   return &mDecrypted;
-}
-     
-std::ostream&
-DumDecrypted::encodeBrief(std::ostream& strm) const
-{
-   return encode(strm);
-}
-
-std::ostream& 
-DumDecrypted::encode(std::ostream& strm) const
-{
-   return mDecrypted.encode(strm);
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
