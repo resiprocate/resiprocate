@@ -10,7 +10,9 @@ class Message;
 class DumFeature
 {
    public:      
-      DumFeature(DialogUsageManager& dum);
+      DumFeature(DialogUsageManager& dum) : mDum(dum) 
+      {}
+
       virtual ~DumFeature() {}
       
       enum ProcessingResultMask
@@ -28,7 +30,7 @@ class DumFeature
          FeatureDone = FeatureDoneBit,
          FeatureDoneAndEventDone = FeatureDoneBit | EventDoneBit,
          FeatureDoneAndEventTaken = FeatureDoneBit | EventTakenBit,
-	 ChainDoneAndEventDone = ChainDoneBit | EventDoneBit,
+         ChainDoneAndEventDone = ChainDoneBit | EventDoneBit,
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
       

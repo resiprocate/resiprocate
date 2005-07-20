@@ -2,6 +2,7 @@
 #define RESIP_DumFeatureChain_HXX 
 
 #include <vector>
+#include "resiprocate/os/SharedPtr.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class DumFeature;
 class DumFeatureChain
 {
    public: 
-      typedef std::vector<DumFeature*> FeatureList;      
+      typedef std::vector<SharedPtr<DumFeature> > FeatureList;
       
       enum ProcessingResultMask
       {
@@ -32,8 +33,8 @@ class DumFeatureChain
       ProcessingResult process(Message* msg);      
 
    private:       
-      std::bit_vector mActiveFeatures;  //vector<bool> is the correct way on most platforms
-
+      // std::bit_vector mActiveFeatures;  //vector<bool> is the correct way on most platforms
+      std::vector<bool> mActiveFeatures;
       FeatureList mFeatures;
 };
  
