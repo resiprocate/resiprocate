@@ -9,7 +9,8 @@ using namespace resip;
 AppDialogSet::AppDialogSet(DialogUsageManager& dum) : 
    Handled(dum),
    mDum(dum),
-   mDialogSet(0)
+   mDialogSet(0),
+   mIsReUsed(false)
 {}
 
 AppDialogSet::~AppDialogSet()
@@ -46,7 +47,7 @@ AppDialogSet::selectUASUserProfile(const SipMessage&)
 UserProfile* 
 AppDialogSet::getUserProfile()
 {
-   if(mDialogSet)
+   if (mDialogSet)
    {
       return mDialogSet->getUserProfile();
    }
