@@ -97,3 +97,6 @@ ifeq ($(USE_POPT),true)
 POPT_DEFINES := HAVE_POPT_H
 POPT_LIBNAME := popt
 endif
+
+TFMLIBS_LIBNAME := cppunit Netxx boost_regex
+
