@@ -9,7 +9,7 @@ using namespace resip;
 
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            const NameAddr& target,
-                                           SharedPtr<UserProfile>& userProfile,
+                                           SharedPtr<UserProfile> userProfile,
                                            const SdpContents* initial,
                                            DialogUsageManager::EncryptionLevel level,
                                            const SdpContents* alternative,
