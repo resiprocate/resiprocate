@@ -1,0 +1,239 @@
+<appendix id="changelog"><title>Revision History</title>
+    <!--################################################################-->
+    <section id="cl-032"><title>Version 0.3.2</title>
+	<subtitle>July 08, 2003</subtitle>
+
+	<para>
+	    Version 0.3.2 is a bug fix release.
+	</para>
+
+	<itemizedlist>
+	    <listitem>
+		<para>
+		    Fixed a bug where socket file descriptors could be leaked. Thanks goes to Steve Bannister.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Fixed a problem with building Netxx on Cygwin. Thanks goes to Sergio Ballestrero.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Updated Perl scripts to work around a bug in the Perl 5.8 regex parser. Thanks goes to Andy Chou.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Fixed a problem in the build system where Netxx could not be built on Solaris if you also wanted TLS/SSL
+		    support. Thanks goes to James Sammut.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Fixed a major bug in non-blocking connects. Thanks goes to Steve Bannister.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Updated the build script for Mac OS X (configure.sh) so that IPv6 won't cause a problem under 10.2.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Implemented missing copy constructor, assignment operator and swap functions for Netxx::Stream. Thanks to
+		    Sebastien Bellerive for finding this one.
+		</para>
+	    </listitem>
+	</itemizedlist>
+    </section>
+    <!--################################################################-->
+    <section id="cl-031"><title>Version 0.3.1</title>
+	<subtitle>January 13, 2003</subtitle>
+
+	<para>
+	    Version 0.3.1 is a bug fix release.
+	</para>
+
+	<itemizedlist>
+	    <listitem>
+		<para>
+		    Made some changes to the internal Netxx::ServerBase class that fixed exception safety issues and a double
+		    delete[] call. Thanks to Steve Bannister for finding this.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Made a small change to Netxx::Peer to allow Netxx to compile under MacOSX again.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Included errno.h on windows to define EAGAIN. Thanks to Charles Kerr for the suggestion.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    The Netxx API appendix of this manual was removed. It caused the size of the manual to be too large.
+		</para>
+	    </listitem>
+	</itemizedlist>
+    </section>
+    <!--################################################################-->
+    <section id="cl-030"><title>Version 0.3.0</title>
+	<subtitle>November 8th, 2002</subtitle>
+
+	<para>
+	    Lots of changes, some bug fixes and some completely rewritten
+	    classes. Most changes were made to make the API even easier to
+	    use.
+	</para>
+
+	<itemizedlist>
+	    <listitem>
+		<para>
+		    Rewrote Address class. The address class is now independent of its actual use. No more Address::Type.
+		    Auto-detection of IPv4, IPv6 and Local Domain socket addresses. Much easier to use and makes input more
+		    flexible.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added Peer class to replace all the std::pair objects that were being used. Peer also replaces some of the
+		    functionality of the old SockAddr class.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Moved some of the classes from the public include directory into the src directory. This means that the
+		    classes are no longer usable outside of Netxx. The classes are: Socket and SockAddr.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added a new Resolve class so that we can change the implementation of host name and service name resolution at
+		    compile time based on the environment.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    The server classes can now bind to more than one address. This allows you to either bind to all local
+		    addresses or just specific ones.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Removed the MutliServer code and replaced with a new Probe class. The new Probe class can return the readable
+		    and writable state of any Netxx socket based object. Updated the multi_server example code to use the new
+		    Probe class.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added Win32 MSVC Workspace files for compiling a Netxx static library under Win32.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added a shell script for building a Netxx static library under MacOS X.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added Netxx::TLS::Certificate class.
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added a default passphrase function that actually works!
+		</para>
+	    </listitem>
+	</itemizedlist>
+    </section>
+    <!--################################################################-->
+    <section id="cl-020"><title>Version 0.2.0</title>
+	<subtitle>October 22, 2001</subtitle>
+
+	<para>
+	    New features and some bug fixes.
+	</para>
+
+	<itemizedlist>
+	    <listitem>
+		<para>
+		    Fixed bug in Socket::write that shows up only when
+		    write(2) returns less than the buffer size
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Fixed bug in call to select when timeout is 0
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added TLS classes a la OpenSSL
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Moved some classes around in order to add TLS classes
+		</para>
+	    </listitem>
+
+	    <listitem>
+		<para>
+		    Added the Netxx::Netbuf class which is a IOStreams streambuf
+		</para>
+	    </listitem>
+    
+	    <listitem>
+		<para>
+		    Added initial support for Microsoft Windows
+		</para>
+	    </listitem>
+	</itemizedlist>
+    </section>
+    <!--################################################################-->
+    <section id="cl-010"><title>Version 0.1.0</title>
+	<subtitle>September 7, 2001</subtitle>
+
+	<para>
+	    The Netxx code was cleaned up and moved around. The API is now
+	    ready for a first release.
+	</para>
+    </section>
+    <!--################################################################-->
+    <section id="cl-000"><title>Version 0.0.0</title>
+	<subtitle>March 1, 2001</subtitle>
+
+	<para>
+	    First draft of some code put together as Netxx.
+	</para>
+    </section>
+    <!--################################################################-->
+</appendix>
+<!--
+    vim:ft=docbk:tw=130
+-->
