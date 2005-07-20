@@ -1441,6 +1441,8 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       return;
    }
 
+   RESIP_STATISTICS(mController.mStatsManager.sent(sip, resend));
+
    // !jf! for responses, go back to source always (not RFC exactly)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
    {
@@ -1485,13 +1487,6 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       assert(!mIsCancel);
       mDnsResult = mController.mTransportSelector.createDnsResult(this);
       mController.mTransportSelector.dnsResolve(mDnsResult, sip);
-      assert(mDnsResult); // !ah! is this really an assertion or an error?
-
-      // do it now, if there is an immediate result
-      if (mDnsResult->available() == DnsResult::Available)
-      {
-         handle(mDnsResult);
-      }
    }
    else // reuse the last dns tuple
    {
@@ -1513,8 +1508,6 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, mTarget);
       }
    }
-
-   RESIP_STATISTICS(mController.mStatsManager.sent(sip, resend));
 }
 
 void
