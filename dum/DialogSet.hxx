@@ -33,8 +33,8 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      SharedPtr<UserProfile>& getUserProfile();
-      void setUserProfile(SharedPtr<UserProfile>& userProfile);
+      SharedPtr<UserProfile> getUserProfile();
+      void setUserProfile(SharedPtr<UserProfile> userProfile);
 
       void end();
       void dispatch(const SipMessage& msg);
