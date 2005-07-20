@@ -1,4 +1,3 @@
-#! /usr/bin/perl
 ######################################################################
 # Copyright (C) 2001-2003 Peter J Jones (pjones@pmade.org)
 # All Rights Reserved
