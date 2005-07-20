@@ -98,5 +98,7 @@ POPT_DEFINES := HAVE_POPT_H
 POPT_LIBNAME := popt
 endif
 
+TFMLIBS_INCLUDEDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/include $(ROOT)/tfm/contrib $(ROOT)/tfm/contrib/cppunit/include
+TFMLIBS_LIBDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/src $(ROOT)/tfm/contrib/cppunit/.libs
 TFMLIBS_LIBNAME := cppunit Netxx boost_regex
 
