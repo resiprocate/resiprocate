@@ -26,7 +26,7 @@ BaseCreator::getLastRequest() const
    return mLastRequest;
 }
 
-SharedPtr<UserProfile>&
+SharedPtr<UserProfile>
 BaseCreator::getUserProfile()
 {
    return mUserProfile;

@@ -37,7 +37,7 @@ AppDialogSet::end()
    }
 }
 
-SharedPtr<UserProfile>&  
+SharedPtr<UserProfile>  
 AppDialogSet::selectUASUserProfile(const SipMessage&)
 {
    // Default is Master Profile - override this method to select a different userProfile for UAS DialogSets
