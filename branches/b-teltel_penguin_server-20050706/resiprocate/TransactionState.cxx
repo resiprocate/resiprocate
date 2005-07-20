@@ -529,6 +529,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
             sendToWire(msg); // don't delete msg
+	    mState = Calling;
             break;
             
          case CANCEL:
