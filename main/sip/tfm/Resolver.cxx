@@ -132,11 +132,14 @@ Resolver::lookupARecords()
 #ifdef WIN32
 	assert(0); // !cj! 
 	int ret = -1;
+#elif defined(__NetBSD__)
+    //!dcm! -- not threadsafe
+    result = gethostbyname(mHost.c_str());    
+    int ret = errno;    
 #else
    int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
 #endif
    assert (ret != ERANGE);
-
    if (ret != 0)
    {
 #endif
