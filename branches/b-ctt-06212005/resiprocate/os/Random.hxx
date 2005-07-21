@@ -27,23 +27,23 @@ class Random
       static int  getCryptoRandom();
 
    private:
-      static bool isInitialized();
-
+      static Mutex mMutex;
+      static bool  mIsInitialized;
+      
 #ifdef WIN32
       // ensure each thread is initialized since windows requires you to call srand for each thread
-      class TlsInitializer
+      class Initializer
       {
-      public:
-          TlsInitializer() { mIsInitializedTLSIndex = ::TlsAlloc(); 
-                             assert(mIsInitializedTLSIndex != TLS_OUT_OF_INDEXES);};
-          ~TlsInitializer() { ::TlsFree(mIsInitializedTLSIndex); };
-          void setInitialized() { ::TlsSetValue(mIsInitializedTLSIndex, (LPVOID) TRUE);};
-          bool isInitialized() { return (BOOL)::TlsGetValue(mIsInitializedTLSIndex) == TRUE; };  // Note:  if value is not set yet then 0 (false) is returned
-          DWORD mIsInitializedTLSIndex;
+         public:
+            Initializer();
+            ~Initializer();
+            void setInitialized();
+            bool isInitialized();
+
+         private:
+            DWORD mThreadStorage;
       };
-      static TlsInitializer tlsInitializer;
-#else
-      static bool  mIsInitialized;
+      static Initializer mInitializer;
 #endif
       
 };

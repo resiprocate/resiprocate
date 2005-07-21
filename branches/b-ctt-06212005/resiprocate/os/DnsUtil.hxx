@@ -87,6 +87,10 @@ class DnsUtil
        *  Currently, this is realized by (inet_ntop(inet_pton(input)).
        */
       static Data canonicalizeIpV6Address(const Data& ipV6Address);
+
+      /// Used to synchronously query A records - only for test code usage
+      static std::list<Data> lookupARecords(const Data& host);
+
 };
 
 }
