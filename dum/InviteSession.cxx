@@ -844,6 +844,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case OnInviteFailure:
+      case On487Invite:
+      case On489Invite:
          transition(Connected);
          mProposedLocalSdp.release();
          handler->onOfferRejected(getSessionHandle(), msg);
