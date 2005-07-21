@@ -653,6 +653,9 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -748,6 +751,9 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -837,6 +843,9 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -893,6 +902,9 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -966,6 +978,9 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -1023,6 +1038,9 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
       case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
