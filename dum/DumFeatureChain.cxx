@@ -27,7 +27,7 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
    {
       if (*active)
       {
-         DumFeature::ProcessingResult pres = (*feat)->process(msg);
+         pres = (*feat)->process(msg);
 
          //if (pres & DumFeature::EventDoneBit)
          //{
