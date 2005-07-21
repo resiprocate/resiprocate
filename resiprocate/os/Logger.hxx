@@ -1,22 +1,16 @@
-#if !defined(RESIP_LOGGER_HXX)
-#define RESIP_LOGGER_HXX 
+#ifndef RESIP_Logger_hxx
+#define RESIP_Logger_hxx
 
 #include <iosfwd>
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
-
-#ifdef WIN32
-
 #include "resiprocate/os/DataStream.hxx"
-
 #include "resiprocate/os/Data.hxx"
 
+#ifdef WIN32
 #include <windows.h>
-
 #endif 
-
-
 
 /**
    Defines a set of logging macros, one for each level of logging.
@@ -68,7 +62,7 @@ do                                                                              
       char _resip_buffer[8096];                                                                 \
       resip::Data _resip_result(resip::Data::Borrow, _resip_buffer, sizeof(_resip_buffer));     \
       _resip_result.clear();                                                                    \
-      Data::size_type _resip_headerLength;                                                      \
+      resip::Data::size_type _resip_headerLength;                                               \
       {                                                                                         \
          resip::DataStream _resip_strm(_resip_result);                                          \
          resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                     \
@@ -79,9 +73,9 @@ do                                                                              
       }                                                                                         \
       if (resip::Log::getExternal())                                                            \
       {                                                                                         \
-         const Data _resip_rest(Data::Share,                                                    \
-                                _resip_result.data() + _resip_headerLength,                     \
-                                _resip_result.size() - _resip_headerLength);                    \
+         const resip::Data _resip_rest(resip::Data::Share,                                      \
+                                      _resip_result.data() + _resip_headerLength,               \
+                                      _resip_result.size() - _resip_headerLength);              \
          if (!(*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),           \
                                            __FILE__, __LINE__, _resip_rest))                    \
          {                                                                                      \
@@ -98,7 +92,7 @@ do                                                                              
       else                                                                                      \
       {                                                                                         \
          /* endl is magic in syslog -- so put it here */                                        \
-         resip::GenericLogImpl::Instance() << _resip_result << std::endl;                       \
+         resip::GenericLogImpl::Instance() << _resip_result.escaped() << std::endl;             \
       }                                                                                         \
    }                                                                                            \
 } while (0)
