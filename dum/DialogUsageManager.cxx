@@ -80,14 +80,22 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    if (createDefaultFeatures)
    {
       SharedPtr<IdentityHandler> identity = SharedPtr<IdentityHandler>(new IdentityHandler(*this));
+
+#if defined (USE_SSL)
       SharedPtr<EncryptionManager> encryption = SharedPtr<EncryptionManager>(new EncryptionManager(*this));
+#endif
 
       // default incoming features.
       addIncomingFeature(identity);
+#if defined (USE_SSL)
       addIncomingFeature(encryption);
+#endif
 
       // default outgoing features.
+#if defined (USE_SSL)
       addOutgoingFeature(encryption);
+#endif
+
    }
 }
 
@@ -274,9 +282,9 @@ DialogUsageManager::setClientAuthManager(std::auto_ptr<ClientAuthManager> manage
 }
 
 void
-DialogUsageManager::setServerAuthManager(std::auto_ptr<ServerAuthManager> manager)
+DialogUsageManager::setServerAuthManager(SharedPtr<ServerAuthManager> manager)
 {
-   mServerAuthManager = manager;
+   mIncomingFeatureList.insert(mIncomingFeatureList.begin(), manager);
 }
 
 void

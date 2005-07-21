@@ -81,7 +81,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
   
 
       // If createDefaultFeatures is true dum will construct a
-      // IdentityHandler->EncryptionManager auth chain.
+      // IdentityHandler->EncryptionManager chain.
       DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
       virtual ~DialogUsageManager();
             
@@ -128,7 +128,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void setClientAuthManager(std::auto_ptr<ClientAuthManager> client);
 
       /// If there is no ServerAuthManager, the server does not authenticate requests
-      void setServerAuthManager(std::auto_ptr<ServerAuthManager> server);
+      void setServerAuthManager(resip::SharedPtr<ServerAuthManager> server);
 
       /// If there is no such handler, calling makeInviteSession will throw and
       /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
@@ -358,7 +358,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       SharedPtr<UserProfile> mMasterUserProfile;
       std::auto_ptr<RedirectManager>   mRedirectManager;
       std::auto_ptr<ClientAuthManager> mClientAuthManager;
-      std::auto_ptr<ServerAuthManager> mServerAuthManager;  
+      //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
@@ -403,10 +403,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
-
-//#if defined (USE_SSL)
-//      EncryptionManager* mEncryptionManager;
-//#endif
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
       InviteSessionEncryptionLevelMap mEncryptionLevels;

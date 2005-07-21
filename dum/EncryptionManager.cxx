@@ -660,7 +660,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
 
    if (!noDecryptionKey && isSigned())
    {
-      if (!!mDum.getSecurity()->hasUserCert(mSigner))
+      if (!mDum.getSecurity()->hasUserCert(mSigner))
       {
          if (mStore)
          {
