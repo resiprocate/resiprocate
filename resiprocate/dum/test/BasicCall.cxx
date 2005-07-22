@@ -75,7 +75,7 @@ public:
    {  
       return new testAppDialog(mDum, mSampleAppData);  
    }
-   virtual SharedPtr<UserProfile>& selectUASUserProfile(const SipMessage& msg) 
+   virtual SharedPtr<UserProfile> selectUASUserProfile(const SipMessage& msg) 
    { 
       cout << mSampleAppData << ": testAppDialogSet: UAS UserProfile requested for msg: " << msg.brief() << endl;  
       return mDum.getMasterUserProfile(); 
