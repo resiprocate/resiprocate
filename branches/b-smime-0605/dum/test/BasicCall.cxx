@@ -16,9 +16,11 @@
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/SharedPtr.hxx"
 
 #ifdef WIN32
 #include "resiprocate/XWinSecurity.hxx"
@@ -431,21 +433,30 @@ class TestShutdownHandler : public DumShutdownHandler
       }
 };
 
+class MyServerAuthManager : public ServerAuthManager
+{
+public:
+   MyServerAuthManager(DialogUsageManager& dum) : ServerAuthManager(dum) {}
+
+   void requestCredential(const Data& user, const Data& realm, const Data& transactionToken)
+   {
+   }
+};
+
 
 //#define NO_REGISTRATION 1
 int 
 main (int argc, char** argv)
 {
 
-   if ( argc < 5 ) {
+   /*if ( argc < 5 ) {
       cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
       return 0;
-   }
+      }*/
 
    //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
-   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
-   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Info, argv[0]);   
 
    Security* securityUac = 0;
    Security* securityUas = 0;
@@ -459,14 +470,14 @@ main (int argc, char** argv)
 #endif
 #endif
 
-   NameAddr uacAor(argv[1]);
-   Data uacPasswd(argv[2]);
-   NameAddr uasAor(argv[3]);
-   Data uasPasswd(argv[4]);
+   //NameAddr uacAor(argv[1]);
+   //Data uacPasswd(argv[2]);
+   //NameAddr uasAor(argv[3]);
+   //Data uasPasswd(argv[4]);
 
    //set up UAC
    SipStack stackUac(securityUac);
-   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
+   DialogUsageManager* dumUac = new DialogUsageManager(stackUac, true);
    dumUac->addTransport(UDP, 12005);
 
    SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
@@ -486,8 +497,8 @@ main (int argc, char** argv)
    //your aor, credentials, etc here
    //NameAddr uacAor("sip:daniel@booze.internal.xten.net");
    //dumUac->getMasterProfile()->setDigestCredential( "booze.internal.xten.net", "daniel", "daniel" );
-   NameAddr uacAor("sip:daniel2@booze.internal.xten.net");
-   dumUac->getMasterProfile()->setDigestCredential( "booze.internal.xten.net", "daniel2", "daniel2" );
+   NameAddr uacAor("sip:jdoe@internal.xten.net");
+   dumUac->getMasterProfile()->setDigestCredential( "internal.xten.net", "jdoe", "jdoe" );
    //dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));
 #else
    uacAor = NameAddr("sip:UAC@127.0.0.1:1205");
@@ -495,13 +506,13 @@ main (int argc, char** argv)
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);
    dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
-   dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
-   dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-signature"));
+   //dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
+   //dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-signature"));
    dumUac->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
 
    //set up UAS
    SipStack stackUas(securityUas);
-   DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
+   DialogUsageManager* dumUas = new DialogUsageManager(stackUas, true);
    dumUas->addTransport(UDP, 12010);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
@@ -522,8 +533,8 @@ main (int argc, char** argv)
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
    dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
-   dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
-   dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "signed"));
+   //dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("application", "pkcs7-mime"));
+   //dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "signed"));
    dumUas->getMasterProfile()->addSupportedMimeType(INVITE, Mime("multipart", "alternative"));
 
    time_t bHangupAt = 0;
@@ -542,10 +553,10 @@ main (int argc, char** argv)
       dumUas->send(regMessage);
    }
    {
-      /*SipMessage& regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      SipMessage& regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
-      dumUac->send(regMessage);*/
-      uac.registered = true;
+      dumUac->send(regMessage);
+      //uac.registered = true;
    }
 #else
    uac.registered = true;
@@ -597,10 +608,10 @@ main (int argc, char** argv)
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
 
-              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::None, 0, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::None, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
               //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::Encrypt, 0, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
               //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::Encrypt, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
-              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::SignAndEncrypt, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              //dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, DialogUsageManager::SignAndEncrypt, uac.alternative, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
         }
 
@@ -624,7 +635,7 @@ main (int argc, char** argv)
            dumUac->shutdown(&uacShutdownHandler);
 #if !defined(NO_REGISTRATION)
            uas.registerHandle->stopRegistering();
-           //uac.registerHandle->stopRegistering();
+           uac.registerHandle->stopRegistering();
 #endif
         }
      }

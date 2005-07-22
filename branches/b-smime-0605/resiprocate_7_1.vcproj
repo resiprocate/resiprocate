@@ -254,6 +254,9 @@
 				RelativePath="Contents.cxx">
 			</File>
 			<File
+				RelativePath=".\ContentsFactoryBase.cxx">
+			</File>
+			<File
 				RelativePath="os\CountStream.cxx">
 			</File>
 			<File
@@ -465,6 +468,9 @@
 			</File>
 			<File
 				RelativePath="ParserCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\ParserContainerBase.cxx">
 			</File>
 			<File
 				RelativePath="Pidf.cxx">
@@ -739,6 +745,9 @@
 			</File>
 			<File
 				RelativePath="Contents.hxx">
+			</File>
+			<File
+				RelativePath=".\ContentsFactoryBase.hxx">
 			</File>
 			<File
 				RelativePath="os\CountStream.hxx">
