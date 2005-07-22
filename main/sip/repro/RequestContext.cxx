@@ -4,8 +4,8 @@
 
 #include <iostream>
 
-#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
