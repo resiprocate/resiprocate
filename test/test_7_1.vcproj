@@ -131,7 +131,7 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="..\dum\test\BasicCall.cxx">
+				RelativePath=".\testDnsStub.cxx">
 			</File>
 		</Filter>
 		<Filter
