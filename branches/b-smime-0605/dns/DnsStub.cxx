@@ -26,15 +26,29 @@ extern "C"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/DnsInterface.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/ExternalDnsFactory.hxx"
 
 using namespace resip;
 using namespace std;
 
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
+
 DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 
-DnsStub::DnsStub(DnsInterface* dns) : mDns(dns), mTransform(0)
+DnsStub::DnsStub() :
+   mTransform(0),
+   mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
+   int retCode = mDnsProvider->init();
+   if (retCode != 0)
+   {
+      ErrLog (<< "Failed to initialize async dns library");
+      char* errmem = mDnsProvider->errorMessage(retCode);
+      ErrLog (<< errmem);
+      delete errmem;
+      throw DnsStubException("Failed to initialize async dns library", __FILE__,__LINE__);
+   }
 }
 
 DnsStub::~DnsStub()
@@ -45,14 +59,27 @@ DnsStub::~DnsStub()
    }
 }
 
-void DnsStub::process()
+bool 
+DnsStub::requiresProcess()
+{
+   return mDnsProvider->requiresProcess();
+}
+
+void 
+DnsStub::buildFdSet(FdSet& fdset)
+{
+   mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+}
+
+void DnsStub::process(FdSet& fdset)
 {
    while (mCommandFifo.messageAvailable())
    {
       Command* command = mCommandFifo.getNext();
-      command->doIt();
+      command->execute();
       delete command;
    }
+   mDnsProvider->process(fdset.read, fdset.write);
 }
 
 void DnsStub::cache(const Data& key,
@@ -297,7 +324,6 @@ DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter
      mProto(proto),
      mReQuery(0),
      mSink(s),
-     mDns(0),
      mFollowCname(followCname)
 {
    assert(s);               
@@ -310,10 +336,8 @@ DnsStub::Query::~Query()
 
 
 void 
-DnsStub::Query::go(DnsInterface* dns)
+DnsStub::Query::go()
 {
-   mDns = dns;
-   assert(mDns!=0);
    DnsResourceRecordsByPtr records;
    int status = 0;
    bool cached = false;
@@ -336,7 +360,7 @@ DnsStub::Query::go(DnsInterface* dns)
 
    if (!cached)
    {
-      mDns->lookupRecords(targetToQuery, mRRType, this);
+      mStub.lookupRecords(targetToQuery, mRRType, this);
    }
    else
    {
@@ -344,7 +368,7 @@ DnsStub::Query::go(DnsInterface* dns)
       {
          mTransform->transform(targetToQuery, mRRType, records);
       }
-      mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), records, mSink); 
+      mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), records, mSink); 
       mStub.removeQuery(this);
       delete this;
    }
@@ -359,7 +383,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       {
          mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
       }
-      mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), Empty, mSink);
+      mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), Empty, mSink);
       mReQuery = 0;
       mStub.removeQuery(this);
       delete this;
@@ -380,7 +404,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    int ancount = DNS_HEADER_ANCOUNT(abuf);
    if (ancount == 0)
    {
-      mResultConverter->notifyUser(mTarget, 0, mDns->errorMessage(0), Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink); 
    }
    else
    {
@@ -402,7 +426,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
          RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status);
          if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
-         mResultConverter->notifyUser(mTarget, status, mDns->errorMessage(status), result, mSink);
+         mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), result, mSink);
       }
    }
                
@@ -442,17 +466,33 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
             int status = 0;
             RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
             assert(!cnames.empty());
-            mDns->lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), mRRType, this);
+            mStub.lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), mRRType, this);
             bDeleteThis = false;
          }
          else
          {
             mReQuery = 0;
-            mResultConverter->notifyUser(mTarget, 0, mDns->errorMessage(0), Empty, mSink);
+            mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink);
          }
          bGotAnswers = false;
       }
    }
 }
 
+Data 
+DnsStub::errorMessage(int status)
+{
+   return Data(Data::Take, mDnsProvider->errorMessage(status));
+}
 
+void DnsStub::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
+{
+   mDnsProvider->lookup(target.c_str(), type, this, sink);
+}
+
+void 
+DnsStub::handleDnsRaw(ExternalDnsRawResult res)
+{
+   reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
+   mDnsProvider->freeResult(res);
+}
