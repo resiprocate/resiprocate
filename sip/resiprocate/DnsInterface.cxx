@@ -35,7 +35,7 @@ extern "C"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
 
-#include "resiprocate/ExternalDnsFactory.hxx"
+//#include "resiprocate/ExternalDnsFactory.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 
@@ -44,9 +44,10 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 DnsInterface::DnsInterface() : 
-   mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   //mDnsProvider(ExternalDnsFactory::createExternalDns()),
    	  mActiveQueryCount(0)
 {
+   /* moved to DnsStub.
    int retCode = mDnsProvider->init();
    if (retCode != 0)
    {
@@ -56,7 +57,8 @@ DnsInterface::DnsInterface() :
       delete errmem;
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
-   mDnsStub = new DnsStub(this);
+   */
+   mDnsStub = new DnsStub();
 #ifdef USE_DNS_VIP
    mDnsStub->setResultTransform(&mVip);
 #endif
@@ -64,14 +66,8 @@ DnsInterface::DnsInterface() :
 
 DnsInterface::~DnsInterface()
 {
-   delete mDnsProvider;
+   //delete mDnsProvider;
    delete mDnsStub;
-}
-
-Data 
-DnsInterface::errorMessage(int status)
-{
-   return Data(Data::Take, mDnsProvider->errorMessage(status));
 }
 
 void 
@@ -136,20 +132,22 @@ int DnsInterface::supportedProtocols()
 bool 
 DnsInterface::requiresProcess()
 {
-   return mDnsProvider->requiresProcess() && mActiveQueryCount;   
+   //return mDnsProvider->requiresProcess() && mActiveQueryCount;   
+   return mDnsStub->requiresProcess() && mActiveQueryCount;
 }
 
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
-   mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   //mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   mDnsStub->buildFdSet(fdset);
 }
 
 void 
 DnsInterface::process(FdSet& fdset)
 {
-   mDnsStub->process();
-   mDnsProvider->process(fdset.read, fdset.write);
+   mDnsStub->process(fdset);
+   //mDnsProvider->process(fdset.read, fdset.write);
 }
 
 
@@ -181,6 +179,7 @@ DnsHandler::~DnsHandler()
 {
 }
 
+/* moved to DnsStub.
 void 
 DnsInterface::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
 {
@@ -193,6 +192,7 @@ DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
    reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
    mDnsProvider->freeResult(res);
 }
+*/
 
 void
 DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
