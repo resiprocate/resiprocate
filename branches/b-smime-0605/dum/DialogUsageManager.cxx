@@ -743,7 +743,7 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
          }
          else
          {
-            it = mOutgoingFeatureChainMap.insert(lb, FeatureChainMap::value_type(msg.getTransactionId(), new DumFeatureChain(mOutgoingFeatureList)));
+            it = mOutgoingFeatureChainMap.insert(lb, FeatureChainMap::value_type(msg.getTransactionId(), new DumFeatureChain(*this, mOutgoingFeatureList)));
          }
       }
       
@@ -1000,6 +1000,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       DumFeatureMessage* featureMsg = dynamic_cast<DumFeatureMessage*>(msg.get());
       if (featureMsg)
       {
+         InfoLog(<<"Got a DumFeatureMessage" << featureMsg);
          tid = featureMsg->getTransactionId();
       }
    }
@@ -1015,7 +1016,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          }
          else
          {
-            it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(mIncomingFeatureList)));
+            it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mIncomingFeatureList)));
          }
       }
       
