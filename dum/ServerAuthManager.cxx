@@ -50,6 +50,7 @@ ServerAuthManager::process(Message* msg)
    UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
    if (userAuth)
    {
+      InfoLog(<< "Got UserAuthInfo");
       UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
       if (userAuth)
       {
@@ -57,7 +58,7 @@ ServerAuthManager::process(Message* msg)
          if (result)
          {
             mDum.post(result);            
-            return FeatureDoneAndEventDone;            
+            return FeatureDoneAndEventDone;
          }
          else
          {

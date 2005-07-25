@@ -2,13 +2,12 @@
 #define RESIP_USER_AUTH_INFO_HXX 
 
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/ApplicationMessage.hxx"
+#include "resiprocate/dum/DumFeatureMessage.hxx"
 
 namespace resip
 {
 
-class UserAuthInfo : public resip::ApplicationMessage
+class UserAuthInfo : public resip::DumFeatureMessage
 {
    public:
       UserAuthInfo( const resip::Data& user,
@@ -17,8 +16,6 @@ class UserAuthInfo : public resip::ApplicationMessage
                     const resip::Data& transactionID);
       ~UserAuthInfo();
          
-      virtual const Data& getTransactionId() const;
-
       const resip::Data& getA1() const;
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
@@ -33,7 +30,6 @@ class UserAuthInfo : public resip::ApplicationMessage
       resip::Data mUser;
       resip::Data mRealm;
       resip::Data mA1;
-      resip::Data mTransactionId;
 };
 
 std::ostream& 

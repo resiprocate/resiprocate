@@ -28,7 +28,7 @@ class DumFeatureChain
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
 
-      DumFeatureChain(const FeatureList& features);
+      DumFeatureChain(DialogUsageManager& dum, const FeatureList& features);
      
       ProcessingResult process(Message* msg);      
 

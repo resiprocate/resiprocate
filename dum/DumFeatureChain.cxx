@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/dum/DumFeature.hxx"
 #include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/Message.hxx"
@@ -7,9 +8,24 @@
 using namespace resip;
 using namespace std;
 
-DumFeatureChain::DumFeatureChain(const FeatureList& features)
+class GuardFeature : public DumFeature
+{
+   public:
+      GuardFeature(DialogUsageManager& dum)
+         : DumFeature(dum)
+      {}
+
+      virtual ProcessingResult process(Message* msg)
+      {
+         return DumFeature::FeatureDone;
+      }
+};
+
+DumFeatureChain::DumFeatureChain(DialogUsageManager& dum,
+                                 const FeatureList& features)
    :mFeatures(features)
 {
+   mFeatures.push_back(SharedPtr<DumFeature>(new GuardFeature(dum)));
    for (FeatureList::size_type i = 0; i < mFeatures.size(); ++i)
    {
       mActiveFeatures.push_back(true);
@@ -29,10 +45,10 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
       {
          pres = (*feat)->process(msg);
 
-         //if (pres & DumFeature::EventDoneBit)
-         //{
-         //delete msg;
-         //}
+         if (pres & DumFeature::EventDoneBit)
+         {
+            delete msg;
+         }
 
          switch(pres)
          {
@@ -53,24 +69,24 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
       }
 
       active++;
-      feat++;      
+      feat++;    
    }
    while(!stop && feat != mFeatures.end() );
 
-   DumFeatureChain::ProcessingResult res = DumFeatureChain::ChainDone;
-
-   if (pres & DumFeature::EventTakenBit)
+   if (pres & DumFeature::ChainDoneBit && pres & DumFeature::EventTakenBit)
    {
-      if (pres & DumFeature::FeatureDoneBit || 
-          pres & DumFeature::ChainDoneBit)
-      {
-         res = DumFeatureChain::ChainDoneAndEventTaken;
-      }
-      else
-      {
-         res = DumFeatureChain::EventTaken;
-      }
+      return  DumFeatureChain::ChainDoneAndEventTaken;
    }
 
-   return res;
+   if (pres & DumFeature::ChainDoneBit)
+   {
+      return DumFeatureChain::ChainDone;
+   }
+
+   if (pres & DumFeature::FeatureDoneBit && feat == mFeatures.end())
+   {
+      return DumFeatureChain::ChainDone;
+   }
+
+   return DumFeatureChain::EventTaken;
 }

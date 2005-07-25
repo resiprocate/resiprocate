@@ -67,7 +67,6 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
       else
       {
-         delete msg;
          return DumFeature::EventTaken;
       }
    }
@@ -77,7 +76,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    {
       if (!request->message().getContents())
       {
-         return DumFeature::FeatureDoneAndEventDone;
+         return DumFeature::FeatureDone;
       }
 
       Data senderAor;
@@ -117,11 +116,10 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
          {
             request->message().setContents(auto_ptr<Contents>(contents));
          }
-         return DumFeature::FeatureDoneAndEventDone;
+         return DumFeature::FeatureDone;
       }
       else
       {
-         delete msg;
          return DumFeature::EventTaken;
       }
    }
@@ -135,7 +133,6 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
       else
       {
-         delete msg;
          return DumFeature::EventTaken;
       }
    }
