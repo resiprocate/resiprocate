@@ -143,6 +143,8 @@ WinCompat::WinCompat() :
 
 
 #if !defined(NO_IPHLPAPI)
+// !slg! - This function is horribly slow (upto 200ms) and can cause serious performance issues for servers.
+//         We should consider finding more efficient APIs, or caching some of the results.
 Tuple
 WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
 {
@@ -274,7 +276,14 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 #if defined(USE_IPV6)
    try
    {
-      return  determineSourceInterfaceWithIPv6(destination);
+      if(destination.ipVersion() == V6)
+      {
+         return  determineSourceInterfaceWithIPv6(destination);
+      }
+      else
+      {
+         return determineSourceInterfaceWithoutIPv6(destination);
+      }
    }
    catch (...)
    {
