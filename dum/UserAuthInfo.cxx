@@ -15,10 +15,10 @@ UserAuthInfo::UserAuthInfo(const Data& user,
                            const Data& realm, 
                            const Data& a1, 
                            const Data& transactionId ):
+   DumFeatureMessage(transactionId),
    mUser(user),
    mRealm(realm),
-   mA1(a1),
-   mTransactionId(transactionId)
+   mA1(a1)
 {
 }
 
@@ -46,12 +46,6 @@ const Data&
 UserAuthInfo::getUser() const
 {
    return mUser;
-}
-
-const Data&
-UserAuthInfo::getTransactionId() const
-{
-   return mTransactionId;
 }
 
 Data 
