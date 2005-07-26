@@ -5,13 +5,13 @@
 using namespace resip;
 using namespace std;
 
-DumDecrypted::DumDecrypted(auto_ptr<SipMessage> msg)
+DumDecrypted::DumDecrypted(const SipMessage& msg)
    : mDecrypted(msg)
 {
 }
 
 DumDecrypted::DumDecrypted(const DumDecrypted& src)
-   : mDecrypted(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(src.mDecrypted.get()->clone())))
+   : mDecrypted(src.mDecrypted)
 {
 }
 
@@ -22,14 +22,19 @@ DumDecrypted::~DumDecrypted()
 Message*
 DumDecrypted::clone() const
 {
-   SipMessage* msg = dynamic_cast<SipMessage*>(mDecrypted.get()->clone());
-   return new DumDecrypted(auto_ptr<SipMessage>(msg));
+   return new DumDecrypted(*this);
+}
+
+const SipMessage&
+DumDecrypted::decrypted() const
+{
+   return mDecrypted;
 }
 
 SipMessage*
-DumDecrypted::decrypted() const
+DumDecrypted::decrypted() 
 {
-   return mDecrypted.get();
+   return &mDecrypted;
 }
      
 std::ostream&
@@ -41,7 +46,7 @@ DumDecrypted::encodeBrief(std::ostream& strm) const
 std::ostream& 
 DumDecrypted::encode(std::ostream& strm) const
 {
-   return mDecrypted.get()->encode(strm); 
+   return mDecrypted.encode(strm);
 }
 
 /* ====================================================================

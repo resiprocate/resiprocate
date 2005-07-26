@@ -7,20 +7,21 @@
 namespace resip
 {
 
-class DumDecrypted : public ApplicationMessage
+class DumDecrypted : public Message
 {
    public:
-      DumDecrypted(std::auto_ptr<SipMessage> msg);
+      DumDecrypted(const SipMessage& msg);
       DumDecrypted(const DumDecrypted&);
       ~DumDecrypted();
 
-      SipMessage* decrypted() const;
+      SipMessage* decrypted();
+      const SipMessage& decrypted() const;
       Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
-      std::auto_ptr<SipMessage> mDecrypted;
+      SipMessage mDecrypted;
 };
 
 }
