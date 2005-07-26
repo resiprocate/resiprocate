@@ -15,7 +15,7 @@ namespace resip
 class GenericUri : public ParserCategory
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      enum {commaHandling = CommasAllowedOutputMulti};
 
       GenericUri() : ParserCategory() {}
       GenericUri(HeaderFieldValue* hfv, Headers::Type type);
