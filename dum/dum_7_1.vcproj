@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;..\openssl-0.9.7g\inc32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES;LEAK_CHECK;USE_IPV6"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -62,7 +62,7 @@
 			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;;&quot;..\openssl-0.9.7g\inc32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_ARES;USE_IPV6"
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
@@ -262,6 +262,9 @@
 				RelativePath=".\DumEncrypted.cxx">
 			</File>
 			<File
+				RelativePath=".\DumFeatureChain.cxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.cxx">
 			</File>
 			<File
@@ -274,6 +277,12 @@
 				RelativePath=".\EncryptionManager.cxx">
 			</File>
 			<File
+				RelativePath=".\EncryptionRequest.cxx">
+			</File>
+			<File
+				RelativePath=".\Handle.cxx">
+			</File>
+			<File
 				RelativePath=".\Handled.cxx">
 			</File>
 			<File
@@ -281,6 +290,9 @@
 			</File>
 			<File
 				RelativePath=".\HandleManager.cxx">
+			</File>
+			<File
+				RelativePath=".\IdentityHandler.cxx">
 			</File>
 			<File
 				RelativePath=".\InMemoryRegistrationDatabase.cxx">
@@ -450,6 +462,12 @@
 				RelativePath=".\DumException.hxx">
 			</File>
 			<File
+				RelativePath=".\DumFeature.hxx">
+			</File>
+			<File
+				RelativePath=".\DumFeatureChain.hxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.hxx">
 			</File>
 			<File
@@ -465,6 +483,9 @@
 				RelativePath=".\EncryptionManager.hxx">
 			</File>
 			<File
+				RelativePath=".\EncryptionRequest.hxx">
+			</File>
+			<File
 				RelativePath=".\Handle.hxx">
 			</File>
 			<File
@@ -478,6 +499,9 @@
 			</File>
 			<File
 				RelativePath=".\Handles.hxx">
+			</File>
+			<File
+				RelativePath=".\IdentityHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\InMemoryRegistrationDatabase.hxx">
