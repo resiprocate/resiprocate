@@ -4,6 +4,7 @@
 #include <map>
 
 #include "resiprocate/SipMessage.hxx"
+#include "DumFeature.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class UserAuthInfo;
 class DialogUsageManager;
 
 
-class ServerAuthManager
+class ServerAuthManager : public DumFeature
 {
    public:
       typedef enum Result
@@ -25,6 +26,8 @@ class ServerAuthManager
       
       ServerAuthManager(DialogUsageManager& dum);
       virtual ~ServerAuthManager();
+
+      ProcessingResult process(Message* msg);      
       
       // can return Authorized, Rejected or Skipped
       //Result handleUserAuthInfo(Message* msg);
@@ -45,7 +48,6 @@ class ServerAuthManager
       virtual bool useAuthInt() const;
       
    private:
-      DialogUsageManager& mDum;      
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
       bool authorizedForThisIdentity(const resip::Data &user, 

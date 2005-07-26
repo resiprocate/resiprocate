@@ -1,25 +1,40 @@
-#ifndef RESIP_ApplicationMessage_hxx
-#define RESIP_ApplicationMessage_hxx 
+#if !defined(RESIP_ENCRYPTIONREQUEST_HXX)
+#define RESIP_ENCRYPTIONREQUEST_HXX 
 
-#include "assert.h"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
 namespace resip
 {
 
-class ApplicationMessage : public Message
+class EncryptionRequest : public Message
 {
    public:
-      ApplicationMessage() {};
+      EncryptionRequest(const SipMessage& msg, DialogUsageManager::EncryptionLevel level);
+      EncryptionRequest(const EncryptionRequest&);
+      ~EncryptionRequest();
 
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
+      SipMessage& message();
+      DialogUsageManager::EncryptionLevel encryptionLevel() const;
+
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      
+   private:
+      SipMessage mMessage;
+      DialogUsageManager::EncryptionLevel mLevel;
 };
- 
+
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
