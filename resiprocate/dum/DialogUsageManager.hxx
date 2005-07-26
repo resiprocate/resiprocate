@@ -18,6 +18,9 @@
 #include "resiprocate/os/SharedPtr.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/dum/DumFeature.hxx"
+#include "resiprocate/dum/DumFeatureChain.hxx"
+#include "resiprocate/dum/DumFeatureMessage.hxx"
 
 namespace resip 
 {
@@ -76,8 +79,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          Encrypt,
          SignAndEncrypt
       } EncryptionLevel;
+  
 
-      DialogUsageManager(SipStack& stack);
+      // If createDefaultFeatures is true dum will construct a
+      // IdentityHandler->EncryptionManager chain.
+      DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
       virtual ~DialogUsageManager();
             
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
@@ -123,7 +129,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void setClientAuthManager(std::auto_ptr<ClientAuthManager> client);
 
       /// If there is no ServerAuthManager, the server does not authenticate requests
-      void setServerAuthManager(std::auto_ptr<ServerAuthManager> server);
+      void setServerAuthManager(resip::SharedPtr<ServerAuthManager> server);
 
       /// If there is no such handler, calling makeInviteSession will throw and
       /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
@@ -235,7 +241,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
 
-
       // will apply the specified functor(which takes a
       //ServerSubscriptionHandle) to each matching ServerSubscription.  
       //Returns the functor after the last application.
@@ -256,13 +261,30 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          return applyFn;         
       }
 
+      //DUM will delete features in its destructor. Feature manipulation should
+      //be done before any processing starts.
+      //ServerAuthManager is now a DumFeature; setServerAuthManager is a special
+      //case of addFeature; the ServerAuthManager should always be the first
+      //feature in the chain.
+      void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
+      void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
+
+      void processDumFeatureResult(std::auto_ptr<Message> msg);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
       virtual const Data& name() const;
       void internalProcess(std::auto_ptr<Message> msg);
       friend class DumThread;
-      
+
+      DumFeatureChain::FeatureList mIncomingFeatureList;
+      DumFeatureChain::FeatureList mOutgoingFeatureList;
+
+      typedef std::map<Data, DumFeatureChain*> FeatureChainMap;
+      FeatureChainMap mIncomingFeatureChainMap;
+      FeatureChainMap mOutgoingFeatureChainMap;
+  
    private:
       friend class Dialog;
       friend class DialogSet;
@@ -293,9 +315,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                         int responseCode, 
                         const Data& reason = Data::Empty) const;
       // May call a callback to let the app adorn
-      void sendResponse(SipMessage& response);
+      void sendResponse(const SipMessage& response);
 
-      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, SipMessage& msg);      
+      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, const SipMessage& msg);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
@@ -352,7 +374,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       SharedPtr<UserProfile> mMasterUserProfile;
       std::auto_ptr<RedirectManager>   mRedirectManager;
       std::auto_ptr<ClientAuthManager> mClientAuthManager;
-      std::auto_ptr<ServerAuthManager> mServerAuthManager;  
+      //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
@@ -397,10 +419,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
-
-#if defined (USE_SSL)
-      EncryptionManager mEncryptionManager;
-#endif
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
       InviteSessionEncryptionLevelMap mEncryptionLevels;

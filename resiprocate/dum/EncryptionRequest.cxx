@@ -1,25 +1,61 @@
-#ifndef RESIP_ApplicationMessage_hxx
-#define RESIP_ApplicationMessage_hxx 
+#include "resiprocate/dum/EncryptionRequest.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
-#include "assert.h"
-#include "resiprocate/Message.hxx"
+using namespace resip;
+using namespace std;
 
-namespace resip
+EncryptionRequest::EncryptionRequest(const SipMessage& msg, DialogUsageManager::EncryptionLevel level)
+   : mMessage(msg),
+     mLevel(level)
 {
-
-class ApplicationMessage : public Message
-{
-   public:
-      ApplicationMessage() {};
-
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
-};
- 
 }
 
-#endif
+EncryptionRequest::EncryptionRequest(const EncryptionRequest& from)
+   : mMessage(from.mMessage),
+     mLevel(from.mLevel)
+{
+}
+
+EncryptionRequest::~EncryptionRequest()
+{
+}
+
+Message*
+EncryptionRequest::clone() const
+{
+   return new EncryptionRequest(*this);
+}
+
+SipMessage& 
+EncryptionRequest::message()
+{
+   return mMessage;
+}
+
+DialogUsageManager::EncryptionLevel 
+EncryptionRequest::encryptionLevel() const
+{
+   return mLevel;
+}
+     
+std::ostream&
+EncryptionRequest::encodeBrief(std::ostream& strm) const
+{
+   return encode(strm);
+}
+
+std::ostream& 
+EncryptionRequest::encode(std::ostream& strm) const
+{
+   mMessage.encode(strm); 
+   strm << "Encryption level: " << mLevel << endl;
+   return strm;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

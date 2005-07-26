@@ -67,6 +67,11 @@ SRC =   \
 	NetworkAssociation.cxx \
 	EncryptionManager.cxx \
 	DumDecrypted.cxx \
-	CertMessage.cxx
+	CertMessage.cxx \
+	DumFeatureChain.cxx \
+	DumFeatureMessage.cxx \
+	DumEncrypted.cxx \
+	EncryptionRequest.cxx \
+	IdentityHandler.cxx
 
 include $(BUILD)/Makefile.post
