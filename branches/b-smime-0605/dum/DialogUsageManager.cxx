@@ -1026,11 +1026,13 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          delete it->second;
          mIncomingFeatureChainMap.erase(it);
+         InfoLog(<< "feature chain deleted" << endl);
       }
  
       if (res & DumFeatureChain::EventTakenBit)
       {
          msg.release();
+         InfoLog(<< "event taken" << endl);
          return;
       }
    }
