@@ -38,17 +38,12 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
    vector<bool>::iterator active = mActiveFeatures.begin();
    bool stop = false;
 
-   DumFeature::ProcessingResult pres = DumFeature::FeatureDoneAndEventDone;
+   DumFeature::ProcessingResult pres = DumFeature::FeatureDone;
    do
    {
       if (*active)
       {
          pres = (*feat)->process(msg);
-
-         if (pres & DumFeature::EventDoneBit)
-         {
-            delete msg;
-         }
 
          switch(pres)
          {
@@ -66,27 +61,33 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
                stop = true;
                break;
          }
+
+         if (pres & DumFeature::EventDoneBit)
+         {
+            delete msg;
+            int bits = pres;
+            bits ^= DumFeature::EventDoneBit;
+            bits |= DumFeature::EventTaken;
+            pres = static_cast<DumFeature::ProcessingResult>(bits);
+         }
       }
 
       active++;
-      feat++;    
+      feat++;
    }
-   while(!stop && feat != mFeatures.end() );
+   while(!stop && feat != mFeatures.end());
 
-   if (pres & DumFeature::ChainDoneBit && pres & DumFeature::EventTakenBit)
+
+   int chainBits = 0;
+   if (pres & DumFeature::ChainDoneBit || feat == mFeatures.end())
    {
-      return  DumFeatureChain::ChainDoneAndEventTaken;
+      chainBits |= ChainDoneBit;
    }
 
-   if (pres & DumFeature::ChainDoneBit)
+   if (pres & DumFeature::EventTakenBit)
    {
-      return DumFeatureChain::ChainDone;
+      chainBits |= EventTakenBit;
    }
 
-   if (pres & DumFeature::FeatureDoneBit && feat == mFeatures.end())
-   {
-      return DumFeatureChain::ChainDone;
-   }
-
-   return DumFeatureChain::EventTaken;
+   return static_cast<DumFeatureChain::ProcessingResult>(chainBits);
 }
