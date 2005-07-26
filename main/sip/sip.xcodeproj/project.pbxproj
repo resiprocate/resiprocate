@@ -223,6 +223,12 @@
 		124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47408721A880017C8BB /* TransportMessage.cxx */; };
 		124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */; };
 		124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */; };
+		12BF59350895D59E00F7DD81 /* ParserContainerBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59340895D59E00F7DD81 /* ParserContainerBase.cxx */; };
+		12BF59370895D5BA00F7DD81 /* ContentsFactoryBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59360895D5BA00F7DD81 /* ContentsFactoryBase.cxx */; };
+		12BF59390895D5E600F7DD81 /* EncryptionManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */; };
+		12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */; };
+		12BF593D0895D5FF00F7DD81 /* DumEncrypted.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF593B0895D5FF00F7DD81 /* DumEncrypted.cxx */; };
+		12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59570895D7B800F7DD81 /* CertMessage.cxx */; };
 		12F79733086CBA1E00AF4EDF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
 		D2AAC0700554677100DB518D /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
 /* End PBXBuildFile section */
@@ -469,6 +475,12 @@
 		124EC47408721A880017C8BB /* TransportMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportMessage.cxx; path = resiprocate/TransportMessage.cxx; sourceTree = SOURCE_ROOT; };
 		124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionHeader.cxx; path = resiprocate/ExtensionHeader.cxx; sourceTree = SOURCE_ROOT; };
 		124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionParameter.cxx; path = resiprocate/ExtensionParameter.cxx; sourceTree = SOURCE_ROOT; };
+		12BF59340895D59E00F7DD81 /* ParserContainerBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParserContainerBase.cxx; path = resiprocate/ParserContainerBase.cxx; sourceTree = SOURCE_ROOT; };
+		12BF59360895D5BA00F7DD81 /* ContentsFactoryBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContentsFactoryBase.cxx; path = resiprocate/ContentsFactoryBase.cxx; sourceTree = SOURCE_ROOT; };
+		12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptionManager.cxx; path = resiprocate/dum/EncryptionManager.cxx; sourceTree = SOURCE_ROOT; };
+		12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumDecrypted.cxx; path = resiprocate/dum/DumDecrypted.cxx; sourceTree = SOURCE_ROOT; };
+		12BF593B0895D5FF00F7DD81 /* DumEncrypted.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumEncrypted.cxx; path = resiprocate/dum/DumEncrypted.cxx; sourceTree = SOURCE_ROOT; };
+		12BF59570895D7B800F7DD81 /* CertMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CertMessage.cxx; path = resiprocate/dum/CertMessage.cxx; sourceTree = SOURCE_ROOT; };
 		12F79738086CBA1E00AF4EDF /* libresiprocate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libresiprocate.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		32BAE0B70371A74B00C91783 /* sip_MacPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sip_MacPrefix.pch; sourceTree = "<group>"; };
 		D2AAC06F0554671400DB518D /* libares.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libares.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -588,6 +600,7 @@
 				124D79C0086CC68200BCA5A9 /* BaseCreator.cxx */,
 				124D79C1086CC68200BCA5A9 /* BaseSubscription.cxx */,
 				124D79C2086CC68200BCA5A9 /* BaseUsage.cxx */,
+				12BF59570895D7B800F7DD81 /* CertMessage.cxx */,
 				124D79C3086CC68200BCA5A9 /* ClientAuthManager.cxx */,
 				124D79C4086CC68200BCA5A9 /* ClientInviteSession.cxx */,
 				124D79C5086CC68200BCA5A9 /* ClientOutOfDialogReq.cxx */,
@@ -603,8 +616,11 @@
 				124D79CF086CC68200BCA5A9 /* DialogSetId.cxx */,
 				124D79D0086CC68200BCA5A9 /* DialogUsage.cxx */,
 				124D79D1086CC68200BCA5A9 /* DialogUsageManager.cxx */,
+				12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */,
+				12BF593B0895D5FF00F7DD81 /* DumEncrypted.cxx */,
 				124D79D2086CC68200BCA5A9 /* DumProcessHandler.cxx */,
 				124D79D3086CC68200BCA5A9 /* DumTimeout.cxx */,
+				12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */,
 				124D79D4086CC68200BCA5A9 /* Handled.cxx */,
 				124D79D5086CC68200BCA5A9 /* HandleException.cxx */,
 				124D79D6086CC68200BCA5A9 /* HandleManager.cxx */,
@@ -688,6 +704,7 @@
 				124D78CE086CC3CE00BCA5A9 /* CallId.cxx */,
 				124D78CF086CC3CE00BCA5A9 /* Connection.cxx */,
 				124D78D0086CC3CE00BCA5A9 /* ConnectionBase.cxx */,
+				12BF59360895D5BA00F7DD81 /* ContentsFactoryBase.cxx */,
 				124D78D1086CC3CE00BCA5A9 /* ConnectionManager.cxx */,
 				124D78D2086CC3CE00BCA5A9 /* Contents.cxx */,
 				124D78D3086CC3CE00BCA5A9 /* CpimContents.cxx */,
@@ -736,6 +753,7 @@
 				124D78FC086CC3CE00BCA5A9 /* ParameterTypes.cxx */,
 				124D78FD086CC3CE00BCA5A9 /* ParserCategories.cxx */,
 				124D78FE086CC3CE00BCA5A9 /* ParserCategory.cxx */,
+				12BF59340895D59E00F7DD81 /* ParserContainerBase.cxx */,
 				124D78FF086CC3CE00BCA5A9 /* ParseUtil.cxx */,
 				124D7900086CC3CE00BCA5A9 /* Pkcs7Contents.cxx */,
 				124D7901086CC3CE00BCA5A9 /* PlainContents.cxx */,
@@ -1085,6 +1103,12 @@
 				124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */,
 				124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */,
 				124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */,
+				12BF59350895D59E00F7DD81 /* ParserContainerBase.cxx in Sources */,
+				12BF59370895D5BA00F7DD81 /* ContentsFactoryBase.cxx in Sources */,
+				12BF59390895D5E600F7DD81 /* EncryptionManager.cxx in Sources */,
+				12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */,
+				12BF593D0895D5FF00F7DD81 /* DumEncrypted.cxx in Sources */,
+				12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1179,24 +1203,153 @@
 		12F79720086CB6D700AF4EDF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = SuaSIPPhone_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					../../SIPUserAgent,
+					../../API/Headers,
+					../../Resources/Mac,
+					../../../../../Library,
+					../../../../../Library/Codec/UBVideo/H264/Inc,
+					../../../../../Library/Codec/UBVideo/include,
+					../../../../../Library/Codec/UBVideo,
+					../../../../../Library/JPGConvert/JPGConvertCristiCuturicu/Source/JPGConvert,
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					../../../../../Library/simple/src/util,
+					../../../../../Library/simple/src,
+					../../../../../Library/speex.org/speex/Source/speex/include,
+					../../../../../Library/Vs/Source/Vs/VsCodec,
+					../../../../../Library/XtenNetworksInc,
+					../../../../../../sipfoundry/main/sip,
+					../../../../../../sipfoundry/main/sip/contrib/ares,
+					../../../../../../Temp/Bamfield,
+					"$(SDKROOT)/usr/include/libxml2",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263dec/build/Debug,
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263enc/build/Debug,
+					"../../../../../Library/libxml2/MacLibrary-2.6.17-without-iconv",
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					"../../../../../Library/OpenSSL/openssl-0.9.7g/libs/Mac",
+					../../../../../Library/speex.org/MacProject/libspeex/build/Debug,
+					../../../../../Library/Vs/Source/Vs/VsCodec/MacProject/build/Debug,
+					../../../../../Library/XtenNetworksInc/AEC/Source/AEC_MAC,
+					../../../../../../sipfoundry/main/sip/build/Debug,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fpermissive",
+					"-Wno-invalid-offsetof",
+				);
+				REZ_SEARCH_PATHS = "../../Resources/Common/**";
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+				ZERO_LINK = NO;
 			};
 			name = Debug;
 		};
 		12F79721086CB6D700AF4EDF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEAD_CODE_STRIPPING = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INPUT_FILETYPE = sourcecode.cpp.cpp;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = SuaSIPPhone_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					../../SIPUserAgent,
+					../../API/Headers,
+					../../Resources/Mac,
+					../../../../../Library,
+					../../../../../Library/Codec/UBVideo/H264/Inc,
+					../../../../../Library/Codec/UBVideo/include,
+					../../../../../Library/Codec/UBVideo,
+					../../../../../Library/JPGConvert/JPGConvertCristiCuturicu/Source/JPGConvert,
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					../../../../../Library/simple/src/util,
+					../../../../../Library/simple/src,
+					../../../../../Library/speex.org/speex/Source/speex/include,
+					../../../../../Library/Vs/Source/Vs/VsCodec,
+					../../../../../Library/XtenNetworksInc,
+					../../../../../../sipfoundry/main/sip,
+					../../../../../../sipfoundry/main/sip/contrib/ares,
+					../../../../../../Temp/Bamfield,
+					"$(SDKROOT)/usr/include/libxml2",
+				);
+				INFOPLIST_PREPROCESS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263dec/build/Release,
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263enc/build/Release,
+					"../../../../../Library/libxml2/MacLibrary-2.6.17-without-iconv",
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					"../../../../../Library/OpenSSL/openssl-0.9.7g/libs/Mac",
+					../../../../../Library/speex.org/MacProject/libspeex/build/Release,
+					../../../../../Library/Vs/Source/Vs/VsCodec/MacProject/build/Release,
+					../../../../../Library/XtenNetworksInc/AEC/Source/AEC_MAC,
+					../../../../../../sipfoundry/main/sip/build/Release,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fpermissive",
+					"-Wno-invalid-offsetof",
+				);
+				REZ_SEARCH_PATHS = "../../Resources/Common/**";
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		12F79722086CB6D700AF4EDF /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = SuaSIPPhone_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					../../SIPUserAgent,
+					../../API/Headers,
+					../../Resources/Mac,
+					../../../../../Library,
+					../../../../../Library/Codec/UBVideo/H264/Inc,
+					../../../../../Library/Codec/UBVideo/include,
+					../../../../../Library/Codec/UBVideo,
+					../../../../../Library/JPGConvert/JPGConvertCristiCuturicu/Source/JPGConvert,
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					../../../../../Library/simple/src/util,
+					../../../../../Library/simple/src,
+					../../../../../Library/speex.org/speex/Source/speex/include,
+					../../../../../Library/Vs/Source/Vs/VsCodec,
+					../../../../../Library/XtenNetworksInc,
+					../../../../../../sipfoundry/main/sip,
+					../../../../../../sipfoundry/main/sip/contrib/ares,
+					../../../../../../Temp/Bamfield,
+					"$(SDKROOT)/usr/include/libxml2",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263dec/build/Debug,
+					../../../../../Library/Codec/UBVideo/MacProjects/MacUBH263enc/build/Debug,
+					"../../../../../Library/libxml2/MacLibrary-2.6.17-without-iconv",
+					"../../../../../Library/NeonDav/neon-0.24.7/Mac",
+					"../../../../../Library/OpenSSL/openssl-0.9.7g/libs/Mac",
+					../../../../../Library/speex.org/MacProject/libspeex/build/Debug,
+					../../../../../Library/Vs/Source/Vs/VsCodec/MacProject/build/Debug,
+					../../../../../Library/XtenNetworksInc/AEC/Source/AEC_MAC,
+					../../../../../../sipfoundry/main/sip/build/Debug,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fpermissive",
+					"-Wno-invalid-offsetof",
+				);
+				REZ_SEARCH_PATHS = "../../Resources/Common/**";
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+				ZERO_LINK = NO;
 			};
 			name = Default;
 		};
