@@ -16,9 +16,9 @@ class MessageId
          UserPrivateKey
       } Type;
 
-      MessageId(UInt32 id, const Data& aor, Type type) : mId(id), mAor(aor), mType(type) {}
+      MessageId(const Data& id, const Data& aor, Type type) : mId(id), mAor(aor), mType(type) {}
       friend std::ostream& operator<<(std::ostream& strm, const MessageId& id);
-      UInt32 mId;
+      Data mId;
       Data mAor;
       Type mType;
 };
