@@ -1,5 +1,7 @@
 #include <cassert>
 
+#include "resiprocate/dum/DumFeature.hxx"
+#include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -11,13 +13,61 @@
 using namespace resip;
 
 ServerAuthManager::ServerAuthManager(DialogUsageManager& dum) :
-   mDum(dum)
+   DumFeature(dum)
 {
 }
 
 
 ServerAuthManager::~ServerAuthManager()
 {
+}
+
+DumFeature::ProcessingResult 
+ServerAuthManager::process(Message* msg)
+{
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+
+   if (sipMsg)
+   {
+      //!dcm! -- unecessary happens in handle
+      switch ( handle(*sipMsg) )
+      {
+         case ServerAuthManager::Challenged:
+            InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
+            return DumFeature::ChainDoneAndEventDone;            
+         case ServerAuthManager::RequestedCredentials:
+            InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
+            return DumFeature::EventTaken;
+         case ServerAuthManager::Rejected:
+            InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
+            return DumFeature::ChainDoneAndEventDone;            
+         default:
+            return DumFeature::FeatureDone;            
+            break;
+      }
+   }
+
+   UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
+   if (userAuth)
+   {
+      InfoLog(<< "Got UserAuthInfo");
+      UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
+      if (userAuth)
+      {
+         Message* result = handleUserAuthInfo(userAuth);
+         if (result)
+         {
+            mDum.post(result);            
+            return FeatureDoneAndEventDone;
+         }
+         else
+         {
+            InfoLog(<< "ServerAuth rejected request " << *userAuth);
+            return ChainDoneAndEventDone;            
+         }
+      }
+   }
+   return FeatureDone;   
 }
 
 SipMessage*
