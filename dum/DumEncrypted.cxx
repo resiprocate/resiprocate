@@ -1,27 +1,16 @@
 #include <cassert>
 #include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/Contents.hxx"
 
 using namespace resip;
 
-DumEncrypted::DumEncrypted(bool success,
-                           const Data& msg,
-                           BaseUsageHandle targetBu,
-                           std::auto_ptr<Contents> encrypted)
-   : mSuccess(success),
-     mErrMsg(msg),
-     mUsageHandle(targetBu),
-     mEncrypted(encrypted)
+DumEncrypted::DumEncrypted(const SipMessage& msg)
+   : mEncrypted(msg)
 {
 }
 
 DumEncrypted::DumEncrypted(const DumEncrypted& src)
-   : mSuccess(src.mSuccess),
-     mErrMsg(src.mErrMsg),
-     mUsageHandle(src.mUsageHandle),
-     mEncrypted(src.mEncrypted.get()->clone())
+   : mEncrypted(src.mEncrypted)
 {
 }
 
@@ -34,10 +23,10 @@ DumEncrypted::clone() const
    return new DumEncrypted(*this);
 }
 
-Contents*
-DumEncrypted::encrypted() const
+const SipMessage&
+DumEncrypted::message() const
 {
-   return mEncrypted.get();
+   return mEncrypted;
 }
      
 std::ostream&
@@ -49,38 +38,8 @@ DumEncrypted::encodeBrief(std::ostream& strm) const
 std::ostream& 
 DumEncrypted::encode(std::ostream& strm) const
 {
-   strm << "DumEncrypted::";
-
-   if (mUsageHandle.isValid()) 
-   {
-      strm << " " << *mUsageHandle;
-   }
-   else 
-   {
-      strm << " defunct";
-   }   
-   strm << (mSuccess? "Success: " : "Failure: ") << mErrMsg;
-   return strm;
+   return mEncrypted.encode(strm);
 }
-
-BaseUsageHandle 
-DumEncrypted::getBaseUsage() const
-{
-   return mUsageHandle;
-}
-
-bool
-DumEncrypted::success() const
-{
-   return mSuccess;
-}
-
-const Data&
-DumEncrypted::error() const
-{
-   return mErrMsg;
-}
-
    
 /* ====================================================================
 
