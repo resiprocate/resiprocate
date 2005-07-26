@@ -585,7 +585,20 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }
             }
          }
-
+         if (msg->exists(h_RecordRoutes) && !msg->header(h_RecordRoutes).empty())
+         {
+            NameAddr& rr = msg->header(h_RecordRoutes).back();
+            if (rr.uri().host().empty())
+            {
+               rr.uri().host() = DnsUtil::inet_ntop(source);
+               rr.uri().port() = target.transport->port();
+               if (target.transport->transport() != UDP)
+               {
+                  rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+               }
+            }
+         }
+         
          // See draft-ietf-sip-identity
          if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
          {
