@@ -34,4 +34,5 @@ std::ostream&
 DumFeatureMessage::encode(std::ostream& strm) const
 {
    strm << "DumFeatureMessage::" << mTransactionId;
+   return strm;
 }
