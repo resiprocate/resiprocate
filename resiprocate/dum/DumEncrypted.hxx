@@ -1,32 +1,25 @@
 #if !defined(RESIP_DUMENCRYPTED_HXX)
 #define RESIP_DUMENCRYPTED_HXX 
 
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
 
-class DumEncrypted : public ApplicationMessage
+class DumEncrypted : public Message
 {
    public:
-      DumEncrypted(bool success, const Data& msg, BaseUsageHandle target, std::auto_ptr<Contents> contents);
+      DumEncrypted(const SipMessage& msg);
       DumEncrypted(const DumEncrypted&);
       ~DumEncrypted();
 
-      bool success() const;
-      const Data& error() const;
-      Contents* encrypted() const;
+      const SipMessage& message() const;
       Message* clone() const;
-      BaseUsageHandle getBaseUsage() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
-      bool mSuccess;
-      Data mErrMsg;
-      BaseUsageHandle mUsageHandle;
-      std::auto_ptr<Contents> mEncrypted;
+      SipMessage mEncrypted;
 };
 
 }
