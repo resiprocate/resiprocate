@@ -10,29 +10,25 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/CertMessage.hxx"
 #include "resiprocate/dum/RemoteCertStore.hxx"
+#include "resiprocate/dum/DumFeature.hxx"
 
 namespace resip
 {
 
-class EncryptionManager
+class EncryptionManager : public DumFeature
 {
    public:
       class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line);
-            const char* name() const { return "PayloadHandlerException"; }
+            const char* name() const { return "EncryptionManagerException"; }
       };
 
-      EncryptionManager();
+      EncryptionManager(DialogUsageManager& dum);
       virtual ~EncryptionManager();
-      void setDialogUsageManager(DialogUsageManager* dum);
       void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
-      void processCertMessage(const CertMessage& cert);
-      Contents* sign(const SipMessage& msg, const Data& senderAor);
-      Contents* encrypt(const SipMessage& msg, const Data& recipientAor);
-      Contents* signAndEncrypt(const SipMessage& mg, const Data& senderAor, const Data& recipientAor);
-      bool decrypt(SipMessage& msg);
+      DumFeature::ProcessingResult process(Message* msg);
 
    private:
 
@@ -42,19 +38,24 @@ class EncryptionManager
          Complete
       } Result;
 
+      EncryptionManager::Result processCertMessage(const CertMessage& cert);
+      Contents* sign(const SipMessage& msg, const Data& senderAor);
+      Contents* encrypt(const SipMessage& msg, const Data& recipientAor);
+      Contents* signAndEncrypt(const SipMessage& mg, const Data& senderAor, const Data& recipientAor);
+      bool decrypt(SipMessage& msg);
+
       class Request
       {
          public:
-            Request(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id);
+            Request(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg);
             virtual ~Request();
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
-            UInt32 getId() const { return mId; }
+            Data getId() const { return mMsg.getTransactionId(); }
 
          protected:
             DialogUsageManager& mDum;
             RemoteCertStore* mStore;
             SipMessage mMsg; // initial message.
-            UInt32 mId;
             int mPendingRequests;
 
             void response415();
@@ -63,8 +64,7 @@ class EncryptionManager
       class Sign : public Request
       {
          public:
-            Sign(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id, 
-                 const Data& senderAor);
+            Sign(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& senderAor);
             ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool sign(Contents**);
@@ -76,8 +76,7 @@ class EncryptionManager
       class Encrypt : public Request
       {
          public:
-            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id, 
-                    const Data& recipientAor);
+            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& recipientAor);
             ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool encrypt(Contents**);
@@ -89,8 +88,7 @@ class EncryptionManager
       class SignAndEncrypt : public Request
       {
          public:
-            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id, 
-                           const Data& senderAor, const Data& recipientAor);
+            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg,  const Data& senderAor, const Data& recipientAor);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool signAndEncrypt(Contents**);
@@ -106,7 +104,7 @@ class EncryptionManager
       class Decrypt : public Request
       {
          public:
-            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, UInt32 id);
+            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg);
             ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);
@@ -123,15 +121,12 @@ class EncryptionManager
             Data mSigner;
       };
 
-      DialogUsageManager* mDum;
+      //DialogUsageManager* mDum;
       UInt32 mCounter;
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
 
       typedef std::list<Request*> RequestList;
       RequestList mRequests;
-
-      UInt32 getNextId();
-      void incrementId();
 };
 
 }
