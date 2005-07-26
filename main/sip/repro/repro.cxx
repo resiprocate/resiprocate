@@ -390,7 +390,7 @@ main(int argc, char** argv)
    {
       if (!args.mNoChallenge)
       {
-         auto_ptr<ServerAuthManager> 
+         SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
                                                 store.mUserStore ));
          dum->setServerAuthManager(uasAuth);
