@@ -256,7 +256,7 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator;
-         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         locators->addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
 
       AmIResponsible* isme = new AmIResponsible;
