@@ -26,6 +26,7 @@ SRC = \
 	Fixture.cxx \
 	Renderer.cxx \
 	Resolver.cxx \
+	RouteGuard.cxx \
 	Sequence.cxx \
 	SequenceSet.cxx \
 	SequenceSetThread.cxx \
