@@ -656,7 +656,6 @@ DeprecatedDialog::makeRequestInternal(MethodTypes method)
    via.param(p_branch); // will create the branch
    request->header(h_Vias).push_front(via);
 
-   //DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
    Helper::processStrictRoute(*request);
    return request;
 }
@@ -690,7 +689,7 @@ resip::operator<<(std::ostream& strm, const DeprecatedDialog& d)
    strm << "DeprecatedDialog: [" << d.dialogId() 
         << " created=" << d.mCreated 
         << ",remoteTarget=" << d.mRemoteTarget 
-//        << "routeset=" << Inserter(d.mRouteSet) << std::endl
+        << ", routeset=" << Inserter(d.mRouteSet) 
         << ",remoteSeq=" << d.mRemoteSequence 
         << ",remote=" << d.mRemoteUri 
         << ",remoteTag=" << d.mRemoteTag 
