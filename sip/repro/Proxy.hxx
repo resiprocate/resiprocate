@@ -41,7 +41,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
       
-      RequestProcessorChain mRequestProcessorChain;
+      // needs to be a reference since parent owns it
+      RequestProcessorChain& mRequestProcessorChain;
       
       /** a map from transaction id to RequestContext. Store the server
           transaction and client transactions in this map. The
