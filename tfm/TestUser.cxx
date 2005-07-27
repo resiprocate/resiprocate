@@ -63,7 +63,7 @@ TestUser::~TestUser()
 void TestUser::clean()
 {
    TestSipEndPoint::clean();
-   InfoLog (<< "Cleaning user: " << *mRegistration);
+   //InfoLog (<< "Cleaning user: " << *mRegistration);
    mRegistration->header(h_ProxyAuthorizations).clear();
    mRegistration->remove(h_ProxyAuthenticates);
    assert(!mRegistration->exists(h_ProxyAuthenticates));
@@ -71,7 +71,7 @@ void TestUser::clean()
    mRegistration->header(h_Authorizations).clear();
    mRegistration->remove(h_Authorizations);
    assert(!mRegistration->exists(h_Authorizations));
-   InfoLog (<< "Cleaned user: " << *mRegistration);
+   //InfoLog (<< "Cleaned user: " << *mRegistration);
 }
 
 TestUser::TestUserAction::TestUserAction(TestUser* endPoint)
