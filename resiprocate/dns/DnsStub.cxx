@@ -20,6 +20,7 @@ extern "C"
 #endif
 #endif
 
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/BaseException.hxx"
