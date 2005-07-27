@@ -139,3 +139,23 @@ TestRepro::deleteBindings(const Uri& aor)
    //InfoLog (<< "Repro::delBindings: " << aor);
    mRegData.removeAor(aor);
 }
+
+void 
+TestRepro::addRoute(const resip::Data& matchingPattern,
+                    const resip::Data& rewriteExpression, 
+                    const resip::Data& method,
+                    const resip::Data& event,
+                    int priority,
+                    int weight) 
+{
+   mStore.mRouteStore.addRoute(method, event, matchingPattern, rewriteExpression, priority);
+}
+
+void 
+TestRepro::deleteRoute(const resip::Data& matchingPattern, 
+                       const resip::Data& method, 
+                       const resip::Data& event)
+{
+   mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
+}
+
