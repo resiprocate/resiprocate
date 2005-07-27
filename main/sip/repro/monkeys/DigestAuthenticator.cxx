@@ -186,6 +186,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                   }
                }            
             
+#if defined(USE_SSL)
                // TODO need nerd knob to enable/disable adding Identity header
                sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
@@ -195,6 +196,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                   + post + realm;
                InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
                InfoLog (<< *sipMessage);
+#endif
             }
             else
             {
