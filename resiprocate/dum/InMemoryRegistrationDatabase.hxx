@@ -24,17 +24,17 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       InMemoryRegistrationDatabase();
       virtual ~InMemoryRegistrationDatabase();
       
-      virtual void addAor(Uri &aor, ContactPairList contacts = ContactPairList());
-      virtual void removeAor(Uri &aor);
-      virtual bool aorIsRegistered(Uri &aor);
+      virtual void addAor(const Uri& aor, ContactPairList contacts = ContactPairList());
+      virtual void removeAor(const Uri& aor);
+      virtual bool aorIsRegistered(const Uri& aor);
       
-      virtual void lockRecord(Uri &aor);
-      virtual void unlockRecord(Uri &aor);
+      virtual void lockRecord(const Uri& aor);
+      virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires);
-      virtual void removeContact(Uri &aor, Uri &contact);
+      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires);
+      virtual void removeContact(const Uri& aor, const Uri& contact);
       
-      virtual ContactPairList getContacts(Uri &aor);
+      virtual ContactPairList getContacts(const Uri& aor);
    
       /// return all the AOR is the DB 
       virtual UriList getAors();
