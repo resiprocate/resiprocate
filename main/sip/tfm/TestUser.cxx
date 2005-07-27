@@ -201,6 +201,44 @@ TestUser::prack()
 }
 
 
+TestUser::RemoveAllRegistrationBindings::RemoveAllRegistrationBindings(TestUser *endPoint)
+   : TestSipEndPoint::MessageAction(*endPoint, endPoint->getAddressOfRecord())
+{
+}
+
+
+shared_ptr<SipMessage>
+TestUser::RemoveAllRegistrationBindings::go()
+{
+   shared_ptr<SipMessage> reg = static_cast<TestUser&>(mEndPoint).mRegistration;
+
+   reg->header(h_CSeq).sequence()++;
+
+   // recompute the branch each time !jf! why here?
+   reg->header(h_Vias).front().param(p_branch).reset();
+   reg->header(h_Expires).value() = 0;
+   reg->header(h_Contacts).clear();
+   NameAddr allContacts;
+   allContacts.setAllContacts();
+   reg->header(h_Contacts).clear();
+   reg->header(h_Contacts).push_back(allContacts);
+   return reg;
+}
+
+resip::Data
+TestUser::RemoveAllRegistrationBindings::toString() const
+{
+   return mEndPoint.getName() + ".RemoveAllRegistrationBindings()";
+}
+
+TestUser::RemoveAllRegistrationBindings*
+TestUser::removeRegistrationBindings()
+{
+   return new RemoveAllRegistrationBindings(this);
+}
+
+
+
 // Copyright 2005 Purplecomm, Inc.
 /*
   Copyright (c) 2005, PurpleComm, Inc. 
