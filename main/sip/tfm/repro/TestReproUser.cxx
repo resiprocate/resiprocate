@@ -19,5 +19,5 @@ TestReproUser::TestReproUser(TestProxy& proxy,
 
 TestReproUser::~TestReproUser()
 {
-   mProxy.deleteUser(mAuthName);
+   mProxy.deleteUser(mAuthName, mAor);
 }

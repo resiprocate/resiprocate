@@ -48,6 +48,19 @@ makeRequestProcessorChain(RequestProcessorChain& chain,
    return chain;
 }
 
+static Uri  
+makeUri(const resip::Data& domain, int port)
+{
+   Uri uri;
+   uri.host() = domain;
+   if (port != 5060)
+   {
+      uri.port() = port;
+   }
+   return uri;
+}
+
+
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
@@ -62,6 +75,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRequestProcessors(),
    mRegData(),
    mProxy(mStack, 
+          makeUri(host, port),
           makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore, mRegData),
           mStore.mUserStore),
    mDum(mStack),
@@ -112,8 +126,9 @@ TestRepro::addUser(const Data& userid, const Uri& aor, const Data& password)
 }
 
 void
-TestRepro::deleteUser(const Data& userid)
+TestRepro::deleteUser(const Data& userid, const Uri& aor)
 {
    InfoLog (<< "Repro::delUser: " << userid);
    mStore.mUserStore.eraseUser(userid);
+   mRegData.removeAor(aor);
 }
