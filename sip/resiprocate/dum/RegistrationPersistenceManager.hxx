@@ -23,12 +23,12 @@ class RegistrationPersistenceManager
     RegistrationPersistenceManager() {}
     virtual ~RegistrationPersistenceManager() {}
 
-    virtual void addAor(Uri &aor, ContactPairList contacts = ContactPairList()) = 0;
-    virtual void removeAor(Uri &aor) = 0;
-    virtual bool aorIsRegistered(Uri &aor) = 0;
+    virtual void addAor(const Uri& aor, ContactPairList contacts = ContactPairList()) = 0;
+    virtual void removeAor(const Uri& aor) = 0;
+    virtual bool aorIsRegistered(const Uri& aor) = 0;
  
-    virtual void lockRecord(Uri &aor) = 0;
-    virtual void unlockRecord(Uri &aor) = 0;
+    virtual void lockRecord(const Uri& aor) = 0;
+    virtual void unlockRecord(const Uri& aor) = 0;
 
      virtual UriList getAors() = 0;
 
@@ -36,11 +36,11 @@ class RegistrationPersistenceManager
       @param expires Absolute time of expiration, measured in seconds
                      since midnight January 1st, 1970.
      */
-    virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires) = 0;
+    virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires) = 0;
 
-    virtual void removeContact(Uri &aor, Uri &contact) = 0;
+    virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
 
-    virtual ContactPairList getContacts(Uri &aor) = 0;
+    virtual ContactPairList getContacts(const Uri& aor) = 0;
   private:
 };
 
