@@ -274,9 +274,9 @@ TuIM::processSipFrag(SipMessage* msg)
    DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
    Data signedBy;
-   SignatureStatus sigStat = SignatureNone;
 
 #if defined( USE_SSL )
+   SignatureStatus sigStat = SignatureNone;
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {

@@ -3,8 +3,9 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
+PACKAGES += ARES PTHREAD OPENSSL
 
+CXXFLAGS += -I../
 CODE_SUBDIRS = os external dns
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
