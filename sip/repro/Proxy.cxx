@@ -20,12 +20,19 @@ using namespace std;
 
 
 Proxy::Proxy(SipStack& stack, 
+             const Uri& recordRoute,
              RequestProcessorChain& requestProcessors, 
              UserStore& userStore) 
    : mStack(stack), 
+     mRecordRoute(recordRoute),
      mRequestProcessorChain(requestProcessors), 
      mUserStore(userStore)
 {
+   if (!mRecordRoute.uri().host().empty())
+   {
+      mRecordRoute.uri().param(p_lr);
+   }
+   
    mStack.registerForTransactionTermination();
 }
 
@@ -229,6 +236,12 @@ Proxy::isMyUri(const Uri& uri)
    bool ret = isMyDomain(uri.host());
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
+}
+
+const resip::NameAddr& 
+Proxy::getRecordRoute() const
+{
+   return mRecordRoute;
 }
 
 
