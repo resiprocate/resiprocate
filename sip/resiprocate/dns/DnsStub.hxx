@@ -1,22 +1,24 @@
 #ifndef RESIP_DNS_STUB_HXX
 #define RESIP_DNS_STUB_HXX
 
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
+
+#include "resiprocate/dns/DnsAAAARecord.hxx"
+#include "resiprocate/dns/DnsCnameRecord.hxx"
+#include "resiprocate/dns/DnsHostRecord.hxx"
+#include "resiprocate/dns/DnsHostRecord.hxx"
+#include "resiprocate/dns/DnsNaptrRecord.hxx"
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+#include "resiprocate/dns/DnsSrvRecord.hxx"
+#include "resiprocate/dns/RRCache.hxx"
+#include "resiprocate/dns/RROverlay.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/RRList.hxx"
-#include "resiprocate/dns/RRCache.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/external/ExternalDns.hxx"
 
 namespace resip
 {

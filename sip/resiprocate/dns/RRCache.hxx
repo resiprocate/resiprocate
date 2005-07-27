@@ -1,6 +1,9 @@
 #ifndef RESIP_RRCACHE_HXX
 #define RESIP_RRCACHE_HXX
 
+#include <map>
+#include <set>
+
 #include "resiprocate/dns/RRFactory.hxx"
 #include "resiprocate/dns/DnsResourceRecord.hxx"
 #include "resiprocate/dns/DnsAAAARecord.hxx"

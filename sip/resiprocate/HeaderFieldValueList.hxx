@@ -7,6 +7,7 @@
 namespace resip
 {
 
+class Data;
 class ParserContainerBase;
 class HeaderFieldValue;
 
