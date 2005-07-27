@@ -42,6 +42,17 @@ class TestUser : public TestSipEndPoint
             std::set<resip::NameAddr> mContacts;
       };
       friend class Register;
+
+      class RemoveAllRegistrationBindings : public TestSipEndPoint::MessageAction
+      {
+         public:
+            RemoveAllRegistrationBindings(TestUser *endPoint);
+
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            virtual resip::Data toString() const;
+      };
+      friend class RemoveAllRegistrationBindings;
+      RemoveAllRegistrationBindings* removeRegistrationBindings();
       
       Register* registerUser(int requestedExpireSecs, const std::set<resip::NameAddr>& contacts);
       Register* registerUser(int requestedExpireSecs, const resip::NameAddr& contact);

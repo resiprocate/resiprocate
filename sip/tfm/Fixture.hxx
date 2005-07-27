@@ -39,6 +39,7 @@ class Fixture : public CppUnit::TestFixture
       static TestUser* jason;
       static TestUser* jason1;
       static TestUser* jason2;
+      static TestUser* jason3;
       static TestUser* derek;
       static TestUser* david;
       static TestUser* enlai;

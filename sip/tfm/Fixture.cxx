@@ -28,6 +28,7 @@ TestProxy* Fixture::proxy = 0;
 TestUser* Fixture::jason = 0;
 TestUser* Fixture::jason1 = 0;
 TestUser* Fixture::jason2 = 0;
+TestUser* Fixture::jason3 = 0;
 TestUser* Fixture::derek = 0;
 TestUser* Fixture::david = 0;
 TestUser* Fixture::enlai = 0;
@@ -65,6 +66,7 @@ Fixture::initialize(int argc, char** argv)
    jason = makeReproUser(*proxy, "jason", "localhost");
    jason1 = makeReproUser(*proxy, "jason", "localhost");
    jason2 = makeReproUser(*proxy, "jason", "localhost");
+   jason3 = makeReproUser(*proxy, "jason", "localhost");
    derek = makeReproUser(*proxy, "derek", "localhost");
    david = makeReproUser(*proxy, "david", "localhost");
    enlai = makeReproUser(*proxy, "enlai", "localhost");
@@ -103,6 +105,7 @@ Fixture::tearDown()
    jason->clean();
    jason1->clean();
    jason2->clean();
+   jason3->clean();
    derek->clean();
    david->clean();
    enlai->clean();
