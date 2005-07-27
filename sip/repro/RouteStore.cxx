@@ -87,6 +87,16 @@ RouteStore::getRoutes() const
 
 
 void 
+RouteStore::eraseRoute(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern)
+{
+   Key key = buildKey(method,event,matchingPattern);
+   eraseRoute(key);
+}
+
+
+void 
 RouteStore::eraseRoute(const resip::Data& key )
 {  
    mDb.eraseRoute(key);
