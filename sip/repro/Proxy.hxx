@@ -21,13 +21,14 @@ class RequestProcessorChain;
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&, UserStore& );
+      Proxy(resip::SipStack&, const resip::Uri& recordRoute, RequestProcessorChain&, UserStore& );
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
       virtual void thread();
       
       bool isMyUri(const resip::Uri& uri);      
+      const resip::NameAddr& getRecordRoute() const;
       
       UserStore& getUserStore();
       void send(const resip::SipMessage& msg);
@@ -38,7 +39,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
    private:
       resip::SipStack& mStack;
-
+      resip::NameAddr mRecordRoute;
+      
       RequestProcessorChain mRequestProcessorChain;
       
       /** a map from transaction id to RequestContext. Store the server

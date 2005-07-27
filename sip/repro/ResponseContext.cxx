@@ -129,9 +129,10 @@ ResponseContext::processPendingTargets()
 
          // !jf! By not specifying host in Record-Route, the TransportSelector
          //will fill it in. 
-         //rt.uri().host() = DnsUtil::getLocalHostName();
-         rt.uri().param(p_lr);
-         request.header(h_RecordRoutes).push_front(rt);
+         if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
+         {
+            request.header(h_RecordRoutes).push_front(mRequestContext.mProxy.getRecordRoute());
+         }
       }
       
       // !jf! unleash the baboons here
