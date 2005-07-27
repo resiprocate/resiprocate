@@ -27,7 +27,6 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      void addDomainWithPort(const resip::Data& domain, int port);
       bool isMyUri(const resip::Uri& uri);      
       
       UserStore& getUserStore();

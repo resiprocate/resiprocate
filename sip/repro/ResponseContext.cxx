@@ -127,9 +127,9 @@ ResponseContext::processPendingTargets()
             rt.uri().param(p_transport) = sentTransport;
          }
 
-         // !jf! This should be the domain of "this" proxy instead of local
-         // hostname. 
-         rt.uri().host() = DnsUtil::getLocalHostName();
+         // !jf! By not specifying host in Record-Route, the TransportSelector
+         //will fill it in. 
+         //rt.uri().host() = DnsUtil::getLocalHostName();
          rt.uri().param(p_lr);
          request.header(h_RecordRoutes).push_front(rt);
       }
