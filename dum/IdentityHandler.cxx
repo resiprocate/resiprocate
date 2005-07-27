@@ -1,3 +1,4 @@
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/IdentityHandler.hxx"
 #include "resiprocate/external/HttpProvider.hxx"
