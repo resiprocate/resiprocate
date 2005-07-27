@@ -209,6 +209,121 @@ class TestHolder : public Fixture
       }
 
 
+      void testInviteClientRetransmitsAfter200()
+      {
+         WarningLog(<<"*!testInviteClientRetransmitsAfter200!*");
+
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         
+         boost::shared_ptr<SipMessage> inv;
+         boost::shared_ptr<SipMessage> ok;
+         Seq(save(inv, derek->invite(*jason)),
+             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+             And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+                 Sub(jason->expect(INVITE, from(derek), 2000, chain(jason->send100(), jason->ring(), (ok <= jason->answer()))),
+                     derek->expect(INVITE/180, from(jason), WaitFor100, derek->noAction()),
+                     derek->expect(INVITE/200, from(jason), WaitForResponse, chain(derek->retransmit(inv), derek->pause(500), jason->retransmit(ok))),
+                     derek->expect(INVITE/200, from(jason), 1000, derek->ack()),
+                     jason->expect(ACK, from(derek), WaitForResponse, derek->noAction()))),
+             WaitForEndOfTest);
+         ExecuteSequences();  
+      }
+
+
+      void testNonInviteClientRetransmissionsWithRecovery()
+      {
+         WarningLog(<<"*!testNonInviteClientRetransmissionsWithRecovery!*");
+
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         Seq(derek->info(jason),
+             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
+             jason->expect(INFO, from(derek), 1000, jason->noAction()),
+             jason->expect(INFO, from(derek), 1000, jason->ok()),
+             derek->expect(INFO/200, from(jason), 1000, derek->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+      void testNonInviteClientRetransmissionsWithTimeout()
+      {
+         WarningLog(<<"*!testNonInviteClientRetransmissionsWithTimeout!*");
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         Seq(derek->info(jason),
+             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
+             jason->expect(INFO, from(derek), 1000, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+             // note: 408 to NIT are not forwarded by repro
+             //derek->expect(INFO/408, from(proxy), 4800, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+      
+      void testNonInviteServerRetransmission()
+      {
+         WarningLog(<<"*!testNonInviteServerRetransmission!*");
+
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         boost::shared_ptr<SipMessage> infoMsg;
+         Seq(save(infoMsg, derek->info(jason)),
+             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
+             jason->expect(INFO, from(derek), 1000, jason->noAction()),
+             jason->expect(INFO, from(derek), 1000, jason->ok()),
+             derek->expect(INFO/200, from(jason), 1000, derek->retransmit(infoMsg)),
+             derek->expect(INFO/200, from(jason), 1000, derek->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+      }
+
+
+      void testInviteTransportFailure()
+      {
+         WarningLog(<<"*!testInviteTransportFailure!*");
+
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+         
+         Seq(chain(jason->closeTransport(), derek->invite(*jason)),
+             optional(derek->expect(INVITE/100, from(proxy), 300+WaitFor100, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(),
+                                                                           derek->digestRespond())),
+             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+             derek->expect(INVITE/503, from(proxy), WaitForResponse, derek->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();  
+      }
+
       // provisioning here(automatic cleanup)
       static void createStatic()
       {
@@ -223,15 +338,23 @@ class MyTestCase
       static CppUnit::Test* suite()
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
+#if 1
          TEST(testRegisterBasic);
          TEST(testRegisterClientRetransmits);
          TEST(testInviteBasic);
          TEST(testInviteClientRetransmissionsWithRecovery);
          TEST(testUnregisterAll);
          TEST(testInfo);
+         TEST(testInviteClientRetransmitsAfter200);
+         TEST(testNonInviteClientRetransmissionsWithRecovery);
+         TEST(testNonInviteClientRetransmissionsWithTimeout);
+         TEST(testNonInviteServerRetransmission);
+         //TEST(testInviteTransportFailure);
+         
          //TEST(testOversizeCallIdRegister);
          //TEST(testOversizeContactRegister);
-
+#else
+#endif         
          return suiteOfTests;
       }
 };
