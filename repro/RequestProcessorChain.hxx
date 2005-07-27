@@ -21,7 +21,7 @@ class RequestProcessorChain : public RequestProcessor
       virtual void dump(std::ostream &os) const;
 
    private:
-      Chain chain;
+      Chain mChain;
 };
 }
 #endif
