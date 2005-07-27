@@ -265,6 +265,9 @@
 				RelativePath=".\DumFeatureChain.cxx">
 			</File>
 			<File
+				RelativePath=".\DumFeatureMessage.cxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.cxx">
 			</File>
 			<File
@@ -466,6 +469,9 @@
 			</File>
 			<File
 				RelativePath=".\DumFeatureChain.hxx">
+			</File>
+			<File
+				RelativePath=".\DumFeatureMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\DumProcessHandler.hxx">
