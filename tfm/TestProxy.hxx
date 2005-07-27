@@ -24,6 +24,7 @@ class TestProxy
 
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password) {};
       virtual void deleteUser(const resip::Data& userid, const resip::Uri& aor) {};
+      virtual void deleteBindings(const resip::Uri& aor) {};
 
       void addSource(const resip::Data& host, int port, resip::TransportType transport);
       void addSource(const Source& source);

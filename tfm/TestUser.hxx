@@ -56,7 +56,6 @@ class TestUser : public TestSipEndPoint
       MessageExpectAction* prack();
 
    protected:
-      resip::Uri mAor;
       resip::Data mAuthName;
       resip::Data mPassword;
       unsigned int mNonceCount;

@@ -9,6 +9,8 @@
 #include "tfm/SipEvent.hxx"
 #include "tfm/TestProxy.hxx"
 #include "tfm/TestUser.hxx"
+#include "tfm/CheckFetchedContacts.hxx"
+#include "tfm/predicates/ExpectUtils.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
@@ -40,7 +42,6 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testRegisterBasic!*");
          
-         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
          Seq(jason->registerUser(60, jason->getDefaultContacts()),
              jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
@@ -67,7 +68,6 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testOversizeCallIdRegister!*");
          
-         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
          Seq(condition(largeCallId, jason->registerUser(60, jason->getDefaultContacts())),
              jason->expect(REGISTER/400, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
@@ -78,7 +78,6 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testRegisterClientRetransmits!*");
 
-         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
          boost::shared_ptr<SipMessage> reg;
          Seq(save(reg, jason->registerUser(60, jason->getDefaultContacts())),
              jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
@@ -91,9 +90,6 @@ class TestHolder : public Fixture
       void testInviteClientRetransmissionsWithRecovery()
       {
          WarningLog(<<"*!testInviteClientRetransmissionsWithRecovery!*");
-         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         //TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
-
          Seq(jason->registerUser(60, jason->getDefaultContacts()),
              jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
@@ -118,8 +114,6 @@ class TestHolder : public Fixture
       void testInviteBasic()
       {
          WarningLog(<<"*!testInviteBasic!*");
-         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         //TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
          Seq(derek->registerUser(60, derek->getDefaultContacts()),
              derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
              derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
@@ -136,6 +130,82 @@ class TestHolder : public Fixture
                      derek->expect(ACK, from(jason), WaitForResponse, jason->noAction()))),
              WaitForEndOfTest);
          ExecuteSequences();  
+      }
+
+      static boost::shared_ptr<SipMessage>
+      largeContact(boost::shared_ptr<SipMessage> msg)
+      {
+         assert(msg->exists(h_Contacts) &&
+                !msg->header(h_Contacts).empty());
+
+         const int oversize = 2048;
+         Data contactUser(oversize, true);
+         for (int i = 0; i < oversize/resip::Random::maxLength; ++i)
+         {
+            contactUser += resip::Random::getRandomHex(resip::Random::maxLength);
+         }
+         contactUser += resip::Random::getRandomHex(oversize - resip::Random::maxLength*(oversize/resip::Random::maxLength));
+         msg->header(h_Contacts).front().uri().user() = contactUser;
+
+         return msg;
+      }
+
+      void testOversizeContactRegister()
+      {
+         WarningLog(<<"*!testOversizeContactRegister!*");
+         Seq(condition(largeContact, jason->registerUser(60, jason->getDefaultContacts())),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/500, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+      void testUnregisterAll()
+      {
+         WarningLog(<<"*!testUnregisterAll!*");
+         
+         NameAddr na;
+		 set<NameAddr> all;
+		 set<NameAddr> emptySet;
+          
+         na.setAllContacts();
+         all.insert( na );
+
+         Seq(jason1->registerUser(60, jason1->getDefaultContacts()),
+             jason1->expect(REGISTER/407, from(proxy), WaitForResponse, jason1->digestRespond()),
+             jason1->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckFetchedContacts(jason1->getDefaultContacts() )),
+             WaitForEndOfTest);
+         ExecuteSequences();
+
+         Seq(jason2->registerUser(60, jason2->getDefaultContacts()),
+             jason2->expect(REGISTER/407, from(proxy), WaitForResponse, jason2->digestRespond()),
+             jason2->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckFetchedContacts( mergeContacts(*jason1, *jason2) )),
+             WaitForEndOfTest);
+         ExecuteSequences();
+
+         Seq(jason1->registerUser(0, all ),
+             jason1->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckFetchedContacts(emptySet)),
+             WaitForEndOfTest);
+             
+         ExecuteSequences();
+      }
+
+      void testInfo()
+      {
+         WarningLog(<<"*!testInfo!*");
+
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
+
+         Seq(derek->info(jason),
+             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
+             jason->expect(INFO, from(derek), 1000, jason->ok()),
+             derek->expect(INFO/200, from(jason), 1000, derek->noAction()),
+             WaitForEndOfSeq);
+         ExecuteSequences();
       }
 
 
@@ -157,7 +227,11 @@ class MyTestCase
          TEST(testRegisterClientRetransmits);
          TEST(testInviteBasic);
          TEST(testInviteClientRetransmissionsWithRecovery);
+         TEST(testUnregisterAll);
+         TEST(testInfo);
          //TEST(testOversizeCallIdRegister);
+         //TEST(testOversizeContactRegister);
+
          return suiteOfTests;
       }
 };
