@@ -3,7 +3,8 @@ BUILD = ../build
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += 	TFMLIBS DUM RESIPROCATE OPENSSL ARES PTHREAD POPT BOOST
+CODE_SUBDIRS = predicates repro
+PACKAGES += 	TFMLIBS DUM RESIPROCATE REPRO OPENSSL ARES DB4CXX PTHREAD POPT 
 TESTPROGRAMS = 	sanityTests.cxx 
 TARGET_LIBRARY = libtfm
 
@@ -37,7 +38,14 @@ SRC = \
 	TestProxy.cxx \
 	TestSipEndPoint.cxx \
 	TestUser.cxx \
-	TransportDriver.cxx
+	TransportDriver.cxx \
+	\
+	predicates/NotifyContents.cxx \
+	predicates/SubscribeExpired.cxx \
+	predicates/SubscribeExpires.cxx \
+	\
+	repro/TestRepro.cxx \
+	repro/TestReproUser.cxx
 
 include $(BUILD)/Makefile.post
 
