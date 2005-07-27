@@ -14,14 +14,19 @@
 #include "tfm/PortAllocator.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/TestProxy.hxx"
+#include "tfm/repro/TestRepro.hxx"
+#include "tfm/repro/TestReproUser.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 using namespace CppUnit;
 using namespace std;
 using resip::Data;
+using resip::Uri;
 
 TestProxy* Fixture::proxy = 0;
+TestUser* Fixture::jason = 0;
+TestUser* Fixture::derek = 0;
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
 resip::Uri Fixture::outboundProxy;
@@ -37,9 +42,22 @@ Fixture::~Fixture()
 void
 Fixture::initialize(int argc, char** argv)
 {
+#if 0
    proxy = new TestProxy("proxy",
                          "localhost", 
                          5060);
+#else
+   proxy = new TestRepro("proxy", "localhost", 5060);
+   Uri j;
+   j.user() = "jason";
+   j.host() = "localhost";
+   jason = new TestReproUser(*proxy, j, j.user(), j.user());
+
+   Uri d;
+   d.user() = "derek";
+   d.host() = "localhost";
+   derek = new TestReproUser(*proxy, d, d.user(), d.user());
+#endif
 }
 
 
@@ -69,6 +87,9 @@ Fixture::tearDown()
          InfoLog(<<"===================================================");
       }
    }
+
+   jason->clean();
+   derek->clean();
 }
 
       

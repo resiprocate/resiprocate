@@ -17,7 +17,9 @@ using namespace repro;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 static RequestProcessorChain&  
-makeRequestProcessorChain(RequestProcessorChain& chain, RouteStore& store)
+makeRequestProcessorChain(RequestProcessorChain& chain, 
+                          RouteStore& store, 
+                          RegistrationPersistenceManager& regData)
 {
    // Either the chainName is default or we don't know about it
    // Use default if we don't recognize the name
@@ -39,7 +41,6 @@ makeRequestProcessorChain(RequestProcessorChain& chain, RouteStore& store)
    StaticRoute* sr = new StaticRoute(store);
    locators->addProcessor(std::auto_ptr<RequestProcessor>(sr));
  
-   InMemoryRegistrationDatabase regData;
    LocationServer* ls = new LocationServer(regData);
    locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
  
@@ -59,8 +60,10 @@ TestRepro::TestRepro(const resip::Data& name,
    mDb(new BerkeleyDb),
    mStore(*mDb),
    mRequestProcessors(),
-   mProxy(mStack, makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore), mStore.mUserStore),
    mRegData(),
+   mProxy(mStack, 
+          makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore, mRegData),
+          mStore.mUserStore),
    mDum(mStack),
    mDumThread(mDum)
 {
@@ -87,7 +90,7 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum.setMessageFilterRuleList(ruleList);
     
-   std::auto_ptr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore ));
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore ));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);
@@ -95,20 +98,10 @@ TestRepro::TestRepro(const resip::Data& name,
    mStackThread.run();
    mProxy.run();
    mDumThread.run();
-
-   run();
 }
 
 TestRepro::~TestRepro()
 {
-}
-
-void
-TestRepro::thread()
-{
-   while (!waitForShutdown(100))
-   {
-   }
 }
 
 void

@@ -5,6 +5,8 @@
 #include <set>
 #include <boost/shared_ptr.hpp>
 
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/HashMap.hxx"
