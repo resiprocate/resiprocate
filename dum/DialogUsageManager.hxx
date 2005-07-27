@@ -285,7 +285,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       FeatureChainMap mIncomingFeatureChainMap;
       FeatureChainMap mOutgoingFeatureChainMap;
   
-   private:
+   private:     
       friend class Dialog;
       friend class DialogSet;
 
@@ -305,6 +305,30 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       friend class ServerPagerMessage;
       friend class KeepAliveAssociation;
       friend class NetworkAssociation;
+
+      class IncomingTarget : public TargetCommand::Target
+      {
+         public:
+            IncomingTarget(DialogUsageManager& dum) : mDum(dum) 
+            {}
+
+            virtual void post()(std::auto_ptr<Message> msg)
+            {
+               dum.incomingProcess(msg);
+            }
+      };
+      
+      class OutgoingTarget : public TargetCommand::Target
+      {
+         public:
+            OutgoingTarget(DialogUsageManager& dum) : mDum(dum) 
+            {}
+
+            virtual void post()(std::auto_ptr<Message> msg)
+            {
+               dum.outgoingProcess(msg);
+            }
+      };
 
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
