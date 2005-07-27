@@ -1,7 +1,10 @@
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 InMemoryRegistrationDatabase::InMemoryRegistrationDatabase()
 {
@@ -12,7 +15,7 @@ InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 }
 
 void 
-InMemoryRegistrationDatabase::addAor(Uri &aor,
+InMemoryRegistrationDatabase::addAor(const Uri& aor,
     RegistrationPersistenceManager::ContactPairList contacts)
 {
   Lock g(mDatabaseMutex);
@@ -20,18 +23,22 @@ InMemoryRegistrationDatabase::addAor(Uri &aor,
 }
 
 void 
-InMemoryRegistrationDatabase::removeAor(Uri &aor)
+InMemoryRegistrationDatabase::removeAor(const Uri& aor)
 {
   database_map_t::iterator i;
 
   Lock g(mDatabaseMutex);
   i = mDatabase.find(aor);
+  InfoLog (<< "Removing registration bindings " << aor);
   if (i != mDatabase.end())
   {
-    delete i->second;
-
-    // Setting this to 0 causes it to be removed when we unlock the AOR.
-    i->second = 0;
+     if (i->second)
+     {
+        InfoLog (<< "Removed " << i->second->size() << " entries");
+        delete i->second;
+        // Setting this to 0 causes it to be removed when we unlock the AOR.
+        i->second = 0;
+     }
   }
 }
 
@@ -50,7 +57,7 @@ InMemoryRegistrationDatabase::getAors()
 
 
 bool 
-InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
+InMemoryRegistrationDatabase::aorIsRegistered(const Uri& aor)
 {
   database_map_t::iterator i;
 
@@ -64,7 +71,7 @@ InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
 }
 
 void
-InMemoryRegistrationDatabase::lockRecord(Uri &aor)
+InMemoryRegistrationDatabase::lockRecord(const Uri& aor)
 {
   Lock g2(mLockedRecordsMutex);
 
@@ -83,7 +90,7 @@ InMemoryRegistrationDatabase::lockRecord(Uri &aor)
 }
 
 void
-InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
+InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
 {
   Lock g2(mLockedRecordsMutex);
 
@@ -106,7 +113,7 @@ InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
 }
 
 RegistrationPersistenceManager::update_status_t 
-InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expires)
+InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, time_t expires)
 {
   ContactPairList *contactList = 0;
 
@@ -148,7 +155,7 @@ InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expir
 }
 
 void 
-InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
+InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
 {
   ContactPairList *contactList = 0;
 
@@ -182,7 +189,7 @@ InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
 }
 
 RegistrationPersistenceManager::ContactPairList
-InMemoryRegistrationDatabase::getContacts(Uri &aor)
+InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 {
   Lock g(mDatabaseMutex);
 
