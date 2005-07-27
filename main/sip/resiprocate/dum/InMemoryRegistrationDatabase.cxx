@@ -29,12 +29,12 @@ InMemoryRegistrationDatabase::removeAor(const Uri& aor)
 
   Lock g(mDatabaseMutex);
   i = mDatabase.find(aor);
-  InfoLog (<< "Removing registration bindings " << aor);
+  //DebugLog (<< "Removing registration bindings " << aor);
   if (i != mDatabase.end())
   {
      if (i->second)
      {
-        InfoLog (<< "Removed " << i->second->size() << " entries");
+        DebugLog (<< "Removed " << i->second->size() << " entries");
         delete i->second;
         // Setting this to 0 causes it to be removed when we unlock the AOR.
         i->second = 0;

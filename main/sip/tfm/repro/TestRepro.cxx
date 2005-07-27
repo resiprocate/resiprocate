@@ -128,7 +128,7 @@ TestRepro::addUser(const Data& userid, const Uri& aor, const Data& password)
 void
 TestRepro::deleteUser(const Data& userid, const Uri& aor)
 {
-   InfoLog (<< "Repro::delUser: " << userid);
+   //InfoLog (<< "Repro::delUser: " << userid);
    mStore.mUserStore.eraseUser(userid);
    mRegData.removeAor(aor);
 }
@@ -136,6 +136,6 @@ TestRepro::deleteUser(const Data& userid, const Uri& aor)
 void
 TestRepro::deleteBindings(const Uri& aor)
 {
-   InfoLog (<< "Repro::delBindings: " << aor);
+   //InfoLog (<< "Repro::delBindings: " << aor);
    mRegData.removeAor(aor);
 }
