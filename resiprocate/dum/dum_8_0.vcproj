@@ -235,6 +235,12 @@
 				RelativePath=".\DumEncrypted.cxx">
 			</File>
 			<File
+				RelativePath=".\DumFeatureChain.cxx">
+			</File>
+			<File
+				RelativePath=".\DumFeatureMessage.cxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.cxx">
 			</File>
 			<File
@@ -247,6 +253,12 @@
 				RelativePath=".\EncryptionManager.cxx">
 			</File>
 			<File
+				RelativePath=".\EncryptionRequest.cxx">
+			</File>
+			<File
+				RelativePath=".\Handle.cxx">
+			</File>
+			<File
 				RelativePath=".\Handled.cxx">
 			</File>
 			<File
@@ -254,6 +266,9 @@
 			</File>
 			<File
 				RelativePath=".\HandleManager.cxx">
+			</File>
+			<File
+				RelativePath=".\IdentityHandler.cxx">
 			</File>
 			<File
 				RelativePath=".\InMemoryRegistrationDatabase.cxx">
@@ -424,6 +439,15 @@
 				RelativePath=".\DumException.hxx">
 			</File>
 			<File
+				RelativePath=".\DumFeature.hxx">
+			</File>
+			<File
+				RelativePath=".\DumFeatureChain.hxx">
+			</File>
+			<File
+				RelativePath=".\DumFeatureMessage.hxx">
+			</File>
+			<File
 				RelativePath=".\DumProcessHandler.hxx">
 			</File>
 			<File
@@ -439,6 +463,9 @@
 				RelativePath=".\EncryptionManager.hxx">
 			</File>
 			<File
+				RelativePath=".\EncryptionRequest.hxx">
+			</File>
+			<File
 				RelativePath=".\Handle.hxx">
 			</File>
 			<File
@@ -452,6 +479,9 @@
 			</File>
 			<File
 				RelativePath=".\Handles.hxx">
+			</File>
+			<File
+				RelativePath=".\IdentityHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\InMemoryRegistrationDatabase.hxx">
