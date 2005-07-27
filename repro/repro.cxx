@@ -177,9 +177,9 @@ main(int argc, char** argv)
       }
       if (args.mTcpPort)
       {
-         if (args.mUseV4) stack.addTransport(TCP, args.mUdpPort, V4);
+         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TCP, args.mUdpPort, V6);
+         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6);
 #endif
       }
 #ifdef USE_SSL
@@ -282,7 +282,7 @@ main(int argc, char** argv)
       requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));      
    }
    
-   Proxy proxy(stack, requestProcessors, store.mUserStore );
+   Proxy proxy(stack, args.mRecordRoute, requestProcessors, store.mUserStore );
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
