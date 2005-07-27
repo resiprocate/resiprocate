@@ -26,6 +26,7 @@ class TestRepro : public TestProxy
 
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password);
       virtual void deleteUser(const resip::Data& userid, const resip::Uri& aor);
+      virtual void deleteBindings(const resip::Uri& aor);
       
    private:
       resip::SipStack mStack;
