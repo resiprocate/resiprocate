@@ -5,6 +5,7 @@
 #include "resiprocate/os/Random.hxx"
 #include "tfm/CommandLineParser.hxx"
 #include "tfm/Fixture.hxx"
+#include "tfm/RouteGuard.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/SipEvent.hxx"
 #include "tfm/TestProxy.hxx"
@@ -324,6 +325,20 @@ class TestHolder : public Fixture
          ExecuteSequences();  
       }
 
+      void testInviteNoDNS()
+      {
+         WarningLog(<<"*!testInviteNoDNS!*");
+         
+         RouteGuard dGuard(*proxy, "sip:.*@.*", "sip:foobar@dfkaslkfdas.com");
+         Seq(jason->invite(*derek),
+             optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+             jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+             optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+             jason->expect(INVITE/503, from(proxy), 5000, jason->ack()),
+             WaitForEndOfTest);
+         ExecuteSequences();  
+      }
+
       // provisioning here(automatic cleanup)
       static void createStatic()
       {
@@ -338,7 +353,7 @@ class MyTestCase
       static CppUnit::Test* suite()
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
-#if 1
+#if 0
          TEST(testRegisterBasic);
          TEST(testRegisterClientRetransmits);
          TEST(testInviteBasic);
@@ -350,10 +365,12 @@ class MyTestCase
          TEST(testNonInviteClientRetransmissionsWithTimeout);
          TEST(testNonInviteServerRetransmission);
          //TEST(testInviteTransportFailure);
+         TEST(testInviteNoDNS);
          
          //TEST(testOversizeCallIdRegister);
          //TEST(testOversizeContactRegister);
 #else
+         TEST(testInviteNoDNS);
 #endif         
          return suiteOfTests;
       }
