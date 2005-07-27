@@ -65,7 +65,6 @@ signalHandler(int signo)
    finished = true;
 }
 
-
 Data
 addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
 {
@@ -364,7 +363,11 @@ main(int argc, char** argv)
    
    while (!finished)
    {
-      usleep(100000);
+#ifdef WIN32
+   Sleep(1000);
+#else
+   usleep(100000);
+#endif
    }
    exit(0);
 
