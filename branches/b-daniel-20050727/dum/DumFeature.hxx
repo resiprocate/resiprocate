@@ -10,7 +10,7 @@ class Message;
 class DumFeature
 {
    public:      
-      DumFeature(DialogUsageManager& dum) : mDum(dum) 
+      DumFeature(DialogUsageManager& dum, TargetCommand::Target& target) : mDum(dum) 
       {}
 
       virtual ~DumFeature() {}
