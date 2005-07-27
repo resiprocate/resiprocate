@@ -18,6 +18,7 @@ class NameAddr;
 class Data;
 }
 
+class TestUser;
 class TestProxy;
 class TestEndPoint;
 class CommandLineParser;
@@ -35,6 +36,8 @@ class Fixture : public CppUnit::TestFixture
       static void destroyStatic();
 
       static TestProxy* proxy;
+      static TestUser* jason;
+      static TestUser* derek;
       
       //static TestUser jason;
       static resip::Data publicInterface;
