@@ -223,17 +223,10 @@ Proxy::name() const
    return n;
 }
 
-void 
-Proxy::addDomainWithPort(const Data& domain, int port)
-{
-   mStack.addAlias(domain, port);   
-}
-
-
 bool 
 Proxy::isMyUri(const Uri& uri)
 {
-   bool ret = mStack.isMyDomain(uri.host(), uri.port());
+   bool ret = isMyDomain(uri.host());
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
 }
