@@ -40,10 +40,10 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testRegisterBasic!*");
          
-         TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         Seq(jason.registerUser(60, jason.getDefaultContacts()),
-             jason.expect(REGISTER/407, from(proxy), WaitForResponse, jason.digestRespond()),
-             jason.expect(REGISTER/200, from(proxy), WaitForResponse, jason.noAction()),
+         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -67,9 +67,9 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testOversizeCallIdRegister!*");
          
-         TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         Seq(condition(largeCallId, jason.registerUser(60, jason.getDefaultContacts())),
-             jason.expect(REGISTER/400, from(proxy), WaitForResponse, jason.noAction()),
+         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
+         Seq(condition(largeCallId, jason->registerUser(60, jason->getDefaultContacts())),
+             jason->expect(REGISTER/400, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -78,12 +78,12 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testRegisterClientRetransmits!*");
 
-         TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
+         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
          boost::shared_ptr<SipMessage> reg;
-         Seq(save(reg, jason.registerUser(60, jason.getDefaultContacts())),
-             jason.expect(REGISTER/407, from(proxy), WaitForResponse, jason.digestRespond()),
-             jason.expect(REGISTER/200, from(proxy), WaitForResponse, jason.retransmit(reg)),
-             jason.expect(REGISTER/200, from(proxy), WaitForResponse, jason.noAction()),
+         Seq(save(reg, jason->registerUser(60, jason->getDefaultContacts())),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->retransmit(reg)),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfTest);
          ExecuteSequences();
       }
@@ -91,26 +91,26 @@ class TestHolder : public Fixture
       void testInviteClientRetransmissionsWithRecovery()
       {
          WarningLog(<<"*!testInviteClientRetransmissionsWithRecovery!*");
-         TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
+         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
+         //TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
 
-         Seq(jason.registerUser(60, jason.getDefaultContacts()),
-             jason.expect(REGISTER/407, from(proxy), WaitForResponse, jason.digestRespond()),
-             jason.expect(REGISTER/200, from(proxy), WaitForResponse, jason.noAction()),
+         Seq(jason->registerUser(60, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
          
-         Seq(derek.invite(jason),
-             optional(derek.expect(INVITE/100, from(proxy), WaitFor100, derek.noAction())),
-             derek.expect(INVITE/407, from(proxy), WaitForResponse, chain(derek.ack(), derek.digestRespond())),
-             And(Sub(optional(derek.expect(INVITE/100, from(proxy), WaitFor100, derek.noAction()))),
-                 Sub(jason.expect(INVITE, contact(derek), WaitForCommand, derek.note("R1")),
-                     jason.expect(INVITE, contact(derek), 1000, derek.note("R2")),
-                     jason.expect(INVITE, contact(derek), 2000, chain(derek.note("R3"), jason.ring(), jason.answer())),
-                     derek.expect(INVITE/180, from(jason), WaitFor100, derek.noAction()),
-                     derek.expect(INVITE/200, contact(jason), WaitForResponse, derek.ack()),
-                     jason.expect(ACK, from(derek), WaitForResponse, derek.noAction()))),
+         Seq(derek->invite(*jason),
+             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+             And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+                 Sub(jason->expect(INVITE, contact(derek), WaitForCommand, derek->note("R1")),
+                     jason->expect(INVITE, contact(derek), 1000, derek->note("R2")),
+                     jason->expect(INVITE, contact(derek), 2000, chain(derek->note("R3"), jason->ring(), jason->answer())),
+                     derek->expect(INVITE/180, from(jason), WaitFor100, derek->noAction()),
+                     derek->expect(INVITE/200, contact(jason), WaitForResponse, derek->ack()),
+                     jason->expect(ACK, from(derek), WaitForResponse, derek->noAction()))),
              WaitForEndOfTest);
          ExecuteSequences();  
       }
@@ -118,22 +118,22 @@ class TestHolder : public Fixture
       void testInviteBasic()
       {
          WarningLog(<<"*!testInviteBasic!*");
-         TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
-         TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
-         Seq(derek.registerUser(60, derek.getDefaultContacts()),
-             derek.expect(REGISTER/407, from(proxy), WaitForResponse, derek.digestRespond()),
-             derek.expect(REGISTER/200, from(proxy), WaitForResponse, derek.noAction()),
+         //TestUser jason(Uri("sip:jason@localhost"), "jason", "jason");
+         //TestUser derek(Uri("sip:derek@localhost"), "derek", "derek");
+         Seq(derek->registerUser(60, derek->getDefaultContacts()),
+             derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
          
-         Seq(jason.invite(derek),
-             optional(jason.expect(INVITE/100, from(proxy), WaitFor100, jason.noAction())),
-             jason.expect(INVITE/407, from(proxy), WaitForResponse, chain(jason.ack(), jason.digestRespond())),
-             And(Sub(optional(jason.expect(INVITE/100, from(proxy), WaitFor100, jason.noAction()))),
-                 Sub(derek.expect(INVITE, contact(jason), WaitForCommand, chain(derek.ring(), derek.answer())),
-                     jason.expect(INVITE/180, from(derek), WaitFor100, jason.noAction()),
-                     jason.expect(INVITE/200, contact(derek), WaitForResponse, jason.ack()),
-                     derek.expect(ACK, from(jason), WaitForResponse, jason.noAction()))),
+         Seq(jason->invite(*derek),
+             optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+             jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+             And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
+                 Sub(derek->expect(INVITE, contact(jason), WaitForCommand, chain(derek->ring(), derek->answer())),
+                     jason->expect(INVITE/180, from(derek), WaitFor100, jason->noAction()),
+                     jason->expect(INVITE/200, contact(derek), WaitForResponse, jason->ack()),
+                     derek->expect(ACK, from(jason), WaitForResponse, jason->noAction()))),
              WaitForEndOfTest);
          ExecuteSequences();  
       }

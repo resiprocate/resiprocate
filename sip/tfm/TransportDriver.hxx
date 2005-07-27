@@ -1,7 +1,7 @@
 #ifndef TransportDriver_hxx
 #define TransportDriver_hxx
 
-#include "resiprocate/SipStack.hxx"
+//#include "resiprocate/SipStack.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Mutex.hxx"
