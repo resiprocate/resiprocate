@@ -16,7 +16,8 @@ class TestReproUser : public TestUser
                     const resip::Uri& outboundProxy = TestSipEndPoint::NoOutboundProxy,
                     const resip::Data& interface = resip::Data::Empty);
       virtual ~TestReproUser();
-
+      virtual void clean();
+      
    private:
       TestProxy& mProxy;
 };
