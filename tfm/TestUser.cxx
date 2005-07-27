@@ -66,8 +66,11 @@ void TestUser::clean()
    InfoLog (<< "Cleaning user: " << *mRegistration);
    mRegistration->header(h_ProxyAuthorizations).clear();
    mRegistration->remove(h_ProxyAuthenticates);
+   assert(!mRegistration->exists(h_ProxyAuthenticates));
+   
    mRegistration->header(h_Authorizations).clear();
    mRegistration->remove(h_Authorizations);
+   assert(!mRegistration->exists(h_Authorizations));
    InfoLog (<< "Cleaned user: " << *mRegistration);
 }
 
