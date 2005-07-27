@@ -29,6 +29,10 @@ TestUser* Fixture::jason = 0;
 TestUser* Fixture::jason1 = 0;
 TestUser* Fixture::jason2 = 0;
 TestUser* Fixture::derek = 0;
+TestUser* Fixture::david = 0;
+TestUser* Fixture::enlai = 0;
+TestUser* Fixture::cullen = 0;
+
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
 resip::Uri Fixture::outboundProxy;
@@ -41,6 +45,14 @@ Fixture::~Fixture()
 {
 }
 
+static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host)
+{
+   Uri j;
+   j.user() = user;
+   j.host() = host;
+   return new TestReproUser(proxy, j, j.user(), j.user());
+}
+
 void
 Fixture::initialize(int argc, char** argv)
 {
@@ -50,17 +62,13 @@ Fixture::initialize(int argc, char** argv)
                          5060);
 #else
    proxy = new TestRepro("proxy", "localhost", 5060);
-   Uri j;
-   j.user() = "jason";
-   j.host() = "localhost";
-   jason = new TestReproUser(*proxy, j, j.user(), j.user());
-   jason1 = new TestReproUser(*proxy, j, j.user(), j.user());
-   jason2 = new TestReproUser(*proxy, j, j.user(), j.user());
-
-   Uri d;
-   d.user() = "derek";
-   d.host() = "localhost";
-   derek = new TestReproUser(*proxy, d, d.user(), d.user());
+   jason = makeReproUser(*proxy, "jason", "localhost");
+   jason1 = makeReproUser(*proxy, "jason", "localhost");
+   jason2 = makeReproUser(*proxy, "jason", "localhost");
+   derek = makeReproUser(*proxy, "derek", "localhost");
+   david = makeReproUser(*proxy, "david", "localhost");
+   enlai = makeReproUser(*proxy, "enlai", "localhost");
+   cullen = makeReproUser(*proxy, "cullen", "localhost");
 #endif
 }
 
@@ -96,6 +104,9 @@ Fixture::tearDown()
    jason1->clean();
    jason2->clean();
    derek->clean();
+   david->clean();
+   enlai->clean();
+   cullen->clean();
 }
 
       
