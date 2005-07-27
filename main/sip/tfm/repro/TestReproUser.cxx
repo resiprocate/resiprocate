@@ -19,5 +19,11 @@ TestReproUser::TestReproUser(TestProxy& proxy,
 
 TestReproUser::~TestReproUser()
 {
-   mProxy.deleteUser(mAuthName, mAor);
+}
+
+void
+TestReproUser::clean()
+{
+   TestUser::clean();
+   mProxy.deleteBindings(mAor);
 }
