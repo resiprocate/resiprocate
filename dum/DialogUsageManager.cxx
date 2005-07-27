@@ -985,10 +985,25 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          mKeepAliveManager->process(*keepAliveMsg);
       }
+      return;      
+   }
+   
+   DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
+   if (command)
+   {
+      InfoLog(<< "DumCommand" );
+      command->excecute();
+      return;      
    }
 
-   //call or create feature chain if appropriate
+   //normal sip messages
+   incomingProcess(msg);   
+}
 
+void incomingProcess(std::auto_ptr(Msg) msg);
+
+
+   //call or create feature chain if appropriate
    Data tid = Data::Empty;
    {
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
