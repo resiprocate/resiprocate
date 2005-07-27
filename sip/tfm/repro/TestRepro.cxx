@@ -33,7 +33,7 @@ makeRequestProcessorChain(RequestProcessorChain& chain,
    locators->addProcessor(std::auto_ptr<RequestProcessor>(isTrusted));
 
    DigestAuthenticator* da = new DigestAuthenticator;
-   chain.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+   locators->addProcessor(std::auto_ptr<RequestProcessor>(da)); 
 
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
