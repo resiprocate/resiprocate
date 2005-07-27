@@ -15,7 +15,7 @@
 #include "resiprocate/os/SharedPtr.hxx"
 #include "tfm/TestProxy.hxx"
 
-class TestRepro : public resip::ThreadIf, public TestProxy
+class TestRepro : public TestProxy
 {
    public:
       TestRepro(const resip::Data& name,
@@ -27,8 +27,6 @@ class TestRepro : public resip::ThreadIf, public TestProxy
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password);
       virtual void deleteUser(const resip::Data& userid);
       
-      virtual void thread();
-      
    private:
       resip::SipStack mStack;
       resip::StackThread mStackThread;
@@ -38,8 +36,8 @@ class TestRepro : public resip::ThreadIf, public TestProxy
       repro::AbstractDb* mDb;
       repro::Store mStore;
       repro::RequestProcessorChain mRequestProcessors;
-      repro::Proxy mProxy;
       resip::InMemoryRegistrationDatabase mRegData;
+      repro::Proxy mProxy;
       resip::DialogUsageManager mDum;
       resip::DumThread mDumThread;
 };

@@ -1,3 +1,4 @@
+#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Mutex.hxx"
 #include "tfm/TransportDriver.hxx"
