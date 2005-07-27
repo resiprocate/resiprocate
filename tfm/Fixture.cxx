@@ -26,6 +26,8 @@ using resip::Uri;
 
 TestProxy* Fixture::proxy = 0;
 TestUser* Fixture::jason = 0;
+TestUser* Fixture::jason1 = 0;
+TestUser* Fixture::jason2 = 0;
 TestUser* Fixture::derek = 0;
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
@@ -52,6 +54,8 @@ Fixture::initialize(int argc, char** argv)
    j.user() = "jason";
    j.host() = "localhost";
    jason = new TestReproUser(*proxy, j, j.user(), j.user());
+   jason1 = new TestReproUser(*proxy, j, j.user(), j.user());
+   jason2 = new TestReproUser(*proxy, j, j.user(), j.user());
 
    Uri d;
    d.user() = "derek";
@@ -89,6 +93,8 @@ Fixture::tearDown()
    }
 
    jason->clean();
+   jason1->clean();
+   jason2->clean();
    derek->clean();
 }
 

@@ -132,3 +132,10 @@ TestRepro::deleteUser(const Data& userid, const Uri& aor)
    mStore.mUserStore.eraseUser(userid);
    mRegData.removeAor(aor);
 }
+
+void
+TestRepro::deleteBindings(const Uri& aor)
+{
+   InfoLog (<< "Repro::delBindings: " << aor);
+   mRegData.removeAor(aor);
+}
