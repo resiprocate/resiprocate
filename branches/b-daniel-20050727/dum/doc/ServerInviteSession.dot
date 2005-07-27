@@ -1,0 +1,38 @@
+digraph ServerInviteSession {
+	node [ fonstsize=8 fontname="VeraSans-Roman" ]
+	graph
+	[
+//		ranksep=1.5 // modify to shrink nodes etc
+//		nodesep=1.5
+		fontsize=8
+		fontname="VeraSans-Roman"
+		labelfontsize=8
+		labelfontname="VeraSans-Roman"
+	]
+
+	edge
+	[
+		fontname="VeraSans-Roman"	
+		fontsize=8
+		arrowhead=normal
+	]
+
+// Now setup labels and visual stuff.
+
+        fontname="VeraSans-Roman"
+
+        Start -> Proceeding
+                [ label="INVITE" ]
+        Proceeding -> Proceeding
+                   [ label="1xx from TU" ]
+        Proceeding -> Terminated
+                 [ label="CANCEL" ]
+        Proceeding -> Terminated
+                 [ label="3xx-6xx\nfrom TU" ]
+        Proceeding -> Accepting
+                 [ label="2xx from TU\ncreate timer" ]
+        Accepting -> Connected 
+                 [ label="Ack to 200" ]
+        Connected -> Terminated
+                   [ BYE ]         
+}
