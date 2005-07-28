@@ -82,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\Release\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\release\pcre.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\Release\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\release\pcre.lib&quot; &quot;$(ProjectDir)..\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
