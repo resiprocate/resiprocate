@@ -66,10 +66,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm300"
-				Optimization="3"
+				Optimization="2"
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
+				OptimizeForProcessor="0"
+				OptimizeForWindowsApplication="FALSE"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES;USE_IPV6"
 				StringPooling="TRUE"
@@ -608,6 +610,9 @@
 			</File>
 			<File
 				RelativePath="TimerQueue.cxx">
+			</File>
+			<File
+				RelativePath=".\TlsConnection.cxx">
 			</File>
 			<File
 				RelativePath="TlsTransport.cxx">
