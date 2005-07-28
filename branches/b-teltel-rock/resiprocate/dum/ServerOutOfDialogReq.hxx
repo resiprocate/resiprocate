@@ -19,7 +19,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-	  // Return Options response based on current Profile settings - application may need to add SDP Contents before
+	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
 	  // sending
       virtual SipMessage& answerOptions();
 	  virtual void send(SipMessage& msg);

@@ -8,7 +8,6 @@
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/RefCountedDestroyer.hxx"
 
 namespace resip
 {
@@ -18,6 +17,7 @@ class Dialog;
 class DialogUsageManager;
 class AppDialogSet;
 class ClientOutOfDialogReq;
+class UserProfile;
 
 class DialogSet
 {
@@ -31,7 +31,10 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      void end();
+      UserProfile* getUserProfile();
+      void setUserProfile(UserProfile *userProfile);
+
+      void cancel();
       void dispatch(const SipMessage& msg);
       
       ClientRegistrationHandle getClientRegistration();
@@ -55,20 +58,7 @@ class DialogSet
       friend class ClientPagerMessage;
       friend class ServerPagerMessage;
       
-      typedef enum
-      {
-         Initial,  // No session setup yet
-         WaitingToEnd,
-         ReceivedProvisional,
-         Established,
-         Terminating
-      } State;
-
-      State mState;
-
       void possiblyDie();
-
-      bool handledByAuthOrRedirect(const SipMessage& msg);
 
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
@@ -91,6 +81,8 @@ class DialogSet
       DialogSetId mId;
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
+      bool mCancelled;
+      bool mReceivedProvisional;      
 
       //inelegant, but destruction can happen both automatically and forced by
       //the user.  Extremely single threaded.
@@ -104,11 +96,7 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
-
-      typedef RefCountedDestroyer<DialogSet> Destroyer;
-      Destroyer mDestroyer;
-      friend class Destroyer::Guard;      
-
+      UserProfile* mUserProfile;
 };
  
 }

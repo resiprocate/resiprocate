@@ -12,17 +12,15 @@ InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
 }
 
 void 
-InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle, const SipMessage& msg)
+InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
-   InfoLog(<< "InviteSessionHandler::onAckNotReceived: " << msg.brief());
-   DebugLog(<< "onAckNotReceived(full): " << msg);
+   InfoLog(<< "InviteSessionHandler::onAckNotReceived");
    handle->end();
 }
 
 void 
 InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const SipMessage& msg)
 {
-   InfoLog(<< "InviteSessionHandler::onIllegalNegotiation: " << msg.brief());
-   DebugLog(<< "onIllegalNegotiation(full): " << msg);
-   handle->end();
+   InfoLog(<< "InviteSessionHandler::onIllegalNegotiation");
 }
+

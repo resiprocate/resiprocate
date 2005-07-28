@@ -5,7 +5,6 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/PagerMessageHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;

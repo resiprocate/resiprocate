@@ -11,8 +11,8 @@ class SubscriptionCreator : public BaseCreator
    public:
    
       //probably want to have things like the Accept list here too
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, int subscriptionTime);
-      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, 
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, int subscriptionTime);
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, 
                           int subscriptionTime, int refreshInterval);
 
       bool hasRefreshInterval() const;      

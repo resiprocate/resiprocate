@@ -32,8 +32,6 @@ class DialogUsage : public BaseUsage
       
       DialogUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~DialogUsage();
-
-      virtual void dialogDestroyed(const SipMessage& msg) = 0;
       
       Dialog& mDialog;
 };

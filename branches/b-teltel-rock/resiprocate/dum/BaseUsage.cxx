@@ -29,7 +29,8 @@ BaseUsage::BaseUsage(DialogUsageManager& dum) :
 }
 
 BaseUsage::~BaseUsage()
-{}
+{
+}
 
 void
 BaseUsage::send(SipMessage& msg)
@@ -42,6 +43,15 @@ BaseUsage::getBaseHandle()
 {
    return mHandle;
 }
+
+std::ostream& 
+BaseUsage::dump(std::ostream& strm) const
+{
+   strm << "BaseUsage: " << mId;
+   return strm;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

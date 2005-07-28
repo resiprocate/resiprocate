@@ -57,9 +57,3 @@ ServerSubscriptionHandler::onPublished(ServerSubscriptionHandle associated,
    // do nothing by default
 }
 
-
-void 
-ServerSubscriptionHandler::onNotifyRejected(ServerSubscriptionHandle, const SipMessage& msg)
-{   
-}
-

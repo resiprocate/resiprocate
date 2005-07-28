@@ -1,25 +1,25 @@
 #include "InviteSessionCreator.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 
 using namespace resip;
 
 InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, 
                                            const NameAddr& target, 
-                                           const NameAddr& from,
+                                           UserProfile& userProfile,                                           
                                            const SdpContents* initial, 
                                            ServerSubscriptionHandle serverSub)
-   : BaseCreator(dum),
+   : BaseCreator(dum, userProfile),
      mState(Initialized),
      mServerSub(serverSub)
 {
-   makeInitialRequest(target, from, INVITE);
-   if(mDum.getProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
+   makeInitialRequest(target, INVITE);
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
-       if(mDum.getProfile()->getDefaultSessionTime() >= 90)
+       if(userProfile.getDefaultSessionTime() >= 90)
        {
-           getLastRequest().header(h_SessionExpires).value() = mDum.getProfile()->getDefaultSessionTime();
+           getLastRequest().header(h_SessionExpires).value() = userProfile.getDefaultSessionTime();
            //getLastRequest().header(h_MinSE).value() = 90;
        }
    }
