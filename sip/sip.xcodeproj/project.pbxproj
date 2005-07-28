@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		123B4D4F089871C90049A5B9 /* DumFeatureChain.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */; };
+		123B4D53089871F70049A5B9 /* IdentityHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D52089871F70049A5B9 /* IdentityHandler.cxx */; };
+		123B4D55089872040049A5B9 /* EncryptionRequest.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D54089872040049A5B9 /* EncryptionRequest.cxx */; };
+		123B4D570898721D0049A5B9 /* DumFeatureMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D560898721D0049A5B9 /* DumFeatureMessage.cxx */; };
 		124D78B2086CC36600BCA5A9 /* ares__close_sockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 124D789C086CC36600BCA5A9 /* ares__close_sockets.c */; };
 		124D78B3086CC36600BCA5A9 /* ares__get_hostent.c in Sources */ = {isa = PBXBuildFile; fileRef = 124D789D086CC36600BCA5A9 /* ares__get_hostent.c */; };
 		124D78B4086CC36600BCA5A9 /* ares__read_line.c in Sources */ = {isa = PBXBuildFile; fileRef = 124D789E086CC36600BCA5A9 /* ares__read_line.c */; };
@@ -220,7 +224,6 @@
 		124D7A61086CC77900BCA5A9 /* HttpGetMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7A5F086CC77900BCA5A9 /* HttpGetMessage.cxx */; };
 		124D7A62086CC77900BCA5A9 /* HttpProvider.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7A60086CC77900BCA5A9 /* HttpProvider.cxx */; };
 		124EC468087217600017C8BB /* TransportFailure.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC467087217600017C8BB /* TransportFailure.cxx */; };
-		124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47408721A880017C8BB /* TransportMessage.cxx */; };
 		124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */; };
 		124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */; };
 		12BF59350895D59E00F7DD81 /* ParserContainerBase.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12BF59340895D59E00F7DD81 /* ParserContainerBase.cxx */; };
@@ -259,6 +262,10 @@
 
 /* Begin PBXFileReference section */
 		08FB77AAFE841565C02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeatureChain.cxx; path = resiprocate/dum/DumFeatureChain.cxx; sourceTree = SOURCE_ROOT; };
+		123B4D52089871F70049A5B9 /* IdentityHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IdentityHandler.cxx; path = resiprocate/dum/IdentityHandler.cxx; sourceTree = SOURCE_ROOT; };
+		123B4D54089872040049A5B9 /* EncryptionRequest.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptionRequest.cxx; path = resiprocate/dum/EncryptionRequest.cxx; sourceTree = SOURCE_ROOT; };
+		123B4D560898721D0049A5B9 /* DumFeatureMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeatureMessage.cxx; path = resiprocate/dum/DumFeatureMessage.cxx; sourceTree = SOURCE_ROOT; };
 		124D789C086CC36600BCA5A9 /* ares__close_sockets.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__close_sockets.c; path = contrib/ares/ares__close_sockets.c; sourceTree = SOURCE_ROOT; };
 		124D789D086CC36600BCA5A9 /* ares__get_hostent.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__get_hostent.c; path = contrib/ares/ares__get_hostent.c; sourceTree = SOURCE_ROOT; };
 		124D789E086CC36600BCA5A9 /* ares__read_line.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ares__read_line.c; path = contrib/ares/ares__read_line.c; sourceTree = SOURCE_ROOT; };
@@ -472,7 +479,6 @@
 		124D7A5F086CC77900BCA5A9 /* HttpGetMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpGetMessage.cxx; path = resiprocate/external/HttpGetMessage.cxx; sourceTree = SOURCE_ROOT; };
 		124D7A60086CC77900BCA5A9 /* HttpProvider.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpProvider.cxx; path = resiprocate/external/HttpProvider.cxx; sourceTree = SOURCE_ROOT; };
 		124EC467087217600017C8BB /* TransportFailure.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportFailure.cxx; path = resiprocate/TransportFailure.cxx; sourceTree = SOURCE_ROOT; };
-		124EC47408721A880017C8BB /* TransportMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportMessage.cxx; path = resiprocate/TransportMessage.cxx; sourceTree = SOURCE_ROOT; };
 		124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionHeader.cxx; path = resiprocate/ExtensionHeader.cxx; sourceTree = SOURCE_ROOT; };
 		124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionParameter.cxx; path = resiprocate/ExtensionParameter.cxx; sourceTree = SOURCE_ROOT; };
 		12BF59340895D59E00F7DD81 /* ParserContainerBase.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ParserContainerBase.cxx; path = resiprocate/ParserContainerBase.cxx; sourceTree = SOURCE_ROOT; };
@@ -618,12 +624,16 @@
 				124D79D1086CC68200BCA5A9 /* DialogUsageManager.cxx */,
 				12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */,
 				12BF593B0895D5FF00F7DD81 /* DumEncrypted.cxx */,
+				123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */,
+				123B4D560898721D0049A5B9 /* DumFeatureMessage.cxx */,
 				124D79D2086CC68200BCA5A9 /* DumProcessHandler.cxx */,
 				124D79D3086CC68200BCA5A9 /* DumTimeout.cxx */,
+				123B4D54089872040049A5B9 /* EncryptionRequest.cxx */,
 				12BF59380895D5E600F7DD81 /* EncryptionManager.cxx */,
 				124D79D4086CC68200BCA5A9 /* Handled.cxx */,
 				124D79D5086CC68200BCA5A9 /* HandleException.cxx */,
 				124D79D6086CC68200BCA5A9 /* HandleManager.cxx */,
+				123B4D52089871F70049A5B9 /* IdentityHandler.cxx */,
 				124D79D7086CC68200BCA5A9 /* InviteSession.cxx */,
 				124D79D8086CC68200BCA5A9 /* InviteSessionCreator.cxx */,
 				124D79D9086CC68200BCA5A9 /* InviteSessionHandler.cxx */,
@@ -790,7 +800,6 @@
 				124D7920086CC3CE00BCA5A9 /* TransactionUser.cxx */,
 				124D7921086CC3CE00BCA5A9 /* TransactionUserMessage.cxx */,
 				124D7922086CC3CE00BCA5A9 /* Transport.cxx */,
-				124EC47408721A880017C8BB /* TransportMessage.cxx */,
 				124EC467087217600017C8BB /* TransportFailure.cxx */,
 				124D7923086CC3CE00BCA5A9 /* TransportSelector.cxx */,
 				124D7924086CC3CE00BCA5A9 /* TuSelector.cxx */,
@@ -1100,7 +1109,6 @@
 				124D7A61086CC77900BCA5A9 /* HttpGetMessage.cxx in Sources */,
 				124D7A62086CC77900BCA5A9 /* HttpProvider.cxx in Sources */,
 				124EC468087217600017C8BB /* TransportFailure.cxx in Sources */,
-				124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */,
 				124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */,
 				124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */,
 				12BF59350895D59E00F7DD81 /* ParserContainerBase.cxx in Sources */,
@@ -1109,6 +1117,10 @@
 				12BF593C0895D5FF00F7DD81 /* DumDecrypted.cxx in Sources */,
 				12BF593D0895D5FF00F7DD81 /* DumEncrypted.cxx in Sources */,
 				12BF59580895D7B800F7DD81 /* CertMessage.cxx in Sources */,
+				123B4D4F089871C90049A5B9 /* DumFeatureChain.cxx in Sources */,
+				123B4D53089871F70049A5B9 /* IdentityHandler.cxx in Sources */,
+				123B4D55089872040049A5B9 /* EncryptionRequest.cxx in Sources */,
+				123B4D570898721D0049A5B9 /* DumFeatureMessage.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
