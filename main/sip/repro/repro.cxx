@@ -6,10 +6,10 @@
 #include DB_HEADER
 #else 
 #include <db4/db_cxx.h>
-#include <signal.h>
 #include <sys/ipc.h>
 #endif
 
+#include <signal.h>
 #include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -93,7 +93,9 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   tu.addDomain(DnsUtil::getLocalHostName());
+   Data localhostname(DnsUtil::getLocalHostName());
+   InfoLog (<< "Adding local hostname domain " << localhostname );
+   tu.addDomain(localhostname);
    if ( realm.empty() )
    {
       realm =DnsUtil::getLocalHostName();
@@ -105,14 +107,12 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       realm = "localhost";
    }
    
-#ifndef WIN32 // !cj! TODO 
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      DebugLog( << "Adding domain for IP " << i->second  );
+      InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
       tu.addDomain(i->second);
    }
-#endif 
 
    tu.addDomain("127.0.0.1");
 
@@ -130,6 +130,7 @@ main(int argc, char** argv)
       cerr << "Couldn't install signal handler for SIGPIPE" << endl;
       exit(-1);
    }
+#endif
 
    if ( signal( SIGINT, signalHandler ) == SIG_ERR )
    {
@@ -142,7 +143,6 @@ main(int argc, char** argv)
       cerr << "Couldn't install signal handler for SIGTERM" << endl;
       exit( -1 );
    }
-#endif
 
    /* Initialize a stack */
    CommandLineParser args(argc, argv);
