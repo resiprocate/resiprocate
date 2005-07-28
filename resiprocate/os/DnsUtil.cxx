@@ -17,6 +17,9 @@
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
+#ifdef WIN32
+#include "resiprocate/os/WinCompat.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
@@ -338,6 +341,7 @@ DnsUtil::getInterfaces(const Data& matching)
    std::list<std::pair<Data,Data> > results;
 
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined (__sun__)
+
    struct ifconf ifc;
 
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -446,8 +450,12 @@ DnsUtil::getInterfaces(const Data& matching)
    }
 
    close(s);
+#else 
+#if defined(WIN32)
+   return WinCompat::getInterfaces(matching);
 #else
    assert(0);
+#endif
 #endif
 
    return results;
