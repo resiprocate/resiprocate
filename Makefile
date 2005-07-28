@@ -15,7 +15,6 @@ repro: dum
 
 tests: resiprocate 
 	cd resiprocate/test; $(MAKE)
-	cd tfm; $(MAKE)
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
