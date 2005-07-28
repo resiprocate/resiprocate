@@ -270,8 +270,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
       void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
 
-      void processDumFeatureResult(std::auto_ptr<Message> msg);
-
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
@@ -314,7 +312,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post()(std::auto_ptr<Message> msg)
+            virtual void post(std::auto_ptr<Message> msg)
             {
                mDum.incomingProcess(msg);
             }
@@ -327,7 +325,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post()(std::auto_ptr<Message> msg)
+            virtual void post(std::auto_ptr<Message> msg)
             {
                mDum.outgoingProcess(msg);
             }
@@ -382,6 +380,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
+
+      void incomingProcess(std::auto_ptr<Message> msg);
+      void outgoingProcess(std::auto_ptr<Message> msg);
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
@@ -449,6 +450,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
       InviteSessionEncryptionLevelMap mEncryptionLevels;
+
+      IncomingTarget* mIncomingTarget;
+      OutgoingTarget* mOutgoingTarget;
 };
 
 }
