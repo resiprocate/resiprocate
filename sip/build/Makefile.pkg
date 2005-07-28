@@ -32,16 +32,9 @@ OPENSSL_LIBDIRS :=
 OPENSSL_DEFINES += USE_SSL
 endif
 
-# note there is no elif and no && for gnu make
-ifeq ($(USE_DTLS),true)
-OPENSSL_LIBNAME := 
-OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := 
-OPENSSL_LIBDIRS :=
-OPENSSL_LDLIBS_LAST := $(ROOT)/contrib/dtls/libssl.a $(ROOT)/contrib/dtls/libcrypto.a
-OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
-OPENSSL_DEFINES += USE_DTLS
-endif
+# This is useful if you are not using openssl in the normal location 
+#OPENSSL_LDLIBS_LAST := /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a
+#OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
 
 ifeq ($(USE_MYSQL),true)
 MYSQL_LIBNAME :=  mysqlclient z m

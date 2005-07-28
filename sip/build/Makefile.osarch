@@ -76,13 +76,10 @@ endif
 ############################# QNX ##################################
 
 ifeq ($(OSTYPE),QNX)
-
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
     LDLIBS_LAST   += -lsocket -lstdc++ 
     USE_SSL = false
-    USE_DTLS = false
-
 endif
 
 
