@@ -183,13 +183,16 @@ DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long give
 void
 DialogUsageManager::forceShutdown(DumShutdownHandler* h)
 {
-   WarningLog (<< "force shutdown ");
-   dumpHandles();
-   
-   mDumShutdownHandler = h;
-   //HandleManager::shutdown();  // clear out usages
-   mShutdownState = ShutdownRequested;
-   DialogUsageManager::onAllHandlesDestroyed();
+   if (mHandleMap.size() > 0)
+   {
+      WarningLog (<< "force shutdown ");
+      dumpHandles();
+      
+      mDumShutdownHandler = h;
+      //HandleManager::shutdown();  // clear out usages
+      mShutdownState = ShutdownRequested;
+      DialogUsageManager::onAllHandlesDestroyed();
+   }
 }
 
 void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
@@ -1519,9 +1522,13 @@ void
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
    DebugLog ( << "************* Removing DialogSet ***************" );
-   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
-   mDialogSetMap.erase(dsId);
-   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   DialogSetMap::iterator found = mDialogSetMap.find(dsId);
+   if (found != mDialogSetMap.end())
+   {
+      DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+      mDialogSetMap.erase(dsId);
+      DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   }
    if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);
