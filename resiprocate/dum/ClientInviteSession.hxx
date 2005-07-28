@@ -20,57 +20,80 @@ class ClientInviteSession : public InviteSession
 
       ClientInviteSessionHandle getHandle();
 
-      virtual void end();
-      virtual void send(SipMessage& msg);
+   public:
+      virtual void provideOffer (const SdpContents& offer);
+      virtual void provideAnswer (const SdpContents& answer);
+      virtual void end ();
+      virtual void reject (int statusCode, WarningCategory *warning = 0);
 
+      const SdpContents& getEarlyMedia() const;
+      
    private:
-      void redirected(const SipMessage& msg);      
-
-      friend class Dialog;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      void sendSipFrag(const SipMessage& response);      
-      void handlePrackResponse(const SipMessage& response);
-      void sendPrack(const SipMessage& response);
-//      void sendAck(const SipMessage& ok);
+      void dispatchStart (const SipMessage& msg);
+      void dispatchEarly (const SipMessage& msg);
+      void dispatchEarlyWithOffer (const SipMessage& msg);
+      void dispatchEarlyWithAnswer (const SipMessage& msg);
+      void dispatchAnswered (const SipMessage& msg);
+      void dispatchSentUpdateEarly (const SipMessage& msg);
+      void dispatchSentUpdateConnected (const SipMessage& msg);
+      void dispatchReceivedUpdateEarly (const SipMessage& msg);
+      void dispatchSentAnswer (const SipMessage& msg);
+      void dispatchQueuedUpdate (const SipMessage& msg);
+      void dispatchCancelled (const SipMessage& msg);
 
-      int lastReceivedRSeq;
-      int lastExpectedRSeq;
-      int mStaleCallTimerSeq;
-
-      ServerSubscriptionHandle mServerSub;      
+      void handleRedirect (const SipMessage& msg);
+      void handleProvisional (const SipMessage& msg);
+      void handleOffer (const SipMessage& msg, const SdpContents& sdp);
+      void handleAnswer (const SipMessage& msg, const SdpContents& sdp);
+      void sendPrackIfNeeded(const SipMessage& msg);
+      void sendPrack(const SdpContents& sdp);
       
+      // Called by the DialogSet (friend) when the app has CANCELed the request
+      void cancel();
+
+   private:
+      std::auto_ptr<SdpContents> mEarlyMedia;
+      void startCancelTimer();
+      void sendSipFrag(const SipMessage& response);
+
+      SipMessage mInvite; // the original INVITE sent
+      int mLastReceivedRSeq;
+      int mStaleCallTimerSeq;
+      int mCancelledTimerSeq;      
+      ServerSubscriptionHandle mServerSub;
+
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
 
-      void forked();      
-      void cancel();
+      friend class Dialog;
 };
- 
+
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
 
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -80,7 +103,7 @@ class ClientInviteSession : public InviteSession
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -94,9 +117,9 @@ class ClientInviteSession : public InviteSession
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

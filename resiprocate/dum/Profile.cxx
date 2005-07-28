@@ -1,62 +1,91 @@
 
 #include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-
-Profile::Profile() : 
-   mDefaultRegistrationExpires(3600),  // 1 hour
-   mDefaultSubscriptionExpires(3600),  // 1 hour
-   mDefaultSessionExpires(1800),       // 30 minutes
-   mDefaultStaleCallTime(3600),        // 1 hour
-   mHasOutboundProxy(false),
-   mLooseToTagMatching(false),
-   mRportEnabled(true),
-   mValidateContentEnabled(true),
-   mValidateContentLanguageEnabled(false),
-   mValidateAcceptEnabled(true),
-   mHasUserAgent(false),
-   mHasOverrideHostPort(false)
+Profile::Profile(Profile *baseProfile) : 
+   mBaseProfile(baseProfile)
 {
-   // Default settings
-   addAdvertisedCapability(Headers::Allow);  
-   addAdvertisedCapability(Headers::Supported);  
-   addSupportedMimeType(Mime("application", "sdp"));
-   addSupportedLanguage(Token("en"));
-   addSupportedMethod(INVITE);
-   addSupportedMethod(ACK);
-   addSupportedMethod(CANCEL);
-   addSupportedMethod(OPTIONS);
-   addSupportedMethod(BYE);
-   addSupportedScheme(Symbols::Sip);  
+   // Default settings - if a fall through profile was not provided
+   if(!baseProfile)
+   {
+      mHasDefaultRegistrationExpires = true;
+      mDefaultRegistrationExpires = 3600; // 1 hour
+
+      mHasDefaultSubscriptionExpires = true;
+      mDefaultSubscriptionExpires = 3600; // 1 hour
+
+      mHasDefaultPublicationExpires = true;
+      mDefaultPublicationExpires = 3600; // 1 hour
+
+      mHasDefaultStaleCallTime = true;
+      mDefaultStaleCallTime = 3600;       // 1 hour
+
+      mHasDefaultSessionExpires = true;
+      mDefaultSessionExpires = 1800;      // 30 minutes
+
+      mHasDefaultSessionTimerMode = true;
+      mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
+
+      mHas1xxRetransmissionTime = true;
+      m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
+
+      mHasOutboundProxy = false;
+
+	  mHasAdvertisedCapabilities = true;
+      addAdvertisedCapability(Headers::Allow);  
+      addAdvertisedCapability(Headers::Supported);  
+
+	  mHasLooseToTagMatching = true;
+      mLooseToTagMatching = false;
+
+	  mHasRportEnabled = true;
+      mRportEnabled = true;
+
+      mHasUserAgent = false;
+
+      mHasOverrideHostPort = false;
+   }
+   else
+   {
+      mHasDefaultRegistrationExpires = false;
+      mHasDefaultSubscriptionExpires = false;
+      mHasDefaultPublicationExpires = false;
+      mHasDefaultStaleCallTime = false;
+      mHasDefaultSessionExpires = false;
+      mHasDefaultSessionTimerMode = false;
+      mHas1xxRetransmissionTime = false;
+      mHasOutboundProxy = false;
+	  mHasAdvertisedCapabilities = false;
+	  mHasLooseToTagMatching = false;
+	  mHasRportEnabled = false;
+      mHasUserAgent = false;
+      mHasOverrideHostPort = false;
+   }
 }
 
-void
-Profile::setDefaultFrom(const NameAddr& from)
+Profile::~Profile()
 {
-   mDefaultFrom = from;
-}
-
-NameAddr& 
-Profile::getDefaultFrom()
-{
-   return mDefaultFrom;
 }
 
 void
 Profile::setDefaultRegistrationTime(int secs)
 {
    mDefaultRegistrationExpires = secs;
+   mHasDefaultRegistrationExpires = true;
 }
 
 int 
 Profile::getDefaultRegistrationTime() const
 {
+   // Fall through seting (if required)
+   if(!mHasDefaultRegistrationExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultRegistrationTime();
+   }
    return mDefaultRegistrationExpires;
 }
 
@@ -64,212 +93,137 @@ void
 Profile::setDefaultSubscriptionTime(int secs)
 {
    mDefaultSubscriptionExpires = secs;
+   mHasDefaultSubscriptionExpires = true;
 }
 
 int 
 Profile::getDefaultSubscriptionTime() const
 {
+   // Fall through seting (if required)
+   if(!mHasDefaultSubscriptionExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultSubscriptionTime();
+   }
    return mDefaultSubscriptionExpires;
 }
 
 void
-Profile::setDefaultSessionTime(int secs)
+Profile::setDefaultPublicationTime(int secs)
 {
-   mDefaultSessionExpires = secs;
+   mDefaultPublicationExpires = secs;
+   mHasDefaultPublicationExpires = true;
 }
 
 int 
-Profile::getDefaultSessionTime() const
+Profile::getDefaultPublicationTime() const
 {
-   return mDefaultSessionExpires;
+   // Fall through seting (if required)
+   if(!mHasDefaultPublicationExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultPublicationTime();
+   }
+   return mDefaultPublicationExpires;
 }
 
 void
 Profile::setDefaultStaleCallTime(int secs)
 {
    mDefaultStaleCallTime = secs;
+   mHasDefaultStaleCallTime = true;
 }
 
 int 
 Profile::getDefaultStaleCallTime() const
 {
+   // Fall through seting (if required)
+   if(!mHasDefaultStaleCallTime && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultStaleCallTime();
+   }
    return mDefaultStaleCallTime;
+}
+
+void
+Profile::setDefaultSessionTime(int secs)
+{
+   mDefaultSessionExpires = secs;
+   mHasDefaultSessionExpires = true;
+}
+
+int 
+Profile::getDefaultSessionTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultSessionExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultSessionTime();
+   }
+   return mDefaultSessionExpires;
+}
+
+void
+Profile::setDefaultSessionTimerMode(Profile::SessionTimerMode mode)
+{
+   mDefaultSessionTimerMode = mode;
+   mHasDefaultSessionTimerMode = true;
+}
+
+Profile::SessionTimerMode 
+Profile::getDefaultSessionTimerMode() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultSessionTimerMode && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultSessionTimerMode();
+   }
+   return mDefaultSessionTimerMode;
+}
+
+void
+Profile::set1xxRetransmissionTime(int secs)
+{
+   m1xxRetransmissionTime = secs;
+   mHas1xxRetransmissionTime = true;
+}
+
+int 
+Profile::get1xxRetransmissionTime() const
+{
+   // Fall through seting (if required)
+   if(!mHas1xxRetransmissionTime && mBaseProfile)
+   {
+       return mBaseProfile->get1xxRetransmissionTime();
+   }
+   return m1xxRetransmissionTime;
 }
 
 void 
 Profile::setOverrideHostAndPort(const Uri& hostPort)
 {
-   mHasOverrideHostPort = true;   
    mOverrideHostPort = hostPort;   
+   mHasOverrideHostPort = true;   
 }
 
 bool 
 Profile::hasOverrideHostAndPort() const
 {
+   // Fall through seting (if required)
+   if(!mHasOverrideHostPort && mBaseProfile)
+   {
+       return mBaseProfile->hasOverrideHostAndPort();
+   }
    return mHasOverrideHostPort;
 }
 
 const Uri& 
-Profile::getOverideHostAndPort() const
+Profile::getOverrideHostAndPort() const
 {
+   // Fall through seting (if required)
+   if(!mHasOverrideHostPort && mBaseProfile)
+   {
+       return mBaseProfile->getOverrideHostAndPort();
+   }
    return mOverrideHostPort;
-}
-
-void 
-Profile::addSupportedScheme(const Data& scheme)
-{
-   mSupportedSchemes.insert(scheme);
-}
-
-bool 
-Profile::isSchemeSupported(const Data& scheme) const
-{
-   return mSupportedSchemes.count(scheme) != 0;
-}
-
-void 
-Profile::clearSupportedSchemes()
-{
-   mSupportedSchemes.clear();
-}
-
-void 
-Profile::addSupportedMethod(const MethodTypes& method)
-{
-   mSupportedMethodTypes.insert(method);
-   mSupportedMethods.push_back(Token(getMethodName(method)));
-}
-
-bool 
-Profile::isMethodSupported(MethodTypes method) const
-{
-   return mSupportedMethodTypes.count(method) != 0;
-}
-
-Tokens 
-Profile::getAllowedMethods() const
-{
-   return mSupportedMethods;
-}
-
-void 
-Profile::clearSupportedMethods()
-{
-   mSupportedMethodTypes.clear();
-   mSupportedMethods.clear();
-}
-
-void 
-Profile::addSupportedOptionTag(const Token& tag)
-{
-   mSupportedOptionTags.push_back(tag);
-}
-
-Tokens 
-Profile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
-{
-   Tokens tokens;
-   for (Tokens::const_iterator i=requiresOptionTags.begin(); i != requiresOptionTags.end(); ++i)
-   {
-      // if this option is not supported
-      if (!mSupportedOptionTags.find(*i))
-      {
-         tokens.push_back(*i);
-      }
-   }
-   
-   return tokens;
-}
-
-Tokens 
-Profile::getSupportedOptionTags() const
-{
-   return mSupportedOptionTags;
-}
-
-void 
-Profile::clearSupportedOptionTags()
-{
-   mSupportedOptionTags.clear();
-}
-
-void 
-Profile::addSupportedMimeType(const Mime& mimeType)
-{
-   mSupportedMimeTypes.push_back(mimeType);
-}
-
-bool 
-Profile::isMimeTypeSupported(const Mime& mimeType) const
-{
-   return mSupportedMimeTypes.find(mimeType);
-}
-
-Mimes 
-Profile::getSupportedMimeTypes() const
-{
-   return mSupportedMimeTypes;
-}
-
-void 
-Profile::clearSupportedMimeTypes()
-{
-   mSupportedMimeTypes.clear();
-}
-
-void 
-Profile::addSupportedEncoding(const Token& encoding)
-{
-   mSupportedEncodings.push_back(encoding);
-}
-
-bool 
-Profile::isContentEncodingSupported(const Token& encoding) const
-{
-   return mSupportedEncodings.find(encoding);
-}
-
-Tokens 
-Profile::getSupportedEncodings() const
-{
-   return mSupportedEncodings;
-}
-
-void 
-Profile::clearSupportedEncodings()
-{
-   mSupportedEncodings.clear();
-}
-
-void 
-Profile::addSupportedLanguage(const Token& lang)
-{
-   mSupportedLanguages.push_back(lang);
-}
-
-bool 
-Profile::isLanguageSupported(const Tokens& langs) const
-{
-   for (Tokens::const_iterator i=langs.begin(); i != langs.end(); ++i)
-   {
-      if (mSupportedLanguages.find(*i) == false)
-      {
-         return false;
-      }
-   }
-   return true;
-}
-
-Tokens 
-Profile::getSupportedLanguages() const
-{
-   return mSupportedLanguages;
-}
-
-void 
-Profile::clearSupportedLanguages()
-{
-   mSupportedLanguages.clear();
 }
 
 void 
@@ -281,51 +235,26 @@ Profile::addAdvertisedCapability(const Headers::Type header)
 		  header == Headers::Supported);
 
    mAdvertisedCapabilities.insert(header);
+   mHasAdvertisedCapabilities = true;
 }
  
 bool 
 Profile::isAdvertisedCapability(const Headers::Type header) const
 {
+   // Fall through seting (if required)
+   if(!mHasAdvertisedCapabilities && mBaseProfile)
+   {
+       return mBaseProfile->isAdvertisedCapability(header);
+   }
    return mAdvertisedCapabilities.count(header) != 0;
 }
 
 void 
 Profile::clearAdvertisedCapabilities(void)
 {
+   // !slg! do we set mHasAdvertisedCapabilities = false and allow fall through?  For now we assume that clearing means to not advertised any headers
+   mHasAdvertisedCapabilities = true;
    return mAdvertisedCapabilities.clear();
-}
-
-void 
-Profile::addGruu(const Data& aor, const NameAddr& contact)
-{
-}
-
-bool 
-Profile::hasGruu(const Data& aor) const
-{
-   return false;
-}
-
-bool 
-Profile::hasGruu(const Data& aor, const Data& instance) const
-{
-   return false;
-}
-
-NameAddr&
-Profile:: getGruu(const Data& aor)
-{
-   assert(0);
-   static NameAddr gruu;
-   return gruu;
-}
-
-NameAddr&
-Profile:: getGruu(const Data& aor, const NameAddr& contact)
-{
-   assert(0);
-   static NameAddr gruu;
-   return gruu;
 }
 
 void 
@@ -338,6 +267,11 @@ Profile::setOutboundProxy( const Uri& uri )
 const NameAddr&
 Profile::getOutboundProxy() const
 {
+   // Fall through seting (if required)
+   if(!mHasOutboundProxy && mBaseProfile)
+   {
+       return mBaseProfile->getOutboundProxy();
+   }
    assert(mHasOutboundProxy);
    return mOutboundProxy;
 }
@@ -345,199 +279,65 @@ Profile::getOutboundProxy() const
 bool
 Profile::hasOutboundProxy() const
 {
+   // Fall through seting (if required)
+   if(!mHasOutboundProxy && mBaseProfile)
+   {
+       return mBaseProfile->hasOutboundProxy();
+   }
    return mHasOutboundProxy;
 }
    
-void
-Profile::setUAName(const Data& name)
-{
-   mUAName = name;
-}
-
-const resip::Data&
-Profile::getUAName() const
-{
-   return mUAName;
-}
-
 void 
-Profile::disableGruu()
+Profile::setLooseToTagMatching(bool enabled)
 {
-   assert(0);
+   mLooseToTagMatching = enabled;
+   mHasLooseToTagMatching = true;
 }
 
-void 
-Profile::setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
+bool 
+Profile::getLooseToTagMatching() const
 {
-   DigestCredential cred(aor, realm, user, password);
-   DebugLog (<< "Adding credential: " << cred);
-   mDigestCredentials.erase(cred);
-   mDigestCredentials.insert(cred);
-}
-     
-Profile::DigestCredentialHandler* 
-Profile::getDigestHandler()
-{
-   return mDigestCredentialHandler;
-}
-
-const Profile::DigestCredential&
-Profile::getDigestCredential( const Data& realm )
-{
-   DigestCredential dc;
-   dc.realm = realm;
-   
-   DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
-   if (i != mDigestCredentials.end())
+   // Fall through seting (if required)
+   if(!mHasLooseToTagMatching && mBaseProfile)
    {
-      return *i;
+       return mBaseProfile->getLooseToTagMatching();
    }
-   
-   static const DigestCredential empty;
-   return empty;
-}
-
-const Profile::DigestCredential&
-Profile::getDigestCredential( const SipMessage& challenge )
-{
-   StackLog (<< Inserter(mDigestCredentials));
-   DebugLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
-   const Data& aor = challenge.header(h_From).uri().getAor();
-   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
-        it != mDigestCredentials.end(); it++)
-   {
-      if (it->aor == aor)
-      {
-         return *it;
-      }
-   }
-   const Data& user = challenge.header(h_From).uri().user();
-   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
-        it != mDigestCredentials.end(); it++)
-   {
-      if (it->user == user)
-      {
-         return *it;
-      }
-   }
-
-   // !jf! why not just throw here? 
-   static const DigestCredential empty;
-   return empty;
-}
-
-Profile::DigestCredential::DigestCredential(const Data& a, const Data& r, const Data& u, const Data& p) :
-   aor(a),
-   realm(r),
-   user(u),
-   password(p)
-{
-}
-
-Profile::DigestCredential::DigestCredential() : 
-   aor(Data::Empty),
-   realm(Data::Empty),
-   user(Data::Empty),
-   password(Data::Empty)
-{
-}  
-
-bool
-Profile::DigestCredential::operator<(const DigestCredential& rhs) const
-{
-   if (realm < rhs.realm)
-   {
-      return true;
-   }
-   else if (realm == rhs.realm)
-   {
-      return aor < rhs.aor;
-   }
-   else
-   {
-      return false;
-   }
-}
-
-std::ostream&
-resip::operator<<(std::ostream& strm, const Profile::DigestCredential& cred)
-{
-   strm << "realm=" << cred.realm 
-        << " aor=" << cred.aor
-        << " user=" << cred.user ;
-   return strm;
-}
-
-bool& 
-Profile::looseToTagMatching()
-{
    return mLooseToTagMatching;
 }
 
-const bool 
-Profile::looseToTagMatching() const
+void 
+Profile::setRportEnabled(bool enabled)
 {
-   return mLooseToTagMatching;
+   mRportEnabled = enabled;
+   mHasRportEnabled = true;
 }
 
-bool& 
-Profile::rportEnabled()
+bool 
+Profile::getRportEnabled() const
 {
-   return mRportEnabled;   
-}
-
-const bool 
-Profile::rportEnabled() const
-{
-   return mRportEnabled;   
-}
-
-bool& 
-Profile::validateContentEnabled()
-{
-   return mValidateContentEnabled;   
-}
-
-const bool 
-Profile::validateContentEnabled() const
-{
-   return mValidateContentEnabled;   
-}
-
-bool& 
-Profile::validateContentLanguageEnabled()
-{
-   return mValidateContentLanguageEnabled;   
-}
-
-const bool 
-Profile::validateContentLanguageEnabled() const
-{
-   return mValidateContentLanguageEnabled;   
-}
-
-bool& 
-Profile::validateAcceptEnabled()
-{
-   return mValidateAcceptEnabled;   
-}
-
-const bool 
-Profile::validateAcceptEnabled() const
-{
-   return mValidateContentEnabled;   
+   // Fall through seting (if required)
+   if(!mHasRportEnabled && mBaseProfile)
+   {
+       return mBaseProfile->getRportEnabled();
+   }
+   return mRportEnabled;
 }
 
 void 
 Profile::setUserAgent( const Data& userAgent )
 {
-   mHasUserAgent = true;   
    mUserAgent = userAgent;   
+   mHasUserAgent = true;   
 }
 
 const Data& 
 Profile::getUserAgent() const
 {
+   // Fall through seting (if required)
+   if(!mHasUserAgent && mBaseProfile)
+   {
+       return mBaseProfile->getUserAgent();
+   }
    assert(mHasUserAgent);
    return mUserAgent;
 }
@@ -545,6 +345,11 @@ Profile::getUserAgent() const
 bool 
 Profile::hasUserAgent() const
 {
+   // Fall through seting (if required)
+   if(!mHasUserAgent && mBaseProfile)
+   {
+       return mBaseProfile->hasUserAgent();
+   }
    return mHasUserAgent;
 }
 

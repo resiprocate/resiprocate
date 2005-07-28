@@ -4,7 +4,7 @@
 #include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -82,11 +82,11 @@ ServerOutOfDialogReq::answerOptions()
 	mDum.makeResponse(mResponse, mRequest, 200);
 
 	// Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
-	mResponse.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
-	mResponse.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
-	mResponse.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
-	mResponse.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
-	mResponse.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+	mResponse.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+	mResponse.header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes();
+	mResponse.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+	mResponse.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+	mResponse.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
 	return mResponse;
 }

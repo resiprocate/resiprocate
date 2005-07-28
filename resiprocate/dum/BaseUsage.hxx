@@ -26,6 +26,7 @@ class BaseUsage : public Handled
 
       virtual void end()=0;
       virtual void send(SipMessage& request);
+      virtual std::ostream& dump(std::ostream& strm) const;
       
    protected:
       BaseUsage(DialogUsageManager& dum);      
@@ -39,10 +40,11 @@ class BaseUsage : public Handled
       DialogUsageManager& mDum;
    private:
       BaseUsageHandle mHandle;
-
+      
+      friend class DestroyUsage;
       friend class DialogUsageManager;
 };
- 
+
 }
 
 #endif

@@ -1,13 +1,15 @@
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
 AppDialogSet::AppDialogSet(DialogUsageManager& dum) : 
    Handled(dum),
    mDum(dum),
-   mDialogSetId(Data::Empty, Data::Empty)
+   mDialogSet(0)
 {
 }
 
@@ -30,7 +32,30 @@ AppDialogSet::destroy()
 void 
 AppDialogSet::cancel()
 {
-   mDum.cancel(mDialogSetId);   
+   if(mDialogSet)
+   {
+      mDialogSet->cancel();
+   }
+}
+
+UserProfile*  
+AppDialogSet::selectUASUserProfile(const SipMessage&)
+{
+   // Default is Master Profile - override this method to select a different userProfile for UAS DialogSets
+   return mDum.getMasterProfile();
+}
+
+UserProfile* 
+AppDialogSet::getUserProfile()
+{
+   if(mDialogSet)
+   {
+      return mDialogSet->getUserProfile();
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 AppDialog* 
@@ -39,9 +64,23 @@ AppDialogSet::createAppDialog(const SipMessage&)
    return new AppDialog(mDum);
 }
 
-const DialogSetId& 
+DialogSetId 
 AppDialogSet::getDialogSetId()
 {
-   return mDialogSetId;   
+   if(mDialogSet)
+   {
+       return mDialogSet->getId();
+   }
+   else
+   {
+       return DialogSetId(Data::Empty, Data::Empty);
+   }
 }
 
+
+std::ostream& 
+AppDialogSet::dump(std::ostream& strm) const
+{
+   strm << "AppDialogSet " << mId;
+   return strm;
+}

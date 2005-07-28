@@ -22,7 +22,7 @@ class InviteSessionHandler
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
       
       /// called when dialog enters the Early state - typically after getting 100
-      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents*)=0;
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents&)=0;
 
       /// called when dialog enters the Early state - typically after getting 18x
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
@@ -37,11 +37,18 @@ class InviteSessionHandler
       // expect an onTerminated after this
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 
-      virtual void onForkDestroyed(ClientInviteSessionHandle)=0;
-
       /// called when an dialog enters the terminated state - this can happen
-      /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
-      virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
+      /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
+      /// times out
+      typedef enum
+      {
+         PeerEnded, // received a BYE or CANCEL from peer
+         //Ended, // ended by the application
+         GeneralFailure, // ended due to a failure
+         Cancelled,
+         SessionExpired
+      } TerminatedReason;
+      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a 3xx with valid targets is encountered in an early dialog     
       /// This is different then getting a 3xx in onTerminated, as another
@@ -56,10 +63,10 @@ class InviteSessionHandler
 
       /** called when an SDP answer is received - has nothing to do with user
           answering the call */ 
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;
 
       /// called when an SDP offer is received - must send an answer soon after this
-      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;      
+      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
 
       //called when an Invite w/out SDP is sent, or any other context which
       //requires an SDP offer from the user
@@ -70,8 +77,8 @@ class InviteSessionHandler
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
       
       /// called when some state in the Dialog changes - typically remoteURI, or
-      /// a re-invite
-      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
+      /// a re-invite. This is no longer necessary - use onOfferRequired and onOffer
+      //virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
 
       /// called when INFO message is received 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
@@ -89,12 +96,14 @@ class InviteSessionHandler
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
 
-      //default behaviour is to send a BYE to end the dialog, msg is the 
-      //2xx that was being retransmitted
-      virtual void onAckNotReceived(InviteSessionHandle, const SipMessage& msg);
+      /// called when an REFER message receives an accepted response 
+      virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg)=0;
 
+      //default behaviour is to send a BYE to end the dialog
+      virtual void onAckNotReceived(InviteSessionHandle);
+
+      // will be called if reINVITE or UPDATE in dialog fails
       virtual void onIllegalNegotiation(InviteSessionHandle, const SipMessage& msg);     
-
 };
 
 }

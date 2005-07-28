@@ -1,5 +1,6 @@
 #include <cassert>
 #include "DumTimeout.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
@@ -79,7 +80,57 @@ DumTimeout::brief() const
 std::ostream& 
 DumTimeout::encode(std::ostream& strm) const
 {
-   strm << "DumTimeout: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
+   strm << "DumTimeout::";
+   switch (mType)
+   {
+      case SessionExpiration:
+         strm <<"SessionExpiration";
+         break;
+      case SessionRefresh:
+         strm <<"SessionRefresh";
+         break;
+      case Registration:
+         strm <<"Registration";
+         break;
+      case Provisional1:
+         strm <<"Provisional1";
+         break;
+      case Provisional2:
+         strm <<"Provisional2";
+         break;
+      case Publication:
+         strm <<"Publication";
+         break;
+      case Retransmit200:
+         strm <<"Retransmit200";
+         break;
+      case Retransmit1xx:
+         strm <<"Retransmit1xx";
+         break;
+      case WaitForAck:
+         strm <<"WaitForAck";
+         break;
+      case CanDiscardAck:
+         strm <<"CanDiscardAck";
+         break;
+      case StaleCall:
+         strm <<"StaleCall";
+         break;
+      case Subscription:
+         strm <<"Subscription";
+         break;
+      case StaleReInvite:
+         strm <<"StaleReInvite";
+         break;
+      case Glare:
+         strm <<"Glare";
+         break;
+      case Cancelled:
+         strm <<"Cancelled";
+         break;
+   }
+
+   strm << ": duration=" << mDuration << " seq=" << mSeq;
    return strm;
 }
 

@@ -2,7 +2,6 @@
 #define RESIP_SERVERINVITESESSION_HXX
 
 #include "resiprocate/dum/InviteSession.hxx"
-
 #include "resiprocate/SipMessage.hxx"
 
 #include <deque>
@@ -16,35 +15,76 @@ class ServerInviteSession: public InviteSession
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
-      /// Returns a 200 the user should end to accept the call
-      SipMessage& accept();
-      
-      /// Returns provisional response (a 1xx but not 100). This may contain an
-      /// offer or answer depending on if setOffer or setAnswer was called
-      /// before this.
-      SipMessage& provisional(int statusCode);
-      
-      /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
-      virtual SipMessage& reject(int statusCode);
+      // send a 3xx
+      void redirect(const NameAddrs& contacts, int code=302);
 
-      virtual void send(SipMessage& msg);
+      // send a 1xx - provisional response
+      void provisional(int code=180);
+      
+      /// Called to set the offer that will be used in the next messages that
+      /// sends and offer. Does not send an offer
+      virtual void provideOffer(const SdpContents& offer);
 
-      /// Makes the dialog end. Depending on the current state, this might
-      /// results in BYE or CANCEL being sent.
+      /// Called to set the answer that will be used in the next messages that
+      /// sends an offer. Does not send an answer
+      virtual void provideAnswer(const SdpContents& answer);
+
+      /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
-      
-      void dispatch(const SipMessage& msg);
 
+      /// Rejects an offer at the SIP level. So this can send a 488 to a
+      /// reINVITE or UPDATE
+      virtual void reject(int statusCode, WarningCategory *warning = 0);
+
+      //accept a re-invite, etc.  Always 200?
+      //this is only applicable to the UAS
+      virtual void accept(int statusCode=200);
+            
    private:
       friend class Dialog;
+
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimeout& timer);
+
+      void dispatchStart(const SipMessage& msg);
+      void dispatchOfferOrEarly(const SipMessage& msg);
+      void dispatchAccepted(const SipMessage& msg);
+      void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
+      void dispatchOfferReliable(const SipMessage& msg);
+      void dispatchNoOfferReliable(const SipMessage& msg);
+      void dispatchFirstSentOfferReliable(const SipMessage& msg);
+      void dispatchFirstEarlyReliable(const SipMessage& msg);
+      void dispatchEarlyReliable(const SipMessage& msg);
+      void dispatchSentUpdate(const SipMessage& msg);
+      void dispatchSentUpdateAccepted(const SipMessage& msg);
+      void dispatchReceivedUpdate(const SipMessage& msg);
+      void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
+      void dispatchWaitingToTerminate(const SipMessage& msg);
+      void dispatchWaitingToHangup(const SipMessage& msg);
+
+      void dispatchCancel(const SipMessage& msg);
+      void dispatchBye(const SipMessage& msg);
+      void dispatchUnknown(const SipMessage& msg);
+
+      // utilities
+      void startRetransmit1xxTimer();
+      void sendAccept(int code, SdpContents* sdp); // sends 2xxI
+      void sendProvisional(int code);
+      void sendUpdate(const SdpContents& sdp);
+
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
       ServerInviteSession(const ServerInviteSession&);
       ServerInviteSession& operator=(const ServerInviteSession&);
 
-      std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
-      SipMessage m200; // for retransmission
+      // stores the original request
+      const SipMessage mFirstRequest;
+      SipMessage m1xx; // for 1xx retransmissions
+      unsigned long mCurrentRetransmit1xx;
+      
+      //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
+      //SipMessage m200; // for retransmission
 };
 
 }
