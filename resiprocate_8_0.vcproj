@@ -702,6 +702,9 @@
 				RelativePath="TimerQueue.cxx">
 			</File>
 			<File
+				RelativePath=".\TlsConnection.cxx">
+			</File>
+			<File
 				RelativePath="TlsTransport.cxx">
 			</File>
 			<File
