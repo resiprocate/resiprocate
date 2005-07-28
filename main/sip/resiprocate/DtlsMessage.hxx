@@ -7,6 +7,10 @@
 
 #include <openssl/ssl.h>
 
+#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
+#error DTLS support requires OpenSSL 0.9.8 or later
+#endif
+
 namespace resip
 {
 
