@@ -997,12 +997,11 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    }
 
    //normal sip messages
-   incomingProcess(msg);   
+   incomingProcess(msg);
 }
 
-void incomingProcess(std::auto_ptr(Msg) msg);
-
-
+void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
+{
    //call or create feature chain if appropriate
    Data tid = Data::Empty;
    {
