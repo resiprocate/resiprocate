@@ -17,6 +17,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -40,7 +41,8 @@ main(int argc, char* argv[])
    int window = 5;
    int seltime = 100;
    int v6 = 0;
-
+   int invite=0;
+   
 #ifdef WIN32
    //logLevel = "ALERT";
   logLevel = "INFO";
@@ -53,10 +55,11 @@ main(int argc, char* argv[])
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
       {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
-      {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
+      { "select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
       {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
+      {"invite",      'i', POPT_ARG_NONE,   &invite     ,   0, "send INVITE/BYE instead of REGISTER", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -70,6 +73,7 @@ main(int argc, char* argv[])
    IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
    SipStack sender;
+   
 //   sender.addTransport(UDP, 25060, version); // !ah! just for debugging TransportSelector
 //   sender.addTransport(TCP, 25060, version);
 
@@ -113,6 +117,7 @@ main(int argc, char* argv[])
    int outstanding=0;
    int count = 0;
    int sent = 0;
+
    while (count < runs)
    {
       //InfoLog (<< "count=" << count << " messages=" << messages.size());
@@ -122,14 +127,24 @@ main(int argc, char* argv[])
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
          target.uri().port() = registrarPort; // +(sent%window);
-         SipMessage* next = Helper::makeRegister( target, from, contact);
+
+         SipMessage* next=0;
+         if (invite)
+         {
+            next = Helper::makeInvite( target, from, contact);            
+         }
+         else
+         {
+            next = Helper::makeRegister( target, from, contact);
+         }
+         
          next->header(h_Vias).front().sentPort() = senderPort;
          sender.send(*next);
          outstanding++;
          sent++;
          delete next;
       }
-      
+
       FdSet fdset; 
       receiver.buildFdSet(fdset);
       sender.buildFdSet(fdset);
@@ -138,14 +153,40 @@ main(int argc, char* argv[])
       sender.process(fdset);
       
       SipMessage* request = receiver.receive();
+      static NameAddr contact;
+
       if (request)
       {
          assert(request->isRequest());
-         assert(request->header(h_RequestLine).getMethod() == REGISTER);
+         SipMessage response;
+         switch (request->header(h_RequestLine).getMethod())
+         {
+            case INVITE:
+            {
+               DeprecatedDialog dlg(contact);
+               dlg.makeResponse(*request, response, 180);
+               receiver.send(response);               
+               dlg.makeResponse(*request, response, 200);
+               receiver.send(response);               
+               break;
+            }
 
-         SipMessage* response = Helper::makeResponse(*request, 200);
-         receiver.send(*response);
-         delete response;
+            case ACK:
+               break;
+
+            case BYE:
+               Helper::makeResponse(response, *request, 200);
+               receiver.send(response);
+               break;
+               
+            case REGISTER:
+               Helper::makeResponse(response, *request, 200);
+               receiver.send(response);
+               break;
+            default:
+               assert(0);
+               break;
+         }
          delete request;
       }
       
@@ -153,18 +194,57 @@ main(int argc, char* argv[])
       if (response)
       {
          assert(response->isResponse());
-         assert(response->header(h_CSeq).method() == REGISTER);
-         assert(response->header(h_StatusLine).statusCode() == 200);
-         outstanding--;
-         count++;
+         switch(response->header(h_CSeq).method())
+         {
+            case REGISTER:
+               outstanding--;
+               count++;
+               break;
+               
+            case INVITE:
+               if (response->header(h_StatusLine).statusCode() == 200)
+               {
+                  outstanding--;
+                  count++;
+
+                  DeprecatedDialog dlg(contact);
+                  dlg.createDialogAsUAC(*response);
+                  SipMessage* ack = dlg.makeAck();
+                  sender.send(*ack);
+                  delete ack;
+
+                  SipMessage* bye = dlg.makeBye();
+                  sender.send(*bye);
+                  delete bye;
+               }
+               break;
+
+            case BYE:
+               break;
+               
+            default:
+               assert(0);
+               break;
+         }
+         
          delete response;
       }
    }
    InfoLog (<< "Finished " << count << " runs");
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
-        << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
+   if (!invite)
+   {
+      cout << runs << " registrations peformed in " << elapsed << " ms, a rate of " 
+           << runs / ((float) elapsed / 1000.0) << " transactions per second.]" << endl;
+   }
+   else
+   {
+      cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+   }
+   cout << "Note: this test runs both sides (client and server)" << endl;
+   
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
