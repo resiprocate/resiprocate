@@ -1,17 +1,16 @@
 #if !defined(RESIP_DUMCOMMAND_HXX)
 #define RESIP_DUMCOMMAND_HXX
 
-#include "resiprocate/dum/DumCommand.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/Message.hxx"
 
 namespace resip
 {
 
-class DumCommand
+class DumCommand : public Message
 {
    public:
       virtual ~DumCommand() {}
-      virtual void excute() = 0;
+      virtual void execute() = 0;
 };
 
 }

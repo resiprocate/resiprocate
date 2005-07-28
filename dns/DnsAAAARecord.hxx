@@ -2,6 +2,9 @@
 #define RESIP_DNS_AAAA_RECORD
 
 #ifdef USE_IPV6
+
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+
 namespace resip
 {
 

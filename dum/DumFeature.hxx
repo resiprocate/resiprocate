@@ -1,12 +1,13 @@
 #ifndef RESIP_DumFeature_HXX
 #define RESIP_DumFeature_HXX 
 
+#include "resiprocate/dum/TargetCommand.hxx"
+
 namespace resip
 {
 
 class DialogUsageManager;
 class Message;
-class TargetCommand;
 
 class DumFeature
 {
