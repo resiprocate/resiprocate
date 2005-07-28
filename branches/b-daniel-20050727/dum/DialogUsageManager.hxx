@@ -21,6 +21,7 @@
 #include "resiprocate/dum/DumFeature.hxx"
 #include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/dum/DumFeatureMessage.hxx"
+#include "resiprocate/dum/TargetCommand.hxx"
 
 namespace resip 
 {
@@ -309,24 +310,26 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       class IncomingTarget : public TargetCommand::Target
       {
          public:
-            IncomingTarget(DialogUsageManager& dum) : mDum(dum) 
-            {}
+            IncomingTarget(DialogUsageManager& dum) : TargetCommand::Target(dum) 
+            {
+            }
 
             virtual void post()(std::auto_ptr<Message> msg)
             {
-               dum.incomingProcess(msg);
+               mDum.incomingProcess(msg);
             }
       };
       
       class OutgoingTarget : public TargetCommand::Target
       {
          public:
-            OutgoingTarget(DialogUsageManager& dum) : mDum(dum) 
-            {}
+            OutgoingTarget(DialogUsageManager& dum) : TargetCommand::Target(dum) 
+            {
+            }
 
             virtual void post()(std::auto_ptr<Message> msg)
             {
-               dum.outgoingProcess(msg);
+               mDum.outgoingProcess(msg);
             }
       };
 
