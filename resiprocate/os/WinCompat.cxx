@@ -1,8 +1,10 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
+#include <atlconv.h>
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/WinCompat.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -164,7 +166,8 @@ WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
    // Obtain the size of the structure
    IP_ADAPTER_ADDRESSES *pAdapterAddresses;
    DWORD dwRet, dwSize;
-   dwRet = (instance()->getAdaptersAddresses)(saddr->sa_family, 0, NULL, NULL, &dwSize);
+   DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+   dwRet = (instance()->getAdaptersAddresses)(saddr->sa_family, flags, NULL, NULL, &dwSize);
    if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
    {
       // Allocate memory
@@ -175,7 +178,6 @@ WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
       }
 
       // Obtain network adapter information (IPv6)
-      DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST;
       dwRet = (instance()->getAdaptersAddresses)(saddr->sa_family, flags, NULL, pAdapterAddresses, &dwSize);
       if (dwRet != ERROR_SUCCESS) 
       {
@@ -301,6 +303,61 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 #endif
    return Tuple();
 }
+
+
+std::list<std::pair<Data,Data> >
+WinCompat::getInterfaces(const Data& matching)
+{
+   if (instance()->loadLibraryAlreadyFailed || (getVersion() < WinCompat::WindowsXP))
+   {
+      throw Exception("Library iphlpapi.dll with IPv6 support not available", __FILE__,__LINE__);
+   }
+
+   // Obtain the size of the structure
+   IP_ADAPTER_ADDRESSES *pAdapterAddresses;
+   std::list<std::pair<Data,Data> > results;
+   DWORD dwRet, dwSize;
+   DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+   dwRet = (instance()->getAdaptersAddresses)(AF_UNSPEC, flags, NULL, NULL, &dwSize);
+   if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
+   {
+      // Allocate memory
+      pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT,dwSize);
+      if (pAdapterAddresses == NULL) 
+      {
+         throw Exception("Can't query for adapter addresses - LocalAlloc error", __FILE__,__LINE__);
+      }
+
+      // Obtain network adapter information (IPv6)
+      dwRet = (instance()->getAdaptersAddresses)(AF_UNSPEC, flags, NULL, pAdapterAddresses, &dwSize);
+      if (dwRet != ERROR_SUCCESS) 
+      {
+         LocalFree(pAdapterAddresses);
+         throw Exception("Can't query for adapter addresses - GetAdapterAddresses", __FILE__,__LINE__);
+      } 
+      else 
+      {
+         IP_ADAPTER_ADDRESSES *AI;
+         USES_CONVERSION;
+         int i;
+         for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
+         {
+            if (AI->FirstUnicastAddress != NULL) 
+            {
+               //Data name(AI->AdapterName); 
+               Data name(W2A(AI->FriendlyName));
+               if(matching == Data::Empty || name == matching)
+               {
+                  results.push_back(std::make_pair(name, DnsUtil::inet_ntop(*AI->FirstUnicastAddress->Address.lpSockaddr)));
+               }
+            } 
+         }
+         LocalFree(pAdapterAddresses);
+      }      
+   }
+   return results;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

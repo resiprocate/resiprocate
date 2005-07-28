@@ -2,6 +2,7 @@
 #define resip_WinCompat_hxx
 
 #include <Iphlpapi.h>
+#include <list>
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Mutex.hxx"
@@ -39,6 +40,7 @@ class WinCompat
       };
 
       static Tuple determineSourceInterface(const Tuple& destination);
+      static std::list<std::pair<Data,Data> > getInterfaces(const Data& matching);
 
    private:
       static WinCompat* mInstance;
