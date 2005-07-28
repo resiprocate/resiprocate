@@ -2,10 +2,6 @@
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
 
-ifeq ($(USE_DTLS),true)
-BUILD_DTLS = dtls
-endif
-
 all: repro dum tests 
 
 resiprocate: contrib 
@@ -17,8 +13,9 @@ dum: resiprocate
 repro: dum
 	cd repro; $(MAKE)
 
-tests: resiprocate
+tests: resiprocate 
 	cd resiprocate/test; $(MAKE)
+	cd tfm; $(MAKE)
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
@@ -39,7 +36,7 @@ configure_dtls: contrib/dtls/Makefile
 dtls: configure_dtls
 	cd contrib/dtls && $(MAKE)
 
-contrib: ares $(BUILD_DTLS)
+contrib: ares 
 
 clean: 
 	cd resiprocate; $(MAKE) clean
