@@ -1,4 +1,4 @@
-2#if !defined(RESIP_TARGETCOMMAND_HXX)
+#if !defined(RESIP_TARGETCOMMAND_HXX)
 #define RESIP_TARGETCOMMAND_HXX
 
 #include "resiprocate/dum/DumCommand.hxx"
@@ -18,18 +18,24 @@ class TargetCommand : public DumCommand
             {
             }
             
-            virtual void post()(std::auto_ptr<Message>)=0;
+            virtual void post(std::auto_ptr<Message>)=0;
 
          protected:
             DialogUsageManager& mDum;
       };
 
       TargetCommand(Target& target, std::auto_ptr<Message> message);
+      TargetCommand(const TargetCommand&);
       void execute();
+
+
+      Message* clone() const;
+      std::ostream& encode(std::ostream& strm) const;
+      std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
       Target& mTarget;
-      std::auto_ptr<Message> mMessage;
+      mutable std::auto_ptr<Message> mMessage;
 };
 
 }

@@ -70,10 +70,10 @@ SRC =   \
 	CertMessage.cxx \
 	DumFeatureChain.cxx \
 	DumFeatureMessage.cxx \
-	DumEncrypted.cxx \
-	EncryptionRequest.cxx \
 	IdentityHandler.cxx \
 	TargetCommand.cxx \
-	DumFeature.cxx
+	DumFeature.cxx \
+	Stun.cxx \
+	StunUdpTransport.cxx
 
 include $(BUILD)/Makefile.post
