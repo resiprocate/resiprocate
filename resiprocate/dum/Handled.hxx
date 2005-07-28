@@ -13,10 +13,15 @@ class Handled
       Handled(HandleManager& ham);
       virtual ~Handled();
       
+      virtual std::ostream& dump(std::ostream& strm) const=0;
+      
    protected:
       HandleManager& mHam;
       Handled::Id mId;
 };
+
+std::ostream& 
+operator<<(std::ostream& strm, const Handled& usage);
  
 }
 

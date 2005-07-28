@@ -42,7 +42,7 @@ class ServerSubscription : public BaseSubscription
 
    protected:
       virtual ~ServerSubscription();
-      virtual void dialogDestroyed(const SipMessage& msg);           
+
    private:
       friend class Dialog;
       
@@ -52,8 +52,6 @@ class ServerSubscription : public BaseSubscription
       void makeNotify();    
       
       int getTimeLeft();
-
-      bool shouldDestroyAfterSendingFailure(const SipMessage& msg);      
 
       Data mSubscriber;
 
