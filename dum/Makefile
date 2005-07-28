@@ -72,6 +72,8 @@ SRC =   \
 	DumFeatureMessage.cxx \
 	DumEncrypted.cxx \
 	EncryptionRequest.cxx \
-	IdentityHandler.cxx
+	IdentityHandler.cxx \
+	TargetCommand.cxx \
+	DumFeature.cxx
 
 include $(BUILD)/Makefile.post
