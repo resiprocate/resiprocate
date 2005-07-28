@@ -6,14 +6,13 @@ namespace resip
 
 class DialogUsageManager;
 class Message;
+class TargetCommand;
 
 class DumFeature
 {
    public:      
-      DumFeature(DialogUsageManager& dum, TargetCommand::Target& target) : mDum(dum) 
-      {}
-
-      virtual ~DumFeature() {}
+      DumFeature(DialogUsageManager& dum, TargetCommand::Target& target);
+      virtual ~DumFeature();
       
       enum ProcessingResultMask
       {
@@ -34,9 +33,12 @@ class DumFeature
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
       
-      virtual ProcessingResult process(Message* msg) = 0;      
+      virtual ProcessingResult process(Message* msg) = 0;
+      virtual void postCommand(std::auto_ptr<Message> message);
+
    protected:
-      DialogUsageManager& mDum;      
+      DialogUsageManager& mDum;
+      TargetCommand::Target& mTarget;
 };
  
 }
