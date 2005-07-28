@@ -7,7 +7,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
+
 
 using namespace resip;
 
@@ -16,7 +16,8 @@ using namespace resip;
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
-     mOnNewSubscriptionCalled(false)
+     mOnNewSubscriptionCalled(mEventType == "refer"),
+     mEnded(false)
 {
    mLastRequest = request;
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
@@ -43,9 +44,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
    if (msg.isRequest() )
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
-
-      //!dcm! -- heavy, should just store enough information to make response
-      mLastNotify = msg;
+      mDialog.makeResponse(mLastResponse, msg, 200);
+      send(mLastResponse);
 
       if (!mOnNewSubscriptionCalled)
       {
@@ -86,7 +86,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   }
                   else
                   {
-                     acceptUpdate();                     
                      handler->onTerminated(getHandle(), msg);
                      delete this;
                   }
@@ -94,16 +93,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
             }
             else
             {
-               acceptUpdate();
                handler->onTerminated(getHandle(), msg);
                delete this;
             }
          }
          else
-         {            
-            mDialog.makeResponse(mLastResponse, msg, 400);
-            mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-            send(mLastResponse);
+         {
             handler->onTerminated(getHandle(), msg);
             delete this;
          }
@@ -125,7 +120,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
       }
          
-      if (msg.header(h_SubscriptionState).value() == "active")
+      if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
          {
@@ -136,7 +131,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          
          handler->onUpdateActive(getHandle(), msg);
       }
-      else if (msg.header(h_SubscriptionState).value() == "pending")
+      else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
       {
          if (refreshInterval)
          {
@@ -149,13 +144,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
-         acceptUpdate();
          handler->onTerminated(getHandle(), msg);
          DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");                   
          delete this;
          return;
       }
-      else
+      else if (!mEnded)
       {
          handler->onUpdateExtension(getHandle(), msg);         
       }
@@ -164,8 +158,19 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
       // to ignore this case
-      if (msg.header(h_StatusLine).statusCode() >= 300)
-      {         
+      if (msg.header(h_StatusLine).statusCode() == 481)
+      {
+         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " 
+                  << mDialog.mRemoteTarget);
+         handler->onTerminated(getHandle(), msg);
+         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
+         mDum.send(sub);
+         
+         delete this;
+         return;
+      }
+      else if (msg.header(h_StatusLine).statusCode() >= 300)
+      {
          handler->onTerminated(getHandle(), msg);
          delete this;
          return;
@@ -185,71 +190,37 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 void  
 ClientSubscription::requestRefresh()
 {
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-   //!dcm! -- need a mechanism to retrieve this for the event package...part of
-   //the map that stores the handlers, or part of the handler API
-   //mLastRequest.header(h_Expires).value() = 300;   
-   InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
-   send(mLastRequest);
+   if (!mEnded)
+   {
+      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+      //!dcm! -- need a mechanism to retrieve this for the event package...part of
+      //the map that stores the handlers, or part of the handler API
+      //mLastRequest.header(h_Expires).value() = 300;   
+      InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
+      send(mLastRequest);
+   }
 }
 
 void  
 ClientSubscription::end()
 {
    InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
-   
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-   mLastRequest.header(h_Expires).value() = 0;   
-   send(mLastRequest);
-}
 
-
-void 
-ClientSubscription::acceptUpdate(int statusCode)
-{
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-   send(mLastResponse);
-}
-
-void 
-ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
-{
-   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   if (!reasonPhrase.empty())
+   if (!mEnded)
    {
-      mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
-   }
-   
-   send(mLastResponse);
-   switch (Helper::determineFailureMessageEffect(mLastResponse))
-   {
-      case Helper::TransactionTermination:
-      case Helper::RetryAfter:
-         break;            
-      case Helper::OptionalRetryAfter:
-      case Helper::ApplicationDependant: 
-         throw UsageUseException("Not a reasonable code to reject a NOTIFY with inside an established dialog.", 
-                                 __FILE__, __LINE__);
-         break;            
-      case Helper::DialogTermination: //?dcm? -- throw or destroy this?
-      case Helper::UsageTermination:
-         handler->onTerminated(getHandle(), mLastResponse);
-         delete this;
-         break;
+      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+      mLastRequest.header(h_Expires).value() = 0;   
+      mEnded = true;
+      send(mLastRequest);
    }
 }
 
-void ClientSubscription::dialogDestroyed(const SipMessage& msg)
+std::ostream& 
+ClientSubscription::dump(std::ostream& strm) const
 {
-   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   handler->onTerminated(getHandle(), msg);
-   delete this;   
+   strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
+   return strm;
 }
-
 
 
 /* ====================================================================

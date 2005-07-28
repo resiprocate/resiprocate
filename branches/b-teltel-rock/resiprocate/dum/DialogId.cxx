@@ -72,7 +72,7 @@ DialogId::operator==(const DialogId& rhs) const
 bool
 DialogId::operator!=(const DialogId& rhs) const
 {
-   return mDialogSetId != rhs.mDialogSetId || mRemoteTag != rhs.mRemoteTag;
+   return mDialogSetId != rhs.mDialogSetId && mRemoteTag != rhs.mRemoteTag;
 }
 
 bool

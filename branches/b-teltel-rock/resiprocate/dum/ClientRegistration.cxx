@@ -1,18 +1,21 @@
+#include <iterator>
+
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-ClientRegistrationHandle 
+ClientRegistrationHandle
 ClientRegistration::getHandle()
 {
    return ClientRegistrationHandle(mDum, getBaseHandle().getId());
@@ -25,7 +28,8 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mLastRequest(request),
      mTimerSeq(0),
      mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
-     mEndWhenDone(false)
+     mEndWhenDone(false),
+     mQueuedState(None)
 {
    // If no Contacts header, this is a query
    if (mLastRequest.exists(h_Contacts))
@@ -40,137 +44,185 @@ ClientRegistration::~ClientRegistration()
    mDialogSet.mClientRegistration = 0;
 }
 
-void 
+void
 ClientRegistration::addBinding(const NameAddr& contact)
 {
-   addBinding(contact, mDum.getProfile()->getDefaultRegistrationTime());
+   addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
 }
 
-void 
+SipMessage&
+ClientRegistration::tryModification(ClientRegistration::State state)
+{
+   if (mState != Registered)
+   {
+      if (mQueuedState != None)
+      {
+         WarningLog (<< "Trying to modify bindings when already another request is queued");
+         throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
+      }
+
+      mQueuedRequest = mLastRequest;
+      mQueuedState = state;
+
+      return mQueuedRequest;
+   }
+
+   assert(mQueuedState == None);
+   mState = state;
+
+   return mLastRequest;
+}
+
+void
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
+   SipMessage& next = tryModification(Adding);
    mMyContacts.push_back(contact);
-   mLastRequest.header(h_Contacts) = mMyContacts;
-   mLastRequest.header(h_Expires).value() = registrationTime;
-   mLastRequest.header(h_CSeq).sequence()++;
+
+   next.header(h_Contacts) = mMyContacts;
+   next.header(h_Expires).value() = registrationTime;
+   next.header(h_CSeq).sequence()++;
    // caller prefs
 
-   if (mState != Registered)
+   if (mQueuedState == None)
    {
-      throw UsageUseException("Can't add binding when already modifying registration bindings", __FILE__,__LINE__);
+      mDum.send(next);
    }
-
-   mState = Adding;
-   mDum.send(mLastRequest);
 }
 
-void 
+void
 ClientRegistration::removeBinding(const NameAddr& contact)
 {
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
+   SipMessage& next = tryModification(Removing);
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
       {
          mMyContacts.erase(i);
 
-         mLastRequest.header(h_Contacts) = mMyContacts;
-         mLastRequest.header(h_Expires).value() = 0;
-         mLastRequest.header(h_CSeq).sequence()++;
-         mState = Removing;
-         mDum.send(mLastRequest);
-         
+         next.header(h_Contacts) = mMyContacts;
+         next.header(h_Expires).value() = 0;
+         next.header(h_CSeq).sequence()++;
+
+         if (mQueuedState == None)
+         {
+            mDum.send(next);
+         }
+
          return;
       }
    }
 
+   // !jf! What state are we left in now?
    throw Exception("No such binding", __FILE__, __LINE__);
 }
 
-void 
+void
 ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 {
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      throw UsageUseException("Can't remove bindings when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
+   SipMessage& next = tryModification(Removing);
 
    mAllContacts.clear();
    mMyContacts.clear();
-   
+
    NameAddr all;
    all.setAllContacts();
-   mLastRequest.header(h_Contacts).clear();
-   mLastRequest.header(h_Contacts).push_back(all);
-   mLastRequest.header(h_Expires).value() = 0;
-   mLastRequest.header(h_CSeq).sequence()++;
+   next.header(h_Contacts).clear();
+   next.header(h_Contacts).push_back(all);
+   next.header(h_Expires).value() = 0;
+   next.header(h_CSeq).sequence()++;
    mEndWhenDone = stopRegisteringWhenDone;
-   
-   mState = Removing;
-   mDum.send(mLastRequest);
+
+   if (mQueuedState == None)
+   {
+      mDum.send(next);
+   }
 }
 
-void 
+void
 ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
    InfoLog (<< "Removing binding");
 
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      InfoLog (<< "Trying to remove bindings when modifying: " << mState);
-      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
+   SipMessage& next = tryModification(Removing);
 
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       i->param(p_expires) = 0;
    }
 
-   mLastRequest.header(h_Contacts) = mMyContacts;
-   mLastRequest.remove(h_Expires);
-   mLastRequest.header(h_CSeq).sequence()++;
+   next.header(h_Contacts) = mMyContacts;
+   next.remove(h_Expires);
+   next.header(h_CSeq).sequence()++;
+
+   // !jf! is this ok if queued
    mEndWhenDone = stopRegisteringWhenDone;
-   mState = Removing;
-   mDum.send(mLastRequest);
+
+   if (mQueuedState == None)
+   {
+      mDum.send(next);
+   }
+}
+
+void ClientRegistration::stopRegistering()
+{
+   //timers aren't a concern, as DUM checks for Handle validity before firing.
+   delete this;
 }
 
 void
-ClientRegistration::end()
-{
-   stopRegistering();
-}
-
-void 
-ClientRegistration::stopRegistering()
-{
-   //timers aren't a concern, as DUM checks for Handle validity before firing.
-   delete this;     
-}
-
-void 
 ClientRegistration::requestRefresh()
 {
+   InfoLog (<< "requesting refresh of " << *this);
+   
+   assert (mState == Registered);
+   mState = Refreshing;
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
 }
 
-const NameAddrs& 
+const NameAddrs&
 ClientRegistration::myContacts()
 {
    return mMyContacts;
 }
 
-const NameAddrs& 
+const NameAddrs&
 ClientRegistration::allContacts()
 {
    return mAllContacts;
 }
 
-void 
+void
+ClientRegistration::end()
+{
+   removeMyBindings(true);
+}
+
+std::ostream& 
+ClientRegistration::dump(std::ostream& strm) const
+{
+   strm << "ClientRegistration " << mLastRequest.header(h_From).uri();
+   return strm;
+}
+
+void
 ClientRegistration::dispatch(const SipMessage& msg)
 {
    try
@@ -185,18 +237,18 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else if (code < 300) // success
       {
-         //Profile* profile = mDum.getProfile();
-         
+         //Profile* profile = mDum.getMasterProfile();
+
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
-         
+
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
 
             // make timers to re-register
-            int expiry = INT_MAX;            
-            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
+            int expiry = INT_MAX;
+            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
                  it != msg.header(h_Contacts).end(); it++)
             {
                if(it->exists(p_expires))
@@ -213,13 +265,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
             if (expiry != INT_MAX)
             {
-               mDum.addTimer(DumTimeout::Registration, 
+               mDum.addTimer(DumTimeout::Registration,
                              Helper::aBitSmallerThan(expiry),
                              getBaseHandle(),
                              ++mTimerSeq);
             }
          }
-         
+
          switch (mState)
          {
             case Querying:
@@ -227,28 +279,47 @@ ClientRegistration::dispatch(const SipMessage& msg)
                mState = Registered;
                mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                break;
-               
+
             case Removing:
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                mDum.mClientRegistrationHandler->onRemoved(getHandle());
+               InfoLog (<< "Finished removing registration " << *this << " mEndWhenDone=" << mEndWhenDone);
                if (mEndWhenDone)
                {
+                  // !kh!
+                  // stopRegistering() deletes 'this'
+                  // furthur processing makes no sense
+                  //assert(mQueuedState == None);
                   stopRegistering();
+                  return;
                }
                break;
 
             case Registered:
+            case Refreshing:
+               mState = Registered;
                break;
-               
+
+            default:
+               break;
+         }
+
+         if (mQueuedState != None)
+         {
+            InfoLog (<< "Sending queued request: " << mQueuedRequest);
+            mState = mQueuedState;
+            mQueuedState = None;
+            mLastRequest = mQueuedRequest;
+            mDum.send(mLastRequest);
          }
       }
       else
       {
          if (code == 423) // interval too short
          {
-            // maximum 1 day 
+            // maximum 1 day
             // !ah! why max check? -- profile?
-            if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
+            if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400)
             {
                mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
                mLastRequest.header(h_CSeq).sequence()++;
@@ -259,7 +330,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
 
          // assume that if a failure occurred, the bindings are gone
-         if (mEndWhenDone) 
+         if (mEndWhenDone)
          {
             mDum.mClientRegistrationHandler->onRemoved(getHandle());
          }
@@ -278,7 +349,7 @@ void
 ClientRegistration::dispatch(const DumTimeout& timer)
 {
    // If you happen to be Adding/Updating when the timer goes off, you should just ignore
-   // it since a new timer will get added when the 2xx is received. 
+   // it since a new timer will get added when the 2xx is received.
    if (timer.seq() == mTimerSeq && mState == Registered)
    {
       if (!mMyContacts.empty())
@@ -289,23 +360,23 @@ ClientRegistration::dispatch(const DumTimeout& timer)
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
 
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -315,7 +386,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -329,9 +400,9 @@ ClientRegistration::dispatch(const DumTimeout& timer)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

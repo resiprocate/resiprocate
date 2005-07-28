@@ -1,6 +1,7 @@
 #if !defined(RESIP_HANDLE_HXX)
 #define RESIP_HANDLE_HXX
 
+#include <iosfwd>
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/HandleException.hxx"
@@ -42,11 +43,37 @@ class Handle
          }
          return static_cast<T*>(mHam->getHandled(mId));
       }
+
+      const T* get() const
+      {
+         if (!mHam)
+         {
+            //assert(0);
+            throw HandleException("Reference to unitialized handle.", __FILE__, __LINE__);
+         }
+         return static_cast<T*>(mHam->getHandled(mId));
+      }
       
       T* operator->()
       {
          return get();
       }
+
+      const T* operator->() const
+      {
+         return get();
+      }
+
+      T& operator*()
+      {
+         return *get();
+      }
+
+      const T& operator*() const
+      {
+         return *get();
+      }
+      
 
       Handled::Id getId() const
       {

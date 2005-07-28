@@ -13,12 +13,15 @@
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogSetHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -37,7 +40,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
-   mState(Initial),
+   mCancelled(false),
+   mReceivedProvisional(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -46,8 +50,9 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
    mServerPagerMessage(0),
-   mDestroyer(this)
+   mUserProfile(0)
 {
+   setUserProfile(&creator->getUserProfile());
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
@@ -59,7 +64,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
-   mState(Established),
+   mCancelled(false),
+   mReceivedProvisional(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -68,8 +74,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
    mServerPagerMessage(0),
-   mDestroyer(this)
-
+   mUserProfile(0)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -118,7 +123,6 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   Destroyer::Guard guard(mDestroyer);
    if (!mDestroying)
    {
       if(mDialogs.empty() && 
@@ -130,7 +134,7 @@ void DialogSet::possiblyDie()
            mClientRegistration ||
            mServerRegistration))
       {
-         guard.destroy();         
+         mDum.destroy(this);
       }   
    }
 }
@@ -153,13 +157,30 @@ DialogSet::getCreator()
    return mCreator;
 }
 
+UserProfile* 
+DialogSet::getUserProfile()
+{
+   if(mUserProfile)
+   {
+      return mUserProfile;
+   }
+   else
+   {
+      // If no UserProfile set then use UserProfile of the MasterProfile
+      return mDum.getMasterProfile();
+   }
+}
+ 
+void 
+DialogSet::setUserProfile(UserProfile *userProfile)
+{
+   assert(!mUserProfile);
+   mUserProfile = userProfile;
+}
+
 Dialog* 
 DialogSet::findDialog(const SipMessage& msg)
 {
-   if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 100)
-   {
-      return 0;
-   }
    DialogId id(msg);
    Dialog* dlog = findDialog(id);
    //vonage/2543 matching here
@@ -167,28 +188,16 @@ DialogSet::findDialog(const SipMessage& msg)
    {
       return dlog;
    }
-   //match off transaction ID
-   else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
-   {
-      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-      {
-         if (it->second->matches(msg))
-         {
-            return it->second;            
-         }
-      }
-   }
-   else if (msg.exists(h_Contacts) && !msg.header(h_Contacts).empty()
+   else if (msg.exists(h_Contacts) && 
+            msg.header(h_Contacts).size() == 1 
             && msg.isResponse() 
-            && mDum.getProfile()->looseToTagMatching()
+            && getUserProfile()->getLooseToTagMatching()
             && msg.header(h_To).exists(p_tag))     
    {
-      const Uri& contact = msg.header(h_Contacts).front().uri();
-      
       //match by contact
       for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
-         if (it->second->mRemoteTarget.uri() == contact)
+         if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
          {
             //!dcm! in the vonage case, the to tag should be updated to match the fake
             //vonage tag introduced in the 200 which is also used for the BYE.
@@ -214,11 +223,12 @@ DialogSet::empty() const
    return mDialogs.empty();
 }
 
-
-bool
-DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
+void
+DialogSet::dispatch(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
+   assert(msg.isRequest() || msg.isResponse());
+
+   if (msg.isResponse() && !mCancelled)
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -226,13 +236,13 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle( *getUserProfile(), getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
                
                mDum.send(getCreator()->getLastRequest());
-               return true;                     
+               return;                     
             }
          }
          //!dcm! -- need to protect against 3xx highjacking a dialogset which
@@ -250,8 +260,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
                   Dialog* d = it->second;
-                  it++;   Destroyer::Guard guard(mDestroyer);
-
+                  it++;
                   d->redirected(msg);         
                }
                mDestroying = false;
@@ -260,81 +269,17 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                {
                   //a dialog is refusing this 3xx(only implemented for INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
-                  return true; //(toss 3xx) !dcm! -- might leak dialog
+                  return; //(toss 3xx)                  
                }
 
                InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
                
                mDum.send(getCreator()->getLastRequest());
-               return true;                     
+               return;                     
             }
          }
       }
-   }
-   return false;
-}
-
-void
-DialogSet::dispatch(const SipMessage& msg)
-{
-   Destroyer::Guard guard(mDestroyer);
-
-   assert(msg.isRequest() || msg.isResponse());
-   
-   if (handledByAuthOrRedirect(msg))
-   {
-      return;
-   }
-
-   if (mState == WaitingToEnd)
-   {
-      assert(mDialogs.empty());
-      if (msg.isResponse())         
-      {
-         int code = msg.header(h_StatusLine).statusCode();
-         if (code < 300)
-         {
-            switch(mCreator->getLastRequest().header(h_CSeq).method())               
-            {
-               case INVITE:
-                  if (code <= 100)
-                  {
-                     return;
-                  }
-                  else if (code < 200)
-                  {
-                    if (msg.header(h_CSeq).method() == INVITE)
-                    {
-                       mState = ReceivedProvisional;
-                       end();
-                       return;
-                    }
-                  }
-                  else 
-                  {
-                     //send a BYE here...construct a Dialog to accomplish this?
-                     delete this;
-                     return;
-                  }
-                  break;
-               case SUBSCRIBE:
-                  if (code >= 200)
-                  {
-                     //unsubscribe, create dialog again?
-                     delete this;
-                     return;
-                  }
-            }
-         }
-      }
-      else
-      {
-         SipMessage response;         
-         mDum.makeResponse(response, msg, 481);
-         mDum.send(response);
-      }
-      return;
    }
 
    Dialog* dialog = findDialog(msg);
@@ -404,43 +349,9 @@ DialogSet::dispatch(const SipMessage& msg)
    else
    {
       const SipMessage& response = msg;
-
-      int code = msg.header(h_StatusLine).statusCode();
-      switch(mState)
-      {
-         case Initial:
-            if (code < 200)
-            {
-               mState = ReceivedProvisional;
-            }
-            else
-            {
-               mState = Established;
-            }
-         break;
-         case ReceivedProvisional:
-            if (code < 200)
-            {
-            }
-            else if (code < 300)
-            {
-               mState = Established;
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-               {
-                  if (it->second != dialog)
-                  {
-                     it->second->forked(msg);
-                  }
-               }
-            }
-            else
-            {
-               mState = Established;
-            }
-      }
-
       if (response.header(h_StatusLine).statusCode() < 200)
       {
+         mReceivedProvisional = true;
          if (response.header(h_StatusLine).statusCode() == 100)
          {
             if (mDum.mDialogSetHandler)
@@ -537,7 +448,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          int code = msg.header(h_StatusLine).statusCode();
          
-         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
+         if (code > 100 && code < 200 && !msg.exists(h_Contacts))
          {
             InfoLog ( << "Cannot create a dialog, no Contact in 180." );
             if (mDum.mDialogSetHandler)
@@ -548,22 +459,9 @@ DialogSet::dispatch(const SipMessage& msg)
             //call OnProgress in proposed DialogSetHandler here
             return;         
          }
-         else if (code >= 300)
+         else
          {
-            //!dcm! no forking for now, think about onSessionTerminated call(vs
-            // forking) also think about 3xx after early dialog(ugh)--is this possible?
-            //so, short term appropach, dispatch this failur to all existing
-            //usages, return, if no usage allow one to be created.
-            if (!mDialogs.empty())
-            {
-               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-               {
-                  Dialog* d = it->second;
-                  it++;
-                  d->dispatch(msg);         
-               }
-               return;
-            }
+            InfoLog (<< "No matching dialog: " << msg.brief());
          }
       }
       
@@ -584,32 +482,27 @@ DialogSet::dispatch(const SipMessage& msg)
          //valid 200
          if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
          {
-            guard.destroy();            
+            mDum.destroy(this);
             return;            
          }
       }
 
-      if (mState == WaitingToEnd && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
+      if (mCancelled && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
       {
-         assert(0);
-//         dialog->cancel();
-//         return;         
+         dialog->cancel();
+         return;         
       }
       else
       {
          DebugLog ( << "### Calling CreateAppDialog ### " << msg);
          AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
          dialog->mAppDialog = appDialog;
-         appDialog->mDialog = dialog;
+         appDialog->mDialog = dialog;         
       }
    }     
    if (dialog)
    {     
       dialog->dispatch(msg);
-      if (msg.isResponse() && msg.header(h_StatusLine).statusCode() < 200 && mState == Established)
-      {
-         dialog->forked(msg);
-      }
    }
    else if (msg.isRequest())
    {
@@ -636,6 +529,8 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog* 
 DialogSet::findDialog(const DialogId id)
 {
+   DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
    {
@@ -648,119 +543,30 @@ DialogSet::findDialog(const DialogId id)
 }
 
 void
-DialogSet::end()
-{
-   Destroyer::Guard guard(mDestroyer);
-   switch(mState)
-   {
-      case Initial:
-         mState = WaitingToEnd;
-         break;
-      case WaitingToEnd:
-         break;         
-      case ReceivedProvisional:
-      {
-         if (mCreator->getLastRequest().header(h_CSeq).method() == INVITE)
-         {
-            mState = Terminating;
-            auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
-            mDum.send(*cancel);
-
-            if (mDialogs.empty())
-            {
-               //!dcm!-- crossover cancel timer, go to terminated state?
-               guard.destroy();
-            }
-            else
-            {
-               //need to lag and do last element ouside of look as this DialogSet will be
-               //deleted if all dialogs are destroyed
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-               {
-                  try
-                  {
-                     //not quite right, should re-structure CANCEL so it does the right
-                     //thing for all things.
-                     //cancel could invalidate it
-                     Dialog* d = it->second;
-                     it++;
-                     //behaviour will change when crossover cancel timer moves
-                     //into DialogSet
-                     d->cancel();
-                  }
-                  catch(UsageUseException&)
-                  {
-                  }
-               }
-            }
-         }
-         else
-         {
-            mState = WaitingToEnd;
-         }
-      }            
-      break;         
-      case Established:
-      {
-         for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-         {
-            try
-            {
-               //cancel could invalidate it
-               Dialog* d = it->second;
-               it++;
-               //behaviour will change when crossover cancel timer moves
-               //into DialogSet
-               d->end();
-            }
-            catch(UsageUseException&)
-            {
-            }
-         }            
-         mState = Terminating;
-         break;
-      case Terminating:
-         assert(0);
-      }
-   }
-}
-
-
-#if 0
-mCancelled = true;
-if (mDialogs.empty())
-{
+DialogSet::cancel()
+{   
+   mCancelled = true;
    if (mReceivedProvisional && getCreator())
    {
+      // !jf! What is this comment about?
       //unify makeCancel w/ Dialog makeCancel, verify both
       //exception to cancel UAS DialogSet?
+
+      InfoLog (<< "Canceling " << mId);
       auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
       mDum.send(*cancel);
-      guard.destroy();         
-      return;         
-      }
-}
-else
-{
-   //need to lag and do last element ouside of look as this DialogSet will be
-   //deleted if all dialogs are destroyed
-   for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-   {
-      //not quite right, should re-structure CANCEL so it does the right
-      //thing for all things.
-      try
+
+      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
       {
-            //cancel could invalidate it
-         Dialog* d = it->second;
-         it++;
-         d->cancel();
+         // let the early dialogs know they are being canceled in case they get
+         // a 200 to the INVITE which crossed the CANCEL so they will BYE them. 
+         it->second->cancel();
       }
-      catch(UsageUseException)
-      {
-      }
+
+      // so it won't call me again
+      mCancelled = false;
    }
 }
-#endif
 
 
 ClientRegistrationHandle 

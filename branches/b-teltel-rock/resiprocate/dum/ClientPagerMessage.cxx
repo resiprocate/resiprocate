@@ -7,12 +7,76 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Helper.hxx"
 
 using namespace resip;
 
+#if(0)
+//  for appcliation behaves like ICQ
+app::onSendButtonClicked(im)
+{
+    disableSendButton();
+    mPageManager.page(im);
+}
+
+app::onSuccess(...)
+{
+    enableSendButton();
+}
+
+app::onFailure(...)
+{
+    reportFailueToUI();
+    enableSendButton();
+}
+
+//  for application behaves like MSN
+app::onSendButtonClicked(im)
+{
+    mPageManager.page(im);
+}
+
+app::onSuccess(...)
+{
+    // most likely no-op
+}
+
+app::onFailure(...)
+{
+    reportFailueToUI();
+}
+
+//  for application behaves like MSN but wants to limit number of pages queued.
+app::onSendButtonClicked(im)
+{
+    if(mPageManager.msgQueued() > 5 - 1)
+    {
+        disableSendButton();
+    }
+    mPageManager.page(im);
+}
+
+app::onSuccess(...)
+{
+    if(mPageManager.msgQueued() < 5)
+    {
+        enableSendButton();
+    }
+}
+
+app::onFailure(...)
+{
+    reportFailueToUI();
+    if(mPageManager.msgQueued() < 5)
+    {
+        enableSendButton();
+    }
+}
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-ClientPagerMessageHandle 
+ClientPagerMessageHandle
 ClientPagerMessage::getHandle()
 {
    return ClientPagerMessageHandle(mDum, getBaseHandle().getId());
@@ -20,63 +84,86 @@ ClientPagerMessage::getHandle()
 
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(dialogSet.getCreator()->getLastRequest()),
-     mInTransaction(false)
+     mRequest(dialogSet.getCreator()->getLastRequest())//,
+     //mInTransaction(false)
 {
 }
 
 ClientPagerMessage::~ClientPagerMessage()
 {
-   mDialogSet.mClientPagerMessage = 0;   
+   this->clearMsgQueued();
+   mDialogSet.mClientPagerMessage = 0;
 }
 
-SipMessage& 
+SipMessage&
 ClientPagerMessage::getMessageRequest()
 {
    return mRequest;
 }
 
-void 
+void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents)
 {
-   if (mInTransaction)
-   {
-      throw UsageUseException("Cannot send a MESSAGE until the previous MESSAGE transaction has completed", 
-                                  __FILE__, __LINE__);
-   }
-   mRequest.header(h_CSeq).sequence()++;
-   mInTransaction = true;
-   mRequest.setContents(contents);
-   DebugLog(<< "ClientPagerMessage::page: " << mRequest);
-   mDum.send(mRequest);
+    assert(contents.get() != 0);
+
+    bool do_page = mMsgQueue.empty();
+    mMsgQueue.push_back(contents.get());
+    contents.release();
+    if(do_page)
+    {
+     this->pageFirstMsgQueued();
+    }
 }
 
-
-void 
+void
 ClientPagerMessage::dispatch(const SipMessage& msg)
 {
 	assert(msg.isResponse());
+
     ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
     assert(handler);
-    int code = msg.header(h_StatusLine).statusCode();    
 
-    if (code < 200)
+    int code = msg.header(h_StatusLine).statusCode();
+
+    DebugLog ( << "ClientPagerMessageReq::dispatch(msg)" << msg.brief() );
     {
-       DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
-    }
-    else if (code < 300)
-    {
-       handler->onSuccess(getHandle(), msg);  
-       mInTransaction = false;
-    }
-    else
-    {
-       handler->onFailure(getHandle(), msg);
-       mInTransaction = false;
+        assert(mMsgQueue.empty() == false);
+        if (code < 200)
+        {
+           DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
+        }
+        else if (code < 300)
+        {
+           if(mMsgQueue.empty() == false)
+           {
+              delete mMsgQueue.front();
+              mMsgQueue.pop_front();
+              if(mMsgQueue.empty() == false)
+              {
+                 this->pageFirstMsgQueued();
+              }
+              
+              handler->onSuccess(getHandle(), msg);
+           }
+        }
+        else
+        {
+           SipMessage errResponse;
+           MsgQueue::iterator contents;
+           for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+           {
+               Contents* p = *contents;
+               WarningLog ( << "Paging failed" << *p );
+               Helper::makeResponse(errResponse, mRequest, code);
+               handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+               *contents = 0;
+           }
+
+           mMsgQueue.clear();
+        }
     }
 }
-
-void 
+void
 ClientPagerMessage::dispatch(const DumTimeout& timer)
 {
 }
@@ -87,25 +174,53 @@ ClientPagerMessage::end()
    delete this;
 }
 
+size_t
+ClientPagerMessage::msgQueued () const
+{
+    return  mMsgQueue.size();
+}
+
+void
+ClientPagerMessage::pageFirstMsgQueued ()
+{
+   assert(mMsgQueue.empty() == false);
+   mRequest.header(h_CSeq).sequence()++;
+   mRequest.setContents(mMsgQueue.front());
+   DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
+   mDum.send(mRequest);
+}
+
+void
+ClientPagerMessage::clearMsgQueued ()
+{
+   MsgQueue::iterator   contents;
+   for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+   {
+      Contents* p = *contents;
+      delete p;
+   }
+   mMsgQueue.clear();
+}
+
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
 
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -115,7 +230,7 @@ ClientPagerMessage::end()
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -129,9 +244,9 @@ ClientPagerMessage::end()
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

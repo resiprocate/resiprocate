@@ -3,7 +3,9 @@
 
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
+#include "resiprocate/dum/UserProfile.hxx"
 
 namespace resip
 {
@@ -21,17 +23,27 @@ class AppDialogSet : public Handled
       virtual void destroy();
 
       virtual void cancel();
+
+      virtual UserProfile* getUserProfile();
+
       virtual AppDialog* createAppDialog(const SipMessage&);
+
       AppDialogSetHandle getHandle();
-      const DialogSetId& getDialogSetId();
+      DialogSetId getDialogSetId();
+
+      virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
       DialogUsageManager& mDum;      
       virtual ~AppDialogSet();
+      // This is called by the DialogUsageManager to select an userProfile to assign to a UAS DialogSet.
+      // The application should not call this directly, but should override it, in order to assign 
+      // an userProfile other than the MasterProfile
+      virtual UserProfile* selectUASUserProfile(const SipMessage&); 
 
    private:
       friend class DialogUsageManager;
-      DialogSetId mDialogSetId;
+      DialogSet* mDialogSet;
 };
 
 }
