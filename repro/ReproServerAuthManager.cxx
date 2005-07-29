@@ -24,7 +24,7 @@ using namespace repro;
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                UserStore& db):
-   ServerAuthManager(dum),
+   ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
    mDb(db)
 {
