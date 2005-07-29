@@ -270,6 +270,16 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
       void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
 
+      TargetCommand::Target& dumIncomingTarget() 
+      {
+         return *mIncomingTarget;
+      }
+
+      TargetCommand::Target& dumOutgoingTarget()
+      {
+         return *mOutgoingTarget;
+      }
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
