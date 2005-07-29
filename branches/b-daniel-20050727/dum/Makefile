@@ -73,7 +73,6 @@ SRC =   \
 	IdentityHandler.cxx \
 	TargetCommand.cxx \
 	DumFeature.cxx \
-	Stun.cxx \
-	StunUdpTransport.cxx
+	OutgoingEvent.cxx
 
 include $(BUILD)/Makefile.post
