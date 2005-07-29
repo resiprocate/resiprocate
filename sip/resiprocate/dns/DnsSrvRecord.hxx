@@ -1,6 +1,11 @@
 #ifndef RESIP_DNS_SRV_RECORD
 #define RESIP_DNS_SRV_RECORD
 
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+
 namespace resip
 {
 
