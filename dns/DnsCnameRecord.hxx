@@ -1,6 +1,8 @@
 #ifndef RESIP_DNS_CNAME_RECORD
 #define RESIP_DNS_CNAME_RECORD
 
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/dns/DnsResourceRecord.hxx"
 #include "resiprocate/os/BaseException.hxx"
 
