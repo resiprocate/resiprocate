@@ -16,12 +16,12 @@
 #include "resiprocate/dum/RemoteCertStore.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/dum/CertMessage.hxx"
+#include "resiprocate/dum/TargetCommand.hxx"
 #include "resiprocate/dum/EncryptionManager.hxx"
 #include "resiprocate/dum/DumDecrypted.hxx"
 #include "resiprocate/dum/DumFeature.hxx"
 #include "resiprocate/dum/DumFeatureChain.hxx"
-#include "resiprocate/dum/EncryptionRequest.hxx"
-#include "resiprocate/dum/DumEncrypted.hxx"
+#include "resiprocate/dum/OutgoingEvent.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #if defined(USE_SSL)
@@ -36,8 +36,8 @@ EncryptionManager::Exception::Exception(const Data& msg, const Data& file, const
 {
 }
 
-EncryptionManager::EncryptionManager(DialogUsageManager& dum)
-   : DumFeature(dum),
+EncryptionManager::EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target)
+   : DumFeature(dum, target),
      mCounter(0)
 {
 }
@@ -71,42 +71,42 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
    }
 
-   EncryptionRequest* request = dynamic_cast<EncryptionRequest*>(msg);
-   if (request)
+   OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(msg);
+   if (event)
    {
-      if (!request->message().getContents())
+      if (!event->message().getContents())
       {
          return DumFeature::FeatureDone;
       }
 
       Data senderAor;
       Data recipAor;
-      if (request->message().isRequest())
+      if (event->message().isRequest())
       {
-         senderAor = request->message().header(h_From).uri().getAor();
-         recipAor = request->message().header(h_To).uri().getAor();
+         senderAor = event->message().header(h_From).uri().getAor();
+         recipAor = event->message().header(h_To).uri().getAor();
       }
       else
       {
-         senderAor = request->message().header(h_To).uri().getAor();
-         recipAor = request->message().header(h_From).uri().getAor();
+         senderAor = event->message().header(h_To).uri().getAor();
+         recipAor = event->message().header(h_From).uri().getAor();
       }
 
-      Contents* contents = request->message().getContents();
+      Contents* contents = event->message().getContents();
       bool setContents = true;
-      switch (request->encryptionLevel())
+      switch (event->encryptionLevel())
       {
          case DialogUsageManager::None:
             setContents = false;
             break;
          case DialogUsageManager::Encrypt:
-            contents = encrypt(request->message(), recipAor);
+            contents = encrypt(event->message(), recipAor);
             break;
          case DialogUsageManager::Sign:
-            contents = sign(request->message(), senderAor);
+            contents = sign(event->message(), senderAor);
             break;
          case DialogUsageManager::SignAndEncrypt:
-            contents = signAndEncrypt(request->message(), senderAor, recipAor);
+            contents = signAndEncrypt(event->message(), senderAor, recipAor);
             break;
       }
 
@@ -114,7 +114,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       {
          if (setContents)
          {
-            request->message().setContents(auto_ptr<Contents>(contents));
+            event->message().setContents(auto_ptr<Contents>(contents));
          }
          return DumFeature::FeatureDone;
       }
@@ -166,7 +166,7 @@ EncryptionManager::Result EncryptionManager::processCertMessage(const CertMessag
 Contents* EncryptionManager::sign(const SipMessage& msg, 
                                   const Data& senderAor)
 {
-   Sign* request = new Sign(mDum, mRemoteCertStore.get(), msg, senderAor);
+   Sign* request = new Sign(mDum, mRemoteCertStore.get(), msg, senderAor, *this);
    Contents* contents;
    bool async = request->sign(&contents);
    if (async)
@@ -184,7 +184,7 @@ Contents* EncryptionManager::sign(const SipMessage& msg,
 Contents* EncryptionManager::encrypt(const SipMessage& msg,
                                      const Data& recipientAor)
 {
-   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), msg, recipientAor);
+   Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), msg, recipientAor, *this);
    Contents* contents;
    bool async = request->encrypt(&contents);
    if (async)
@@ -203,7 +203,7 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
                                             const Data& senderAor,
                                             const Data& recipAor)
 {
-   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), msg, senderAor, recipAor);
+   SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), msg, senderAor, recipAor, *this);
    Contents* contents;
    bool async = request->signAndEncrypt(&contents);
    if (!async)
@@ -221,7 +221,7 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 bool EncryptionManager::decrypt(SipMessage& msg)
 {
    SipMessage copy(msg);
-   Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), copy);
+   Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), copy, *this);
    Helper::ContentsSecAttrs csa;
    bool ret = request->decrypt(csa);
    if (ret)
@@ -246,11 +246,13 @@ bool EncryptionManager::decrypt(SipMessage& msg)
 
 EncryptionManager::Request::Request(DialogUsageManager& dum,
                                     RemoteCertStore* store,
-                                    const SipMessage& msg)
+                                    const SipMessage& msg,
+                                    DumFeature& feature)
    : mDum(dum),
      mStore(store),
      mMsg(msg),
-     mPendingRequests(0)
+     mPendingRequests(0),
+     mFeature(feature)
 {
 }
 
@@ -268,8 +270,9 @@ void EncryptionManager::Request::response415()
 EncryptionManager::Sign::Sign(DialogUsageManager& dum,
                               RemoteCertStore* store,
                               const SipMessage& msg, 
-                              const Data& senderAor)
-   : Request(dum, store, msg),
+                              const Data& senderAor,
+                              DumFeature& feature)
+   : Request(dum, store, msg, feature),
      mSenderAor(senderAor)
 {
 }
@@ -350,8 +353,8 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
          MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsg.getContents());
          auto_ptr<Contents> contents(msc);
          mMsg.setContents(contents);
-         DumEncrypted* encrypted = new DumEncrypted(mMsg);
-         mDum.processDumFeatureResult(auto_ptr<Message>(encrypted));
+         OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
+         mFeature.postCommand(auto_ptr<Message>(event));
          result = Complete;
       }
    }
@@ -367,8 +370,9 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
 EncryptionManager::Encrypt::Encrypt(DialogUsageManager& dum, 
                                     RemoteCertStore* store, 
                                     const SipMessage& msg, 
-                                    const Data& recipientAor)
-   : Request(dum, store, msg),
+                                    const Data& recipientAor,
+                                    DumFeature& feature)
+   : Request(dum, store, msg, feature),
      mRecipientAor(recipientAor)
 {
 }
@@ -441,8 +445,8 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
       InfoLog(<< "Encrypting message" << endl);
       Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsg.getContents(), aor);
       mMsg.setContents(auto_ptr<Contents>(encrypted));
-      DumEncrypted* dumEncrypted = new DumEncrypted(mMsg);
-      mDum.processDumFeatureResult(auto_ptr<Message>(dumEncrypted));
+      OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
+      mFeature.postCommand(auto_ptr<Message>(event));
    }
    else
    {
@@ -456,8 +460,9 @@ EncryptionManager::SignAndEncrypt::SignAndEncrypt(DialogUsageManager& dum,
                                                   RemoteCertStore* store, 
                                                   const SipMessage& msg, 
                                                   const Data& senderAor, 
-                                                  const Data& recipientAor)
-   : Request(dum, store, msg),
+                                                  const Data& recipientAor,
+                                                  DumFeature& feature)
+   : Request(dum, store, msg, feature),
      mSenderAor(senderAor),
      mRecipientAor(recipientAor)
 {
@@ -546,8 +551,8 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
          InfoLog(<< "Encrypting and signing message" << endl);
          Contents* contents = doWork();
          mMsg.setContents(auto_ptr<Contents>(contents));
-         DumEncrypted* encrypted = new DumEncrypted(mMsg);
-         mDum.processDumFeatureResult(auto_ptr<Message>(encrypted));
+         OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
+         mFeature.postCommand(auto_ptr<Message>(event));
          result = Complete;
       }
    }
@@ -592,8 +597,9 @@ Contents* EncryptionManager::SignAndEncrypt::doWork()
 
 EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
-                                    const SipMessage& msg)
-   : Request(dum, store, msg)
+                                    const SipMessage& msg,
+                                    DumFeature& feature)
+   : Request(dum, store, msg, feature)
 {
    if (msg.isResponse())
    {

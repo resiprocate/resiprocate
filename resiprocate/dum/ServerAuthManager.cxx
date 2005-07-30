@@ -4,6 +4,7 @@
 #include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/TargetCommand.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/Helper.hxx"
@@ -11,9 +12,10 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+using namespace std;
 
-ServerAuthManager::ServerAuthManager(DialogUsageManager& dum) :
-   DumFeature(dum)
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target) :
+   DumFeature(dum, target)
 {
 }
 
@@ -57,7 +59,7 @@ ServerAuthManager::process(Message* msg)
          Message* result = handleUserAuthInfo(userAuth);
          if (result)
          {
-            mDum.post(result);            
+            postCommand(auto_ptr<Message>(result));
             return FeatureDoneAndEventDone;
          }
          else

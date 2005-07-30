@@ -1,5 +1,5 @@
 #ifndef RESIP_QUERY_TYPES_HXX
-#define RESIP_QURY_TYPES_HXX
+#define RESIP_QUERY_TYPES_HXX
 
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 #include "resiprocate/os/compat.hxx"

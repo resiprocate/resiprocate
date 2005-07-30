@@ -1,65 +1,56 @@
-#if !defined(RESIP_SERVERAUTHMANAGER_HXX)
-#define RESIP_SERVERAUTHMANAGER_HXX
+#include "resiprocate/dum/OutgoingEvent.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
-#include <map>
+using namespace resip;
+using namespace std;
 
-#include "resiprocate/SipMessage.hxx"
-#include "DumFeature.hxx"
-
-namespace resip
+OutgoingEvent::OutgoingEvent(const SipMessage& msg, DialogUsageManager::EncryptionLevel level)
+   : mMessage(msg),
+     mLevel(level)
 {
-class UserAuthInfo;
-class DialogUsageManager;
-
-
-class ServerAuthManager : public DumFeature
-{
-   public:
-      typedef enum Result
-      {
-         //Authorized,
-         RequestedCredentials,
-         Challenged,
-         Skipped,
-         Rejected
-      };
-      
-      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
-      virtual ~ServerAuthManager();
-
-      ProcessingResult process(Message* msg);      
-      
-      // can return Authorized, Rejected or Skipped
-      //Result handleUserAuthInfo(Message* msg);
-
-      // returns the SipMessage that was authorized if succeeded or returns 0 if
-      // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
-
-      // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
-      
-   protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const Data& user, 
-                                     const Data& realm, 
-                                     const Data& transactionToken ) = 0;
-      
-      virtual bool useAuthInt() const;
-      
-   private:
-      typedef std::map<Data, SipMessage*> MessageMap;
-      MessageMap mMessages;
-      bool authorizedForThisIdentity(const resip::Data &user, 
-                                     const resip::Data &realm, 
-                                     resip::Uri &fromUri);
-      
-};
-
- 
 }
 
-#endif
+OutgoingEvent::OutgoingEvent(const OutgoingEvent& from)
+   : mMessage(from.mMessage),
+     mLevel(from.mLevel)
+{
+}
+
+OutgoingEvent::~OutgoingEvent()
+{
+}
+
+Message*
+OutgoingEvent::clone() const
+{
+   return new OutgoingEvent(*this);
+}
+
+SipMessage& 
+OutgoingEvent::message()
+{
+   return mMessage;
+}
+
+DialogUsageManager::EncryptionLevel 
+OutgoingEvent::encryptionLevel() const
+{
+   return mLevel;
+}
+     
+std::ostream&
+OutgoingEvent::encodeBrief(std::ostream& strm) const
+{
+   return encode(strm);
+}
+
+std::ostream& 
+OutgoingEvent::encode(std::ostream& strm) const
+{
+   mMessage.encode(strm); 
+   strm << "Encryption level: " << mLevel << endl;
+   return strm;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
