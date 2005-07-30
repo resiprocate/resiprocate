@@ -1,62 +1,33 @@
-#if !defined(RESIP_SERVERAUTHMANAGER_HXX)
-#define RESIP_SERVERAUTHMANAGER_HXX
+#if !defined(RESIP_OUTGOINGEVENT_HXX)
+#define RESIP_OUTGOINGEVENT_HXX
 
-#include <map>
-
+#include "resiprocate/Message.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "DumFeature.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
 namespace resip
 {
-class UserAuthInfo;
-class DialogUsageManager;
 
-
-class ServerAuthManager : public DumFeature
+class OutgoingEvent : public Message
 {
    public:
-      typedef enum Result
-      {
-         //Authorized,
-         RequestedCredentials,
-         Challenged,
-         Skipped,
-         Rejected
-      };
-      
-      ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
-      virtual ~ServerAuthManager();
+      OutgoingEvent(const SipMessage& msg, DialogUsageManager::EncryptionLevel level);
+      OutgoingEvent(const OutgoingEvent&);
+      ~OutgoingEvent();
 
-      ProcessingResult process(Message* msg);      
-      
-      // can return Authorized, Rejected or Skipped
-      //Result handleUserAuthInfo(Message* msg);
+      SipMessage& message();
+      DialogUsageManager::EncryptionLevel encryptionLevel() const;
+      const Data& getTransactionId() const { return mMessage.getTransactionId(); }
 
-      // returns the SipMessage that was authorized if succeeded or returns 0 if
-      // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
-
-      // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
-      
-   protected:
-      // this call back should async cause a post of UserAuthInfo
-      virtual void requestCredential(const Data& user, 
-                                     const Data& realm, 
-                                     const Data& transactionToken ) = 0;
-      
-      virtual bool useAuthInt() const;
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
       
    private:
-      typedef std::map<Data, SipMessage*> MessageMap;
-      MessageMap mMessages;
-      bool authorizedForThisIdentity(const resip::Data &user, 
-                                     const resip::Data &realm, 
-                                     resip::Uri &fromUri);
-      
+      SipMessage mMessage; // may change it to auto pointer.
+      DialogUsageManager::EncryptionLevel mLevel;
 };
 
- 
 }
 
 #endif
