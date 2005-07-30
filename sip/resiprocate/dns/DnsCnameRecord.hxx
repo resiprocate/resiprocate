@@ -9,7 +9,6 @@
 namespace resip
 {
 
-class DnsResourceRecord;
 class RROverlay;
 
 class DnsCnameRecord : public DnsResourceRecord

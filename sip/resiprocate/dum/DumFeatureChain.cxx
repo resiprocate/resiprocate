@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "resiprocate/os/SharedPtr.hxx"
+#include "resiprocate/dum/TargetCommand.hxx"
 #include "resiprocate/dum/DumFeature.hxx"
 #include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/Message.hxx"
@@ -11,8 +12,8 @@ using namespace std;
 class GuardFeature : public DumFeature
 {
    public:
-      GuardFeature(DialogUsageManager& dum)
-         : DumFeature(dum)
+      GuardFeature(DialogUsageManager& dum, TargetCommand::Target& target)
+         : DumFeature(dum, target)
       {}
 
       virtual ProcessingResult process(Message* msg)
@@ -22,10 +23,11 @@ class GuardFeature : public DumFeature
 };
 
 DumFeatureChain::DumFeatureChain(DialogUsageManager& dum,
-                                 const FeatureList& features)
+                                 const FeatureList& features,
+                                 TargetCommand::Target& target)
    :mFeatures(features)
 {
-   mFeatures.push_back(SharedPtr<DumFeature>(new GuardFeature(dum)));
+   mFeatures.push_back(SharedPtr<DumFeature>(new GuardFeature(dum, target)));
    for (FeatureList::size_type i = 0; i < mFeatures.size(); ++i)
    {
       mActiveFeatures.push_back(true);
