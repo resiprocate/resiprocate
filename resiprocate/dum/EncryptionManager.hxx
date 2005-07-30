@@ -25,7 +25,7 @@ class EncryptionManager : public DumFeature
             const char* name() const { return "EncryptionManagerException"; }
       };
 
-      EncryptionManager(DialogUsageManager& dum);
+      EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~EncryptionManager();
       void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
       DumFeature::ProcessingResult process(Message* msg);
@@ -47,7 +47,7 @@ class EncryptionManager : public DumFeature
       class Request
       {
          public:
-            Request(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg);
+            Request(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, DumFeature& feature);
             virtual ~Request();
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
             Data getId() const { return mMsg.getTransactionId(); }
@@ -57,6 +57,7 @@ class EncryptionManager : public DumFeature
             RemoteCertStore* mStore;
             SipMessage mMsg; // initial message.
             int mPendingRequests;
+            DumFeature& mFeature;
 
             void response415();
       };
@@ -64,7 +65,7 @@ class EncryptionManager : public DumFeature
       class Sign : public Request
       {
          public:
-            Sign(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& senderAor);
+            Sign(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& senderAor, DumFeature& feature);
             ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool sign(Contents**);
@@ -76,7 +77,7 @@ class EncryptionManager : public DumFeature
       class Encrypt : public Request
       {
          public:
-            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& recipientAor);
+            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& recipientAor, DumFeature& feature);
             ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool encrypt(Contents**);
@@ -88,7 +89,7 @@ class EncryptionManager : public DumFeature
       class SignAndEncrypt : public Request
       {
          public:
-            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg,  const Data& senderAor, const Data& recipientAor);
+            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool signAndEncrypt(Contents**);
@@ -104,7 +105,7 @@ class EncryptionManager : public DumFeature
       class Decrypt : public Request
       {
          public:
-            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg);
+            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, DumFeature& feature);
             ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);

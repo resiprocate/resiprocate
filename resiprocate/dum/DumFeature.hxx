@@ -1,6 +1,8 @@
 #ifndef RESIP_DumFeature_HXX
 #define RESIP_DumFeature_HXX 
 
+#include "resiprocate/dum/TargetCommand.hxx"
+
 namespace resip
 {
 
@@ -10,10 +12,8 @@ class Message;
 class DumFeature
 {
    public:      
-      DumFeature(DialogUsageManager& dum) : mDum(dum) 
-      {}
-
-      virtual ~DumFeature() {}
+      DumFeature(DialogUsageManager& dum, TargetCommand::Target& target);
+      virtual ~DumFeature();
       
       enum ProcessingResultMask
       {
@@ -34,9 +34,12 @@ class DumFeature
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
       
-      virtual ProcessingResult process(Message* msg) = 0;      
+      virtual ProcessingResult process(Message* msg) = 0;
+      virtual void postCommand(std::auto_ptr<Message> message);
+
    protected:
-      DialogUsageManager& mDum;      
+      DialogUsageManager& mDum;
+      TargetCommand::Target& mTarget;
 };
  
 }

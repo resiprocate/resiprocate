@@ -6,21 +6,21 @@
 #include "resiprocate/dns/DnsResourceRecord.hxx"
 
 #ifdef USE_IPV6
+
 namespace resip
 {
 
-class DnsResourceRecord;
 class RROverlay;
 
 class DnsAAAARecord : public DnsResourceRecord
 {
    public:
       DnsAAAARecord(const RROverlay& overlay);
-      ~DnsAAAARecord() {}
+      virtual ~DnsAAAARecord() {}
 
       const struct in6_addr& v6Address() const { return mAddr; }
-      const Data& name() const { return mName; }
-      bool isSameValue(const Data& value) const;
+      virtual const Data& name() const { return mName; }
+      virtual bool isSameValue(const Data& value) const;
       
    private:
       struct in6_addr mAddr;

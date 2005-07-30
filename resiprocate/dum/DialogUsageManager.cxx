@@ -45,9 +45,8 @@
 #include "resiprocate/dum/EncryptionManager.hxx"
 #include "resiprocate/dum/IdentityHandler.hxx"
 #include "resiprocate/dum/DumDecrypted.hxx"
-#include "resiprocate/dum/DumEncrypted.hxx"
 #include "resiprocate/dum/CertMessage.hxx"
-#include "resiprocate/dum/EncryptionRequest.hxx"
+#include "resiprocate/dum/OutgoingEvent.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -77,23 +76,27 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mStack.registerTransactionUser(*this);
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
 
+   mIncomingTarget = new IncomingTarget(*this);
+   mOutgoingTarget = new OutgoingTarget(*this);
+
    if (createDefaultFeatures)
    {
-      SharedPtr<IdentityHandler> identity = SharedPtr<IdentityHandler>(new IdentityHandler(*this));
+      SharedPtr<IdentityHandler> identity = SharedPtr<IdentityHandler>(new IdentityHandler(*this, *mIncomingTarget));
 
 #if defined (USE_SSL)
-      SharedPtr<EncryptionManager> encryption = SharedPtr<EncryptionManager>(new EncryptionManager(*this));
+      SharedPtr<EncryptionManager> encryptionIncoming = SharedPtr<EncryptionManager>(new EncryptionManager(*this, *mIncomingTarget));
+      SharedPtr<EncryptionManager> encryptionOutgoing = SharedPtr<EncryptionManager>(new EncryptionManager(*this, *mOutgoingTarget));
 #endif
 
       // default incoming features.
       addIncomingFeature(identity);
 #if defined (USE_SSL)
-      addIncomingFeature(encryption);
+      addIncomingFeature(encryptionIncoming);
 #endif
 
       // default outgoing features.
 #if defined (USE_SSL)
-      addOutgoingFeature(encryption);
+      addOutgoingFeature(encryptionOutgoing);
 #endif
 
    }
@@ -133,6 +136,9 @@ DialogUsageManager::~DialogUsageManager()
       DialogSet*  ds = mDialogSetMap.begin()->second;
       delete ds;
    }
+
+   delete mIncomingTarget;
+   delete mOutgoingTarget;
 
    //InfoLog ( << "~DialogUsageManager done" );
 }
@@ -731,24 +737,45 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
       }
    }
 
-   if (!mOutgoingFeatureList.empty())
+   OutgoingEvent* event = new OutgoingEvent(msg, level);
+   outgoingProcess(auto_ptr<Message>(event));
+}
+
+void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
+{
+   Data tid = Data::Empty;
    {
-      FeatureChainMap::iterator it;     
+      OutgoingEvent* sipMsg = dynamic_cast<OutgoingEvent*>(message.get());
+      if (sipMsg)
+      {
+         tid = sipMsg->getTransactionId();
+      }
+      
+      DumFeatureMessage* featureMsg = dynamic_cast<DumFeatureMessage*>(message.get());
+      if (featureMsg)
+      {
+         InfoLog(<<"Got a DumFeatureMessage" << featureMsg);
+         tid = featureMsg->getTransactionId();
+      }
+   }
+
+   if (tid != Data::Empty && !mOutgoingFeatureList.empty())
+   {
+      FeatureChainMap::iterator it;
       //efficiently find or create FeatureChain, should prob. be a utility template
       {
-         FeatureChainMap::iterator lb = mOutgoingFeatureChainMap.lower_bound(msg.getTransactionId());
-         if (lb != mOutgoingFeatureChainMap.end() && !(mOutgoingFeatureChainMap.key_comp()(msg.getTransactionId(), lb->first)))
+         FeatureChainMap::iterator lb = mOutgoingFeatureChainMap.lower_bound(tid);
+         if (lb != mOutgoingFeatureChainMap.end() && !(mOutgoingFeatureChainMap.key_comp()(tid, lb->first)))
          {
             it = lb;
          }
          else
          {
-            it = mOutgoingFeatureChainMap.insert(lb, FeatureChainMap::value_type(msg.getTransactionId(), new DumFeatureChain(*this, mOutgoingFeatureList)));
+            it = mOutgoingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mOutgoingFeatureList, *mOutgoingTarget)));
          }
       }
       
-      EncryptionRequest* request = new EncryptionRequest(msg, level);
-      DumFeatureChain::ProcessingResult res = it->second->process(request);
+      DumFeatureChain::ProcessingResult res = it->second->process(message.get());
       
       if (res & DumFeatureChain::ChainDoneBit)
       {
@@ -758,34 +785,47 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
 
       if (res & DumFeatureChain::EventTakenBit)
       {
+         message.release();
          return;
       }
-
-      msg = request->message();
-      delete request;
    }
 
-   if (msg.isRequest())
+   OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(message.get());
+   assert(event);
+   if (event)
    {
-      //copy message if processStrictRoute will modify it
-      if (msg.exists(h_Routes) &&
-          !msg.header(h_Routes).empty() &&
-          !msg.header(h_Routes).front().uri().exists(p_lr))
+      if (event->message().isRequest())
       {
-         SipMessage copyOfMessage(msg);
-         Helper::processStrictRoute(copyOfMessage);
-         sendUsingOutboundIfAppropriate(*userProfile, copyOfMessage);
+         DialogSet* ds = findDialogSet(DialogSetId(event->message()));
+         UserProfile* userProfile;
+         if (ds == 0)
+         {
+            userProfile = getMasterUserProfile().get();
+         }
+         else
+         {
+            userProfile = ds->getUserProfile().get();
+         }
+
+         assert(userProfile);
+
+         if (event->message().exists(h_Routes) &&
+             !event->message().header(h_Routes).empty() &&
+             !event->message().header(h_Routes).front().uri().exists(p_lr))
+         {
+            Helper::processStrictRoute(event->message());
+            sendUsingOutboundIfAppropriate(*userProfile, event->message());
+         }
+         else
+         {
+            sendUsingOutboundIfAppropriate(*userProfile, event->message());
+         }
       }
       else
       {
-         sendUsingOutboundIfAppropriate(*userProfile, msg);
+         sendResponse(event->message());
       }
    }
-   else
-   {
-      sendResponse(msg);
-   }
-
 }
 
 void
@@ -985,10 +1025,23 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          mKeepAliveManager->process(*keepAliveMsg);
       }
+      return;      
+   }
+   
+   DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
+   if (command)
+   {
+      InfoLog(<< "DumCommand" );
+      command->execute();
+      return;      
    }
 
-   //call or create feature chain if appropriate
+   incomingProcess(msg);
+}
 
+void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
+{
+   //call or create feature chain if appropriate
    Data tid = Data::Empty;
    {
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
@@ -1016,7 +1069,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          }
          else
          {
-            it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mIncomingFeatureList)));
+            assert(dynamic_cast<SipMessage*>(msg.get()));
+            it = mIncomingFeatureChainMap.insert(lb, FeatureChainMap::value_type(tid, new DumFeatureChain(*this, mIncomingFeatureList, *mIncomingTarget)));
          }
       }
       
@@ -1037,7 +1091,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       }
    }
    
-   //normal dum message processing
    try
    {
       InfoLog (<< "Got: " << msg->brief());
@@ -1104,48 +1157,6 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
-   }
-}
-
-void
-DialogUsageManager::processDumFeatureResult(auto_ptr<Message> msg)
-{
-   DumEncrypted* encrypted = dynamic_cast<DumEncrypted*>(msg.get());
-   if (encrypted)
-   {
-      if (encrypted->message().isRequest())
-      {
-         DialogSet* ds = findDialogSet(DialogSetId(encrypted->message()));
-         UserProfile* userProfile;
-         if (ds == 0)
-         {
-            userProfile = getMasterUserProfile().get();
-         }
-         else
-         {
-            userProfile = ds->getUserProfile().get();
-         }
-
-         assert(userProfile);
-
-         //copy message if processStrictRoute will modify it
-         if (encrypted->message().exists(h_Routes) &&
-             !encrypted->message().header(h_Routes).empty() &&
-             !encrypted->message().header(h_Routes).front().uri().exists(p_lr))
-         {
-            SipMessage copyOfMessage(encrypted->message());
-            Helper::processStrictRoute(copyOfMessage);
-            sendUsingOutboundIfAppropriate(*userProfile, copyOfMessage);
-         }
-         else
-         {
-            sendUsingOutboundIfAppropriate(*userProfile, encrypted->message());
-         }
-      }
-      else
-      {
-         sendResponse(encrypted->message());
-      }
    }
 }
 
