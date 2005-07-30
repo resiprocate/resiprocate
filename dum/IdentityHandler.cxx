@@ -10,8 +10,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-IdentityHandler::IdentityHandler(DialogUsageManager& dum)
-   : DumFeature(dum)
+IdentityHandler::IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target)
+   : DumFeature(dum, target)
 {
 }
 
@@ -96,7 +96,7 @@ IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
    {
       mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
       mRequiresCerts.erase(it);
-      mDum.post(it->second);
+      postCommand(auto_ptr<Message>(it->second));
    }
 #endif
 }
