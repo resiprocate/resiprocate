@@ -1,6 +1,11 @@
 #ifndef RESIP_DNS_HOST_RECORD
 #define RESIP_DNS_HOST_RECORD
 
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/dns/DnsResourceRecord.hxx"
+
+
 namespace resip
 {
 

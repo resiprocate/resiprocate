@@ -6,12 +6,11 @@
 #include <map>
 #include <set>
 
+#include "resiprocate/dns/DnsResourceRecord.hxx"
 #include "resiprocate/dns/DnsAAAARecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
 #include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
 #include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
 #include "resiprocate/dns/DnsSrvRecord.hxx"
 #include "resiprocate/dns/RRCache.hxx"
 #include "resiprocate/dns/RROverlay.hxx"
