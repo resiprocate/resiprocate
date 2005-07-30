@@ -21,6 +21,7 @@
 #include "resiprocate/dum/DumFeature.hxx"
 #include "resiprocate/dum/DumFeatureChain.hxx"
 #include "resiprocate/dum/DumFeatureMessage.hxx"
+#include "resiprocate/dum/TargetCommand.hxx"
 
 namespace resip 
 {
@@ -269,7 +270,15 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
       void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
 
-      void processDumFeatureResult(std::auto_ptr<Message> msg);
+      TargetCommand::Target& dumIncomingTarget() 
+      {
+         return *mIncomingTarget;
+      }
+
+      TargetCommand::Target& dumOutgoingTarget()
+      {
+         return *mOutgoingTarget;
+      }
 
    protected:
       virtual void onAllHandlesDestroyed();      
@@ -285,7 +294,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       FeatureChainMap mIncomingFeatureChainMap;
       FeatureChainMap mOutgoingFeatureChainMap;
   
-   private:
+   private:     
       friend class Dialog;
       friend class DialogSet;
 
@@ -305,6 +314,32 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       friend class ServerPagerMessage;
       friend class KeepAliveAssociation;
       friend class NetworkAssociation;
+
+      class IncomingTarget : public TargetCommand::Target
+      {
+         public:
+            IncomingTarget(DialogUsageManager& dum) : TargetCommand::Target(dum) 
+            {
+            }
+
+            virtual void post(std::auto_ptr<Message> msg)
+            {
+               mDum.incomingProcess(msg);
+            }
+      };
+      
+      class OutgoingTarget : public TargetCommand::Target
+      {
+         public:
+            OutgoingTarget(DialogUsageManager& dum) : TargetCommand::Target(dum) 
+            {
+            }
+
+            virtual void post(std::auto_ptr<Message> msg)
+            {
+               mDum.outgoingProcess(msg);
+            }
+      };
 
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
@@ -355,6 +390,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
+
+      void incomingProcess(std::auto_ptr<Message> msg);
+      void outgoingProcess(std::auto_ptr<Message> msg);
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
@@ -422,6 +460,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
       InviteSessionEncryptionLevelMap mEncryptionLevels;
+
+      IncomingTarget* mIncomingTarget;
+      OutgoingTarget* mOutgoingTarget;
 };
 
 }

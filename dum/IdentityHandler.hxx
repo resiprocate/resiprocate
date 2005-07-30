@@ -13,7 +13,7 @@ class DumFeature;
 class IdentityHandler : public DumFeature
 {
    public:      
-      IdentityHandler(DialogUsageManager& dum); 
+      IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target); 
       virtual ProcessingResult process(Message* msg);
    private:
       void processIdentityCheckResponse(const HttpGetMessage& msg);      
