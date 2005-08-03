@@ -54,9 +54,14 @@ typedef long int ssize_t;
 
 #if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
 #include <netdb.h>
+
 #if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2)
-#include <arpa/nameser_compat.h>
+#  include <arpa/nameser_compat.h>
+#else
+   // Mac OS 10.2 and less need to have this defined
+   typedef int socklen_t;
 #endif
+
 #ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
 #ifndef __SCHAR_MAX__ 
 #define __SCHAR_MAX__ 127
