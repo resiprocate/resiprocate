@@ -457,6 +457,7 @@ SdpContents::Session::Phone::parse(ParseBuffer& pb)
 {
    pb.skipChar('p');
    parseEorP(pb, mNumber, mFreeText);
+   skipEol(pb);
 }
 
 SdpContents::Session::Connection::Connection(AddrType addType,
