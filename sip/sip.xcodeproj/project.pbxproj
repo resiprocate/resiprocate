@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12396E3708A2F3C800C5ED5E /* DumFeature.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12396E3608A2F3C800C5ED5E /* DumFeature.cxx */; };
+		12396E6A08A2F91E00C5ED5E /* OutgoingEvent.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12396E6908A2F91E00C5ED5E /* OutgoingEvent.cxx */; };
+		12396E6C08A2F93400C5ED5E /* TargetCommand.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 12396E6B08A2F93400C5ED5E /* TargetCommand.cxx */; };
 		123B4D4F089871C90049A5B9 /* DumFeatureChain.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */; };
 		123B4D53089871F70049A5B9 /* IdentityHandler.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D52089871F70049A5B9 /* IdentityHandler.cxx */; };
 		123B4D55089872040049A5B9 /* EncryptionRequest.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 123B4D54089872040049A5B9 /* EncryptionRequest.cxx */; };
@@ -262,6 +265,9 @@
 
 /* Begin PBXFileReference section */
 		08FB77AAFE841565C02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		12396E3608A2F3C800C5ED5E /* DumFeature.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeature.cxx; path = resiprocate/dum/DumFeature.cxx; sourceTree = SOURCE_ROOT; };
+		12396E6908A2F91E00C5ED5E /* OutgoingEvent.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OutgoingEvent.cxx; path = resiprocate/dum/OutgoingEvent.cxx; sourceTree = SOURCE_ROOT; };
+		12396E6B08A2F93400C5ED5E /* TargetCommand.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TargetCommand.cxx; path = resiprocate/dum/TargetCommand.cxx; sourceTree = SOURCE_ROOT; };
 		123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DumFeatureChain.cxx; path = resiprocate/dum/DumFeatureChain.cxx; sourceTree = SOURCE_ROOT; };
 		123B4D52089871F70049A5B9 /* IdentityHandler.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IdentityHandler.cxx; path = resiprocate/dum/IdentityHandler.cxx; sourceTree = SOURCE_ROOT; };
 		123B4D54089872040049A5B9 /* EncryptionRequest.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptionRequest.cxx; path = resiprocate/dum/EncryptionRequest.cxx; sourceTree = SOURCE_ROOT; };
@@ -624,6 +630,7 @@
 				124D79D1086CC68200BCA5A9 /* DialogUsageManager.cxx */,
 				12BF593A0895D5FF00F7DD81 /* DumDecrypted.cxx */,
 				12BF593B0895D5FF00F7DD81 /* DumEncrypted.cxx */,
+				12396E3608A2F3C800C5ED5E /* DumFeature.cxx */,
 				123B4D4E089871C90049A5B9 /* DumFeatureChain.cxx */,
 				123B4D560898721D0049A5B9 /* DumFeatureMessage.cxx */,
 				124D79D2086CC68200BCA5A9 /* DumProcessHandler.cxx */,
@@ -643,6 +650,7 @@
 				124D79DD086CC68200BCA5A9 /* MasterProfile.cxx */,
 				124D79DE086CC68200BCA5A9 /* NetworkAssociation.cxx */,
 				124D79DF086CC68200BCA5A9 /* NonDialogUsage.cxx */,
+				12396E6908A2F91E00C5ED5E /* OutgoingEvent.cxx */,
 				124D79E0086CC68200BCA5A9 /* OutOfDialogReqCreator.cxx */,
 				124D79E1086CC68200BCA5A9 /* PagerMessageCreator.cxx */,
 				124D79E2086CC68200BCA5A9 /* Profile.cxx */,
@@ -659,6 +667,7 @@
 				124D79ED086CC68200BCA5A9 /* SubscriptionCreator.cxx */,
 				124D79EE086CC68200BCA5A9 /* SubscriptionHandler.cxx */,
 				124D79EF086CC68200BCA5A9 /* SubscriptionState.cxx */,
+				12396E6B08A2F93400C5ED5E /* TargetCommand.cxx */,
 				124D79F0086CC68200BCA5A9 /* UInt64Hash.cxx */,
 				124D79F1086CC68200BCA5A9 /* UserAuthInfo.cxx */,
 				124D79F2086CC68200BCA5A9 /* UserProfile.cxx */,
@@ -1121,6 +1130,9 @@
 				123B4D53089871F70049A5B9 /* IdentityHandler.cxx in Sources */,
 				123B4D55089872040049A5B9 /* EncryptionRequest.cxx in Sources */,
 				123B4D570898721D0049A5B9 /* DumFeatureMessage.cxx in Sources */,
+				12396E3708A2F3C800C5ED5E /* DumFeature.cxx in Sources */,
+				12396E6A08A2F91E00C5ED5E /* OutgoingEvent.cxx in Sources */,
+				12396E6C08A2F93400C5ED5E /* TargetCommand.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
