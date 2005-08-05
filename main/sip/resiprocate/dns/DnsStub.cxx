@@ -58,6 +58,8 @@ DnsStub::~DnsStub()
    {
       delete *it;
    }
+
+   delete mDnsProvider;
 }
 
 bool 
