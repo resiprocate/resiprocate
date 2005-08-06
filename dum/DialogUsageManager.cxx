@@ -759,7 +759,12 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
       }
    }
 
-   if (tid != Data::Empty && !mOutgoingFeatureList.empty())
+   if (tid == Data::Empty && mOutgoingMessageInterceptor.get())
+   {
+      mOutgoingMessageInterceptor->process(message.get());
+      return;
+   }
+   else if (tid != Data::Empty && !mOutgoingFeatureList.empty())
    {
       FeatureChainMap::iterator it;
       //efficiently find or create FeatureChain, should prob. be a utility template
@@ -1743,6 +1748,12 @@ void
 DialogUsageManager::addOutgoingFeature(resip::SharedPtr<DumFeature> feat)
 {
    mOutgoingFeatureList.push_back(feat);
+}
+
+void
+DialogUsageManager::setOutgoingMessageInterceptor(SharedPtr<DumFeature> feat)
+{
+   mOutgoingMessageInterceptor = feat;
 }
 
 /* ====================================================================
