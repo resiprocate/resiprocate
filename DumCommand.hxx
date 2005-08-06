@@ -1,12 +1,12 @@
 #if !defined(RESIP_DUMCOMMAND_HXX)
 #define RESIP_DUMCOMMAND_HXX
 
-#include "resiprocate/Message.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 
 namespace resip
 {
 
-class DumCommand : public Message
+class DumCommand : public ApplicationMessage
 {
    public:
       virtual ~DumCommand() {}
@@ -16,3 +16,4 @@ class DumCommand : public Message
 }
 
 #endif
+
