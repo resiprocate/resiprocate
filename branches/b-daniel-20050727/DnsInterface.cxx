@@ -43,31 +43,19 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsInterface::DnsInterface() : 
+DnsInterface::DnsInterface(DnsStub& dnsStub) : 
    //mDnsProvider(ExternalDnsFactory::createExternalDns()),
-   	  mActiveQueryCount(0)
+   mActiveQueryCount(0),
+   mDnsStub(dnsStub)
 {
-   /* moved to DnsStub.
-   int retCode = mDnsProvider->init();
-   if (retCode != 0)
-   {
-      ErrLog (<< "Failed to initialize async dns library");
-      char* errmem = mDnsProvider->errorMessage(retCode);
-      ErrLog (<< errmem);
-      delete errmem;
-      throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
-   }
-   */
-   mDnsStub = new DnsStub();
+
 #ifdef USE_DNS_VIP
-   mDnsStub->setResultTransform(&mVip);
+   mDnsStub.setResultTransform(&mVip);
 #endif
 }
 
 DnsInterface::~DnsInterface()
 {
-   //delete mDnsProvider;
-   delete mDnsStub;
 }
 
 void 
@@ -132,21 +120,20 @@ int DnsInterface::supportedProtocols()
 bool 
 DnsInterface::requiresProcess()
 {
-   //return mDnsProvider->requiresProcess() && mActiveQueryCount;   
-   return mDnsStub->requiresProcess() && mActiveQueryCount;
+   return mActiveQueryCount;
 }
 
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
    //mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
-   mDnsStub->buildFdSet(fdset);
+   //mDnsStub->buildFdSet(fdset);
 }
 
 void 
 DnsInterface::process(FdSet& fdset)
 {
-   mDnsStub->process(fdset);
+   //mDnsStub->process(fdset);
    //mDnsProvider->process(fdset.read, fdset.write);
 }
 
@@ -154,7 +141,7 @@ DnsInterface::process(FdSet& fdset)
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this, *mDnsStub, mVip, handler);
+   DnsResult* result = new DnsResult(*this, mDnsStub, mVip, handler);
    mActiveQueryCount++;  
    return result;
 }
@@ -197,12 +184,12 @@ DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
 void
 DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
-   mDnsStub->registerBlacklistListener(rrType, listener);
+   mDnsStub.registerBlacklistListener(rrType, listener);
 }
 
 void DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
-   mDnsStub->unregisterBlacklistListener(rrType, listener);
+   mDnsStub.unregisterBlacklistListener(rrType, listener);
 }
 
 //  Copyright (c) 2003, Jason Fischl 

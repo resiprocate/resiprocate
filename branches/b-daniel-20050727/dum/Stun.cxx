@@ -7,7 +7,7 @@
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Stun.hxx"
+#include "resiprocate/dum/Stun.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
