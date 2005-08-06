@@ -26,6 +26,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 
 #ifdef WIN32
 #include "resiprocate/os/WinCompat.hxx"
@@ -37,7 +38,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security) :
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub) :
+   mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
