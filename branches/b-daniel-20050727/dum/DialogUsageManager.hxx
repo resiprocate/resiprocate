@@ -270,6 +270,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addIncomingFeature(resip::SharedPtr<DumFeature> feat);
       void addOutgoingFeature(resip::SharedPtr<DumFeature> feat);
 
+      void setOutgoingMessageInterceptor(resip::SharedPtr<DumFeature> feat);
+
       TargetCommand::Target& dumIncomingTarget() 
       {
          return *mIncomingTarget;
@@ -289,6 +291,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       DumFeatureChain::FeatureList mIncomingFeatureList;
       DumFeatureChain::FeatureList mOutgoingFeatureList;
+      
+      SharedPtr<DumFeature> mOutgoingMessageInterceptor;
 
       typedef std::map<Data, DumFeatureChain*> FeatureChainMap;
       FeatureChainMap mIncomingFeatureChainMap;

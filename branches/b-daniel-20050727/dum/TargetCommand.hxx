@@ -28,7 +28,6 @@ class TargetCommand : public DumCommand
       TargetCommand(const TargetCommand&);
       void execute();
 
-
       Message* clone() const;
       std::ostream& encode(std::ostream& strm) const;
       std::ostream& encodeBrief(std::ostream& strm) const;
