@@ -8,7 +8,6 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
-//#include "resiprocate/external/ExternalDns.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/dns/RRVip.hxx"
 
@@ -37,7 +36,7 @@ class DnsInterface
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
       // Will throw DnsInterface::Exception if the Dns provider fails to initialize
-      DnsInterface();
+      DnsInterface(DnsStub& dnsStub);
 
       virtual ~DnsInterface();
 
@@ -105,7 +104,7 @@ class DnsInterface
       //ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
 
-      DnsStub* mDnsStub;
+      DnsStub& mDnsStub;
       RRVip mVip;
 };
 
