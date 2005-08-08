@@ -75,7 +75,7 @@ do                                                                              
       {                                                                                         \
          const resip::Data _resip_rest(resip::Data::Share,                                      \
                                       _resip_result.data() + _resip_headerLength,               \
-                                      _resip_result.size() - _resip_headerLength);              \
+                                      (int)(_resip_result.size() - _resip_headerLength));       \
          if (!(*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),           \
                                            __FILE__, __LINE__, _resip_rest))                    \
          {                                                                                      \
