@@ -232,7 +232,7 @@
 				RelativePath=".\DumDecrypted.cxx">
 			</File>
 			<File
-				RelativePath=".\DumEncrypted.cxx">
+				RelativePath=".\DumFeature.cxx">
 			</File>
 			<File
 				RelativePath=".\DumFeatureChain.cxx">
@@ -251,9 +251,6 @@
 			</File>
 			<File
 				RelativePath=".\EncryptionManager.cxx">
-			</File>
-			<File
-				RelativePath=".\EncryptionRequest.cxx">
 			</File>
 			<File
 				RelativePath=".\Handle.cxx">
@@ -299,6 +296,9 @@
 			</File>
 			<File
 				RelativePath=".\NonDialogUsage.cxx">
+			</File>
+			<File
+				RelativePath=".\OutgoingEvent.cxx">
 			</File>
 			<File
 				RelativePath=".\OutOfDialogReqCreator.cxx">
@@ -347,6 +347,9 @@
 			</File>
 			<File
 				RelativePath=".\SubscriptionState.cxx">
+			</File>
+			<File
+				RelativePath=".\TargetCommand.cxx">
 			</File>
 			<File
 				RelativePath=".\UserAuthInfo.cxx">
@@ -433,9 +436,6 @@
 				RelativePath=".\DumDecrypted.hxx">
 			</File>
 			<File
-				RelativePath=".\DumEncrypted.hxx">
-			</File>
-			<File
 				RelativePath=".\DumException.hxx">
 			</File>
 			<File
@@ -461,9 +461,6 @@
 			</File>
 			<File
 				RelativePath=".\EncryptionManager.hxx">
-			</File>
-			<File
-				RelativePath=".\EncryptionRequest.hxx">
 			</File>
 			<File
 				RelativePath=".\Handle.hxx">
@@ -512,6 +509,9 @@
 			</File>
 			<File
 				RelativePath=".\NonDialogUsage.hxx">
+			</File>
+			<File
+				RelativePath=".\OutgoingEvent.hxx">
 			</File>
 			<File
 				RelativePath=".\OutOfDialogHandler.hxx">
@@ -587,6 +587,9 @@
 			</File>
 			<File
 				RelativePath=".\SubscriptionState.hxx">
+			</File>
+			<File
+				RelativePath=".\TargetCommand.hxx">
 			</File>
 			<File
 				RelativePath=".\UsageUseException.hxx">
