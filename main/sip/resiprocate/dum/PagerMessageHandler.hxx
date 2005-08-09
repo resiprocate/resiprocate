@@ -16,10 +16,10 @@ class ClientPagerMessageHandler
    public:
       virtual ~ClientPagerMessageHandler() {}
 
+      // Note:  end() must be explicitly called to terminate the usage
+
+      // Called when a MESSAGE has been successfully sent
       virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status)=0;
-      //call on failure. The usage will be destroyed.  Note that this may not
-      //necessarily be 4xx...a malformed 200, etc. could also reach here.
-      //virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status)=0;
       //!kh!
       // Application could re-page the failed contents or just ingore it.
       virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents)=0;
