@@ -213,6 +213,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
          mBufferPos += bytesRead;
          if (mBufferPos == contentLength)
          {
+	    mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, contentLength);
             if (!transport()->basicCheck(*mMessage))
             {
