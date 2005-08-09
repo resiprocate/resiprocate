@@ -737,7 +737,7 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
       }
    }
 
-   OutgoingEvent* event = new OutgoingEvent(msg, level);
+   OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(msg.clone())), level);
    outgoingProcess(auto_ptr<Message>(event));
 }
 
@@ -799,9 +799,9 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
    assert(event);
    if (event)
    {
-      if (event->message().isRequest())
+      if (event->message()->isRequest())
       {
-         DialogSet* ds = findDialogSet(DialogSetId(event->message()));
+         DialogSet* ds = findDialogSet(DialogSetId(*event->message()));
          UserProfile* userProfile;
          if (ds == 0)
          {
@@ -814,21 +814,21 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 
          assert(userProfile);
 
-         if (event->message().exists(h_Routes) &&
-             !event->message().header(h_Routes).empty() &&
-             !event->message().header(h_Routes).front().uri().exists(p_lr))
+         if (event->message()->exists(h_Routes) &&
+             !event->message()->header(h_Routes).empty() &&
+             !event->message()->header(h_Routes).front().uri().exists(p_lr))
          {
-            Helper::processStrictRoute(event->message());
-            sendUsingOutboundIfAppropriate(*userProfile, event->message());
+            Helper::processStrictRoute(*event->message());
+            sendUsingOutboundIfAppropriate(*userProfile, *event->message());
          }
          else
          {
-            sendUsingOutboundIfAppropriate(*userProfile, event->message());
+            sendUsingOutboundIfAppropriate(*userProfile, *event->message());
          }
       }
       else
       {
-         sendResponse(event->message());
+         sendResponse(*event->message());
       }
    }
 }

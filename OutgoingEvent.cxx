@@ -4,7 +4,7 @@
 using namespace resip;
 using namespace std;
 
-OutgoingEvent::OutgoingEvent(const SipMessage& msg, DialogUsageManager::EncryptionLevel level)
+OutgoingEvent::OutgoingEvent(auto_ptr<SipMessage> msg, DialogUsageManager::EncryptionLevel level)
    : mMessage(msg),
      mLevel(level)
 {
@@ -26,16 +26,22 @@ OutgoingEvent::clone() const
    return new OutgoingEvent(*this);
 }
 
-SipMessage& 
+SipMessage*
 OutgoingEvent::message()
 {
-   return mMessage;
+   return mMessage.get();
 }
 
 DialogUsageManager::EncryptionLevel 
 OutgoingEvent::encryptionLevel() const
 {
    return mLevel;
+}
+
+void
+OutgoingEvent::releaseMessage()
+{
+   mMessage.release();
 }
      
 std::ostream&
@@ -47,7 +53,7 @@ OutgoingEvent::encodeBrief(std::ostream& strm) const
 std::ostream& 
 OutgoingEvent::encode(std::ostream& strm) const
 {
-   mMessage.encode(strm); 
+   mMessage->encode(strm); 
    strm << "Encryption level: " << mLevel << endl;
    return strm;
 }
