@@ -220,8 +220,7 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
 
 bool EncryptionManager::decrypt(SipMessage& msg)
 {
-   SipMessage copy(msg);
-   Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), copy, *this);
+   Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
    Helper::ContentsSecAttrs csa;
    bool ret = request->decrypt(csa);
    if (ret)
