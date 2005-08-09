@@ -545,7 +545,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       if (mCurrentRetransmit200)
       {
          InfoLog (<< "Retransmitting: " << endl << mInvite200);
-         mDialog.send(mInvite200, DialogUsageManager::None);
+         mDialog.send(mInvite200, mCurrentEncryptionLevel);
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
       }
