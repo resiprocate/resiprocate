@@ -175,7 +175,7 @@ ClientPagerMessage::dispatch(const DumTimeout& timer)
 void
 ClientPagerMessage::end()
 {
-   delete this;
+   mDum.destroy(this);
 }
 
 size_t
