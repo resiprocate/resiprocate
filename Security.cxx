@@ -1857,12 +1857,17 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    BIO_flush(out);   
    BUF_MEM* bufMem;
    BIO_get_mem_ptr(out, &bufMem);
-   BIO_set_close(out, BIO_NOCLOSE);
+
+   int len = bufMem->length;
+   char* buffer = new char[len];
+   memcpy(buffer, bufMem->data, len);
+
+   BIO_set_close(out, BIO_CLOSE);
    BIO_free(out);
 
    // parse out the header information and form new body.
    // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff 
-   ParseBuffer pb(bufMem->data, bufMem->length);
+   ParseBuffer pb(buffer, len);
 
    const char* headerStart = pb.position();
 
@@ -1900,7 +1905,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    pb.data(tmp, bodyStart);
    // create contents against body
    Contents* ret = Contents::createContents(contentType, tmp);
-   ret->addBuffer(bufMem->data);
+   ret->addBuffer(buffer);
    
    // pre-parse headers
    ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
