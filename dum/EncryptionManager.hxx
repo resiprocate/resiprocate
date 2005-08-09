@@ -38,26 +38,28 @@ class EncryptionManager : public DumFeature
          Complete
       } Result;
 
-      EncryptionManager::Result processCertMessage(const CertMessage& cert);
-      Contents* sign(const SipMessage& msg, const Data& senderAor);
-      Contents* encrypt(const SipMessage& msg, const Data& recipientAor);
-      Contents* signAndEncrypt(const SipMessage& mg, const Data& senderAor, const Data& recipientAor);
-      bool decrypt(SipMessage& msg);
+      EncryptionManager::Result processCertMessage(CertMessage* cert);
+      Contents* sign(SipMessage* msg, const Data& senderAor, bool* noCerts);
+      Contents* encrypt(SipMessage* msg, const Data& recipientAor, bool* noCerts);
+      Contents* signAndEncrypt(SipMessage* msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
+      bool decrypt(SipMessage* msg);
 
       class Request
       {
          public:
-            Request(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, DumFeature& feature);
+            Request(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, DumFeature& feature);
             virtual ~Request();
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
-            Data getId() const { return mMsg.getTransactionId(); }
+            Data getId() const { return mMsg->getTransactionId(); }            
+            void setTaken() { mTaken = true; }
 
          protected:
             DialogUsageManager& mDum;
             RemoteCertStore* mStore;
-            SipMessage mMsg; // initial message.
+            SipMessage* mMsg; // initial message.
             int mPendingRequests;
             DumFeature& mFeature;
+            bool mTaken;
 
             void response415();
       };
@@ -65,10 +67,10 @@ class EncryptionManager : public DumFeature
       class Sign : public Request
       {
          public:
-            Sign(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& senderAor, DumFeature& feature);
-            ~Sign();
+            Sign(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, const Data& senderAor, DumFeature& feature);
+            virtual ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool sign(Contents**);
+            bool sign(Contents**, bool* noCerts);
 
          protected:
             Data mSenderAor;
@@ -77,10 +79,10 @@ class EncryptionManager : public DumFeature
       class Encrypt : public Request
       {
          public:
-            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, const Data& recipientAor, DumFeature& feature);
-            ~Encrypt();
+            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, const Data& recipientAor, DumFeature& feature);
+            virtual ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool encrypt(Contents**);
+            bool encrypt(Contents**, bool* noCerts);
 
          protected:
             Data mRecipientAor;
@@ -89,10 +91,10 @@ class EncryptionManager : public DumFeature
       class SignAndEncrypt : public Request
       {
          public:
-            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
+            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
-            bool signAndEncrypt(Contents**);
+            bool signAndEncrypt(Contents**, bool* noCerts);
 
          protected:
             Data mSenderAor;
@@ -105,24 +107,22 @@ class EncryptionManager : public DumFeature
       class Decrypt : public Request
       {
          public:
-            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, const SipMessage& msg, DumFeature& feature);
-            ~Decrypt();
+            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, DumFeature& feature);
+            virtual ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);
 
          private:
-            std::auto_ptr<Contents> mContents;
             bool isEncrypted();
-            bool isSigned();
+            bool isSigned(bool noDecryptionKey);
             bool isEncryptedRecurse(Contents*);
-            bool isSignedRecurse(Contents*, const Data& decryptorAor);
-            Helper::ContentsSecAttrs getContents(const SipMessage& msg, Security& security, bool noDecryptionKey);
+            bool isSignedRecurse(Contents*, const Data& decryptorAor, bool noDecryptionKey);
+            Helper::ContentsSecAttrs getContents(SipMessage* msg, Security& security, bool noDecryptionKey);
             Contents* getContentsRecurse(Contents*, Security&, bool, SecurityAttributes* attr);
             Data mDecryptor;
             Data mSigner;
       };
 
-      //DialogUsageManager* mDum;
       UInt32 mCounter;
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
 

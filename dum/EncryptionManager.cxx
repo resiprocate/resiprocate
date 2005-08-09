@@ -61,7 +61,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
    if (sipMsg)
    {
-      if (decrypt(*sipMsg))
+      if (decrypt(sipMsg))
       {
          return DumFeature::FeatureDone;
       }
@@ -74,39 +74,40 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(msg);
    if (event)
    {
-      if (!event->message().getContents())
+      if (!event->message()->getContents())
       {
          return DumFeature::FeatureDone;
       }
 
       Data senderAor;
       Data recipAor;
-      if (event->message().isRequest())
+      if (event->message()->isRequest())
       {
-         senderAor = event->message().header(h_From).uri().getAor();
-         recipAor = event->message().header(h_To).uri().getAor();
+         senderAor = event->message()->header(h_From).uri().getAor();
+         recipAor = event->message()->header(h_To).uri().getAor();
       }
       else
       {
-         senderAor = event->message().header(h_To).uri().getAor();
-         recipAor = event->message().header(h_From).uri().getAor();
+         senderAor = event->message()->header(h_To).uri().getAor();
+         recipAor = event->message()->header(h_From).uri().getAor();
       }
 
-      Contents* contents = event->message().getContents();
+      Contents* contents = event->message()->getContents();
       bool setContents = true;
+      bool noCerts = false;
       switch (event->encryptionLevel())
       {
          case DialogUsageManager::None:
             setContents = false;
             break;
          case DialogUsageManager::Encrypt:
-            contents = encrypt(event->message(), recipAor);
+            contents = encrypt(event->message(), recipAor, &noCerts);
             break;
          case DialogUsageManager::Sign:
-            contents = sign(event->message(), senderAor);
+            contents = sign(event->message(), senderAor, &noCerts);
             break;
          case DialogUsageManager::SignAndEncrypt:
-            contents = signAndEncrypt(event->message(), senderAor, recipAor);
+            contents = signAndEncrypt(event->message(), senderAor, recipAor, &noCerts);
             break;
       }
 
@@ -114,64 +115,77 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       {
          if (setContents)
          {
-            event->message().setContents(auto_ptr<Contents>(contents));
+            event->message()->setContents(auto_ptr<Contents>(contents));
          }
          return DumFeature::FeatureDone;
       }
       else
       {
-         return DumFeature::EventTaken;
+         if (noCerts)
+         {
+            return DumFeature::ChainDoneAndEventDone;
+         }
+         else
+         {
+            event->releaseMessage();
+            return DumFeature::EventTaken;
+         }
       }
    }
 
    CertMessage* certMsg = dynamic_cast<CertMessage*>(msg);
    if (certMsg)
    {
-      if (processCertMessage(*certMsg) == Complete)
+      if (processCertMessage(certMsg) == Complete)
       {
-         return DumFeature::FeatureDoneAndEventDone;
+         return DumFeature::ChainDoneAndEventDone;
       }
       else
       {
-         return DumFeature::EventTaken;
+         delete msg;
+         return DumFeature::ChainDoneAndEventTaken;
       }
    }
 
    return DumFeature::FeatureDone;
 }
 
-EncryptionManager::Result EncryptionManager::processCertMessage(const CertMessage& message)
+EncryptionManager::Result EncryptionManager::processCertMessage(CertMessage* message)
 {
-   InfoLog( << "Received a cert message: " << message << endl);
+   InfoLog( << "Received a cert message: " << *message << endl);
    Result ret = Pending;
    list<Request*>::iterator it;
    for (it = mRequests.begin(); it != mRequests.end(); ++it)
    {
-      if ((*it)->getId() == message.id().mId) break;
+      if ((*it)->getId() == message->id().mId) break;
    }
 
    if (it != mRequests.end())
    {
       InfoLog ( << "Processing the cert message" << endl);
-      Result result = (*it)->received(message.success(), message.id().mType, message.id().mAor, message.body());
-      if (Complete == result)
+      ret = (*it)->received(message->success(), message->id().mType, message->id().mAor, message->body());
+      if (Complete == ret)
       {
          delete *it;
          mRequests.erase(it);
       }
    }
+
    return ret;
 }
 
-Contents* EncryptionManager::sign(const SipMessage& msg, 
-                                  const Data& senderAor)
+Contents* EncryptionManager::sign(SipMessage* msg, 
+                                  const Data& senderAor,
+                                  bool* noCerts)
 {
    Sign* request = new Sign(mDum, mRemoteCertStore.get(), msg, senderAor, *this);
    Contents* contents;
-   bool async = request->sign(&contents);
+   *noCerts = false;
+   bool async = request->sign(&contents, noCerts);
    if (async)
    {
       InfoLog(<< "Async sign" << endl);
+      request->setTaken();
       mRequests.push_back(request);
    }
    else
@@ -181,15 +195,18 @@ Contents* EncryptionManager::sign(const SipMessage& msg,
    return contents;
 }
 
-Contents* EncryptionManager::encrypt(const SipMessage& msg,
-                                     const Data& recipientAor)
+Contents* EncryptionManager::encrypt(SipMessage* msg,
+                                     const Data& recipientAor,
+                                     bool* noCerts)
 {
    Encrypt* request = new Encrypt(mDum, mRemoteCertStore.get(), msg, recipientAor, *this);
    Contents* contents;
-   bool async = request->encrypt(&contents);
+   *noCerts = false;
+   bool async = request->encrypt(&contents, noCerts);
    if (async)
    {
       InfoLog(<< "Async encrypt" << endl);
+      request->setTaken();
       mRequests.push_back(request);
    }
    else
@@ -199,13 +216,15 @@ Contents* EncryptionManager::encrypt(const SipMessage& msg,
    return contents;
 }
 
-Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
+Contents* EncryptionManager::signAndEncrypt(SipMessage* msg,
                                             const Data& senderAor,
-                                            const Data& recipAor)
+                                            const Data& recipAor,
+                                            bool* noCerts)
 {
    SignAndEncrypt* request = new SignAndEncrypt(mDum, mRemoteCertStore.get(), msg, senderAor, recipAor, *this);
    Contents* contents;
-   bool async = request->signAndEncrypt(&contents);
+   *noCerts = false;
+   bool async = request->signAndEncrypt(&contents, noCerts);
    if (!async)
    {
       delete request;
@@ -213,12 +232,13 @@ Contents* EncryptionManager::signAndEncrypt(const SipMessage& msg,
    else
    {
       InfoLog(<< "Async sign and encrypt" << endl);
+      request->setTaken();
       mRequests.push_back(request);
    }
    return contents;
 }
 
-bool EncryptionManager::decrypt(SipMessage& msg)
+bool EncryptionManager::decrypt(SipMessage* msg)
 {
    Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
    Helper::ContentsSecAttrs csa;
@@ -227,17 +247,18 @@ bool EncryptionManager::decrypt(SipMessage& msg)
    {
       if (csa.mContents.get())
       {
-         msg.setContents(csa.mContents);
+         msg->setContents(csa.mContents);
       }
       if (csa.mAttributes.get()) 
       {
-         msg.setSecurityAttributes(csa.mAttributes);
+         msg->setSecurityAttributes(csa.mAttributes);
       }
       delete request;
    }
    else
    {
       InfoLog(<< "Async decrypt" << endl);
+      request->setTaken();
       mRequests.push_back(request);
    }
    return ret;
@@ -245,30 +266,35 @@ bool EncryptionManager::decrypt(SipMessage& msg)
 
 EncryptionManager::Request::Request(DialogUsageManager& dum,
                                     RemoteCertStore* store,
-                                    const SipMessage& msg,
+                                    SipMessage* msg,
                                     DumFeature& feature)
    : mDum(dum),
      mStore(store),
      mMsg(msg),
      mPendingRequests(0),
-     mFeature(feature)
+     mFeature(feature),
+     mTaken(false)
 {
 }
 
 EncryptionManager::Request::~Request()
 {
+   if (mTaken)
+   {
+      delete mMsg;
+   }
 }
 
 void EncryptionManager::Request::response415()
 {
-   SipMessage* response = Helper::makeResponse(mMsg, 415);
+   SipMessage* response = Helper::makeResponse(*mMsg, 415);
    mDum.post(response);
    InfoLog(<< "Generated 415" << endl);
 }
 
 EncryptionManager::Sign::Sign(DialogUsageManager& dum,
                               RemoteCertStore* store,
-                              const SipMessage& msg, 
+                              SipMessage* msg, 
                               const Data& senderAor,
                               DumFeature& feature)
    : Request(dum, store, msg, feature),
@@ -280,11 +306,11 @@ EncryptionManager::Sign::~Sign()
 {
 }
 
-bool EncryptionManager::Sign::sign(Contents** contents)
+bool EncryptionManager::Sign::sign(Contents** contents, bool* noCerts)
 {
    *contents = 0;
+   *noCerts = false;
    bool async = false;
-   if (0 != mPendingRequests) return 0;
 
    MultipartSignedContents* msc = 0;
    bool missingCert = !mDum.getSecurity()->hasUserCert(mSenderAor);
@@ -293,7 +319,7 @@ bool EncryptionManager::Sign::sign(Contents** contents)
    if (!missingCert && !missingKey)
    {
       InfoLog(<< "Signing message" << endl);
-      msc =  mDum.getSecurity()->sign(mSenderAor, mMsg.getContents());
+      msc =  mDum.getSecurity()->sign(mSenderAor, mMsg->getContents());
       *contents = msc;
    }
    else
@@ -304,14 +330,14 @@ bool EncryptionManager::Sign::sign(Contents** contents)
          {
             InfoLog(<< "Fetching cert for " << mSenderAor << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mSenderAor, MessageId::UserCert);
+            MessageId id(mMsg->getTransactionId(), mSenderAor, MessageId::UserCert);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
          if (missingKey)
          {
             InfoLog(<< "Fetching private key for " << mSenderAor << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mSenderAor, MessageId::UserPrivateKey);
+            MessageId id(mMsg->getTransactionId(), mSenderAor, MessageId::UserPrivateKey);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
          async = true;
@@ -319,6 +345,7 @@ bool EncryptionManager::Sign::sign(Contents** contents)
       else
       {
          InfoLog(<< "No remote cert store installed" << endl);
+         *noCerts = true;
          response415();
       }
    }
@@ -334,6 +361,7 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
    assert(mSenderAor==aor);
    assert(mPendingRequests>0&&mPendingRequests<=2);
    Result result = Pending;
+
    if (success)
    {
       if (type == MessageId::UserCert)
@@ -349,11 +377,12 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
       if (--mPendingRequests == 0)
       {
          InfoLog(<< "Signing message" << endl);
-         MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsg.getContents());
+         MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsg->getContents());
          auto_ptr<Contents> contents(msc);
-         mMsg.setContents(contents);
-         OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
-         mFeature.postCommand(auto_ptr<Message>(event));
+         mMsg->setContents(contents);
+         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+         mTaken = false;
+         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
          result = Complete;
       }
    }
@@ -368,7 +397,7 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
 
 EncryptionManager::Encrypt::Encrypt(DialogUsageManager& dum, 
                                     RemoteCertStore* store, 
-                                    const SipMessage& msg, 
+                                    SipMessage* msg, 
                                     const Data& recipientAor,
                                     DumFeature& feature)
    : Request(dum, store, msg, feature),
@@ -380,16 +409,16 @@ EncryptionManager::Encrypt::~Encrypt()
 {
 }
 
-bool EncryptionManager::Encrypt::encrypt(Contents** contents)
+bool EncryptionManager::Encrypt::encrypt(Contents** contents, bool* noCerts)
 {
    *contents = 0;
+   *noCerts = false;
    bool async = false;
-   if (0 != mPendingRequests) return 0;
 
    if (mDum.getSecurity()->hasUserCert(mRecipientAor))
    {
       InfoLog(<< "Encrypting message" << endl);
-      MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(mMsg.getContents());
+      MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(mMsg->getContents());
       if (alt)
       {
          // encrypt the last part.
@@ -406,7 +435,7 @@ bool EncryptionManager::Encrypt::encrypt(Contents** contents)
       }
       else
       {
-         *contents =  mDum.getSecurity()->encrypt(mMsg.getContents(), mRecipientAor);
+         *contents =  mDum.getSecurity()->encrypt(mMsg->getContents(), mRecipientAor);
       }
    }
    else
@@ -415,13 +444,14 @@ bool EncryptionManager::Encrypt::encrypt(Contents** contents)
       {
          InfoLog(<< "Fetching cert for " << mRecipientAor << endl);
          ++mPendingRequests;
-         MessageId id(mMsg.getTransactionId(), mRecipientAor, MessageId::UserCert);
+         MessageId id(mMsg->getTransactionId(), mRecipientAor, MessageId::UserCert);
          mStore->fetch(mRecipientAor, MessageId::UserCert, id, mDum);
          async = true;
       }
       else
       {
          InfoLog(<< "No remote cert store installed" << endl);
+         *noCerts = true;
          response415();
       }
    }
@@ -442,10 +472,11 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
       mDum.getSecurity()->addUserCertDER(aor, data);
       --mPendingRequests;
       InfoLog(<< "Encrypting message" << endl);
-      Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsg.getContents(), aor);
-      mMsg.setContents(auto_ptr<Contents>(encrypted));
-      OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
-      mFeature.postCommand(auto_ptr<Message>(event));
+      Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsg->getContents(), aor);
+      mMsg->setContents(auto_ptr<Contents>(encrypted));
+      OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+      mTaken = false;
+      mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));      
    }
    else
    {
@@ -457,7 +488,7 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
 
 EncryptionManager::SignAndEncrypt::SignAndEncrypt(DialogUsageManager& dum, 
                                                   RemoteCertStore* store, 
-                                                  const SipMessage& msg, 
+                                                  SipMessage* msg, 
                                                   const Data& senderAor, 
                                                   const Data& recipientAor,
                                                   DumFeature& feature)
@@ -471,12 +502,11 @@ EncryptionManager::SignAndEncrypt::~SignAndEncrypt()
 {
 }
 
-bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
+bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents, bool* noCerts)
 {
    *contents = 0;
+   *noCerts = false;
    bool async = false;
-   if (0 != mPendingRequests) return 0;
-
    bool missingCert = !mDum.getSecurity()->hasUserCert(mSenderAor);
    bool missingKey = !mDum.getSecurity()->hasUserPrivateKey(mSenderAor);
    bool missingRecipCert = !mDum.getSecurity()->hasUserCert(mRecipientAor);
@@ -494,21 +524,21 @@ bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
          {
             InfoLog(<< "Fetching cert for " << mSenderAor << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mSenderAor, MessageId::UserCert);
+            MessageId id(mMsg->getTransactionId(), mSenderAor, MessageId::UserCert);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
          if (missingKey)
          {
             InfoLog(<< "Fetching private key for " << mSenderAor << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mSenderAor, MessageId::UserPrivateKey);
+            MessageId id(mMsg->getTransactionId(), mSenderAor, MessageId::UserPrivateKey);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
          if (missingRecipCert)
          {
             InfoLog(<< "Fetching cert for " << mRecipientAor << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mRecipientAor, MessageId::UserCert);
+            MessageId id(mMsg->getTransactionId(), mRecipientAor, MessageId::UserCert);
             mStore->fetch(mSenderAor, MessageId::UserCert, id, mDum);
          }
          async = true;
@@ -516,6 +546,7 @@ bool EncryptionManager::SignAndEncrypt::signAndEncrypt(Contents** contents)
       else
       {
          InfoLog(<< "No remote cert store installed" << endl);
+         *noCerts = true;
          response415();
       }
    }
@@ -549,9 +580,10 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
       {
          InfoLog(<< "Encrypting and signing message" << endl);
          Contents* contents = doWork();
-         mMsg.setContents(auto_ptr<Contents>(contents));
-         OutgoingEvent* event = new OutgoingEvent(mMsg, DialogUsageManager::None);
-         mFeature.postCommand(auto_ptr<Message>(event));
+         mMsg->setContents(auto_ptr<Contents>(contents));
+         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+         mTaken = false;
+         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
          result = Complete;
       }
    }
@@ -567,7 +599,7 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
 Contents* EncryptionManager::SignAndEncrypt::doWork()
 {
    Contents* contents = 0;
-   MultipartAlternativeContents* mac = dynamic_cast<MultipartAlternativeContents*>(mMsg.getContents());
+   MultipartAlternativeContents* mac = dynamic_cast<MultipartAlternativeContents*>(mMsg->getContents());
    if (mac)
    {
       MultipartMixedContents::Parts parts = mac->parts();
@@ -583,7 +615,7 @@ Contents* EncryptionManager::SignAndEncrypt::doWork()
    }
    else
    {
-      contents = mDum.getSecurity()->encrypt(mMsg.getContents() , mRecipientAor);
+      contents = mDum.getSecurity()->encrypt(mMsg->getContents() , mRecipientAor);
    }
 
    if (contents)
@@ -596,24 +628,19 @@ Contents* EncryptionManager::SignAndEncrypt::doWork()
 
 EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
-                                    const SipMessage& msg,
+                                    SipMessage* msg,
                                     DumFeature& feature)
    : Request(dum, store, msg, feature)
 {
-   if (msg.isResponse())
+   if (msg->isResponse())
    {
-      mDecryptor = msg.header(h_From).uri().getAor();
-      mSigner = msg.header(h_To).uri().getAor();
+      mDecryptor = msg->header(h_From).uri().getAor();
+      mSigner = msg->header(h_To).uri().getAor();
    }
    else
    {
-      mDecryptor = msg.header(h_To).uri().getAor();
-      mSigner = msg.header(h_From).uri().getAor();
-   }
-
-   if (msg.getContents())
-   {
-      mContents.reset(msg.getContents()->clone());
+      mDecryptor = msg->header(h_To).uri().getAor();
+      mSigner = msg->header(h_From).uri().getAor();
    }
 }
 
@@ -623,8 +650,6 @@ EncryptionManager::Decrypt::~Decrypt()
 
 bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
 {
-   if (0 != mPendingRequests) return false;
-
    bool noDecryptionKey = false;
 
    if (isEncrypted())
@@ -639,7 +664,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
             {
                InfoLog(<< "Fetching user cert for " << mDecryptor << endl);
                ++mPendingRequests;
-               MessageId id(mMsg.getTransactionId(), mDecryptor, MessageId::UserCert);
+               MessageId id(mMsg->getTransactionId(), mDecryptor, MessageId::UserCert);
                mStore->fetch(mDecryptor, MessageId::UserCert, id, mDum);
             }
 
@@ -647,7 +672,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
             {
                InfoLog(<< "Fetching private key for " << mDecryptor << endl);
                ++mPendingRequests;
-               MessageId id(mMsg.getTransactionId(), mDecryptor, MessageId::UserPrivateKey);
+               MessageId id(mMsg->getTransactionId(), mDecryptor, MessageId::UserPrivateKey);
                mStore->fetch(mDecryptor, MessageId::UserPrivateKey, id, mDum);
             }
             return false;
@@ -660,7 +685,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
       }
    }
 
-   if (!noDecryptionKey && isSigned())
+   if (isSigned(noDecryptionKey))
    {
       if (!mDum.getSecurity()->hasUserCert(mSigner))
       {
@@ -668,7 +693,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
          {
             InfoLog(<< "Fetching user cert for " << mSigner << endl);
             ++mPendingRequests;
-            MessageId id(mMsg.getTransactionId(), mSigner, MessageId::UserCert);
+            MessageId id(mMsg->getTransactionId(), mSigner, MessageId::UserCert);
             mStore->fetch(mSigner, MessageId::UserCert, id, mDum);
             return false;
          }
@@ -717,13 +742,13 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
 
          if (--mPendingRequests == 0)
          {
-            if (isSigned())
+            if (isSigned(true))
             {
                if (!mDum.getSecurity()->hasUserCert(mSigner))
                {
                   InfoLog(<< "Fetching user cert for " << mSigner << endl);
                   ++mPendingRequests;
-                  MessageId id(mMsg.getTransactionId(), mSigner, MessageId::UserCert);
+                  MessageId id(mMsg->getTransactionId(), mSigner, MessageId::UserCert);
                   mStore->fetch(mSigner, MessageId::UserCert, id, mDum);
                   result = Pending;
                }
@@ -747,13 +772,13 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
                         (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
       if (csa.mContents.get())
       {
-         mMsg.setContents(csa.mContents);
+         mMsg->setContents(csa.mContents);
       }
       if (csa.mAttributes.get()) 
       {
-         mMsg.setSecurityAttributes(csa.mAttributes);
+         mMsg->setSecurityAttributes(csa.mAttributes);
       }
-      DumDecrypted* decrypted = new DumDecrypted(mMsg);
+      DumDecrypted* decrypted = new DumDecrypted(*mMsg);
       mDum.post(decrypted);
    }
 
@@ -762,12 +787,12 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
 
 bool EncryptionManager::Decrypt::isEncrypted()
 {
-   return isEncryptedRecurse(mMsg.getContents());
+   return isEncryptedRecurse(mMsg->getContents());
 }
 
-bool EncryptionManager::Decrypt::isSigned()
+bool EncryptionManager::Decrypt::isSigned(bool noDecryptionKey)
 {
-   return isSignedRecurse(mMsg.getContents(), mDecryptor);
+   return isSignedRecurse(mMsg->getContents(), mDecryptor, noDecryptionKey);
 }
 
 bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents* contents)
@@ -814,13 +839,15 @@ bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents* contents)
 }
 
 bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
-                                                 const Data& decryptorAor)
+                                                 const Data& decryptorAor,
+                                                 bool noDecryptionKey)
 {
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(contents)))
    {
+      if (noDecryptionKey) return false;
       Contents* decrypted = mDum.getSecurity()->decrypt(decryptorAor, pk);
-      bool ret = isSignedRecurse(decrypted, decryptorAor);
+      bool ret = isSignedRecurse(decrypted, decryptorAor, noDecryptionKey);
       delete decrypted;
       return ret;
    }
@@ -837,7 +864,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
-         if (isSignedRecurse(*i, decryptorAor))
+         if (isSignedRecurse(*i, decryptorAor, noDecryptionKey))
          {
             return true;
          }
@@ -850,7 +877,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
       for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
            i != mult->parts().end(); ++i)
       {
-         if (isSignedRecurse(*i, decryptorAor))
+         if (isSignedRecurse(*i, decryptorAor, noDecryptionKey))
          {
             return true;
          }
@@ -860,13 +887,13 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
    return false;
 }
 
-Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(const SipMessage& message,
+Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* message,
                                                                  Security& security,
                                                                  bool noDecryptionKey)
 {
    SecurityAttributes* attr = new SecurityAttributes;
-   attr->setIdentity(message.header(h_From).uri().getAor());
-   Contents* contents = message.getContents();
+   attr->setIdentity(message->header(h_From).uri().getAor());
+   Contents* contents = message->getContents();
    if (contents)
    {
       contents = getContentsRecurse(contents, security, noDecryptionKey, attr);
