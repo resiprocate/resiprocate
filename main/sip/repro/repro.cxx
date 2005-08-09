@@ -44,6 +44,9 @@
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
+#ifdef WIN32
+#include "resiprocate/WinSecurity.hxx"
+#endif
 #endif
 
 #if defined(USE_MYSQL)
@@ -156,7 +159,11 @@ main(int argc, char** argv)
    }
 
 #ifdef USE_SSL
+#ifdef WIN32
+   WinSecurity security;
+#else
    Security security(args.mCertPath);
+#endif
    SipStack stack(&security);
 #else
     SipStack stack;
