@@ -641,18 +641,10 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    }
    catch(...)
    {
-      if (passPhrase) 
-      {
-         free( passPhrase ); passPhrase=NULL;
-      }
       BIO_free(in);
       throw;
    }
    
-   if (passPhrase) 
-   {
-      free( passPhrase ); passPhrase=NULL;
-   }
    BIO_free(in);
 }
 
@@ -697,18 +689,10 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
    }
    catch(...)
    {
-      if (passPhrase) 
-      {
-         free( passPhrase ); passPhrase=NULL;
-      }
       BIO_free(in);
       throw;
    }
 
-   if (passPhrase) 
-   {
-      free( passPhrase ); passPhrase=NULL;
-   }
    BIO_free(in);
 }
 
