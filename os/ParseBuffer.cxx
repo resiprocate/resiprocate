@@ -802,6 +802,49 @@ ParseBuffer::floatVal()
    }
 }
 
+
+int
+ParseBuffer::qVal()
+{
+   // parse a qvalue into an integer between 0 and 1000  (ex: 1.0 -> 1000,  0.8 -> 800, 0.05 -> 50)
+   const char* s = mPosition;
+   try
+   {
+      int num = integer();
+      if (num == 1)
+      {
+         num = 1000;
+      }
+      else if (num != 0)
+      {
+         // error: qvalue must start with 1 or 0
+         return 0;
+      }
+      
+      if (*mPosition == '.')
+      {
+         skipChar();
+         
+         int i = 100;
+         while(isdigit(*mPosition) && i)
+         {
+            num += (*mPosition) * i;
+            i /= 10;
+            skipChar();
+         }
+      }
+      return num;
+   }
+   catch (Exception&)
+   {
+      Data msg("Expected a floating point value, got: ");
+      msg += Data(s, mPosition - s);
+      fail(__FILE__, __LINE__,msg);
+      return 0;
+   }
+}
+   
+
 void
 ParseBuffer::assertEof() const
 {
