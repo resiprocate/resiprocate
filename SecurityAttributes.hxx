@@ -55,6 +55,11 @@ class SecurityAttributes
          mStrength = strength;         
       }      
 
+      IdentityStrength getIdentityStrength() const
+      {
+         return mStrength;
+      }
+      
       void setSigner(const Data& signer)
       {
          mSigner = signer;
