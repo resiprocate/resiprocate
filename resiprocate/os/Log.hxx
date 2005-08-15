@@ -59,6 +59,38 @@ class Log
          Bogus = 666
       } Level;
 
+      /**
+	 Implementation for logging macros.
+	 Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
+      */
+      class Guard
+      {
+	 public:
+	    /** Remember the logging values and be a a stream to receive
+		the log contents. */
+	    Guard(Level level,
+		  const Subsystem& system,
+		  const char* file,
+		  int line);
+
+	    /** Commit logging */
+	    ~Guard();
+
+	    std::ostream& asStream() {return mStream;}
+	    operator std::ostream&() {return mStream;}
+	    
+	 private:
+	    resip::Log::Level mLevel;
+	    resip::Subsystem mSubsystem;
+	    resip::Data::size_type mHeaderLength;
+	    const char* mFile;
+	    int mLine;
+	    char mBuffer[8096];
+	    Data mData;
+	    oDataStream mStream;
+	    Guard& operator=(const Guard&);
+      };
+
       class ThreadSetting
       {
          public:
@@ -166,7 +198,8 @@ class ExternalLogger
                               const Data& appName,
                               const char* file,
                               int line,
-                              const Data& message) = 0;
+                              const Data& message,
+			      const Data& messageWithHeaders) = 0;
 };
 
 }
