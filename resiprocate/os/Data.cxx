@@ -15,6 +15,11 @@ using namespace std;
 const Data Data::Empty("", 0);
 const Data::size_type Data::npos = UINT_MAX;
 
+Data::PreallocateType::PreallocateType(int)
+{}
+
+const Data::PreallocateType Data::Preallocate(0);
+
 const bool Data::isCharHex[256] = 
 {
 // 0       1       2       3       4       5       6       7       8       9       a   b   c   d   e   f
@@ -185,6 +190,22 @@ Data::Data()
    mBuf[mSize] = 0;
 }
 
+Data::Data(int capacity,
+	   const Data::PreallocateType&) 
+   : mSize(0),
+     mBuf(capacity > LocalAlloc 
+          ? new char[capacity + 1]
+          : mPreBuffer),
+     mCapacity(capacity > LocalAlloc
+               ? capacity
+               : LocalAlloc),
+     mMine(capacity > LocalAlloc ? Take : Borrow)
+{
+   assert( capacity >= 0 );
+   mBuf[mSize] = 0;
+}
+
+#ifdef DEPRECATED_PREALLOC
 // pre-allocate capacity
 Data::Data(int capacity, bool) 
    : mSize(0),
@@ -199,6 +220,7 @@ Data::Data(int capacity, bool)
    assert( capacity >= 0 );
    mBuf[mSize] = 0;
 }
+#endif
 
 Data::Data(const char* str, int length) 
    : mSize(length),
@@ -462,7 +484,7 @@ Data::Data(double value, int precision)
 
    int dec = (int)floor(v+0.5);
 
-   Data d(precision, true);
+   Data d(precision, Data::Preallocate);
 
    if (dec == 0)
    {
@@ -501,7 +523,10 @@ Data::Data(double value, int precision)
    }
    else
    {
-      resize(m.size() + d.size() + 1, false);
+      if (mCapacity < m.size() + d.size() + 1)
+      {
+	 resize(m.size() + d.size() + 1, false);
+      }
       memcpy(mBuf, m.mBuf, m.size());
       mBuf[m.size()] = '.';
       memcpy(mBuf+m.size()+1, d.mBuf, d.size()+1);
@@ -725,7 +750,7 @@ Data::truncate(size_type len)
 Data 
 Data::operator+(const Data& data) const
 {
-   Data tmp(mSize + data.mSize, true);
+   Data tmp(mSize + data.mSize, Data::Preallocate);
    tmp.mSize = mSize + data.mSize;
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
@@ -843,7 +868,7 @@ Data::operator+(const char* str) const
 {
    assert(str);
    size_t l = strlen(str);
-   Data tmp(mSize + l, true);
+   Data tmp(mSize + l, Data::Preallocate);
    tmp.mSize = mSize + l;
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
@@ -890,7 +915,7 @@ Data::append(const char* str, size_type len)
 Data
 Data::operator+(char c) const
 {
-   Data tmp(mSize + 1, true);
+   Data tmp(mSize + 1, Data::Preallocate);
    tmp.mSize = mSize + 1;
    tmp.mCapacity = tmp.mSize;
    memcpy(tmp.mBuf, mBuf, mSize);
@@ -980,7 +1005,7 @@ Data::md5() const
 Data 
 Data::escaped() const
 { 
-   Data ret((int)floor(1.1*size()), true );  
+   Data ret((int)floor(1.1*size()), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1024,7 +1049,7 @@ Data::escaped() const
 Data 
 Data::charEncoded() const
 { 
-   Data ret((int)floor(1.1*size()), true );  
+   Data ret((int)floor(1.1*size()), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1070,7 +1095,7 @@ Data::charEncoded() const
 Data
 Data::charUnencoded() const
 {
-   Data ret(size(), true);
+   Data ret(size(), Data::Preallocate);
 
    const char* p = data();
    for (size_type i = 0; i < size(); ++i)
@@ -1249,7 +1274,7 @@ Data::trunc(size_t s) const
 Data
 Data::hex() const
 {
-   Data ret( 2*mSize, true );
+   Data ret( 2*mSize, Data::Preallocate);
 
    const char* p = mBuf;
    char* r = ret.mBuf;
@@ -1294,10 +1319,11 @@ Data::uppercase()
    return *this;
 }
 
-void
+Data&
 Data::clear()
 {
    mSize = 0;
+   return *this;
 }
 
 int 
@@ -1489,13 +1515,8 @@ Data::substr(size_type first, size_type count) const
 }
 
 Data::size_type
-Data::find(const Data& match, size_type start) const
-{
-   return find(match.data(), start);
-}
-
-Data::size_type
-Data::find(const char* match, size_type start) const
+Data::find(const Data& match, 
+	   size_type start) const
 {
    if (start > mSize) 
    {
