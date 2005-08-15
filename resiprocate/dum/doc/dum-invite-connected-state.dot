@@ -68,13 +68,20 @@ digraph UAC {
   WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
   WaitingToOffer -> Terminated            [ label = "timer::NoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
 
-  ReceivedReinviteNoOffer -> Connected    [ label = "dum::provideOffer/send::200-offer" ];
+  ReceivedReinviteNoOffer -> ReceivedReinviteSentOffer    [ label = "dum::provideOffer/send::200-offer,timer::200I,timer::NoACK" ];
   ReceivedReinviteNoOffer -> Connected    [ label = "dum::reject/send::488I" ];
   ReceivedReinviteNoOffer -> Terminated   [ label = "dum::end/send::488I,send::BYE" ];
   ReceivedReinviteNoOffer -> ReceivedReinviteNoOffer  [ label = "onINVITE|onUPDATE/send::500" ]; 
 
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onACK-answer/app::onAnswer" ];
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onACK/app::onOfferRejected" ];
+  ReceivedReinviteSentOffer -> ReceivedReinviteSentOffer     [ label = "onTimer2xx/resend::2XXI" ]; 
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onTimerNoACK/app::onOfferRejected" ];
+  ReceivedReinviteSentOffer -> WaitingToTerminate            [ label = "dum::end" ];
+
   WaitingToTerminate -> Terminated        [ label = "on200I/send::ACK,send::BYE" ];
   WaitingToTerminate -> Terminated        [ label = "onFailureInvite/?send::BYE" ];
+  WaitingToTerminate -> Terminated        [ label = "onACK/send::BYE" ];
 
   Terminated -> Terminated                [ label = "onResponse/destroy" ];
   Terminated -> Terminated                [ label = "onRequest/send::481,destroy" ];
