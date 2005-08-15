@@ -122,7 +122,7 @@ std::ostream&
 MultipartMixedContents::encodeParsed(std::ostream& str) const
 {
    const Data& boundaryToken = mType.param(p_boundary);
-   Data boundary(boundaryToken.size() + 2, true);
+   Data boundary(boundaryToken.size() + 2, Data::Preallocate);
    boundary = Symbols::DASHDASH;
    boundary += boundaryToken;
 
@@ -157,12 +157,12 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 {
    const Data& boundaryToken = mType.param(p_boundary);
    
-   Data boundary(boundaryToken.size() + 4, true);
+   Data boundary(boundaryToken.size() + 4, Data::Preallocate);
    boundary += Symbols::CRLF;
    boundary += Symbols::DASHDASH;
    boundary += boundaryToken;
 
-   Data boundaryNoCRLF(boundaryToken.size() + 2, true);
+   Data boundaryNoCRLF(boundaryToken.size() + 2, Data::Preallocate);
    boundaryNoCRLF += Symbols::DASHDASH;
    boundaryNoCRLF += boundaryToken;
 
