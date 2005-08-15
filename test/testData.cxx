@@ -390,7 +390,7 @@ class TestData
 
          {
             // test resizing
-            Data header(10, true);
+            Data header(10, Data::Preallocate);
             assert(header.empty());
 
             header += 'c';
@@ -404,7 +404,7 @@ class TestData
 
          {
             // test resizing
-            Data header(10, true);
+            Data header(10, Data::Preallocate);
             assert(header.empty());
 
             header += 'c';
@@ -418,7 +418,7 @@ class TestData
 
          {
             // test resizing
-            Data header(120, true);
+            Data header(120, Data::Preallocate);
             assert(header.empty());
 
             header += 'c';
@@ -569,7 +569,7 @@ class TestData
             assert(d1[3] == 0);
             assert(d1[4] == 0);
 
-            d1 = Data(100, true);
+            d1 = Data(100, Data::Preallocate);
             d1 ^= Data("0");
             cerr << d1.hex() << endl;
 

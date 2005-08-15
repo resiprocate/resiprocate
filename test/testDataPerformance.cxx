@@ -9,7 +9,7 @@ main()
    Data data = Random::getRandomHex(8);
    for (int j=0; j<100; j++)
    {
-      Data output(1000000,true);
+      Data output(1000000, Data::Preallocate);
       DataStream strm(output);
       
       for (int i=0; i<100000; i++)

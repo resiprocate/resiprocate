@@ -1,5 +1,5 @@
-#if !defined(RESIP_DATASTREAM_HXX)
-#define RESIP_DATASTREAM_HXX 
+#ifndef RESIP_DataStream_hxx
+#define RESIP_DataStream_hxx
 
 #include <iostream>
 
@@ -19,9 +19,9 @@ class DataBuffer : public std::streambuf
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
+      Data& mStr;
 
    private:
-      Data& mStr;
       DataBuffer(const DataBuffer&);
       DataBuffer& operator=(const DataBuffer&);
 };
@@ -84,6 +84,9 @@ class oDataStream : private DataBuffer, public std::ostream {
        */
       ~oDataStream();
 
+      /** Clears the underlying Data reference. */
+      void reset();
+
    private:
       oDataStream(const oDataStream&);
       oDataStream& operator=(const oDataStream&);
@@ -96,7 +99,7 @@ class oDataStream : private DataBuffer, public std::ostream {
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
