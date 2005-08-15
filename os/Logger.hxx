@@ -1,8 +1,6 @@
 #ifndef RESIP_Logger_hxx
 #define RESIP_Logger_hxx
 
-#include <iosfwd>
-
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -51,51 +49,19 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 #define CritLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
+bool
+genericLogCheckLevel(resip::Log::Level level);
+
 // do/while allows a {} block in an expression
-#define GenericLog(system_, level_, args_)                                                      \
-do                                                                                              \
-{                                                                                               \
-   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();                   \
-   if ((setting && level_ <= setting->level) ||                                                 \
-       (!setting && resip::GenericLogImpl::isLogging(level_)))                                  \
-   {                                                                                            \
-      char _resip_buffer[8096];                                                                 \
-      resip::Data _resip_result(resip::Data::Borrow, _resip_buffer, sizeof(_resip_buffer));     \
-      _resip_result.clear();                                                                    \
-      resip::Data::size_type _resip_headerLength;                                               \
-      {                                                                                         \
-         resip::DataStream _resip_strm(_resip_result);                                          \
-         resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                     \
-               << resip::Log::delim;                                                            \
-         _resip_strm.flush();                                                                   \
-         _resip_headerLength = _resip_result.size();                                            \
-         _resip_strm args_;                                                                     \
-      }                                                                                         \
-      if (resip::Log::getExternal())                                                            \
-      {                                                                                         \
-         const resip::Data _resip_rest(resip::Data::Share,                                      \
-                                      _resip_result.data() + _resip_headerLength,               \
-                                      (int)(_resip_result.size() - _resip_headerLength));       \
-         if (!(*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),           \
-                                           __FILE__, __LINE__, _resip_rest))                    \
-         {                                                                                      \
-            break;                                                                              \
-         }                                                                                      \
-      }                                                                                         \
-                                                                                                \
-      resip::Lock lock(resip::Log::_mutex);                                                     \
-      if (resip::Log::_type == resip::Log::VSDebugWindow)                                       \
-      {                                                                                         \
-         _resip_result += "\r\n";                                                               \
-         resip::GenericLogImpl::OutputToWin32DebugWindow(_resip_result);                        \
-      }                                                                                         \
-      else                                                                                      \
-      {                                                                                         \
-         /* endl is magic in syslog -- so put it here */                                        \
-         resip::GenericLogImpl::Instance() << _resip_result.escaped() << std::endl;             \
-      }                                                                                         \
-   }                                                                                            \
-} while (0)
+#define GenericLog(system_, level_, args_)                                               \
+do                                                                                       \
+{                                                                                        \
+   if (genericLogCheckLevel(level_))                                                     \
+   {                                                                                     \
+      resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__);           \
+      _resip_log_guard.asStream()  args_;                                                           \
+   }                                                                                     \
+} while (false)
 
 #ifdef NO_DEBUG
 // Suppress debug logging at compile time
