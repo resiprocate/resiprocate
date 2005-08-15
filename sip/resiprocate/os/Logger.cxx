@@ -1,4 +1,3 @@
-#include <ostream>
 #include <fstream>
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
@@ -68,10 +67,18 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
 #endif
 }
 
+bool
+genericLogCheckLevel(resip::Log::Level level)
+{
+   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
+   return ((setting && level <= setting->level) ||
+	   (!setting && resip::GenericLogImpl::isLogging(level)));
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
