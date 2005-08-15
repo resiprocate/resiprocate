@@ -344,21 +344,25 @@ DnsStub::Query::go()
    bool cached = false;
    Data targetToQuery = mTarget;
    cached = RRCache::instance()->lookup(mTarget, mRRType, mProto, records, status);
+
    if (!cached)
    {
       if (mRRType != T_CNAME)
       {
-         DnsResourceRecordsByPtr cnames;
-         cached = RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
-         if (cached && !cnames.empty()) 
+         do
          {
-            targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
-            // check the cache.
-            cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
-         }
+            DnsResourceRecordsByPtr cnames;
+            cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+            if (cached) 
+            {
+               targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
+            }
+         } while(cached);
       }
    }
 
+   cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
+   
    if (!cached)
    {
       mStub.lookupRecords(targetToQuery, mRRType, this);
@@ -410,21 +414,13 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    else
    {
       bool bGotAnswers = true;
-      if (ancount == 1)
-      {
-         followCname(aptr, abuf, alen, bGotAnswers, bDeleteThis);
-      }
+      Data targetToQuery;
+      followCname(aptr, abuf, alen, bGotAnswers, bDeleteThis, targetToQuery);
 
       if (bGotAnswers)
       {
-         mStub.cache(mTarget, abuf, alen);
          mReQuery = 0;
-         int status = 0;
-         Data targetToQuery = mTarget;
          DnsResourceRecordsByPtr result;
-         DnsResourceRecordsByPtr cnames;
-         RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
-         if (!cnames.empty()) targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
          RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status);
          if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
          mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), result, mSink);
@@ -445,39 +441,57 @@ DnsStub::Query::onDnsRaw(int status, const unsigned char* abuf, int alen)
 }
 
 void 
-DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis)
+DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis, Data& targetToQuery)
 {
    bGotAnswers = true;
    bDeleteThis = true;
+
+   char* name = 0;
+   int len = 0;
+   ares_expand_name(aptr, abuf, alen, &name, &len);
+   targetToQuery = name;
+   aptr += len;
+   mStub.cache(name, abuf, alen);
+
    if (mRRType != T_CNAME)
    {
-      char* name = 0;
-      int len = 0;
-      ares_expand_name(aptr, abuf, alen, &name, &len);
-      aptr += len;
-      free(name);
-
       if (DNS_RR_TYPE(aptr) == T_CNAME)
       {
          if (mFollowCname && mReQuery < MAX_REQUERIES)
          {
-            mStub.cache(mTarget, abuf, alen);
             ++mReQuery;
-            DnsResourceRecordsByPtr cnames;
             int status = 0;
-            RRCache::instance()->lookup(mTarget, T_CNAME, mProto, cnames, status);
-            assert(!cnames.empty());
-            mStub.lookupRecords((dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname(), mRRType, this);
-            bDeleteThis = false;
+            bool cached = false;
+
+            do
+            {
+               DnsResourceRecordsByPtr cnames;
+               cached = RRCache::instance()->lookup(targetToQuery, T_CNAME, mProto, cnames, status);
+               if (cached) 
+               {
+                  ++mReQuery;
+                  targetToQuery = (dynamic_cast<DnsCnameRecord*>(cnames[0]))->cname();
+               }
+            } while(mReQuery < MAX_REQUERIES && cached);
+
+            DnsResourceRecordsByPtr result;
+            if (!RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status))
+            {
+               mStub.lookupRecords(targetToQuery, mRRType, this);
+               bDeleteThis = false;
+               bGotAnswers = false;
+            }
          }
          else
          {
             mReQuery = 0;
-            mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink);
+            mResultConverter->notifyUser(mTarget, 1, mStub.errorMessage(1), Empty, mSink);
+            bGotAnswers = false;
          }
-         bGotAnswers = false;
       }
    }
+
+   free(name);
 }
 
 Data 

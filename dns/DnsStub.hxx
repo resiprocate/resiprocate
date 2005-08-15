@@ -173,7 +173,7 @@ class DnsStub : public ExternalDnsHandler
             void go();
             void process(int status, const unsigned char* abuf, const int alen);
             void onDnsRaw(int status, const unsigned char* abuf, int alen);
-            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis);
+            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis, Data& targetToQuery);
 
          private:
             static DnsResourceRecordsByPtr Empty;
