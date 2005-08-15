@@ -867,7 +867,7 @@ ParseBuffer::assertNotEof() const
 Data
 spaces(unsigned int numSpaces)
 {
-   Data sps(numSpaces, true);
+   Data sps(numSpaces, Data::Preallocate);
    for (unsigned int i = 0; i < numSpaces; i++)
    {
       sps += ' ';
@@ -880,7 +880,7 @@ escapeAndAnnotate(const char* buffer,
                   unsigned int size,
                   const char* position)
 { 
-   Data ret(2*size+16, true);
+   Data ret(2*size+16, Data::Preallocate);
 
    const char* lastReturn = buffer;
    int lineCount = 0;

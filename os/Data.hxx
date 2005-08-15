@@ -1,5 +1,5 @@
-#if !defined(RESIP_DATA_HXX)
-#define RESIP_DATA_HXX 
+#ifndef RESIP_Data_hxx
+#define RESIP_Data_hxx
 
 #include <iostream>
 #include <string>
@@ -13,7 +13,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#if !defined(RESIP_DATA_LOCAL_SIZE)
+#ifndef RESIP_DATA_LOCAL_SIZE
 #define RESIP_DATA_LOCAL_SIZE 16
 #endif
 
@@ -62,6 +62,26 @@ class Data
 
       Data();
 
+      class PreallocateType
+      {
+	    friend class Data;
+	    explicit PreallocateType(int);
+      };
+      static const PreallocateType Preallocate;
+
+      /**
+        Creates a data with a specified initial capacity.
+
+        @param capacity  The initial capacity of the buffer
+
+        @param foo       This parameter is ignored; it is merely
+                         used to disambuguate this constructor
+                         from the constructor that takes a single
+                         int. Always pass Data::Preallocate.
+      */
+      Data(int capacity, const PreallocateType&);
+
+#ifdef DEPRECATED_PREALLOC
       /**
         Creates a data with a specified initial capacity.
 
@@ -82,6 +102,7 @@ class Data
         @todo Remove this constructor
       */
       Data(int capacity, bool foo);
+#endif      
 
       /**
         Creates a data with the contents of the null-terminated
@@ -118,7 +139,6 @@ class Data
       */
       explicit Data(const std::string& str);
 
-
       /**
         Converts the passed in value into ascii-decimal
         representation, and then creates a "Data" containing
@@ -126,7 +146,6 @@ class Data
         with length=2, and contents of 0x37 0x35).
       */
       explicit Data(int value);
-
 
       /**
         Converts the passed in value into ascii-decimal
@@ -278,12 +297,10 @@ class Data
       */
       Data operator+(const char* str) const;
 
-
       /**
         Concatenates a single byte after Data object.
       */
       Data operator+(char c) const;
-
 
       /**
         Appends a data object to this one.
@@ -489,7 +506,7 @@ class Data
         Clears the contents of this Data. This call does not modify
         the capacity of the Data.
       */	
-      void clear();
+      Data& clear();
 
       /**
         Takes the contents of the Data and converts them to an 
@@ -506,7 +523,6 @@ class Data
       */ 
       size_t convertSize() const;
 
-
       /**
         Takes the contents of the Data and converts them to a 
         double precision floating point value. Will strip leading
@@ -515,7 +531,6 @@ class Data
         and leading negative signs).
       */ 
       double convertDouble() const;
-
 
       /**
         Takes the contents of the Data and converts them to an
@@ -531,7 +546,6 @@ class Data
         would be false.
       */
       bool prefix(const Data& pre) const;
-
 
       /**
         Returns true if this Data ends with the bytes indicated by
@@ -557,33 +571,8 @@ class Data
         @param start Offset into this Data to start the search
 
         @returns An index to the start of the found bytes.
-
-        @bug The match parameter must be null-terminated, which is
-             basically impossible to ensure for a Data. This
-             method is consequently an ideal candidate for a
-             gaping security hole.
-
-        @todo Rewrite this method to use the lentgth of the match
-              Data instead of relying on null-termination
       */
       size_type find(const Data& match, size_type start = 0) const;
-
-
-      /**
-        Finds a specified sequence of bytes in this Data.
-
-        @param match A null-terminated string representing the bytes
-                     to be found
-
-        @param start Offset into this Data to start the search
-
-        @returns An index to the start of the found bytes.
-
-        @warning Passing a non-null-terminated string to this
-                 method would be a Really Bad Thing.
-
-      */
-      size_type find(const char* match, size_type start = 0) const;
 
       /**
         Constant that represents a zero-length data.
@@ -591,17 +580,14 @@ class Data
       static const Data Empty;
 
       /**
-        Represents the maximum number of bytes there can be in a Data.
+	 Represents an impossible position; returned to indicate failure to find.
       */
       static const size_type npos;
-
 
       /**
         Initializes this Data.
 
-        @note Doesn't actually do anything
-
-        @todo Remove this?
+        @note This method is a link time contraint. Don't remove it.
       */
       static bool init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg);
 
@@ -659,6 +645,8 @@ class Data
                             as a parameter, and returns true if the
                             character should be escaped, false if
                             it should not.
+
+	@deprecated dlb -- pass a 256 array of bits rather than a function.
       */      
       template<class Predicate> std::ostream& 
           escapeToStream(std::ostream& str, 
@@ -682,10 +670,10 @@ class Data
       void resize(size_type newSize, bool copy);
 
       static bool isHex(char c);      
-      // Trade off between in-object and heap allocation
-      // Larger LocalAlloc makes for larger objects that have Data members but
-      // bulk allocation/deallocation of Data  members.
 
+      /** Trade off between in-object and heap allocation
+	  Larger LocalAlloc makes for larger objects that have Data members but
+	  bulk allocation/deallocation of Data  members. */
       enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE };
       char mPreBuffer[LocalAlloc+1];
 
@@ -729,15 +717,15 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
 
    if (res < 0)
    {
-       return true;
+      return true;
    }
    else if (res > 0)
    {
-       return false;
+      return false;
    }
    else
    {
-       return left.size() < right.size();
+      return left.size() < right.size();
    }
 }
 
