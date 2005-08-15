@@ -74,7 +74,7 @@ static char hexMap[] = "0123456789ABCDEF";
 Data
 Embedded::encode(const Data& dat)
 {
-   Data out((int)(dat.size()*1.1), true);
+   Data out((int)(dat.size()*1.1), Data::Preallocate);
    
    {
       DataStream str(out);
