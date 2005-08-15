@@ -19,8 +19,7 @@ DataBuffer::DataBuffer(Data& str)
 }
 
 DataBuffer::~DataBuffer()
-{
-}
+{}
 
 int
 DataBuffer::sync()
@@ -76,8 +75,7 @@ iDataStream::iDataStream(Data& str)
 }
 
 iDataStream::~iDataStream()
-{
-}
+{}
 
 oDataStream::oDataStream(Data& str)
    : DataBuffer(str), 
@@ -92,6 +90,18 @@ oDataStream::~oDataStream()
    flush();
 }
 
+void
+oDataStream::reset()
+{
+   flush();
+   mStr.clear();
+
+   // reset the underlying buffer state
+   char* gbuf = const_cast<char*>(mStr.mBuf);
+   setg(gbuf, gbuf, gbuf+mStr.size());
+   setp(gbuf+mStr.mSize, gbuf+mStr.mCapacity);
+}
+
 DataStream::DataStream(Data& str)
    : DataBuffer(str), 
      std::iostream(this)
@@ -104,8 +114,11 @@ DataStream::~DataStream()
 {
    flush();
 }
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
+ *
+ * Copyright 2000-2005
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

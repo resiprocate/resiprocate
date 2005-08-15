@@ -10,6 +10,28 @@ using namespace std;
 int main()
 {
    {
+      Data foo;
+      {
+	 oDataStream str(foo);
+
+	 str << "some characters " << 42 << " for foo";
+	 str << "some more characters " << 24 << " for foo";
+	 
+	 str.flush();
+
+	 str << "some a few more characters ";
+
+	 str.reset();
+
+	 str << "all that remains";
+      }
+
+      std::cerr << "!! " << foo << std::endl;
+
+      assert(foo == "all that remains");
+   }
+
+   {
       Data d;
       d = ("  SIP invitations used to create sessions carry session descriptions\n"
            "that allow participants to agree on a set of compatible media types.\n"
@@ -45,7 +67,7 @@ int main()
       assert(strlen(d.c_str()) == d.size());
    }
    {
-      Data d(500, true);
+      Data d(500, Data::Preallocate);
       DataStream ds(d);
 
       Data foo("foo");
@@ -58,7 +80,7 @@ int main()
    }
 
    {
-      Data d(3, true);
+      Data d(3, Data::Preallocate);
       DataStream ds(d);
       
       for (int i = 0; i < 200; i++)

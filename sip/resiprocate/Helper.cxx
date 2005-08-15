@@ -510,7 +510,7 @@ Helper::computeUniqueBranch()
 {
    static const Data cookie("z9hG4bK"); // magic cookie per rfc2543bis-09    
 
-   Data result(16, true);
+   Data result(16, Data::Preallocate);
    result += cookie;
    result += Random::getRandomHex(4);
    result += "C1";
@@ -541,10 +541,10 @@ static Data privateKey("asdfklsadflkj"); // Random::getRandomHex(1));
 Data
 Helper::makeNonce(const SipMessage& request, const Data& timestamp)
 {
-   Data nonce(100, true);
+   Data nonce(100, Data::Preallocate);
    nonce += timestamp;
    nonce += Symbols::COLON;
-   Data noncePrivate(100, true);
+   Data noncePrivate(100, Data::Preallocate);
    noncePrivate += timestamp;
    noncePrivate += Symbols::COLON;
    //!jf! don't include the Call-Id since it might not be the same. 
@@ -1252,7 +1252,7 @@ Helper::makeUri(const Data& aor, const Data& scheme)
    assert(!aor.prefix("sip:"));
    assert(!aor.prefix("sips:"));
    
-   Data tmp(aor.size() + scheme.size() + 1, true);
+   Data tmp(aor.size() + scheme.size() + 1, Data::Preallocate);
    tmp += scheme;
    tmp += Symbols::COLON;
    tmp += aor;
