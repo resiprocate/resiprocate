@@ -123,7 +123,6 @@ class EncryptionManager : public DumFeature
             Data mSigner;
       };
 
-      UInt32 mCounter;
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
 
       typedef std::list<Request*> RequestList;
