@@ -37,8 +37,7 @@ EncryptionManager::Exception::Exception(const Data& msg, const Data& file, const
 }
 
 EncryptionManager::EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target)
-   : DumFeature(dum, target),
-     mCounter(0)
+   : DumFeature(dum, target)
 {
 }
 
