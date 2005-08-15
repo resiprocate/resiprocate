@@ -51,7 +51,8 @@ class ExampleExternalLogger : public ExternalLogger
                               const Data& appName,
                               const char* file,
                               int line,
-                              const Data& message)
+                              const Data& message,
+			      const Data& messageWithHeaders)
       {
          std::cerr << "ExampleExternalLogger " << level << " $ "
                    << subsystem << " $ " 
