@@ -28,8 +28,8 @@ class Subsystem
       const Data& getSubsystem() const;
 
    protected:
-      Subsystem(const char* rhs) : mSubsystem(rhs) {};
-      Subsystem(const Data& rhs) : mSubsystem(rhs) {};
+      explicit Subsystem(const char* rhs) : mSubsystem(rhs) {};
+      explicit Subsystem(const Data& rhs) : mSubsystem(rhs) {};
       Subsystem& operator=(const Data& rhs);
 
       Data mSubsystem;
@@ -53,8 +53,8 @@ class Subsystem : public resip::Subsystem
       static const Subsystem SPECIAL_SUBSYSTEM;
 
    private:
-      Subsystem(const char* rhs) : resip::Subsystem(rhs) {};
-      Subsystem(const resip::Data& rhs);
+      explicit Subsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      explicit Subsystem(const resip::Data& rhs);
       Subsystem& operator=(const resip::Data& rhs);
 };
  
@@ -68,7 +68,7 @@ class Subsystem : public resip::Subsystem
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
