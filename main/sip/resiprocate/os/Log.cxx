@@ -15,6 +15,7 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace std;
@@ -405,14 +406,60 @@ Log::setServiceLevel(int service, Level l)
 }
 
 ExternalLogger::~ExternalLogger()
+{}
+
+Log::Guard::Guard(resip::Log::Level level,
+		  const resip::Subsystem& subsystem,
+		  const char* file,
+		  int line) :
+   mLevel(level),
+   mSubsystem(subsystem),
+   mFile(file),
+   mLine(line),
+   mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
+   mStream(mData.clear())
 {
+   Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
+   mStream << resip::Log::delim;
+   mStream.flush();
+   
+   mHeaderLength = mData.size();
 }
 
-   
+Log::Guard::~Guard()
+{
+   mStream.flush();
+
+   if (resip::Log::getExternal())
+   {
+      const resip::Data rest(resip::Data::Share,
+			     mData.data() + mHeaderLength,
+			     mData.size() - mHeaderLength);
+      if (!(*resip::Log::getExternal())(mLevel, mSubsystem, resip::Log::getAppName(),
+					__FILE__, __LINE__, rest, mData))
+      {
+	 return;
+      }
+   }
+    
+   resip::Lock lock(resip::Log::_mutex);
+   // !dlb! imlement VSDebugWindow as an external logger
+   if (resip::Log::_type == resip::Log::VSDebugWindow)
+   {
+      mData += "\r\n";
+      resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
+   }
+   else
+   {
+      // endl is magic in syslog -- so put it here
+      resip::GenericLogImpl::Instance() << mData << std::endl;
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
