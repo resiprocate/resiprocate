@@ -6,7 +6,8 @@ INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 EXTRA_DIST = 	resiprocate_7_0.vcproj \
 		resiprocate_7_1.vcproj \
 		resiprocate_8_0.vcproj \
-		doc Doxyfile FAQ Readme-Compliance.txt
+		doc Doxyfile FAQ Readme-Compliance.txt \
+	        os/WinCompat.cxx 
 
 LIBTOOL = @LIBTOOL@ --tag=CXX
 
@@ -17,6 +18,17 @@ lib_LTLIBRARIES = libresiprocate.la
 # the *Contents* family
 
 libresiprocate_la_SOURCES = \
+        dns/DnsAAAARecord.cxx \
+        dns/DnsCnameRecord.cxx \
+        dns/DnsHostRecord.cxx \
+        dns/DnsNaptrRecord.cxx \
+        dns/DnsSrvRecord.cxx \
+        dns/DnsStub.cxx \
+        dns/QueryTypes.cxx \
+        dns/RRCache.cxx \
+        dns/RRList.cxx \
+        dns/RROverlay.cxx \
+        dns/RRVip.cxx \
 	external/HttpGetMessage.cxx \
 	external/HttpProvider.cxx \
 	os/AbstractFifo.cxx \
@@ -28,6 +40,7 @@ libresiprocate_la_SOURCES = \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
 	os/FileSystem.cxx \
+        os/FlowId.cxx \
 	os/HeapInstanceCounter.cxx \
 	os/Id.cxx \
 	os/Lock.cxx \
@@ -49,7 +62,6 @@ libresiprocate_la_SOURCES = \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
 	os/Tuple.cxx \
-	os/WinCompat.cxx \
 	os/vmd5.cxx \
 	Aor.cxx \
 	ApiCheck.cxx \
@@ -62,6 +74,7 @@ libresiprocate_la_SOURCES = \
 	ConnectionBase.cxx \
 	ConnectionManager.cxx \
 	Contents.cxx \
+	ContentsFactoryBase.cxx \
 	DataParameter.cxx \
 	DateCategory.cxx \
 	DeprecatedDialog.cxx \
@@ -98,13 +111,12 @@ libresiprocate_la_SOURCES = \
 	Parameter.cxx \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
-	ParseUtil.cxx \
 	ParserCategory.cxx \
+        ParserContainerBase.cxx \
 	Pidf.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	RAckCategory.cxx \
-	Registration.cxx \
         RequestLine.cxx \
 	Rlmi.cxx \
 	RportParameter.cxx \
@@ -118,7 +130,6 @@ libresiprocate_la_SOURCES = \
 	StatisticsMessage.cxx \
         StatusLine.cxx \
         StringCategory.cxx \
-	Subscription.cxx \
 	Symbols.cxx \
 	TcpBaseTransport.cxx \
 	TcpConnection.cxx \
@@ -135,7 +146,7 @@ libresiprocate_la_SOURCES = \
 	TransactionUser.cxx \
 	TransactionUserMessage.cxx \
 	Transport.cxx \
-	TransportMessage.cxx \
+	TransportFailure.cxx \
 	TransportSelector.cxx \
 	TuSelector.cxx \
 	UdpTransport.cxx \
@@ -190,6 +201,7 @@ resiprocate_include_HEADERS = \
 	ConnectionBase.hxx \
 	ConnectionManager.hxx \
 	Contents.hxx \
+	ContentsFactoryBase.hxx \
 	CpimContents.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
@@ -239,12 +251,10 @@ resiprocate_include_HEADERS = \
 	ParameterTypeEnums.hxx \
 	ParameterTypes.hxx \
 	ParseException.hxx \
-	ParseUtil.hxx \
 	ParserCategories.hxx \
 	ParserCategory.hxx \
 	ParserContainer.hxx \
 	ParserContainerBase.hxx \
-	ParseUtil.hxx \
 	Pidf.hxx \
 	Pkcs7Contents.hxx \
 	Pkcs8Contents.hxx \
@@ -252,7 +262,6 @@ resiprocate_include_HEADERS = \
 	QopParameter.hxx \
 	QuotedDataParameter.hxx \
 	RAckCategory.hxx \
-	Registration.hxx \
 	RequestLine.hxx \
 	Rlmi.hxx \
 	RportParameter.hxx \
@@ -271,7 +280,6 @@ resiprocate_include_HEADERS = \
 	StatisticsMessage.hxx \
 	StatusLine.hxx \
 	StringCategory.hxx \
-	Subscription.hxx \
 	Symbols.hxx \
 	TcpBaseTransport.hxx \
 	TcpConnection.hxx \
@@ -290,7 +298,7 @@ resiprocate_include_HEADERS = \
 	TransactionUser.hxx \
 	TransactionUserMessage.hxx \
 	Transport.hxx \
-	TransportMessage.hxx \
+	TransportFailure.hxx \
 	TransportSelector.hxx \
 	TuIM.hxx \
 	TuSelector.hxx \
@@ -303,7 +311,6 @@ resiprocate_include_HEADERS = \
 	WarningCategory.hxx \
 	X509Contents.hxx \
 	XMLCursor.hxx \
-	X_msMsgsInvite.hxx \
 	config.hxx
 
 resiprocate_external_includedir=$(includedir)/resiprocate/external
@@ -329,6 +336,7 @@ resiprocate_os_include_HEADERS = \
 	os/Fifo.hxx \
 	os/FileSystem.hxx \
 	os/FiniteFifo.hxx \
+        os/FlowId.hxx \
 	os/HashMap.hxx \
 	os/HeapInstanceCounter.hxx \
 	os/Id.hxx \
@@ -362,6 +370,21 @@ resiprocate_os_include_HEADERS = \
 	os/vmd5.hxx \
 	os/vthread.hxx 
 
+resiprocate_dns_includedir=$(includedir)/resiprocate/external
+resiprocate_dns_include_HEADERS = \
+       dns/DnsAAAARecord.hxx \
+       dns/DnsCnameRecord.hxx \
+       dns/DnsHostRecord.hxx \
+       dns/DnsNaptrRecord.hxx \
+       dns/DnsResourceRecord.hxx \
+       dns/DnsSrvRecord.hxx \
+       dns/DnsStub.hxx \
+       dns/QueryTypes.hxx \
+       dns/RRCache.hxx \
+       dns/RRFactory.hxx \
+       dns/RRList.hxx \
+       dns/RROverlay.hxx \
+       dns/RRVip.hxx
 
 
 #SUFFIXES = .gperf .cxx
