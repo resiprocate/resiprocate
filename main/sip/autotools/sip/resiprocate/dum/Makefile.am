@@ -17,6 +17,7 @@ libresipdum_la_SOURCES = \
 	BaseCreator.cxx \
 	BaseSubscription.cxx \
 	BaseUsage.cxx \
+        CertMessage.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
 	ClientOutOfDialogReq.cxx \
@@ -32,12 +33,18 @@ libresipdum_la_SOURCES = \
 	DialogSetId.cxx \
 	DialogUsage.cxx \
 	DialogUsageManager.cxx \
+        DumDecrypted.cxx \
+        DumFeatureChain.cxx \
+        DumFeature.cxx \
+        DumFeatureMessage.cxx
 	DumProcessHandler.cxx \
 	DumThread.cxx \
 	DumTimeout.cxx \
+        EncryptionManager.cxx \
 	Handled.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
+        IdentityHandler.cxx \
 	InMemoryRegistrationDatabase.cxx \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
@@ -48,6 +55,7 @@ libresipdum_la_SOURCES = \
 	MergedRequestKey.cxx \
 	NetworkAssociation.cxx \
 	NonDialogUsage.cxx \
+        OutgoingEvent.cxx \
 	OutOfDialogReqCreator.cxx \
 	PagerMessageCreator.cxx \
 	Profile.cxx \
@@ -64,7 +72,7 @@ libresipdum_la_SOURCES = \
 	SubscriptionCreator.cxx \
 	SubscriptionHandler.cxx \
 	SubscriptionState.cxx \
-	UInt64Hash.cxx \
+        TargetCommand.cxx \
 	UserAuthInfo.cxx \
 	UserProfile.cxx
 
@@ -76,6 +84,7 @@ resipdum_include_HEADERS = \
 	BaseCreator.hxx \
 	BaseSubscription.hxx \
 	BaseUsage.hxx \
+        CertMessage.hxx \
 	ClientAuthManager.hxx \
 	ClientInviteSession.hxx \
 	ClientOutOfDialogReq.hxx \
@@ -92,16 +101,23 @@ resipdum_include_HEADERS = \
 	DialogSetId.hxx \
 	DialogUsage.hxx \
 	DialogUsageManager.hxx \
+        DumCommand.hxx \
+        DumDecrypted.hxx \
 	DumException.hxx \
+        DumFeatureChain.hxx \
+        DumFeature.hxx \
+        DumFeatureMessage.hxx \
 	DumProcessHandler.hxx \
 	DumShutdownHandler.hxx \
 	DumThread.hxx \
 	DumTimeout.hxx \
+        EncryptionManager.hxx \
 	Handled.hxx \
 	HandleException.hxx \
 	Handle.hxx \
 	HandleManager.hxx \
 	Handles.hxx \
+        IdentityHandler.hxx \
 	InMemoryRegistrationDatabase.hxx \
 	InviteSessionCreator.hxx \
 	InviteSessionHandler.hxx \
@@ -112,6 +128,7 @@ resipdum_include_HEADERS = \
 	MergedRequestKey.hxx \
 	NetworkAssociation.hxx \
 	NonDialogUsage.hxx \
+        OutgoingEvent.hxx \
 	OutOfDialogHandler.hxx \
 	OutOfDialogReqCreator.hxx \
 	PagerMessageCreator.hxx \
@@ -136,7 +153,7 @@ resipdum_include_HEADERS = \
 	SubscriptionHandler.hxx \
 	SubscriptionPersistenceManager.hxx \
 	SubscriptionState.hxx \
-	UInt64Hash.hxx \
+        TargetCommand.hxx \
 	UsageUseException.hxx \
 	UserAuthInfo.hxx \
 	UserProfile.hxx
