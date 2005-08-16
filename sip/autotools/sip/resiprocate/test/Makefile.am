@@ -10,6 +10,7 @@ noinst_LIBRARIES = libtestsupport.a
 libtestsupport_a_SOURCES = \
 	InviteClient.cxx \
 	InviteServer.cxx \
+        makeSelfCert.cxx \
 	Register.cxx \
 	Registrar.cxx \
 	TestSupport.cxx \
@@ -44,7 +45,7 @@ noinst_HEADERS = \
 # testMsgHeaderDiagram testNameAddrParamExclusions
 # testNonInviteClientTx testNonInviteServerTx
 # testParseNameAddr testParseUtil testSipStackInvite
-# testSource testTlsConnection testTransportSelector
+# testSource testTls testTlsConnection testTransportSelector
 # testTypes Transceiver
 
 LDADD = libtestsupport.a ../libresiprocate.la
@@ -66,9 +67,12 @@ check_PROGRAMS = \
 	testExternalLogger \
 	testFifo \
 	testFileSystem \
+        testFlowId \
 	testIM \
 	testIntrusiveList \
+        testLockStep \
 	testLogger \
+        testMD5Stream \
 	testMem \
 	testMessageWaiting \
 	testMultipartMixedContents \
@@ -121,9 +125,12 @@ testEmptyHeader_SOURCES = testEmptyHeader.cxx
 testExternalLogger_SOURCES = testExternalLogger.cxx
 testFifo_SOURCES = 	testFifo.cxx
 testFileSystem_SOURCES = testFileSystem.cxx
+testFlowId_SOURCES = testFlowId.cxx
 testIM_SOURCES = testIM.cxx
 testIntrusiveList_SOURCES = testIntrusiveList.cxx
+testLockStep_SOURCES = testLockStep.cxx
 testLogger_SOURCES = testLogger.cxx
+testMD5Stream_SOURCES = testMD5Stream.cxx
 testMem_SOURCES = testMem.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
