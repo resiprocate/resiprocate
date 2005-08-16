@@ -36,7 +36,7 @@ libresipdum_la_SOURCES = \
         DumDecrypted.cxx \
         DumFeatureChain.cxx \
         DumFeature.cxx \
-        DumFeatureMessage.cxx
+        DumFeatureMessage.cxx \
 	DumProcessHandler.cxx \
 	DumThread.cxx \
 	DumTimeout.cxx \
