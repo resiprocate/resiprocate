@@ -142,6 +142,7 @@ resipdum_include_HEADERS = \
 	RegistrationCreator.hxx \
 	RegistrationHandler.hxx \
 	RegistrationPersistenceManager.hxx \
+	RemoteCertStore.hxx \
 	ServerAuthManager.hxx \
 	ServerInviteSession.hxx \
 	ServerOutOfDialogReq.hxx \
@@ -160,4 +161,4 @@ resipdum_include_HEADERS = \
 
 libresipdum_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
-resipdum_includedir=$(includedir)/resiprocate $(includedir)/resiprocate/dum
+resipdum_includedir=$(includedir)/resiprocate/dum
