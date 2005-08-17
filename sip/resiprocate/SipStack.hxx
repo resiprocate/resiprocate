@@ -94,6 +94,7 @@ class SipStack
       void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
+                         StunSetting stun=StunDisabled,
                          const Data& ipInterface = Data::Empty, 
                          const Data& sipDomainname = Data::Empty, // only used
                                                                   // for TLS

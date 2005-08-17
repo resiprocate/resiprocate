@@ -98,6 +98,7 @@ void
 SipStack::addTransport( TransportType protocol,
                         int port, 
                         IpVersion version,
+                        StunSetting stun,
                         const Data& ipInterface, 
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
@@ -112,7 +113,7 @@ SipStack::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, ipInterface);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface);
             break;
          case TCP:
             transport = new TcpTransport(stateMacFifo, port, version, ipInterface);
@@ -135,7 +136,7 @@ SipStack::addTransport( TransportType protocol,
 #if defined( USE_DTLS )
             transport = new DtlsTransport(stateMacFifo,
                                           port,
-                                          version,
+                                          version, // !jf! stun
                                           ipInterface,
                                           *mSecurity,
                                           sipDomainname);
