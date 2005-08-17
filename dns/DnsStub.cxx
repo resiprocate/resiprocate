@@ -423,9 +423,10 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       {
          mReQuery = 0;
          DnsResourceRecordsByPtr result;
-         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, status);
+         int queryStatus = 0;
+         RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, queryStatus);
          if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
-         mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), result, mSink);
+         mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
       }
    }
                
