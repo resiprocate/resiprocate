@@ -72,9 +72,9 @@ main(int argc, char* argv[])
    if (optBindAddr)
    {
      const char *addr = optBindUdpAddr?optBindUdpAddr:optBindAddr;
-     stack->addTransport(UDP, optPort, DnsUtil::isIpV6Address(addr)?V6:V4, addr);
+     stack->addTransport(UDP, optPort, DnsUtil::isIpV6Address(addr)?V6:V4, StunDisabled, addr);
      addr = optBindTcpAddr?optBindTcpAddr:optBindAddr;
-     stack->addTransport(TCP, optPort, DnsUtil::isIpV6Address(addr)?V6:V4, addr);
+     stack->addTransport(TCP, optPort, DnsUtil::isIpV6Address(addr)?V6:V4, StunDisabled, addr);
    }
    else
    {

@@ -30,6 +30,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
+unsigned long TransactionState::StatelessIdCounter = 0;
+
 TransactionState::TransactionState(TransactionController& controller, Machine m, 
                                    State s, const Data& id, TransactionUser* tu) : 
    mController(controller),
@@ -291,7 +293,7 @@ TransactionState::process(TransactionController& controller)
             }
             else if (sip->header(h_RequestLine).getMethod() == ACK)
             {
-               //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(controller.StatelessIdCounter++));
+               //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(StatelessIdCounter++));
                TransactionState* state = new TransactionState(controller, Stateless, Calling, tid, tu);
                state->add(state->mId);
                state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
@@ -363,7 +365,7 @@ TransactionState::process(TransactionController& controller)
             StackLog (<< "forwarding stateless response: " << sip->brief());
             TransactionState* state = 
                new TransactionState(controller, Stateless, Calling, 
-                                    Data(controller.StatelessIdCounter++), tu);
+                                    Data(StatelessIdCounter++), tu);
             state->add(state->mId);
             state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
             state->processStateless(sip);
@@ -628,7 +630,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             else if (code >= 200 && code < 300)
             {
                sendToTU(sip); // don't delete msg
-               terminateClientTransaction(mId);
+               //terminateClientTransaction(mId);
                mMachine = ClientStale;
                StackLog (<< "Received 2xx on client invite transaction");
                StackLog (<< *this);
@@ -930,7 +932,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                if (mIsReliable)
                {
                   //StackLog (<< "Received ACK in Completed (reliable) - delete transaction");
-                  terminateServerTransaction(mId);
+                  //terminateServerTransaction(mId);
                   delete this; 
                   delete msg;
                }
@@ -1008,10 +1010,10 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                   
                   // Keep the StaleServer transaction around, so we can keep the
                   // source Tuple that the request was received on. 
-                  terminateServerTransaction(mId);
+                  //terminateServerTransaction(mId);
                   mMachine = ServerStale;
                   mController.mTimers.add(Timer::TimerStaleServer, mId, Timer::TS );
-		  delete msg;
+                  delete msg;
                }
                else
                {
@@ -1148,6 +1150,7 @@ TransactionState::processClientStale(TransactionMessage* msg)
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       if (timer->getType() == Timer::TimerStaleClient)
       {
+         terminateClientTransaction(mId);
          delete this;
          delete msg;
       }

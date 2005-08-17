@@ -24,6 +24,7 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dns/RRVip.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/DnsHandler.hxx"
 
 using namespace std;
 

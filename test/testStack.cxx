@@ -37,18 +37,12 @@ main(int argc, char* argv[])
    char* proto = "tcp";
    char* bindAddr = 0;
 
-   int runs = 100;
-   int window = 5;
-   int seltime = 100;
+   int runs = 10000;
+   int window = 100;
+   int seltime = 0;
    int v6 = 0;
    int invite=0;
    
-#ifdef WIN32
-   //logLevel = "ALERT";
-  logLevel = "INFO";
-  //logLevel = "DEBUG";
-#endif
-
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -81,8 +75,8 @@ main(int argc, char* argv[])
    if (bindAddr)
    {
       InfoLog(<<"Binding to address: " << bindAddr);
-      sender.addTransport(UDP, senderPort, version,bindAddr);
-      sender.addTransport(TCP, senderPort, version,bindAddr);
+      sender.addTransport(UDP, senderPort, version, StunDisabled, bindAddr);
+      sender.addTransport(TCP, senderPort, version, StunDisabled, bindAddr);
    }
    else
    {

@@ -6,7 +6,7 @@ include $(BUILD)/Makefile.pre
 PACKAGES += ARES PTHREAD OPENSSL
 
 CXXFLAGS += -I../
-CODE_SUBDIRS = os external dns
+CODE_SUBDIRS = os external dns stun
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -128,7 +128,6 @@ SRC = \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
-	StatelessHandler.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \
@@ -162,6 +161,10 @@ SRC = \
 	\
 	external/HttpProvider.cxx \
 	external/HttpGetMessage.cxx \
+	\
+	stun/stun.cxx \
+	stun/udp.cxx \
+	\
 	dns/DnsAAAARecord.cxx \
 	dns/DnsCnameRecord.cxx \
 	dns/DnsHostRecord.cxx \

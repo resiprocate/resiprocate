@@ -3,16 +3,18 @@
 #endif
 
 #include <memory>
-#include "resiprocate/os/compat.hxx"
+
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SendData.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/SendData.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/stun/stun.h"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -22,6 +24,7 @@ using namespace resip;
 UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,  
                            IpVersion version,
+                           StunSetting stun,
                            const Data& pinterface) 
    : InternalTransport(fifo, portNum, version, pinterface)
 {
@@ -32,6 +35,32 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    bind();
+
+   if (stun == StunEnabled)
+   {
+      if (version == V4)
+      {
+         if (pinterface == Data::Empty)
+         {
+            // This means the application didn't specify an interface to bind
+            // the transport to
+            ErrLog (<< "Stun server requires a specific interface to be specified in order to run");
+         }
+         else
+         {
+            Data alternate = DnsUtil::findAlternateInterface(pinterface);
+            if (alternate == Data::Empty)
+            {
+               ErrLog (<< "Stun server requires at least two network interfaces to run");
+            }
+            
+         }
+      }
+      else
+      {
+         ErrLog (<< "Stun server not supported on ipv6");
+      }
+   }
 }
 
 UdpTransport::~UdpTransport()
@@ -129,6 +158,57 @@ UdpTransport::process(FdSet& fdset)
          StackLog(<<"Throwing away incoming firewall keep-alive");
          return;
       }
+      // this must be a STUN request (or garbage)
+      if (buffer[0] == 0 || buffer[0] == 1)
+      {
+         bool changePort = false;
+         bool changeIp = false;
+         
+         StunAddress4 myAddr;
+         const sockaddr_in& bi = (const sockaddr_in&)boundInterface();
+         myAddr.addr = ntohl(bi.sin_addr.s_addr);
+         myAddr.port = ntohs(bi.sin_port);
+         
+         StunAddress4 from; // packet source
+         const sockaddr_in& fi = (const sockaddr_in&)tuple.getSockaddr();
+         from.addr = ntohl(fi.sin_addr.s_addr);
+         from.port = ntohs(fi.sin_port);
+         
+         StunMessage resp;
+         StunAddress4 dest;
+         StunAtrString hmacPassword;  
+         hmacPassword.sizeValue = 0;
+         
+         StunAddress4 secondary;
+         secondary.port = 0;
+         secondary.addr = 0;
+         
+         bool ok = stunServerProcessMsg( buffer, len, // input buffer
+                                         from,  // packet source
+                                         secondary, // not used
+                                         myAddr, // address to fill into response
+                                         myAddr, // not used
+                                         &resp, // stun response
+                                         &dest, // where to send response
+                                         &hmacPassword, // not used
+                                         &changePort, // not used
+                                         &changeIp, // not used
+                                         false ); // logging
+         
+         if (ok)
+         {
+            char* response = new char[STUN_MAX_MESSAGE_SIZE];
+            int rlen = stunEncodeMessage( resp, 
+                                          response, 
+                                          sizeof(response), 
+                                          hmacPassword,
+                                          false );
+            SendData* stunResponse = new SendData(tuple, response, rlen);
+            mTxFifo.add(stunResponse);
+         }
+         return;
+      }
+      
 
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
