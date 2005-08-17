@@ -120,7 +120,7 @@ int DnsInterface::supportedProtocols()
 bool 
 DnsInterface::requiresProcess()
 {
-   return mActiveQueryCount;
+   return mActiveQueryCount>0;
 }
 
 void 
