@@ -44,9 +44,6 @@ class SipStack
           @param handler    AsyncProcessHandler that will be invoked when Messages 
                             are posted to the stack.  For example:  SelectInterruptor.
                             Default is 0.
-
-          @param stateless  Set stateless=true, if you want to use the stack for a 
-                            stateless proxy (no transactions).  Default is false.
       */
       SipStack(Security* security=0, AsyncProcessHandler* handler = 0);
       virtual ~SipStack();
