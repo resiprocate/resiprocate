@@ -106,133 +106,102 @@ class SipMessage : public TransactionMessage
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
 
-#ifdef PARTIAL_TEMPLATE_SPECIALIZATION
+#define defineHeader(_header, _name, _type, _rfc)                       \
+      const H_##_header::Type& header(const H_##_header& headerType) const; \
+            H_##_header::Type& header(const H_##_header& headerType)
+      
+#define defineMultiHeader(_header, _name, _type, _rfc)                  \
+      const H_##_header##s::Type& header(const H_##_header##s& headerType) const; \
+            H_##_header##s::Type& header(const H_##_header##s& headerType)
+      
+      defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
+      defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
+      defineHeader(MIMEVersion, "Mime-Version", Token, "RFC 3261");
+      defineHeader(Priority, "Priority", Token, "RFC 3261");
+      defineHeader(Event, "Event", Token, "RFC 3265");
+      defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
+      defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
+      defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
+      defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
+      defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
+      defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
+      defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
+      defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
+      defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
+      defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC 3261");
+      defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261");
+      defineMultiHeader(Require, "Require", Token, "RFC 3261");
+      defineMultiHeader(Supported, "Supported", Token, "RFC 3261");
+      defineMultiHeader(Unsupported, "Unsupported", Token, "RFC 3261");
+      defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329");
+      defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329");
+      defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
+      defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
+      defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
+      defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
+      defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
-      template <class T>
-      typename T::UnknownReturn&
-      SipMessage::header(const T& headerType)
-      {
-         HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
-         if (hfvs->getParserContainer() == 0)
-         {
-            hfvs->setParserContainer(new ParserContainer<typename T::Type>(hfvs, headerType.getTypeNum()));
-         }
-         return T::knownReturn(hfvs->getParserContainer());
-      };
+      defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
+      defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 
-      // looks identical, but it isn't -- ensureHeaders CONST called -- may throw
-      template <class T>
-      const typename T::UnknownReturn&
-      SipMessage::header(const T& headerType) const
-      {
-         HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
-         if (hfvs->getParserContainer() == 0)
-         {
-            hfvs->setParserContainer(new ParserContainer<typename T::Type>(hfvs, headerType.getTypeNum()));
-         }
-         return T::knownReturn(hfvs->getParserContainer());
-      };
+      defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
+      defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
+      defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
+      defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
 
-#else
+      defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
+      defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");
+      defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261");
+      defineHeader(From, "From", NameAddr, "RFC 3261");
+      defineHeader(To, "To", NameAddr, "RFC 3261");
+      defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261");
+      defineHeader(ReferTo, "Refer-To", NameAddr, "RFC 3515");
+      defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC 3892");
+      defineMultiHeader(Path, "Path", NameAddr, "RFC 3327");
+      defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
+      defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
+      defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
+      defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
+      defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
+      defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
+      defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 
-#define defineHeader(_header, _name, _type, _rfc)                               \
-      const H_##_header::Type& header(const H_##_header& headerType) const;     \
-      H_##_header::Type& header(const H_##_header& headerType)
+      defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
+      defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
+      defineHeader(Server, "Server", StringCategory, "RFC 3261");
+      defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
+      defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
+      defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-#define defineMultiHeader(_header, _name, _type, _rfc)                                  \
-      const H_##_header##s::Type& header(const H_##_header##s& headerType) const;       \
-      H_##_header##s::Type& header(const H_##_header##s& headerType)
-         
-defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
-defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
-defineHeader(MIMEVersion, "Mime-Version", Token, "RFC 3261");
-defineHeader(Priority, "Priority", Token, "RFC 3261");
-defineHeader(Event, "Event", Token, "RFC 3265");
-defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
-defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
-defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
-defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
-defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
-defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
-defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
-defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
-defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC 3261");
-defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261");
-defineMultiHeader(Require, "Require", Token, "RFC 3261");
-defineMultiHeader(Supported, "Supported", Token, "RFC 3261");
-defineMultiHeader(Unsupported, "Unsupported", Token, "RFC 3261");
-defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329");
-defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329");
-defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
-defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
-defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
-defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
-defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
-
-defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
-defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
-
-defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
-defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
-defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
-
-defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
-defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");
-defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261");
-defineHeader(From, "From", NameAddr, "RFC 3261");
-defineHeader(To, "To", NameAddr, "RFC 3261");
-defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261");
-defineHeader(ReferTo, "Refer-To", NameAddr, "RFC 3515");
-defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC 3892");
-defineMultiHeader(Path, "Path", NameAddr, "RFC 3327");
-defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
-defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
-defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
-defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
-defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
-defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
-defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
-
-defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
-defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
-defineHeader(Server, "Server", StringCategory, "RFC 3261");
-defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
-defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
-defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
-
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+      defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
+      defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
+      defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
+      defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+      defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
 
-defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
-defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
-defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
+      defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
+      defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
+      defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 
-defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
-defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
-defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
-defineHeader(Join, "Join", CallId, "RFC 3911");
-defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+      defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
+      defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
+      defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
+      defineHeader(Join, "Join", CallId, "RFC 3911");
+      defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
 
-defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261");
-defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261");
-defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261");
-defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261");
-defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth, "RFC 3261");
+      defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261");
+      defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261");
+      defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261");
+      defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261");
+      defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth, "RFC 3261");
 
-defineHeader(CSeq, "CSeq", CSeqCategory, "RFC 3261");
-defineHeader(Date, "Date", DateCategory, "RFC 3261");
-defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
-defineMultiHeader(Via, "Via", Via, "RFC 3261");
-defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
-
-#endif // METHOD_TEMPLATES
+      defineHeader(CSeq, "CSeq", CSeqCategory, "RFC 3261");
+      defineHeader(Date, "Date", DateCategory, "RFC 3261");
+      defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
+      defineMultiHeader(Via, "Via", Via, "RFC 3261");
+      defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
       // unknown header interface
       const StringCategories& header(const ExtensionHeader& symbol) const;
