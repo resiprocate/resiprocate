@@ -48,9 +48,7 @@ class SipStack
           @param stateless  Set stateless=true, if you want to use the stack for a 
                             stateless proxy (no transactions).  Default is false.
       */
-      SipStack(Security* security=0, AsyncProcessHandler* handler = 0, 
-               bool stateless=false);
-
+      SipStack(Security* security=0, AsyncProcessHandler* handler = 0);
       virtual ~SipStack();
 
       /** 
