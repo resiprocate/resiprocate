@@ -35,32 +35,6 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    bind();
-
-   if (stun == StunEnabled)
-   {
-      if (version == V4)
-      {
-         if (pinterface == Data::Empty)
-         {
-            // This means the application didn't specify an interface to bind
-            // the transport to
-            ErrLog (<< "Stun server requires a specific interface to be specified in order to run");
-         }
-         else
-         {
-            Data alternate = DnsUtil::findAlternateInterface(pinterface);
-            if (alternate == Data::Empty)
-            {
-               ErrLog (<< "Stun server requires at least two network interfaces to run");
-            }
-            
-         }
-      }
-      else
-      {
-         ErrLog (<< "Stun server not supported on ipv6");
-      }
-   }
 }
 
 UdpTransport::~UdpTransport()
@@ -159,7 +133,7 @@ UdpTransport::process(FdSet& fdset)
          return;
       }
       // this must be a STUN request (or garbage)
-      if (buffer[0] == 0 || buffer[0] == 1)
+      if (buffer[0] == 0 || buffer[0] == 1 && ipVersion() == V4)
       {
          bool changePort = false;
          bool changeIp = false;
