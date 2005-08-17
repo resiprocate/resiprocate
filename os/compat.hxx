@@ -142,7 +142,7 @@ typedef unsigned __int64 UInt64;
 typedef unsigned long long UInt64;
 #endif
 
-typedef struct { unsigned char octet[16]; }  UInt128;
+//typedef struct { unsigned char octet[16]; }  UInt128;
 
 //template "levels; ie REASONABLE and COMPLETE
 //reasonable allows most things such as partial template specialization,

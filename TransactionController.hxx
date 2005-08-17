@@ -4,7 +4,6 @@
 #include "resiprocate/TuSelector.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/Security.hxx"
 
@@ -23,7 +22,7 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(SipStack& stack, bool stateless=false);
+      TransactionController(SipStack& stack);
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -60,7 +59,6 @@ class TransactionController
       SipStack& mStack;
       
       bool mMultiThreaded;
-      bool mStateless;
       bool mRegisteredForTransactionTermination;
       
       // If true, indicate to the Transaction to ignore responses for which
@@ -73,9 +71,6 @@ class TransactionController
       // messages (requests and responses), timers (used by state machines),
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
-      // For stateless stacks, this has a different behavior and does not create
-      // a transaction for each request and does not do any special transaction
-      // processing for requests or responses
       Fifo<TransactionMessage> mStateMacFifo;
 
       // from the sipstack (for convenience)
@@ -88,21 +83,15 @@ class TransactionController
       TransactionMap mClientTransactionMap;
       TransactionMap mServerTransactionMap;
 
-      // Used to handle the stateless stack incoming requests and responses as
-      // well as maintaining a state machine for the async dns responses
-      StatelessHandler mStatelessHandler;
-
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
       TimerQueue  mTimers;
 
-      unsigned long StatelessIdCounter;
       bool mShuttingDown;
       
       StatisticsManager& mStatsManager;
 
       friend class SipStack; // for debug only
-      friend class StatelessHandler;
       friend class TransactionState;
       friend class TransportSelector;
 
