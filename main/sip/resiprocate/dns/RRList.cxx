@@ -67,6 +67,14 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
          mAbsoluteExpiry = it->ttl();
       }
    }
+
+   if (mAbsoluteExpiry == 0)
+   {
+      // in case of 0 ttl, giving it 10 seconds to live in the cache.
+      // not ideal solution, will fix it properly later.
+      mAbsoluteExpiry = 10;
+   }
+
    mAbsoluteExpiry += Timer::getTimeMs()/1000;
 }
 
