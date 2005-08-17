@@ -356,6 +356,8 @@ resiprocate_os_include_HEADERS = \
 	os/RecursiveMutex.hxx \
 	os/SHA1Stream.hxx \
 	os/SelectInterruptor.hxx \
+	os/SharedCount.hxx \
+	os/SharedPtr.hxx \
 	os/Socket.hxx \
 	os/Subsystem.hxx \
 	os/SysLogBuf.hxx \
@@ -371,7 +373,7 @@ resiprocate_os_include_HEADERS = \
 	os/vmd5.hxx \
 	os/vthread.hxx 
 
-resiprocate_dns_includedir=$(includedir)/resiprocate/external
+resiprocate_dns_includedir=$(includedir)/resiprocate/dns
 resiprocate_dns_include_HEADERS = \
        dns/DnsAAAARecord.hxx \
        dns/DnsCnameRecord.hxx \
