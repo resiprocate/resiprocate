@@ -78,9 +78,9 @@ main(int argc, char* argv[])
       Data domain = Data("example") + Data(s) +".com";
       
 #ifdef USE_DTLS
-      stack[s]->addTransport(DTLS, 25000+s,version,bindInterface, domain);
+      stack[s]->addTransport(DTLS, 25000+s,version, StunDisabled, bindInterface, domain);
 #else
-      stack[s]->addTransport(TLS,  25000+s,version,bindInterface, domain);
+      stack[s]->addTransport(TLS,  25000+s,version, StunDisabled, bindInterface, domain);
 #endif
    }
    
