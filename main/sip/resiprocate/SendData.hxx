@@ -14,7 +14,18 @@ class SendData
          destination(dest),
          data(pdata),
          transactionId(tid) 
-      {}
+      {
+      }
+
+      // This interface is only used for stun responses
+      SendData(const Tuple& dest, char* buffer, int length) : 
+         destination(dest),
+         data(Data::Take, buffer, length),
+         transactionId(Data::Empty)
+      {
+      }
+      
+      
       Tuple destination;
       const Data data;
       const Data transactionId;

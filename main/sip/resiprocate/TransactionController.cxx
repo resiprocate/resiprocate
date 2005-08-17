@@ -22,18 +22,14 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(SipStack& stack, 
-                                             bool stateless) : 
+TransactionController::TransactionController(SipStack& stack) :
    mStack(stack),
-   mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo, stack.getSecurity(), stack.getDnsStub()),
-   mStatelessHandler(*this),
    mTimers(mStateMacFifo),
-   StatelessIdCounter(1),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
 {
@@ -82,14 +78,7 @@ TransactionController::process(FdSet& fdset)
 
       while (mStateMacFifo.messageAvailable())
       {
-         if (mStateless)
-         {
-            mStatelessHandler.process();
-         }
-         else
-         {
-            TransactionState::process(*this);
-         }
+         TransactionState::process(*this);
       }
    }
 }

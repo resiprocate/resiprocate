@@ -22,6 +22,13 @@ typedef enum
    V6
 } IpVersion;
 
+// Indicate whether or not to run a stun server on a Transport
+typedef enum
+{
+   StunDisabled,
+   StunEnabled
+} StunSetting;
+   
 }
 
 #endif
