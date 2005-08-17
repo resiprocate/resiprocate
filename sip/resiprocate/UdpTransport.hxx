@@ -18,6 +18,7 @@ class UdpTransport : public InternalTransport
       UdpTransport(Fifo<TransactionMessage>& fifo,
                    int portNum,
                    IpVersion version,
+                   StunSetting stun,
                    const Data& interfaceObj);
       virtual  ~UdpTransport();
 

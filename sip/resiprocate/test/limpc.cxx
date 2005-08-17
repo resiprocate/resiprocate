@@ -831,7 +831,7 @@ myMain(int argc, char* argv[])
       {
          if (!noV4) 
          {
-            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, tlsDomain );
+            sipStack.addTransport(TLS, tlsPort, V4, StunDisabled, Data::Empty, tlsDomain );
          }
 	 //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
