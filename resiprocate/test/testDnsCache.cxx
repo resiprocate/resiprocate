@@ -226,37 +226,35 @@ main(int argc, char* argv[])
    {
       const char* const key = "yahoo.com";
       MyDnsSink sink;
-      DnsInterface dns;
-      DnsStub stub(&dns);
-      stub.lookup<RR_A, DnsResultSink>(key, &sink);
-      stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+      DnsStub stub;
+      DnsInterface dns(stub);
+      stub.lookup<RR_A>(key, Protocol::Sip, &sink);
    }
 
    {
       const char* const key = "_ldap._tcp.openldap.org";
       MyDnsSink sink;
-      DnsInterface dns;
-      DnsStub stub(&dns);
-      stub.lookup<RR_SRV, DnsResultSink>(key, &sink);
+      DnsStub stub;
+      DnsInterface dns(stub);
+      stub.lookup<RR_SRV>(key, Protocol::Sip, &sink);
    }
 
    {
 #ifdef USE_IPV6
       const char* const key = "quartz";
       MyDnsSink sink;
-      DnsInterface dns;
-      DnsStub stub(&dns);
-      stub.lookup<RR_AAAA, DnsResultSink>(key, &sink);
-      stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+      DnsStub stub;
+      DnsInterface dns(stub);
+      stub.lookup<RR_AAAA>(key, Protocol::Sip, &sink);
 #endif
    }
 
    {
       const char* const key = "www.google.com";
       MyDnsSink sink;
-      DnsInterface dns;
-      DnsStub stub(&dns);
-      stub.lookup<RR_CNAME, DnsResultSink>(key, &sink);
+      DnsStub stub;
+      DnsInterface dns(stub);
+      stub.lookup<RR_CNAME>(key, Protocol::Sip, &sink);
    }
 
    return 0;
