@@ -43,7 +43,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(Security* pSecurity, 
-                   AsyncProcessHandler* handler, bool stateless) : 
+                   AsyncProcessHandler* handler) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security("~/")),
 #else
