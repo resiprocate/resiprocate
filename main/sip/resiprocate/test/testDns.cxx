@@ -23,6 +23,7 @@
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dns/RRVip.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 
 using namespace std;
 
@@ -90,7 +91,7 @@ class VipListener : public RRVip::Listener
 class TestDns : public DnsInterface, public ThreadIf
 {
    public:
-      TestDns()
+      TestDns(DnsStub& stub) : DnsInterface(stub), mStub(stub)
       {
          addTransportType(TCP, V4);
          addTransportType(UDP, V4);
@@ -108,10 +109,14 @@ class TestDns : public DnsInterface, public ThreadIf
          {
             FdSet fdset;
             buildFdSet(fdset);
+            mStub.buildFdSet(fdset);
             fdset.selectMilliSeconds(1);
             process(fdset);
+            mStub.process(fdset);
          }
       }
+
+      DnsStub& mStub;
 };
  
 }
@@ -146,7 +151,8 @@ main(int argc, const char** argv)
 
    Log::initialize(logType, logLevel, argv[0]);
    initNetwork();
-   TestDns dns;
+   DnsStub* stub = new DnsStub;
+   TestDns dns(*stub);
    dns.run();   
    Uri uri;
    cerr << "Starting" << endl;   
@@ -180,7 +186,7 @@ main(int argc, const char** argv)
       query.handler = new TestDnsHandler;
       //query.listener = new VipListener;
       cerr << "Creating Uri: " << *args << endl;       
-      uri = Uri(*args);
+      uri = Uri(*(++args));
       query.uri = uri;
       cerr << "Creating DnsResult" << endl;      
       DnsResult* res = dns.createDnsResult(query.handler);
@@ -188,7 +194,6 @@ main(int argc, const char** argv)
       queries.push_back(query);
       cerr << rf << "Looking up" << ub << endl;
       dns.lookup(res, uri);
-      args++;
       argc--;
    }
 
@@ -227,6 +232,8 @@ main(int argc, const char** argv)
 
    dns.shutdown();
    dns.join();
+
+   delete stub;
 
    return 0;
 }
