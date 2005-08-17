@@ -149,7 +149,10 @@ AC_DEFUN([RESIP_CHECK_MYSQL],
 AC_DEFUN([AX_BERKELEY_DB],
 [
   old_LIBS="$LIBS"
+  AC_ARG_WITH(bdb_cxx_libs,[---with-bdb_cxx_libs=path_to_bdb_cxx_libs],[],[])
 
+  LDFLAGS="$LDFLAGS -L$with_bdb_cxx_libs"
+  
   minversion=ifelse([$1], ,,$1)
 
   DB_HEADER=""
@@ -168,7 +171,10 @@ AC_DEFUN([AX_BERKELEY_DB],
       minverminor=${minverminor:-0}
       minverpatch=${minverpatch:-0}
       AC_MSG_CHECKING([for Berkeley DB >= $minversion])
+
   fi
+	  
+	  AC_ARG_WITH(bdb,[---with-bdb=path_to_bdb],[],[])
 
   for version in 5.0 4.9 4.8 4.7 4.6 4.5 4.4 4.3 4.2 4.1 4.0 3.6 3.5 3.4 3.3 3.2 3.1 ""; do
 
@@ -177,7 +183,7 @@ AC_DEFUN([AX_BERKELEY_DB],
         try_headers="db.h"
     else
         db_lib="-ldb_cxx-$version"
-        try_headers="db$version/db_cxx.h db`echo $version | sed -e 's,\..*,,g'`/db_cxx.h"
+        try_headers="$with_bdb/db_cxx.h db$version/db_cxx.h db`echo $version | sed -e 's,\..*,,g'`/db_cxx.h"
     fi
 
 #    LIBS="$old_LIBS $db_lib"
