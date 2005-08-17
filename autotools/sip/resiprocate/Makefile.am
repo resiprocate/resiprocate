@@ -201,6 +201,7 @@ resiprocate_include_HEADERS = \
 	ConnectionBase.hxx \
 	ConnectionManager.hxx \
 	Contents.hxx \
+	ContentsFactory.hxx \
 	ContentsFactoryBase.hxx \
 	CpimContents.hxx \
 	DataParameter.hxx \
