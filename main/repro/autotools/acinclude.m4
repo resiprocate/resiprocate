@@ -149,9 +149,10 @@ AC_DEFUN([RESIP_CHECK_MYSQL],
 AC_DEFUN([AX_BERKELEY_DB],
 [
   old_LIBS="$LIBS"
-  AC_ARG_WITH(bdb_cxx_libs,[---with-bdb_cxx_libs=path_to_bdb_cxx_libs],[],[])
-
-  LDFLAGS="$LDFLAGS -L$with_bdb_cxx_libs"
+  AC_ARG_WITH(bdb_cxx_libs,[---with-bdb_cxx_libs=path_to_bdb_cxx_libs],[Specifies the location of the db_cxx libraries],[])
+  if test -z $with_bdb_cxx_libs; then
+    LDFLAGS="$LDFLAGS -L$with_bdb_cxx_libs"
+  fi
   
   minversion=ifelse([$1], ,,$1)
 
@@ -174,7 +175,7 @@ AC_DEFUN([AX_BERKELEY_DB],
 
   fi
 	  
-	  AC_ARG_WITH(bdb,[---with-bdb=path_to_bdb],[],[])
+	  AC_ARG_WITH(bdb,[---with-bdb=path_to_bdb],[Specifies the path to the db_cxx headers.],[])
 
   for version in 5.0 4.9 4.8 4.7 4.6 4.5 4.4 4.3 4.2 4.1 4.0 3.6 3.5 3.4 3.3 3.2 3.1 ""; do
 
