@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt-1.8-1-lib/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../sip&quot;;&quot;$(ProjectDir)../sip/contrib/db/build_win32&quot;;&quot;$(ProjectDir)../sip/contrib/pcre&quot;;&quot;$(ProjectDir)../sip/contrib/popt-1.8-1-lib/include&quot;;&quot;$(ProjectDir)../sip/contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\Debug\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Debug\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\Debug\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\debug_static\libdb43sd.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\Debug\pcre.lib&quot; &quot;$(ProjectDir)..\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\sip\resiprocate\Debug\resiprocate.lib&quot; &quot;$(ProjectDir)..\sip\contrib\ares\Debug\ares.lib&quot; &quot;$(ProjectDir)..\sip\resiprocate\dum\Debug\dum.lib&quot; &quot;$(ProjectDir)..\sip\contrib\db\build_win32\debug_static\libdb43sd.lib&quot; &quot;$(ProjectDir)..\sip\contrib\pcre\Debug\pcre.lib&quot; &quot;$(ProjectDir)..\sip\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -70,7 +70,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt-1.8-1-lib/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../sip&quot;;&quot;$(ProjectDir)../sip/contrib/db/build_win32&quot;;&quot;$(ProjectDir)../sip/contrib/pcre&quot;;&quot;$(ProjectDir)../sip/contrib/popt-1.8-1-lib/include&quot;;&quot;$(ProjectDir)../sip/contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_POPT_H;USE_IPV6"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="TRUE"
@@ -82,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib crypt32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\Release\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\release\pcre.lib&quot; &quot;$(ProjectDir)..\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib crypt32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\sip\resiprocate\Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\sip\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\sip\resiprocate\dum\Release\dum.lib&quot; &quot;$(ProjectDir)..\sip\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\sip\contrib\pcre\release\pcre.lib&quot; &quot;$(ProjectDir)..\sip\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -120,7 +120,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/popt-1.8-1-lib/include&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../sip&quot;;&quot;$(ProjectDir)../sip/contrib/db/build_win32&quot;;&quot;$(ProjectDir)../sip/contrib/pcre&quot;;&quot;$(ProjectDir)../sip/contrib/popt-1.8-1-lib/include&quot;;&quot;$(ProjectDir)../sip/contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_POPT_H;USE_SSL;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -134,7 +134,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib crypt32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\SSL-Debug\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Debug\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\SSL-Debug\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\debug_static\libdb43sd.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\Debug\pcre.lib&quot; &quot;$(ProjectDir)..\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib crypt32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\sip\resiprocate\SSL-Debug\resiprocate.lib&quot; &quot;$(ProjectDir)..\sip\contrib\ares\Debug\ares.lib&quot; &quot;$(ProjectDir)..\sip\resiprocate\dum\SSL-Debug\dum.lib&quot; &quot;$(ProjectDir)..\sip\contrib\db\build_win32\debug_static\libdb43sd.lib&quot; &quot;$(ProjectDir)..\sip\contrib\pcre\Debug\pcre.lib&quot; &quot;$(ProjectDir)..\sip\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\sip\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\sip\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -170,7 +170,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../contrib/db/build_win32&quot;;&quot;$(ProjectDir)../contrib/pcre&quot;;&quot;$(ProjectDir)../contrib/openssl/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../&quot;;&quot;$(ProjectDir)../sip&quot;;&quot;$(ProjectDir)../sip/contrib/db/build_win32&quot;;&quot;$(ProjectDir)../sip/contrib/pcre&quot;;&quot;$(ProjectDir)../sip/contrib/popt-1.8-1-lib/include&quot;;&quot;$(ProjectDir)../sip/contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_SSL;USE_IPV6"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="TRUE"
@@ -182,7 +182,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\resiprocate\SSL-Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\resiprocate\dum\SSL-Release\dum.lib&quot; &quot;$(ProjectDir)..\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\contrib\pcre\release\pcre.lib&quot; &quot;$(ProjectDir)..\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\sip\resiprocate\SSL-Release\resiprocate.lib&quot; &quot;$(ProjectDir)..\sip\contrib\ares\Release\ares.lib&quot; &quot;$(ProjectDir)..\sip\resiprocate\dum\SSL-Release\dum.lib&quot; &quot;$(ProjectDir)..\sip\contrib\db\build_win32\release_static\libdb43s.lib&quot; &quot;$(ProjectDir)..\sip\contrib\pcre\release\pcre.lib&quot; &quot;$(ProjectDir)..\sip\contrib\popt-1.8-1-lib\lib\libpopt.lib&quot; &quot;$(ProjectDir)..\sip\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\sip\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
