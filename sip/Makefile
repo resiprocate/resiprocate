@@ -19,8 +19,12 @@ tests: resiprocate
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
 
+ifeq (${USE_IPV6},true)
+   ARES_IPV6=--with-ipv6
+endif
+
 contrib/ares/Makefile:
-	cd contrib/ares && ./configure
+	cd contrib/ares && ./configure ${ARES_IPV6}
 
 configure_ares: contrib/ares/Makefile
 

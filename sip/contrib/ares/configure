@@ -814,6 +814,11 @@ Optional Features:
   --enable-maintainer-mode enable make rules and dependencies not useful
                           (and sometimes confusing) to the casual installer
 
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-ipv6             enable ipv6
+
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -3014,6 +3019,13 @@ _ACEOF
 
 	;;
 esac
+
+
+# Check whether --with-ipv6 or --without-ipv6 was given.
+if test "${with_ipv6+set}" = set; then
+  withval="$with_ipv6"
+  CFLAGS="${CFLAGS} -DUSE_IPV6=1"
+fi;
 
 
 echo "$as_me:$LINENO: checking for library containing gethostbyname" >&5
