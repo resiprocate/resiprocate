@@ -174,7 +174,7 @@ UdpTransport::process(FdSet& fdset)
             char* response = new char[STUN_MAX_MESSAGE_SIZE];
             int rlen = stunEncodeMessage( resp, 
                                           response, 
-                                          sizeof(response), 
+                                          STUN_MAX_MESSAGE_SIZE, 
                                           hmacPassword,
                                           false );
             SendData* stunResponse = new SendData(tuple, response, rlen);
