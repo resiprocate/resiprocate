@@ -3,8 +3,8 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionUser.hxx"
-#include "rutil/HashMap.hxx"
-#include "rutil/ThreadIf.hxx"
+#include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 #include "repro/RequestContext.hxx"
 
 namespace resip
@@ -21,14 +21,14 @@ class RequestProcessorChain;
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&, UserStore& );
+      Proxy(resip::SipStack&, const resip::Uri& recordRoute, RequestProcessorChain&, UserStore& );
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      void addDomainWithPort(const resip::Data& domain, int port);
       bool isMyUri(const resip::Uri& uri);      
+      const resip::NameAddr& getRecordRoute() const;
       
       UserStore& getUserStore();
       void send(const resip::SipMessage& msg);
@@ -39,8 +39,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
    private:
       resip::SipStack& mStack;
-
-      RequestProcessorChain mRequestProcessorChain;
+      resip::NameAddr mRecordRoute;
+      
+      // needs to be a reference since parent owns it
+      RequestProcessorChain& mRequestProcessorChain;
       
       /** a map from transaction id to RequestContext. Store the server
           transaction and client transactions in this map. The

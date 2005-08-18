@@ -4,12 +4,17 @@
 
 #include <iostream>
 
-#include "rutil/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+// Remove warning about 'this' use in initiator list
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 

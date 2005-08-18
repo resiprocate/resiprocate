@@ -10,14 +10,14 @@
 
 #include <cassert>
 
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "rutil/TransportType.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/ParseBuffer.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
@@ -73,15 +73,17 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    DebugLog (<< "Creating fd=" << (int)mFd 
              << (ipVer == V4 ? " V4/" : " V6/") );
       
-#if !defined(WIN32)
    int on = 1;
+#if !defined(WIN32)
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
+#else
+   if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) )
+#endif
    {
       int e = getErrno();
       InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
       assert(0); //throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
-#endif
    
    DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
    

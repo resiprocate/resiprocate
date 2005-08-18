@@ -10,10 +10,10 @@
 
 #include <cassert>
 
-#include "dum/DialogUsageManager.hxx"
-#include "dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
-#include "dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
 #include "repro/UserStore.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -24,7 +24,7 @@ using namespace repro;
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                UserStore& db):
-   ServerAuthManager(dum),
+   ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
    mDb(db)
 {

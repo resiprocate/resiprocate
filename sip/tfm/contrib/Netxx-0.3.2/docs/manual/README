@@ -1,0 +1,8 @@
+How to build on FreeBSD
+    Install the /usr/ports/textproc/docproject port
+    make
+
+How to build on RedHat Linux 7.3 Workstation:
+    cd /usr/share/sgml
+    ln -s openjade-* openjade
+    pmake PREFIX=/usr

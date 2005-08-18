@@ -5,10 +5,10 @@
 #include <iostream>
 
 #include "resiprocate/SipMessage.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/Inserter.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/Helper.hxx"
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
@@ -127,11 +127,12 @@ ResponseContext::processPendingTargets()
             rt.uri().param(p_transport) = sentTransport;
          }
 
-         // !jf! This should be the domain of "this" proxy instead of local
-         // hostname. 
-         rt.uri().host() = DnsUtil::getLocalHostName();
-         rt.uri().param(p_lr);
-         request.header(h_RecordRoutes).push_front(rt);
+         // !jf! By not specifying host in Record-Route, the TransportSelector
+         //will fill it in. 
+         if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
+         {
+            request.header(h_RecordRoutes).push_front(mRequestContext.mProxy.getRecordRoute());
+         }
       }
       
       // !jf! unleash the baboons here

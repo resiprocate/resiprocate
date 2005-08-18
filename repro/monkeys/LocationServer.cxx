@@ -7,7 +7,7 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -40,6 +40,11 @@ LocationServer::handleRequest(RequestContext& context)
         {
            InfoLog (<< *this << " adding target " << contact.first);
            context.addTarget(NameAddr(contact.first));
+        }
+        else
+        {
+            // remove expired contact 
+            mStore.removeContact(inputUri, contact.first);
         }
      }
 	 // if target list is empty return a 480

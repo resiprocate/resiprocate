@@ -6,18 +6,20 @@
 #include DB_HEADER
 #else 
 #include <db4/db_cxx.h>
+#include <sys/ipc.h>
 #endif
 
+#include <signal.h>
 #include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
-#include "dum/DumThread.hxx"
-#include "dum/InMemoryRegistrationDatabase.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/Log.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/Inserter.hxx"
+#include "resiprocate/dum/DumThread.hxx"
+#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -42,6 +44,9 @@
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
+#ifdef WIN32
+#include "resiprocate/WinSecurity.hxx"
+#endif
 #endif
 
 #if defined(USE_MYSQL)
@@ -53,6 +58,15 @@
 using namespace repro;
 using namespace resip;
 using namespace std;
+
+static bool finished = false;
+
+static void
+signalHandler(int signo)
+{
+   std::cerr << "Shutting down" << endl;
+   finished = true;
+}
 
 Data
 addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
@@ -82,7 +96,9 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   tu.addDomain(DnsUtil::getLocalHostName());
+   Data localhostname(DnsUtil::getLocalHostName());
+   InfoLog (<< "Adding local hostname domain " << localhostname );
+   tu.addDomain(localhostname);
    if ( realm.empty() )
    {
       realm =DnsUtil::getLocalHostName();
@@ -94,14 +110,12 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       realm = "localhost";
    }
    
-#ifndef WIN32 // !cj! TODO 
    list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
    for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
    {
-      DebugLog( << "Adding domain for IP " << i->second  );
+      InfoLog( << "Adding domain for IP " << i->second << " from interface " << i->first  );
       tu.addDomain(i->second);
    }
-#endif 
 
    tu.addDomain("127.0.0.1");
 
@@ -109,96 +123,47 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
 }
 
 
-//!dcm! -- this type of matching can probably move into TU and be removed from
-//SipStack. Also doesn't  handle ConfigStore properly(configstore doesn't have
-//the ports yet)
-
-void 
-addDomain(Proxy& proxy, const Data& domain, vector<int> portList)
-{
-   for (vector<int>::iterator it = portList.begin(); it != portList.end(); it++)
-   {
-      proxy.addDomainWithPort(domain, *it);
-   }
-   //!dcm! -- get rid of when we have isMyRealm
-   proxy.addDomain(domain);
-}
-
-Data
-addDomainsToProxy(Proxy& proxy, CommandLineParser& args, Store& store)
-{
-   Data realm;
-   vector<int> ports;
-   ports.push_back(0);
-   ports.push_back(args.mUdpPort);
-   ports.push_back(args.mTcpPort);
-   ports.push_back(args.mTlsPort);
-   ports.push_back(args.mDtlsPort);
-   
-   for (std::vector<Data>::const_iterator i=args.mDomains.begin(); 
-        i != args.mDomains.end(); ++i)
-   {
-      InfoLog (<< "Adding domain " << *i << " from command line");
-      
-      addDomain(proxy, *i, ports);
-
-      if ( realm.empty() )
-      {
-         realm = *i;
-      }
-   }
-
-   ConfigStore::DataList dList = store.mConfigStore.getDomains();
-   for (  ConfigStore::DataList::const_iterator i=dList.begin(); 
-           i != dList.end(); ++i)
-   {
-      InfoLog (<< "Adding domain " << *i << " from config");
-
-      proxy.addDomainWithPort(*i, 0);
-
-      if ( realm.empty() )
-      {
-         realm = *i;
-      }
-   }
-
-
-   addDomain(proxy, DnsUtil::getLocalHostName(), ports);
-   
-   if ( realm.empty() )
-   {
-      realm =DnsUtil::getLocalHostName();
-   }
-
-   addDomain(proxy, "localhost", ports);
-   if ( realm.empty() )
-   {
-      realm = "localhost";
-   }
-   
-#ifndef WIN32 // !cj! TODO 
-   list<pair<Data,Data> > ips = DnsUtil::getInterfaces();
-   for ( list<pair<Data,Data> >::const_iterator i=ips.begin(); i!=ips.end(); i++)
-   {
-      DebugLog( << "Adding domain for IP " << i->second  );
-      proxy.addDomain(i->second);
-   }
-#endif 
-
-   addDomain(proxy, "127.0.0.1", ports);
-
-   return realm;
-}
 
 int
 main(int argc, char** argv)
 {
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+#endif
+
+   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGINT" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
+
    /* Initialize a stack */
    CommandLineParser args(argc, argv);
-   Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
+   if(args.mLogType.lowercase() == "file")
+   {
+      Log::initialize("file", args.mLogLevel, argv[0], "repro_log.txt");
+   }
+   else
+   {
+      Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
+   }
 
 #ifdef USE_SSL
+#ifdef WIN32
+   WinSecurity security;
+#else
    Security security(args.mCertPath);
+#endif
    SipStack stack(&security);
 #else
     SipStack stack;
@@ -218,9 +183,9 @@ main(int argc, char** argv)
       }
       if (args.mTcpPort)
       {
-         if (args.mUseV4) stack.addTransport(TCP, args.mUdpPort, V4);
+         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TCP, args.mUdpPort, V6);
+         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6);
 #endif
       }
 #ifdef USE_SSL
@@ -297,7 +262,7 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator;
-         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         locators->addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
 
       AmIResponsible* isme = new AmIResponsible;
@@ -323,8 +288,8 @@ main(int argc, char** argv)
       requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));      
    }
    
-   Proxy proxy(stack, requestProcessors, store.mUserStore );
-   Data realm = addDomainsToProxy(proxy, args, store);
+   Proxy proxy(stack, args.mRecordRoute, requestProcessors, store.mUserStore );
+   Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
    WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm, args.mHttpPort  );
@@ -383,7 +348,7 @@ main(int argc, char** argv)
    {
       if (!args.mNoChallenge)
       {
-         auto_ptr<ServerAuthManager> 
+         SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
                                                 store.mUserStore ));
          dum->setServerAuthManager(uasAuth);
@@ -403,6 +368,16 @@ main(int argc, char** argv)
       dumThread->run();
    }
    
+   while (!finished)
+   {
+#ifdef WIN32
+   Sleep(1000);
+#else
+   usleep(100000);
+#endif
+   }
+   exit(0);
+
    proxy.join();
    stackThread.join();
    adminThread.join();

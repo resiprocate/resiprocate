@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "resiprocate/Uri.hxx"
-#include "rutil/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
@@ -18,6 +18,7 @@ class CommandLineParser
       Data mLogType;
       Data mLogLevel;
       Data mTlsDomain;
+      resip::Uri mRecordRoute;
       int mUdpPort;
       int mTcpPort;
       int mTlsPort;

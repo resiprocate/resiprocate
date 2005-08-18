@@ -1,6 +1,6 @@
 
-#include "rutil/Logger.hxx"
-#include "rutil/ParseBuffer.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "repro/RouteStore.hxx"
@@ -84,6 +84,16 @@ RouteStore::getRoutes() const
    return result;   
 }
 */
+
+
+void 
+RouteStore::eraseRoute(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern)
+{
+   Key key = buildKey(method,event,matchingPattern);
+   eraseRoute(key);
+}
 
 
 void 

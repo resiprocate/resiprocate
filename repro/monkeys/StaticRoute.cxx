@@ -7,7 +7,7 @@
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/RequestContext.hxx"
 
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "repro/RouteStore.hxx"
 
 

@@ -10,14 +10,14 @@
 
 #include <cassert>
 
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "rutil/TransportType.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/ParseBuffer.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
