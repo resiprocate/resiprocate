@@ -126,8 +126,7 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   if(mState != Initial &&  // !jf! may not be correct
-      mState != Destroying &&
+   if(mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -346,8 +345,6 @@ DialogSet::dispatch(const SipMessage& msg)
    }
 
    Dialog* dialog = findDialog(msg);
-   assert(!dialog || msg.header(h_CSeq).method() != MESSAGE);
-
    if (dialog)
    {
       DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
@@ -409,9 +406,13 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case MESSAGE:
             // !jf! move this to DialogUsageManager
-            mServerPagerMessage = makeServerPagerMessage(request);
-            mServerPagerMessage->dispatch(request);
-            return;
+            if(!dialog)
+            {
+               mServerPagerMessage = makeServerPagerMessage(request);
+               mServerPagerMessage->dispatch(request);
+               return;
+            }
+            break;
 
          default:
             // !jf! move this to DialogUsageManager
@@ -523,7 +524,11 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
 
          case MESSAGE:
-            if (mClientPagerMessage)
+             if (dialog)
+            {
+                break;
+            }
+            else if (mClientPagerMessage)
             {
                mClientPagerMessage->dispatch(response);
             }

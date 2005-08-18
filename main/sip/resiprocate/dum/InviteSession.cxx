@@ -494,6 +494,35 @@ InviteSession::info(const Contents& contents)
 }
 
 void
+InviteSession::message(const Contents& contents)
+{
+   if (mNitState == NitComplete)
+   {
+      if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+      {
+         mNitState = NitProceeding;
+         SipMessage message;
+         mDialog.makeRequest(message, MESSAGE);
+         // !jf! handle multipart here
+         message.setContents(&contents);
+         mDialog.send(message, mCurrentEncryptionLevel);
+         InfoLog (<< "Trying to send MESSAGE: " << message);
+      }
+      else
+      {
+         WarningLog (<< "Can't send MESSAGE before Connected");
+         assert(0);
+         throw UsageUseException("Can't send MESSAGE before Connected", __FILE__, __LINE__);
+      }
+   }
+   else
+   {
+      throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
+                              __FILE__, __LINE__);
+   }
+}
+
+void
 InviteSession::dispatch(const SipMessage& msg)
 {
    // !jf! do we need to handle 3xx here or is it handled elsewhere?
@@ -996,6 +1025,9 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case INFO:
          dispatchInfo(msg);
          break;
+      case MESSAGE:
+         dispatchMessage(msg);
+         break;
 	  case ACK:
 		  // Ignore duplicate ACKs from 2xx reTransmissions
 		  break;
@@ -1125,7 +1157,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
 }
 
 void
-InviteSession::acceptInfo(int statusCode)
+InviteSession::acceptNIT(int statusCode)
 {
    if (statusCode / 100  != 2)
    {
@@ -1137,7 +1169,7 @@ InviteSession::acceptInfo(int statusCode)
 } 
 
 void
-InviteSession::rejectInfo(int statusCode)
+InviteSession::rejectNIT(int statusCode)
 {
    if (statusCode < 400)
    {
@@ -1145,6 +1177,32 @@ InviteSession::rejectInfo(int statusCode)
    }
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
    send(mLastNitResponse);
+}
+
+void
+InviteSession::dispatchMessage(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   if (msg.isRequest())
+   {
+      InfoLog (<< "Received " << msg.brief());
+      mDialog.makeResponse(mLastNitResponse, msg, 200);
+      handler->onMessage(getSessionHandle(), msg);
+   }
+   else
+   {
+      assert(mNitState == NitProceeding);
+      mNitState = NitComplete;
+      //!dcm! -- toss away 1xx to an message?
+      if (msg.header(h_StatusLine).statusCode() >= 300)
+      {
+         handler->onMessageFailure(getSessionHandle(), msg);
+      }
+      else if (msg.header(h_StatusLine).statusCode() >= 200)
+      {
+         handler->onMessageSuccess(getSessionHandle(), msg);
+      }
+   }
 }
 
 void
