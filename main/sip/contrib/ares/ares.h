@@ -39,8 +39,6 @@
 #include <netinet/in.h>
 #endif
 
-
-
 #define ARES_SUCCESS		0
 
 /* Server error codes (ARES_ENODATA indicates no relevant answer) */
@@ -84,9 +82,14 @@
 #define ARES_OPT_DOMAINS	(1 << 7)
 #define ARES_OPT_LOOKUPS	(1 << 8)
 
+/* Capability mask values */
+
+#define ARES_CAP_IPV6 		(1 << 0)
+
 #ifdef WIN32
 typedef unsigned char u_int8_t;
 #endif
+
 #ifdef USE_IPV6
 struct multiFamilyAddr {
   u_int8_t family;
@@ -123,6 +126,9 @@ typedef void (*ares_host_callback)(void *arg, int status,
 				   struct hostent *hostent);
 
 int ares_init(ares_channel *channelptr);
+
+int ares_capabilities(int capmask);
+
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 		      int optmask);
 void ares_destroy(ares_channel channel);
