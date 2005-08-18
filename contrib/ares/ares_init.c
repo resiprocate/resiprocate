@@ -71,6 +71,17 @@ static int	inet_pton6(const char *src, u_char *dst);
 char w32hostspath[256];
 #endif
 
+
+int ares_capabilities(int capmask)
+{
+#ifdef USE_IPV6
+   static int ares_caps = ARES_CAP_IPV6;
+#else
+   static int ares_caps = 0;
+#endif
+   return (capmask & ares_caps);
+}
+
 int ares_init(ares_channel *channelptr)
 {
   return ares_init_options(channelptr, NULL, 0);
