@@ -90,6 +90,13 @@ class InviteSessionHandler
       virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg)=0;
       virtual void onInfoFailure(InviteSessionHandle, const SipMessage& msg)=0;
 
+      /// called when MESSAGE message is received 
+      virtual void onMessage(InviteSessionHandle, const SipMessage& msg)=0;
+
+      /// called when response to MESSAGE message is received 
+      virtual void onMessageSuccess(InviteSessionHandle, const SipMessage& msg)=0;
+      virtual void onMessageFailure(InviteSessionHandle, const SipMessage& msg)=0;
+
       /// called when an REFER message is received.  The refer is accepted or
       /// rejected using the server subscription. If the offer is accepted,
       /// DialogUsageManager::makeInviteSessionFromRefer can be used to create an
