@@ -651,9 +651,6 @@
 				RelativePath=".\StackThread.cxx">
 			</File>
 			<File
-				RelativePath="StatelessHandler.cxx">
-			</File>
-			<File
 				RelativePath=".\StatisticsManager.cxx">
 			</File>
 			<File
@@ -664,6 +661,9 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\stun\stun.cxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.cxx">
@@ -739,6 +739,9 @@
 			</File>
 			<File
 				RelativePath="TuSelector.cxx">
+			</File>
+			<File
+				RelativePath=".\stun\udp.cxx">
 			</File>
 			<File
 				RelativePath="UdpTransport.cxx">
@@ -1201,9 +1204,6 @@
 				RelativePath=".\StackThread.hxx">
 			</File>
 			<File
-				RelativePath="StatelessHandler.hxx">
-			</File>
-			<File
 				RelativePath=".\StatisticsManager.hxx">
 			</File>
 			<File
@@ -1214,6 +1214,9 @@
 			</File>
 			<File
 				RelativePath="StringCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\stun\stun.h">
 			</File>
 			<File
 				RelativePath="os\Subsystem.hxx">
@@ -1304,6 +1307,9 @@
 			</File>
 			<File
 				RelativePath=".\TuSelector.hxx">
+			</File>
+			<File
+				RelativePath=".\stun\udp.h">
 			</File>
 			<File
 				RelativePath="UdpTransport.hxx">
