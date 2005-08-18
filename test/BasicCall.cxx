@@ -215,11 +215,6 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onDialogModified - " << msg.brief() << endl;
       }
 
-      virtual void onInfo(InviteSessionHandle, const SipMessage& msg)
-      {
-         cout << name << ": InviteSession-onInfo - " << msg.brief() << endl;
-      }
-
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onRefer - " << msg.brief() << endl;
@@ -235,6 +230,11 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onReferRejected - " << msg.brief() << endl;
       }
 
+      virtual void onInfo(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onInfo - " << msg.brief() << endl;
+      }
+
       virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onInfoSuccess - " << msg.brief() << endl;
@@ -243,6 +243,21 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onInfoFailure(InviteSessionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onInfoFailure - " << msg.brief() << endl;
+      }
+
+      virtual void onMessage(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onMessage - " << msg.brief() << endl;
+      }
+
+      virtual void onMessageSuccess(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onMessageSuccess - " << msg.brief() << endl;
+      }
+
+      virtual void onMessageFailure(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onMessageFailure - " << msg.brief() << endl;
       }
 
       virtual void onForkDestroyed(ClientInviteSessionHandle)
