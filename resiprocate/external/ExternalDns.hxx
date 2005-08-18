@@ -2,6 +2,9 @@
 #define RESIP_EXTERNAL_DNS_HXX
 
 #include "resiprocate/external/AsyncID.hxx"
+#include "resiprocate/os/Tuple.hxx"
+
+#include <vector>
 
 struct hostent;
 
@@ -16,7 +19,7 @@ class ExternalDns
 {
    public:
       //returns 0 for success, otherwise message can be pulled from errorMessage
-      virtual int init() = 0; 
+      virtual int init(const std::vector<Tuple>& additionalNameservers) = 0; 
                           
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;
