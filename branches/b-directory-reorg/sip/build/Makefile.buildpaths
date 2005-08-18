@@ -1,0 +1,10 @@
+include $(BUILD)/Makefile.pre
+include $(BUILD)/Makefile.post
+
+build_cflags:
+	@echo $(CXXFLAGS)
+
+build_ldflags:
+	@echo $(LDFLAGS) $(LDLIBS)
+
+

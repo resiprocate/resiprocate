@@ -1,0 +1,34 @@
+---------------------------------------------------------------------------
+                                                                           
+                                   Netxx                                   
+                                                                           
+---------------------------------------------------------------------------
+
+Netxx is a C++ network programming library. It is designed to take the pain
+out of programming network communications applications.
+
+It does this by providing an easy to use and cross-platform interface. As a
+side effect, you get the safety of automatic resource management and
+smaller, simpler code.
+
+
+Features:
+
+  * Very clean API with total abstraction from any operating system calls.
+    No networking or operating system headers are used in the Netxx header
+    files.
+  * Appropriate use of C++ technologies such as namespaces, templates,
+    inheritance and exceptions. All Netxx classes are in the Netxx
+    namespace and exceptions are used only in exceptional situations.
+  * Includes support for TLS/SSL (via OpenSSL), IPv6 and Local/Unix Domain
+    Sockets (on operating systems that support them).
+  * Cross-platform support. Netxx currently supports most flavors of Unix,
+    Windows and MacOS X.
+  * An IOStreams streambuf is provided so you can treat network connections
+    just like a std::iostream.
+  * Berkeley style license so you can do whatever you want with Netxx,
+    including commercial use.
+
+
+For more information about Netxx please go to:
+http://pmade.org/pjones/software/netxx/
