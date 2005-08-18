@@ -60,7 +60,10 @@ class DnsStub : public ExternalDnsHandler
       typedef RRCache::Protocol Protocol;
       typedef std::vector<Data> DataArr;
       typedef std::vector<DnsResourceRecord*> DnsResourceRecordsByPtr;
+      typedef std::vector<Tuple> NameserverList;
 
+      static NameserverList EmptyNameserverList;
+            
       class ResultTransform
       {
          public:
@@ -86,7 +89,7 @@ class DnsStub : public ExternalDnsHandler
             const char* name() const { return "DnsStubException"; }
       };
 
-      DnsStub();
+      DnsStub(const NameserverList& additional = EmptyNameserverList);      
       ~DnsStub();
 
       void setResultTransform(ResultTransform*);

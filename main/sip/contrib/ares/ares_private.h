@@ -25,7 +25,6 @@
 #include <string.h>
 #include <stdio.h>
 
-
 #define	DEFAULT_TIMEOUT		5
 #define DEFAULT_TRIES		4
 #ifndef INADDR_NONE
@@ -49,7 +48,7 @@ struct send_request {
 };
 
 struct server_state {
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   // added by Rohan on 7-Sep-2004
   // define address and family contructs for IPv6
   u_int8_t family;

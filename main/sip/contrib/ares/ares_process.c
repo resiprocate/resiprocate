@@ -502,12 +502,12 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 {
   int s;
   struct sockaddr_in sin;
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   struct sockaddr_in6 sin6;
 #endif
 
   /* Acquire a socket. */
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   s = socket(server->family, SOCK_STREAM, 0);
 #else
   s = socket(AF_INET, SOCK_STREAM, 0);
@@ -549,7 +549,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 #endif
 
   /* Connect to the server. */
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   if (server->family == AF_INET6)
   {
     memset(&sin6, 0, sizeof(sin6));
@@ -603,7 +603,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 {
   int s;
 
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   // added by Rohan 7-Sept-2004
   // should really replace sockaddr_in6 with sockaddr_storage
   struct sockaddr_in6 sin6;
