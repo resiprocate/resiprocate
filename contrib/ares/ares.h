@@ -82,7 +82,7 @@
 #define ARES_OPT_DOMAINS	(1 << 7)
 #define ARES_OPT_LOOKUPS	(1 << 8)
 
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
 struct multiFamilyAddr {
   u_int8_t family;
   struct in6_addr addr6;
@@ -97,7 +97,7 @@ struct ares_options {
   int ndots;
   unsigned short udp_port;
   unsigned short tcp_port;
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   struct multiFamilyAddr *servers;
 #else
   struct in_addr *servers;

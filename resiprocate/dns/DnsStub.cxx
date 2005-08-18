@@ -37,11 +37,13 @@ using namespace std;
 
 DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 
-DnsStub::DnsStub() :
+DnsStub::NameserverList DnsStub::EmptyNameserverList;
+
+DnsStub::DnsStub(const NameserverList& additional) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
-   int retCode = mDnsProvider->init();
+   int retCode = mDnsProvider->init(additional);
    if (retCode != 0)
    {
       ErrLog (<< "Failed to initialize async dns library");

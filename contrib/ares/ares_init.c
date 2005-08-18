@@ -27,6 +27,7 @@
 #include <sys/param.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #ifndef __CYGWIN__
 #  include <arpa/nameser.h>
 #endif
@@ -62,7 +63,7 @@ static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
 
 static int	inet_pton4(const char *src, u_char *dst);
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
 static int	inet_pton6(const char *src, u_char *dst);
 #endif 
 
@@ -71,6 +72,12 @@ char w32hostspath[256];
 #endif
 
 int ares_init(ares_channel *channelptr)
+{
+  return ares_init_options(channelptr, NULL, 0);
+}
+
+int ares_init_options(ares_channel *channelptr, struct ares_options *options,
+		      int optmask)
 {
 #ifdef WIN32
   HKEY hKey;  
@@ -89,12 +96,6 @@ int ares_init(ares_channel *channelptr)
       }
   }
 #endif
-  return ares_init_options(channelptr, NULL, 0);
-}
-
-int ares_init_options(ares_channel *channelptr, struct ares_options *options,
-		      int optmask)
-{
   ares_channel channel;
   int i, status;
   struct server_state *server;
@@ -195,20 +196,20 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
   if ((optmask & ARES_OPT_NDOTS) && channel->ndots == -1)
     channel->ndots = options->ndots;
   if ((optmask & ARES_OPT_UDP_PORT) && channel->udp_port == -1)
-    channel->udp_port = options->udp_port;
+     channel->udp_port = options->udp_port;
   if ((optmask & ARES_OPT_TCP_PORT) && channel->tcp_port == -1)
-    channel->tcp_port = options->tcp_port;
+     channel->tcp_port = options->tcp_port;
 
   /* Copy the servers, if given. */
   if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1)
-    {
-      channel->servers =
-	malloc(options->nservers * sizeof(struct server_state));
-      if (!channel->servers && options->nservers != 0)
-	return ARES_ENOMEM;
-      for (i = 0; i < options->nservers; i++)
-	  {
-#ifdef HAS_IPV6
+  {
+     channel->servers =
+        malloc(options->nservers * sizeof(struct server_state));
+     if (!channel->servers && options->nservers != 0)
+        return ARES_ENOMEM;
+     for (i = 0; i < options->nservers; i++)
+     {
+#ifdef USE_IPV6
 		channel->servers[i].family = options->servers[i].family;
 		if (options->servers[i].family == AF_INET6)
 		{
@@ -545,7 +546,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
 {
   struct in_addr addr;
   struct server_state *newserv;
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   u_int8_t family;
   struct in6_addr addr6;
 
@@ -571,7 +572,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
   if (!newserv)
     return ARES_ENOMEM;
 
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
   newserv[*nservers].family = family;
   if (family == AF_INET6)
     newserv[*nservers].addr6 = addr6;  
@@ -764,7 +765,7 @@ static void natural_mask(struct apattern *pat)
 #define  NS_INADDRSZ  4
 #define  NS_IN6ADDRSZ 16
 
-#ifdef HAS_IPV6
+#ifdef USE_IPV6
 /* int
  * inet_pton6(src, dst)
  *	convert presentation level address to network order binary form.
