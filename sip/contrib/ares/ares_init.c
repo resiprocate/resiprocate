@@ -79,27 +79,29 @@ int ares_init(ares_channel *channelptr)
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 		      int optmask)
 {
-#ifdef WIN32
-  HKEY hKey;  
-  char hostpath[256];
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-  {
-      DWORD dwSize = sizeof(hostpath);
-      if(RegQueryValueEx(hKey, "DatabasePath", 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
-      {
-         hostpath[dwSize] = '\0';
-         ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
-         if(strlen(w32hostspath) < sizeof(w32hostspath) - 6) 
-         {
-            strcat(w32hostspath, "\\hosts");
-         }
-      }
-  }
-#endif
   ares_channel channel;
   int i, status;
   struct server_state *server;
-//  struct timeval tv;
+#ifdef WIN32
+	{
+		HKEY hKey;  
+		char hostpath[256];
+		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+		{
+			DWORD dwSize = sizeof(hostpath);
+			if(RegQueryValueEx(hKey, "DatabasePath", 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
+			{
+				hostpath[dwSize] = '\0';
+				ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
+				if(strlen(w32hostspath) < sizeof(w32hostspath) - 6) 
+				{
+					strcat(w32hostspath, "\\hosts");
+				}
+			}
+		}
+	}
+#endif
+ //  struct timeval tv;
 
   channel = malloc(sizeof(struct ares_channeldata));
   if (!channel)

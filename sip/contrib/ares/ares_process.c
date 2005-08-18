@@ -613,13 +613,14 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
   /* Acquire a socket. */
   s = socket(server->family, SOCK_DGRAM, 0);
 #ifdef WIN32
-  {
-     unsigned long noBlock = 1;
-     int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
+  {   
+	 unsigned long errNoBlock = 1;
+     errNoBlock = ioctlsocket( s, FIONBIO , &errNoBlock );
      if ( errNoBlock != 0 )
      {
         return -1;
      }
+  }
 #endif
   if (s == -1)
     return -1;
