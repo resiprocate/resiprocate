@@ -17,11 +17,13 @@
 #define ARES__H
 
 #ifdef WIN32
+#include <winsock2.h>
+#include <stdlib.h>
 #include <errno.h>
-#include <WinSock2.h>
 #include <io.h>
 #include <string.h>
 #include <stdio.h>
+#include <Ws2tcpip.h>
 #endif
 
 #if defined(__APPLE__)
@@ -82,6 +84,9 @@
 #define ARES_OPT_DOMAINS	(1 << 7)
 #define ARES_OPT_LOOKUPS	(1 << 8)
 
+#ifdef WIN32
+typedef unsigned char u_int8_t;
+#endif
 #ifdef USE_IPV6
 struct multiFamilyAddr {
   u_int8_t family;
