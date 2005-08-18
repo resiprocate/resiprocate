@@ -18,7 +18,14 @@ class ExternalDnsHostResult;
 class ExternalDns
 {
    public:
-      //returns 0 for success, otherwise message can be pulled from errorMessage
+      //returns Success, BuildMismatch, otherwise ExternalDns specific 
+      //error message can be pulled from errorMessage
+      enum InitResult 
+      {
+         Success = 0,
+         BuildMismatch = 4777
+      };      
+      
       virtual int init(const std::vector<Tuple>& additionalNameservers) = 0; 
                           
       //only call buildFdSet and process if requiresProcess is true.  

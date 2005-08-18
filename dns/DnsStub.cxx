@@ -44,8 +44,14 @@ DnsStub::DnsStub(const NameserverList& additional) :
    mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
    int retCode = mDnsProvider->init(additional);
-   if (retCode != 0)
+   if (retCode != ExternalDns::Success)
    {
+      if (retCode == ExternalDns::BuildMismatch)
+      {
+         throw DnsStubException("Library was not build w/ required capabilities(probably USE_IPV6 resip/ares mismatch", 
+                                __FILE__,__LINE__);
+      }
+      
       ErrLog (<< "Failed to initialize async dns library");
       char* errmem = mDnsProvider->errorMessage(retCode);
       ErrLog (<< errmem);
