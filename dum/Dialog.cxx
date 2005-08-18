@@ -42,7 +42,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
      mAppDialog(0),
-     mDestroying(false)
+     mDestroying(false),
+     mReUseDialogSet(false)
 {
    assert(msg.isExternal());
 
@@ -225,7 +226,10 @@ Dialog::~Dialog()
    delete mInviteSession;
    mDialogSet.mDialogs.erase(this->getId());
    delete mAppDialog;
-   mDialogSet.possiblyDie();
+   if(!mReUseDialogSet)
+   {
+      mDialogSet.possiblyDie();
+   }
 }
 
 const DialogId&
@@ -333,6 +337,17 @@ Dialog::dispatch(const SipMessage& msg)
             if (mInviteSession == 0)
             {
                InfoLog ( << "Spurious INFO" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
+         case MESSAGE:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious MESSAGE" );
                return;
             }
             else
@@ -537,6 +552,7 @@ Dialog::dispatch(const SipMessage& msg)
          case ACK:
          case CANCEL:
          case INFO:
+         case MESSAGE:
          case UPDATE:
             if (mInviteSession)
             {
@@ -779,6 +795,7 @@ Dialog::redirected(const SipMessage& msg)
       if (cInv)
       {
          cInv->handleRedirect(msg);
+         mReUseDialogSet = true;  // Set flag so that DialogSet will not be destroyed and new Request can use it
       }
    }
 }
