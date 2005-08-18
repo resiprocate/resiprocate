@@ -23,6 +23,18 @@ using namespace resip;
 int 
 AresDns::init(const std::vector<Tuple>& additionalNameservers)
 {
+#ifdef USE_IPV6
+   int requiredCap = ARES_CAP_IPV6;
+#else
+   int requiredCap = 0;
+#endif
+
+   int cap = ares_capabilities(requiredCap);
+   if (cap != requiredCap)
+   {
+      return BuildMismatch;      
+   }
+   
    int status;
    if (additionalNameservers.empty())
    {
@@ -67,7 +79,7 @@ AresDns::init(const std::vector<Tuple>& additionalNameservers)
    }
    else
    {
-      return 0;
+      return Success;      
    }
 }
 
