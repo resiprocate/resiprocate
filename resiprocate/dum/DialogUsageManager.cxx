@@ -159,7 +159,7 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   const Data& privateKeyPassPhrase,
                                   SecurityTypes::SSLType sslType)
 {
-   mStack.addTransport(protocol, port, version, ipInterface,
+   mStack.addTransport(protocol, port, version, StunDisabled, ipInterface,
                        sipDomainname, privateKeyPassPhrase, sslType);
 }
 
