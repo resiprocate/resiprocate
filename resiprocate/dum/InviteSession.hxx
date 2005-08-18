@@ -53,11 +53,23 @@ class InviteSession : public DialogUsage
       /** sends an info request */
       virtual void info(const Contents& contents);
 
-      /** accepts an info request with a 2xx */
-      virtual void acceptInfo(int statusCode = 200);
+      /** sends a message request 
 
-      /** rejects an info request with an error status code */
-      virtual void rejectInfo(int statusCode = 488);
+          @warning From RFC3428 - The authors recognize that there may be valid reasons to 
+                                  send MESSAGE requests in the context of a dialog.  For 
+                                  example, one participant in a voice session may wish to 
+                                  send an IM to another participant, and associate that IM 
+                                  with the session.  But implementations SHOULD NOT create 
+                                  dialogs for the primary purpose of associating MESSAGE 
+                                  requests with one another. 
+      */
+      virtual void message(const Contents& contents);
+
+      /** accepts an INFO or MESSAGE request with a 2xx */
+      virtual void acceptNIT(int statusCode = 200);
+
+      /** rejects an INFO or MESSAGE request with an error status code */
+      virtual void rejectNIT(int statusCode = 488);
 
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
@@ -278,6 +290,7 @@ class InviteSession : public DialogUsage
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
+      void dispatchMessage(const SipMessage& msg);
 
 };
 

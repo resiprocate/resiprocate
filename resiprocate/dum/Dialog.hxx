@@ -148,6 +148,7 @@ class Dialog
       AppDialog* mAppDialog;
       
       bool mDestroying;
+      bool mReUseDialogSet;
 
       friend std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
 };
