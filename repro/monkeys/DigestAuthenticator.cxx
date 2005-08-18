@@ -8,13 +8,13 @@
 #endif
 
 
-#include "rutil/DnsUtil.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Auth.hxx"
 #include "resiprocate/Helper.hxx"
-#include "rutil/Logger.hxx"
-#include "dum/UserAuthInfo.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 
 #include "repro/UserStore.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
@@ -49,6 +49,10 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
    
    if (sipMessage)
    {
+      if (sipMessage->header(h_RequestLine).method() == ACK)
+      {
+         return Continue;
+      }
 
       if (sipMessage->exists(h_ProxyAuthorizations))
       {
@@ -65,8 +69,6 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
             }
          }
       }
-      if (sipMessage->header(h_RequestLine).method() == ACK)
-         return Continue;
       
       // if there was no Proxy-Auth header already, and the request is purportedly From
       // one of our domains, send a challenge, unless this is from a trusted node in one
@@ -184,6 +186,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                   }
                }            
             
+#if defined(USE_SSL)
                // TODO need nerd knob to enable/disable adding Identity header
                sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
@@ -193,6 +196,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
                   + post + realm;
                InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
                InfoLog (<< *sipMessage);
+#endif
             }
             else
             {

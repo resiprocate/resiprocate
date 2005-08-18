@@ -14,10 +14,10 @@
 
 #ifdef USE_MYSQL
 
-#include "rutil/Data.hxx"
-#include "rutil/DataStream.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/ParseBuffer.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 #include "repro/AbstractDb.hxx"
 #include "repro/MySqlDb.hxx"

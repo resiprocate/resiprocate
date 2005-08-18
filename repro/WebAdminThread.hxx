@@ -1,8 +1,8 @@
 #ifndef REPRO_WebAdminThread__hxx
 #define REPRO_WebAdminThread__hxx
 
-#include "rutil/ThreadIf.hxx"
-#include "rutil/Socket.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 namespace repro
 {

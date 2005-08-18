@@ -9,7 +9,7 @@
 
 #include <list>
 
-#include "rutil/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "repro/AbstractDb.hxx"
@@ -34,6 +34,9 @@ class RouteStore
                     const resip::Data& rewriteExpression,
                     const int order );
       
+      void eraseRoute(const resip::Data& method,
+                      const resip::Data& event,
+                      const resip::Data& matchingPattern);
       void eraseRoute( const resip::Data& key );
 
       void updateRoute( const resip::Data& originalKey,

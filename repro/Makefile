@@ -4,11 +4,11 @@
 # a comercial license for MySQL that is not GPL 
 USE_MYSQL = false
 
-BUILD = ../build
+BUILD = ../sip/build
 include $(BUILD)/Makefile.pre
 
-
-PACKAGES += DUM RESIPROCATE RUTIL RDNS OPENSSL ARES DB4CXX PTHREAD POPT
+CXXFLAGS += -I../
+PACKAGES += DUM RESIPROCATE OPENSSL ARES DB4CXX PTHREAD POPT
 
 ifeq ($(USE_MYSQL),true)
 PACKAGES += MYSQL

@@ -1,7 +1,7 @@
 #if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
 #define RESIP_DIGEST_AUTHENTICATOR_HXX 
 
-#include "rutil/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "repro/RequestProcessor.hxx"
 
 namespace repro

@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "rutil/Data.hxx"
-#include "rutil/DataStream.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/Symbols.hxx"
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 
 #include "repro/UserStore.hxx"

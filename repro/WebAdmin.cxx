@@ -8,20 +8,21 @@
 #endif
 
 #include <cassert>
+#include <time.h>
 
 #include "resiprocate/Symbols.hxx"
 
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/TransportType.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/ParseBuffer.hxx"
-#include "rutil/MD5Stream.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/MD5Stream.hxx"
 
-//#include "dum/ServerAuthManager.hxx"
-#include "dum/RegistrationPersistenceManager.hxx"
+//#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
@@ -37,6 +38,26 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2) 
+{
+}; 
+
+bool
+WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
+{
+   if(mKey1 < rhs.mKey1) 
+   {
+      return true;
+   }
+   else if(mKey1 == rhs.mKey1 && mKey2 < rhs.mKey2) 
+   { 
+      return true; 
+   }
+   else 
+   {
+      return false;
+   }
+}
 
 // !cj! TODO - make all the removes on the web pages work 
 
@@ -234,7 +255,7 @@ WebAdmin::buildPage( const Data& uri,
             Data tmp = key.substr(7);  // the ID is everything after the dot
             if (!tmp.empty())
             {
-               mRemoveSet.insert(tmp.urlDecoded());   // add to the set of records to remove
+               mRemoveSet.insert(RemoveKey(tmp.urlDecoded(),value.urlDecoded()));   // add to the set of records to remove
             }
          }
          else if ( !key.empty() && !value.empty() ) // make sure both exist
@@ -294,9 +315,9 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
    {
       int j = 0;
-      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mAclStore.eraseAcl(*i);
+         mStore.mAclStore.eraseAcl(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -366,9 +387,9 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
   if (!mRemoveSet.empty() && (mHttpParams["action"] == "Remove"))
    {
       int j = 0;
-      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mConfigStore.eraseDomain(*i);
+         mStore.mConfigStore.eraseDomain(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -590,8 +611,21 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 void
 WebAdmin::buildRegistrationsSubPage(DataStream& s)
 {
+   if (!mRemoveSet.empty())
+   {
+      int j = 0;
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      {
+         Uri key(i->mKey1);
+         Uri contact(i->mKey2);
+         mRegDb.removeContact(key, contact);
+         ++j;
+      }
+      s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
+   }
+
    s << 
-      "<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
+       "<form id=\"showReg\" method=\"get\" action=\"registrations.html\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
       //"<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>" << endl << 
       //"<hr/>" << endl << 
 
@@ -600,9 +634,10 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
       "  <td>Contact</td>" << endl << 
-      "  <td><button name=\"removeReg\" type=\"button\">Remove</button></td>" << endl << 
+      "  <td>Expires In</td>" << endl << 
+      "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
-   
+  
       RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
       for ( RegistrationPersistenceManager::UriList::const_iterator 
                aor = aors.begin(); aor != aors.end(); ++aor )
@@ -612,29 +647,37 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactPairList::const_iterator i 
-                 = contacts.begin();
+         for (RegistrationPersistenceManager::ContactPairList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            s << "<tr>" << endl
-              << "  <td>" ;
-            if (first) 
-            { 
-               s << uri;
-               first = false;
-            }
-            s << "</td>" << endl
-              << "  <td>";
+            if (i->second >= time(NULL))
+            {
+               s << "<tr>" << endl
+                 << "  <td>" ;
+               if (first) 
+               { 
+                  s << uri;
+                  first = false;
+               }
+               s << "</td>" << endl
+                 << "  <td>";
             
-            const RegistrationPersistenceManager::ContactPair& p = *i;
-            const Uri& contact = p.first; 
-         
-            s << contact;
-            s <<"</td>" << endl 
-              << "  <td><input type=\"checkbox\" name=\"removeUser\" value=\""
-              << uri
-              << "\"/></td>" << endl
-              << "</tr>" << endl;
+               const RegistrationPersistenceManager::ContactPair& p = *i;
+               const Uri& contact = p.first; 
+
+               s << contact;
+               s <<"</td>" << endl 
+                 <<"<td>" << i->second - time(NULL) << "s</td>" << endl
+                 << "  <td>"
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
+                 << "\"/></td>" << endl
+                 << "</tr>" << endl;
+            }
+            else
+            {
+               // remove expired contact 
+               mRegDb.removeContact(uri, i->first);
+            }
          }
       }
                   
@@ -802,9 +845,9 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
    if (!mRemoveSet.empty())
    {
       int j = 0;
-      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mUserStore.eraseUser(*i);
+         mStore.mUserStore.eraseUser(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -899,9 +942,9 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
    if (!mRemoveSet.empty())
    {
       int j = 0;
-      for (set<Data>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
+      for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mRouteStore.eraseRoute(*i);
+         mStore.mRouteStore.eraseRoute(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;

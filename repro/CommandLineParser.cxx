@@ -7,8 +7,8 @@
 #endif
 
 #include "CommandLineParser.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/DnsUtil.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/ParseException.hxx"
 
 using namespace resip;
@@ -21,6 +21,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logType = "cout";
    char* logLevel = "INFO";
    char* tlsDomain = 0;
+   char* recordRoute = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
    int tlsPort = 5061;
@@ -41,8 +42,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int httpPort = 5080;
    
 #ifdef WIN32
-   noChallenge = 1;
-   strcpy(certPath,"C:\\sipCerts");
+#ifndef HAVE_POPT_H
+   noChallenge = 1;  // If no POPT, then default to no digest challenges
+#endif
+   // strcpy(certPath,"C:\\sipCerts");   Note:  certPath is not used in Win32 - WinSecurity is used instead and certificates come from windows certificate store
 #else
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
@@ -52,6 +55,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",     'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"record-route",  'r',  POPT_ARG_STRING, &recordRoute,  0, "specify uri to use as Record-Route", "sip:example.com"},
       {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
       {"mysqlServer",    'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,  0, "enable MySQL and provide name of server", "localhost"},
       {"udp",            0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort, 0, "add UDP transport on specified port", "5060"},
@@ -65,7 +69,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
       {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+#if !defined(WIN32)
       {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
+#endif
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       POPT_AUTOHELP 
@@ -84,7 +90,17 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
-   if (tlsDomain) mTlsDomain = tlsDomain;
+
+   if (tlsDomain) 
+   {
+      mTlsDomain = tlsDomain;
+   }
+
+   if (recordRoute) 
+   {
+      mRecordRoute = toUri(recordRoute, "Record-Route");
+   }
+   
    mUdpPort = udpPort;
    mTcpPort = tcpPort;
    mTlsPort = tlsPort;

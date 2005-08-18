@@ -6,7 +6,7 @@
 #include "StrictRouteFixup.hxx"
 #include "../RequestContext.hxx"
 
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;

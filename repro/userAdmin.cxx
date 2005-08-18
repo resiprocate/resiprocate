@@ -4,8 +4,8 @@
 
 #include "repro/UserDb.hxx"
 #include "repro/WebAdmin.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace repro;

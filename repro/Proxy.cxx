@@ -9,8 +9,8 @@
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -20,12 +20,19 @@ using namespace std;
 
 
 Proxy::Proxy(SipStack& stack, 
+             const Uri& recordRoute,
              RequestProcessorChain& requestProcessors, 
              UserStore& userStore) 
    : mStack(stack), 
+     mRecordRoute(recordRoute),
      mRequestProcessorChain(requestProcessors), 
      mUserStore(userStore)
 {
+   if (!mRecordRoute.uri().host().empty())
+   {
+      mRecordRoute.uri().param(p_lr);
+   }
+   
    mStack.registerForTransactionTermination();
 }
 
@@ -223,19 +230,18 @@ Proxy::name() const
    return n;
 }
 
-void 
-Proxy::addDomainWithPort(const Data& domain, int port)
-{
-   mStack.addAlias(domain, port);   
-}
-
-
 bool 
 Proxy::isMyUri(const Uri& uri)
 {
-   bool ret = mStack.isMyDomain(uri.host(), uri.port());
+   bool ret = isMyDomain(uri.host());
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
+}
+
+const resip::NameAddr& 
+Proxy::getRecordRoute() const
+{
+   return mRecordRoute;
 }
 
 

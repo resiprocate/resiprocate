@@ -1,7 +1,7 @@
 #if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/RequestProcessor.hxx"
-#include "dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
 {

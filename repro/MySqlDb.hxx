@@ -7,7 +7,7 @@
 #include <mysql/mysql.h>
 #endif
 
-#include "rutil/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "repro/AbstractDb.hxx"
 
 namespace resip

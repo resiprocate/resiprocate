@@ -5,8 +5,8 @@
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace repro;

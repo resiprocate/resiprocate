@@ -8,7 +8,9 @@
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/RequestContext.hxx"
 
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
@@ -17,23 +19,25 @@ using namespace std;
 
 repro::RequestProcessorChain::RequestProcessorChain()
 {
-   DebugLog(<< "Instantiating new monkey chain");
+   DebugLog(<< "Instantiating new monkey chain " << this );
 }
 
 repro::RequestProcessorChain::~RequestProcessorChain()
 {
-   Chain::iterator i;
-   for (i = chain.begin(); i != chain.end(); i++)
+   //DebugLog (<< "Deleting Chain: " << this);
+   for (Chain::iterator i = mChain.begin(); i != mChain.end(); ++i)
    {
+      //DebugLog (<< "Deleting RP: " << *i << " : " << **i);
       delete *i;
    }
+   mChain.clear();
 }
 
 void
 repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
 {
    DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
-   chain.push_back(rp.release());
+   mChain.push_back(rp.release());
 }
 
 repro::RequestProcessor::processor_action_t
@@ -46,14 +50,14 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 
    if (rc.chainIteratorStackIsEmpty())
    {
-      i = chain.begin();
+      i = mChain.begin();
    }
    else
    {
       i = rc.popChainIterator();
    }
 
-   for (; i != chain.end(); i++)
+   for (; i != mChain.end(); i++)
    {
       DebugLog(<< "Chain invoking monkey: " << **i);
 
@@ -86,8 +90,7 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 void
 RequestProcessorChain::dump(std::ostream &os) const
 {
-   os << "Monkey Chain!" << std::endl;
-   // !abr! Dump monkey chain here
+   os << "Monkey Chain!" << Inserter(mChain);
 }
 
 /* ====================================================================

@@ -9,7 +9,7 @@
 #include "repro/Proxy.hxx"
 #include <ostream>
 
-#include "rutil/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
