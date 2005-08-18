@@ -43,13 +43,14 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(Security* pSecurity, 
-                   AsyncProcessHandler* handler) : 
+                   const DnsStub::NameserverList& additional,
+                   AsyncProcessHandler* handler, bool stateless) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security("~/")),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub()),
+   mDnsStub(new DnsStub(additional)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),

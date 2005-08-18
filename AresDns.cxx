@@ -21,10 +21,47 @@ extern "C"
 using namespace resip;
 
 int 
-AresDns::init()
+AresDns::init(const std::vector<Tuple>& additionalNameservers)
 {
    int status;
-   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   if (additionalNameservers.empty())
+   {
+      status = ares_init(&mChannel);
+   }
+   else
+   {
+      ares_options opt;
+      int optmask = ARES_OPT_SERVERS;
+      
+      opt.nservers = additionalNameservers.size();
+      
+#ifdef USE_IPV6
+      opt.servers = new multiFamilyAddr[additionalNameservers.size()];
+      for (size_t i =0; i < additionalNameservers.size(); i++)
+      {
+         if (additionalNameservers[i].isV4())
+         {
+            opt.servers[i].family = AF_INET;            
+            opt.servers[i].addr = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+         }
+         else
+         {
+            opt.servers[i].family = AF_INET6;            
+            opt.servers[i].addr6 = reinterpret_cast<const sockaddr_in6&>(additionalNameservers[i].getSockaddr()).sin6_addr;
+         }                  
+      }
+#else
+      opt.servers = new in_addr[additionalNameservers.size()];
+      for (size_t i =0; i < additionalNameservers.size(); i++)
+      {
+         opt.servers[i] = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+      }
+#endif
+      status = ares_init_options(&mChannel, &opt, optmask);
+      delete [] opt.servers;
+   }
+   
+   if (status != ARES_SUCCESS)
    {
       return status;
    }

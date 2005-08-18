@@ -19,7 +19,7 @@ class AresDns : public ExternalDns
       AresDns() {}
       virtual ~AresDns();
 
-      virtual int init(); 
+      virtual int init(const std::vector<Tuple>& additionalNameservers); 
 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
