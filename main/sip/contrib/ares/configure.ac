@@ -31,6 +31,10 @@ solaris*)
 	;;
 esac
 
+AC_ARG_WITH(ipv6,
+      AC_HELP_STRING([--with-ipv6],[enable ipv6]),
+      [CFLAGS="${CFLAGS} -DUSE_IPV6=1"])
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 

@@ -45,7 +45,11 @@ class SipStack
                             are posted to the stack.  For example:  SelectInterruptor.
                             Default is 0.
       */
-      SipStack(Security* security=0, AsyncProcessHandler* handler = 0);
+      SipStack(Security* security=0, 
+               const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
+               AsyncProcessHandler* handler = 0, 
+               bool stateless=false);
+
       virtual ~SipStack();
 
       /** 
