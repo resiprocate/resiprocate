@@ -1,45 +1,64 @@
-#if !defined(RESIP_ARES_DNS_HXX)
-#define RESIP_ARES_DNS_HXX
+#if !defined(RESIP_LOCAL_DNS_HXX)
+#define RESIP_LOCAL_DNS_HXX
 
+#include "rutil/Data.hxx"
 #include "rutil/Tuple.hxx"
-#include "resip/sip/external/ExternalDns.hxx"
+#include "rutil/dns/ExternalDns.hxx"
+
 
 extern "C"
 {
 struct ares_channeldata;
 }
 
-//struct fd_set;
 
 namespace resip
 {
-class AresDns : public ExternalDns
+class LocalDns : public ExternalDns
 {
    public:
-      AresDns() {}
-      virtual ~AresDns();
+      LocalDns();
+      virtual ~LocalDns();
 
-      virtual int init(const std::vector<Tuple>& additionalNameservers); 
-
+      virtual int init(); 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
       virtual void process(fd_set& read, fd_set& write);
 
-      //?dcm?  I believe these need to do nothing in the ARES case.
       virtual void freeResult(ExternalDnsRawResult /* res */) {}
       virtual void freeResult(ExternalDnsHostResult /* res */) {}
 
-      virtual char* errorMessage(long errorCode);
-
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
+      virtual void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData) {}
+      virtual char* errorMessage(long errorCode) 
+      {
+         const char* msg = "Local Dns";
+
+         int len = strlen(msg);
+         char* errorString = new char[len+1];
+
+         strncpy(errorString, msg, len);
+         errorString[len] = '\0';
+         return errorString;
+      }
+
    private:
+
+	   struct ares_channeldata* mChannel;
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
-      static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
-	  struct ares_channeldata* mChannel;
+
+      static void localCallback(void *arg, int status, unsigned char* abuf, int alen);
+
+      static void message(const char* file, unsigned char* buf, int& len);
+      static std::map<Data, Data> files;
+      static Data mTarget;
 };
    
 }

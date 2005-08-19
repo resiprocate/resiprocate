@@ -1,27 +1,50 @@
-//#define USE_LOCAL_DNS 
+#if !defined(RESIP_ARES_DNS_HXX)
+#define RESIP_ARES_DNS_HXX
 
-#ifdef USE_LOCAL_DNS
-#include <map>
-#include "resip/sip/LocalDns.hxx"
-#else
-#include "resip/sip/AresDns.hxx"
-#endif
+#include "rutil/Tuple.hxx"
+#include "rutil/dns/ExternalDns.hxx"
 
-#include "resip/sip/ExternalDnsFactory.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-
-using namespace resip;
-
-ExternalDns* 
-ExternalDnsFactory::createExternalDns()
+extern "C"
 {
-#ifdef USE_LOCAL_DNS
-   return new LocalDns();
-#else
-   return new AresDns();
-#endif
+struct ares_channeldata;
 }
+
+//struct fd_set;
+
+namespace resip
+{
+class AresDns : public ExternalDns
+{
+   public:
+      AresDns() {}
+      virtual ~AresDns();
+
+      virtual int init(const std::vector<Tuple>& additionalNameservers); 
+
+      virtual bool requiresProcess();
+      virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
+      virtual void process(fd_set& read, fd_set& write);
+
+      //?dcm?  I believe these need to do nothing in the ARES case.
+      virtual void freeResult(ExternalDnsRawResult /* res */) {}
+      virtual void freeResult(ExternalDnsHostResult /* res */) {}
+
+      virtual char* errorMessage(long errorCode);
+
+      void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
+
+   private:
+
+      typedef std::pair<ExternalDnsHandler*, void*> Payload;
+      static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
+      static ExternalDnsHandler* getHandler(void* arg);
+      static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+	  struct ares_channeldata* mChannel;
+};
+   
+}
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
