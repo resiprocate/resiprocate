@@ -58,7 +58,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
           (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(UDP))))
       {
          //CerrLog(<< "transport is UDP " << interface);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, interface);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interface);
       }
       else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TCP)))
       {
@@ -106,7 +106,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
           (contactUrl.param(p_transport) == Tuple::toData(UDP)))
       {
          //CerrLog(<< "transport is UDP " << interface);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, interface);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interface);
       }
       else if (contactUrl.param(p_transport) == Tuple::toData(TCP))
       {
