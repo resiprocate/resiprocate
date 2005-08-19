@@ -74,28 +74,32 @@ endif
 RUTIL_INCLUDEDIRS := $(ROOT)
 RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME) 
 RUTIL_LIBNAME := rutil
+RUTIL_DEPENDS := $(ROOT)/rutil/obj.$(TARGET_NAME)/librutil.$(LIBSUFFIX)
+$(RUTIL_DEPENDS): 
+	cd $(ROOT)/rutil; $(MAKE)
 
 RESIP_INCLUDEDIRS := $(ROOT)
 RESIP_LIBDIRS := $(ROOT)/resip/stack/obj.$(TARGET_NAME) 
-RESIP_LIBNAME := resiprocate
-#$(RESIP_DEPENDS): 
-#	cd $(ROOT)/rutil; $(MAKE)
+RESIP_LIBNAME := resip
+RESIP_DEPENDS := $(ROOT)/resip/stack/obj.$(TARGET_NAME)/libresip.$(LIBSUFFIX)
+$(RESIP_DEPENDS): 
+	cd $(ROOT)/resip/stack; $(MAKE)
 
 DUM_LIBDIRS := $(ROOT)/resip/dum/obj.$(TARGET_NAME) 
 DUM_LIBNAME := dum
 DUM_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
-#$(DUM_DEPENDS): 
-#	cd $(ROOT)/resip/dum; $(MAKE)
+$(DUM_DEPENDS): 
+	cd $(ROOT)/resip/dum; $(MAKE)
 
 REPRO_INCLUDEDIRS := $(ROOT)
 REPRO_LIBDIRS := $(ROOT)/repro/obj.$(TARGET_NAME) 
 REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
+REPRO_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/librepro.$(LIBSUFFIX)
+$(REPRO_DEPENDS): 
+	cd $(ROOT)/repro; $(MAKE)
 
 
-RESIPROCATE_DEPENDS := $(ROOT)/resip/stack/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
-$(RESIPROCATE_DEPENDS): 
-	cd $(ROOT)/resip/stack; $(MAKE)
 
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),true)
