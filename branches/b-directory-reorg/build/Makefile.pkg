@@ -56,6 +56,11 @@ DB42_LIBNAME := db4
 DB4CXX_LIBNAME := db4_cxx
 endif
 
+ifeq ($(OSTYPE),Linux)
+DB42_LIBNAME := db
+DB4CXX_LIBNAME := db_cxx
+endif
+
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
