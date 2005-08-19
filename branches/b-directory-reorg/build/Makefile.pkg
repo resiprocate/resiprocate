@@ -66,25 +66,31 @@ CURL_LIBNAME := curl
 CURL_DEFINES := USE_CURL
 endif
 
-RESIPROCATE_INCLUDEDIRS := $(ROOT)
-RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
-RESIPROCATE_LIBNAME := resiprocate
-RESIPROCATE_LDFLAGS :=
+RUTIL_INCLUDEDIRS := $(ROOT)
+RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME) 
+RUTIL_LIBNAME := rutil
+
+RESIP_INCLUDEDIRS := $(ROOT)
+RESIP_LIBDIRS := $(ROOT)/resip/sip/obj.$(TARGET_NAME) 
+RESIP_LIBNAME := resiprocate
+#$(RESIP_DEPENDS): 
+#	cd $(ROOT)/rutil; $(MAKE)
+
+DUM_LIBDIRS := $(ROOT)/resip/dum/obj.$(TARGET_NAME) 
+DUM_LIBNAME := dum
+DUM_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
+#$(DUM_DEPENDS): 
+#	cd $(ROOT)/resip/dum; $(MAKE)
 
 REPRO_INCLUDEDIRS := $(ROOT)
 REPRO_LIBDIRS := $(ROOT)/repro/obj.$(TARGET_NAME) 
 REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
 
-DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
-DUM_LIBNAME := dum
-DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
-$(DUM_DEPENDS): 
-	cd $(ROOT)/resiprocate/dum; $(MAKE)
 
-RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
+RESIPROCATE_DEPENDS := $(ROOT)/resip/sip/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
 $(RESIPROCATE_DEPENDS): 
-	cd $(ROOT)/resiprocate; $(MAKE)
+	cd $(ROOT)/resip/sip; $(MAKE)
 
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),true)
