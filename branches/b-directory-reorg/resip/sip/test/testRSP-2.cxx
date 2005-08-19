@@ -1,8 +1,8 @@
-#include <resiprocate/SipStack.hxx>
-#include <resiprocate/SipMessage.hxx>
-#include <resiprocate/os/Logger.hxx>
-#include <resiprocate/os/Subsystem.hxx>
-#include <resiprocate/Helper.hxx>
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Subsystem.hxx"
+#include "resip/sip/Helper.hxx"
 
 #include <pthread.h>
 

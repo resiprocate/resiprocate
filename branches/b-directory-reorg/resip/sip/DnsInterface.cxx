@@ -32,10 +32,10 @@ extern "C"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "resip/sip/DnsInterface.hxx"
-#include "resip/sip/DnsHandler.hxx"
+#include "rutil/dns/DnsHandler.hxx"
 #include "resip/sip/DnsResult.hxx"
 
-//#include "resip/sip/ExternalDnsFactory.hxx"
+//#include "rutil/dns/ExternalDnsFactory.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 

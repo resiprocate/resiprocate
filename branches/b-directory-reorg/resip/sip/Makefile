@@ -12,7 +12,6 @@ TESTPROGRAMS =
 
 SRC = \
 	\
-	AresDns.cxx \
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \
@@ -49,7 +48,6 @@ SRC = \
 	ExtensionHeader.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
-	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \

@@ -27,8 +27,8 @@ extern "C"
 #include "rutil/Data.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "resip/sip/external/ExternalDns.hxx"
-#include "resip/sip/ExternalDnsFactory.hxx"
+#include "rutil/dns/ExternalDns.hxx"
+#include "rutil/dns/ExternalDnsFactory.hxx"
 
 using namespace resip;
 using namespace std;

@@ -2,7 +2,7 @@
 #define RESIP_TRANSACTIONSTATE_HXX
 
 #include <iosfwd>
-#include "resip/sip/DnsHandler.hxx"
+#include "rutil/dns/DnsHandler.hxx"
 #include "resip/sip/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
