@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_HXX)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <iostream>
@@ -10,11 +10,11 @@
 #include <unistd.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Security.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Security.hxx"
 
 
 using namespace resip;

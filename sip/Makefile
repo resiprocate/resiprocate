@@ -1,49 +1,16 @@
 # $Id: Makefile,v 1.144 2004/05/18 01:40:48 jason Exp $
 
-BUILD = ../build
+BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += ARES PTHREAD OPENSSL
 
-CXXFLAGS += -I../
-CODE_SUBDIRS = os external dns stun
+CXXFLAGS += -I../../
+CODE_SUBDIRS = external stun
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
 SRC = \
-	os/HeapInstanceCounter.cxx \
-	\
-	os/AbstractFifo.cxx \
-	os/BaseException.cxx \
-	os/Coders.cxx \
-	os/Condition.cxx \
-	os/CountStream.cxx \
-	os/Data.cxx \
-	os/DataStream.cxx \
-	os/DnsUtil.cxx \
-	os/FileSystem.cxx \
-	os/FlowId.cxx \
-	os/Lock.cxx \
-	os/Log.cxx \
-	os/Logger.cxx \
-	os/MD5Stream.cxx \
-	os/Mutex.cxx \
-	os/Poll.cxx \
-	os/RecursiveMutex.cxx \
-	os/ParseBuffer.cxx \
-	os/RWMutex.cxx \
-	os/Random.cxx \
-	os/SelectInterruptor.cxx \
-	os/SHA1Stream.cxx \
-	os/Socket.cxx \
-	os/Subsystem.cxx \
-	os/SysLogBuf.cxx \
-	os/SysLogStream.cxx \
-	os/ThreadIf.cxx \
-	os/Timer.cxx \
-	os/Tuple.cxx \
-	os/vmd5.cxx \
-	\
 	\
 	AresDns.cxx \
 	Auth.cxx \
@@ -164,18 +131,6 @@ SRC = \
 	\
 	stun/stun.cxx \
 	stun/udp.cxx \
-	\
-	dns/DnsAAAARecord.cxx \
-	dns/DnsCnameRecord.cxx \
-	dns/DnsHostRecord.cxx \
-	dns/DnsNaptrRecord.cxx \
-	dns/DnsSrvRecord.cxx \
-	dns/DnsStub.cxx \
-	dns/RRCache.cxx \
-	dns/RRList.cxx \
-	dns/RRVip.cxx \
-	dns/QueryTypes.cxx \
-	dns/RROverlay.cxx \
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

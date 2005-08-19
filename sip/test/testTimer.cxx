@@ -1,9 +1,9 @@
 #include <iostream>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/TuSelector.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resip/sip/TransactionMessage.hxx"
+#include "resip/sip/TimerQueue.hxx"
+#include "resip/sip/TuSelector.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/TimeLimitFifo.hxx"
 #include <unistd.h>
 
 using namespace resip;

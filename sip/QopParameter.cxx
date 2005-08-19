@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cassert>
-#include "resiprocate/QopParameter.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/ParseException.hxx"
-#include "resiprocate/DataParameter.hxx"
-#include "resiprocate/QuotedDataParameter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/QopParameter.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/ParseException.hxx"
+#include "resip/sip/DataParameter.hxx"
+#include "resip/sip/QuotedDataParameter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

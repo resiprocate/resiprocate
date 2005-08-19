@@ -2,52 +2,52 @@
 #ifdef USE_DTLS
 
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <memory>
 
 #ifndef RESIP_COMPAT_HXX
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 #endif
 
 #ifndef RESIP_DATA_HXX
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #endif
 
 #ifndef RESIP_DNSUTIL_HXX
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/DnsUtil.hxx"
 #endif
 
 #ifndef RESIP_SOCKET_HXX
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 #endif
 
 #ifndef RESIP_LOGGER_HXX
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #endif
 
 #ifndef RESIP_SIPMESSAGE_HXX
-#include "resiprocate/SipMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
 #endif
 
 #ifndef RESIP_HELPER_HXX
-#include "resiprocate/Helper.hxx"
+#include "resip/sip/Helper.hxx"
 #endif
 
 #ifndef RESIP_SECURITY_HXX
-#include "resiprocate/Security.hxx"
+#include "resip/sip/Security.hxx"
 #endif
 
 #ifndef RESIP_DTLSMESSAGE_HXX
-#include "resiprocate/DtlsMessage.hxx"
+#include "resip/sip/DtlsMessage.hxx"
 #endif
 
 #ifndef RESIP_DTLSTRANSPORT_HXX
-#include "resiprocate/DtlsTransport.hxx"
+#include "resip/sip/DtlsTransport.hxx"
 #endif
 
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>

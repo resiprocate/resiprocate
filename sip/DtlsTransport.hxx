@@ -4,19 +4,19 @@
 #ifdef USE_DTLS
 
 #ifndef RESIP_UDPTRANSPORT_HXX
-#include "resiprocate/UdpTransport.hxx"
+#include "resip/sip/UdpTransport.hxx"
 #endif
 
 #ifndef RESIP_TIMERQUEUE_HXX
-#include "resiprocate/TimerQueue.hxx"
+#include "resip/sip/TimerQueue.hxx"
 #endif
 
 #ifndef RESIP_HEAPINSTANCECOUNTER_HXX
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 #endif
 
 #ifndef RESIP_HASHMAP_HXX
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/HashMap.hxx"
 #endif
 
 #include <map>

@@ -1,7 +1,7 @@
 #ifndef RESIP_DumThread__hxx
 #define RESIP_DumThread__hxx
 
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rutil/ThreadIf.hxx"
 
 namespace resip
 {

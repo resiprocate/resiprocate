@@ -1,9 +1,9 @@
 #if !defined(RESIP_QUOTEDDATAPARAMETER_HXX)
 #define RESIP_QUOTEDDATAPARAMETER_HXX 
 
-#include "resiprocate/Parameter.hxx"
-#include "resiprocate/ParameterTypeEnums.hxx"
-#include "resiprocate/DataParameter.hxx"
+#include "resip/sip/Parameter.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
+#include "resip/sip/DataParameter.hxx"
 #include <iosfwd>
 
 namespace resip

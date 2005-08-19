@@ -1,8 +1,8 @@
 #ifndef RESIP_X509Contents_hxx
 #define RESIP_X509Contents_hxx
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Contents.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

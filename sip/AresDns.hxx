@@ -1,8 +1,8 @@
 #if !defined(RESIP_ARES_DNS_HXX)
 #define RESIP_ARES_DNS_HXX
 
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/external/ExternalDns.hxx"
+#include "rutil/Tuple.hxx"
+#include "resip/sip/external/ExternalDns.hxx"
 
 extern "C"
 {

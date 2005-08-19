@@ -3,16 +3,16 @@
 #include <sstream>
 #include <string.h>
 #include <string>
-#include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/HeaderTypes.hxx"
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/ExtensionHeader.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/sip/HeaderTypes.hxx"
+#include "resip/sip/Headers.hxx"
+#include "resip/sip/ParserCategories.hxx"
+#include "resip/sip/ExtensionHeader.hxx"
+#include "resip/sip/UnknownParameterType.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace std;
 using namespace resip;

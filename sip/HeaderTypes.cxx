@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/HeaderTypes.hxx"
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/Symbols.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/HeaderTypes.hxx"
+#include "resip/sip/Headers.hxx"
+#include "resip/sip/Symbols.hxx"
 
 using namespace resip;
 

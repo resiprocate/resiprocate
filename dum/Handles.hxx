@@ -1,7 +1,7 @@
 #if !defined(RESIP_Handles_hxx)
 #define RESIP_Handles_hxx
 
-#include "resiprocate/dum/Handle.hxx"
+#include "resip/dum/Handle.hxx"
 
 namespace resip
 {

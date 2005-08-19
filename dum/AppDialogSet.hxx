@@ -1,11 +1,11 @@
 #if !defined(RESIP_APPDIALOGSET_HXX)
 #define RESIP_APPDIALOGSET_HXX
 
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/dum/Handled.hxx"
+#include "resip/dum/DialogSet.hxx"
+#include "resip/dum/DialogSetId.hxx"
+#include "resip/dum/UserProfile.hxx"
 
 namespace resip
 {

@@ -2,13 +2,13 @@
 
 #ifdef USE_LOCAL_DNS
 #include <map>
-#include "resiprocate/LocalDns.hxx"
+#include "resip/sip/LocalDns.hxx"
 #else
-#include "resiprocate/AresDns.hxx"
+#include "resip/sip/AresDns.hxx"
 #endif
 
-#include "resiprocate/ExternalDnsFactory.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/ExternalDnsFactory.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

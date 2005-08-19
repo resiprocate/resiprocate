@@ -1,5 +1,5 @@
-#include "resiprocate/dum/OutgoingEvent.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/dum/OutgoingEvent.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

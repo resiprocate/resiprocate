@@ -1,7 +1,7 @@
 #include "CurlHttpProvider.hxx"
-#include "resiprocate/external/HttpGetMessage.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/external/HttpGetMessage.hxx"
+#include "resip/sip/TransactionUser.hxx"
+#include "rutil/Logger.hxx"
 
 #include <curl/curl.h>
 

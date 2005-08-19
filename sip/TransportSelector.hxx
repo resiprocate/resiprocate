@@ -8,14 +8,14 @@
 #include <map>
 #include <vector>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/GenericIPAddress.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/DnsInterface.hxx"
+#include "resip/sip/GenericIPAddress.hxx"
 
 
-#include "resiprocate/SecurityTypes.hxx"
+#include "resip/sip/SecurityTypes.hxx"
 class TestTransportSelector;
 
 namespace resip

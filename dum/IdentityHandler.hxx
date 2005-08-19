@@ -1,7 +1,7 @@
 #ifndef RESIP_IdentityHandler_HXX
 #define RESIP_IdentityHandler_HXX
 
-#include "resiprocate/dum/DumFeature.hxx"
+#include "resip/dum/DumFeature.hxx"
 #include <map>
 
 namespace resip

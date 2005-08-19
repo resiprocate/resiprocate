@@ -1,6 +1,6 @@
-#include "resiprocate/os/CountStream.hxx"
+#include "rutil/CountStream.hxx"
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "assert.h"
 
 using namespace resip;

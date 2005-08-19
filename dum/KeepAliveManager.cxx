@@ -1,9 +1,9 @@
-#include "resiprocate/KeepAliveMessage.hxx"
-#include "resiprocate/dum/KeepAliveManager.hxx"
-#include "resiprocate/dum/KeepAliveTimeout.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipStack.hxx"
+#include "resip/sip/KeepAliveMessage.hxx"
+#include "resip/dum/KeepAliveManager.hxx"
+#include "resip/dum/KeepAliveTimeout.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/SipStack.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

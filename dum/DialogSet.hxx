@@ -4,12 +4,12 @@
 #include <map>
 #include <list>
 
-#include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/dum/MergedRequestKey.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
+#include "resip/dum/DialogId.hxx"
+#include "resip/dum/DialogSetId.hxx"
+#include "resip/dum/MergedRequestKey.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

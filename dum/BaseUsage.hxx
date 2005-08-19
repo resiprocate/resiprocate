@@ -1,9 +1,9 @@
 #if !defined(RESIP_BASEUSAGE_HXX)
 #define RESIP_BASEUSAGE_HXX
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "rutil/BaseException.hxx"
+#include "resip/dum/Handled.hxx"
+#include "resip/dum/Handles.hxx"
 
 namespace resip
 {

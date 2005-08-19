@@ -1,7 +1,7 @@
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/DumProcessHandler.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/DumProcessHandler.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/X509Contents.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resip/sip/X509Contents.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;
