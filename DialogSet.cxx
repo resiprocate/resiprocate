@@ -1,5 +1,5 @@
 
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/BaseCreator.hxx"

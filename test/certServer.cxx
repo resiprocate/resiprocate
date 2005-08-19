@@ -8,12 +8,12 @@
 
 #include <signal.h>
 
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/Pkcs8Contents.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/X509Contents.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/X509Contents.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

@@ -1,4 +1,4 @@
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/Dialog.hxx"

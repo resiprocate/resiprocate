@@ -7,7 +7,7 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

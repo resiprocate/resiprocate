@@ -1,7 +1,7 @@
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/dum/InviteSessionCreator.hxx"
-#include "resip/sip/SdpContents.hxx"
+#include "resip/stack/SdpContents.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 

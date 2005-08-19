@@ -3,8 +3,8 @@
 
 #include <iosfwd>
 #include <set>
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/MethodTypes.hxx"
 #include "resip/dum/Profile.hxx"
 
 namespace resip

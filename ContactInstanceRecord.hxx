@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 
-#include "resip/sip/NameAddr.hxx"
+#include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Tuple.hxx"
 

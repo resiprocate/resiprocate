@@ -2,8 +2,8 @@
 #define RESIP_SUBSCRIPTIONHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/Mime.hxx"
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Mime.hxx"
+#include "resip/stack/Contents.hxx"
 
 namespace resip
 {

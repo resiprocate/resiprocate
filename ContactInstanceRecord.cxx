@@ -1,6 +1,6 @@
 #include "resip/dum/ContactInstanceRecord.hxx"
 #include "rutil/Timer.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 using namespace resip;
 

@@ -1,17 +1,17 @@
-#include "resip/sip/PlainContents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/MultipartAlternativeContents.hxx"
-#include "resip/sip/Mime.hxx"
+#include "resip/stack/PlainContents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/MultipartAlternativeContents.hxx"
+#include "resip/stack/Mime.hxx"
 
-#include "resip/sip/SecurityAttributes.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Helper.hxx"
 
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resip/sip/XWinSecurity.hxx"
+#include "resip/stack/XWinSecurity.hxx"
 #endif
 
 #include <iostream>

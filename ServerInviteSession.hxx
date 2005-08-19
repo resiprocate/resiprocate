@@ -2,7 +2,7 @@
 #define RESIP_SERVERINVITESESSION_HXX
 
 #include "resip/dum/InviteSession.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 #include <deque>
 

@@ -1,5 +1,5 @@
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/MethodTypes.hxx"
 #include "resip/dum/ClientOutOfDialogReq.hxx"
 #include "resip/dum/OutOfDialogHandler.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

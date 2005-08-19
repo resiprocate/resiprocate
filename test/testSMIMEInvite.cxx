@@ -9,22 +9,22 @@
 #include "resip/dum/DumShutdownHandler.hxx"
 
 #include "resip/dum/MasterProfile.hxx"
-#include "resip/sip/ShutdownMessage.hxx"
+#include "resip/stack/ShutdownMessage.hxx"
 
-#include "resip/sip/SdpContents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/MultipartAlternativeContents.hxx"
-#include "resip/sip/Mime.hxx"
+#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/MultipartAlternativeContents.hxx"
+#include "resip/stack/Mime.hxx"
 
-#include "resip/sip/SecurityAttributes.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Helper.hxx"
 
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 
 #include "TestDumHandlers.hxx"
