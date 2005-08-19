@@ -1,5 +1,4 @@
-
-#include <resiprocate/SipStack.hxx>
+#include "resip/sip/SipStack.hxx"
 
 int main(int argc, char* argv[])
 {

@@ -2,7 +2,7 @@
 #define RESIP_STATELESS_HANDLER_HXX
 
 #include "rutil/HashMap.hxx"
-#include "resip/sip/DnsHandler.hxx"
+#include "rutil/dns/DnsHandler.hxx"
 
 namespace resip
 {

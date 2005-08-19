@@ -1,11 +1,11 @@
 # $Id: Makefile,v 1.70 2004/05/12 01:14:30 jason Exp $
 
-BUILD = ../../build
-CONTRIB = ../../contrib
+BUILD = ../../../build
+CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD POPT
+PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), true)
 TESTPROGRAMS += makeSelfCert.cxx \
