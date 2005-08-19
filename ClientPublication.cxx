@@ -1,13 +1,13 @@
 #include <cassert>
 
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/DumTimeout.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/PublicationHandler.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/ClientPublication.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/DumTimeout.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/dum/PublicationHandler.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

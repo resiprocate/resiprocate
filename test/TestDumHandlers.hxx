@@ -1,11 +1,11 @@
-#include "resiprocate/dum/ServerPagerMessage.hxx"
+#include "resip/dum/ServerPagerMessage.hxx"
 
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/DumShutdownHandler.hxx"
-#include "resiprocate/dum/PagerMessageHandler.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
+#include "resip/dum/InviteSessionHandler.hxx"
+#include "resip/dum/DumShutdownHandler.hxx"
+#include "resip/dum/PagerMessageHandler.hxx"
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

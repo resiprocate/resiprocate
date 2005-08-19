@@ -1,11 +1,11 @@
 #include <cassert>
 
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/ClientAuthManager.hxx"
+#include "resip/dum/UserProfile.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

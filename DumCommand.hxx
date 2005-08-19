@@ -1,7 +1,7 @@
 #if !defined(RESIP_DUMCOMMAND_HXX)
 #define RESIP_DUMCOMMAND_HXX
 
-#include "resiprocate/ApplicationMessage.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
 
 namespace resip
 {

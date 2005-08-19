@@ -1,24 +1,24 @@
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/dum/PayloadEncrypter.hxx"
-#include "resiprocate/dum/DumEncrypted.hxx"
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/Mime.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/TransactionUser.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/dum/MasterProfile.hxx"
+#include "resip/dum/UserProfile.hxx"
+#include "resip/dum/PayloadEncrypter.hxx"
+#include "resip/dum/DumEncrypted.hxx"
+#include "resip/sip/PlainContents.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/Mime.hxx"
 
-#include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/sip/Helper.hxx"
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/sip/WinSecurity.hxx"
 #endif
 
 #include <iostream>

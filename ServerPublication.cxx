@@ -1,10 +1,10 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/PublicationHandler.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/ServerPublication.hxx"
+#include "resip/dum/PublicationHandler.hxx"
+#include "resip/dum/ServerSubscription.hxx"
+#include "resip/dum/SubscriptionHandler.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
 
 using namespace resip;
 

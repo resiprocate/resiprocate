@@ -1,11 +1,11 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/dum/ServerPagerMessage.hxx"
-#include "resiprocate/dum/OutOfDialogHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/PagerMessageHandler.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/dum/ServerPagerMessage.hxx"
+#include "resip/dum/OutOfDialogHandler.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/dum/PagerMessageHandler.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

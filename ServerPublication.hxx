@@ -1,9 +1,9 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/dum/BaseUsage.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
 
 namespace resip
 {

@@ -1,8 +1,8 @@
-#include "resiprocate/dum/AppDialogSetFactory.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/AppDialogSet.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/dum/AppDialogSetFactory.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/AppDialogSet.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 
