@@ -97,12 +97,29 @@ class DnsStub : public ExternalDnsHandler
       void registerBlacklistListener(int rrType, BlacklistListener*);
       void unregisterBlacklistListener(int rrType, BlacklistListener*);
 
-      template<class QueryType> void lookup(const Data& target, int proto, DnsResultSink* sink)
+      template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
-         QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, proto, sink, *this);
+         lookup<QueryType>(target, Protocol::Reserved, sink);
+      }
+
+      // There are three pre-defined protocols (see RRList.hxx). Zero(0) is
+      // reserved for internal use, so do not use 0. If you'd like to blacklist
+      // for different types of protocols, just pass in any integer other than
+      // those used for pre-defined protocols.
+      //
+      template<class QueryType> void lookup(const Data& target, int protocol, DnsResultSink* sink)
+      {
+         QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, protocol, sink, *this);
          mCommandFifo.add(command);
       }
 
+      // targets in targetsToBlacklist should be one of the following values
+      // for a specific RR type:
+      //
+      //    A/AAAA: IPs in dotted form;
+      //    SRV: target:port;
+      //    NAPTR: replacement.
+      //
       void blacklist(const Data& target, int rrType, const int proto, const DataArr& targetsToBlacklist)
       {
          BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
