@@ -2,9 +2,9 @@
 #define RESIP_TOKEN_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "resip/sip/ParserContainer.hxx"
 
 namespace resip
 {

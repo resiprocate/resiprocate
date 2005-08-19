@@ -1,6 +1,6 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/test/TestSupport.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/test/TestSupport.hxx"
 
 #include <iostream>
 #include <memory>

@@ -11,11 +11,11 @@
 
 #include <list>
 
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/SendData.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Fifo.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/MsgHeaderScanner.hxx"
+#include "resip/sip/SendData.hxx"
 
 namespace resip
 {

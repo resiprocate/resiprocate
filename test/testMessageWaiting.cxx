@@ -1,6 +1,6 @@
-#include "resiprocate/MessageWaitingContents.hxx"
-#include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resip/sip/MessageWaitingContents.hxx"
+#include "resip/sip/HeaderFieldValue.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include <iostream>
 
 using namespace resip;

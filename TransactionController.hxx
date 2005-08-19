@@ -1,11 +1,11 @@
 #if !defined(RESIP_TRANSACTION_CONTROLLER_HXX)
 #define RESIP_TRANSACTION_CONTROLLER_HXX
 
-#include "resiprocate/TuSelector.hxx"
-#include "resiprocate/TransactionMap.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/Security.hxx"
+#include "resip/sip/TuSelector.hxx"
+#include "resip/sip/TransactionMap.hxx"
+#include "resip/sip/TransportSelector.hxx"
+#include "resip/sip/TimerQueue.hxx"
+#include "resip/sip/Security.hxx"
 
 namespace resip
 {

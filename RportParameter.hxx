@@ -3,8 +3,8 @@
 
 #include <iosfwd>
 
-#include "resiprocate/ParameterTypeEnums.hxx"
-#include "resiprocate/Parameter.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
+#include "resip/sip/Parameter.hxx"
 
 namespace resip
 {

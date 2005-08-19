@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/MessageFilterRule.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/MessageFilterRule.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 

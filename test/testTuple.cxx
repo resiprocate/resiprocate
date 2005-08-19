@@ -1,7 +1,7 @@
 #include <iostream>
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/Connection.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/Inserter.hxx"
+#include "resip/sip/Connection.hxx"
 
 using namespace resip;
 

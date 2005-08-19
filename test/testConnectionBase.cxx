@@ -1,22 +1,22 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/ConnectionBase.hxx"
+#include "rutil/DataStream.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/ConnectionBase.hxx"
 
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/UnknownHeaderType.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/SdpContents.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "resip/sip/PlainContents.hxx"
+#include "resip/sip/UnknownHeaderType.hxx"
+#include "resip/sip/UnknownParameterType.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Random.hxx"
 
 
 using namespace resip;

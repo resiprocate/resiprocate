@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include "ExtensionHeader.hxx"
 #include "HeaderTypes.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #include <cassert>
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

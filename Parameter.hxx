@@ -1,9 +1,9 @@
 #if !defined(RESIP_PARAMETER_HXX)
 #define RESIP_PARAMETER_HXX 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include <iosfwd>
-#include "resiprocate/ParameterTypeEnums.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
 
 
 namespace resip

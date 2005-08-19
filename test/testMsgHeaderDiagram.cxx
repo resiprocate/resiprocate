@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 
-//#include "resiprocate/config.hxx"
-#include "resiprocate/MsgHeaderScanner.cxx"
+//#include "resip/sip/config.hxx"
+#include "resip/sip/MsgHeaderScanner.cxx"
 
 using namespace resip;
 using namespace std;

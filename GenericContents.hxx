@@ -1,8 +1,8 @@
 #if !defined(RESIP_GENERICCONTENTS_HXX)
 #define RESIP_GENERICCONTENTS_HXX
 
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/PlainContents.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

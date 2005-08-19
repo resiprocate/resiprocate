@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/Pidf.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/XMLCursor.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Pidf.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "resip/sip/XMLCursor.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

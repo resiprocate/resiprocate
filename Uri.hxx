@@ -3,8 +3,8 @@
 
 #include <cassert>
 
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -92,7 +92,7 @@ class Uri : public ParserCategory
 
 }
 
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/HashMap.hxx"
 
 #if  defined(__INTEL_COMPILER )
 namespace std

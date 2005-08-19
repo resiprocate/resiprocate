@@ -1,8 +1,8 @@
 #if !defined(RESIP_PKCS7CONTENTS_HXX)
 #define RESIP_PKCS7CONTENTS_HXX 
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Contents.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

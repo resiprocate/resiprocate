@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -24,19 +24,19 @@ extern "C"
 }
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Socket.hxx"
 
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/dns/RRVip.hxx"
-#include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/DnsHandler.hxx"
-#include "resiprocate/DnsResult.hxx"
+#include "rutil/dns/DnsStub.hxx"
+#include "rutil/dns/RRVip.hxx"
+#include "resip/sip/DnsInterface.hxx"
+#include "resip/sip/DnsHandler.hxx"
+#include "resip/sip/DnsResult.hxx"
 
-//#include "resiprocate/ExternalDnsFactory.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+//#include "resip/sip/ExternalDnsFactory.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

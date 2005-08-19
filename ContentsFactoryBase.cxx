@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "resiprocate/ContentsFactoryBase.hxx"
+#include "resip/sip/ContentsFactoryBase.hxx"
 
 using namespace resip;
 using namespace std;

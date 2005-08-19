@@ -2,21 +2,21 @@
 #define RESIP_APICHECKLIST_HXX
 
 
-#include "resiprocate/ApiCheck.hxx"
+#include "resip/sip/ApiCheck.hxx"
 
 // These types were chosen because they represent the exported stuff.
 
 
-#include "resiprocate/Connection.hxx"
-#include "resiprocate/DnsResult.hxx"
-#include "resiprocate/GenericIPAddress.hxx"
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resip/sip/Connection.hxx"
+#include "resip/sip/DnsResult.hxx"
+#include "resip/sip/GenericIPAddress.hxx"
+#include "resip/sip/Headers.hxx"
+#include "resip/sip/MsgHeaderScanner.hxx"
+#include "resip/sip/TlsConnection.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/TransportSelector.hxx"
+#include "resip/sip/UdpTransport.hxx"
+#include "rutil/Tuple.hxx"
 
 // Make an entry in the table
 #define RESIP_TENT(x,y) { #x, sizeof(resip::x), y }

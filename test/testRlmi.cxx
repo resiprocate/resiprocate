@@ -1,11 +1,11 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/Rlmi.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/sip/Rlmi.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

@@ -4,8 +4,8 @@
 #include <iosfwd>
 #include <vector>
 
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/HashMap.hxx"
 
 namespace resip
 {

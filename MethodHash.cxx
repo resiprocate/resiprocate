@@ -32,7 +32,7 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "resiprocate/MethodTypes.hxx"
+#include "resip/sip/MethodTypes.hxx"
 
 namespace resip
 {

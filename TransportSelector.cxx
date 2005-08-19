@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if !defined(WIN32)
@@ -9,27 +9,27 @@
 #include <netdb.h>
 #endif
 
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/Uri.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/Uri.hxx"
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransactionState.hxx"
-#include "resiprocate/TransportFailure.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/InternalTransport.hxx"
-#include "resiprocate/Uri.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/TransactionState.hxx"
+#include "resip/sip/TransportFailure.hxx"
+#include "resip/sip/TransportSelector.hxx"
+#include "resip/sip/InternalTransport.hxx"
+#include "resip/sip/Uri.hxx"
 
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/dns/DnsStub.hxx"
 
 #ifdef WIN32
-#include "resiprocate/os/WinCompat.hxx"
+#include "rutil/WinCompat.hxx"
 #endif
 
 #include <sys/types.h>

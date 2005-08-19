@@ -2,9 +2,9 @@
 #include <cassert>
 #include <iostream>
 
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/UdpTransport.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Socket.hxx"
+#include "resip/sip/UdpTransport.hxx"
 
 #include <resiprocate/os/Timer.hxx>
 

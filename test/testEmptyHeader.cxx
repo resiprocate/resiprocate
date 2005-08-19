@@ -1,15 +1,15 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/ExtensionHeader.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "resip/sip/ExtensionHeader.hxx"
+#include "resip/sip/UnknownParameterType.hxx"
+#include "rutil/Logger.hxx"
 
-#include "resiprocate/test/tassert.h"
+#include "resip/sip/test/tassert.h"
 
 using namespace resip;
 using namespace std;

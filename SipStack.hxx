@@ -4,15 +4,15 @@
 #include <set>
 #include <iosfwd>
 
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/TransactionController.hxx"
-#include "resiprocate/SecurityTypes.hxx"
-#include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/TuSelector.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/BaseException.hxx"
+#include "resip/sip/TransactionController.hxx"
+#include "resip/sip/SecurityTypes.hxx"
+#include "resip/sip/StatisticsManager.hxx"
+#include "resip/sip/TuSelector.hxx"
+#include "rutil/dns/DnsStub.hxx"
 
 namespace resip 
 {

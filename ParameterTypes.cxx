@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/ParameterTypes.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "resip/sip/ParameterTypes.hxx"
+#include "rutil/compat.hxx"
 #include <iostream>
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
@@ -133,7 +133,7 @@ Qop_Factory_Param::Qop_Factory_Param()
 }
 Qop_Factory_Param resip::p_qopFactory;
 
-#include "resiprocate/ParameterHash.hxx"
+#include "resip/sip/ParameterHash.hxx"
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* pname, unsigned int len)

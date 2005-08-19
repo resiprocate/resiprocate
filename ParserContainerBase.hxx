@@ -1,9 +1,9 @@
 #ifndef RESIP_ParserContainerBase_hxx
 #define RESIP_ParserContainerBase_hxx
 
-#include "resiprocate/ParserCategory.hxx"
+#include "resip/sip/ParserCategory.hxx"
 #include <iosfwd>
-#include "resiprocate/HeaderTypes.hxx"
+#include "resip/sip/HeaderTypes.hxx"
 #include <vector>
 
 namespace resip
