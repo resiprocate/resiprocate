@@ -3,10 +3,10 @@
 
 #include <iosfwd>
 #include "rutil/HashMap.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Via.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Via.hxx"
+#include "resip/stack/Uri.hxx"
 
 namespace resip
 {

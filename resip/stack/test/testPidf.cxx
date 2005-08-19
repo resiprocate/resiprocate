@@ -1,4 +1,4 @@
-#include "resip/sip/Pidf.hxx"
+#include "resip/stack/Pidf.hxx"
 #include <iostream>
 #include "rutil/Logger.hxx"
 

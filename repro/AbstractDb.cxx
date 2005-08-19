@@ -2,7 +2,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 
 

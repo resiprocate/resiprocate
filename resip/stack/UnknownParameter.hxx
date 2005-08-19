@@ -2,7 +2,7 @@
 #define RESIP_UNKNOWNPARAMETER_HXX 
 
 #include <iosfwd>
-#include "resip/sip/Parameter.hxx"
+#include "resip/stack/Parameter.hxx"
 
 namespace resip
 {

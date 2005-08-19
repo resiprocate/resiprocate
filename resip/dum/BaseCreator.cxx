@@ -1,4 +1,4 @@
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"

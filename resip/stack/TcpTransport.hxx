@@ -1,7 +1,7 @@
 #if !defined(RESIP_TCPTRANSPORT_HXX)
 #define RESIP_TCPTRANSPORT_HXX
 
-#include "resip/sip/TcpBaseTransport.hxx"
+#include "resip/stack/TcpBaseTransport.hxx"
 
 namespace resip
 {

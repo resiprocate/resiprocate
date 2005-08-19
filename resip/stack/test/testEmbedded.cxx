@@ -1,9 +1,9 @@
 #include "rutil/DataStream.hxx"
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/Embedded.hxx"
-#include "resip/sip/ParserCategories.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/Embedded.hxx"
+#include "resip/stack/ParserCategories.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;

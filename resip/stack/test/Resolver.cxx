@@ -12,8 +12,8 @@
 
 #include "rutil/Socket.hxx"
 
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Uri.hxx"
 
 #include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"

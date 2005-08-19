@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
@@ -14,10 +14,10 @@
 #include "rutil/Socket.hxx"
 #include "rutil/ParseBuffer.hxx"
 
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TransportFailure.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransportFailure.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

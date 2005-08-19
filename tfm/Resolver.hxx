@@ -2,7 +2,7 @@
 #define Resolver_hxx
 
 #include <list>
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/Data.hxx"
 #include "tfm/Resolver.hxx"
 

@@ -1,8 +1,8 @@
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Subsystem.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 
 #include <pthread.h>
 

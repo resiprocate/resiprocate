@@ -5,8 +5,8 @@
 #include <cppunit/TestCaller.h>
 #include <cppunit/TestSuite.h>
 
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Tuple.hxx"
 #include "tfm/SequenceSet.hxx"

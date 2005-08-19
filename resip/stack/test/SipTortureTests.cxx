@@ -2,11 +2,11 @@
 #include <memory>
 
 #include "TestSupport.hxx"
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/SdpContents.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/ExtensionHeader.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 #include "tassert.h"
 

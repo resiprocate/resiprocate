@@ -1,7 +1,7 @@
 #include <iostream>
-#include "resip/sip/TransactionMessage.hxx"
-#include "resip/sip/TimerQueue.hxx"
-#include "resip/sip/TuSelector.hxx"
+#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/TimerQueue.hxx"
+#include "resip/stack/TuSelector.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include <unistd.h>

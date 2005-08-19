@@ -2,8 +2,8 @@
 #define RESIP_PAGERMESSAGEHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Contents.hxx"
 
 namespace resip
 {

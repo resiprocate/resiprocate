@@ -1,8 +1,8 @@
 #if !defined(RESIP_OUTGOINGEVENT_HXX)
 #define RESIP_OUTGOINGEVENT_HXX
 
-#include "resip/sip/Message.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
 namespace resip

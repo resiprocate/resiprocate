@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "rutil/DataStream.hxx"
 #include <cassert>
 

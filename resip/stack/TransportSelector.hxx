@@ -10,12 +10,12 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/DnsInterface.hxx"
-#include "resip/sip/GenericIPAddress.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/DnsInterface.hxx"
+#include "resip/stack/GenericIPAddress.hxx"
 
 
-#include "resip/sip/SecurityTypes.hxx"
+#include "resip/stack/SecurityTypes.hxx"
 class TestTransportSelector;
 
 namespace resip

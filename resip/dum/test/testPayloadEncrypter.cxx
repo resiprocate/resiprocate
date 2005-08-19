@@ -1,24 +1,24 @@
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/TransactionUser.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TransactionUser.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/PayloadEncrypter.hxx"
 #include "resip/dum/DumEncrypted.hxx"
-#include "resip/sip/PlainContents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/Mime.hxx"
+#include "resip/stack/PlainContents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/Mime.hxx"
 
-#include "resip/sip/SecurityAttributes.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Helper.hxx"
 
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 
 #include <iostream>

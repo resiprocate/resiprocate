@@ -3,8 +3,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Timer.hxx"
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
 #include "InviteServer.hxx"
 #include "Transceiver.hxx"
 #include "Resolver.hxx"

@@ -3,7 +3,7 @@
 
 #include "resip/dum/DialogUsage.hxx"
 #include "resip/dum/SubscriptionState.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

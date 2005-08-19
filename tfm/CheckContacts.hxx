@@ -4,7 +4,7 @@
 #include <set>
 #include <boost/shared_ptr.hpp>
 #include "tfm/ExpectAction.hxx"
-#include "resip/sip/NameAddr.hxx"
+#include "resip/stack/NameAddr.hxx"
 
 class CheckContacts : public ExpectAction
 {

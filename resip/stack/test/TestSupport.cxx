@@ -1,4 +1,4 @@
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 

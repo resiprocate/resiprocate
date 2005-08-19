@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <string.h>
@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <memory>
 
-#include "resip/sip/Auth.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Auth.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Coders.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/Timer.hxx"
@@ -19,14 +19,14 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Security.hxx"
-//#include "resip/sip/SecurityAttributes.hxx"
-//#include "resip/sip/Contents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Security.hxx"
+//#include "resip/stack/SecurityAttributes.hxx"
+//#include "resip/stack/Contents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/MultipartAlternativeContents.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

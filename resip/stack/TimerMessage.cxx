@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <cassert>
-#include "resip/sip/TimerMessage.hxx"
+#include "resip/stack/TimerMessage.hxx"
 
 using namespace resip;
 

@@ -1,4 +1,4 @@
-#include "resip/sip/XMLCursor.hxx"
+#include "resip/stack/XMLCursor.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"

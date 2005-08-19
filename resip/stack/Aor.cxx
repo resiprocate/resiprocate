@@ -3,8 +3,8 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/Aor.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/Aor.hxx"
 
 using namespace resip;
 

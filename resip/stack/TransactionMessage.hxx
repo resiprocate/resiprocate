@@ -2,7 +2,7 @@
 #define RESIP_TransactionMessage_hxx
 
 #include <cassert>
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip

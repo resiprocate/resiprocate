@@ -2,8 +2,8 @@
 #define RESIP_CLIENTPAGERMESSAGE_HXX
 
 #include "resip/dum/NonDialogUsage.hxx"
-#include "resip/sip/CSeqCategory.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/CSeqCategory.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include <deque>
 #include <memory>

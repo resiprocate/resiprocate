@@ -4,7 +4,7 @@
 #include <set>
 #include "rutil/Data.hxx"
 #include "rutil/TransportType.hxx"
-#include "resip/sip/NameAddr.hxx"
+#include "resip/stack/NameAddr.hxx"
 #include "tfm/Source.hxx"
 
 namespace resip

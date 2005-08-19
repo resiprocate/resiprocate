@@ -1,5 +1,5 @@
 #include "resip/dum/RedirectManager.hxx"
-#include "resip/sip/NameAddr.hxx"
+#include "resip/stack/NameAddr.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/RedirectHandler.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

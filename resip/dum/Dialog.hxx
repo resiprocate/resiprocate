@@ -8,10 +8,10 @@
 
 #include "resip/dum/DialogId.hxx"
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/CallId.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/CallId.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 

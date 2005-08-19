@@ -7,10 +7,10 @@
 #include <signal.h>
 #include <sys/fcntl.h>
 #include "rutil/Logger.hxx"
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/ParameterTypeEnums.hxx"
-#include "resip/sip/ParameterTypes.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/ParameterTypes.hxx"
+#include "resip/stack/MethodTypes.hxx"
 
 using namespace resip;
 using namespace std;

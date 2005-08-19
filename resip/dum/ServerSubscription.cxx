@@ -3,7 +3,7 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UsageUseException.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 
 #include <time.h>

@@ -1,20 +1,20 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <memory>
 
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SendData.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/UdpTransport.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SendData.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/UdpTransport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/compat.hxx"
-#include "resip/sip/stun/stun.h"
+#include "resip/stack/stun/stun.h"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

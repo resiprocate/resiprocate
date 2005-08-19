@@ -13,9 +13,9 @@
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/PagerMessageHandler.hxx"
-#include "resip/sip/PlainContents.hxx"
+#include "resip/stack/PlainContents.hxx"
 
-#include "resip/sip/external/HttpGetMessage.hxx"
+#include "resip/stack/external/HttpGetMessage.hxx"
 #include "curlHttp/CurlHttpProvider.hxx"
 
 #include "rutil/Log.hxx"
@@ -23,7 +23,7 @@
 #include "rutil/Subsystem.hxx"
 
 #ifdef WIN32
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 
 #include <iostream>

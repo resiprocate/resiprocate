@@ -1,7 +1,7 @@
 #if !defined(STATELESS_PROXY_HXX)
 #define STATELESS_PROXY_HXX
 
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/ThreadIf.hxx"
 

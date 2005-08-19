@@ -1,8 +1,8 @@
 #if defined(USE_SSL)
 
-#include "resip/sip/Security.hxx"
-#include "resip/sip/Pkcs8Contents.hxx"
-#include "resip/sip/X509Contents.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/X509Contents.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/dum/MasterProfile.hxx"

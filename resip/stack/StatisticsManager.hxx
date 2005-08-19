@@ -3,7 +3,7 @@
 
 #include "rutil/Timer.hxx"
 #include "rutil/Data.hxx"
-#include "resip/sip/StatisticsMessage.hxx"
+#include "resip/stack/StatisticsMessage.hxx"
 
 // !dlb! part of the build script
 #define RESIP_STATISTICS(_x) _x

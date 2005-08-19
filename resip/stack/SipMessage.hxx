@@ -8,13 +8,13 @@
 #include <utility>
 #include <memory> 
 
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/TransactionMessage.hxx"
-#include "resip/sip/ParserContainer.hxx"
-#include "resip/sip/ParserCategories.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/ParserContainer.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"

@@ -2,7 +2,7 @@
 #define RESIP_TIMERMESSAGE_HXX 
 
 #include <iosfwd>
-#include "resip/sip/TransactionMessage.hxx"
+#include "resip/stack/TransactionMessage.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HeapInstanceCounter.hxx"

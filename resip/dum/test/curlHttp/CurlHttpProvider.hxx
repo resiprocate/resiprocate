@@ -2,9 +2,9 @@
 #define RESIP_CurlHttpProvider
 
 
-#include "resip/sip/external/HttpProvider.hxx"
+#include "resip/stack/external/HttpProvider.hxx"
 #include "rutil/ThreadIf.hxx"
-#include "resip/sip/GenericUri.hxx"
+#include "resip/stack/GenericUri.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

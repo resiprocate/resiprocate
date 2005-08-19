@@ -3,7 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include <iosfwd>
-#include "resip/sip/ParameterTypeEnums.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
 
 
 namespace resip

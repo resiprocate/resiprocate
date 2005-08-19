@@ -5,7 +5,7 @@
 #include <set>
 #include <map>
 
-#include "resip/sip/Headers.hxx"
+#include "resip/stack/Headers.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DumTimeout.hxx"
 #include "resip/dum/HandleManager.hxx"
@@ -16,8 +16,8 @@
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/TransactionUser.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/dum/DumFeatureMessage.hxx"

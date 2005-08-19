@@ -4,9 +4,9 @@
 #include <iosfwd>
 #include <vector>
 #include <set>
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/LazyParser.hxx"
-#include "resip/sip/ParameterTypes.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/LazyParser.hxx"
+#include "resip/stack/ParameterTypes.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 
