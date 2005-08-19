@@ -7,7 +7,7 @@ PACKAGES += ARES PTHREAD OPENSSL
 
 CXXFLAGS += -I../../
 CODE_SUBDIRS = external stun
-TARGET_LIBRARY = libresiprocate
+TARGET_LIBRARY = libresip
 TESTPROGRAMS =
 
 SRC = \
