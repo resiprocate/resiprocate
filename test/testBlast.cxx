@@ -6,7 +6,7 @@
 #include "rutil/Socket.hxx"
 #include "resip/sip/UdpTransport.hxx"
 
-#include <resiprocate/os/Timer.hxx>
+#include "rutil/Timer.hxx"
 
 
 using namespace resip;
