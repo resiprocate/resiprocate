@@ -9,8 +9,8 @@
 #include <stack>
 
 #include "rutil/Tuple.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/dns/DnsStub.hxx"

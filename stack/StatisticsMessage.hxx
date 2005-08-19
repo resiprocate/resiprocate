@@ -2,8 +2,8 @@
 #define RESIP_StatisticsMessage_hxx
 
 #include <iostream>
-#include "resip/sip/ApplicationMessage.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/MethodTypes.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 

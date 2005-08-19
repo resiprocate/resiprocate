@@ -1,7 +1,7 @@
 
 #include "resip/dum/Profile.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/HeaderTypes.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/HeaderTypes.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

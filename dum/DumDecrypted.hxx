@@ -1,8 +1,8 @@
 #if !defined(RESIP_DUMDECRYPTED_HXX)
 #define RESIP_DUMDECRYPTED_HXX 
 
-#include "resip/sip/ApplicationMessage.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

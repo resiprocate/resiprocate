@@ -2,7 +2,7 @@
 #define TESTSUPPORT_HXX
 #include <sys/types.h>
 #include "rutil/Data.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip {
 

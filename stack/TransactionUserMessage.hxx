@@ -1,7 +1,7 @@
 #ifndef RESIP_TransactionUserMessage_hxx
 #define RESIP_TransactionUserMessage_hxx 
 
-#include "resip/sip/TransactionMessage.hxx"
+#include "resip/stack/TransactionMessage.hxx"
 
 namespace resip
 {

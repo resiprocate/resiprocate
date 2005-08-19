@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include "ExtensionHeader.hxx"

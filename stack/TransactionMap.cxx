@@ -1,10 +1,10 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include "rutil/Logger.hxx"
-#include "resip/sip/TransactionMap.hxx"
-#include "resip/sip/TransactionState.hxx"
+#include "resip/stack/TransactionMap.hxx"
+#include "resip/stack/TransactionState.hxx"
 
 using namespace resip;
 

@@ -2,8 +2,8 @@
 #define RESIP_CLIENTREGISTRATION_HXX
 
 #include "resip/dum/NonDialogUsage.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
 
 namespace resip

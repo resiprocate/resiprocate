@@ -1,6 +1,6 @@
 #include "resip/dum/MergedRequestKey.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/CSeqCategory.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/CSeqCategory.hxx"
 
 using namespace resip;
 

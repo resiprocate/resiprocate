@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/MsgHeaderScanner.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
 
 namespace resip 
 {

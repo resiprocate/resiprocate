@@ -1,7 +1,7 @@
 #include "resip/dum/BaseSubscription.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/Dialog.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 using namespace resip;
 

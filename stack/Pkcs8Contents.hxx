@@ -1,7 +1,7 @@
 #ifndef RESIP_Pkcs8Contents_hxx
 #define RESIP_Pkcs8Contents_hxx
 
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

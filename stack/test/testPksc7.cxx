@@ -1,9 +1,9 @@
 #include <iostream>
 #include <memory>
 
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;

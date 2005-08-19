@@ -2,14 +2,14 @@
 #include <memory>
 
 #include "rutil/DataStream.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/test/TestSupport.hxx"
-#include "resip/sip/ExtensionHeader.hxx"
-#include "resip/sip/UnknownParameterType.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/test/TestSupport.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
+#include "resip/stack/UnknownParameterType.hxx"
 #include "rutil/Logger.hxx"
 
-#include "resip/sip/test/tassert.h"
+#include "resip/stack/test/tassert.h"
 
 using namespace resip;
 using namespace std;

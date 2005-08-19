@@ -1,5 +1,5 @@
 #include <iostream>
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Timer.hxx"
 
 #include <unistd.h>

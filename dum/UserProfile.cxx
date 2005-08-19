@@ -3,7 +3,7 @@
 #include "resip/dum/UserProfile.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/MD5Stream.hxx"
 
 using namespace resip;

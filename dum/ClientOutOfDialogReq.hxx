@@ -2,8 +2,8 @@
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
 #include "resip/dum/NonDialogUsage.hxx"
-#include "resip/sip/CSeqCategory.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/CSeqCategory.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

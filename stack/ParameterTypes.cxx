@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/ParameterTypes.hxx"
+#include "resip/stack/ParameterTypes.hxx"
 #include "rutil/compat.hxx"
 #include <iostream>
 
@@ -133,7 +133,7 @@ Qop_Factory_Param::Qop_Factory_Param()
 }
 Qop_Factory_Param resip::p_qopFactory;
 
-#include "resip/sip/ParameterHash.hxx"
+#include "resip/stack/ParameterHash.hxx"
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* pname, unsigned int len)

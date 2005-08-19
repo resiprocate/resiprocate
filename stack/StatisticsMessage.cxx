@@ -1,4 +1,4 @@
-#include "resip/sip/StatisticsMessage.hxx"
+#include "resip/stack/StatisticsMessage.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"

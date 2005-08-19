@@ -5,8 +5,8 @@
 #include <set>
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Data.hxx"
-#include "resip/sip/Message.hxx"
-#include "resip/sip/MessageFilterRule.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/MessageFilterRule.hxx"
 
 
 namespace resip

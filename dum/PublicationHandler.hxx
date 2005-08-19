@@ -2,7 +2,7 @@
 #define RESIP_PUBLICATIONHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/Mime.hxx"
+#include "resip/stack/Mime.hxx"
 
 namespace resip
 {

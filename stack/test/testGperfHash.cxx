@@ -3,12 +3,12 @@
 #include <sstream>
 #include <string.h>
 #include <string>
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/HeaderHash.hxx"
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/MethodHash.hxx"
-#include "resip/sip/ParameterTypes.hxx"
-#include "resip/sip/ParameterHash.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/HeaderHash.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/MethodHash.hxx"
+#include "resip/stack/ParameterTypes.hxx"
+#include "resip/stack/ParameterHash.hxx"
 
 using namespace std;
 using namespace resip;

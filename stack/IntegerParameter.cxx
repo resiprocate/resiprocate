@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/IntegerParameter.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/IntegerParameter.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

@@ -1,8 +1,8 @@
 #if !defined(RESIP_TCPBASETRANSPORT_HXX)
 #define RESIP_TCPBASETRANSPORT_HXX
 
-#include "resip/sip/InternalTransport.hxx"
-#include "resip/sip/ConnectionManager.hxx"
+#include "resip/stack/InternalTransport.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 
 namespace resip
 {

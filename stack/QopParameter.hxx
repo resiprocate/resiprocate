@@ -1,8 +1,8 @@
 #if !defined(RESIP_QOPPARAMETER_HXX)
 #define RESIP_QOPPARAMETER_HXX 
 
-#include "resip/sip/ParameterTypeEnums.hxx"
-#include "resip/sip/Parameter.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/Parameter.hxx"
 #include <iosfwd>
 
 namespace resip

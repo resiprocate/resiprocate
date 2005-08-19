@@ -2,7 +2,7 @@
 #define RESIP_ApplicationMessage_hxx 
 
 #include "assert.h"
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 
 namespace resip
 {
