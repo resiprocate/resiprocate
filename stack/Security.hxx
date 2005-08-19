@@ -7,8 +7,8 @@
 
 #include "rutil/Socket.hxx"
 #include "rutil/BaseException.hxx"
-#include "resip/sip/SecurityTypes.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/ssl.h>

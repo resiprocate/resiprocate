@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <memory>
 
-#include "resip/sip/HeaderFieldValue.hxx"
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/ParserCategories.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/MD5Stream.hxx"

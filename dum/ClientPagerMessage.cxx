@@ -1,7 +1,7 @@
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/TransactionUser.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/TransactionUser.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/dum/PagerMessageCreator.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientPagerMessage.hxx"
@@ -9,7 +9,7 @@
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/UsageUseException.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 
 using namespace resip;
 

@@ -3,7 +3,7 @@
 
 #include <map>
 #include "rutil/HashMap.hxx"
-#include "resip/sip/Connection.hxx"
+#include "resip/stack/Connection.hxx"
 
 namespace resip
 {

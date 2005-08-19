@@ -2,7 +2,7 @@
 #define RESIP_KEEPALIVE_TIMEOUT_HXX 
 
 
-#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 #include "resip/dum/Handles.hxx"
 #include "rutil/Tuple.hxx"
 

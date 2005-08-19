@@ -1,16 +1,16 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <set>
 
-#include "resip/sip/Embedded.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/NameAddr.hxx" 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/UnknownParameter.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Embedded.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/NameAddr.hxx" 
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/UnknownParameter.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"

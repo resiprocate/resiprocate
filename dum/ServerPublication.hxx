@@ -2,8 +2,8 @@
 #define RESIP_SERVERPUBLICATION_HXX
 
 #include "resip/dum/BaseUsage.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
 
 namespace resip
 {

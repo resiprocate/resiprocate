@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <string.h>
 #include <cstdio>
 #include <cassert>
 
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/Data.hxx"
 
 using namespace resip;

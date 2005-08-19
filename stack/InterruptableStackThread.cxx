@@ -1,6 +1,6 @@
-#include "resip/sip/InterruptableStackThread.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/InterruptableStackThread.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/SelectInterruptor.hxx"
 #include "rutil/Logger.hxx"
 

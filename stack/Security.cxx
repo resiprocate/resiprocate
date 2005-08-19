@@ -1,18 +1,18 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <ostream>
 #include <fstream>
 
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/PlainContents.hxx"
-#include "resip/sip/Security.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/PlainContents.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"

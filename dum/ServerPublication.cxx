@@ -3,8 +3,8 @@
 #include "resip/dum/PublicationHandler.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
 
 using namespace resip;
 

@@ -2,7 +2,7 @@
 #define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
 
 #include <list>
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 namespace resip
 {

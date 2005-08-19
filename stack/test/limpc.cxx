@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_HXX)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <cstring>
@@ -73,10 +73,10 @@ void mvvline(...) {};
 
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/TuIM.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/TuIM.hxx"
+#include "resip/stack/Security.hxx"
 
 static int myMain(int argc, char* argv[]);
 

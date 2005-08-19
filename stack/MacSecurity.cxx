@@ -1,4 +1,4 @@
-#include "resip/sip/MacSecurity.hxx"
+#include "resip/stack/MacSecurity.hxx"
 #include "rutil/Logger.hxx"
 
 #include <CoreFoundation/CoreFoundation.h>

@@ -2,7 +2,7 @@
 #define RESIP_MESSAGE_FILTER_RULE_HXX 
 
 #include <vector>
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

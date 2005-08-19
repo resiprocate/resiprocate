@@ -2,7 +2,7 @@
 #define RESIP_DUM_PROCESS_HANDLER_HXX
 
 #include "rutil/AsyncProcessHandler.hxx"
-#include "resip/sip/external/ExternalTimer.hxx"
+#include "resip/stack/external/ExternalTimer.hxx"
 
 
 namespace resip

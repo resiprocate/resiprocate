@@ -1,4 +1,4 @@
-#include "resip/sip/KeepAliveMessage.hxx"
+#include "resip/stack/KeepAliveMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

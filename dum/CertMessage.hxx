@@ -1,7 +1,7 @@
 #ifndef RESIP_CertMessage_hxx
 #define RESIP_CertMessage_hxx 
 
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

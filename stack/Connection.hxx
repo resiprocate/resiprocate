@@ -3,12 +3,12 @@
 
 #include <list>
 
-#include "resip/sip/ConnectionBase.hxx"
+#include "resip/stack/ConnectionBase.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/MsgHeaderScanner.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/IntrusiveListElement.hxx"
 
 namespace resip

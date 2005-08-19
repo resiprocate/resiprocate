@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <time.h>
 
-#include "resip/sip/DateCategory.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/DateCategory.hxx"
+#include "resip/stack/Transport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"

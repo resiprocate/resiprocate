@@ -1,5 +1,5 @@
 #include "resip/dum/DialogUsageManager.hxx"
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/TargetCommand.hxx"
 

@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
-//#include "resip/sip/EncodingContext.hxx"
+//#include "resip/stack/EncodingContext.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

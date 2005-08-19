@@ -4,7 +4,7 @@
 #include "TestSupport.hxx"
 
 #include "rutil/Logger.hxx"
-#include "resip/sip/Aor.hxx"
+#include "resip/stack/Aor.hxx"
 
 using namespace resip;
 using namespace std;

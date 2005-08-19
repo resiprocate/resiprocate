@@ -2,7 +2,7 @@
 #define DUM_CommandLineParser_hxx
 
 #include <vector>
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

@@ -2,7 +2,7 @@
 #define RESIP_TransportFailure_hxx
 
 #include <iosfwd>
-#include "resip/sip/TransactionMessage.hxx"
+#include "resip/stack/TransactionMessage.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 

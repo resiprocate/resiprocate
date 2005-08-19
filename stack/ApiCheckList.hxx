@@ -2,20 +2,20 @@
 #define RESIP_APICHECKLIST_HXX
 
 
-#include "resip/sip/ApiCheck.hxx"
+#include "resip/stack/ApiCheck.hxx"
 
 // These types were chosen because they represent the exported stuff.
 
 
-#include "resip/sip/Connection.hxx"
-#include "resip/sip/DnsResult.hxx"
-#include "resip/sip/GenericIPAddress.hxx"
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/MsgHeaderScanner.hxx"
-#include "resip/sip/TlsConnection.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TransportSelector.hxx"
-#include "resip/sip/UdpTransport.hxx"
+#include "resip/stack/Connection.hxx"
+#include "resip/stack/DnsResult.hxx"
+#include "resip/stack/GenericIPAddress.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
+#include "resip/stack/TlsConnection.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransportSelector.hxx"
+#include "resip/stack/UdpTransport.hxx"
 #include "rutil/Tuple.hxx"
 
 // Make an entry in the table

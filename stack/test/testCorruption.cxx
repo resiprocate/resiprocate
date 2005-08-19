@@ -1,4 +1,4 @@
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 
 int main(int argc, char* argv[])
 {

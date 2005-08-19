@@ -1,6 +1,6 @@
 #include "rutil/Logger.hxx"
 
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 #include "Register.hxx"
 #include "Registrar.hxx"
