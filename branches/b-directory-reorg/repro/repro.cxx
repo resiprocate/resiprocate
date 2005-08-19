@@ -176,31 +176,31 @@ main(int argc, char** argv)
 
       if (args.mUdpPort)
       {
-         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4);
+         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6);
+         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
 #endif
       }
       if (args.mTcpPort)
       {
-         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4);
+         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6);
+         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
 #endif
       }
 #ifdef USE_SSL
       if (args.mTlsPort)
       {
-         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
 #endif
       }
       if (args.mDtlsPort)
       {
-         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
 #endif
       }
 #endif
