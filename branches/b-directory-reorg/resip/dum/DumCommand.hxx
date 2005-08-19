@@ -9,7 +9,7 @@ namespace resip
 class DumCommand : public ApplicationMessage
 {
    public:
-      virtual ~DumCommand() {}
+      virtual ~DumCommand() {};
       virtual void execute() = 0;
 };
 
