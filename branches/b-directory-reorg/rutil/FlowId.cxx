@@ -1,7 +1,7 @@
 #include "rutil/FlowId.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Transport.hxx"
 #include <iostream>
 
 using namespace resip;

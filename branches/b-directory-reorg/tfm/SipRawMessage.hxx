@@ -2,7 +2,7 @@
 #define TFM_SipRawMessage_hxx
 
 #include <iosfwd>
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 /// Allows sending of arbitrarily badly formed messages.
 class SipRawMessage : public resip::SipMessage

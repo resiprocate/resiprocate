@@ -3,7 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include <vector>
 
 namespace resip

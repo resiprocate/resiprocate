@@ -1,5 +1,5 @@
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/RouteGuard.hxx"
 #include "tfm/TestProxy.hxx"

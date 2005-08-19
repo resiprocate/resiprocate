@@ -10,10 +10,10 @@
 #endif
 
 #include <signal.h>
-#include "resip/sip/MessageFilterRule.hxx"
-#include "resip/sip/Security.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/StackThread.hxx"
+#include "resip/stack/MessageFilterRule.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/StackThread.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -45,7 +45,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #ifdef WIN32
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 #endif
 

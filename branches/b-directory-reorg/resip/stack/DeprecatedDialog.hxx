@@ -2,10 +2,10 @@
 #define RESIP_DIALOG_HXX
 
 #include <iosfwd>
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/CallId.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/CallId.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Timer.hxx"
 

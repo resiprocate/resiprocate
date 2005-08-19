@@ -4,7 +4,7 @@
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Socket.hxx"
-#include "resip/sip/UdpTransport.hxx"
+#include "resip/stack/UdpTransport.hxx"
 
 #include "rutil/Timer.hxx"
 

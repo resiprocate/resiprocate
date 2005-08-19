@@ -2,7 +2,7 @@
 #define RESIP_DUMTIMER_HXX 
 
 #include <iosfwd>
-#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 #include "resip/dum/Handles.hxx"
 
 namespace resip

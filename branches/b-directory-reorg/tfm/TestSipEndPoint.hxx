@@ -5,10 +5,10 @@
 #include <set>
 #include <boost/shared_ptr.hpp>
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/ParserCategories.hxx"
-#include "resip/sip/SdpContents.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Transport.hxx"
 #include "rutil/HashMap.hxx"
 #include "tfm/DialogSet.hxx"
 #include "tfm/ExpectFunctorDefs.hxx"

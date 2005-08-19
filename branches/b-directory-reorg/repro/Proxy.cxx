@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 
-#include "resip/sip/TransactionTerminated.hxx"
-#include "resip/sip/ApplicationMessage.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/TransactionTerminated.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 

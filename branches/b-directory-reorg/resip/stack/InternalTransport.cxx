@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
@@ -8,9 +8,9 @@
 #include <sys/sockio.h>
 #endif
 
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/InternalTransport.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/InternalTransport.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"

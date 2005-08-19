@@ -1,10 +1,10 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/RequestContext.hxx"
 

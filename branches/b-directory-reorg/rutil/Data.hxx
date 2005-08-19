@@ -10,7 +10,7 @@
 
 #include "HashMap.hxx"
 #if defined(HAVE_CONFIG_HXX)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #ifndef RESIP_DATA_LOCAL_SIZE

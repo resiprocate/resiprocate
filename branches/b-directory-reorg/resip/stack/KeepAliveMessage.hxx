@@ -1,7 +1,7 @@
 #if !defined(RESIP_KEEPALIVEMESSAGE_HXX)
 #define RESIP_KEEPALIVEMESSAGE_HXX 
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

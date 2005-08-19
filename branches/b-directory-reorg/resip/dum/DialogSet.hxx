@@ -8,7 +8,7 @@
 #include "resip/dum/DialogSetId.hxx"
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/SharedPtr.hxx"
 
 namespace resip

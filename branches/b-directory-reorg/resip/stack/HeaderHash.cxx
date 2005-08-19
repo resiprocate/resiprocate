@@ -32,7 +32,7 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "resip/sip/HeaderTypes.hxx"
+#include "resip/stack/HeaderTypes.hxx"
 
 namespace resip
 {

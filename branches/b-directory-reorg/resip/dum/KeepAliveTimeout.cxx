@@ -1,7 +1,7 @@
-#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

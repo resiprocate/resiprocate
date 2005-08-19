@@ -1,8 +1,8 @@
 #ifndef TransportDriver_hxx
 #define TransportDriver_hxx
 
-//#include "resip/sip/SipStack.hxx"
-#include "resip/sip/TimerQueue.hxx"
+//#include "resip/stack/SipStack.hxx"
+#include "resip/stack/TimerQueue.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Mutex.hxx"
 

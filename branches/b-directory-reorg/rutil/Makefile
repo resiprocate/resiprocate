@@ -44,7 +44,6 @@ SRC = \
 	vmd5.cxx \
 	\
 	dns/AresDns.cxx \
-	dns/LocalDns.cxx \
 	dns/DnsAAAARecord.cxx \
 	dns/DnsCnameRecord.cxx \
 	dns/DnsHostRecord.cxx \

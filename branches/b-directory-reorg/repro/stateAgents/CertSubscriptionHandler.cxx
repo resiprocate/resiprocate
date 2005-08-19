@@ -1,7 +1,7 @@
 #if defined(USE_SSL)
 
-#include "resip/sip/Security.hxx"
-#include "resip/sip/X509Contents.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/X509Contents.hxx"
 #include "repro/stateAgents/CertSubscriptionHandler.hxx"
 
 using namespace repro;

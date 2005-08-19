@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/RAckCategory.hxx"
-#include "resip/sip/UnknownParameter.hxx"
+#include "resip/stack/RAckCategory.hxx"
+#include "resip/stack/UnknownParameter.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"

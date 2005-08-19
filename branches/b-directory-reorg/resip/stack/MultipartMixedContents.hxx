@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

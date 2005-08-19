@@ -1,7 +1,7 @@
 #if !defined(RESIP_BASECREATOR_HXX)
 #define RESIP_BASECREATOR_HXX
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/UserProfile.hxx"
 
 namespace resip

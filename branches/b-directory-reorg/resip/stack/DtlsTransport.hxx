@@ -4,11 +4,11 @@
 #ifdef USE_DTLS
 
 #ifndef RESIP_UDPTRANSPORT_HXX
-#include "resip/sip/UdpTransport.hxx"
+#include "resip/stack/UdpTransport.hxx"
 #endif
 
 #ifndef RESIP_TIMERQUEUE_HXX
-#include "resip/sip/TimerQueue.hxx"
+#include "resip/stack/TimerQueue.hxx"
 #endif
 
 #ifndef RESIP_HEAPINSTANCECOUNTER_HXX

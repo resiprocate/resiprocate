@@ -3,8 +3,8 @@
 
 #include <set>
 #include <iosfwd>
-#include "resip/sip/TransactionMessage.hxx"
-#include "resip/sip/DtlsMessage.hxx"
+#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/DtlsMessage.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Timer.hxx"

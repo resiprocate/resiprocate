@@ -3,7 +3,7 @@
 
 #include "CommandLineParser.hxx"
 
-#include "resip/sip/StackThread.hxx"
+#include "resip/stack/StackThread.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/SubscriptionHandler.hxx"

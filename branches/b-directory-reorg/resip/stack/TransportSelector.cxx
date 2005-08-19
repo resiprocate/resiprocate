@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #if !defined(WIN32)
@@ -9,16 +9,16 @@
 #include <netdb.h>
 #endif
 
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Uri.hxx"
 
-#include "resip/sip/Security.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TransactionState.hxx"
-#include "resip/sip/TransportFailure.hxx"
-#include "resip/sip/TransportSelector.hxx"
-#include "resip/sip/InternalTransport.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransactionState.hxx"
+#include "resip/stack/TransportFailure.hxx"
+#include "resip/stack/TransportSelector.hxx"
+#include "resip/stack/InternalTransport.hxx"
+#include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"

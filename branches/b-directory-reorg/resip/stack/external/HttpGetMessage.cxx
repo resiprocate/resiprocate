@@ -1,4 +1,4 @@
-#include "resip/sip/external/HttpGetMessage.hxx"
+#include "resip/stack/external/HttpGetMessage.hxx"
 
 using namespace resip;
 

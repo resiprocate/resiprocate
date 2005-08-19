@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_HXX)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <cstring>
@@ -11,9 +11,9 @@ bool FALSE=false;
 #endif
 
 #include "UserAgent.hxx"
-#include "resip/sip/Security.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;

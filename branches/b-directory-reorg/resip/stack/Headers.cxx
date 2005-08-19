@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include "rutil/Data.hxx"
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 // GPERF generated external routines
-#include "resip/sip/HeaderHash.hxx"
+#include "resip/stack/HeaderHash.hxx"
 
 #include <iostream>
 using namespace std;

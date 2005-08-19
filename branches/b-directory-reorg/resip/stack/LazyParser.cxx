@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 
 #include <cassert>
 
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/HeaderFieldValue.hxx"
-#include "resip/sip/LazyParser.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
+#include "resip/stack/LazyParser.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

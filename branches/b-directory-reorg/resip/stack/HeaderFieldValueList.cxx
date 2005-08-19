@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 
 #include <cassert>
 
-#include "resip/sip/HeaderFieldValue.hxx"
-#include "resip/sip/HeaderFieldValueList.hxx"
-#include "resip/sip/ParserContainerBase.hxx"
-#include "resip/sip/Embedded.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
+#include "resip/stack/HeaderFieldValueList.hxx"
+#include "resip/stack/ParserContainerBase.hxx"
+#include "resip/stack/Embedded.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

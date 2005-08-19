@@ -1,7 +1,7 @@
 #if !defined(TcpConnection_hxx)
 #define TcpConnection_hxx
 
-#include "resip/sip/Connection.hxx"
+#include "resip/stack/Connection.hxx"
 
 namespace resip
 {

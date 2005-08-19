@@ -1,17 +1,17 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/HeaderFieldValue.hxx"
-#include "resip/sip/ParserCategory.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
+#include "resip/stack/ParserCategory.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/compat.hxx"
 
-#include "resip/sip/UnknownParameter.hxx"
-#include "resip/sip/ExtensionParameter.hxx"
+#include "resip/stack/UnknownParameter.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
 
 #include <iostream>
 #include <cassert>

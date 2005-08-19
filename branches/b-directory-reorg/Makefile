@@ -5,16 +5,16 @@ BUILD 	=	build
 all: repro dum tests 
 
 resiprocate: contrib 
-	cd resiprocate; $(MAKE)
+	cd resip/stack; $(MAKE)
 
 dum: resiprocate
-	cd resiprocate/dum; $(MAKE)
+	cd resip/dum; $(MAKE)
 
 repro: dum
 	cd repro; $(MAKE)
 
 tests: resiprocate 
-	cd resiprocate/test; $(MAKE)
+	cd resip/stack/test; $(MAKE)
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
@@ -42,8 +42,9 @@ dtls: configure_dtls
 contrib: ares 
 
 clean: 
-	cd resiprocate; $(MAKE) clean
-	cd resiprocate/test; $(MAKE) clean
+	cd resip/stack; $(MAKE) clean
+	cd resip/dum; $(MAKE) clean
+	cd resip/stack/test; $(MAKE) clean
 	cd presSvr; $(MAKE) clean
 
 .PHONY : resiprocate tests contrib ares dtls

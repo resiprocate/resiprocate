@@ -1,9 +1,9 @@
-#include "resip/sip/KeepAliveMessage.hxx"
+#include "resip/stack/KeepAliveMessage.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

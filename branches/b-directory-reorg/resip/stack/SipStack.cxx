@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -17,21 +17,21 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 
-#include "resip/sip/Message.hxx"
-#include "resip/sip/Security.hxx"
-#include "resip/sip/ShutdownMessage.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/ApplicationMessage.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/ShutdownMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/Inserter.hxx"
-#include "resip/sip/StatisticsManager.hxx"
+#include "resip/stack/StatisticsManager.hxx"
 #include "rutil/AsyncProcessHandler.hxx"
-#include "resip/sip/TcpTransport.hxx"
-#include "resip/sip/TlsTransport.hxx"
-#include "resip/sip/UdpTransport.hxx"
-#include "resip/sip/DtlsTransport.hxx"
-#include "resip/sip/TransactionUser.hxx"
-#include "resip/sip/TransactionUserMessage.hxx"
+#include "resip/stack/TcpTransport.hxx"
+#include "resip/stack/TlsTransport.hxx"
+#include "resip/stack/UdpTransport.hxx"
+#include "resip/stack/DtlsTransport.hxx"
+#include "resip/stack/TransactionUser.hxx"
+#include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #ifdef WIN32

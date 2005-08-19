@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_HXX)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
@@ -13,8 +13,8 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/Security.hxx"
 
 
 using namespace resip;

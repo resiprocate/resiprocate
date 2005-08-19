@@ -12,7 +12,7 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Tuple.hxx"
