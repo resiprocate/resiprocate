@@ -1,4 +1,4 @@
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/ClientSubscription.hxx"
@@ -15,9 +15,9 @@
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSetFactory.hxx"
-#include "resip/sip/Pidf.hxx"
-//#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/GenericContents.hxx"
+#include "resip/stack/Pidf.hxx"
+//#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/GenericContents.hxx"
 
 
 #include <iostream>

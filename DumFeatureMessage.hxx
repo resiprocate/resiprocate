@@ -2,7 +2,7 @@
 #define RESIP_DumFeatureMessage_hxx 
 
 #include <iosfwd>
-#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 
 namespace resip
 {
