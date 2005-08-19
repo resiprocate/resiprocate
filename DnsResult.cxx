@@ -39,7 +39,7 @@ extern "C"
 #include "rutil/Tuple.hxx"
 #include "rutil/compat.hxx"
 
-#include "resip/sip/DnsHandler.hxx"
+#include "rutil/dns/DnsHandler.hxx"
 #include "resip/sip/DnsInterface.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"

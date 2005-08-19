@@ -24,7 +24,7 @@
 #include "resip/sip/SipStack.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "resip/sip/DnsHandler.hxx"
+#include "rutil/dns/DnsHandler.hxx"
 
 using namespace std;
 
