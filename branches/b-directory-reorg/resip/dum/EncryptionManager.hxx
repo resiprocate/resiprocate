@@ -1,6 +1,7 @@
 #if !defined(RESIP_ENCRYPTIONMANAGER_HXX)
 #define RESIP_ENCRYPTIONMANAGER_HXX
 
+#include <memory>
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"
