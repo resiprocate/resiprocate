@@ -8,9 +8,9 @@
 #include <boost/shared_ptr.hpp>
 
 #include "tfm/TestEndPoint.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ValueFifo.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ValueFifo.hxx"
 
 // .dlb. add an onComplete action?
 

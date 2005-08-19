@@ -1,9 +1,9 @@
 #if !defined(RESIP_SUBSCRIPTIONHANDLER_HXX)
 #define RESIP_SUBSCRIPTIONHANDLER_HXX
 
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/Mime.hxx"
-#include "resiprocate/Contents.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/sip/Mime.hxx"
+#include "resip/sip/Contents.hxx"
 
 namespace resip
 {

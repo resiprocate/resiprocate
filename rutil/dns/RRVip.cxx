@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 extern "C"
@@ -31,14 +31,14 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/RRVip.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/DnsAAAARecord.hxx"
+#include "rutil/dns/DnsHostRecord.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
+#include "rutil/dns/DnsSrvRecord.hxx"
+#include "rutil/dns/RRVip.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

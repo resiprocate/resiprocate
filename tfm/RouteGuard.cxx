@@ -1,6 +1,6 @@
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/RouteGuard.hxx"
 #include "tfm/TestProxy.hxx"
 

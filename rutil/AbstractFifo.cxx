@@ -1,7 +1,7 @@
 #include <cassert>
-#include "resiprocate/os/AbstractFifo.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/AbstractFifo.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Timer.hxx"
 
 using namespace resip;
 

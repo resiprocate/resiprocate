@@ -7,11 +7,11 @@
 #include <functional>
 #include <vector>
 
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogSetId.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/DialogSetId.hxx"
+#include "rutil/HashMap.hxx"
 
 //8.1.3.4
 //19.1.5

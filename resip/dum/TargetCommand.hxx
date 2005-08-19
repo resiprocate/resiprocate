@@ -1,7 +1,7 @@
 #if !defined(RESIP_TARGETCOMMAND_HXX)
 #define RESIP_TARGETCOMMAND_HXX
 
-#include "resiprocate/dum/DumCommand.hxx"
+#include "resip/dum/DumCommand.hxx"
 
 namespace resip
 {
@@ -17,7 +17,7 @@ class TargetCommand : public DumCommand
             Target(DialogUsageManager& dum) : mDum(dum) 
             {
             }
-            
+            virtual ~Target()=0;
             virtual void post(std::auto_ptr<Message>)=0;
 
          protected:

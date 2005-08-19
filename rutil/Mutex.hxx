@@ -1,8 +1,8 @@
 #if !defined(RESIP_MUTEX_HXX)
 #define RESIP_MUTEX_HXX
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Lockable.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Lockable.hxx"
 
 
 namespace resip

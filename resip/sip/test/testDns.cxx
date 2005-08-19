@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -13,18 +13,18 @@
 #include <iostream>
 #include <list>
 
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/DnsResult.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/dns/RRVip.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/DnsHandler.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "resip/sip/DnsInterface.hxx"
+#include "resip/sip/DnsResult.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "rutil/dns/RRVip.hxx"
+#include "rutil/dns/DnsStub.hxx"
+#include "resip/sip/DnsHandler.hxx"
 
 using namespace std;
 

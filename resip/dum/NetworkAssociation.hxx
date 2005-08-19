@@ -1,7 +1,7 @@
 #ifndef RESIP_NETWORKASSOCIATION_HXX
 #define RESIP_NETWORKASSOCIATION_HXX
 
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip 
 {

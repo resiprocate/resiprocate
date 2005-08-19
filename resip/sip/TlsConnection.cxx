@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "resip/sip/TlsConnection.hxx"
+#include "resip/sip/Security.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Socket.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/e_os2.h>

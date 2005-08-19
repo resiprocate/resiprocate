@@ -1,8 +1,8 @@
 #if !defined(RESIP_RANDOM_HXX)
 #define RESIP_RANDOM_HXX 
 
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Data.hxx"
 #include <cassert>
 
 namespace resip

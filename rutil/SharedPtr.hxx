@@ -7,7 +7,7 @@
 // http://www.boost.org/libs/smart_ptr/shared_ptr.htm
 //
 
-#include "resiprocate/os/SharedCount.hxx"
+#include "rutil/SharedCount.hxx"
 #include <memory>               // for std::auto_ptr
 #include <algorithm>            // for std::swap
 #include <functional>           // for std::less

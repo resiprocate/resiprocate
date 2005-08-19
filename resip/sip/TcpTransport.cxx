@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <memory>
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TcpTransport.hxx"
-#include "resiprocate/TcpConnection.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/TcpTransport.hxx"
+#include "resip/sip/TcpConnection.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

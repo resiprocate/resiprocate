@@ -1,7 +1,7 @@
 #ifndef RESIP_HttpProvider
 #define RESIP_HttpProvider
 
-#include "resiprocate/os/Mutex.hxx"
+#include "rutil/Mutex.hxx"
 #include <memory>
 
 namespace resip

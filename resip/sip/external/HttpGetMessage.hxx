@@ -1,9 +1,9 @@
 #ifndef RESIP_HttpGetMessage_hxx
 #define RESIP_HttpGetMessage_hxx 
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/Mime.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/Mime.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

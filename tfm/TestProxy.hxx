@@ -2,9 +2,9 @@
 #define TestProxy_hxx
 
 #include <set>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/NameAddr.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/TransportType.hxx"
+#include "resip/sip/NameAddr.hxx"
 #include "tfm/Source.hxx"
 
 namespace resip

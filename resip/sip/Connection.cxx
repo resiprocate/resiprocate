@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Connection.hxx"
-#include "resiprocate/ConnectionManager.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/TcpBaseTransport.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/Connection.hxx"
+#include "resip/sip/ConnectionManager.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/TcpBaseTransport.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

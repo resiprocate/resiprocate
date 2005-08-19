@@ -27,7 +27,7 @@
 #include <netinet/in.h>		/* for ntohl() */
 #endif
 
-#include "resiprocate/os/vmd5.hxx"
+#include "rutil/vmd5.hxx"
 
 /* Add _BIG_ENDIAN for Solaris */
 /* Add _BIG_ENDIAN__ for MAC OSX */

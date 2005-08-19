@@ -1,7 +1,7 @@
 #if !defined(RESIP_PAGERMESSAGECREATOR_HXX)
 #define RESIP_PAGERMESSAGECREATOR_HXX
 
-#include "resiprocate/dum/BaseCreator.hxx"
+#include "resip/dum/BaseCreator.hxx"
 
 namespace resip
 {

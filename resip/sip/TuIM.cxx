@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 /* TODO list for this file ....
@@ -17,27 +17,27 @@
 #include <cassert>
 #include <memory>
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/DeprecatedDialog.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TuIM.hxx"
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/CpimContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/OctetContents.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/Pidf.hxx"
-#include "resiprocate/SipFrag.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/DeprecatedDialog.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/TuIM.hxx"
+#include "resip/sip/Contents.hxx"
+#include "resip/sip/ParserCategories.hxx"
+#include "resip/sip/PlainContents.hxx"
+#include "resip/sip/CpimContents.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/sip/OctetContents.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/Pidf.hxx"
+#include "resip/sip/SipFrag.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

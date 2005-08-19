@@ -1,5 +1,5 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/TargetCommand.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/TargetCommand.hxx"
 
 using namespace resip;
 using namespace std;

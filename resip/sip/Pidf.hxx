@@ -3,11 +3,11 @@
 
 #include <vector>
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/Contents.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HashMap.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

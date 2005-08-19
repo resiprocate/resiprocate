@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/SipMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
 #include "StrictRouteFixup.hxx"
 #include "../RequestContext.hxx"
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;

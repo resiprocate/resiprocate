@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -16,15 +16,15 @@
 
 #include <fstream>
 
-#include "resiprocate/os/socket.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/dns/QueryTypes.hxx"
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/RRList.hxx"
-#include "resiprocate/dns/RRCache.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rutil/socket.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "resip/sip/DnsInterface.hxx"
+#include "rutil/dns/QueryTypes.hxx"
+#include "rutil/dns/RROverlay.hxx"
+#include "rutil/dns/RRList.hxx"
+#include "rutil/dns/RRCache.hxx"
+#include "rutil/dns/DnsStub.hxx"
 
 using namespace resip;
 using namespace std;

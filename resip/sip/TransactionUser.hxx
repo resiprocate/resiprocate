@@ -3,10 +3,10 @@
 
 #include <iosfwd>
 #include <set>
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/MessageFilterRule.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/MessageFilterRule.hxx"
 
 
 namespace resip

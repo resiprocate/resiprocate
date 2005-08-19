@@ -1,4 +1,4 @@
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 #include "tfm/SipEvent.hxx"
 #include "tfm/TestSipEndPoint.hxx"
 

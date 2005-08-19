@@ -1,9 +1,9 @@
 #if !defined(STATELESS_PROXY_HXX)
 #define STATELESS_PROXY_HXX
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ThreadIf.hxx"
 
 namespace resip
 {

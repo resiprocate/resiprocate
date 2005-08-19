@@ -1,28 +1,28 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <ostream>
 #include <fstream>
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/PlainContents.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/SHA1Stream.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/FileSystem.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Contents.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/PlainContents.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/SHA1Stream.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/FileSystem.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 #if defined(USE_SSL)

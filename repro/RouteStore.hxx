@@ -9,8 +9,8 @@
 
 #include <list>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/Uri.hxx"
 
 #include "repro/AbstractDb.hxx"
 

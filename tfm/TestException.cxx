@@ -1,4 +1,4 @@
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "tfm/TestException.hxx"
 
 TestException::TestException(const resip::Data& msg,

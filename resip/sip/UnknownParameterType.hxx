@@ -3,7 +3,7 @@
 
 // !dlb! deprecated
 
-#include "resiprocate/ExtensionParameter.hxx"
+#include "resip/sip/ExtensionParameter.hxx"
 
 namespace resip
 {

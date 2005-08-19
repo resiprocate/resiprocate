@@ -1,10 +1,10 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TransportSelector.hxx"
+#include "rutil/DataStream.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/TransportSelector.hxx"
 
 using namespace resip;
 using namespace std;

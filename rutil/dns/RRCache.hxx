@@ -4,14 +4,14 @@
 #include <map>
 #include <set>
 
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/dns/RRList.hxx"
+#include "rutil/dns/RRFactory.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/DnsAAAARecord.hxx"
+#include "rutil/dns/DnsHostRecord.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
+#include "rutil/dns/DnsSrvRecord.hxx"
+#include "rutil/dns/DnsCnameRecord.hxx"
+#include "rutil/dns/RRList.hxx"
 
 namespace resip
 {

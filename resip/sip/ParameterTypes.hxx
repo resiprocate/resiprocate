@@ -1,16 +1,16 @@
 #if !defined(RESIP_PARAMETERTYPES_HXX)
 #define RESIP_PARAMETERTYPES_HXX 
 
-#include "resiprocate/BranchParameter.hxx"
-#include "resiprocate/DataParameter.hxx"
-#include "resiprocate/QuotedDataParameter.hxx"
-#include "resiprocate/QopParameter.hxx"
-#include "resiprocate/IntegerParameter.hxx"
-#include "resiprocate/FloatParameter.hxx"
-#include "resiprocate/ExistsParameter.hxx"
-#include "resiprocate/ParameterTypeEnums.hxx"
-#include "resiprocate/RportParameter.hxx"
-#include "resiprocate/Symbols.hxx"
+#include "resip/sip/BranchParameter.hxx"
+#include "resip/sip/DataParameter.hxx"
+#include "resip/sip/QuotedDataParameter.hxx"
+#include "resip/sip/QopParameter.hxx"
+#include "resip/sip/IntegerParameter.hxx"
+#include "resip/sip/FloatParameter.hxx"
+#include "resip/sip/ExistsParameter.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
+#include "resip/sip/RportParameter.hxx"
+#include "resip/sip/Symbols.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
    class _enum##_Param : public ParamBase                   \

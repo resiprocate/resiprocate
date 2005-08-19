@@ -1,8 +1,8 @@
-#include "resiprocate/os/Subsystem.hxx"
+#include "rutil/Subsystem.hxx"
 #include "tfm/DialogSet.hxx"
 #include "tfm/TestSipEndPoint.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST

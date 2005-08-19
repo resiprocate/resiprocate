@@ -1,10 +1,10 @@
 #if !defined(RESIP_CLIENTREGISTRATION_HXX)
 #define RESIP_CLIENTREGISTRATION_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/NetworkAssociation.hxx"
+#include "resip/dum/NonDialogUsage.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/NetworkAssociation.hxx"
 
 namespace resip
 {

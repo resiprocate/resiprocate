@@ -10,16 +10,16 @@
 #endif
 
 #include <signal.h>
-#include "resiprocate/MessageFilterRule.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/StackThread.hxx"
-#include "resiprocate/dum/DumThread.hxx"
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "resip/sip/MessageFilterRule.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/StackThread.hxx"
+#include "resip/dum/DumThread.hxx"
+#include "resip/dum/InMemoryRegistrationDatabase.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -45,7 +45,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/sip/WinSecurity.hxx"
 #endif
 #endif
 

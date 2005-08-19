@@ -1,8 +1,8 @@
 #if !defined(RESIP_HEADERFIELDVALUE_HXX)
 #define RESIP_HEADERFIELDVALUE_HXX 
 
-#include "resiprocate/ParseException.hxx"
-#include "resiprocate/ParameterTypes.hxx"
+#include "resip/sip/ParseException.hxx"
+#include "resip/sip/ParameterTypes.hxx"
 
 #include <iosfwd>
 

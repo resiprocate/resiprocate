@@ -1,9 +1,9 @@
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/IdentityHandler.hxx"
-#include "resiprocate/external/HttpProvider.hxx"
-#include "resiprocate/external/HttpGetMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/IdentityHandler.hxx"
+#include "resip/sip/external/HttpProvider.hxx"
+#include "resip/sip/external/HttpGetMessage.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 using namespace resip;
 using namespace std;

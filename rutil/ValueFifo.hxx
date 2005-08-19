@@ -5,11 +5,11 @@
 #include <iosfwd>
 #include <deque>
 
-#include "resiprocate/os/Condition.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/AbstractFifo.hxx"
-#include "resiprocate/CancelableTimerQueue.hxx"
+#include "rutil/Condition.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/AbstractFifo.hxx"
+#include "resip/sip/CancelableTimerQueue.hxx"
 
 namespace resip
 {

@@ -1,16 +1,16 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <vector>
 #include <list>
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/RRList.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/RRFactory.hxx"
+#include "rutil/dns/RRList.hxx"
 
 using namespace resip;
 using namespace std;

@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <iosfwd>
-#include "resiprocate/Uri.hxx"
+#include "resip/sip/Uri.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
-#include "resiprocate/NameAddr.hxx"
+#include "resip/sip/NameAddr.hxx"
 #include "repro/ResponseContext.hxx"
 
 namespace resip

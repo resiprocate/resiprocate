@@ -1,9 +1,9 @@
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Tuple.hxx"
 #include "StatelessProxy.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST

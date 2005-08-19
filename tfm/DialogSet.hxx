@@ -4,7 +4,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-#include "resiprocate/DeprecatedDialog.hxx"
+#include "resip/sip/DeprecatedDialog.hxx"
 
 class TestSipEndPoint;
 

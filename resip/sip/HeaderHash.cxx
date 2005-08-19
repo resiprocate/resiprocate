@@ -32,7 +32,7 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "resiprocate/HeaderTypes.hxx"
+#include "resip/sip/HeaderTypes.hxx"
 
 namespace resip
 {

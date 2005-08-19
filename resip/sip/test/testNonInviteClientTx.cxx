@@ -1,10 +1,10 @@
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
 
 using namespace resip;
 using namespace std;

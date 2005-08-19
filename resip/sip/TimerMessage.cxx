@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cassert>
-#include "resiprocate/TimerMessage.hxx"
+#include "resip/sip/TimerMessage.hxx"
 
 using namespace resip;
 

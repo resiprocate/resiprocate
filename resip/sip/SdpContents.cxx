@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/SdpContents.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/DataStream.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 

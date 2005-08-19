@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/Uri.hxx"
 
 using namespace resip;
 using namespace std;

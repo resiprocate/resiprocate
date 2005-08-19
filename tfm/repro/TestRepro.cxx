@@ -6,7 +6,7 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/repro/TestRepro.hxx"
 
 using namespace resip;

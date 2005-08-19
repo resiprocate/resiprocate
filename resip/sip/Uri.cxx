@@ -1,21 +1,21 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <set>
 
-#include "resiprocate/Embedded.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/NameAddr.hxx" 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Embedded.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/NameAddr.hxx" 
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "resip/sip/UnknownParameter.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

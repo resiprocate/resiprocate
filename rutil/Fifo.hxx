@@ -2,7 +2,7 @@
 #define RESIP_FIFO_HXX 
 
 #include <cassert>
-#include "resiprocate/os/AbstractFifo.hxx"
+#include "rutil/AbstractFifo.hxx"
 
 namespace resip
 {
