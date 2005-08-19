@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -31,9 +31,9 @@ extern "C"
 
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/RRVip.hxx"
-#include "resip/sip/DnsInterface.hxx"
+#include "resip/stack/DnsInterface.hxx"
 #include "rutil/dns/DnsHandler.hxx"
-#include "resip/sip/DnsResult.hxx"
+#include "resip/stack/DnsResult.hxx"
 
 //#include "rutil/dns/ExternalDnsFactory.hxx"
 #include "rutil/WinLeakCheck.hxx"

@@ -1,8 +1,8 @@
 #if !defined(RESIP_PROXY_HXX)
 #define RESIP_PROXY_HXX 
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TransactionUser.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransactionUser.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "repro/RequestContext.hxx"

@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/ApplicationMessage.hxx"
-#include "resip/sip/ShutdownMessage.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TransactionController.hxx"
-#include "resip/sip/TransactionState.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/ShutdownMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransactionController.hxx"
+#include "resip/stack/TransactionState.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 
 using namespace resip;
 

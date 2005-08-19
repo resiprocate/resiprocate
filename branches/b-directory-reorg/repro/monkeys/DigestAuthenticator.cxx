@@ -9,10 +9,10 @@
 
 
 #include "rutil/DnsUtil.hxx"
-#include "resip/sip/Message.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Auth.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Auth.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 

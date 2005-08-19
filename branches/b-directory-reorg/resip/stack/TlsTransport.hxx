@@ -1,8 +1,8 @@
 #if !defined(RESIP_TLSTRANSPORT_HXX)
 #define RESIP_TLSTRANSPORT_HXX
 
-#include "resip/sip/TcpBaseTransport.hxx"
-#include "resip/sip/SecurityTypes.hxx"
+#include "resip/stack/TcpBaseTransport.hxx"
+#include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip

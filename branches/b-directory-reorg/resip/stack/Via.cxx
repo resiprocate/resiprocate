@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/Via.hxx"
+#include "resip/stack/Via.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"

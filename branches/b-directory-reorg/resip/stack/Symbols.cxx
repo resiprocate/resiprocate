@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 
 using namespace resip;
 

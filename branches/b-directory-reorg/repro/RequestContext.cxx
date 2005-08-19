@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Inserter.hxx"
-#include "resip/sip/TransactionTerminated.hxx"
+#include "resip/stack/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include "rutil/Logger.hxx"

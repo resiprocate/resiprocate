@@ -3,7 +3,7 @@
 
 #include "resip/dum/NonDialogUsage.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace resip
 {

@@ -1,10 +1,10 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/MsgHeaderScanner.hxx"
-#include "resip/sip/SipFrag.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
+#include "resip/stack/SipFrag.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"

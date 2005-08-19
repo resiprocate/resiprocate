@@ -1,4 +1,4 @@
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -10,7 +10,7 @@
 #include "resip/dum/KeepAliveManager.hxx"
 
 #ifdef WIN32
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST

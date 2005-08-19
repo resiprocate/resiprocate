@@ -2,7 +2,7 @@
 #define TFM_CheckFetchedContacts_hxx
 
 #include <set>
-#include "resip/sip/NameAddr.hxx"
+#include "resip/stack/NameAddr.hxx"
 #include "tfm/ExpectAction.hxx"
 
 //ignores expires

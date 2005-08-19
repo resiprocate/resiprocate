@@ -4,9 +4,9 @@
 #include <iosfwd>
 #include <set>
 #include <map>
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/Token.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Token.hxx"
 #include "resip/dum/UserProfile.hxx"
 
 namespace resip

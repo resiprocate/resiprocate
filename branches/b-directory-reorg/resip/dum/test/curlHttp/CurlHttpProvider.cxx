@@ -1,6 +1,6 @@
 #include "CurlHttpProvider.hxx"
-#include "resip/sip/external/HttpGetMessage.hxx"
-#include "resip/sip/TransactionUser.hxx"
+#include "resip/stack/external/HttpGetMessage.hxx"
+#include "resip/stack/TransactionUser.hxx"
 #include "rutil/Logger.hxx"
 
 #include <curl/curl.h>

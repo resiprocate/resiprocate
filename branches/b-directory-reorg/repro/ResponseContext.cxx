@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"

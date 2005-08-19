@@ -1,7 +1,7 @@
 #if !defined(RESIP_GENERICCONTENTS_HXX)
 #define RESIP_GENERICCONTENTS_HXX
 
-#include "resip/sip/PlainContents.hxx"
+#include "resip/stack/PlainContents.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

@@ -1,7 +1,7 @@
 #if !defined(RESIP_WINSECURITY_HXX)
 #define RESIP_WINSECURITY_HXX
 
-#include "resip/sip/Security.hxx"
+#include "resip/stack/Security.hxx"
 #include <wincrypt.h>
 
 namespace resip

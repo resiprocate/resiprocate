@@ -1,6 +1,6 @@
 #include "tfm/CheckContacts.hxx"
 #include "tfm/SipEvent.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 

@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 //#include "repro/UserStore.hxx"

@@ -1,6 +1,6 @@
-#include "resip/sip/StackThread.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/StackThread.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP

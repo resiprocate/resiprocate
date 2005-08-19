@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/ConnectionManager.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 

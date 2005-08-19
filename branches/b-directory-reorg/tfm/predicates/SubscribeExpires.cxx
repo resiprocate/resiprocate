@@ -1,4 +1,4 @@
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/SipEvent.hxx"
 #include "tfm/predicates/SubscribeExpires.hxx"

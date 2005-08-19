@@ -10,7 +10,7 @@
 #include <list>
 
 #include "rutil/Data.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 #include "repro/AbstractDb.hxx"
 

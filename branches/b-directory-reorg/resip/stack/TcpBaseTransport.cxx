@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <memory>
@@ -8,7 +8,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/TcpBaseTransport.hxx"
+#include "resip/stack/TcpBaseTransport.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

@@ -2,9 +2,9 @@
 #include <memory>
 
 #include "rutil/DataStream.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/TransportSelector.hxx"
+#include "resip/stack/TransportSelector.hxx"
 
 using namespace resip;
 using namespace std;

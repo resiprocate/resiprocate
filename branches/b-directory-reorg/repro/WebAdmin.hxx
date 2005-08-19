@@ -1,7 +1,7 @@
 #if !defined(RESIP_WEBADMIN_HXX)
 #define RESIP_WEBADMIN_HXX 
 
-#include "resip/sip/Security.hxx"
+#include "resip/stack/Security.hxx"
 #include "rutil/Data.hxx"
 //#include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"

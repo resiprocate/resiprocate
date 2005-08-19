@@ -13,9 +13,9 @@
 
 #include "rutil/Timer.hxx"
 #include "rutil/Fifo.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/MsgHeaderScanner.hxx"
-#include "resip/sip/SendData.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
+#include "resip/stack/SendData.hxx"
 
 namespace resip
 {

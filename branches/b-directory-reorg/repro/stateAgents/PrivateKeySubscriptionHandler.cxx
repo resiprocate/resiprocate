@@ -1,7 +1,7 @@
 #if defined(USE_SSL)
 
-#include "resip/sip/Pkcs8Contents.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/ServerPublication.hxx"
 #include "repro/stateAgents/PrivateKeySubscriptionHandler.hxx"

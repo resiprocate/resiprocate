@@ -1,6 +1,6 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/Pidf.hxx"
+#include "resip/stack/Pidf.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"

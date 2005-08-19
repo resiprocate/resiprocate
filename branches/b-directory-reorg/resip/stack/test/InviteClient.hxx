@@ -2,7 +2,7 @@
 #define InviteClient_hxx
 
 #include "rutil/BaseException.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 namespace Loadgen
 {

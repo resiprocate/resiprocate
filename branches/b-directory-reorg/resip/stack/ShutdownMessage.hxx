@@ -1,7 +1,7 @@
 #ifndef RESIP_ShutdownMessage_hxx
 #define RESIP_ShutdownMessage_hxx 
 
-#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 
 namespace resip
 {

@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include "rutil/dns/DnsHandler.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip

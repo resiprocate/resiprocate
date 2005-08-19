@@ -2,7 +2,7 @@
 #ifdef USE_DTLS
 
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <memory>
@@ -28,23 +28,23 @@
 #endif
 
 #ifndef RESIP_SIPMESSAGE_HXX
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #endif
 
 #ifndef RESIP_HELPER_HXX
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #endif
 
 #ifndef RESIP_SECURITY_HXX
-#include "resip/sip/Security.hxx"
+#include "resip/stack/Security.hxx"
 #endif
 
 #ifndef RESIP_DTLSMESSAGE_HXX
-#include "resip/sip/DtlsMessage.hxx"
+#include "resip/stack/DtlsMessage.hxx"
 #endif
 
 #ifndef RESIP_DTLSTRANSPORT_HXX
-#include "resip/sip/DtlsTransport.hxx"
+#include "resip/stack/DtlsTransport.hxx"
 #endif
 
 #include "rutil/WinLeakCheck.hxx"

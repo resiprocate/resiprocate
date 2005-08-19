@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include "rutil/compat.hxx"
@@ -19,8 +19,8 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/GenericIPAddress.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/GenericIPAddress.hxx"
 
 using namespace resip;
 

@@ -1,7 +1,7 @@
 #include <cppunit/TestCase.h>
 
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/PortAllocator.hxx"

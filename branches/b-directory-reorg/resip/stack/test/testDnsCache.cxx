@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -19,7 +19,7 @@
 #include "rutil/socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "resip/sip/DnsInterface.hxx"
+#include "resip/stack/DnsInterface.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/RROverlay.hxx"
 #include "rutil/dns/RRList.hxx"

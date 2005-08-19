@@ -1,7 +1,7 @@
 #if !defined(RESIP_PKCS7CONTENTS_HXX)
 #define RESIP_PKCS7CONTENTS_HXX 
 
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

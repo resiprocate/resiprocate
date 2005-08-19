@@ -1,5 +1,5 @@
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumTimeout.hxx"

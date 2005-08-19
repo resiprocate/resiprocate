@@ -9,7 +9,7 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/AbstractFifo.hxx"
-#include "resip/sip/CancelableTimerQueue.hxx"
+#include "resip/stack/CancelableTimerQueue.hxx"
 
 namespace resip
 {

@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/MultipartRelatedContents.hxx"
+#include "resip/stack/MultipartRelatedContents.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;
