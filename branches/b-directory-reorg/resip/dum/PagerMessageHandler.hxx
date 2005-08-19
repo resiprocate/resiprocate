@@ -1,9 +1,9 @@
 #if !defined(RESIP_PAGERMESSAGEHANDLER_HXX)
 #define RESIP_PAGERMESSAGEHANDLER_HXX
 
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Contents.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Contents.hxx"
 
 namespace resip
 {

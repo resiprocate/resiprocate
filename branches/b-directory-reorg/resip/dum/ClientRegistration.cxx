@@ -1,15 +1,15 @@
 #include <iterator>
 
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/dum/BaseCreator.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/dum/BaseCreator.hxx"
+#include "resip/dum/ClientRegistration.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/dum/MasterProfile.hxx"
+#include "resip/dum/UsageUseException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <algorithm>
@@ -32,20 +32,20 @@ extern "C"
 }
 #endif
 
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/compat.hxx"
 
-#include "resiprocate/DnsHandler.hxx"
-#include "resiprocate/DnsInterface.hxx"
-#include "resiprocate/dns/QueryTypes.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/DnsResult.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/DnsHandler.hxx"
+#include "resip/sip/DnsInterface.hxx"
+#include "rutil/dns/QueryTypes.hxx"
+#include "rutil/dns/DnsStub.hxx"
+#include "resip/sip/DnsResult.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #if !defined(USE_ARES)
 #warning "ARES is required"

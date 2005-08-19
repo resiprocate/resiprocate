@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined(USE_ARES)
@@ -20,15 +20,15 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/external/ExternalDns.hxx"
-#include "resiprocate/ExternalDnsFactory.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/dns/DnsStub.hxx"
+#include "resip/sip/external/ExternalDns.hxx"
+#include "resip/sip/ExternalDnsFactory.hxx"
 
 using namespace resip;
 using namespace std;

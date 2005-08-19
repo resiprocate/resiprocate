@@ -1,8 +1,8 @@
-#include "resiprocate/TransactionUser.hxx"
+#include "resip/sip/TransactionUser.hxx"
 #include "CurlHttpProvider.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/external/HttpProvider.hxx"
-#include "resiprocate/external/HttpGetMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/external/HttpProvider.hxx"
+#include "resip/sip/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

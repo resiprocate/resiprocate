@@ -1,6 +1,6 @@
 #include <iostream>
 #include "tfm/Source.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 Source::Source(const resip::Data& h, int p, resip::TransportType t)
    : host(h), port(p), transportType(t) 

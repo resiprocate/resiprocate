@@ -1,9 +1,9 @@
 #if !defined(RESIP_UDPTRANSPORT_HXX)
 #define RESIP_UDPTRANSPORT_HXX
 
-#include "resiprocate/InternalTransport.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/InternalTransport.hxx"
+#include "resip/sip/MsgHeaderScanner.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

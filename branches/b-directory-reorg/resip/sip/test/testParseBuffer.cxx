@@ -1,7 +1,7 @@
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

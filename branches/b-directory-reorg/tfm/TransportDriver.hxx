@@ -1,10 +1,10 @@
 #ifndef TransportDriver_hxx
 #define TransportDriver_hxx
 
-//#include "resiprocate/SipStack.hxx"
-#include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Mutex.hxx"
+//#include "resip/sip/SipStack.hxx"
+#include "resip/sip/TimerQueue.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Mutex.hxx"
 
 #include <sys/types.h>
 #include <boost/shared_ptr.hpp>

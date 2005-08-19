@@ -1,7 +1,7 @@
 #ifndef RESIP_DumFeature_HXX
 #define RESIP_DumFeature_HXX 
 
-#include "resiprocate/dum/TargetCommand.hxx"
+#include "resip/dum/TargetCommand.hxx"
 
 namespace resip
 {

@@ -1,10 +1,10 @@
 #ifndef RESIP_Logger_hxx
 #define RESIP_Logger_hxx
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Data.hxx"
 
 #ifdef WIN32
 #include <windows.h>

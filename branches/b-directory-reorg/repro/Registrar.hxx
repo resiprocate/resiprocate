@@ -1,10 +1,10 @@
 #if !defined(RESIP_REGISTRAR_HXX)
 #define RESIP_REGISTRAR_HXX 
 
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/InMemoryRegistrationDatabase.hxx"
+#include "resip/dum/MasterProfile.hxx"
 
 namespace repro
 {

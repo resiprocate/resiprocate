@@ -1,7 +1,7 @@
 #if !defined(RESIP_USAGEUSEEXCEPTION_HXX)
 #define RESIP_USAGEUSEEXCEPTION_HXX 
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 
 namespace resip
 {

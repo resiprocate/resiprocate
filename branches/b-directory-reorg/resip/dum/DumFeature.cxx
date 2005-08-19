@@ -1,7 +1,7 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/dum/DumFeature.hxx"
-#include "resiprocate/dum/TargetCommand.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/dum/DumFeature.hxx"
+#include "resip/dum/TargetCommand.hxx"
 
 using namespace resip;
 

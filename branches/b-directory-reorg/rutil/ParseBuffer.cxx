@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

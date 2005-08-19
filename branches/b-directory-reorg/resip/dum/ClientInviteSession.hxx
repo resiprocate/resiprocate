@@ -1,8 +1,8 @@
 #if !defined(RESIP_CLIENTINVITESESSION_HXX)
 #define RESIP_CLIENTINVITESESSION_HXX
 
-#include "resiprocate/dum/InviteSession.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "resip/dum/InviteSession.hxx"
+#include "resip/dum/Handles.hxx"
 
 namespace resip
 {

@@ -1,6 +1,6 @@
-#include "resiprocate/StringSubComponent.hxx"
-#include "resiprocate/SubComponentList.hxx"
-#include "resiprocate/HeaderFieldValueList.hxx"
+#include "resip/sip/StringSubComponent.hxx"
+#include "resip/sip/SubComponentList.hxx"
+#include "resip/sip/HeaderFieldValueList.hxx"
 #include <iostream>
 
 using namespace resip;

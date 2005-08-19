@@ -1,10 +1,10 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

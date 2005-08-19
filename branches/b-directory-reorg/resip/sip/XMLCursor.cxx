@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/XMLCursor.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/XMLCursor.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 //#ifndef   `WIN32 // !cj! TODO FIX 
 #if 1 

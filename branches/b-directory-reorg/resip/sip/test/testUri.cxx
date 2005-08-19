@@ -2,14 +2,14 @@
 #include <iostream>
 
 #include "TestSupport.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/sip/UnknownParameterType.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
 
 using namespace resip;
 using namespace std;

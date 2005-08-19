@@ -2,7 +2,7 @@
 #define TFM_ActionBase_hxx
 
 #include <boost/shared_ptr.hpp>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 class Event;
 

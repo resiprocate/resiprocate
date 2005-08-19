@@ -1,30 +1,30 @@
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/ClientRegistration.hxx"
+#include "resip/dum/ClientInviteSession.hxx"
+#include "resip/dum/ServerInviteSession.hxx"
+#include "resip/dum/ClientAuthManager.hxx"
 
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/DumShutdownHandler.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
+#include "resip/dum/InviteSessionHandler.hxx"
+#include "resip/dum/DumShutdownHandler.hxx"
 
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
+#include "resip/dum/MasterProfile.hxx"
+#include "resip/sip/ShutdownMessage.hxx"
 
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/MultipartAlternativeContents.hxx"
-#include "resiprocate/Mime.hxx"
+#include "resip/sip/SdpContents.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "resip/sip/Mime.hxx"
 
-#include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/sip/Helper.hxx"
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/sip/WinSecurity.hxx"
 #endif
 
 #include "TestDumHandlers.hxx"

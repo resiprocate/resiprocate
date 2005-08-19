@@ -1,11 +1,11 @@
 #if !defined(RESIP_TuSelector_HXX)
 #define RESIP_TuSelector_HXX 
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/StatisticsMessage.hxx"
-#include "resiprocate/TransactionUserMessage.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/StatisticsMessage.hxx"
+#include "resip/sip/TransactionUserMessage.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Fifo.hxx"
 
 namespace resip
 {

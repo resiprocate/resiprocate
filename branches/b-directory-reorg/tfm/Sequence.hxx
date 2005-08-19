@@ -7,8 +7,8 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ValueFifo.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ValueFifo.hxx"
 #include "tfm/TestEndPoint.hxx"
 
 class SequenceHandler;

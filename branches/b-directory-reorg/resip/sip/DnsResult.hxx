@@ -8,12 +8,12 @@
 #include <map>
 #include <stack>
 
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
-#include "resiprocate/dns/RRVip.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
+#include "rutil/Tuple.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/dns/RRVip.hxx"
+#include "rutil/dns/DnsStub.hxx"
 
 #ifdef WIN32
 #include <Ws2tcpip.h>

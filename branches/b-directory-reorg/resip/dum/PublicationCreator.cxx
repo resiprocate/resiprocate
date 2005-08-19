@@ -1,5 +1,5 @@
 #include "PublicationCreator.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 using namespace resip;
 

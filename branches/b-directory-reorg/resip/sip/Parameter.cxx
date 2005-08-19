@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/Parameter.hxx"
+#include "resip/sip/Parameter.hxx"
 
 using namespace resip;
 using namespace std;

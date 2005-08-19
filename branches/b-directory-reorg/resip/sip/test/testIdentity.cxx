@@ -3,8 +3,8 @@
 #include <fstream>
 #include <ostream>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Security.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/Security.hxx"
 
 
 using namespace resip;

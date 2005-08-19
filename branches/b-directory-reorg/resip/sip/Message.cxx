@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "resip/sip/Message.hxx"
+#include "rutil/DataStream.hxx"
 #include <cassert>
 
 using namespace resip;

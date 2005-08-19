@@ -2,7 +2,7 @@
 #include <boost/lexical_cast.hpp>
 #include <memory>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/TestEndPoint.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/SequenceSet.hxx"

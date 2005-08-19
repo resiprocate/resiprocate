@@ -6,14 +6,14 @@
 #include <list>
 #include <map>
 
-#include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/CallId.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/NetworkAssociation.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resip/dum/DialogId.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/CallId.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/NetworkAssociation.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 namespace resip
 {

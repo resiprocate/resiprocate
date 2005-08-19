@@ -1,11 +1,11 @@
-#include "resiprocate/dum/RedirectManager.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/RedirectHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/AppDialogSet.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/dum/RedirectManager.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/dum/RedirectHandler.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/DialogSet.hxx"
+#include "resip/dum/AppDialogSet.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

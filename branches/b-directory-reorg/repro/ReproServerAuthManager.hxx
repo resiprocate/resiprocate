@@ -3,9 +3,9 @@
 
 #include <map>
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/dum/UserProfile.hxx"
+#include "resip/dum/ServerAuthManager.hxx"
 //#include "repro/UserStore.hxx"
 
 namespace resip

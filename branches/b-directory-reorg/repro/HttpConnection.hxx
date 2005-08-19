@@ -1,11 +1,11 @@
 #if !defined(REPRO_HTTPCONNECTION_HXX)
 #define REPRO_HTTPCONNECTION_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/Mime.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/Tuple.hxx"
+#include "resip/sip/Mime.hxx"
 
 #include "repro/UserStore.hxx"
 #include "repro/HttpBase.hxx"

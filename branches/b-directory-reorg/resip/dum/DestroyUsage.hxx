@@ -2,8 +2,8 @@
 #define RESIP_DESTORYUSAGE_HXX 
 
 #include <iosfwd>
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/dum/Handles.hxx"
 
 namespace resip
 {

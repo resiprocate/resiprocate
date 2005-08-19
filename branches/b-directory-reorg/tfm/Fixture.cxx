@@ -4,10 +4,10 @@
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/CommandLineParser.hxx"
 #include "tfm/DnsUtils.hxx"
 #include "tfm/Fixture.hxx"

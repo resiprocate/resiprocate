@@ -1,4 +1,4 @@
-#include "resiprocate/PlainContents.hxx"
+#include "resip/sip/PlainContents.hxx"
 
 #include <iostream>
 #include <fstream>

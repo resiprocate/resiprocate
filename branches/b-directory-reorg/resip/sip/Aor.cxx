@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/Aor.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/Aor.hxx"
 
 using namespace resip;
 

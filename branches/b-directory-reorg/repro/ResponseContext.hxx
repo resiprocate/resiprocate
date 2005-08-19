@@ -2,11 +2,11 @@
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Via.hxx"
-#include "resiprocate/Uri.hxx"
+#include "rutil/HashMap.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Via.hxx"
+#include "resip/sip/Uri.hxx"
 
 namespace resip
 {

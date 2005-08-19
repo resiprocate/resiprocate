@@ -2,7 +2,7 @@
 #define RESIP_KEEPALIVE_MANAGER_HXX
 
 #include <map>
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip 
 {

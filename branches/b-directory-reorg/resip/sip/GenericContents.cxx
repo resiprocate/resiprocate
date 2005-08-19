@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/GenericContents.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/GenericContents.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

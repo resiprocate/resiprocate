@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -12,14 +12,14 @@
 
 #include <iostream>
 
-#include "resiprocate/TcpTransport.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
+#include "resip/sip/TcpTransport.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
 
 using namespace resip;
 using namespace std;

@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <vector>
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "tfm/Box.hxx"
 
 class AsciiGraphic

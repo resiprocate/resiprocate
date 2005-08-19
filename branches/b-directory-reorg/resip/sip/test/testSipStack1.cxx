@@ -7,15 +7,15 @@
 #include <unistd.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/ParserCategories.hxx"
 
 
 using namespace resip;

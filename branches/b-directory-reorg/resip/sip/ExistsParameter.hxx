@@ -1,7 +1,7 @@
 #if !defined(RESIP_EXISTSPARAMETER_HXX)
 #define RESIP_EXISTSPARAMETER_HXX 
 
-#include "resiprocate/Parameter.hxx"
+#include "resip/sip/Parameter.hxx"
 #include <iosfwd>
 
 namespace resip

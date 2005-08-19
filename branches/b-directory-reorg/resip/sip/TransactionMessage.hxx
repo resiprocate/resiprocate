@@ -2,8 +2,8 @@
 #define RESIP_TransactionMessage_hxx
 
 #include <cassert>
-#include "resiprocate/Message.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/Message.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

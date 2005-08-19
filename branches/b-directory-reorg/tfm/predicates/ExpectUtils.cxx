@@ -1,5 +1,5 @@
 #include "tfm/predicates/ExpectUtils.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Cathay::Subsystem::TEST
 

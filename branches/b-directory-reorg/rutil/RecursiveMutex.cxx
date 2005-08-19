@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cerrno>
 
-#include "resiprocate/os/RecursiveMutex.hxx"
+#include "rutil/RecursiveMutex.hxx"
 
 #if defined(WIN32) 
 #  include <windows.h>

@@ -1,10 +1,10 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include "repro/Registrar.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/ServerRegistration.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

@@ -1,8 +1,8 @@
 #if !defined(RESIP_OCTETCONTENTS_HXX)
 #define RESIP_OCTETCONTENTS_HXX 
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Contents.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

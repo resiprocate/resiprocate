@@ -1,7 +1,7 @@
 #ifndef RESIP_ExternalBodyContents_hxx
 #define RESIP_ExternalBodyContents_hxx
 
-#include "resiprocate/SipFrag.hxx"
+#include "resip/sip/SipFrag.hxx"
 
 namespace resip
 {

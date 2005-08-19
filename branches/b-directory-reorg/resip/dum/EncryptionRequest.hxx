@@ -1,9 +1,9 @@
 #if !defined(RESIP_ENCRYPTIONREQUEST_HXX)
 #define RESIP_ENCRYPTIONREQUEST_HXX 
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 namespace resip
 {

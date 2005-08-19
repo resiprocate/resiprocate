@@ -2,8 +2,8 @@
 #define Resolver_hxx
 
 #include <list>
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "rutil/Data.hxx"
 #include "tfm/Resolver.hxx"
 
 namespace resip

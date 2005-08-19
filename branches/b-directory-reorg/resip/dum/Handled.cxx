@@ -1,7 +1,7 @@
-#include "resiprocate/dum/HandleManager.hxx"
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/HandleManager.hxx"
+#include "resip/dum/Handled.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

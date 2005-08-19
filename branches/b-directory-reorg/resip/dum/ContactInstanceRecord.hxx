@@ -4,9 +4,9 @@
 #include <vector>
 #include <list>
 
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

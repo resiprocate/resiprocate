@@ -1,8 +1,8 @@
 #ifndef RESIP_ExtensionHeader_hxx
 #define RESIP_ExtensionHeader_hxx
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
 namespace resip
 {
 

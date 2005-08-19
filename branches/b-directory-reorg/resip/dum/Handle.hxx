@@ -2,9 +2,9 @@
 #define RESIP_HANDLE_HXX
 
 #include <iosfwd>
-#include "resiprocate/dum/Handled.hxx"
-#include "resiprocate/dum/HandleManager.hxx"
-#include "resiprocate/dum/HandleException.hxx"
+#include "resip/dum/Handled.hxx"
+#include "resip/dum/HandleManager.hxx"
+#include "resip/dum/HandleException.hxx"
 
 namespace resip
 {

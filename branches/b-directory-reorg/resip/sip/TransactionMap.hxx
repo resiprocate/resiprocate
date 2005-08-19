@@ -1,8 +1,8 @@
 #if !defined(RESIP_TRANSACTIONMAP_HXX)
 #define RESIP_TRANSACTIONMAP_HXX
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/HashMap.hxx"
 
 namespace resip
 {
