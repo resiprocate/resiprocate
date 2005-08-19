@@ -4,6 +4,9 @@
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
 
+#include "tfm/repro/TestRepro.hxx"
+#include "tfm/repro/TestReproUser.hxx"
+
 #include "rutil/BaseException.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
@@ -14,8 +17,6 @@
 #include "tfm/PortAllocator.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/TestProxy.hxx"
-#include "tfm/repro/TestRepro.hxx"
-#include "tfm/repro/TestReproUser.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
