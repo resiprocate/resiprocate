@@ -8,10 +8,10 @@
 #include "rutil/Mutex.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/BaseException.hxx"
-#include "resip/sip/TransactionController.hxx"
-#include "resip/sip/SecurityTypes.hxx"
-#include "resip/sip/StatisticsManager.hxx"
-#include "resip/sip/TuSelector.hxx"
+#include "resip/stack/TransactionController.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/StatisticsManager.hxx"
+#include "resip/stack/TuSelector.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
 namespace resip 

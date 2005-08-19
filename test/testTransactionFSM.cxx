@@ -56,12 +56,12 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Socket.hxx"
 
-#include "resip/sip/test/TestSupport.hxx"
-#include "resip/sip/MethodTypes.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/test/TestSupport.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Transport.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 using namespace resip;

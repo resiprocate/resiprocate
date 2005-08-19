@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/Embedded.hxx"
-#include "resip/sip/OctetContents.hxx"
-#include "resip/sip/HeaderFieldValueList.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/ExtensionHeader.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/Embedded.hxx"
+#include "resip/stack/OctetContents.hxx"
+#include "resip/stack/HeaderFieldValueList.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
 #include "rutil/Coders.hxx"
 #include "rutil/CountStream.hxx"
 #include "rutil/Logger.hxx"
@@ -17,7 +17,7 @@
 #include "rutil/Coders.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/MsgHeaderScanner.hxx"
+#include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

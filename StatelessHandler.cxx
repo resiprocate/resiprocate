@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -24,12 +24,12 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 
-#include "resip/sip/TransportSelector.hxx"
-#include "resip/sip/DnsResult.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/StatelessHandler.hxx"
-#include "resip/sip/TransactionController.hxx"
-#include "resip/sip/TransportFailure.hxx"
+#include "resip/stack/TransportSelector.hxx"
+#include "resip/stack/DnsResult.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StatelessHandler.hxx"
+#include "resip/stack/TransactionController.hxx"
+#include "resip/stack/TransportFailure.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 

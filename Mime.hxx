@@ -4,8 +4,8 @@
 #include <iosfwd>
 #include "rutil/Data.hxx"
 #include "rutil/HashMap.hxx"
-#include "resip/sip/ParserCategory.hxx"
-#include "resip/sip/ParserContainer.hxx"
+#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/ParserContainer.hxx"
 
 namespace resip
 {

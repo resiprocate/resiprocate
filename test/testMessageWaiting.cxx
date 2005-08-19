@@ -1,5 +1,5 @@
-#include "resip/sip/MessageWaitingContents.hxx"
-#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/stack/MessageWaitingContents.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include <iostream>
 

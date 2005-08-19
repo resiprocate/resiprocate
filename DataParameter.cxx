@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <cassert>
-#include "resip/sip/DataParameter.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/DataParameter.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/ParseException.hxx"
+#include "resip/stack/ParseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

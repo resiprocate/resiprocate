@@ -3,10 +3,10 @@
 #include <openssl/ossl_typ.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include "resip/sip/X509Contents.hxx"
-#include "resip/sip/Pkcs8Contents.hxx"
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/X509Contents.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Random.hxx"
 
 using namespace resip;

@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <memory>
@@ -8,9 +8,9 @@
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/TlsTransport.hxx"
-#include "resip/sip/TlsConnection.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/TlsTransport.hxx"
+#include "resip/stack/TlsConnection.hxx"
+#include "resip/stack/Security.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT

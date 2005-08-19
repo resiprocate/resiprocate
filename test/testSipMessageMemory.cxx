@@ -1,6 +1,6 @@
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 
 #include <iostream>
 #include <memory>

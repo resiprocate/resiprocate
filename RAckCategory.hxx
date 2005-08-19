@@ -3,8 +3,8 @@
 
 #include <iosfwd>
 #include "rutil/Data.hxx"
-#include "resip/sip/ParserCategory.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/MethodTypes.hxx"
 
 namespace resip
 {

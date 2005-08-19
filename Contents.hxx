@@ -3,13 +3,13 @@
 
 #include <iosfwd>
 
-#include "resip/sip/LazyParser.hxx"
-#include "resip/sip/Mime.hxx"
-#include "resip/sip/StringCategory.hxx"
-#include "resip/sip/Headers.hxx"
-#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/stack/LazyParser.hxx"
+#include "resip/stack/Mime.hxx"
+#include "resip/stack/StringCategory.hxx"
+#include "resip/stack/Headers.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/Data.hxx"
-#include "resip/sip/ContentsFactory.hxx"
+#include "resip/stack/ContentsFactory.hxx"
 
 namespace resip
 {

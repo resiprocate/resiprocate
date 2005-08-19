@@ -1,9 +1,9 @@
 #include "rutil/DataStream.hxx"
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/ApplicationSip.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/ApplicationSip.hxx"
 #include "TestSupport.hxx"
 
 #include <iostream>

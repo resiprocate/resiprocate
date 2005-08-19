@@ -2,7 +2,7 @@
 /* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z ParameterHash ParameterHash.gperf  */
 #include <string.h>
 #include <ctype.h>
-#include "resip/sip/ParameterTypes.hxx"
+#include "resip/stack/ParameterTypes.hxx"
 namespace resip {
 using namespace std;
 struct params { char *name; ParameterTypes::Type type; };

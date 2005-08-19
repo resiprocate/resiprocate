@@ -10,11 +10,11 @@
 #include <iostream>
 #include <memory>
 
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/DeprecatedDialog.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/DeprecatedDialog.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ThreadIf.hxx"
 

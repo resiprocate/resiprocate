@@ -1,8 +1,8 @@
 #ifndef RESIP_ParserContainer_hxx
 #define RESIP_ParserContainer_hxx
 
-#include "resip/sip/HeaderFieldValueList.hxx"
-#include "resip/sip/ParserContainerBase.hxx"
+#include "resip/stack/HeaderFieldValueList.hxx"
+#include "resip/stack/ParserContainerBase.hxx"
 
 namespace resip
 {

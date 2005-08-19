@@ -1,4 +1,4 @@
-#include "resip/sip/TransactionUserMessage.hxx"
+#include "resip/stack/TransactionUserMessage.hxx"
 
 using namespace resip;
 

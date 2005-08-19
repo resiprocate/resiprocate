@@ -1,5 +1,5 @@
-#include "resip/sip/TransactionUser.hxx"
-#include "resip/sip/MessageFilterRule.hxx"
+#include "resip/stack/TransactionUser.hxx"
+#include "resip/stack/MessageFilterRule.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

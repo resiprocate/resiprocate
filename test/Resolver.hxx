@@ -3,7 +3,7 @@
 
 #include <list>
 #include "rutil/Data.hxx"
-#include "resip/sip/Transport.hxx"
+#include "resip/stack/Transport.hxx"
 
 #include "Resolver.hxx"
 

@@ -1,7 +1,7 @@
 #ifndef RESIP_ContentsFactoryBase_hxx
 #define RESIP_ContentsFactoryBase_hxx
 
-#include "resip/sip/Mime.hxx"
+#include "resip/stack/Mime.hxx"
 #include "rutil/HashMap.hxx"
 
 namespace resip
