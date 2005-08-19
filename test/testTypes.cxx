@@ -3,7 +3,7 @@
 #include <unistd.h>
 #endif
 #include "rutil/Logger.hxx"
-#include "resip/sip/HeaderTypes.hxx"
+#include "resip/stack/HeaderTypes.hxx"
 using namespace resip;
 using namespace std;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP

@@ -3,8 +3,8 @@
 
 #include <map>
 
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

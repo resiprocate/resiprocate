@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "resip/sip/ParserCategory.hxx"
+#include "resip/stack/ParserCategory.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip

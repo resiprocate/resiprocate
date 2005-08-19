@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 
 #include <cassert>
 
-#include "resip/sip/Embedded.hxx"
+#include "resip/stack/Embedded.hxx"
 #include "rutil/Data.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

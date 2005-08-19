@@ -1,15 +1,15 @@
 
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <cassert>
 #include <limits.h>
 
-#include "resip/sip/TimerQueue.hxx"
-#include "resip/sip/TimerMessage.hxx"
-#include "resip/sip/TransactionMessage.hxx"
-#include "resip/sip/TuSelector.hxx"
+#include "resip/stack/TimerQueue.hxx"
+#include "resip/stack/TimerMessage.hxx"
+#include "resip/stack/TransactionMessage.hxx"
+#include "resip/stack/TuSelector.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"

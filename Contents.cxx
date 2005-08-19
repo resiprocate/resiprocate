@@ -1,13 +1,13 @@
 #include <vector>
 
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/GenericContents.hxx"
+#include "resip/stack/GenericContents.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;

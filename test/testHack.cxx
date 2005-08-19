@@ -1,17 +1,17 @@
 #include <iostream>
 #include <memory>
 
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/Rlmi.hxx"
-#include "resip/sip/Pidf.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/Rlmi.hxx"
+#include "resip/stack/Pidf.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 #include "rutil/ParseBuffer.hxx"
 
-#include "resip/sip/UnknownParameterType.hxx"
-#include "resip/sip/XMLCursor.hxx"
+#include "resip/stack/UnknownParameterType.hxx"
+#include "resip/stack/XMLCursor.hxx"
 
 using namespace resip;
 using namespace std;

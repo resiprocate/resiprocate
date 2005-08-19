@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include "resip/sip/ApiCheck.hxx"
-#include "resip/sip/ApiCheckList.hxx"
+#include "resip/stack/ApiCheck.hxx"
+#include "resip/stack/ApiCheckList.hxx"
 
 namespace resip
 {

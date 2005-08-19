@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
-#include "resip/sip/DeprecatedDialog.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/DeprecatedDialog.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"

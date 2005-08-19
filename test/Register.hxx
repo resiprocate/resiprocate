@@ -1,7 +1,7 @@
 #ifndef Register_hxx
 #define Register_hxx
 
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 namespace Loadgen
 {

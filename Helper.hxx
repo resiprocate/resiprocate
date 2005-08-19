@@ -3,13 +3,13 @@
 
 #include <time.h>
 
-#include "resip/sip/Symbols.hxx"
-#include "resip/sip/Uri.hxx"
-#include "resip/sip/MethodTypes.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/MethodTypes.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
 
 namespace resip
 {

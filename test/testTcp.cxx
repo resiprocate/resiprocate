@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -12,10 +12,10 @@
 
 #include <iostream>
 
-#include "resip/sip/TcpTransport.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/TcpTransport.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"

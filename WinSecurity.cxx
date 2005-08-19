@@ -1,4 +1,4 @@
-#include "resip/sip/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #include <sys/types.h>
 
 #ifdef USE_SSL

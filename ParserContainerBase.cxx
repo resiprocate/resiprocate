@@ -1,7 +1,7 @@
 #include <cassert>
 
 #include "ParserContainerBase.hxx"
-#include "resip/sip/Embedded.hxx"
+#include "resip/stack/Embedded.hxx"
 
 using namespace resip;
 using namespace std;;

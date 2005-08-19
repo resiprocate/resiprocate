@@ -1,9 +1,9 @@
 #if !defined(RESIP_HEADERS_HXX)
 #define RESIP_HEADERS_HXX 
 
-#include "resip/sip/ParserCategories.hxx"
-#include "resip/sip/HeaderTypes.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/HeaderTypes.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 

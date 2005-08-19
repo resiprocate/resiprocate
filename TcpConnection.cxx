@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/TcpConnection.hxx"
+#include "resip/stack/TcpConnection.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Tuple.hxx"
 #include "rutil/Socket.hxx"

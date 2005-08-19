@@ -4,7 +4,7 @@
 #include <ostream>
 
 #include "rutil/Logger.hxx"
-#include "resip/sip/Security.hxx"
+#include "resip/stack/Security.hxx"
 
 
 using namespace resip;
