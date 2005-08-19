@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <boost/shared_ptr.hpp>
 #include <loki/Singleton.h>
+#include <vector>
 
 //#ifndef WIN32
 //#include <sys/select.h> // posix
@@ -21,6 +22,7 @@ class TransportDriverImpl : public resip::ThreadIf
       class Client
       {
          public:
+            virtual ~Client()=0;
             virtual void process(resip::FdSet& fdset) = 0;
             virtual void registerWithTransportDriver();
             virtual void unregisterFromTransportDriver();
