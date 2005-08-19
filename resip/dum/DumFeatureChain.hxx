@@ -2,7 +2,7 @@
 #define RESIP_DumFeatureChain_HXX 
 
 #include <vector>
-#include "resiprocate/os/SharedPtr.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

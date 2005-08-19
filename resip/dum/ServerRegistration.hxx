@@ -1,9 +1,9 @@
 #if !defined(RESIP_SERVERREGISTRATION_HXX)
 #define RESIP_SERVERREGISTRATION_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/dum/NonDialogUsage.hxx"
+#include "resip/dum/RegistrationPersistenceManager.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 namespace resip
 {

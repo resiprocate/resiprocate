@@ -8,7 +8,7 @@
 #include <list>
 #include <loki/Functor.h>
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #include "tfm/TestException.hxx"
 #include "tfm/AsciiGraphic.hxx"

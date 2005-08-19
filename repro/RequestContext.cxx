@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <iostream>
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/TransactionTerminated.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Inserter.hxx"
+#include "resip/sip/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 // Remove warning about 'this' use in initiator list
 #if defined(WIN32)

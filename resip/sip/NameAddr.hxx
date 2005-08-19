@@ -2,10 +2,10 @@
 #define RESIP_NAME_ADDR_HXX
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
-#include "resiprocate/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "resip/sip/ParserContainer.hxx"
+#include "resip/sip/Uri.hxx"
 
 namespace resip
 {

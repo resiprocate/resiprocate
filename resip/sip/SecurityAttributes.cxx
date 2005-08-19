@@ -1,4 +1,4 @@
-#include "resiprocate/SecurityAttributes.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
 
 using namespace resip;
 

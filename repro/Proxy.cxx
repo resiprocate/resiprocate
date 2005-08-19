@@ -1,16 +1,16 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 
-#include "resiprocate/TransactionTerminated.hxx"
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "resip/sip/TransactionTerminated.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

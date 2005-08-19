@@ -1,18 +1,18 @@
 
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cassert>
 #include <limits.h>
 
-#include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/TimerMessage.hxx"
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/TuSelector.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/TimerQueue.hxx"
+#include "resip/sip/TimerMessage.hxx"
+#include "resip/sip/TransactionMessage.hxx"
+#include "resip/sip/TuSelector.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

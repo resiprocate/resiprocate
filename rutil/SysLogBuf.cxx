@@ -3,7 +3,7 @@
 #endif
 
 #include <cassert>
-#include "resiprocate/os/SysLogBuf.hxx"
+#include "rutil/SysLogBuf.hxx"
 
 using resip::SysLogBuf;
 

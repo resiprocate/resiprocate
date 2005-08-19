@@ -1,6 +1,6 @@
-#include "resiprocate/dum/DefaultServerReferHandler.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/DefaultServerReferHandler.hxx"
+#include "resip/dum/ServerSubscription.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

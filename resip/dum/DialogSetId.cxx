@@ -1,7 +1,7 @@
 #include "DialogSetId.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

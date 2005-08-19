@@ -7,9 +7,9 @@
 #endif
 
 #include "CommandLineParser.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/ParseException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "resip/sip/ParseException.hxx"
 
 using namespace resip;
 using namespace std;

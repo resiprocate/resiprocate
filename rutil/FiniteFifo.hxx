@@ -1,7 +1,7 @@
 #if !defined(RESIP_FiniteFifo_hxx)
 #define RESIP_FiniteFifo_hxx 
 
-#include "resiprocate/os/AbstractFifo.hxx"
+#include "rutil/AbstractFifo.hxx"
 
 // efficiency note: use a circular buffer do avoid list node allocation
 

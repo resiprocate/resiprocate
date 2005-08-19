@@ -1,5 +1,5 @@
-#include "resiprocate/KeepAliveMessage.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/KeepAliveMessage.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

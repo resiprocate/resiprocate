@@ -1,7 +1,7 @@
 #include <assert.h>
 
 #include "compat.hxx"
-#include "resiprocate/os/Coders.hxx"
+#include "rutil/Coders.hxx"
 
 
 namespace resip

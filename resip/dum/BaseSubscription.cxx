@@ -1,7 +1,7 @@
-#include "resiprocate/dum/BaseSubscription.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/dum/BaseSubscription.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 using namespace resip;
 

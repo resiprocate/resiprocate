@@ -4,13 +4,13 @@
 #include <iostream>
 #include <string>
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 #include "HashMap.hxx"
 #if defined(HAVE_CONFIG_HXX)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #ifndef RESIP_DATA_LOCAL_SIZE

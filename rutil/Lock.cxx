@@ -1,4 +1,4 @@
-#include "resiprocate/os/Lock.hxx"
+#include "rutil/Lock.hxx"
 
 using resip::Lock;
 using resip::ReadLock;

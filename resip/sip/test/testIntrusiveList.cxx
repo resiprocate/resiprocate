@@ -1,6 +1,6 @@
 #include <cassert>
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/IntrusiveListElement.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/IntrusiveListElement.hxx"
 
 using namespace resip;
 using namespace std;

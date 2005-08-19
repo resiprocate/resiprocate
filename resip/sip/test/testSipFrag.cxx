@@ -3,15 +3,15 @@
 #include <memory>
 #include <list>
 
-#include "resiprocate/os/DataStream.hxx"
+#include "rutil/DataStream.hxx"
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/SipFrag.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/SipFrag.hxx"
 #include "TestSupport.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/test/tassert.h"
+#include "rutil/Logger.hxx"
+#include "resip/sip/test/tassert.h"
 
 using namespace resip;
 using namespace std;

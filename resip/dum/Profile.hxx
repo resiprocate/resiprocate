@@ -3,9 +3,9 @@
 
 #include <iosfwd>
 #include <set>
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
+#include "resip/sip/Headers.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

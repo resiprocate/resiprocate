@@ -3,14 +3,14 @@
 
 #include <exception>
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/SendData.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/Transport.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Tuple.hxx"
+#include "resip/sip/SendData.hxx"
 
 namespace resip
 {

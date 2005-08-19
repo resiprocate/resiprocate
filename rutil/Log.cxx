@@ -1,9 +1,9 @@
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 
 #include <cassert>
 #include <iostream>
 #include <stdio.h>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -12,10 +12,10 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

@@ -3,9 +3,9 @@
 
 #include <iosfwd>
 
-#include "resiprocate/Parameter.hxx"
-#include "resiprocate/ParameterTypeEnums.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Parameter.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

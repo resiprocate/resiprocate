@@ -11,8 +11,8 @@
 #include <cassert>
 
 #include "HashMap.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#include "rutil/compat.hxx"
+#include "resip/sip/ParserContainer.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be

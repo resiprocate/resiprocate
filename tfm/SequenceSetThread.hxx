@@ -1,7 +1,7 @@
 #ifndef SequenceSetThread_hxx
 #define SequenceSetThread_hxx
 
-#include "resiprocate/os/ThreadIf.hxx"
+#include "rutil/ThreadIf.hxx"
 #include "tfm/SequenceSet.hxx"
 
 class SequenceSetThread : public resip::ThreadIf, public SequenceSet

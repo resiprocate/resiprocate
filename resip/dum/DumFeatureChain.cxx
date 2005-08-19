@@ -1,10 +1,10 @@
 #include <vector>
 
-#include "resiprocate/os/SharedPtr.hxx"
-#include "resiprocate/dum/TargetCommand.hxx"
-#include "resiprocate/dum/DumFeature.hxx"
-#include "resiprocate/dum/DumFeatureChain.hxx"
-#include "resiprocate/Message.hxx"
+#include "rutil/SharedPtr.hxx"
+#include "resip/dum/TargetCommand.hxx"
+#include "resip/dum/DumFeature.hxx"
+#include "resip/dum/DumFeatureChain.hxx"
+#include "resip/sip/Message.hxx"
 
 using namespace resip;
 using namespace std;

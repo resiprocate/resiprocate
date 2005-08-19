@@ -1,20 +1,20 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <memory>
 
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SendData.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/stun/stun.h"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/SendData.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/UdpTransport.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/compat.hxx"
+#include "resip/sip/stun/stun.h"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

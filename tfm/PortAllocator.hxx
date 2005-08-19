@@ -2,8 +2,8 @@
 #define PORTALLOCATOR_HXX
 
 #include "PortAllocator.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Data.hxx"
 
 class PortAllocator
 {

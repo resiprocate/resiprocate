@@ -2,7 +2,7 @@
 #define RESIP_COUNTSTREAM_HXX 
 
 #include <iostream>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

@@ -1,9 +1,9 @@
 #if !defined(RESIP_TLSTRANSPORT_HXX)
 #define RESIP_TLSTRANSPORT_HXX
 
-#include "resiprocate/TcpBaseTransport.hxx"
-#include "resiprocate/SecurityTypes.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/TcpBaseTransport.hxx"
+#include "resip/sip/SecurityTypes.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

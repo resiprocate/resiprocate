@@ -5,10 +5,10 @@
 #include <cppunit/TestCaller.h>
 #include <cppunit/TestSuite.h>
 
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Tuple.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/TestUser.hxx"
 

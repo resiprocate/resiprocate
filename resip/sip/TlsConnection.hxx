@@ -1,9 +1,9 @@
 #if !defined(TlsConnection_hxx)
 #define TlsConnection_hxx
 
-#include "resiprocate/Connection.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
-#include "resiprocate/SecurityTypes.hxx"
+#include "resip/sip/Connection.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "resip/sip/SecurityTypes.hxx"
 
 #ifdef USE_SSL
 #include <openssl/ssl.h>

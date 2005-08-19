@@ -7,10 +7,10 @@
 #  include <sys/time.h>
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Condition.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Condition.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Timer.hxx"
 
 using namespace resip;
 

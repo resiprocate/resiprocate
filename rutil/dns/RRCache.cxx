@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 extern "C"
@@ -32,20 +32,20 @@ extern "C"
 #include <list>
 #include <map>
 #include <cassert>
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/RRFactory.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsCnameRecord.hxx"
-#include "resiprocate/dns/RRCache.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/dns/RRFactory.hxx"
+#include "rutil/dns/RROverlay.hxx"
+#include "rutil/dns/RRFactory.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/DnsAAAARecord.hxx"
+#include "rutil/dns/DnsHostRecord.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
+#include "rutil/dns/DnsSrvRecord.hxx"
+#include "rutil/dns/DnsCnameRecord.hxx"
+#include "rutil/dns/RRCache.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

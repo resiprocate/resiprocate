@@ -1,8 +1,8 @@
 #if !defined(RESIP_HandleManager_HXX)
 #define RESIP_HandleManager_HXX
 
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/dum/Handled.hxx"
+#include "rutil/HashMap.hxx"
+#include "resip/dum/Handled.hxx"
 
 namespace resip
 {

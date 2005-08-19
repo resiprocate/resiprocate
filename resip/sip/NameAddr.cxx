@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/ParseException.hxx"
-#include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/ParseException.hxx"
+#include "resip/sip/UnknownParameter.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

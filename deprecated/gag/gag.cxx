@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <list>
@@ -12,14 +12,14 @@
 #include <sys/fcntl.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/TuIM.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
-//#include "resiprocate/ApiCheckList.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/TuIM.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/ShutdownMessage.hxx"
+//#include "resip/sip/ApiCheckList.hxx"
 
 #include "contrib/getopt/getopt.h"
 

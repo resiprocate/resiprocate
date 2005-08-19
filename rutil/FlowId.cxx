@@ -1,7 +1,7 @@
-#include "resiprocate/os/FlowId.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/Transport.hxx"
+#include "rutil/FlowId.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "resip/sip/Transport.hxx"
 #include <iostream>
 
 using namespace resip;

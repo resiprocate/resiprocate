@@ -1,7 +1,7 @@
 #ifndef RESIP_Log_hx
 #define RESIP_Log_hx
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #ifndef WIN32
 #include <syslog.h>
@@ -11,9 +11,9 @@
 
 #include <set>
 
-#include "resiprocate/os/Subsystem.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/HashMap.hxx"
+#include "rutil/Subsystem.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/HashMap.hxx"
 #include <iostream>
 
 namespace resip

@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined(USE_ARES)
@@ -16,8 +16,8 @@ extern "C"
 #endif
 #endif
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
 #include "RROverlay.hxx"
 #include "DnsResourceRecord.hxx"
 #include "DnsSrvRecord.hxx"

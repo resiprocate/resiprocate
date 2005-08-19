@@ -2,7 +2,7 @@
 #define Repro_PrivateKeySubscriptionHandler_hxx
 
 #if defined(USE_SSL)
-#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resip/dum/SubscriptionHandler.hxx"
 
 namespace resip
 {

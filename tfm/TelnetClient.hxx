@@ -4,7 +4,7 @@
 #include <Netxx/Stream.h>
 #include <Netxx/Timeout.h>
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 class TelnetClient
 {

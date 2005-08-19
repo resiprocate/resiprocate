@@ -3,13 +3,13 @@
 
 #include <time.h>
 
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/Contents.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
 
 namespace resip
 {

@@ -2,11 +2,11 @@
 #include <Iphlpapi.h>
 #include <atlconv.h>
 
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/WinCompat.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/WinCompat.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

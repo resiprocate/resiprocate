@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include "resiprocate/SipMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
 #include "DumFeature.hxx"
 
 namespace resip

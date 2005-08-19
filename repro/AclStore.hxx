@@ -1,7 +1,7 @@
 #if !defined(REPRO_ACLSTORE_HXX)
 #define REPRO_ACLSTORE_HXX
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #include "repro/AbstractDb.hxx"
 

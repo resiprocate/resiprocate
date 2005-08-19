@@ -1,5 +1,5 @@
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Timer.hxx"
 
 #ifndef WIN32
 #include <unistd.h>

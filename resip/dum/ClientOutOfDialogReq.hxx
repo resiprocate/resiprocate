@@ -1,9 +1,9 @@
 #if !defined(RESIP_CLIENTOUTOFDIALOGREQ_HXX)
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
-#include "resiprocate/CSeqCategory.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/dum/NonDialogUsage.hxx"
+#include "resip/sip/CSeqCategory.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 namespace resip
 {

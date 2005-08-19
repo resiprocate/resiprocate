@@ -1,10 +1,10 @@
 #ifndef RESIP_QUERY_TYPES_HXX
 #define RESIP_QUERY_TYPES_HXX
 
-#include "resiprocate/os/HeapInstanceCounter.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/BaseException.hxx"
 #include "DnsResourceRecord.hxx"
 #include "DnsHostRecord.hxx"
 #include "DnsCnameRecord.hxx"

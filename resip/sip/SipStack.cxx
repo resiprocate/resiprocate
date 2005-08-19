@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -9,30 +9,30 @@
 #include <arpa/inet.h>
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/os/AsyncProcessHandler.hxx"
-#include "resiprocate/TcpTransport.hxx"
-#include "resiprocate/TlsTransport.hxx"
-#include "resiprocate/UdpTransport.hxx"
-#include "resiprocate/DtlsTransport.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/TransactionUserMessage.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/ShutdownMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "rutil/Inserter.hxx"
+#include "resip/sip/StatisticsManager.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
+#include "resip/sip/TcpTransport.hxx"
+#include "resip/sip/TlsTransport.hxx"
+#include "resip/sip/UdpTransport.hxx"
+#include "resip/sip/DtlsTransport.hxx"
+#include "resip/sip/TransactionUser.hxx"
+#include "resip/sip/TransactionUserMessage.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )

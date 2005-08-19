@@ -3,8 +3,8 @@
 
 #include <set>
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/TransportType.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/TransportType.hxx"
 
 class Source
 {

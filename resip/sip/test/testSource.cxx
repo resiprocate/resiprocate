@@ -9,9 +9,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iostream>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Tuple.hxx"
 
 int
 main(int argc, char *argv[])

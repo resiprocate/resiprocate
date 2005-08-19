@@ -4,16 +4,16 @@
 #include <tchar.h>
 #include <time.h>
 //from Random.cxx
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 #endif
 
 #include <cassert>
 #include <iostream>
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

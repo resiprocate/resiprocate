@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/MultipartRelatedContents.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/MultipartRelatedContents.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

@@ -2,9 +2,9 @@
 #define RESIP_CSEQ_HXX 
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/MethodTypes.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "resip/sip/MethodTypes.hxx"
 
 namespace resip
 {

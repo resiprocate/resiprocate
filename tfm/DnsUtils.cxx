@@ -8,7 +8,7 @@
 
 #include "Resolver.hxx"
 #include "DnsUtils.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/DnsUtil.hxx"
 
 using namespace resip;
 using namespace std;

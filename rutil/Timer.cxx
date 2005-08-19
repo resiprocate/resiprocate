@@ -1,4 +1,4 @@
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 
 #if defined( WIN32 )
 #  include <windows.h>
@@ -10,9 +10,9 @@
 
 #include <cassert>
 
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
