@@ -1,16 +1,16 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <iostream>
-#include "resiprocate/DeprecatedDialog.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/DeprecatedDialog.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/NameAddr.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

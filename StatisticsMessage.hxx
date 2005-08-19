@@ -2,10 +2,10 @@
 #define RESIP_StatisticsMessage_hxx
 
 #include <iostream>
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {

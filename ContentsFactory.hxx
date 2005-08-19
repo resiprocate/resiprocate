@@ -1,7 +1,7 @@
 #ifndef RESIP_ContentsFactory
 #define RESIP_ContentsFactory
 
-#include "resiprocate/ContentsFactoryBase.hxx"
+#include "resip/sip/ContentsFactoryBase.hxx"
 
 namespace resip
 {

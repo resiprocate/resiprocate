@@ -5,9 +5,9 @@
 #include <limits.h>
 #include <iosfwd>
 
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/Inserter.hxx"
 
 using namespace std;
 

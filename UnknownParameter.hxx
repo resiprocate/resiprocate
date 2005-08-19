@@ -2,7 +2,7 @@
 #define RESIP_UNKNOWNPARAMETER_HXX 
 
 #include <iosfwd>
-#include "resiprocate/Parameter.hxx"
+#include "resip/sip/Parameter.hxx"
 
 namespace resip
 {

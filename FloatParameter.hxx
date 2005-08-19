@@ -1,8 +1,8 @@
 #if !defined(RESIP_FLOATPARAMETER_HXX)
 #define RESIP_FLOATPARAMETER_HXX 
 
-#include "resiprocate/Parameter.hxx"
-#include "resiprocate/ParameterTypeEnums.hxx"
+#include "resip/sip/Parameter.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
 #include <iosfwd>
 
 namespace resip

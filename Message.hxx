@@ -1,7 +1,7 @@
 #ifndef RESIP_Message_hxx
 #define RESIP_Message_hxx 
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include <iosfwd>
 
 namespace resip

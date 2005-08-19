@@ -1,7 +1,7 @@
 #ifndef Registrar_hxx
 #define Registrar_hxx
 
-#include "resiprocate/Uri.hxx"
+#include "resip/sip/Uri.hxx"
 
 namespace Loadgen
 {

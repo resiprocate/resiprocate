@@ -1,8 +1,8 @@
 #if !defined(TESTSUPPORT_HXX)
 #define TESTSUPPORT_HXX
 #include <sys/types.h>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 namespace resip {
 

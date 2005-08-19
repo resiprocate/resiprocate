@@ -3,11 +3,11 @@
 
 #include <set>
 #include <iosfwd>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/DtlsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "resip/sip/TransactionMessage.hxx"
+#include "resip/sip/DtlsMessage.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/TimeLimitFifo.hxx"
+#include "rutil/Timer.hxx"
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for

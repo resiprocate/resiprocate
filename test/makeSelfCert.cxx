@@ -4,12 +4,12 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/err.h>
-#include "resiprocate/X509Contents.hxx"
-#include "resiprocate/Pkcs8Contents.hxx"
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/X509Contents.hxx"
+#include "resip/sip/Pkcs8Contents.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

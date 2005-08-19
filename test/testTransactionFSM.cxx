@@ -51,18 +51,18 @@
 #include <fstream>
 #include <string>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
 
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "resip/sip/Transport.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

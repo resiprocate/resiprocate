@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/TcpConnection.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "resip/sip/TcpConnection.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/Socket.hxx"
 
 using namespace resip;
 

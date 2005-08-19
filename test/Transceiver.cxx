@@ -8,10 +8,10 @@
 #include <arpa/inet.h>
 
 #include "Transceiver.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Timer.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP

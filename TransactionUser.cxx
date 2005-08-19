@@ -1,7 +1,7 @@
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/MessageFilterRule.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/TransactionUser.hxx"
+#include "resip/sip/MessageFilterRule.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 

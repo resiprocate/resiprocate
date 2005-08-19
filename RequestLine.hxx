@@ -2,10 +2,10 @@
 #define RESIP_REQUESTLINE_HXX
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/Uri.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/Uri.hxx"
 
 namespace resip
 {

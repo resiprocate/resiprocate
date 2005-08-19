@@ -1,6 +1,6 @@
 #include <iostream>
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Timer.hxx"
 
 #include <unistd.h>
 

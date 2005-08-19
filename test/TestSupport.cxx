@@ -1,6 +1,6 @@
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

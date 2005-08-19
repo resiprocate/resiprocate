@@ -1,17 +1,17 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cassert>
-#include "resiprocate/BranchParameter.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Coders.hxx"
-#include "resiprocate/ParseException.hxx"
+#include "resip/sip/BranchParameter.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Coders.hxx"
+#include "resip/sip/ParseException.hxx"
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

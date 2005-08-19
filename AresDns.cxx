@@ -1,6 +1,6 @@
-#include "resiprocate/AresDns.hxx"
+#include "resip/sip/AresDns.hxx"
 
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 extern "C"
 {

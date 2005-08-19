@@ -2,8 +2,8 @@
 #define RESIP_EXPIRES_CATEGORY_HXX
 
 #include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
+#include "rutil/Data.hxx"
+#include "resip/sip/ParserCategory.hxx"
 
 namespace resip
 {

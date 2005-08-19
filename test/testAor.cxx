@@ -3,8 +3,8 @@
 
 #include "TestSupport.hxx"
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Aor.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/Aor.hxx"
 
 using namespace resip;
 using namespace std;

@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -14,11 +14,11 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/StackThread.hxx"
-#include "resiprocate/stun/stun.h"
-#include "resiprocate/stun/udp.h"
+#include "rutil/Logger.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/StackThread.hxx"
+#include "resip/sip/stun/stun.h"
+#include "resip/sip/stun/udp.h"
 
 using namespace resip;
 using namespace std;

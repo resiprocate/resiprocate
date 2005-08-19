@@ -5,8 +5,8 @@
 #include <netinet/in.h>
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 
 namespace resip
 {
