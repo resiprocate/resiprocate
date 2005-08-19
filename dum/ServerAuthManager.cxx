@@ -1,13 +1,13 @@
 #include <cassert>
 
-#include "resiprocate/dum/DumFeature.hxx"
-#include "resiprocate/dum/DumFeatureChain.hxx"
-#include "resiprocate/dum/ServerAuthManager.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/TargetCommand.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/dum/DumFeature.hxx"
+#include "resip/dum/DumFeatureChain.hxx"
+#include "resip/dum/ServerAuthManager.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/TargetCommand.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
+#include "resip/sip/Helper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

@@ -1,6 +1,6 @@
-#include "resiprocate/dum/RegistrationCreator.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/RegistrationCreator.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

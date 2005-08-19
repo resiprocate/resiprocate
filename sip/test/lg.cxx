@@ -1,6 +1,6 @@
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
-#include "resiprocate/Uri.hxx"
+#include "resip/sip/Uri.hxx"
 
 #include "Register.hxx"
 #include "Registrar.hxx"

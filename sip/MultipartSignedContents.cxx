@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-//#include "resiprocate/EncodingContext.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+//#include "resip/sip/EncodingContext.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

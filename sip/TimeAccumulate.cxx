@@ -1,5 +1,5 @@
-#include "resiprocate/TimeAccumulate.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/TimeAccumulate.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
 

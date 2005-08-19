@@ -1,8 +1,8 @@
 #if !defined(RESIP_USER_AUTH_INFO_HXX)
 #define RESIP_USER_AUTH_INFO_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/dum/DumFeatureMessage.hxx"
+#include "rutil/Data.hxx"
+#include "resip/dum/DumFeatureMessage.hxx"
 
 namespace resip
 {

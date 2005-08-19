@@ -1,7 +1,7 @@
 #if !defined(RESIP_APPLICATIONSIP_HXX)
 #define RESIP_APPLICATIONSIP_HXX 
 
-#include "resiprocate/SipFrag.hxx"
+#include "resip/sip/SipFrag.hxx"
 
 namespace resip
 {

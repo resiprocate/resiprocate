@@ -1,4 +1,4 @@
-#include "resiprocate/TransactionUserMessage.hxx"
+#include "resip/sip/TransactionUserMessage.hxx"
 
 using namespace resip;
 

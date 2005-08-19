@@ -3,13 +3,13 @@
 
 #include <list>
 
-#include "resiprocate/ConnectionBase.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
-#include "resiprocate/os/IntrusiveListElement.hxx"
+#include "resip/sip/ConnectionBase.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/MsgHeaderScanner.hxx"
+#include "rutil/IntrusiveListElement.hxx"
 
 namespace resip
 {

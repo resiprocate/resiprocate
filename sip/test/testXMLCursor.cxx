@@ -1,7 +1,7 @@
-#include "resiprocate/XMLCursor.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/XMLCursor.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Inserter.hxx"
+#include "rutil/Logger.hxx"
 
 #include <iostream>
 

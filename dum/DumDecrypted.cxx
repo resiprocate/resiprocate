@@ -1,6 +1,6 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/DumDecrypted.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/dum/DumDecrypted.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

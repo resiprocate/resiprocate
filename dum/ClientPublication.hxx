@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTPUBLICATION_HXX)
 #define RESIP_CLIENTPUBLICATION_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resip/dum/NonDialogUsage.hxx"
 
 namespace resip
 {

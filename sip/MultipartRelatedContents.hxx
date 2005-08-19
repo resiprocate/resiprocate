@@ -1,7 +1,7 @@
 #ifndef RESIP_MultipartRelatedContents_hxx
 #define RESIP_MultipartRelatedContents_hxx
 
-#include "resiprocate/MultipartMixedContents.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
 
 namespace resip
 {

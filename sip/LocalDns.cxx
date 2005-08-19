@@ -1,8 +1,8 @@
 #include <fstream>
 
-#include "resiprocate/LocalDns.hxx"
+#include "resip/sip/LocalDns.hxx"
 
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 extern "C"
 {

@@ -1,11 +1,11 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/UnknownParameter.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

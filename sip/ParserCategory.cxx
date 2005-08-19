@@ -1,24 +1,24 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/compat.hxx"
+#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/sip/ParserCategory.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/compat.hxx"
 
-#include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/ExtensionParameter.hxx"
+#include "resip/sip/UnknownParameter.hxx"
+#include "resip/sip/ExtensionParameter.hxx"
 
 #include <iostream>
 #include <cassert>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

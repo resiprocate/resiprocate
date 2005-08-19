@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_HXX)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cstring>
@@ -11,10 +11,10 @@ bool FALSE=false;
 #endif
 
 #include "UserAgent.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

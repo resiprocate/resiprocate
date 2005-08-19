@@ -1,8 +1,8 @@
 #ifndef RESIP_SendData_HXX
 #define RESIP_SendData_HXX
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

@@ -1,9 +1,9 @@
 #if !defined(RESIP_INVITESESSIONCREATOR_HXX)
 #define RESIP_INVITESESSIONCREATOR_HXX
 
-#include "resiprocate/dum/BaseCreator.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resip/dum/BaseCreator.hxx"
+#include "resip/dum/Handles.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 namespace resip
 {

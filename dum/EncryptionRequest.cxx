@@ -1,5 +1,5 @@
-#include "resiprocate/dum/EncryptionRequest.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/dum/EncryptionRequest.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

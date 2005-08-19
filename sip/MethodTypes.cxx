@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <string.h>
 #include <cstdio>
 #include <cassert>
 
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/Symbols.hxx"
+#include "rutil/Data.hxx"
 
 using namespace resip;
 

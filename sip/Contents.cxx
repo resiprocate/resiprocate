@@ -1,14 +1,14 @@
 #include <vector>
 
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/GenericContents.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Contents.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/GenericContents.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

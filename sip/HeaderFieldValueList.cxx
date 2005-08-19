@@ -1,15 +1,15 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 
 #include <cassert>
 
-#include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/HeaderFieldValueList.hxx"
-#include "resiprocate/ParserContainerBase.hxx"
-#include "resiprocate/Embedded.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/sip/HeaderFieldValueList.hxx"
+#include "resip/sip/ParserContainerBase.hxx"
+#include "resip/sip/Embedded.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

@@ -1,10 +1,10 @@
 #include <memory>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Timer.hxx"
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Helper.hxx"
 #include "Resolver.hxx"
 
 #include "Register.hxx"

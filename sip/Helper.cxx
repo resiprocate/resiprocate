@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <string.h>
@@ -7,27 +7,27 @@
 #include <algorithm>
 #include <memory>
 
-#include "resiprocate/Auth.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Coders.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Security.hxx"
-//#include "resiprocate/SecurityAttributes.hxx"
-//#include "resiprocate/Contents.hxx"
-#include "resiprocate/Pkcs7Contents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/MultipartAlternativeContents.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Auth.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Coders.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/MD5Stream.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Security.hxx"
+//#include "resip/sip/SecurityAttributes.hxx"
+//#include "resip/sip/Contents.hxx"
+#include "resip/sip/Pkcs7Contents.hxx"
+#include "resip/sip/MultipartSignedContents.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

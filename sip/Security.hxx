@@ -5,10 +5,10 @@
 #include <map>
 #include <vector>
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/SecurityTypes.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/BaseException.hxx"
+#include "resip/sip/SecurityTypes.hxx"
+#include "resip/sip/SecurityAttributes.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/ssl.h>

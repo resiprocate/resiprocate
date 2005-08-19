@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #ifndef WIN32
@@ -21,16 +21,16 @@
 #endif
 #endif
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
 
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/DnsResult.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/StatelessHandler.hxx"
-#include "resiprocate/TransactionController.hxx"
-#include "resiprocate/TransportFailure.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/TransportSelector.hxx"
+#include "resip/sip/DnsResult.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/StatelessHandler.hxx"
+#include "resip/sip/TransactionController.hxx"
+#include "resip/sip/TransportFailure.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 
