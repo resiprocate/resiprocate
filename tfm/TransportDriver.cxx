@@ -19,6 +19,10 @@ TransportDriverImpl::~TransportDriverImpl()
    join();
 }
 
+TransportDriverImpl::Client::~Client()
+{
+}
+
 void 
 TransportDriverImpl::Client::registerWithTransportDriver()
 {
