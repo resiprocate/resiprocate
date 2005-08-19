@@ -4,10 +4,8 @@
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
 #include "resip/sip/UdpTransport.hxx"
-
-#include <resiprocate/os/Timer.hxx>
-
 
 using namespace resip;
 using namespace std;
