@@ -13,7 +13,7 @@
 	</Platforms>
 	<Configurations>
 		<Configuration
-			Name="Debug Static|Win32"
+			Name="Debug|Win32"
 			OutputDirectory=".\Debug_static"
 			IntermediateDirectory=".\Debug_static"
 			ConfigurationType="4"
@@ -63,7 +63,7 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Release Static|Win32"
+			Name="Release|Win32"
 			OutputDirectory=".\Release_static"
 			IntermediateDirectory=".\Release_static"
 			ConfigurationType="4"
