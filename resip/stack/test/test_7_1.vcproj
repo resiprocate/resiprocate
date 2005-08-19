@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;;&quot;$(ProjectDir)../../../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -36,7 +36,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib $(ProjectDir)..\Debug\resiprocate.lib $(ProjectDir)..\..\contrib\ares\Debug\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -78,7 +78,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../&quot;;&quot;$(ProjectDir)../../../&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib $(ProjectDir)..\..\resiprocate\Release\resiprocate.lib $(ProjectDir)..\..\contrib\ares\Release\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"

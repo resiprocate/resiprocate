@@ -36,7 +36,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\resiprocate\dum\Debug\dum.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib $(SolutionDir)\resiprocate\dum\Release\dum.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -148,7 +148,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\SSL-Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\resiprocate\dum\SSL-Debug\dum.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -190,7 +190,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)../../../openssl-0.9.7g/inc32&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../../&quot;;&quot;$(ProjectDir)../../contrib/ares&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE; USE_SSL"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -205,7 +205,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\SSL-Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib $(SolutionDir)\resiprocate\dum\SSL-Release\dum.lib Iphlpapi.lib crypt32.lib $(SolutionDir)../../../openssl-0.9.7g/out32/libeay32.lib $(SolutionDir)../../../openssl-0.9.7g/out32/ssleay32.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
