@@ -18,9 +18,9 @@ using namespace std;
 RRList::RRList() : mRRType(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX) {}
 
 RRList::RRList(const Data& key, 
-                const int rrtype, 
-                int ttl, 
-                int status)
+               const int rrtype, 
+               int ttl, 
+               int status)
    : mKey(key), mRRType(rrtype), mStatus(status)
 {
    mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
@@ -86,11 +86,7 @@ RRList::Records RRList::records(const int protocol, bool& allBlacklisted)
 
    for (std::vector<RecordItem>::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
    {
-      if ((*it).states.empty())
-      {
-         records.push_back((*it).record);
-      }
-      else if (!(*it).states[protocol].blacklisted)
+      if (!isBlacklisted(*it, protocol))
       {
          records.push_back((*it).record);
       }
@@ -110,27 +106,15 @@ RRList::Records RRList::records(const int protocol, bool& allBlacklisted)
 void RRList::blacklist(const int protocol,
                        const DataArr& targets)
 {
+   if (protocol == Protocol::Reserved) return;
+
    for (DataArr::const_iterator it = targets.begin(); it != targets.end(); ++it)
    {
       RecordItr recordItr = find(*it);
       if (recordItr != mRecords.end())
       {
-         if ((*recordItr).states.empty())
-         {
-            initStates((*recordItr).states);
-         }
-         (*recordItr).states[protocol].blacklisted = true;
+         blacklist(*recordItr, protocol);
       }
-   }
-}
-
-void RRList::initStates(States& states)
-{
-   RecordState state;
-   state.blacklisted = false;
-   for (int i = 0; i < Protocol::Total; ++i)
-   {
-      states.push_back(state);
    }
 }
 
@@ -153,4 +137,39 @@ void RRList::clear()
       delete (*it).record;
    }
    mRecords.clear();
+}
+
+bool RRList::isBlacklisted(RecordItem& item, int protocol)
+{
+   if (protocol == Protocol::Reserved) return false;
+
+   vector<int>::iterator it;
+   for (it = item.blacklistedProtocols.begin(); it != item.blacklistedProtocols.end(); ++it)
+   {
+      if (protocol == *it)
+      {
+         break;
+      }
+   }
+
+   return item.blacklistedProtocols.end()!=it;
+}
+
+void RRList::blacklist(RecordItem& item, int protocol)
+{
+   if (Protocol::Reserved == protocol) return;
+
+   vector<int>::iterator it;
+   for (it = item.blacklistedProtocols.begin(); it != item.blacklistedProtocols.end(); ++it)
+   {
+      if (protocol == *it)
+      {
+         break;
+      }
+   }
+
+   if (item.blacklistedProtocols.end() == it)
+   {
+      item.blacklistedProtocols.push_back(protocol);
+   }
 }
