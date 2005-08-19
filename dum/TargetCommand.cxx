@@ -40,3 +40,6 @@ TargetCommand::encodeBrief(ostream& strm) const
    return strm;
 }
 
+TargetCommand::Target::~Target()
+{
+}
