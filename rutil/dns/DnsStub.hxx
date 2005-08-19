@@ -14,7 +14,7 @@
 #include "rutil/dns/DnsSrvRecord.hxx"
 #include "rutil/dns/RRCache.hxx"
 #include "rutil/dns/RROverlay.hxx"
-#include "resip/sip/external/ExternalDns.hxx"
+#include "rutil/dns/ExternalDns.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
 

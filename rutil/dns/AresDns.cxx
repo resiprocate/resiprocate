@@ -1,7 +1,4 @@
-#include <fstream>
-
-#include "resip/sip/LocalDns.hxx"
-
+#include "rutil/dns/AresDns.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 extern "C"
@@ -15,45 +12,83 @@ extern "C"
 #endif
 
 #if !defined(WIN32)
+#if !defined(__CYGWIN__)
 #include <arpa/nameser.h>
+#endif
 #endif
 
 using namespace resip;
-using namespace std;
-
-std::map<Data, Data> LocalDns::files;
-Data LocalDns::mTarget;
 
 int 
-LocalDns::init()
+AresDns::init(const std::vector<Tuple>& additionalNameservers)
 {
+#ifdef USE_IPV6
+   int requiredCap = ARES_CAP_IPV6;
+#else
+   int requiredCap = 0;
+#endif
+
+   int cap = ares_capabilities(requiredCap);
+   if (cap != requiredCap)
+   {
+      return BuildMismatch;      
+   }
+   
    int status;
-   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   if (additionalNameservers.empty())
+   {
+      status = ares_init(&mChannel);
+   }
+   else
+   {
+      ares_options opt;
+      int optmask = ARES_OPT_SERVERS;
+      
+      opt.nservers = additionalNameservers.size();
+      
+#ifdef USE_IPV6
+      opt.servers = new multiFamilyAddr[additionalNameservers.size()];
+      for (size_t i =0; i < additionalNameservers.size(); i++)
+      {
+         if (additionalNameservers[i].isV4())
+         {
+            opt.servers[i].family = AF_INET;            
+            opt.servers[i].addr = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+         }
+         else
+         {
+            opt.servers[i].family = AF_INET6;            
+            opt.servers[i].addr6 = reinterpret_cast<const sockaddr_in6&>(additionalNameservers[i].getSockaddr()).sin6_addr;
+         }                  
+      }
+#else
+      opt.servers = new in_addr[additionalNameservers.size()];
+      for (size_t i =0; i < additionalNameservers.size(); i++)
+      {
+         opt.servers[i] = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+      }
+#endif
+      status = ares_init_options(&mChannel, &opt, optmask);
+      delete [] opt.servers;
+   }
+   
+   if (status != ARES_SUCCESS)
    {
       return status;
    }
    else
    {
-      return 0;
+      return Success;      
    }
 }
 
-LocalDns::LocalDns()
+AresDns::~AresDns()
 {
-   files["yahoo.com"] = "yahoo.dns";
-   files["demo.xten.com"] = "demo.naptr";
-   files["_ldap._tcp.openldap.org"] = "openldap.srv";
-   files["quartz"] = "quartz.aaaa";
-   files["crystal"] = "crystal.aaaa";
-   files["www.google.com"] = "google.cname";
-}
-
-LocalDns::~LocalDns()
-{
+   ares_destroy(mChannel);
 }
 
 ExternalDnsHandler* 
-LocalDns::getHandler(void* arg)
+AresDns::getHandler(void* arg)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
@@ -61,7 +96,7 @@ LocalDns::getHandler(void* arg)
 }
 
 ExternalDnsRawResult 
-LocalDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
+AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
@@ -77,60 +112,50 @@ LocalDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 }
       
 bool 
-LocalDns::requiresProcess()
+AresDns::requiresProcess()
 {
    return true; 
 }
 
 void 
-LocalDns::buildFdSet(fd_set& read, fd_set& write, int& size)
+AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
+   int newsize = ares_fds(mChannel, &read, &write);
+   if ( newsize > size )
+   {
+      size = newsize;
+   }
 }
 
 void 
-LocalDns::process(fd_set& read, fd_set& write)
+AresDns::process(fd_set& read, fd_set& write)
 {
+   ares_process(mChannel, &read, &write);
+}
+
+char* 
+AresDns::errorMessage(long errorCode)
+{
+   const char* aresMsg = ares_strerror(errorCode);
+
+   int len = strlen(aresMsg);
+   char* errorString = new char[len+1];
+
+   strncpy(errorString, aresMsg, len);
+   errorString[len] = '\0';
+   return errorString;
 }
 
 void
-LocalDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
+AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
-   mTarget = target;
-   ares_query(mChannel, target, C_IN, type, LocalDns::localCallback, new Payload(handler, userData));
-}
-
-void LocalDns::message(const char* file, unsigned char* buf, int& len)
-{
-   len = 0;
-   ifstream fs;
-   fs.open(file, ios_base::binary | ios_base::in);
-   assert(fs.is_open());
-   
-   unsigned char* p = buf;
-   
-   while (!fs.eof())
-   {
-      unsigned char c = fs.get();
-      if (c != char_traits<char>::eof())
-      {
-         *p++ = c;
-         len++;
-      }
-   }
-   
-   fs.close();
+   ares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
 }
 
 void
-LocalDns::localCallback(void *arg, int status, unsigned char *abuf, int alen)
+AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
-   unsigned char msg[1024];
-   int len = 0;
-   map<Data, Data>::iterator it = files.find(mTarget);
-   assert(it != files.end());
-   message(it->second.c_str(), msg, len);   
-   assert(0 != len);
-   getHandler(arg)->handleDnsRaw(makeRawResult(arg, 0, msg, len));
+   getHandler(arg)->handleDnsRaw(makeRawResult(arg, status, abuf, alen));
    Payload* p = reinterpret_cast<Payload*>(arg);
    delete p;
 }
