@@ -1,8 +1,8 @@
 #include "tfm/CheckContacts.hxx"
 #include "tfm/SipEvent.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 

@@ -1,7 +1,7 @@
 #if !defined(TestException_hxx)
 #define TestException_hxx
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 
 namespace resip
 {

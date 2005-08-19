@@ -2,8 +2,8 @@
 #define DUM_CommandLineParser_hxx
 
 #include <vector>
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Uri.hxx"
+#include "rutil/Data.hxx"
 
 class CommandLineParser
 {

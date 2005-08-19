@@ -4,11 +4,11 @@
 #include <iosfwd>
 #include <vector>
 #include <set>
-#include "resiprocate/HeaderTypes.hxx"
-#include "resiprocate/LazyParser.hxx"
-#include "resiprocate/ParameterTypes.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "resip/sip/HeaderTypes.hxx"
+#include "resip/sip/LazyParser.hxx"
+#include "resip/sip/ParameterTypes.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \

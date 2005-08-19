@@ -1,10 +1,10 @@
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/ServerSubscription.hxx"
+#include "resip/dum/SubscriptionHandler.hxx"
+#include "resip/dum/UsageUseException.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Logger.hxx"
 
 #include <time.h>
 

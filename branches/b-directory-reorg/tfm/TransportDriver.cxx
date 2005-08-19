@@ -1,6 +1,6 @@
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Mutex.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Mutex.hxx"
 #include "tfm/TransportDriver.hxx"
 
 using namespace resip;

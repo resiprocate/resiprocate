@@ -1,7 +1,7 @@
 #ifndef RESIP_FileSystem_hxx
 #define RESIP_FileSystem_hxx
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 #if !defined(WIN32)
 #include <sys/types.h>
@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/Socket.hxx"
 #endif
 
 

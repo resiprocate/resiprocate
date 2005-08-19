@@ -1,12 +1,12 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/StatisticsManager.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransactionController.hxx"
-#include "resiprocate/SipStack.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/StatisticsManager.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/TransactionController.hxx"
+#include "resip/sip/SipStack.hxx"
 
 using namespace resip;
 using std::vector;

@@ -1,7 +1,7 @@
 #if !defined(RESIP_OUTOFDIALOGREQCREATOR_HXX)
 #define RESIP_OUTOFDIALOGREQCREATOR_HXX
 
-#include "resiprocate/dum/BaseCreator.hxx"
+#include "resip/dum/BaseCreator.hxx"
 
 namespace resip
 {

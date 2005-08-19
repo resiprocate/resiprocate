@@ -4,12 +4,12 @@
 #include <set>
 #include <vector>
 
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/dns/DnsStub.hxx"
-#include "resiprocate/dns/RRVip.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/dns/DnsStub.hxx"
+#include "rutil/dns/RRVip.hxx"
 
 namespace resip
 {

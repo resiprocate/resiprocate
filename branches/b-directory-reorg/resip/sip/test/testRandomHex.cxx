@@ -2,8 +2,8 @@
 #include <iostream>
 #include <set>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Random.hxx"
 
 using namespace std;
 using namespace resip;

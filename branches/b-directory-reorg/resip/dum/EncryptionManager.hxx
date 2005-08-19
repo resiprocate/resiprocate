@@ -1,16 +1,16 @@
 #if !defined(RESIP_ENCRYPTIONMANAGER_HXX)
 #define RESIP_ENCRYPTIONMANAGER_HXX
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/dum/CertMessage.hxx"
-#include "resiprocate/dum/RemoteCertStore.hxx"
-#include "resiprocate/dum/DumFeature.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/BaseException.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Contents.hxx"
+#include "resip/sip/Security.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/dum/CertMessage.hxx"
+#include "resip/dum/RemoteCertStore.hxx"
+#include "resip/dum/DumFeature.hxx"
 
 namespace resip
 {

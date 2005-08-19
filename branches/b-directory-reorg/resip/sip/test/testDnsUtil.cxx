@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "TestSupport.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

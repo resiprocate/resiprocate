@@ -2,7 +2,7 @@
 #define RESIP_TimeLimitFifo_hxx 
 
 #include <cassert>
-#include "resiprocate/os/AbstractFifo.hxx"
+#include "rutil/AbstractFifo.hxx"
 #include <iostream>
 #if defined( WIN32 )
 #include <time.h>

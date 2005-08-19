@@ -1,4 +1,4 @@
-#include "resiprocate/DtlsMessage.hxx"
+#include "resip/sip/DtlsMessage.hxx"
 
 #ifdef USE_DTLS
 

@@ -4,15 +4,15 @@
 #include <unistd.h>
 #include <memory>
 
-#include "resiprocate/HeaderFieldValue.hxx"
-#include "resiprocate/HeaderTypes.hxx"
-#include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/test/TestSupport.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/sip/HeaderTypes.hxx"
+#include "resip/sip/ParserCategories.hxx"
+#include "resip/sip/Uri.hxx"
+#include "resip/sip/Helper.hxx"
+#include "resip/sip/test/TestSupport.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "digcalc.hxx"
 
 using namespace std;

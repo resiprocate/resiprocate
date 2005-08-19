@@ -1,7 +1,7 @@
 #ifndef RESIP_ExtensionParameter_hxx
 #define RESIP_ExtensionParameter_hxx
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

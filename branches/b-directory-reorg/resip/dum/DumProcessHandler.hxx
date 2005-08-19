@@ -1,8 +1,8 @@
 #if !defined(RESIP_DUM_PROCESS_HANDLER_HXX)
 #define RESIP_DUM_PROCESS_HANDLER_HXX
 
-#include "resiprocate/os/AsyncProcessHandler.hxx"
-#include "resiprocate/external/ExternalTimer.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
+#include "resip/sip/external/ExternalTimer.hxx"
 
 
 namespace resip

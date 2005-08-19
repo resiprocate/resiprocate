@@ -1,10 +1,10 @@
 #if !defined(RESIP_TRANSPORT_HXX)
 #define RESIP_TRANSPORT_HXX
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

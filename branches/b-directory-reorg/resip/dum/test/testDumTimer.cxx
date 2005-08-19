@@ -1,7 +1,7 @@
-#include "resiprocate/SipStack.hxx"
+#include "resip/sip/SipStack.hxx"
 
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "rutil/Data.hxx"
 
 using namespace resip;
 

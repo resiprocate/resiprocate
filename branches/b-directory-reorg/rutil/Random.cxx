@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <cassert>
 
 #ifdef WIN32
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/Data.hxx"
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -15,11 +15,11 @@
 #include <fcntl.h>
 #endif
 
-#include "resiprocate/os/Random.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Random.hxx"
+#include "rutil/Timer.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
+#include "rutil/Logger.hxx"
 
 #ifdef USE_SSL
 #  define USE_OPENSSL 1

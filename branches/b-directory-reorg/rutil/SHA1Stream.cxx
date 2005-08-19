@@ -1,4 +1,4 @@
-#include "resiprocate/os/SHA1Stream.hxx"
+#include "rutil/SHA1Stream.hxx"
 
 #if defined(USE_SSL)
 

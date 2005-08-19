@@ -14,7 +14,7 @@
 #include <popt.h>
 #endif
 
-#include "resiprocate/os/Log.hxx"
+#include "rutil/Log.hxx"
 #include "StatelessProxy.hxx"
 
 using resip::Log;

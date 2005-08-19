@@ -1,7 +1,7 @@
 #if !defined(RESIP_DEFAULTSERVERREFERHANDLER_HXX)
 #define RESIP__DEFAULTSERVERREFERHANDLER_HXX
 
-#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resip/dum/SubscriptionHandler.hxx"
 
 namespace resip
 {

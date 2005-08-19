@@ -1,8 +1,8 @@
-#include "resiprocate/InterruptableStackThread.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/SelectInterruptor.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/InterruptableStackThread.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/SelectInterruptor.hxx"
+#include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

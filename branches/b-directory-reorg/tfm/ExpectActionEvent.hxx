@@ -2,7 +2,7 @@
 #define TFM_ExpectActionEvent_hxx
 
 #include <boost/shared_ptr.hpp>
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 #include "tfm/Event.hxx"
 
 class ActionBase;

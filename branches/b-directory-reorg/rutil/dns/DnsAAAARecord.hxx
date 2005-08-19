@@ -1,9 +1,9 @@
 #ifndef RESIP_DNS_AAAA_RECORD
 #define RESIP_DNS_AAAA_RECORD
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/dns/DnsResourceRecord.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
 
 #ifdef USE_IPV6
 

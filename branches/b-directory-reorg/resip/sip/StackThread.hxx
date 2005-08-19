@@ -1,8 +1,8 @@
 #ifndef RESIP_StackThread__hxx
 #define RESIP_StackThread__hxx
 
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Socket.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Socket.hxx"
 
 namespace resip
 {

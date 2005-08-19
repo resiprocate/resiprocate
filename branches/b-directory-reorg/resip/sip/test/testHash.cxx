@@ -6,11 +6,11 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/fcntl.h>
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/HeaderTypes.hxx"
-#include "resiprocate/ParameterTypeEnums.hxx"
-#include "resiprocate/ParameterTypes.hxx"
-#include "resiprocate/MethodTypes.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/HeaderTypes.hxx"
+#include "resip/sip/ParameterTypeEnums.hxx"
+#include "resip/sip/ParameterTypes.hxx"
+#include "resip/sip/MethodTypes.hxx"
 
 using namespace resip;
 using namespace std;

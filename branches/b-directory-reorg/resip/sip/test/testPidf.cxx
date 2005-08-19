@@ -1,6 +1,6 @@
-#include "resiprocate/Pidf.hxx"
+#include "resip/sip/Pidf.hxx"
 #include <iostream>
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

@@ -3,9 +3,9 @@
 
 #include <deque>
 
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Condition.hxx"
-#include "resiprocate/os/Lock.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Condition.hxx"
+#include "rutil/Lock.hxx"
 
 namespace resip
 {

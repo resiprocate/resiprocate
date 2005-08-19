@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include "resiprocate/Pidf.hxx"
+#include "resip/sip/Pidf.hxx"
 
 namespace resip
 {

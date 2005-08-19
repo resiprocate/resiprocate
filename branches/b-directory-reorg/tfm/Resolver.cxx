@@ -5,8 +5,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/Resolver.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP

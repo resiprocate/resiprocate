@@ -1,9 +1,9 @@
 #if !defined(RESIP_BASESUBSCRIPTION_HXX)
 #define RESIP_BASESUBSCRIPTION_HXX
 
-#include "resiprocate/dum/DialogUsage.hxx"
-#include "resiprocate/dum/SubscriptionState.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/dum/DialogUsage.hxx"
+#include "resip/dum/SubscriptionState.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 namespace resip
 {

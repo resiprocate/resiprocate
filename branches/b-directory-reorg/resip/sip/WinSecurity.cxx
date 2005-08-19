@@ -1,4 +1,4 @@
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/sip/WinSecurity.hxx"
 #include <sys/types.h>
 
 #ifdef USE_SSL
@@ -15,7 +15,7 @@
 #endif
 
 #include <Wincrypt.h>
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

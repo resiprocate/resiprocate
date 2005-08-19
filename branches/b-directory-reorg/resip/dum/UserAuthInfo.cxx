@@ -1,9 +1,9 @@
 
 #include <cassert>
 
-#include "resiprocate/dum/UserAuthInfo.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;

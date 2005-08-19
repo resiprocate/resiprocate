@@ -1,5 +1,5 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/SipEvent.hxx"
 #include "tfm/predicates/SubscribeExpired.hxx"
 

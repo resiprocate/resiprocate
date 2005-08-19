@@ -1,7 +1,7 @@
 #if !defined(DialPlanGuard_hxx)
 #define DialPlanGuard_hxx
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 class TestProxy;
 

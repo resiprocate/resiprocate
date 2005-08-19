@@ -1,8 +1,8 @@
 #if !defined(RESIP_RRFACTORY_HXX)
 #define RESIP_RRFACTORY_HXX 
 
-#include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/RROverlay.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/RROverlay.hxx"
 
 namespace resip
 {

@@ -1,16 +1,16 @@
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Subsystem.hxx"
-#include "resiprocate/dum/KeepAliveManager.hxx"
+#include "resip/sip/SipStack.hxx"
+#include "resip/dum/ClientAuthManager.hxx"
+#include "resip/dum/ClientRegistration.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/MasterProfile.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Subsystem.hxx"
+#include "resip/dum/KeepAliveManager.hxx"
 
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/sip/WinSecurity.hxx"
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST

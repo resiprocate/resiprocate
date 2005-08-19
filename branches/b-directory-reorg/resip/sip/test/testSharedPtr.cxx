@@ -1,9 +1,9 @@
 #include <iostream>
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/SharedPtr.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/SharedPtr.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Timer.hxx"
 #ifndef WIN32
 #include <unistd.h>
 #endif

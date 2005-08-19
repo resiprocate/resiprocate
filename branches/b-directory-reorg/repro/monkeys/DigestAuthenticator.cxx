@@ -8,13 +8,13 @@
 #endif
 
 
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Auth.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "resip/sip/Message.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/Auth.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
 
 #include "repro/UserStore.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"

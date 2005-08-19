@@ -1,8 +1,8 @@
 #if !defined(RESIP_SERVERINVITESESSION_HXX)
 #define RESIP_SERVERINVITESESSION_HXX
 
-#include "resiprocate/dum/InviteSession.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/dum/InviteSession.hxx"
+#include "resip/sip/SipMessage.hxx"
 
 #include <deque>
 

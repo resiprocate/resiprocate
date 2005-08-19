@@ -1,8 +1,8 @@
 #if !defined(RESIP_REMOTECERTSTORE_HXX)
 #define RESIP_REMOTECERTSTORE_HXX
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/dum/CertMessage.hxx"
+#include "rutil/Data.hxx"
+#include "resip/dum/CertMessage.hxx"
 
 namespace resip
 {

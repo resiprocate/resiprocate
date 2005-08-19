@@ -1,10 +1,10 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/dum/DialogUsage.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/SdpContents.hxx"
+#include "resip/dum/DialogUsage.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 #include <map>
 

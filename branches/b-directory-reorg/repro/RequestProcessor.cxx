@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <ostream>
-#include "resiprocate/SipMessage.hxx"
+#include "resip/sip/SipMessage.hxx"
 #include "repro/RequestProcessor.hxx"
 
 using namespace resip;

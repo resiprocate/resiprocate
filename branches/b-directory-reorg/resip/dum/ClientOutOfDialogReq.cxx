@@ -1,10 +1,10 @@
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/OutOfDialogHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/dum/ClientOutOfDialogReq.hxx"
+#include "resip/dum/OutOfDialogHandler.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

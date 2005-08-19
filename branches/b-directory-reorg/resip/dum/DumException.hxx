@@ -1,7 +1,7 @@
 #if !defined(RESIP_DUMEXCEPTION_HXX)
 #define RESIP__DUMEXCEPTION_HXX
 
-#include "resiprocate/os/BaseException.hxx"
+#include "rutil/BaseException.hxx"
 
 namespace resip
 {

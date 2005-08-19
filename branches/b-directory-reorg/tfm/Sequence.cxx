@@ -1,8 +1,8 @@
 #include <cppunit/TestCase.h>
 #include <list>
 
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Logger.hxx"
 #include "tfm/Sequence.hxx"
 #include "tfm/SequenceSet.hxx"
 

@@ -1,8 +1,8 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
-#include "resiprocate/os/compat.hxx"
+#include "rutil/compat.hxx"
 
 #include <iostream>
 #include <string.h>
@@ -14,13 +14,13 @@
 #include <netinet/in.h>
 #endif
 
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/GenericIPAddress.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/HashMap.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/GenericIPAddress.hxx"
 
 using namespace resip;
 

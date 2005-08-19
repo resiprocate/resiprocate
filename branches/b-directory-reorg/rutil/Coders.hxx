@@ -1,7 +1,7 @@
 #if !defined(RESIP_CODERS_HXX)
 #define RESIP_CODERS_HXX
 
-#include "resiprocate/os/Data.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

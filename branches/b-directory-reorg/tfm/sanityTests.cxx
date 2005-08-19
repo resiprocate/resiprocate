@@ -1,8 +1,8 @@
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/TextTestResult.h>
 
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 #include "tfm/CommandLineParser.hxx"
 #include "tfm/Fixture.hxx"
 #include "tfm/RouteGuard.hxx"

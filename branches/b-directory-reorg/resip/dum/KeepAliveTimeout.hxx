@@ -2,9 +2,9 @@
 #define RESIP_KEEPALIVE_TIMEOUT_HXX 
 
 
-#include "resiprocate/ApplicationMessage.hxx"
-#include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resip/sip/ApplicationMessage.hxx"
+#include "resip/dum/Handles.hxx"
+#include "rutil/Tuple.hxx"
 
 namespace resip
 {

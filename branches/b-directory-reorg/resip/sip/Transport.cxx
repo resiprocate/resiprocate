@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/sip/config.hxx"
 #endif
 
 #include <iostream>
@@ -8,17 +8,17 @@
 #include <sys/sockio.h>
 #endif
 
-#include "resiprocate/os/compat.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "rutil/compat.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/ParseBuffer.hxx"
 
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransportFailure.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resip/sip/Transport.hxx"
+#include "resip/sip/SipMessage.hxx"
+#include "resip/sip/TransportFailure.hxx"
+#include "resip/sip/Helper.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
