@@ -1,8 +1,8 @@
 #ifndef RESIP_CertMessage_hxx
 #define RESIP_CertMessage_hxx 
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/sip/Message.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

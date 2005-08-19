@@ -1,6 +1,6 @@
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/dum/InMemoryRegistrationDatabase.hxx"
+#include "rutil/WinLeakCheck.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 

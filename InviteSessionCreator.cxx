@@ -1,9 +1,9 @@
-#include "resiprocate/MultipartMixedContents.hxx"
-#include "resiprocate/MultipartAlternativeContents.hxx"
-#include "resiprocate/dum/InviteSessionCreator.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/sip/MultipartAlternativeContents.hxx"
+#include "resip/dum/InviteSessionCreator.hxx"
+#include "resip/sip/SdpContents.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/MasterProfile.hxx"
 
 using namespace resip;
 

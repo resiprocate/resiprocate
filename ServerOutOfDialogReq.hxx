@@ -1,7 +1,7 @@
 #if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
 #define RESIP_SERVEROUTOFDIALOGREQ_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resip/dum/NonDialogUsage.hxx"
 
 namespace resip
 {

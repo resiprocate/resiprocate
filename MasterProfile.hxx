@@ -4,10 +4,10 @@
 #include <iosfwd>
 #include <set>
 #include <map>
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/Token.hxx"
-#include "resiprocate/dum/UserProfile.hxx"
+#include "resip/sip/Headers.hxx"
+#include "resip/sip/MethodTypes.hxx"
+#include "resip/sip/Token.hxx"
+#include "resip/dum/UserProfile.hxx"
 
 namespace resip
 {

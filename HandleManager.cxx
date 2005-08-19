@@ -1,8 +1,8 @@
 #include <cassert>
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/dum/HandleManager.hxx"
-#include "resiprocate/dum/HandleException.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
+#include "resip/dum/HandleManager.hxx"
+#include "resip/dum/HandleException.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

@@ -1,6 +1,6 @@
 #include <ostream>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/dum/CertMessage.hxx"
+#include "rutil/Data.hxx"
+#include "resip/dum/CertMessage.hxx"
 
 using namespace resip;
 using namespace std;
