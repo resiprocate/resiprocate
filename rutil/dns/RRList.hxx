@@ -14,11 +14,11 @@ class RRList : public IntrusiveListElement<RRList*>
 
       class Protocol
       {
-      public:
-         static const int Sip = 0;
-         static const int Stun = 1;
-         static const int Http = 2;
-         static const int Total = 3; // number of protocols.
+         public:
+            static const int Reserved = 0;
+            static const int Sip = 1;
+            static const int Stun = 2;
+            static const int Http = 3;
       };
 
       typedef std::vector<DnsResourceRecord*> Records;
@@ -49,15 +49,11 @@ class RRList : public IntrusiveListElement<RRList*>
 
    private:
       static const int MIN_TO_SEC = 60;
-      struct RecordState
-      {
-            bool blacklisted;
-      };
-      typedef std::vector<RecordState> States;
+
       struct RecordItem
       {
             DnsResourceRecord* record;
-            States states; // indexed by protocol.
+            std::vector<int> blacklistedProtocols;
       };
 
       typedef std::vector<RecordItem> RecordArr;
@@ -71,12 +67,12 @@ class RRList : public IntrusiveListElement<RRList*>
       int mStatus; // dns query status.
       UInt64 mAbsoluteExpiry;
 
-      void initStates(States& states);
       RecordItr find(const Data&);
       void clear();
+      bool isBlacklisted(RecordItem&, int protocol);
+      void blacklist(RecordItem&, int protocol);
 };
 
 }
-
 
 #endif
