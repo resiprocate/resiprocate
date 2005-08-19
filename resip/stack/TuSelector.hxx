@@ -1,9 +1,9 @@
 #if !defined(RESIP_TuSelector_HXX)
 #define RESIP_TuSelector_HXX 
 
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/StatisticsMessage.hxx"
-#include "resip/sip/TransactionUserMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StatisticsMessage.hxx"
+#include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Fifo.hxx"
 

@@ -5,9 +5,9 @@
 #include "rutil/Data.hxx"
 #include "rutil/MD5Stream.hxx"
 #include "rutil/DataStream.hxx"
-#include "resip/sip/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/TransactionUser.hxx"
+#include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 
 #include "repro/UserStore.hxx"

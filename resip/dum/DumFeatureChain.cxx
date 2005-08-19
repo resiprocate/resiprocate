@@ -4,7 +4,7 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 
 using namespace resip;
 using namespace std;

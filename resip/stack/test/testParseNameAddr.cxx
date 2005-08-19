@@ -2,7 +2,7 @@
 
 #include "TestSupport.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/ParserCategories.hxx"
+#include "resip/stack/ParserCategories.hxx"
 using namespace resip;
 using namespace std;
 

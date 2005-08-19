@@ -1,7 +1,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 #include "repro/AclStore.hxx"
 

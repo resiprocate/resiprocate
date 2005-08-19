@@ -1,10 +1,10 @@
 #include <iostream>
 #include <memory>
 
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/Rlmi.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/test/TestSupport.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/Rlmi.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/test/TestSupport.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 using namespace resip;

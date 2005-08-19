@@ -3,8 +3,8 @@
 
 #include <map>
 
-#include "resip/sip/TuIM.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/TuIM.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "GagMessage.hxx"
 
 class GagConduit: public TuIM::Callback

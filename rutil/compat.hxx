@@ -3,7 +3,7 @@
 
 
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )

@@ -1,9 +1,9 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/BaseException.hxx"

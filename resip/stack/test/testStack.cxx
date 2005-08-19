@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #if defined (HAVE_POPT_H) 
@@ -17,11 +17,11 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/DeprecatedDialog.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/DeprecatedDialog.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/Uri.hxx"
 
 using namespace resip;
 using namespace std;

@@ -76,7 +76,7 @@ RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME)
 RUTIL_LIBNAME := rutil
 
 RESIP_INCLUDEDIRS := $(ROOT)
-RESIP_LIBDIRS := $(ROOT)/resip/sip/obj.$(TARGET_NAME) 
+RESIP_LIBDIRS := $(ROOT)/resip/stack/obj.$(TARGET_NAME) 
 RESIP_LIBNAME := resiprocate
 #$(RESIP_DEPENDS): 
 #	cd $(ROOT)/rutil; $(MAKE)
@@ -93,9 +93,9 @@ REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
 
 
-RESIPROCATE_DEPENDS := $(ROOT)/resip/sip/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
+RESIPROCATE_DEPENDS := $(ROOT)/resip/stack/obj.$(TARGET_NAME)/libresiprocate.$(LIBSUFFIX)
 $(RESIPROCATE_DEPENDS): 
-	cd $(ROOT)/resip/sip; $(MAKE)
+	cd $(ROOT)/resip/stack; $(MAKE)
 
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),true)

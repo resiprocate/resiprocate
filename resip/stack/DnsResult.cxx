@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <algorithm>
@@ -40,11 +40,11 @@ extern "C"
 #include "rutil/compat.hxx"
 
 #include "rutil/dns/DnsHandler.hxx"
-#include "resip/sip/DnsInterface.hxx"
+#include "resip/stack/DnsInterface.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "resip/sip/DnsResult.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/DnsResult.hxx"
+#include "resip/stack/Uri.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #if !defined(USE_ARES)

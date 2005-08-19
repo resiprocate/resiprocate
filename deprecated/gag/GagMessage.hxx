@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "rutil/Data.hxx"
-#include "resip/sip/Uri.hxx"
+#include "resip/stack/Uri.hxx"
 
 using namespace resip;
 using namespace std;

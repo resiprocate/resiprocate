@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "TestSupport.hxx"
-#include "resip/sip/ParseUtil.hxx"
+#include "resip/stack/ParseUtil.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;

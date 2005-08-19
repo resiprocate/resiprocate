@@ -1,4 +1,4 @@
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DumDecrypted.hxx"
 #include "rutil/WinLeakCheck.hxx"
 

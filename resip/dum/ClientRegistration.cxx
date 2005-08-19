@@ -1,6 +1,6 @@
 #include <iterator>
 
-#include "resip/sip/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 #include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/RegistrationHandler.hxx"

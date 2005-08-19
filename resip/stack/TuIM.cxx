@@ -1,5 +1,5 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 /* TODO list for this file ....
@@ -17,22 +17,22 @@
 #include <cassert>
 #include <memory>
 
-#include "resip/sip/SipStack.hxx"
-#include "resip/sip/DeprecatedDialog.hxx"
-#include "resip/sip/SipMessage.hxx"
-#include "resip/sip/TuIM.hxx"
-#include "resip/sip/Contents.hxx"
-#include "resip/sip/ParserCategories.hxx"
-#include "resip/sip/PlainContents.hxx"
-#include "resip/sip/CpimContents.hxx"
-#include "resip/sip/Pkcs7Contents.hxx"
-#include "resip/sip/MultipartSignedContents.hxx"
-#include "resip/sip/MultipartMixedContents.hxx"
-#include "resip/sip/OctetContents.hxx"
-#include "resip/sip/Security.hxx"
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/Pidf.hxx"
-#include "resip/sip/SipFrag.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/DeprecatedDialog.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TuIM.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/PlainContents.hxx"
+#include "resip/stack/CpimContents.hxx"
+#include "resip/stack/Pkcs7Contents.hxx"
+#include "resip/stack/MultipartSignedContents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/OctetContents.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/Pidf.hxx"
+#include "resip/stack/SipFrag.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"

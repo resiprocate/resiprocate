@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resip/sip/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <stdlib.h>
 
-#include "resip/sip/TuIM.hxx"
+#include "resip/stack/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
-#include "resip/sip/os/Logger.hxx"
+#include "resip/stack/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

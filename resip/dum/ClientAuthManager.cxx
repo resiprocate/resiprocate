@@ -1,7 +1,7 @@
 #include <cassert>
 
-#include "resip/sip/Helper.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "rutil/Logger.hxx"

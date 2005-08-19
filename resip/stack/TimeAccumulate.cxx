@@ -1,4 +1,4 @@
-#include "resip/sip/TimeAccumulate.hxx"
+#include "resip/stack/TimeAccumulate.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS

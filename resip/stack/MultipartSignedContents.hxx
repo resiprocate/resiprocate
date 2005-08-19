@@ -2,7 +2,7 @@
 #define RESIP_MULTIPARTSIGNEDCONTENTS_HXX 
 
 
-#include "resip/sip/MultipartMixedContents.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
 
 
 namespace resip

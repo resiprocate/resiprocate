@@ -1,7 +1,7 @@
 #if !defined(RESIP_OCTETCONTENTS_HXX)
 #define RESIP_OCTETCONTENTS_HXX 
 
-#include "resip/sip/Contents.hxx"
+#include "resip/stack/Contents.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip

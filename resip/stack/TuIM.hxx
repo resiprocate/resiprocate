@@ -3,10 +3,10 @@
 
 #include <list>
 
-#include "resip/sip/DeprecatedDialog.hxx"
-#include "resip/sip/SecurityTypes.hxx"
-#include "resip/sip/Transport.hxx"
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/DeprecatedDialog.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/Timer.hxx"
 
 namespace resip

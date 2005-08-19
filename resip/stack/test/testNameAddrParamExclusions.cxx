@@ -1,4 +1,4 @@
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include <iostream>
 
 using namespace resip;

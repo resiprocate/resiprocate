@@ -1,7 +1,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DataStream.hxx"
-#include "resip/sip/SdpContents.hxx"
-#include "resip/sip/HeaderFieldValue.hxx"
+#include "resip/stack/SdpContents.hxx"
+#include "resip/stack/HeaderFieldValue.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 #include <iostream>

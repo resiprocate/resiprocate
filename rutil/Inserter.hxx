@@ -12,7 +12,7 @@
 
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"
-#include "resip/sip/ParserContainer.hxx"
+#include "resip/stack/ParserContainer.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be

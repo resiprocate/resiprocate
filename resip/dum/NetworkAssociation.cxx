@@ -1,5 +1,5 @@
 
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
 #include "resip/dum/KeepAliveManager.hxx"

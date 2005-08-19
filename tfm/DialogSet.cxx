@@ -2,7 +2,7 @@
 #include "tfm/DialogSet.hxx"
 #include "tfm/TestSipEndPoint.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST

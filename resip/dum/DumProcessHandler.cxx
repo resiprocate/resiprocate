@@ -1,4 +1,4 @@
-#include "resip/sip/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumProcessHandler.hxx"
 #include "rutil/Logger.hxx"

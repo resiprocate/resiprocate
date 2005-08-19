@@ -9,7 +9,7 @@
 #include "CommandLineParser.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "resip/sip/ParseException.hxx"
+#include "resip/stack/ParseException.hxx"
 
 using namespace resip;
 using namespace std;

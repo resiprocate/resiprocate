@@ -1,7 +1,7 @@
 #if !defined(RESIP_EXTERNAL_DNS_HXX)
 #define RESIP_EXTERNAL_DNS_HXX
 
-#include "resip/sip/external/AsyncID.hxx"
+#include "resip/stack/external/AsyncID.hxx"
 #include "rutil/Tuple.hxx"
 
 #include <vector>

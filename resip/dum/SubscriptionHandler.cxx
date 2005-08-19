@@ -1,6 +1,6 @@
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/ServerSubscription.hxx"
-#include "resip/sip/SecurityAttributes.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
 
 using namespace resip;
 

@@ -1,5 +1,5 @@
 #include "rutil/Logger.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "tfm/CheckFetchedContacts.hxx"
 #include "tfm/SipEvent.hxx"
 

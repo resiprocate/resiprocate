@@ -3,7 +3,7 @@
 
 #ifdef USE_DTLS
 
-#include "resip/sip/Message.hxx"
+#include "resip/stack/Message.hxx"
 
 #include <openssl/ssl.h>
 

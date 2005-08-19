@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "resip/dum/Handles.hxx"
-#include "resip/sip/NameAddr.hxx"
-#include "resip/sip/SipMessage.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogSetId.hxx"
 #include "rutil/HashMap.hxx"
 
