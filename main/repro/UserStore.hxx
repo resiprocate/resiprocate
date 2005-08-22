@@ -1,9 +1,9 @@
 #if !defined(REPRO_USERSTORE_HXX)
 #define REPRO_USERSTORE_HXX
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "resip/stack/Message.hxx"
 
 #include "repro/AbstractDb.hxx"
 

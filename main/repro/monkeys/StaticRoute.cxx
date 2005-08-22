@@ -1,13 +1,13 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Helper.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Helper.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/RequestContext.hxx"
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 #include "repro/RouteStore.hxx"
 
 
