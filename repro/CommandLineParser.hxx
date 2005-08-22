@@ -2,8 +2,8 @@
 #define DUM_CommandLineParser_hxx
 
 #include <vector>
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/stack/Uri.hxx"
+#include "rutil/Data.hxx"
 
 namespace resip
 {

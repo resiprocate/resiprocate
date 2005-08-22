@@ -1,9 +1,9 @@
 #if !defined(RESIP_ABSTRACTDB_HXX)
 #define RESIP_ABSTRACTDB_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Fifo.hxx"
+#include "resip/stack/Message.hxx"
 #include <vector>
 
 namespace resip

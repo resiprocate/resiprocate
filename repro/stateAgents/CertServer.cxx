@@ -1,11 +1,11 @@
 #if defined(USE_SSL)
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/Pkcs8Contents.hxx"
-#include "resiprocate/X509Contents.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/X509Contents.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 #include "repro/stateAgents/CertServer.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resip/dum/MasterProfile.hxx"
 
 using namespace resip;
 using namespace repro;

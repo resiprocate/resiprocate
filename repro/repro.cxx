@@ -10,16 +10,16 @@
 #endif
 
 #include <signal.h>
-#include "resiprocate/MessageFilterRule.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/StackThread.hxx"
-#include "resiprocate/dum/DumThread.hxx"
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Inserter.hxx"
+#include "resip/stack/MessageFilterRule.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/StackThread.hxx"
+#include "resip/dum/DumThread.hxx"
+#include "resip/dum/InMemoryRegistrationDatabase.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -45,7 +45,7 @@
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #ifdef WIN32
-#include "resiprocate/WinSecurity.hxx"
+#include "resip/stack/WinSecurity.hxx"
 #endif
 #endif
 
@@ -176,31 +176,31 @@ main(int argc, char** argv)
 
       if (args.mUdpPort)
       {
-         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4);
+         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6);
+         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
 #endif
       }
       if (args.mTcpPort)
       {
-         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4);
+         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6);
+         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
 #endif
       }
 #ifdef USE_SSL
       if (args.mTlsPort)
       {
-         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
 #endif
       }
       if (args.mDtlsPort)
       {
-         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
 #ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, Data::Empty, args.mTlsDomain);
+         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
 #endif
       }
 #endif
