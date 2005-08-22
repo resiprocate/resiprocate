@@ -1,8 +1,8 @@
 #ifndef TUPRESSVR
 #define TUPRESSVR
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/SipMessage.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "SubDialogMgr.h"
 
 using namespace resip;
