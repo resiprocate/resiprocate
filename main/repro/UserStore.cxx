@@ -2,13 +2,13 @@
 
 #include <cassert>
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
-#include "resiprocate/os/DataStream.hxx"
-#include "resiprocate/Symbols.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/dum/UserAuthInfo.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/MD5Stream.hxx"
+#include "rutil/DataStream.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/stack/TransactionUser.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
 
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
