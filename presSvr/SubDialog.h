@@ -1,9 +1,9 @@
 #ifndef SUBDIALOG
 #define SUBDIALOG
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "rutil/Data.hxx"
 
 #include "SubscriptionState.h"
 #include "DialogState.h"

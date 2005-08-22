@@ -1,4 +1,4 @@
-#include "resiprocate/Helper.hxx"
+#include "resip/stack/Helper.hxx"
 
 #include "ResourceMgr.h"
 #include "SubDialog.h"

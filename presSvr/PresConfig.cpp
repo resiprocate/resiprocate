@@ -1,4 +1,4 @@
-#include "resiprocate/SipStack.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "PresConfig.h"
 #include "ResourceMgr.h"
 
