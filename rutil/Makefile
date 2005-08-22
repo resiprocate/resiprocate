@@ -57,5 +57,4 @@ SRC = \
 	dns/QueryTypes.cxx \
 	dns/RROverlay.cxx \
 
-
 include $(BUILD)/Makefile.post

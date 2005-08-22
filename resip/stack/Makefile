@@ -147,18 +147,6 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/\*str ==/tolower(*str) ==/' | \
 	sed -e 's/\!strncmp/\!strncasecmp/'  > $@
 
-INSTALL_ROOT=/usr/local
-
-install: all
-	install -d --mode=755 $(INSTALL_ROOT)
-	install -d --mode=755 $(INSTALL_ROOT)/lib
-	-install --mode=755 lib.$(TARGET_NAME)/libresiprocate.so $(INSTALL_ROOT)/lib
-	-install --mode=755 lib.$(TARGET_NAME)/libresiprocate.a $(INSTALL_ROOT)/lib
-	install -d --mode=755 $(INSTALL_ROOT)/include
-	-install --mode=755 resiprocate/*.h $(INSTALL_ROOT)/include
-	install --mode=755 resiprocate/*.hxx $(INSTALL_ROOT)/include
-	install -d --mode=755 $(INSTALL_ROOT)/include/os
-	-install --mode=755 resiprocate/os/*.h $(INSTALL_ROOT)/include/os
-	install --mode=755 resiprocate/os/*.hxx $(INSTALL_ROOT)/include/os
-
 include $(BUILD)/Makefile.post
+INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/stack
+
