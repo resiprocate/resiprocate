@@ -1,7 +1,7 @@
 %{
 #include <string.h>
 #include <ctype.h>
-#include "resiprocate/ParameterTypes.hxx"
+#include "resip/stack/ParameterTypes.hxx"
 namespace resip {
 using namespace std;
 %}
