@@ -284,6 +284,19 @@ $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
 	@ test -h $(ROOT)/lib.$(TARGET_NAME)/$(strip $(TARGET_LIBRARY)).so || ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
 endif
 
+ifdef TARGET_LIBRARY
+INSTALL_LIBDIR := $(INSTALL_PREFIX)/lib
+INSTALL_INCDIR := $(INSTALL_PREFIX)/include/$(subst lib,,$(TARGET_LIBRARY))
+
+install: all
+	install -d $(INSTALL_PREFIX)
+	install -d $(INSTALL_PREFIX)/lib
+	install $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
+	install -d $(INSTALL_INCDIR)
+	install *.h* $(INSTALL_INCDIR)
+	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+endif
+
 -include $(DEPENDENCIES)
 
 # this MUST be the last item in the makefile -- it will be done first always.
