@@ -508,6 +508,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 
   /* Acquire a socket. */
 #ifdef USE_IPV6
+  assert(server->family == AF_INET || server->family == AF_INET6);
   s = socket(server->family, SOCK_STREAM, 0);
 #else
   s = socket(AF_INET, SOCK_STREAM, 0);
@@ -611,6 +612,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
 
   /* Acquire a socket. */
+  assert(server->family == AF_INET || server->family == AF_INET6);
   s = socket(server->family, SOCK_DGRAM, 0);
 #ifdef WIN32
   {   
