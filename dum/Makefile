@@ -76,3 +76,4 @@ SRC =   \
 	OutgoingEvent.cxx
 
 include $(BUILD)/Makefile.post
+INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/dum
