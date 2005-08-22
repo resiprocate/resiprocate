@@ -1,14 +1,14 @@
 #if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#include "resip/stack/config.hxx"
 #endif
 
 #include <iostream>
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Inserter.hxx"
+#include "resip/stack/Helper.hxx"
+#include "rutil/Logger.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"

@@ -10,19 +10,19 @@
 #include <cassert>
 #include <time.h>
 
-#include "resiprocate/Symbols.hxx"
+#include "resip/stack/Symbols.hxx"
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/MD5Stream.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/Tuple.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/MD5Stream.hxx"
 
-//#include "resiprocate/dum/ServerAuthManager.hxx"
-#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+//#include "resip/dum/ServerAuthManager.hxx"
+#include "resip/dum/RegistrationPersistenceManager.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"

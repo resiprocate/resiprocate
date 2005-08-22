@@ -1,6 +1,6 @@
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"

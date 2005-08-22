@@ -1,9 +1,9 @@
 #if defined(USE_SSL)
 
-#include "resiprocate/Pkcs8Contents.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
+#include "resip/stack/Pkcs8Contents.hxx"
+#include "resip/stack/Security.hxx"
+#include "resip/dum/ServerSubscription.hxx"
+#include "resip/dum/ServerPublication.hxx"
 #include "repro/stateAgents/PrivateKeySubscriptionHandler.hxx"
 
 using namespace repro;

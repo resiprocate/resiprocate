@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "resiprocate/os/Logger.hxx"
+#include "rutil/Logger.hxx"
 
 #include "repro/Store.hxx"
 #include "repro/AbstractDb.hxx"
