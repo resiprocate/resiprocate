@@ -442,7 +442,11 @@ static int init_by_defaults(ares_channel channel)
            while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
 		   {
              // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-	         channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+			 
+			 channel->servers[ channel->nservers ].family = AF_INET;
+	         channel->servers[ channel->nservers ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+			 channel->nservers++;
+
              pIPAddr = pIPAddr ->Next;
            }
            //printf("ARES: got all %d nameservers\n",num);
