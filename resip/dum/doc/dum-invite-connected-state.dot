@@ -61,7 +61,9 @@ digraph UAC {
   Answered -> Answered                    [ label = "timer::2xx/resend::2xx" ];
   Answered -> WaitingToOffer              [ label = "dum::provideOffer/saveOffer" ];
   Answered -> Connected                   [ label = "onACK" ];
+  //is ACK failure dialog/usage destruction
   Answered -> Terminated                  [ label = "timer::NoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
+  Answered -> WaitingToTerminate          [ label = "dum::end" ];
 
   WaitingToOffer -> WaitingToOffer        [ label = "timer::2xx/resend::2xx" ];
   WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
