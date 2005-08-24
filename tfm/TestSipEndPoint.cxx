@@ -1577,6 +1577,7 @@ TestSipEndPoint::From::isMatch(shared_ptr<SipMessage>& message) const
       return mProxy->isFromMe(*message);
    }
    assert(false);
+   return false;   
 }
 
 resip::Data 
@@ -1596,6 +1597,7 @@ TestSipEndPoint::From::toString() const
    }
 
    assert(false);
+   return Data::Empty;   
 }
 
 TestSipEndPoint::Contact::Contact(const TestSipEndPoint& testEndPoint)

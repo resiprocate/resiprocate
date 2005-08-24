@@ -217,12 +217,14 @@ bool
 TestEndPoint::And::isMatch(shared_ptr<Event> event) const
 {
    assert(0);
+   return false;   
 }
 
 resip::Data
 TestEndPoint::And::explainMismatch(shared_ptr<Event> event) const
 {
    assert(0);
+   return Data::Empty;   
 }
 
 void
