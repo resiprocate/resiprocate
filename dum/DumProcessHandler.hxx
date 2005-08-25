@@ -1,7 +1,7 @@
 #if !defined(RESIP_DUM_PROCESS_HANDLER_HXX)
 #define RESIP_DUM_PROCESS_HANDLER_HXX
 
-#include "rutil/AsyncProcessHandler.hxx"
+#include "resip/stack/AsyncProcessHandler.hxx"
 #include "resip/stack/external/ExternalTimer.hxx"
 
 
