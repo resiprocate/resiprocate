@@ -585,9 +585,9 @@ class Data
       static const size_type npos;
 
       /**
-        Initializes this Data.
+        Initializes Data class.
 
-        @note This method is a link time contraint. Don't remove it.
+        @note This method is a link time constraint. Don't remove it.
       */
       static bool init(DataLocalSize<RESIP_DATA_LOCAL_SIZE> arg);
 
