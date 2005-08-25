@@ -866,27 +866,6 @@ class TestData
             assert(  Data("1234567" ).base64encode() == d7 );
          }
          
-         {
-             char *p = new  char[16];
-             Data *d = new Data(Data::Take, p, 16);
-             assert( d->data() == p );
-             delete d; // this cleans up p;
-             char * q = new  char[16];
-                                // assumption that this will return
-                                // the same block of mem from heap
-             assert( p == q );
-             delete q;
-
-             // This test assumes that p and q will be unique since the 
-             // destruction of d did NOT release p.
-             p = new char[16];
-             d = new Data(Data::Share, p, 16);
-             delete d;
-             q = new char[16];
-             assert ( q != p );
-             delete p;
-             delete q;
-         }
          std::cerr << "All OK" << endl;
          return 0;
       }
