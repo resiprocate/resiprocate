@@ -1,63 +1,21 @@
-#include "resip/stack/InterruptableStackThread.hxx"
-#include "resip/stack/SipStack.hxx"
-#include "resip/stack/SipMessage.hxx"
-#include "resip/stack/SelectInterruptor.hxx"
-#include "rutil/Logger.hxx"
+#ifndef RESIP_AsyncProcessHandler_HXX
+#define RESIP_AsyncProcessHandler_HXX
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
-using namespace resip;
-
-InterruptableStackThread::InterruptableStackThread(SipStack& stack, SelectInterruptor& si)
-   : mStack(stack),
-     mSelectInterruptor(si)
-{}
-
-InterruptableStackThread::~InterruptableStackThread()
+namespace resip
 {
-   //InfoLog (<< "InterruptableStackThread::~InterruptableStackThread()");
+
+//called when an event from outside the process() lookp of the sipstack occurs
+//which requires the sipstack to all process()
+class AsyncProcessHandler
+{
+   public:
+      virtual ~AsyncProcessHandler() {} 
+      virtual void handleProcessNotification() = 0; 
+};
+
 }
 
-void
-InterruptableStackThread::thread()
-{
-   while (!isShutdown())
-   {
-      try
-      {
-         FdSet fdset;
-         mStack.process(fdset); // .dcm. reqd to get send requests queued at transports
-         mSelectInterruptor.buildFdSet(fdset);
-         mStack.buildFdSet(fdset);
-         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(), 
-                                                     getTimeTillNextProcessMS()));
-         if (ret >= 0)
-         {
-            // .dlb. use return value to peak at the message to see if it is a
-            // shutdown, and call shutdown if it is
-            // .dcm. how will this interact w/ TuSelector?
-            mSelectInterruptor.process(fdset);
-            mStack.process(fdset);
-         }
-      }
-      catch (BaseException& e)
-      {
-         InfoLog (<< "Unhandled exception: " << e);
-      }
-   }
-   WarningLog (<< "Shutting down stack thread");
-}
-
-void
-InterruptableStackThread::buildFdSet(FdSet& fdset)
-{}
-
-unsigned int
-InterruptableStackThread::getTimeTillNextProcessMS() const
-{
-   //.dcm. --- eventually make infinite
-   return 10000;   
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
