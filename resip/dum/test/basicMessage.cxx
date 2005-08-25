@@ -158,8 +158,6 @@ int main(int argc, char *argv[]) {
 	InfoLog( << regMessage << "Generated register: " << endl << regMessage );
 	clientDum.send( regMessage );
 
-	int n = 0;
-	
 	while(true) // (!cmh->isEnded() || !smh->isRcvd() )
 
 	{
