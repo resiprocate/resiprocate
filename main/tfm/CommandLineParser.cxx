@@ -73,9 +73,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
-
+   
    mLogType = logType;
    mLogLevel = logLevel;
+   Log::initialize(mLogType, mLogLevel, argv[0]);
+   
    mEncrypt = encrypt;
    mSign = sign;
    mGenUserCert = genUserCert;
