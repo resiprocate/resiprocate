@@ -54,6 +54,10 @@ class UserAgent : public CommandLineParser,
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg);
       virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg);
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg);
+
+      virtual void onMessage(InviteSessionHandle, const SipMessage& msg);
+      virtual void onMessageSuccess(InviteSessionHandle, const SipMessage& msg);
+      virtual void onMessageFailure(InviteSessionHandle, const SipMessage& msg);
       
       // Registration Handler ////////////////////////////////////////////////////////
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response);
