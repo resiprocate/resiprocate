@@ -25,7 +25,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/StatisticsManager.hxx"
-#include "rutil/AsyncProcessHandler.hxx"
+#include "resip/stack/AsyncProcessHandler.hxx"
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"

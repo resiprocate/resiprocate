@@ -33,7 +33,6 @@ SRC = \
 	Random.cxx \
 	RecursiveMutex.cxx \
 	SHA1Stream.cxx \
-	SelectInterruptor.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
