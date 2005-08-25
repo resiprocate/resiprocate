@@ -52,7 +52,6 @@ class TestClientRegistrationHandler : public ClientRegistrationHandler
       }
 };
 
-
 class TestInviteSessionHandler : public InviteSessionHandler
 {
    public:
@@ -194,6 +193,25 @@ class TestInviteSessionHandler : public InviteSessionHandler
       {
          InfoLog( << "TestInviteSessionHandler::onInfoFailure" );
       }
+
+      virtual void onMessage(InviteSessionHandle,
+                             const SipMessage& msg)
+      {
+         InfoLog( << "TestInviteSessionHandler::onMessage" );
+      }
+
+      virtual void onMessageSuccess(InviteSessionHandle,
+                                    const SipMessage& msg)
+      {
+         InfoLog( << "TestInviteSessionHandler::onMessageSuccess" );
+      }
+
+      virtual void onMessageFailure(InviteSessionHandle,
+                                    const SipMessage& msg)
+      {
+         InfoLog( << "TestInviteSessionHandler::onMessageFailure" );
+      }
+
 };
 
 
@@ -264,9 +282,10 @@ class TestServerPagerMessageHandler : public ServerPagerMessageHandler
          const SecurityAttributes *attr = message.getSecurityAttributes();
          InfoLog( << *attr );
       }
+
 };
- 
-}
+
+} // namespace
 
 /* 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
