@@ -33,9 +33,9 @@ GenericLogImpl::Instance()
          if (mLogger == 0 || (MaxLineCount && mLineCount > MaxLineCount))
          {
             std::cerr << "Creating a file logger" << std::endl;
-            if (Log::_logFileName != "")
+            if (Log::mLogFileName != "")
             {
-               mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               mLogger = new std::ofstream(mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
                mLineCount = 0;
             }
             else
@@ -55,7 +55,7 @@ GenericLogImpl::Instance()
 bool
 GenericLogImpl::isLogging(Log::Level level)
 {
-   return (level <= Log::_level);
+   return (level <= Log::mLevel);
 }
 
 void
