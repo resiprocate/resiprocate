@@ -1,5 +1,5 @@
-#ifndef RESIP_Log_hx
-#define RESIP_Log_hx
+#ifndef RESIP_Log_hxx
+#define RESIP_Log_hxx
 
 #include "rutil/Data.hxx"
 
@@ -123,12 +123,14 @@ class Log
       static Data timestamp();
       static ExternalLogger* getExternal()
       {
-         return _externalLogger;
+         return mExternalLogger;
       }
       static Data getAppName()
       {
-         return _appName;
+         return mAppName;
       }
+
+      static bool init();
 
       static void initialize(Type type,
                              Level level,
@@ -149,7 +151,7 @@ class Log
                              ExternalLogger& logger);
 
       static void setLevel(Level level);
-      static Level level() { return _level; }
+      static Level level() { return mLevel; }
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -166,33 +168,34 @@ class Log
       static Type _type;
       static const Data delim;
    protected:
-      static Level _level;
-      static Data _appName;
-      static Data _hostname;
-      static Data _logFileName;
-      static ExternalLogger* _externalLogger;
+      static Level mLevel;
+      static Data mAppName;
+      static Data mHostname;
+      static Data mLogFileName;
+      static ExternalLogger* mExternalLogger;
 #ifndef WIN32
-      static pid_t _pid;
+      static pid_t mPid;
 #else   
-      static int _pid;
+      static int mPid;
 #endif
-      static const char _descriptions[][32];
-      static HashMap<int, Level> _serviceToLevel;
+      static const char mDescriptions[][32];
+      static HashMap<int, Level> mServiceToLevel;
 
 #ifndef WIN32
-      static HashMap<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
-      static HashMap<int, std::set<pthread_t> > _serviceToThreads;
-      static pthread_key_t _levelKey;
+      static HashMap<pthread_t, std::pair<ThreadSetting, bool> > mThreadToLevel;
+      static HashMap<int, std::set<pthread_t> > mServiceToThreads;
+      static pthread_key_t* mLevelKey;
 #endif
-      ExternalLogger* mExternalLogger;
 };
+
+static bool invokeLogInit = Log::init();
 
 /** Interface functor for external logging. */
 class ExternalLogger
 {
    public:
-      /** return true to also do default logging, false to supress default logging. */
       virtual ~ExternalLogger()=0;
+      /** return true to also do default logging, false to supress default logging. */
       virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 
                               const Data& appName,
@@ -209,7 +212,7 @@ class ExternalLogger
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

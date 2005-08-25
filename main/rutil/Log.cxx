@@ -21,32 +21,31 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::Level Log::_level = Log::Info;
+Log::Level Log::mLevel = Log::Info;
 Log::Type Log::_type = Cout;
-Data Log::_appName;
-Data Log::_hostname;
-Data Log::_logFileName;
-ExternalLogger* Log::_externalLogger = 0;
+Data Log::mAppName;
+Data Log::mHostname;
+Data Log::mLogFileName;
+ExternalLogger* Log::mExternalLogger = 0;
 
 #ifdef WIN32
-	int Log::_pid=0;
+	int Log::mPid=0;
 #else 
-	pid_t Log::_pid=0;
+	pid_t Log::mPid=0;
 #endif
-
 
 volatile short Log::touchCount = 0;
 
 #ifndef WIN32
-pthread_key_t Log::_levelKey;
-HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::_threadToLevel;
-HashMap<int, std::set<pthread_t> > Log::_serviceToThreads;
+HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
+HashMap<int, std::set<pthread_t> > Log::mServiceToThreads;
+pthread_key_t* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
 #endif
 
-HashMap<int, Log::Level> Log::_serviceToLevel;
+HashMap<int, Log::Level> Log::mServiceToLevel;
 
 const char
-Log::_descriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
+Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
 
 Mutex Log::_mutex;
 
@@ -56,6 +55,15 @@ extern "C"
    {
       delete static_cast<Log::ThreadSetting*>(setting);
    }
+}
+bool
+Log::init()
+{
+#ifndef WIN32
+   Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
+   pthread_key_create(Log::mLevelKey, freeThreadSetting);
+#endif
+   return true;
 }
 
 void
@@ -88,35 +96,31 @@ Log::initialize(Type type, Level level, const Data& appName,
    string copy(appName.c_str());
    
    _type = type;
-   _level = level;
+   mLevel = level;
 
    if (logFileName)
    {
-      _logFileName = logFileName;
+      mLogFileName = logFileName;
    }
-    _externalLogger = externalLogger;
+    mExternalLogger = externalLogger;
 
    string::size_type pos = copy.find_last_of('/');
    if ( pos == string::npos || pos == copy.size())
    {
-      _appName = appName;
+      mAppName = appName;
    }
    else
    {
-      _appName = Data(copy.substr(pos+1).c_str());
+      mAppName = Data(copy.substr(pos+1).c_str());
    }
  
    char buffer[1024];  
    gethostname(buffer, sizeof(buffer));
-   _hostname = buffer;
+   mHostname = buffer;
 #ifdef WIN32 
-   _pid = (int)GetCurrentProcess();
+   mPid = (int)GetCurrentProcess();
 #else
-   _pid = getpid();
-#endif
-   
-#ifndef WIN32
-   pthread_key_create(&Log::_levelKey, freeThreadSetting);
+   mPid = getpid();
 #endif
 }
 
@@ -133,7 +137,7 @@ void
 Log::setLevel(Level level)
 {
    Lock lock(_mutex);
-   _level = level; 
+   mLevel = level; 
 }
 
 const static Data log_("LOG_");
@@ -141,7 +145,7 @@ const static Data log_("LOG_");
 Data
 Log::toString(Level l)
 {
-   return log_ + _descriptions[l+1];
+   return log_ + mDescriptions[l+1];
 }
 
 Log::Level
@@ -154,9 +158,9 @@ Log::toLevel(const Data& l)
    }
    
    int i=0;
-   while (string(_descriptions[i]).size())
+   while (string(mDescriptions[i]).size())
    {
-      if (pri == string(_descriptions[i])) 
+      if (pri == string(mDescriptions[i])) 
       {
          return Level(i-1);
       }
@@ -196,9 +200,9 @@ Log::tags(Log::Level level,
           ostream& strm) 
 {
 #if defined( __APPLE__ )
-   strm << _descriptions[level+1] << Log::delim 
+   strm << mDescriptions[level+1] << Log::delim 
         << time(0) << Log::delim 
-        << _appName << Log::delim
+        << mAppName << Log::delim
         << subsystem << Log::delim
         << pfile << ":" << line;
 #else   
@@ -215,19 +219,19 @@ Log::tags(Log::Level level,
    {
       ++file;
    }
-   strm << _descriptions[level+1] << Log::delim
+   strm << mDescriptions[level+1] << Log::delim
         << timestamp(tstamp) << Log::delim  
-        << _appName << Log::delim
+        << mAppName << Log::delim
         << subsystem << Log::delim 
         << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
 #else
-   strm << _descriptions[level+1] << Log::delim
+   strm << mDescriptions[level+1] << Log::delim
         << timestamp(tstamp) << Log::delim  
-        << _hostname << Log::delim  
-        << _appName << Log::delim
+        << mHostname << Log::delim  
+        << mAppName << Log::delim
         << subsystem << Log::delim 
-        << _pid << Log::delim
+        << mPid << Log::delim
         << pthread_self() << Log::delim
         << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 
@@ -307,12 +311,12 @@ Log::getServiceLevel(int service)
 	assert(0);
 	return Bogus;
 #else
-   HashMap<int, Level>::iterator res = Log::_serviceToLevel.find(service);
-   if(res == Log::_serviceToLevel.end())
+   HashMap<int, Level>::iterator res = Log::mServiceToLevel.find(service);
+   if(res == Log::mServiceToLevel.end())
    {
       //!dcm! -- should perhaps throw an exception here, instead of setting a
       //default level of LOG_ERROR, but nobody uses this yet
-      Log::_serviceToLevel[service] = Err;
+      Log::mServiceToLevel[service] = Err;
       return Err;
    }
    return res->second;
@@ -325,7 +329,7 @@ Log::getThreadSetting()
 #ifdef WIN32
    return 0;
 #else
-   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
+   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(*Log::mLevelKey));
    if (setting == 0)
    {
       return 0;
@@ -334,8 +338,8 @@ Log::getThreadSetting()
    {
       Lock lock(_mutex);
       pthread_t thread = pthread_self();
-      HashMap<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::_threadToLevel.find(thread);
-      assert(res != Log::_threadToLevel.end());
+      HashMap<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::mThreadToLevel.find(thread);
+      assert(res != Log::mThreadToLevel.end());
       if (res->second.second)
       {
          setting->level = res->second.first.level;
@@ -370,19 +374,19 @@ Log::setThreadSetting(ThreadSetting info)
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
    pthread_t thread = pthread_self();
-   pthread_setspecific(_levelKey, (void *) new ThreadSetting(info));
+   pthread_setspecific(*mLevelKey, (void *) new ThreadSetting(info));
    Lock lock(_mutex);
 
-   if (Log::_threadToLevel.find(thread) != Log::_threadToLevel.end())
+   if (Log::mThreadToLevel.find(thread) != Log::mThreadToLevel.end())
    {
-      if (Log::_threadToLevel[thread].second == true)
+      if (Log::mThreadToLevel[thread].second == true)
       {
          touchCount--;
       }
    }
-   Log::_threadToLevel[thread].first = info;
-   Log::_threadToLevel[thread].second = false;
-   Log::_serviceToThreads[info.service].insert(thread);
+   Log::mThreadToLevel[thread].first = info;
+   Log::mThreadToLevel[thread].second = false;
+   Log::mServiceToThreads[info.service].insert(thread);
 #endif
 }
    
@@ -390,15 +394,15 @@ void
 Log::setServiceLevel(int service, Level l)
 {
    Lock lock(_mutex);
-   Log::_serviceToLevel[service] = l;
+   Log::mServiceToLevel[service] = l;
 #ifdef WIN32
 	assert(0);
 #else
-   set<pthread_t>& threads = Log::_serviceToThreads[service];
+   set<pthread_t>& threads = Log::mServiceToThreads[service];
    for (set<pthread_t>::iterator i = threads.begin(); i != threads.end(); i++)
    {
-      Log::_threadToLevel[*i].first.level = l;
-      Log::_threadToLevel[*i].second = true;
+      Log::mThreadToLevel[*i].first.level = l;
+      Log::mThreadToLevel[*i].second = true;
    }
    Log::touchCount += threads.size();
 #endif
