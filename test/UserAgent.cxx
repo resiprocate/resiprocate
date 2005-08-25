@@ -290,6 +290,22 @@ UserAgent::onReferRejected(InviteSessionHandle, const SipMessage& msg)
    assert(0);
 }
 
+void
+UserAgent::onMessage(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
+void
+UserAgent::onMessageSuccess(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
+void
+UserAgent::onMessageFailure(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Registration Handler ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
