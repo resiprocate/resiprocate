@@ -120,8 +120,8 @@ ifeq ($(OSTYPE),Darwin)
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
 
-    INCDIRS += /sw/include
-    LIBDIRS += /sw/lib
+    INCDIRS += /sw/include /opt/local/include
+    LIBDIRS += /sw/lib /opt/local/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
