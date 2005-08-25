@@ -89,6 +89,7 @@ SRC = \
 	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \
+	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \

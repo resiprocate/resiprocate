@@ -1,4 +1,4 @@
-#include "rutil/SelectInterruptor.hxx"
+#include "resip/stack/SelectInterruptor.hxx"
 
 #include <cassert>
 #include "rutil/Logger.hxx"
