@@ -207,8 +207,8 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
    private:
       Security *security;
       int registered;
-      int dumShutDown;
       int done;
+      int dumShutDown;
       int connected;
       bool callFailed;
       
@@ -220,7 +220,7 @@ main (int argc, char** argv)
 {
    if ( argc < 5 ) {
       cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
-      return 0;
+      return 1;
    }
 
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
@@ -415,6 +415,8 @@ main (int argc, char** argv)
       }
       
    }
+
+   return 0;
 
 }
 
