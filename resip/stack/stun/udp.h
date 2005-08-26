@@ -8,6 +8,9 @@ typedef int socklen_t;
 
 #include <errno.h>
 
+// for UInt32 used below
+#include "stun.h"
+
 #ifdef WIN32
 
 #include <winsock2.h>
@@ -80,7 +83,7 @@ openPort( unsigned short port, unsigned int interfaceIp,
 /// recive a UDP message 
 bool 
 getMessage( Socket fd, char* buf, int* len,
-            unsigned int* srcIp, unsigned short* srcPort,
+            UInt32* srcIp, unsigned short* srcPort,
             bool verbose);
 
 
