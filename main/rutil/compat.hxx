@@ -44,6 +44,7 @@
 #  include <errno.h>
 #  include <winsock2.h>
 #  include <io.h>
+typedef unsigned int u_int32_t; //!dcm! -- any other platforms?
 #endif
 
 #if defined(__APPLE__) 
