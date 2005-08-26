@@ -127,7 +127,11 @@ SequenceSet::exec()
 void
 SequenceSet::preLoop()
 {
-   usleep(100000); // wait for provisioning updates
+#ifndef WIN32//usleep for windows in a "compat"
+	usleep(100000); // wait for provisioning updates
+#else
+	Sleep(100000*1000);
+#endif
    // start each sequence by executing the action
    for (list<SequenceClass*>::const_iterator i = mSequences.begin();
         i != mSequences.end(); i++)
