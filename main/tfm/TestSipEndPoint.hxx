@@ -37,12 +37,12 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
                       const resip::Uri& contact, 
                       const resip::Uri& outboundProxy=NoOutboundProxy,
                       bool hasStack=true,
-                      const resip::Data& interface = resip::Data::Empty);
+                      const resip::Data& interfaceObj = resip::Data::Empty);
       
       explicit TestSipEndPoint(const resip::Uri& contact, 
                                const resip::Uri& outboundProxy=NoOutboundProxy,
                                bool hasStack=true,
-                               const resip::Data& interface = resip::Data::Empty);
+                               const resip::Data& interfaceObj = resip::Data::Empty);
       
       virtual ~TestSipEndPoint();
       virtual void clean();

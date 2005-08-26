@@ -18,16 +18,16 @@ using namespace boost;
 Uri
 CreateContact(const resip::Data& username,
               const Data& transport,
-              const Data& interface)
+              const Data& interfaceObj)
 {
    Uri contact;
    contact.user() = username;
    // !jf! should be able to do dns or ip
    // contacts may be DNS
    //static Data localIp = resip::DnsUtil::getLocalIpAddress();
-   contact.host() = (interface.empty() 
+   contact.host() = (interfaceObj.empty() 
                            ? PortAllocator::getNextLocalIpAddress()
-                           : interface);
+                           : interfaceObj);
    contact.port() = PortAllocator::getNextPort();
    contact.param(p_transport) = transport;
    DebugLog (<< "Creating contact: " << contact);
@@ -39,12 +39,12 @@ TestUser::TestUser(const resip::Uri& aor,
                    const resip::Data& password,
                    resip::TransportType transport,
                    const resip::Uri& outboundProxy,
-                   const resip::Data& interface)
+                   const resip::Data& interfaceObj)
    : TestSipEndPoint(aor, 
-                     CreateContact(aor.user(), Tuple::toData(transport), interface), 
+                     CreateContact(aor.user(), Tuple::toData(transport), interfaceObj), 
                      outboundProxy, 
                      true, 
-                     interface),
+                     interfaceObj),
      mAuthName(authName),
      mPassword(authName),
      mRegistration(Helper::makeRegister(NameAddr(getAddressOfRecord()), 
