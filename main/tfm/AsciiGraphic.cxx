@@ -70,7 +70,7 @@ AsciiGraphic::displaceRight(const Box& box)
 resip::Data 
 indent(int count)
 {
-   resip::Data spaces(count, true);
+   resip::Data spaces; //(count, true);
    for(int i=0; i < count; i++)
    {
       spaces += ' ';
