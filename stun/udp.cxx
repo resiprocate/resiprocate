@@ -112,7 +112,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 
 bool 
 getMessage( Socket fd, char* buf, int* len,
-            unsigned int* srcIp, unsigned short* srcPort,
+            UInt32* srcIp, unsigned short* srcPort,
             bool verbose)
 {
    assert( fd != INVALID_SOCKET );
