@@ -25,7 +25,7 @@ CheckContacts::compareContacts(const NameAddr & s1,
 }      
 
 bool
-near(const int t1, const int t2, const int tol ) 
+nearTo(int t1, int t2, int tol ) 
 {
    return (abs(t2-t1) < tol);
 }
