@@ -8,15 +8,15 @@
 
 #include <sys/types.h>
 #include <boost/shared_ptr.hpp>
-#include <loki/Singleton.h>
 #include <vector>
+#include <memory>
 
 //#ifndef WIN32
 //#include <sys/select.h> // posix
 //#endif
 
 
-class TransportDriverImpl : public resip::ThreadIf
+class TransportDriver : public resip::ThreadIf
 {
    public:
       class Client
@@ -29,17 +29,18 @@ class TransportDriverImpl : public resip::ThreadIf
             virtual void buildFdSet(resip::FdSet& fdset) = 0;
       };
       
-      //Singleton, don't call
-      TransportDriverImpl();
-      ~TransportDriverImpl();
-
-
-      void thread();
-
       void addClient(Client* client);
       void removeClient(Client* client);
+      static TransportDriver& instance();
+
+   protected:
+      void thread();
 
    private:
+      //Singleton, don't call
+      friend class std::auto_ptr<TransportDriver>;      
+      TransportDriver();
+      ~TransportDriver();
 
       // build the FD set to use in a select to find out when process bust be called again
       void buildFdSet(resip::FdSet& fdset);
@@ -48,14 +49,12 @@ class TransportDriverImpl : public resip::ThreadIf
       bool processTransports();
 
       std::vector<Client*> mClients;
-
       resip::Mutex mMutex;
-};
 
-typedef Loki::SingletonHolder< TransportDriverImpl,                                                      
-                               Loki::CreateUsingNew, 
-                               Loki::DefaultLifetime, 
-                               Loki::ClassLevelLockable>  TransportDriver;
+      //Singleton
+      static std::auto_ptr<TransportDriver> mInstance;
+      static resip::Mutex mInstanceMutex;      
+};
 
 #endif
 
