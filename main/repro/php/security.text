@@ -1,0 +1,27 @@
+when user logs in, get username and password
+create password string (username:realm:password), md5, and check against db
+
+then they are authenticated
+
+create a cookie called "authentication" with 
+       sha1 (username + salt)
+       expiration of now() + 15 min
+
+on each secure page,
+   verify that the user and authentication cookies are set
+   compare the value of the cookie to sha1 (username+salt)
+
+   if not set or not valid
+      (initial page only) -- if there are post values for user name
+      	    and password, try to log in
+
+       (non initial page, or login fails)
+       	    redirect to login page with error message
+    else
+	reset expiration on cookie to now()+15 min
+
+
+
+** what about making the salt a global variable to avoid having to hit the DB
+each page?  In that design, how do you reset the value?  Does it require a stop
+& restart of web server?
