@@ -16,7 +16,7 @@ using namespace std;
 TestProxy::TestProxy(const Data& name,
                      const Data& host, 
                      int port, 
-                     const Data& interface)
+                     const Data& interfaceObj)
 
    : mName(name)
 {
