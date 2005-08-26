@@ -1,0 +1,143 @@
+digraph srv_inv_tree {
+	rankdir=LR
+	size="8,10"
+	ratio=0.8 // !ah! might be off
+	rotate=90
+	compound=true
+	fontname="Helvetica"
+        fontsize=6
+	node [ 
+                style=invis
+//                fixedsize=true
+                fontsize=8
+                shape=circle
+//                width="0.01"
+//                height="0.01"
+                fontname="Helvetica"
+         ]
+	graph
+	[
+//		ranksep=1.5 // modify to shrink nodes etc
+//		nodesep=1.5
+		fontsize=8
+		fontname="Helvetica"
+		labelfontsize=8
+		labelfontname="Helvetica"
+	]
+
+	edge
+	[
+		fontname="Helvetica"	
+		fontsize=8
+		arrowhead=normal
+	]
+
+// Now setup labels and visual stuff.
+
+        { rank=same ; n1; }
+        { rank=same ; n2 n3; }
+        { rank=same ; n11 n10 n9 n8; }
+        { rank=same ; n32 n25 n26 n23 n27 n28;  }
+
+        n0 -> n1 [ label="got(resp)" ]
+        n1 -> n3 [ label="CANCEL" ]
+        n3 [fixedsize=false style=solid  shape=box label="Proc. SRV non-INV"]
+        n1 -> n2 [ label="cSeq=INV" ]
+        n2 -> n4 [ label="101-199" ]
+        n4 -> n11 [ label="Try|Proc" ]
+
+        n11[
+                fixedsize=false style=solid shape=box
+                label="Proceeding\nsend(RESP)\nsave for re-TX"
+        ]
+        
+        n4 -> n10 [ label="*" ]
+        n10 [fixedsize=false style=solid  shape=box label="ign"]
+
+        n2 -> n9 [ label="2xx" ]
+        n9 [
+                fixedsize=false style=solid  shape=box
+                fontsize=8
+                label="snd(RESP)\nmach=stale\nstate=term?\nsetTimer(STALE)\nTS\n"
+        ]
+        n2 -> n8 [ label="300-699" ]
+        n8 [
+                style=solid
+                shape=box
+                fixedsize=false
+                fontsize=8
+                label="snd(RESP)\nsetTimer(H)\nunrel? -> setTimer(G)\nT1"
+        ]
+
+        n2 -> n5 [ label="100" ]
+        n5 -> n6 [ label="Trying" ]
+        n6 [
+                fixedsize=false style=solid  shape=box
+                 label="snd(PROCEEDING)"
+        ]
+
+        n5 -> n7 [ label="*" ]
+        n7 [fixedsize=false style=solid  shape=box label="ign" ]
+
+        { rank=same; n13 n16 n21;}
+
+        n0 -> n12 [ label="rcv(request)" ]
+        n12 -> n13 [ label="INV" ]
+        n13 -> n14 [ label="Proc | Completed"]
+        n14 [
+                fixedsize=false style=solid  shape=box
+                label="SEND"
+        ]
+        n13 -> n15 [ label="*" ]
+        
+        n15[fixedsize=false style=solid  shape=box label="ign"]
+
+        n12 -> n16 [label="ACK"]
+        n16 -> n17 [label="Completed"]
+        n17 -> n18 [label="reliable"]
+        n18 [fixedsize=false style=solid  shape=box label="del(FSM)"]
+        
+        n17 -> n19 [label="unreliable"]
+        n19 [fixedsize=false style=solid  shape=box label="confirmed\ntimerStart(I)" fontsize=6 ]
+        
+        n12 -> n21 [label="CANCEL"]
+        n21[fixedsize=false style=solid  shape=box label="proc. srv non-INV"]
+   
+        n0 -> n22 [label="timer exp"]
+        n22 -> n23[label="J"]
+        n23 [fixedsize=false style=solid  shape=box label="delState(CANCEL)"]
+        n22 -> n24 [label="G"]
+        n24 -> n25 [label="completed"]
+        n25[fixedsize=false style=solid  shape=box label="G = 2G\nstartTimer(G)"]
+
+        n24 -> n26 [label="*"]
+        n26 [fixedsize=false style=solid  shape=box label="ign"]
+
+        n22 -> n27 [label="H"]
+        n27[fixedsize=false style=solid  shape=box label="delState(THIS)"]
+
+        n22 -> n28 [label=I]
+        n28[fixedsize=false style=solid  shape=box label="delState(THIS)"]
+  
+        n22 -> n29 [label=Try]
+        n29 -> n30 [label="*"]
+        n30[fixedsize=false style=solid  shape=box label=ign]
+        n29 -> n31 [label="Trying?"]
+        n31[fixedsize=false style=solid  shape=box label="Proceeding\nsnd(100)"]
+
+        n0 -> n32[label="Transport Error"]
+        n32[fixedsize=false style=solid  shape=box label="delState(THIS)"]
+
+        LABEL_NODE
+        [
+         fixedsize=false
+         style=solid
+         shape=plaintext
+         fontsize=6
+         label="Server INVITE FSM\n$Id: srv-inv-tree.dot,v 1.2 2002/09/23 00:11:57 fluffy Exp $ $Name:  $" 
+        ]
+        
+
+	// Fixups
+
+}
