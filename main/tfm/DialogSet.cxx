@@ -52,6 +52,8 @@ DialogSet::isMatch(boost::shared_ptr<SipMessage> msg) const
       CritLog(<< *msg);
       assert(0);
    }
+   assert(0);
+   return false;   
 }
 
 void
