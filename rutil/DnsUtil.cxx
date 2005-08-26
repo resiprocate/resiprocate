@@ -362,12 +362,13 @@ DnsUtil::getInterfaces(const Data& matching)
       struct ifreq* ifr = (struct ifreq *)ptr;
 
       count++;
-      
-#if defined(__NetBSD__)
+
+#if defined(__NetBSD__) || defined(__APPLE__)
       int si = sizeof(ifr->ifr_name) + ifr->ifr_addr.sa_len;
 #else
       int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
 #endif
+      
       tl -= si;
       ptr += si;
 
