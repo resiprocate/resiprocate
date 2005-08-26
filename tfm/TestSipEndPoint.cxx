@@ -42,7 +42,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
                                  const Uri& contactUrl,
                                  const Uri& outboundProxy,
                                  bool hasStack,
-                                 const Data& interface)
+                                 const Data& interfaceObj)
    : mAor(addressOfRecord),
      mContact(contactUrl),
      mOutboundProxy(outboundProxy),
@@ -57,13 +57,13 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       if (!contactUrl.exists(p_transport) ||
           (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(UDP))))
       {
-         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is UDP " << interface);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interface);
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is UDP " << interfaceObj);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interfaceObj);
       }
       else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TCP)))
       {
-         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TCP " << interface);
-         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interface);
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TCP " << interfaceObj);
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
       }
 /*
       else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(Transport::TLS)))
@@ -89,7 +89,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
 TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
                                  const Uri& outboundProxy,
                                  bool hasStack,
-                                 const Data& interface)
+                                 const Data& interfaceObj)
    : mAor(contactUrl),
      mContact(contactUrl),
      mOutboundProxy(outboundProxy),
@@ -105,18 +105,18 @@ TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
       if (!contactUrl.exists(p_transport) ||
           (contactUrl.param(p_transport) == Tuple::toData(UDP)))
       {
-         //CerrLog(<< "transport is UDP " << interface);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interface);
+         //CerrLog(<< "transport is UDP " << interfaceObj);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interfaceObj);
       }
       else if (contactUrl.param(p_transport) == Tuple::toData(TCP))
       {
-         //CerrLog(<< "transport is TCP " << interface);
-         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interface);
+         //CerrLog(<< "transport is TCP " << interfaceObj);
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
       }
 /*
       else if (contactUrl.param(p_transport) == Tuple::toData(Transport::TLS))
       {
-         mTransport = new TlsTransport(interface, mContact.uri().port(), "", mIncoming);
+         mTransport = new TlsTransport(interfaceObj, mContact.uri().port(), "", mIncoming);
       }
 */
 

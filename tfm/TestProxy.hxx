@@ -18,7 +18,7 @@ class TestProxy
       TestProxy(const resip::Data& name,
                 const resip::Data& host, 
                 int port, 
-                const resip::Data& interface = resip::Data::Empty);
+                const resip::Data& interfaceObj = resip::Data::Empty);
       TestProxy();
       virtual ~TestProxy();
 
