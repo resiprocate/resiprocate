@@ -1,118 +1,96 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
-
 #if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+#  include "rutil/config.hxx"
 #endif
 
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
-#undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
+#  undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
 #endif
 
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
+// this should not be included as some people don't have the OSX SDK insalled
+//#if defined(__APPLE__)
+//#include <TargetConditionals.h>
+//#endif
+//#endif
 
-#if defined(HAVE_SYS_INT_TYPES_H)
-#include <sys/int_types.h>
-#endif
+//#if defined(HAVE_SYS_INT_TYPES_H)
+//#include <sys/int_types.h>
+//#endif
 
-#ifdef WIN32
-
-// !cj! TODO would be nice to remove this 
-#pragma warning(disable : 4996)
-
-#include <errno.h>
-#include <winsock2.h>
-#include <io.h>
-#endif
+#include <netdb.h>
+#include <cstring>
 
 #ifndef WIN32
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#  include <sys/types.h>
+#  include <sys/time.h>
+#  include <sys/socket.h>
+#  include <sys/select.h>
+#  include <netinet/in.h>
+#  include <arpa/inet.h>
+#  include <unistd.h>
+#  include <pthread.h>
 #endif
 
 #ifdef WIN32
-# include <windows.h>
-# include <winbase.h>
-# include <errno.h>
-# include <winsock2.h>
-# include <io.h>
-
-#ifndef __BIT_TYPES_DEFINED__ /* sleepcat DB uses this */ 
-typedef unsigned long int u_int32_t;
-typedef long int ssize_t;
+// !cj! TODO would be nice to remove this 
+#  pragma warning(disable : 4996)
+#  include <errno.h>
+#  include <winsock2.h>
+#  include <io.h>
+#  include <windows.h>
+#  include <winbase.h>
+#  include <errno.h>
+#  include <winsock2.h>
+#  include <io.h>
 #endif
 
-#endif
-
-#if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
-#include <netdb.h>
-
-#if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2)
+#if defined(__APPLE__) 
 #  include <arpa/nameser_compat.h>
-#else
-   // Mac OS 10.2 and less need to have this defined
-   typedef int socklen_t;
-#endif
-
-#ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
-#ifndef __SCHAR_MAX__ 
-#define __SCHAR_MAX__ 127
-#endif
-#endif
-
+#  ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
+#    ifndef __SCHAR_MAX__ 
+#      define __SCHAR_MAX__ 127
+#    endif
+#  endif
 #endif
 
 #if defined(__SUNPRO_CC)
-#if defined(_TIME_T)
- using std::time_t;
-#endif
-
-#include <time.h>
-#include <memory.h>
-#include <string.h>
-#endif
-
-#include <cstring>
-
-#if defined(WIN32) || defined(__QNX__)
-#define strcasecmp(a,b) stricmp(a,b)
-#define strncasecmp(a,b,c) strnicmp(a,b,c)
-#endif
-
-#ifndef WIN32
-#include <pthread.h>
-#endif
-
-#if defined(__QNX__) || defined(__sun)
-typedef unsigned int u_int32_t;
+#  if defined(_TIME_T)
+    using std::time_t;
+#  endif
+#  include <time.h>
+#  include <memory.h>
+#  include <string.h>
 #endif
 
 #if !defined(T_NAPTR)
-#define T_NAPTR 35
+#  define T_NAPTR 35
 #endif
 
 #if !defined(T_SRV)
-#define T_SRV 33
+#  define T_SRV 33
 #endif
 
 #if !defined(T_AAAA)
-#define T_AAAA 28
+#  define T_AAAA 28
 #endif
 
 #if !defined(T_A)
-#define T_A 1
+#  define T_A 1
 #endif
 
 namespace resip
 {
+
+#if defined(WIN32) || defined(__QNX__)
+#  define strcasecmp(a,b)    stricmp(a,b)
+#  define strncasecmp(a,b,c) strnicmp(a,b,c)
+#endif
+
+#if defined(__QNX__) || defined(__sun)
+  typedef unsigned int u_int32_t;
+#endif
 
 template<typename _Tp>
 inline const _Tp&
@@ -130,18 +108,16 @@ resipMax(const _Tp& __a, const _Tp& __b)
 
 }
 
-#ifndef TARGET_OS_MAC
+//#ifndef TARGET_OS_MAC
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
-#endif
-
+//#endif
 #if defined( WIN32 )
-typedef unsigned __int64 UInt64;
+  typedef unsigned __int64 UInt64;
 #else
-typedef unsigned long long UInt64;
+  typedef unsigned long long UInt64;
 #endif
-
 //typedef struct { unsigned char octet[16]; }  UInt128;
 
 //template "levels; ie REASONABLE and COMPLETE
@@ -150,12 +126,13 @@ typedef unsigned long long UInt64;
 //COMPLETE would allow template metaprogramming, template< template< > > tricks,
 //etc...REASONABLE should always be defined when COMPLETE is defined.
 
-#if defined(_MSC_VER) && (MSC_VER >= 1200)
-#define REASONABLE_TEMPLATES
-#endif
+// no longer needed 
+//#if defined(_MSC_VER) && (MSC_VER >= 1200)
+//#define REASONABLE_TEMPLATES
+//#endif
 
 #if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-#define REASONABLE_TEMPLATES
+#  define REASONABLE_TEMPLATES
 #endif
 
 #endif
@@ -202,10 +179,4 @@ typedef unsigned long long UInt64;
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
