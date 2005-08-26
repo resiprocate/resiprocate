@@ -1,6 +1,6 @@
 #include "tfm/CountDown.hxx"
 
-CountDown::CountDown(uint count, resip::Data description)
+CountDown::CountDown(unsigned int count, resip::Data description)
    : _description(description),
      _count(count)
 {}

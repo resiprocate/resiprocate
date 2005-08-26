@@ -6,7 +6,7 @@
 class CountDown : public TestEndPoint::ExpectPreCon
 {
    public:
-      CountDown(uint count, resip::Data description);
+      CountDown(unsigned int count, resip::Data description);
       virtual ~CountDown() {}
 
       class CountDownDec : public ExpectAction
@@ -24,7 +24,7 @@ class CountDown : public TestEndPoint::ExpectPreCon
       virtual bool passes(boost::shared_ptr<Event>);
    private:
       resip::Data _description;
-      uint _count;
+      unsigned int _count;
 };
 
 #endif

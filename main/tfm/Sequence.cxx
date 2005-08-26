@@ -302,7 +302,7 @@ bool
 SequenceClass::removeFromActiveSet()
 {
    //DebugLog(<< "removeFromActiveSet: " << *this);
-   set<SequenceClass*>::const_iterator i = getSequenceSet()->mActiveSet.find(this);
+   set<SequenceClass*>::iterator i = getSequenceSet()->mActiveSet.find(this);
    if (i != getSequenceSet()->mActiveSet.end())
    {
       getSequenceSet()->mActiveSet.erase(i);
