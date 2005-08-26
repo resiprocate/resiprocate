@@ -1,0 +1,168 @@
+digraph MsgHeaderScannerFSM {
+	node[shape=record
+		fontsize=8
+		fontname="Helvetica"
+	]
+	edge [ fontsize=6 fontname="Helvetica"]
+	graph [ ratio=0.8
+		fontsize=6 compound=true ]  MsgStart [ label = "0|MsgStart" ]
+    MsgStart -> MsgStart [label="TERM\nSentinel" ]
+    MsgStart -> ScanStatusLine [label="*\nStartText" ]
+    MsgStart -> ScanStatusLine [label="FName\nStartText" ]
+    MsgStart -> ScanStatusLine [label="WS\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\":\"\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\"\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\"<\"\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\">\"\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\"\\\"\nStartText" ]
+    MsgStart -> ScanStatusLine [label="\",\"\nStartText" ]
+    MsgStart -> HalfLineBreakAtMsgStart [label="CR\nNone" ]
+
+  HalfLineBreakAtMsgStart [ label = "1|HalfLineBreakAtMsgStart" ]
+    HalfLineBreakAtMsgStart -> HalfLineBreakAtMsgStart [label="TERM\nSentinel" ]
+    HalfLineBreakAtMsgStart -> MsgStart [label="LF\nNone" ]
+
+  ScanStatusLine [ label = "2|ScanStatusLine" ]
+    ScanStatusLine -> ScanStatusLine [label="TERM\nSentinel" ]
+    ScanStatusLine -> HalfLineBreakAfterStatusLine [label="CR\nTermStatusLine" ]
+
+  HalfLineBreakAfterStatusLine [ label = "3|HalfLineBreakAfterStatusLine" ]
+    HalfLineBreakAfterStatusLine -> HalfLineBreakAfterStatusLine [label="TERM\nSentinel" ]
+    HalfLineBreakAfterStatusLine -> AfterLineBreakAfterStatusLine [label="LF\nNone" ]
+
+  AfterLineBreakAfterStatusLine [ label = "4|AfterLineBreakAfterStatusLine" ]
+    AfterLineBreakAfterStatusLine -> AfterLineBreakAfterStatusLine [label="TERM\nSentinel" ]
+    AfterLineBreakAfterStatusLine -> ScanFieldName [label="FName\nStartText" ]
+    AfterLineBreakAfterStatusLine -> HalfLineBreakAfterLineBreak [label="CR\nNone" ]
+
+  ScanFieldName [ label = "5|ScanFieldName" ]
+    ScanFieldName -> ScanFieldName [label="TERM\nSentinel" ]
+    ScanFieldName -> ScanWhiteSpaceAfter1FieldName [label="WS\nTermFieldName" ]
+    ScanFieldName -> ScanWhiteSpaceOr1Value [label="\":\"\nTermFieldName" ]
+
+  ScanWhiteSpaceAfter1FieldName [ label = "6|ScanWhiteSpaceAfter1FieldName" ]
+    ScanWhiteSpaceAfter1FieldName -> ScanWhiteSpaceAfter1FieldName [label="TERM\nSentinel" ]
+    ScanWhiteSpaceAfter1FieldName -> ScanWhiteSpaceOr1Value [label="\":\"\nNone" ]
+
+  ScanWhiteSpaceAfterNFieldName [ label = "7|ScanWhiteSpaceAfterNFieldName" ]
+    ScanWhiteSpaceAfterNFieldName -> ScanWhiteSpaceAfterNFieldName [label="TERM\nSentinel" ]
+    ScanWhiteSpaceAfterNFieldName -> ScanWhiteSpaceOrNValue [label="\":\"\nNone" ]
+
+  ScanWhiteSpaceOr1Value [ label = "8|ScanWhiteSpaceOr1Value" ]
+    ScanWhiteSpaceOr1Value -> ScanWhiteSpaceOr1Value [label="TERM\nSentinel" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="*\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="FName\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\":\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\"<\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\">\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\"\\\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> Scan1Value [label="\",\"\nStartText" ]
+    ScanWhiteSpaceOr1Value -> HalfLineBreakInWhiteSpaceBefore1Value [label="CR\nNone" ]
+
+  ScanWhiteSpaceOrNValue [ label = "9|ScanWhiteSpaceOrNValue" ]
+    ScanWhiteSpaceOrNValue -> ScanWhiteSpaceOrNValue [label="TERM\nSentinel" ]
+    ScanWhiteSpaceOrNValue -> ScanNValue [label="*\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValue [label="FName\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValue [label="\":\"\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValueInQuotes [label="\"\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValueInAngles [label="\"<\"\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValue [label="\">\"\nStartText" ]
+    ScanWhiteSpaceOrNValue -> ScanNValue [label="\"\\\"\nStartText" ]
+    ScanWhiteSpaceOrNValue -> HalfLineBreakInWhiteSpaceBeforeNValue [label="CR\nNone" ]
+
+  HalfLineBreakInWhiteSpaceBefore1Value [ label = "10|HalfLineBreakInWhiteSpaceBefore1Value" ]
+    HalfLineBreakInWhiteSpaceBefore1Value -> HalfLineBreakInWhiteSpaceBefore1Value [label="TERM\nSentinel" ]
+    HalfLineBreakInWhiteSpaceBefore1Value -> AfterLineBreakInWhiteSpaceBefore1Value [label="LF\nNone" ]
+
+  HalfLineBreakInWhiteSpaceBeforeNValue [ label = "11|HalfLineBreakInWhiteSpaceBeforeNValue" ]
+    HalfLineBreakInWhiteSpaceBeforeNValue -> HalfLineBreakInWhiteSpaceBeforeNValue [label="TERM\nSentinel" ]
+    HalfLineBreakInWhiteSpaceBeforeNValue -> AfterLineBreakInWhiteSpaceBeforeNValue [label="LF\nNone" ]
+
+  AfterLineBreakInWhiteSpaceBefore1Value [ label = "12|AfterLineBreakInWhiteSpaceBefore1Value" ]
+    AfterLineBreakInWhiteSpaceBefore1Value -> AfterLineBreakInWhiteSpaceBefore1Value [label="TERM\nSentinel" ]
+    AfterLineBreakInWhiteSpaceBefore1Value -> ScanFieldName [label="FName\nBeyondEmptyValue" ]
+    AfterLineBreakInWhiteSpaceBefore1Value -> ScanWhiteSpaceOr1Value [label="WS\nNone" ]
+    AfterLineBreakInWhiteSpaceBefore1Value -> HalfLineBreakAfterLineBreak [label="CR\nBeyondEmptyValue" ]
+
+  AfterLineBreakInWhiteSpaceBeforeNValue [ label = "13|AfterLineBreakInWhiteSpaceBeforeNValue" ]
+    AfterLineBreakInWhiteSpaceBeforeNValue -> AfterLineBreakInWhiteSpaceBeforeNValue [label="TERM\nSentinel" ]
+    AfterLineBreakInWhiteSpaceBeforeNValue -> ScanFieldName [label="FName\nBeyondEmptyValue" ]
+    AfterLineBreakInWhiteSpaceBeforeNValue -> ScanWhiteSpaceOrNValue [label="WS\nNone" ]
+    AfterLineBreakInWhiteSpaceBeforeNValue -> HalfLineBreakAfterLineBreak [label="CR\nBeyondEmptyValue" ]
+
+  Scan1Value [ label = "14|Scan1Value" ]
+    Scan1Value -> Scan1Value [label="TERM\nSentinel" ]
+    Scan1Value -> HalfLineBreakIn1Value [label="CR\nNone" ]
+
+  ScanNValue [ label = "15|ScanNValue" ]
+    ScanNValue -> ScanNValue [label="TERM\nSentinel" ]
+    ScanNValue -> ScanNValueInQuotes [label="\"\nNone" ]
+    ScanNValue -> ScanNValueInAngles [label="\"<\"\nNone" ]
+    ScanNValue -> ScanWhiteSpaceOrNValue [label="\",\"\nTermValue" ]
+    ScanNValue -> HalfLineBreakInNValue [label="CR\nNone" ]
+
+  HalfLineBreakIn1Value [ label = "16|HalfLineBreakIn1Value" ]
+    HalfLineBreakIn1Value -> HalfLineBreakIn1Value [label="TERM\nSentinel" ]
+    HalfLineBreakIn1Value -> AfterLineBreakIn1Value [label="LF\nNone" ]
+
+  HalfLineBreakInNValue [ label = "17|HalfLineBreakInNValue" ]
+    HalfLineBreakInNValue -> HalfLineBreakInNValue [label="TERM\nSentinel" ]
+    HalfLineBreakInNValue -> AfterLineBreakInNValue [label="LF\nNone" ]
+
+  AfterLineBreakIn1Value [ label = "18|AfterLineBreakIn1Value" ]
+    AfterLineBreakIn1Value -> AfterLineBreakIn1Value [label="TERM\nSentinel" ]
+    AfterLineBreakIn1Value -> ScanFieldName [label="FName\nTermValueAfterLineBreak" ]
+    AfterLineBreakIn1Value -> Scan1Value [label="WS\nNone" ]
+    AfterLineBreakIn1Value -> HalfLineBreakAfterLineBreak [label="CR\nTermValueAfterLineBreak" ]
+
+  AfterLineBreakInNValue [ label = "19|AfterLineBreakInNValue" ]
+    AfterLineBreakInNValue -> AfterLineBreakInNValue [label="TERM\nSentinel" ]
+    AfterLineBreakInNValue -> ScanFieldName [label="FName\nTermValueAfterLineBreak" ]
+    AfterLineBreakInNValue -> ScanNValue [label="WS\nNone" ]
+    AfterLineBreakInNValue -> HalfLineBreakAfterLineBreak [label="CR\nTermValueAfterLineBreak" ]
+
+  ScanNValueInQuotes [ label = "20|ScanNValueInQuotes" ]
+    ScanNValueInQuotes -> ScanNValueInQuotes [label="TERM\nSentinel" ]
+    ScanNValueInQuotes -> ScanNValue [label="\"\nNone" ]
+    ScanNValueInQuotes -> AfterEscCharInQuotesInNValue [label="\"\\\"\nNone" ]
+    ScanNValueInQuotes -> HalfLineBreakInQuotesInNValue [label="CR\nNone" ]
+
+  AfterEscCharInQuotesInNValue [ label = "21|AfterEscCharInQuotesInNValue" ]
+    AfterEscCharInQuotesInNValue -> AfterEscCharInQuotesInNValue [label="TERM\nSentinel" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="*\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="FName\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="WS\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\":\"\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\"\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\"<\"\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\">\"\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\"\\\"\nNone" ]
+    AfterEscCharInQuotesInNValue -> ScanNValueInQuotes [label="\",\"\nNone" ]
+
+  HalfLineBreakInQuotesInNValue [ label = "22|HalfLineBreakInQuotesInNValue" ]
+    HalfLineBreakInQuotesInNValue -> HalfLineBreakInQuotesInNValue [label="TERM\nSentinel" ]
+    HalfLineBreakInQuotesInNValue -> AfterLineBreakInQuotesInNValue [label="LF\nNone" ]
+
+  AfterLineBreakInQuotesInNValue [ label = "23|AfterLineBreakInQuotesInNValue" ]
+    AfterLineBreakInQuotesInNValue -> AfterLineBreakInQuotesInNValue [label="TERM\nSentinel" ]
+    AfterLineBreakInQuotesInNValue -> ScanNValueInQuotes [label="WS\nNone" ]
+
+  ScanNValueInAngles [ label = "24|ScanNValueInAngles" ]
+    ScanNValueInAngles -> ScanNValueInAngles [label="TERM\nSentinel" ]
+    ScanNValueInAngles -> ScanNValue [label="\">\"\nNone" ]
+    ScanNValueInAngles -> HalfLineBreakInAnglesInNValue [label="CR\nNone" ]
+
+  HalfLineBreakInAnglesInNValue [ label = "25|HalfLineBreakInAnglesInNValue" ]
+    HalfLineBreakInAnglesInNValue -> HalfLineBreakInAnglesInNValue [label="TERM\nSentinel" ]
+    HalfLineBreakInAnglesInNValue -> AfterLineBreakInAnglesInNValue [label="LF\nNone" ]
+
+  AfterLineBreakInAnglesInNValue [ label = "26|AfterLineBreakInAnglesInNValue" ]
+    AfterLineBreakInAnglesInNValue -> AfterLineBreakInAnglesInNValue [label="TERM\nSentinel" ]
+    AfterLineBreakInAnglesInNValue -> ScanNValueInAngles [label="WS\nNone" ]
+
+  HalfLineBreakAfterLineBreak [ label = "27|HalfLineBreakAfterLineBreak" ]
+    HalfLineBreakAfterLineBreak -> HalfLineBreakAfterLineBreak [label="TERM\nSentinel" ]
+    HalfLineBreakAfterLineBreak -> MsgStart [label="LF\nEndHeader" ]
+
+}

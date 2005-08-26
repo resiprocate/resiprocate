@@ -1,0 +1,80 @@
+2004.02.22
+Updated 2005.08.07
+
+USING AUTOTOOLS WITH RESIPROCATE
+================================
+
+You are seeing this file because you have checked out a 'HEAD' version of
+reSIProcate.  In order to use reSIProcate with the autotools, you'll need to run
+the 'use-autotools.sh' script in this directory.  This script will remove the
+'old' build system in 'build' and update the required files for autotools by
+moving them to the b-autotools branch.
+
+You will need fairly recent autotools to make this all work.
+
+This documentation will be updated shortly.
+
+After running use-autotools.sh, you need to run 'autogen.sh' in the sip
+directory to 'bootstrap' the autotools files.
+
+You should run autogen.sh in it's own sub-shell:
+
+% bash autogen.sh
+
+Once this step is complete, you no longer need to mess around with
+autogen.sh. A simple autoreconf will do in case you add files to the
+Makefile.am's.
+
+NOTE: You need to build ares PRIOR to compiling resiprocate.  The ares build
+system does NOT support independent directories for object files are this time.
+
+To compile repro with autotools too, you need to change to the repro directory
+and execute
+
+% bash autogen.sh
+
+one more time.
+
+Note: resiprocate needs to be compiled and installed first, which is not
+verified yet by configure, before you can compile repro.
+
+MULTI ARCHITECTURE BUILDS or BUILDING WITH SEPARATE OBJECT DIRECTORIES
+----------------------------------------------------------------------
+
+When done properly, autotools-based builds will permit the source
+files to be elsewhere when you build.  In order to take advantage 
+of this, you may choose to run 'configure' from a different directory.
+(This directory will be the build directory and will contain a heirarchy
+of directories analogous to the source tree.) All files that are the result
+of the build process (object, library and dependancy files for example) will
+be in these directories, leaving the source directories untouched.
+
+This is an excellent way to have several architectures or optimization levels
+building from the same source base.
+
+For example:
+
+cd sip
+$ mkdir PowerPC.Darwin
+$ cd PowerPC.Darwin
+$ ../configure --disable-static --enable-maintainer-mode -C ....
+$  make
+...
+
+There are several options that you can provide the autotools to speed up the
+build process.  Since by default autotools builds both static and shared
+libraries it takes up to 4 compilation passes per source file.  With the heavy
+use of templates in reSIProcate, this results in very long compile times.  If
+you specific only shared or only static compilations, your can half the compile
+time. (--disable-static or --disable-shared).
+
+
+If you are building just a single time (for the purposes of USING resiprocate)
+then you can also disable dependancy tracking (see configure --help) for the
+syntax).
+
+
+Any questions, please mail the devel list
+
+resiprocate-devel@list.sipfoundry.org
+

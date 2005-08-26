@@ -1,0 +1,11 @@
+We've had success compiling reciprocate under Visual Studio .NET version 7.0, 7.1, and 8.0 It will not work older compilers. Here's what we did:
+
+1) Checked out the "sip" repository so that it became C:\sip on your machine.
+
+2) In Visual Studio, opened the project file C:\sip\resiprocate_X.sln
+   (where X matches the version of Visual Studio you are using)
+
+3) Start a build
+
+
+
