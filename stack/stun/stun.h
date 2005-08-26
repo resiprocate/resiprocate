@@ -13,6 +13,7 @@
 
 #define STUN_PORT 3478
 
+#ifndef RESIP_COMPAT_HXX
 // define some basic types
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
@@ -26,6 +27,8 @@ typedef unsigned __int64 UInt64;
 #else
 typedef unsigned long long UInt64;
 #endif
+#endif
+
 typedef struct { unsigned char octet[16]; }  UInt128;
 
 /// define a structure to hold a stun address 
