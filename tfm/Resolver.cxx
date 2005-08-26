@@ -1,9 +1,16 @@
+#ifndef WIN32
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#else
+#include <winsock2.h>
+#include <stdlib.h>
+#include <io.h>
+#include <WS2TCPIP.H>
+#endif
 
 #include "resip/stack/SipStack.hxx"
 #include "rutil/Logger.hxx"
@@ -12,6 +19,10 @@
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 using namespace resip;
+
+#ifdef WIN32
+typedef unsigned long int u_int32_t;
+#endif
 
 Resolver::Resolver(const Uri& uri) : 
    mTransport(UNKNOWN_TRANSPORT),
