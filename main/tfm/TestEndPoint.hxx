@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <list>
-#include <loki/Functor.h>
+#include <boost/function.hpp>
 
 #include "rutil/Data.hxx"
 
@@ -182,7 +182,7 @@ class TestEndPoint
             virtual const char* name() const ;
       };
 
-      typedef Loki::Functor<bool, TYPELIST_1(boost::shared_ptr<Event>)> PredicateFn;
+      typedef boost::function<bool (boost::shared_ptr<Event> e) > PredicateFn;
       // general assertion mechanism -- allows general functor
       class Assert : public ExpectAction
       {
@@ -198,7 +198,7 @@ class TestEndPoint
       friend class Assert;
       ExpectAction* check1(PredicateFn fn, resip::Data label);
 
-      typedef Loki::Functor<void, TYPELIST_1(boost::shared_ptr<Event>)> ExecFn;
+      typedef boost::function<void (boost::shared_ptr<Event> event) > ExecFn;
       class Execute : public ExpectAction
       {
          public:

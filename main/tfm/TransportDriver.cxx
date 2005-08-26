@@ -8,36 +8,58 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-TransportDriverImpl::TransportDriverImpl()
+std::auto_ptr<TransportDriver> TransportDriver::mInstance;
+resip::Mutex TransportDriver::mInstanceMutex;      
+
+
+TransportDriver& TransportDriver::instance()
+{
+   if (mInstance.get())
+   {
+      return *mInstance.get();
+   }
+   else
+   {
+      Lock guard(mInstanceMutex);
+      if (!mInstance.get())
+      {
+         mInstance = auto_ptr<TransportDriver>(new TransportDriver());
+      }
+      return *mInstance.get();
+   }
+}
+   
+
+TransportDriver::TransportDriver()
 {
    run();
 }
 
-TransportDriverImpl::~TransportDriverImpl()
+TransportDriver::~TransportDriver()
 {
    shutdown();
    join();
 }
 
-TransportDriverImpl::Client::~Client()
+TransportDriver::Client::~Client()
 {
 }
 
 void 
-TransportDriverImpl::Client::registerWithTransportDriver()
+TransportDriver::Client::registerWithTransportDriver()
 {
    
-   TransportDriver::Instance().addClient(this);
+   TransportDriver::instance().addClient(this);
 }
 
 void 
-TransportDriverImpl::Client::unregisterFromTransportDriver()
+TransportDriver::Client::unregisterFromTransportDriver()
 {
-   TransportDriver::Instance().removeClient(this);
+   TransportDriver::instance().removeClient(this);
 }
 
 void 
-TransportDriverImpl::addClient(Client* client)
+TransportDriver::addClient(Client* client)
 {
    Lock lock(mMutex);
    if (find(mClients.begin(), mClients.end(), client) == mClients.end())
@@ -47,14 +69,14 @@ TransportDriverImpl::addClient(Client* client)
 }
 
 void 
-TransportDriverImpl::removeClient(Client* client)
+TransportDriver::removeClient(Client* client)
 {
    Lock lock(mMutex);
    mClients.erase(remove(mClients.begin(), mClients.end(), client), mClients.end());    
 }
 
 void
-TransportDriverImpl::thread()
+TransportDriver::thread()
 {
    while (!isShutdown())
    {
@@ -74,7 +96,7 @@ TransportDriverImpl::thread()
 }
 
 void
-TransportDriverImpl::process()
+TransportDriver::process()
 {
    FdSet fdset;
    {
@@ -91,7 +113,7 @@ TransportDriverImpl::process()
 }
 
 void
-TransportDriverImpl::buildFdSet(FdSet& fdset)
+TransportDriver::buildFdSet(FdSet& fdset)
 {
    Lock lock(mMutex);
    for (vector<Client*>::iterator it =  mClients.begin();
