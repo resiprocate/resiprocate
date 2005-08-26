@@ -28,7 +28,7 @@ class NameAddr;
 class DeprecatedDialog;
 }
 
-class TestSipEndPoint : public TestEndPoint, public TransportDriverImpl::Client
+class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 {
    public:
       static resip::Uri NoOutboundProxy;
@@ -108,8 +108,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriverImpl::Client
       InviteReferReplaces* inviteReferReplaces();
       InviteReferReplaces* inviteReferredBy();
 
-      typedef Loki::Functor<boost::shared_ptr<resip::SipMessage>, 
-                            TYPELIST_1(boost::shared_ptr<resip::SipMessage>)> 
+      typedef boost::function<boost::shared_ptr<resip::SipMessage> 
+                              ( boost::shared_ptr<resip::SipMessage> msg) > 
       MessageConditionerFn;
 
       class IdentityMessageConditioner
