@@ -19,10 +19,10 @@
 //#include <sys/int_types.h>
 //#endif
 
-#include <netdb.h>
 #include <cstring>
 
 #ifndef WIN32
+#  include <netdb.h>
 #  include <sys/types.h>
 #  include <sys/time.h>
 #  include <sys/socket.h>
