@@ -54,7 +54,7 @@ class TestHolder : public Fixture
       largeCallId(boost::shared_ptr<SipMessage> msg)
       {
          const int oversize = 2048;
-         Data callId(oversize, true);
+         Data callId(oversize, Data::Preallocate);
          for (int i = 0; i < oversize/resip::Random::maxLength; ++i)
          {
             callId += resip::Random::getRandomHex(resip::Random::maxLength);
@@ -140,7 +140,7 @@ class TestHolder : public Fixture
                 !msg->header(h_Contacts).empty());
 
          const int oversize = 2048;
-         Data contactUser(oversize, true);
+         Data contactUser(oversize, Data::Preallocate);
          for (int i = 0; i < oversize/resip::Random::maxLength; ++i)
          {
             contactUser += resip::Random::getRandomHex(resip::Random::maxLength);
