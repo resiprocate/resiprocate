@@ -667,8 +667,9 @@ class TestData
             assert(Data(0.21347) == "0.2135");
             assert(Data(-0.21347) == "-0.2135");
             assert(Data(-0.21344) == "-0.2134");
-            cerr << "!! " << Data(-123454.21344, 5) << endl;            
-            assert(Data(-123454.21344, 5) == "-123454.21344");
+            cerr << "!! " << Data(-123454.21344, Data::FiveDigitPrecision) << endl;            
+            assert(Data(-123454.21344, Data::FiveDigitPrecision) == "-123454.21344");
+            assert(Data(-123454.21344, Data::SevenDigitPrecision) == "-123454.21344");
          }
       
          {
