@@ -48,6 +48,8 @@ int debugLogsInCall()
 int
 main(int argc, char* argv[])
 {
+   CritLog(<< "logging before initializing is ok");
+   
    Log::initialize(Log::Syslog, Log::Info, argv[0]);
 
    DebugLog(<<"This should not appear.");
