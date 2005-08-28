@@ -448,9 +448,9 @@ Data::Data(unsigned long value)
    }
 }
 
-static const int DoubleMaxPrecision = 10;
-static const int DoubleMaxSize = MaxLongSize + DoubleMaxPrecision;
-Data::Data(double value, int precision)
+static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
+Data::Data(double value, 
+	   Data::DoubleDigitPrecision precision)
    : mSize(0),
      mBuf(DoubleMaxSize + precision > LocalAlloc 
           ? new char[DoubleMaxSize + precision + 1]
@@ -461,7 +461,7 @@ Data::Data(double value, int precision)
      mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
 {
    assert(precision >= 0);
-   assert(precision < DoubleMaxPrecision);
+   assert(precision < MaxDigitPrecision);
 
    double v = value;
    bool neg = (value < 0.0);
@@ -484,6 +484,7 @@ Data::Data(double value, int precision)
 
    int dec = (int)floor(v+0.5);
 
+   Data test(precision, true);
    Data d(precision, Data::Preallocate);
 
    if (dec == 0)
