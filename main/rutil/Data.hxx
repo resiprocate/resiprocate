@@ -81,6 +81,7 @@ class Data
       */
       Data(int capacity, const PreallocateType&);
 
+//#define DEPRECATED_PREALLOC
 #ifdef DEPRECATED_PREALLOC
       /**
         Creates a data with a specified initial capacity.
@@ -163,6 +164,13 @@ class Data
       */
       explicit Data(unsigned int value);
 
+      typedef enum {ZeroDigitPrecision = 0, OneDigitPrecision, 
+		    TwoDigitPrecision, ThreeDigitPrecision, 
+		    FourDigitPrecision, FiveDigitPrecision,
+		    SixDigitPrecision, SevenDigitPrecision,
+		    EightDigitPrecision, NineDigitPrecision,
+		    TenDigitPrecision, MaxDigitPrecision,
+      } DoubleDigitPrecision;
       /**
         Converts the passed in value into ascii-decimal
         representation, and then creates a "Data" containing
@@ -172,7 +180,8 @@ class Data
         @param precision  Number of digits after the decimal point.
                           Trailing zeros will be removed.
       */
-      explicit Data(double value, int precision = 4);
+      explicit Data(double value, 
+		    Data::DoubleDigitPrecision precision = FourDigitPrecision);
 
       /**
         Creates a buffer containing "true" or "false", depending
