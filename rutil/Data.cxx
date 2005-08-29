@@ -483,8 +483,6 @@ Data::Data(double value,
    }
 
    int dec = (int)floor(v+0.5);
-
-   Data test(precision, true);
    Data d(precision, Data::Preallocate);
 
    if (dec == 0)
