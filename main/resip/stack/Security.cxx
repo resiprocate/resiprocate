@@ -1359,11 +1359,17 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
 
    // compute the signature
    int flags = 0;
-   flags |= PKCS7_BINARY;
-   flags |= PKCS7_DETACHED;
-   flags |= PKCS7_NOCERTS; 
-   flags |= PKCS7_NOATTR;
-   flags |= PKCS7_NOSMIMECAP;
+   flags |= PKCS7_BINARY; 
+   flags |= PKCS7_DETACHED; 
+   if ( true ) // don't do caps
+   {
+      flags |= PKCS7_NOSMIMECAP; 
+      flags |= PKCS7_NOATTR; 
+   }
+   if ( true ) // don't do certs 
+   {
+      flags |= PKCS7_NOCERTS;  
+   }
 
    PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, flags);
    if ( !pkcs7 )
