@@ -14,7 +14,10 @@ class IdentityHandler : public DumFeature
 {
    public:      
       IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target); 
+      ~IdentityHandler();
+      
       virtual ProcessingResult process(Message* msg);
+
    private:
       void processIdentityCheckResponse(const HttpGetMessage& msg);      
       bool queueForIdentityCheck(SipMessage* sipMsg);
