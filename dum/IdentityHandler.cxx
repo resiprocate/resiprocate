@@ -15,6 +15,14 @@ IdentityHandler::IdentityHandler(DialogUsageManager& dum, TargetCommand::Target&
 {
 }
 
+IdentityHandler::~IdentityHandler()
+{
+   for (RequiresCerts::iterator it = mRequiresCerts.begin(); it != mRequiresCerts.end(); ++it)
+   {
+      delete it->second;
+   }
+}
+
 DumFeature::ProcessingResult 
 IdentityHandler::process(Message* msg)
 {
@@ -69,7 +77,8 @@ IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
             
             HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
                                           sipMsg->getTransactionId(),
-                                          mDum);
+                                          mDum,
+                                          mDum.dumIncomingTarget());
             return true;
          }
          catch (BaseException&)
@@ -95,8 +104,8 @@ IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
    if (it != mRequiresCerts.end())
    {
       mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      mRequiresCerts.erase(it);
       postCommand(auto_ptr<Message>(it->second));
+      mRequiresCerts.erase(it);
    }
 #endif
 }
