@@ -1,7 +1,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/IdentityHandler.hxx"
-#include "resip/stack/external/HttpProvider.hxx"
+#include "resip/dum/HttpProvider.hxx"
 #include "resip/stack/external/HttpGetMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
