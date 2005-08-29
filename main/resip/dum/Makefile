@@ -73,7 +73,8 @@ SRC =   \
 	IdentityHandler.cxx \
 	TargetCommand.cxx \
 	DumFeature.cxx \
-	OutgoingEvent.cxx
+	OutgoingEvent.cxx \
+	HttpProvider.cxx
 
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/dum
