@@ -123,9 +123,9 @@ SRC = \
 	X509Contents.cxx \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
+	StatelessHandler.cxx \
 	\
 	\
-	external/HttpProvider.cxx \
 	external/HttpGetMessage.cxx \
 	\
 	stun/stun.cxx \
