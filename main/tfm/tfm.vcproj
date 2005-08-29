@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\..\..\..\boost\boost_1_32_0;C:\dev\boost_1_33_0;..\;.\contrib\popt\include"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -61,8 +61,9 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
