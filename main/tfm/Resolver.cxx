@@ -20,10 +20,6 @@
 
 using namespace resip;
 
-#ifdef WIN32
-typedef unsigned long int u_int32_t;
-#endif
-
 Resolver::Resolver(const Uri& uri) : 
    mTransport(UNKNOWN_TRANSPORT),
    mHost(uri.host()),

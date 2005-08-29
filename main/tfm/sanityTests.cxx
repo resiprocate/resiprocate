@@ -34,6 +34,15 @@ static const int Seconds = 1000;
 const Data transport("udp");
 static NameAddr localhost;
 
+void sleepSeconds(unsigned int seconds)
+{
+#ifdef WIN32
+   Sleep(seconds*1000);
+#else
+   sleep(seconds);
+#endif
+}
+
 class TestHolder : public Fixture
 {
    public:
@@ -1580,7 +1589,7 @@ class TestHolder : public Fixture
              500);
          ExecuteSequences();
          
-         sleep(1);
+         sleepSeconds(1);
 
          NameAddr con = *(derek->getDefaultContacts().begin());
          con.param(p_expires) = 6000;
@@ -1648,7 +1657,7 @@ class TestHolder : public Fixture
              500);
 
          ExecuteSequences();
-         sleep(61);
+         sleepSeconds(61);
          // !jf! cause registration bindings to expire here
          assert(0);
          
@@ -1769,7 +1778,7 @@ class TestHolder : public Fixture
              500);
          ExecuteSequences();
          
-         sleep(1);
+         sleepSeconds(1);
          //CPPUNIT_ASSERT(LocationServer::Instance().count(derek->getAddressOfRecordString()) == 0);
       }
 
