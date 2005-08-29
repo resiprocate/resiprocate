@@ -2,6 +2,7 @@
 #define RESIP_HttpProvider
 
 #include "rutil/Mutex.hxx"
+#include "resip/dum/TargetCommand.hxx"
 #include <memory>
 
 namespace resip
@@ -9,6 +10,7 @@ namespace resip
 class TransactionUser;
 class Data;
 class GenericUri;
+class TargetCommand;
 
 //To provide this functionality, plug in an instance of
 //HttpProviderFactory(before any instances of DialogUsageManager/SipStack are
