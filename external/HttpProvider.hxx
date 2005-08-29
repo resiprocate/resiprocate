@@ -24,7 +24,7 @@ class HttpProvider
       static HttpProvider* instance();
       
       //.dcm. tu param will become a postable
-      virtual void get(const GenericUri& target, const Data& tid, TransactionUser& tu)=0;
+      virtual void get(const GenericUri& target, const Data& tid, TransactionUser& tu, TargetCommand::Target& commandTarget)=0;
       virtual ~HttpProvider(){} //impl. singleton destructor pattern later
    private:
       static HttpProvider* mInstance;
