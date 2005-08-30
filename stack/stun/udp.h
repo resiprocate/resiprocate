@@ -3,7 +3,13 @@
 
 
 #ifdef __MACH__
+#  if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2
+      // you include the Mac OS SDK and you're running on OS 10.3 or more
+#     include <sys/socket.h>
+#  else
+      // you don't include the Mac OS SDK or you're running on OS 10.2 or less
 typedef int socklen_t;
+#  endif
 #endif
 
 #include <errno.h>
