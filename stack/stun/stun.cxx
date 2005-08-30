@@ -2117,7 +2117,10 @@ stunNatType( StunAddress4& dest,
          }
       }
    }
-	
+
+   closesocket(myFd1);
+   closesocket(myFd2);
+
    // see if we can bind to this address 
    //cerr << "try binding to " << testImappedAddr << endl;
    Socket s = openPort( 0/*use ephemeral*/, testImappedAddr.addr, false );
