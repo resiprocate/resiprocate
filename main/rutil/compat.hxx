@@ -9,12 +9,6 @@
 #  undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
 #endif
 
-// this should not be included as some people don't have the OSX SDK insalled
-//#if defined(__APPLE__)
-//#include <TargetConditionals.h>
-//#endif
-//#endif
-
 //#if defined(HAVE_SYS_INT_TYPES_H)
 //#include <sys/int_types.h>
 //#endif
@@ -48,7 +42,14 @@ typedef unsigned int u_int32_t; //!dcm! -- any other platforms?
 #endif
 
 #if defined(__APPLE__) 
-#  include <arpa/nameser_compat.h>
+#  if !defined(MAC_OS_X_VERSION_MIN_REQUIRED) || MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_2
+      // you don't include the SDK or you're running 10.3 or above
+      // note: this will fail on 10.2 if you don't include the SDK
+#     include <arpa/nameser_compat.h>
+#  else
+      // you include the SDK and you're running Mac OS 10.2 or below
+      typedef int socklen_t;
+#  endif
 #  ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
 #    ifndef __SCHAR_MAX__ 
 #      define __SCHAR_MAX__ 127
@@ -109,11 +110,14 @@ resipMax(const _Tp& __a, const _Tp& __b)
 
 }
 
-//#ifndef TARGET_OS_MAC
+// Mac OS X: UInt32 definition conflicts with the Mac OS SDK.
+// If you've included the SDK then TARGET_OS_MAC will be defined.
+#ifndef TARGET_OS_MAC
 typedef unsigned char  UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int   UInt32;
-//#endif
+#endif
+
 #if defined( WIN32 )
   typedef unsigned __int64 UInt64;
 #else
