@@ -84,7 +84,7 @@ AresDns::init(const std::vector<Tuple>& additionalNameservers)
 
 AresDns::~AresDns()
 {
-   ares_destroy(mChannel);
+   ares_destroy_suppress_callbacks(mChannel);
 }
 
 ExternalDnsHandler* 
