@@ -318,9 +318,6 @@
 				RelativePath=".\external\HttpGetMessage.cxx">
 			</File>
 			<File
-				RelativePath=".\external\HttpProvider.cxx">
-			</File>
-			<File
 				RelativePath=".\IntegerCategory.cxx">
 			</File>
 			<File
@@ -686,9 +683,6 @@
 			</File>
 			<File
 				RelativePath=".\external\HttpGetMessage.hxx">
-			</File>
-			<File
-				RelativePath=".\external\HttpProvider.hxx">
 			</File>
 			<File
 				RelativePath=".\IntegerCategory.hxx">
