@@ -298,6 +298,9 @@
 				RelativePath=".\HandleManager.cxx">
 			</File>
 			<File
+				RelativePath=".\HttpProvider.cxx">
+			</File>
+			<File
 				RelativePath=".\IdentityHandler.cxx">
 			</File>
 			<File
@@ -517,6 +520,9 @@
 			</File>
 			<File
 				RelativePath=".\Handles.hxx">
+			</File>
+			<File
+				RelativePath=".\HttpProvider.hxx">
 			</File>
 			<File
 				RelativePath=".\IdentityHandler.hxx">
