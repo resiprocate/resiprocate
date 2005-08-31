@@ -18,27 +18,42 @@
 #include "ares.h"
 #include "ares_private.h"
 
+
+
 void ares_destroy(ares_channel channel)
 {
-  int i;
-  struct query *query;
+   ares_destroy(channel);
+}
 
-  for (i = 0; i < channel->nservers; i++)
-    ares__close_sockets(&channel->servers[i]);
-  free(channel->servers);
-  for (i = 0; i < channel->ndomains; i++)
-    free(channel->domains[i]);
-  free(channel->domains);
-  free(channel->sortlist);
-  free(channel->lookups);
-  while (channel->queries)
-    {
+void ares_destroy_suppress_callbacks(ares_channel channel)
+{
+   ares_destroy_internal(channel, 1);
+}
+
+void ares_destroy_internal(ares_channel channel, int suppressCallbacks)
+{
+   int i;
+   struct query *query;
+
+   for (i = 0; i < channel->nservers; i++)
+      ares__close_sockets(&channel->servers[i]);
+   free(channel->servers);
+   for (i = 0; i < channel->ndomains; i++)
+      free(channel->domains[i]);
+   free(channel->domains);
+   free(channel->sortlist);
+   free(channel->lookups);
+   while (channel->queries)
+   {
       query = channel->queries;
       channel->queries = query->next;
-      query->callback(query->arg, ARES_EDESTRUCTION, NULL, 0);
+      if (!suppressCallbacks)
+      {
+         query->callback(query->arg, ARES_EDESTRUCTION, NULL, 0);
+      }      
       free(query->tcpbuf);
       free(query->skip_server);
       free(query);
-    }
-  free(channel);
+   }
+   free(channel);
 }
