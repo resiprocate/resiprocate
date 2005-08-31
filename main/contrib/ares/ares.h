@@ -131,7 +131,11 @@ int ares_capabilities(int capmask);
 
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 		      int optmask);
+
 void ares_destroy(ares_channel channel);
+void ares_destroy_suppress_callbacks(ares_channel channel);
+
+void ares_destroy_internal(ares_channel channel, int suppressCallbacks);
 
 void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
 	       ares_callback callback, void *arg);
