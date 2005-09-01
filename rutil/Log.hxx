@@ -16,6 +16,14 @@
 #include "rutil/HashMap.hxx"
 #include <iostream>
 
+// NOTE: disabling thread setting code for native mac os applications.
+// since some logging takes place during static initialization we can't
+// be sure all the pthread stuff is ready to go. this eventually causes
+// crashes in the Mac OS native API.
+#if !defined(WIN32) && !defined(TARGET_OS_MAC)
+#define LOG_ENABLE_THREAD_SETTING
+#endif
+
 namespace resip
 {
 
@@ -181,7 +189,7 @@ class Log
       static const char mDescriptions[][32];
       static HashMap<int, Level> mServiceToLevel;
 
-#ifndef WIN32
+#ifdef LOG_ENABLE_THREAD_SETTING
       static HashMap<pthread_t, std::pair<ThreadSetting, bool> > mThreadToLevel;
       static HashMap<int, std::set<pthread_t> > mServiceToThreads;
       static pthread_key_t* mLevelKey;
