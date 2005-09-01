@@ -83,6 +83,13 @@ DumTimeout::encode(std::ostream& strm) const
    return strm;
 }
 
+std::ostream&
+DumTimeout::encodeBrief(std::ostream& strm) const
+{
+   strm << "DumTimeout: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq;
+   return strm;
+}
+
 BaseUsageHandle 
 DumTimeout::getBaseUsage() const
 {
