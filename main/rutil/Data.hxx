@@ -584,7 +584,7 @@ class Data
       size_type find(const Data& match, size_type start = 0) const;
 
       /** 
-          Replaces all occurrences of the bytes match with target 
+          Replaces all occurrences of the bytes match with target. 
       */
       void replace(const Data& match, const Data& target);
       
