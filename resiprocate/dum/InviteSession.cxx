@@ -1037,6 +1037,18 @@ InviteSession::targetRefresh(const NameAddr& localUri)
    return mLastRequest;
 }
 
+const NameAddr&
+InviteSession::myAddr() const
+{
+   return mDialog.mLocalNameAddr;
+}
+
+const NameAddr&
+InviteSession::peerAddr() const
+{
+   return mDialog.mRemoteNameAddr;
+}
+
 void
 InviteSession::send()
 {
