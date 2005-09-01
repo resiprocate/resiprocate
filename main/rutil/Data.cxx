@@ -1537,19 +1537,28 @@ Data::find(const Data& match,
 }
 
 void
-Data::replace(const Data& match, const Data& replaceWith)
+Data::replace(const Data& match, 
+	      const Data& replaceWith)
 {
-   int incr = replaceWith.size() - match.size();
-   for (size_type offset = find(match, 0); offset != Data::npos; offset = find(match, offset))
+   const int incr = replaceWith.size() - match.size();
+   for (size_type offset = find(match, 0); offset != Data::npos;
+	offset = find(match, offset+replaceWith.size()))
    {
       if (mSize + incr >= mCapacity)
       {
-         resize(mCapacity * 3 / 2, true);
+         resize((mCapacity + incr) * 3 / 2, true);
+      }
+      else
+      {
+	 own();
       }
 
-      // move the memory forward
+      // move the memory forward (or backward)
+      std::cerr << mBuf + offset + replaceWith.size() << ", " 
+		<< mBuf + offset + match.size() << ", " 
+		<< mSize - offset - match.size() << std::endl;
       memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
-      memcpy(mBuf + offset, replaceWith.c_str(), replaceWith.size());
+      memcpy(mBuf + offset, replaceWith.data(), replaceWith.size());
       mSize += incr;
    }
 }

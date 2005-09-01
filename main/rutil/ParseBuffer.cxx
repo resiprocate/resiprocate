@@ -299,6 +299,7 @@ ParseBuffer::Pointer
 ParseBuffer::skipToChars(const Data& cs)
 {
    const unsigned int l = static_cast<unsigned int>(cs.size());
+   assert(l);
 
    const char* rpos;
    const char* cpos;
