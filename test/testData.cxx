@@ -15,6 +15,153 @@ class TestData
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
+	 {
+	    {
+	       Data from;
+	       Data to;
+	       Data example;
+
+	       // asserts
+	       //example.replace(from, to);
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("b");
+	       Data example;
+
+	       example.replace(from, to);
+	       assert(example.empty());
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("b");
+	       Data example("c");
+
+	       example.replace(from, to);
+	       assert(example == "c");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("b");
+	       Data example("a");
+
+	       example.replace(from, to);
+	       assert(example == "b");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("b");
+	       Data example("aaaa");
+
+	       example.replace(from, to);
+	       assert(example == "bbbb");
+	    }
+	    
+	    {
+	       Data from("a");
+	       Data to("b");
+	       Data example("abracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "bbrbcbdbbrb");
+	    }
+
+	    {
+	       Data from("aa");
+	       Data to("b");
+	       Data example("aa");
+
+	       example.replace(from, to);
+	       assert(example == "b");
+	    }
+
+	    {
+	       Data from("aa");
+	       Data to("b");
+	       Data example("aaaaa");
+
+	       example.replace(from, to);
+	       assert(example == "bba");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("bb");
+	       Data example("a");
+
+	       example.replace(from, to);
+	       assert(example == "bb");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("bb");
+	       Data example("abracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "bbbrbbcbbdbbbrbb");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("bb");
+	       char* buffer = "abracadabra";
+	       Data example(Data::Share, buffer, sizeof(buffer));
+
+	       example.replace(from, to);
+	       assert(example == "bbbrbbcbbdbbbrbb");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("aa");
+	       Data example("a");
+
+	       example.replace(from, to);
+	       assert(example == "aa");
+	    }
+
+	    {
+	       Data from("a");
+	       Data to("aa");
+	       Data example("abracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "aabraacaadaabraa");
+	    }
+	    
+	    {
+	       Data from("abracadabra");
+	       Data to("a");
+	       Data example("abracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "a");
+	    }
+
+	    {
+	       Data from("abracadabra");
+	       Data to("");
+	       Data example("abracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "");
+	    }
+
+	    {
+	       Data from("abracadabra");
+	       Data to("");
+	       Data example("abracadabraabracadabraabracadabra");
+
+	       example.replace(from, to);
+	       assert(example == "");
+	    }
+	 }
+
          {
             const char* s = "a";
             const char* ss = "bb";
