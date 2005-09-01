@@ -63,6 +63,9 @@ class InviteSession : public DialogUsage
 
       virtual SipMessage& makeInfo(std::auto_ptr<Contents> contents);
 
+      const NameAddr& myAddr() const;
+      const NameAddr& peerAddr() const;
+
    public:
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
