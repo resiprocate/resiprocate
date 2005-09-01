@@ -1536,6 +1536,25 @@ Data::find(const Data& match,
    }
 }
 
+void
+Data::replace(const Data& match, const Data& replaceWith)
+{
+   int incr = replaceWith.size() - match.size();
+   for (size_type offset = find(match, 0); offset != Data::npos; offset = find(match, offset))
+   {
+      if (mSize + incr >= mCapacity)
+      {
+         resize(mCapacity * 3 / 2, true);
+      }
+
+      // move the memory forward
+      memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
+      memcpy(mBuf + offset, replaceWith.c_str(), replaceWith.size());
+      mSize += incr;
+   }
+}
+
+
 bool
 resip::operator==(const char* s, const Data& d)
 {
