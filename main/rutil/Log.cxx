@@ -36,7 +36,7 @@ ExternalLogger* Log::mExternalLogger = 0;
 
 volatile short Log::touchCount = 0;
 
-#ifndef WIN32
+#ifdef LOG_ENABLE_THREAD_SETTING
 HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<pthread_t> > Log::mServiceToThreads;
 pthread_key_t* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
@@ -59,7 +59,7 @@ extern "C"
 bool
 Log::init()
 {
-#ifndef WIN32
+#ifdef LOG_ENABLE_THREAD_SETTING
    Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
    pthread_key_create(Log::mLevelKey, freeThreadSetting);
 #endif
@@ -326,7 +326,7 @@ Log::getServiceLevel(int service)
 const Log::ThreadSetting*
 Log::getThreadSetting()
 {
-#ifdef WIN32
+#ifndef LOG_ENABLE_THREAD_SETTING
    return 0;
 #else
    ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(*Log::mLevelKey));
@@ -369,7 +369,7 @@ Log::setThreadSetting(int serv, Log::Level l)
 void 
 Log::setThreadSetting(ThreadSetting info)
 {
-#ifdef WIN32
+#ifndef LOG_ENABLE_THREAD_SETTING
 	assert(0);
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
@@ -395,7 +395,7 @@ Log::setServiceLevel(int service, Level l)
 {
    Lock lock(_mutex);
    Log::mServiceToLevel[service] = l;
-#ifdef WIN32
+#if defined(WIN32) || defined(TARGET_OS_MAC)
 	assert(0);
 #else
    set<pthread_t>& threads = Log::mServiceToThreads[service];
