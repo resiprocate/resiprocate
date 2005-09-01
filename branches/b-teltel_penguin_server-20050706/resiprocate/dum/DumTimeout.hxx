@@ -49,7 +49,8 @@ class DumTimeout : public ApplicationMessage
       
       virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
-      
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
+     
    private:
       Type mType;
       unsigned long mDuration;
