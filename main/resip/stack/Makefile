@@ -128,8 +128,6 @@ SRC = \
 	StatelessHandler.cxx \
 	\
 	\
-	external/HttpGetMessage.cxx \
-	\
 	stun/stun.cxx \
 	stun/udp.cxx \
 
