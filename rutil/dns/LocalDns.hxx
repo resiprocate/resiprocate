@@ -2,9 +2,7 @@
 #define RESIP_LOCAL_DNS_HXX
 
 #include "rutil/Data.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/dns/ExternalDns.hxx"
-
 
 extern "C"
 {

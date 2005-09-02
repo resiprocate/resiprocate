@@ -3,13 +3,13 @@
 
 #include <exception>
 
-#include "resip/stack/Message.hxx"
-#include "resip/stack/Transport.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Socket.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/Transport.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/SendData.hxx"
 
 namespace resip

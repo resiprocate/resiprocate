@@ -1,7 +1,7 @@
 #if !defined(RESIP_EXTERNAL_TIMER_HXX)
 #define RESIP_EXTERNAL_TIMER_HXX
 
-#include "resip/stack/external/AsyncID.hxx"
+#include "rutil/AsyncID.hxx"
 
 namespace resip
 {

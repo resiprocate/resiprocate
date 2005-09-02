@@ -8,7 +8,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "rutil/Data.hxx"
-#include "rutil/ValueFifo.hxx"
+#include "resip/stack/ValueFifo.hxx"
 #include "tfm/TestEndPoint.hxx"
 
 class SequenceHandler;

@@ -1,7 +1,7 @@
-#include <cppunit/TestCase.h>
 #include <boost/lexical_cast.hpp>
 #include <memory>
 
+#include "cppunit/TestCase.h"
 #include "rutil/Logger.hxx"
 #include "tfm/TestEndPoint.hxx"
 #include "tfm/Sequence.hxx"

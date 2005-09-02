@@ -14,13 +14,13 @@
 #include <netinet/in.h>
 #endif
 
-#include "rutil/Tuple.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/GenericIPAddress.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Transport.hxx"
-#include "resip/stack/GenericIPAddress.hxx"
+#include "resip/stack/Tuple.hxx"
 
 using namespace resip;
 
@@ -205,19 +205,19 @@ Tuple::presentationFormat() const
 #ifdef USE_IPV6
    if (isV4())
    {
-      return DnsUtil::inet_ntop(*this);
+      return Tuple::inet_ntop(*this);
    }
    else if (IN6_IS_ADDR_V4MAPPED(&m_anonv6.sin6_addr))
    {
-      return DnsUtil::inet_ntop(*(reinterpret_cast<const in_addr*>(
-                                 (reinterpret_cast<const unsigned char*>(&m_anonv6.sin6_addr) + 12))));
+      return Tuple::inet_ntop(*(reinterpret_cast<const in_addr*>(
+                                   (reinterpret_cast<const unsigned char*>(&m_anonv6.sin6_addr) + 12))));
    }
    else
    {
-      return DnsUtil::inet_ntop(*this);
+      return Tuple::inet_ntop(*this);
    }
 #else
-      return DnsUtil::inet_ntop(*this);
+      return Tuple::inet_ntop(*this);
 #endif
 
 }
@@ -420,13 +420,13 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
    if (tuple.mSockaddr.sa_family == AF_INET6)
    {
-      ostrm << "V6 " << DnsUtil::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
+      ostrm << "V6 " << Tuple::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
    }
    else
 #endif
    if (tuple.mSockaddr.sa_family == AF_INET)
    {
-      ostrm << "V4 " << DnsUtil::inet_ntop(tuple.m_anonv4.sin_addr) << ":" << tuple.getPort();
+      ostrm << "V4 " << Tuple::inet_ntop(tuple) << ":" << tuple.getPort();
    }
    else
    {
@@ -525,6 +525,23 @@ Tuple::toData(TransportType type)
 {
    assert(type >= UNKNOWN_TRANSPORT && type < MAX_TRANSPORT);
    return transportNames[type];
+}
+
+Data
+Tuple::inet_ntop(const Tuple& tuple)
+{
+#if USE_IPV6
+   if (!tuple.isV4())
+   {
+      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin6_addr);
+   }
+   else
+#endif
+   {
+      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin_addr);
+   }
 }
 
 

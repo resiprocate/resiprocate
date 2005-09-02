@@ -17,12 +17,78 @@ extern "C"
 #endif
 
 #include "rutil/Data.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "rutil/BaseException.hxx"
-#include "RROverlay.hxx"
-#include "DnsResourceRecord.hxx"
-#include "DnsNaptrRecord.hxx"
+#include "rutil/dns/RROverlay.hxx"
+#include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
 
 using namespace resip;
+
+DnsNaptrRecord::RegExp::RegExp()
+{
+}
+
+DnsNaptrRecord::RegExp::RegExp(const Data& data)  
+{
+   if (data.size() > 1)
+   {
+      ParseBuffer pb(data, "DnsNaptrRecord::RegExp parser");
+
+      const char delim = data[0];
+      const char* start = pb.skipChar(delim);
+      pb.skipToChar(delim);
+
+      pb.data(mRegexp, start);
+      start = pb.skipChar(delim);
+      pb.skipToChar(delim);
+      pb.data(mReplacement, start);
+      start = pb.skipChar(delim);
+#if 0
+      //pb.data(mFlags, start);
+
+      if (regcomp(&mRe, mRegexp.c_str(), REG_EXTENDED) != 0)
+      {
+         // couldn't parse input regexp so ignore it
+         mRegexp.clear();
+      }
+#endif
+   }
+}
+
+DnsNaptrRecord::RegExp::~RegExp()
+{
+   //regfree(&mRe);
+}
+
+
+bool
+DnsNaptrRecord::RegExp::empty() const
+{
+   return mRegexp.empty();
+}
+
+const Data&
+DnsNaptrRecord::RegExp::regexp() const
+{
+   return mRegexp;
+}
+
+const Data&
+DnsNaptrRecord::RegExp::replacement() const
+{
+   return mReplacement;
+}
+
+Data
+DnsNaptrRecord::RegExp::apply(const Data& input) const
+{
+   //regmatch_t matches[10];
+   //regexec(&mRe, input.c_str(), 10, matches, 0);
+   
+   return Data::Empty;
+}
+
 
 DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 {

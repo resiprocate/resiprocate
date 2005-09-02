@@ -13,6 +13,34 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Info, argv[0]);
    
    {
+      const char buf[] = "!^.*$!sip:user@example.com!";
+      ParseBuffer pb(buf, strlen(buf));
+
+      const char delim = buf[0];
+      const char* start = pb.skipChar(delim);
+      std::cerr << "start=" << start << std::endl;
+      pb.skipToChar(delim);
+
+      Data e1;
+      pb.data(e1, start);
+      std::cerr << "e1=" << e1 << std::endl;
+      assert(e1 == "^.*$");
+       
+      start = pb.skipChar(delim);
+      Data e2;
+      pb.skipToChar(delim);
+      pb.data(e2, start);
+      std::cerr << "e2=" << e2 << std::endl;
+      assert(e2 == "sip:user@example.com");
+      
+      start = pb.skipChar(delim);
+      Data e3;
+      pb.data(e3, start);
+      std::cerr << "e3=" << e3 << std::endl;
+      assert(e3.empty());
+   }
+   
+   {
       const char buf[] = "Ducky%20%26";
       ParseBuffer pb(buf, strlen(buf));
 

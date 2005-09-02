@@ -10,9 +10,9 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
+#include "rutil/GenericIPAddress.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/DnsInterface.hxx"
-#include "resip/stack/GenericIPAddress.hxx"
 
 
 #include "resip/stack/SecurityTypes.hxx"
