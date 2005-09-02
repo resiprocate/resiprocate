@@ -87,6 +87,7 @@ class Tuple
       
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
+      static Data inet_ntop(const Tuple& tuple);
 
       GenericIPAddress toGenericIPAddress() const;
 

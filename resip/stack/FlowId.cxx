@@ -1,7 +1,6 @@
-#include "rutil/FlowId.hxx"
-#include "rutil/ParseBuffer.hxx"
-#include "resip/stack/Symbols.hxx"
+#include "resip/stack/FlowId.hxx"
 #include "resip/stack/Transport.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include <iostream>
 
 using namespace resip;
@@ -21,7 +20,7 @@ FlowId::FlowId(const Data& d)
    ParseBuffer pb(d);
 
    const char* anchor = pb.position();
-   pb.skipToChar(Symbols::COLON[0]);
+   pb.skipToChar(':');
 
    {
       Data intData;

@@ -15,7 +15,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
 
@@ -85,7 +85,7 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
       assert(0); //throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
    
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
+   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
    
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {

@@ -4,7 +4,7 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 
 namespace resip
 {

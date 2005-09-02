@@ -1,5 +1,4 @@
-#include <cppunit/TestCase.h>
-
+#include "cppunit/TestCase.h"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "rutil/DnsUtil.hxx"

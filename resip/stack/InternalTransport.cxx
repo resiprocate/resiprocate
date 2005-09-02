@@ -90,7 +90,7 @@ InternalTransport::socket(TransportType type, IpVersion ipVer)
 void 
 InternalTransport::bind()
 {
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
+   DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
    
    if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {

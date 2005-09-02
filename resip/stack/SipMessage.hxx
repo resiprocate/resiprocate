@@ -14,11 +14,11 @@
 #include "resip/stack/ParserContainer.hxx"
 #include "resip/stack/ParserCategories.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip

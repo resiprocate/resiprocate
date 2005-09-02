@@ -1,7 +1,7 @@
 #if !defined(RESIP_ARES_DNS_HXX)
 #define RESIP_ARES_DNS_HXX
 
-#include "rutil/Tuple.hxx"
+#include "rutil/GenericIPAddress.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 
 extern "C"
@@ -19,7 +19,7 @@ class AresDns : public ExternalDns
       AresDns() {}
       virtual ~AresDns();
 
-      virtual int init(const std::vector<Tuple>& additionalNameservers); 
+      virtual int init(const std::vector<GenericIPAddress>& additionalNameservers); 
 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);

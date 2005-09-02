@@ -1,10 +1,10 @@
-#include "resip/stack/NameAddr.hxx"
-#include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Via.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/Inserter.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Tuple.hxx"
+#include "resip/stack/Via.hxx"
 #include "tfm/PortAllocator.hxx"
 #include "tfm/TestProxy.hxx"
 
@@ -128,7 +128,7 @@ TestProxy::isFromMe(const SipMessage& msg)
    }
 
    Source src;
-   src.host = resip::DnsUtil::inet_ntop(msg.getSource());
+   src.host = resip::Tuple::inet_ntop(msg.getSource());
    src.port = msg.getSource().getPort();
    src.transportType = msg.getSource().getType();
    

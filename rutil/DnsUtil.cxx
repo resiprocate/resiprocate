@@ -14,7 +14,6 @@
 
 #include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #ifdef WIN32
@@ -177,23 +176,6 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
    else
    {
       return ifs.begin()->second;
-   }
-}
-
-Data
-DnsUtil::inet_ntop(const Tuple& tuple)
-{
-#if USE_IPV6
-   if (!tuple.isV4())
-   {
-      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
-      return DnsUtil::inet_ntop(addr.sin6_addr);
-   }
-   else
-#endif
-   {
-      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr());
-      return DnsUtil::inet_ntop(addr.sin_addr);
    }
 }
 

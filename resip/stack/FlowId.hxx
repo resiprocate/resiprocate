@@ -1,95 +1,35 @@
-#include <iostream>
+#if !defined(RESIP_FLOWID_HXX)
+#define RESIP_FLOWID_HXX
 
-#include "TestSupport.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/Logger.hxx"
+#include "resip/stack/Tuple.hxx"
 
-using namespace resip;
-using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-
-int
-main(int argc, char* argv[])
+namespace resip
 {
-   Log::Level l = Log::Debug;
-   Log::initialize(Log::Cout, l, argv[0]);
-   
-   {
-      Data addr("1:1");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
 
-   {
-      Data addr("1:1:192.168.2.233");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
+class FlowId
+{
+   public:
+      FlowId(const Tuple& t);
+      
+      //can throw a ParseBuffer::Exception, inverse of toData/operator<<
+      FlowId(const Data& d);      
 
-   {
-      Data addr("1:1:::::");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
+      //.dcm. -- I suspect we only will need one of these
+      Tuple makeConnectionTuple() const;
+      Tuple& pointTupleToFlow(Tuple& t) const;      
 
-   {
-      Data addr("1:1::::::168.192.2.233");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
+      Data toData() const;
+      bool operator==(const FlowId& rhs) const;
+      bool operator<(const FlowId& rhs) const;
+   private:
+      Transport* transport;
+      ConnectionId connectionId;
+      friend std::ostream& operator<<(std::ostream& strm, const FlowId& f);
+};
 
-   {
-      Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("192.168.2.233");
-      cerr << "!! "<< addr << endl;
-      assert(!DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("u@a.tv:1290");
-      cerr << "!! "<< addr << endl;
-      assert(!DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("::1");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("::");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data addr("FF01::43");
-      cerr << "!! "<< addr << endl;
-      assert(DnsUtil::isIpV6Address(addr));
-   }
-
-   {
-      Data c("apple:5060");
-      Data addr(Data::Share, c.c_str(), 5);
-      cerr << "!! " << addr << endl;
-      assert(!DnsUtil::isIpV6Address(addr));
-   }
-
-   cerr << "All OK" << endl;
 }
+
+#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

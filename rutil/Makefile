@@ -20,7 +20,6 @@ SRC = \
 	DataStream.cxx \
 	DnsUtil.cxx \
 	FileSystem.cxx \
-	FlowId.cxx \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
 	Log.cxx \
@@ -39,7 +38,6 @@ SRC = \
 	SysLogStream.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
-	Tuple.cxx \
 	vmd5.cxx \
 	\
 	dns/AresDns.cxx \

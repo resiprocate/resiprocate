@@ -6,6 +6,9 @@
 #include <map>
 #include <set>
 
+#include "rutil/Fifo.hxx"
+#include "rutil/GenericIPAddress.hxx"
+#include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/DnsAAAARecord.hxx"
 #include "rutil/dns/DnsCnameRecord.hxx"
@@ -15,8 +18,6 @@
 #include "rutil/dns/RRCache.hxx"
 #include "rutil/dns/RROverlay.hxx"
 #include "rutil/dns/ExternalDns.hxx"
-#include "rutil/Fifo.hxx"
-#include "rutil/Socket.hxx"
 
 
 namespace resip
@@ -60,7 +61,7 @@ class DnsStub : public ExternalDnsHandler
       typedef RRCache::Protocol Protocol;
       typedef std::vector<Data> DataArr;
       typedef std::vector<DnsResourceRecord*> DnsResourceRecordsByPtr;
-      typedef std::vector<Tuple> NameserverList;
+      typedef std::vector<GenericIPAddress> NameserverList;
 
       static NameserverList EmptyNameserverList;
             

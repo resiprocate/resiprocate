@@ -15,6 +15,7 @@ class TestData
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
+
          {
             {
                Data input("abcdefghij");
@@ -127,16 +128,15 @@ class TestData
                assert(example == "bbbrbbcbbdbbbrbb");
             }
 
-	    {
-	       Data from("a");
-	       Data to("bb");
-	       char* buffer = "abracadabra";
-	       Data example(Data::Share, buffer, strlen(buffer));
+            {
+               Data from("a");
+               Data to("bb");
+               char* buffer = "abracadabra";
+               Data example(Data::Share, buffer, strlen(buffer));
 
-	       example.replace(from, to);
-	       std::cerr << "!! " << example << std::endl;
-	       assert(example == "bbbrbbcbbdbbbrbb");
-	    }
+               example.replace(from, to);
+               assert(example == "bbbrbbcbbdbbbrbb");
+            }
 
             {
                Data from("a");
