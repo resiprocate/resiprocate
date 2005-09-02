@@ -46,7 +46,7 @@ class UserAgent : public CommandLineParser,
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
       virtual void onOffer(InviteSessionHandle handle, const SipMessage& msg, const SdpContents& offer);
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg);
-      virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg);
+      virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg);
       virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg);
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg);
       virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg);
