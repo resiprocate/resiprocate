@@ -16,13 +16,11 @@ class HttpGetMessage : public DumFeatureMessage
       bool success() const { return mSuccess; }
       const Data& getBodyData() const { return mBody; }
       const Mime& getType() const {return mType;}
-      //const Data& tid() const { return mTid; } //replace w/ act
 
       virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
-      //Data mTid;
       bool mSuccess;
       Data mBody;
       Mime mType;
