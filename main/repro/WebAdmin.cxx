@@ -16,7 +16,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/MD5Stream.hxx"

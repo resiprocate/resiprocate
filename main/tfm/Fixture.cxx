@@ -1,8 +1,8 @@
-#include <cppunit/TestCase.h>
-#include <cppunit/TestCaller.h>
-#include <cppunit/TestSuite.h>
-#include <cppunit/TextTestRunner.h>
-#include <cppunit/TextTestResult.h>
+#include "cppunit/TestCase.h"
+#include "cppunit/TestCaller.h"
+#include "cppunit/TestSuite.h"
+#include "cppunit/TextTestRunner.h"
+#include "cppunit/TextTestResult.h"
 
 #include "tfm/repro/TestRepro.hxx"
 #include "tfm/repro/TestReproUser.hxx"

@@ -10,7 +10,7 @@
 #include "tfm/TestEndPoint.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/ValueFifo.hxx"
+#include "resip/stack/ValueFifo.hxx"
 
 // .dlb. add an onComplete action?
 
