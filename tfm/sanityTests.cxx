@@ -1,5 +1,5 @@
-#include <cppunit/TextTestRunner.h>
-#include <cppunit/TextTestResult.h>
+#include "cppunit/TextTestRunner.h"
+#include "cppunit/TextTestResult.h"
 
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -1940,7 +1940,7 @@ class MyTestCase
       static CppUnit::Test* suite()
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
-#if 0
+#if 1
          TEST(testRegisterBasic);
          TEST(testRegisterClientRetransmits);
          TEST(testInviteBasic);
@@ -1980,15 +1980,7 @@ class MyTestCase
          TEST(testInviteForkThreeCallerCancels);
          TEST(testInviteForkCallerCancels);         
 #else
-         TEST(testInviteBusy);
-         //TEST(testInviteAllBusyContacts);
-         TEST(testInviteCalleeHangsUp);
-         TEST(testInviteCallerHangsUp);
-         TEST(testInviteCallerCancels);
-         TEST(testInviteCallerCancelsNo487);
-         TEST(testInviteNoAnswerCancel);
-         TEST(testInviteNotFound);
-         TEST(testInviteNotFoundServerRetransmits);
+         TEST(testInviteAllBusyContacts);
 #endif         
          return suiteOfTests;
       }
