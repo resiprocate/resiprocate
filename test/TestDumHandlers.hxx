@@ -144,7 +144,7 @@ class TestInviteSessionHandler : public InviteSessionHandler
       }
 
       virtual void onOfferRejected(InviteSessionHandle,
-                                   const SipMessage& msg)
+                                   const SipMessage* msg)
       {
          InfoLog( << "TestInviteSessionHandler::onOfferRejected" );
       }
