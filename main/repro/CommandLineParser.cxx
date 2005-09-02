@@ -40,6 +40,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* reqChainName = "default";
    char* mySqlServer = 0;
    int httpPort = 5080;
+   int recursiveRedirect = 0;
    
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -74,6 +75,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #endif
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
+      {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -114,6 +116,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoRegistrar = noRegistrar != 0 ;
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
+   mRecursiveRedirect = recursiveRedirect;
+   
    if (mySqlServer) 
    {
       mMySqlServer = Data(mySqlServer);
@@ -132,13 +136,13 @@ CommandLineParser::toUri(const char* input, const char* description)
       }
       else
       {
-         WarningLog (<< "No " << description << " specified");
+         std::cerr << "No " << description << " specified" << std::endl;
       }
    } 
    catch (ParseException& e)
    {
-      InfoLog (<< "Caught: " << e);
-      WarningLog (<< "Can't parse " << description << " : " << input);
+      std::cerr << "Caught: " << e << std::endl;
+      std::cerr << "Can't parse " << description << " : " << input << std::endl;
       exit(-1);
    }
    return uri;
@@ -162,14 +166,14 @@ CommandLineParser::toVector(const char* input, const char* description)
             } 
             catch (ParseException& e)
             {
-               InfoLog (<< "Caught: " << e);
-               WarningLog (<< "Can't parse " << description << " : " << token);
+               std::cout << "Caught: " << e << std::endl;
+               std::cerr << "Can't parse " << description << " : " << token << std::endl;
                exit(-1);
             }
             catch (...)
             {
-               InfoLog (<< "Caught some exception" );
-               WarningLog (<< "Some problem parsing " << description << " : " << token);
+               std::cout << "Caught some exception" <<std::endl;
+               std::cerr << "Some problem parsing " << description << " : " << token << std::endl;
             }
          }
       }
