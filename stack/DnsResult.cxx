@@ -36,16 +36,16 @@ extern "C"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/compat.hxx"
-
+#include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsHandler.hxx"
-#include "resip/stack/DnsInterface.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "resip/stack/DnsResult.hxx"
+#include "resip/stack/DnsInterface.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
-#include "rutil/WinLeakCheck.hxx"
+
 
 #if !defined(USE_ARES)
 #warning "ARES is required"
@@ -161,7 +161,7 @@ DnsResult::next()
    }
    top.domain = next.getTargetDomain();
    top.rrType = next.isV4()? T_A : T_AAAA;
-   top.value = DnsUtil::inet_ntop(next);
+   top.value = Tuple::inet_ntop(next);
    mCurrSuccessPath.push(top);
    return next;
 }
@@ -995,7 +995,7 @@ void DnsResult::blacklistLastReturnedResult()
    Item top = mCurrResultPath.top();
    assert(top.rrType==T_A || top.rrType==T_AAAA);
    assert(top.domain==mLastReturnedResult.getTargetDomain());
-   assert(top.value==DnsUtil::inet_ntop(mLastReturnedResult));
+   assert(top.value==Tuple::inet_ntop(mLastReturnedResult));
    vector<Data> records;
    records.push_back(top.value);
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
@@ -1011,7 +1011,7 @@ void DnsResult::addToPath(const std::deque<Tuple>& results)
       Item item;
       item.domain = (*it).getTargetDomain();
       item.rrType = (*it).isV4()? T_A : T_AAAA;
-      item.value = DnsUtil::inet_ntop((*it));
+      item.value = Tuple::inet_ntop((*it));
       mCurrResultPath.push(item);
    }
 }
@@ -1032,7 +1032,7 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
         << " pref=" << naptr.pref
         << " flags=" << naptr.flags
         << " service=" << naptr.service
-        << " regex=" << naptr.regex
+        << " regex=" << naptr.regex.regexp() << " -> " << naptr.regex.replacement()
         << " replacement=" << naptr.replacement;
    return strm;
 }

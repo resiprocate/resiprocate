@@ -1,7 +1,7 @@
 #include <iostream>
-#include "rutil/Tuple.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Connection.hxx"
+#include "resip/stack/Tuple.hxx"
 
 using namespace resip;
 
