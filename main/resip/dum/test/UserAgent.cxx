@@ -243,7 +243,7 @@ UserAgent::onOfferRequired(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-UserAgent::onOfferRejected(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onOfferRejected(InviteSessionHandle, const SipMessage* msg)
 {
     assert(0);
 }
