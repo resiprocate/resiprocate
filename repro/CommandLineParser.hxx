@@ -34,6 +34,7 @@ class CommandLineParser
       Data mRequestProcessorChainName;
       Data mMySqlServer;
       int mHttpPort;
+      bool mRecursiveRedirect;
 };
  
 }
