@@ -296,29 +296,36 @@ ParseBuffer::skipToChars(const char* cs)
 }
 
 ParseBuffer::Pointer
-ParseBuffer::skipToChars(const Data& cs)
+ParseBuffer::skipToChars(const Data& sub)
 {
-   const unsigned int l = static_cast<unsigned int>(cs.size());
-   assert(l);
+   const char* begSub = sub.mBuf;
+   const char* endSub = sub.mBuf + sub.mSize;
+   assert(begSub != endSub);
 
-   const char* rpos;
-   const char* cpos;
-   while (mPosition < mEnd)
+   while (true)
    {
-      cpos = cs.data();
-      rpos = mPosition;
-      for (size_t i = 0; i < l; i++)
-      {
-         if (*cpos++ != *rpos++)
-         {
-            mPosition++;
-            goto skip;
-         }
-      }
-      return Pointer(*this, mPosition, false);
-     skip: ;
+next:
+     const char* searchPos = mPosition;
+     const char* subPos = sub.mBuf;
+
+     while (subPos != endSub) 
+     {
+	if (searchPos == mEnd)
+	{
+	   // nope
+	   mPosition = mEnd;
+	   return Pointer(*this, mPosition, true);
+	}
+	if (*subPos++ != *searchPos++)
+	{
+	   // nope, but try the next position
+	   ++mPosition;
+	   goto next;
+	}
+     }
+     // found a match
+     return Pointer(*this, searchPos, false);
    }
-   return Pointer(*this, mPosition, true);
 }
 
 bool oneOf(char c, const char* cs)
