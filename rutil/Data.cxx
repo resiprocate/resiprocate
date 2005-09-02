@@ -1545,7 +1545,6 @@ Data::replace(const Data& match,
         offset != Data::npos; 
         offset = find(match, offset+replaceWith.size()))
    {
-      assert(offset != Data::npos);
       if (mSize + incr >= mCapacity)
       {
          resize((mCapacity + incr) * 3 / 2, true);
@@ -1556,37 +1555,11 @@ Data::replace(const Data& match,
       }
 
       // move the memory forward (or backward)
-#if 0
-      std::cerr << mBuf + offset + replaceWith.size() << ", " 
-                << mBuf + offset + match.size() << ", " 
-                << mSize - offset - match.size() 
-                << std::endl;
-     
-      std::cerr << "offset=" << offset << " size=" << mSize << std::endl
-                << " move " << mSize - offset - match.size() << " bytes from " 
-                << offset + match.size() << " to " 
-                << offset + replaceWith.size() 
-                << std::endl
-                << " copy " << replaceWith.size() << " bytes"
-                << " to " << offset
-                << std::endl;
-#endif
-
       memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
       memcpy(mBuf + offset, replaceWith.data(), replaceWith.size());
       mSize += incr;
-      mBuf[mSize] = 0; // required due to bug in Data::find or ParseBuffer::skipToChars
-      
-#if 0
-      std::cerr << "offset=" << offset  
-                << " mSize=" << mSize 
-                << " buf=" << mBuf
-                << std::endl;
-#endif
    }
-   mBuf[mSize] = 0;
 }
-
 
 bool
 resip::operator==(const char* s, const Data& d)
