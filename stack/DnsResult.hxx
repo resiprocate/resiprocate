@@ -8,7 +8,7 @@
 #include <map>
 #include <stack>
 
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
@@ -80,7 +80,7 @@ class DnsResult : public DnsResultSink
             int pref;
             Data flags;
             Data service;
-            Data regex;
+            DnsNaptrRecord::RegExp regex;
             Data replacement;
       };
       

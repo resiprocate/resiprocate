@@ -141,6 +141,25 @@ class ParserContainer : public ParserContainerBase
          return new ParserContainer(*this);
       }
 };
+
+template <class T>
+std::ostream&
+insert(std::ostream& s, const resip::ParserContainer<T>& c)
+{
+   s << "[";
+   for (typename resip::ParserContainer <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      // recurse
+      insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
  
 }
 

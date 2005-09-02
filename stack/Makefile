@@ -49,6 +49,7 @@ SRC = \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
 	FloatParameter.cxx \
+	FlowId.cxx \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
@@ -106,6 +107,7 @@ SRC = \
 	TlsConnection.cxx \
 	TlsTransport.cxx \
 	TlsTransport.cxx \
+	Tuple.cxx \
 	TransactionController.cxx \
 	MessageFilterRule.cxx \
 	TransactionUser.cxx \
