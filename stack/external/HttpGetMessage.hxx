@@ -1,14 +1,14 @@
 #ifndef RESIP_HttpGetMessage_hxx
 #define RESIP_HttpGetMessage_hxx 
 
-#include "resip/stack/Message.hxx"
+#include "resip/dum/DumFeatureMessage.hxx"
 #include "resip/stack/Mime.hxx"
 #include "rutil/Data.hxx"
 
 namespace resip
 {
 
-class HttpGetMessage : public Message
+class HttpGetMessage : public DumFeatureMessage
 {
    public:
       HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
@@ -16,13 +16,13 @@ class HttpGetMessage : public Message
       bool success() const { return mSuccess; }
       const Data& getBodyData() const { return mBody; }
       const Mime& getType() const {return mType;}
-      const Data& tid() const { return mTid; } //replace w/ act
+      //const Data& tid() const { return mTid; } //replace w/ act
 
       virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
-      Data mTid;
+      //Data mTid;
       bool mSuccess;
       Data mBody;
       Mime mType;

@@ -100,7 +100,7 @@ IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
 #if defined(USE_SSL)
    InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
-   RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
+   RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
    if (it != mRequiresCerts.end())
    {
       mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
