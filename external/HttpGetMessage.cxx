@@ -17,7 +17,7 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
 std::ostream&
 HttpGetMessage::encodeBrief(std::ostream& str) const
 { 
-   return str << "HttpGetMessage: " << mTid << " " << mType;
+   return str << "HttpGetMessage: " << getTransactionId() << " " << mType;
 }
 
 std::ostream& 
@@ -29,7 +29,7 @@ HttpGetMessage::encode(std::ostream& strm) const
 Message* 
 HttpGetMessage::clone() const 
 { 
-   return new HttpGetMessage(mTid, mSuccess, mBody, mType); 
+   return new HttpGetMessage(getTransactionId(), mSuccess, mBody, mType); 
 }
 
 /* ====================================================================
