@@ -7,16 +7,16 @@
 // These types were chosen because they represent the exported stuff.
 
 
+#include "rutil/GenericIPAddress.hxx"
 #include "resip/stack/Connection.hxx"
 #include "resip/stack/DnsResult.hxx"
-#include "resip/stack/GenericIPAddress.hxx"
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/TlsConnection.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/UdpTransport.hxx"
-#include "rutil/Tuple.hxx"
 
 // Make an entry in the table
 #define RESIP_TENT(x,y) { #x, sizeof(resip::x), y }
