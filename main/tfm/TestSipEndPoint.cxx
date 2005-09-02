@@ -1,5 +1,4 @@
-#include <cppunit/TestCase.h>
-
+#include "cppunit/TestCase.h"
 
 #include "resip/stack/DeprecatedDialog.hxx"
 #include "resip/stack/Helper.hxx"

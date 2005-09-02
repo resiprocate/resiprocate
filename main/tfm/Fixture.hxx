@@ -1,14 +1,14 @@
 #ifndef _DragonFixture_hxx_
 #define _DragonFixture_hxx_
 
-#include <cppunit/TestCase.h>
-#include <cppunit/TestCaller.h>
-#include <cppunit/TestSuite.h>
+#include "cppunit/TestCase.h"
+#include "cppunit/TestCaller.h"
+#include "cppunit/TestSuite.h"
 
-#include "resip/stack/MethodTypes.hxx"
-#include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "resip/stack/Tuple.hxx"
+#include "resip/stack/Uri.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/TestUser.hxx"
 

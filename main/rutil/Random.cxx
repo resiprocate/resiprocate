@@ -98,7 +98,7 @@ Random::initialize()
             ErrLog( << "Could not open /dev/urandom" );
          }
 
-#if USE_OPENSSL
+#if defined(USE_SSL)
          if (fd == -1 )
          {
             // really bad sign - /dev/random does not exist so need to intialize

@@ -26,7 +26,7 @@ DnsUtils::makeSourceSet(const Data& dnsName, int port, resip::TransportType tran
            it != r.mNextHops.end(); it++)
       {
          Source x;
-         x.host = resip::DnsUtil::inet_ntop(*it);
+         x.host = resip::Tuple::inet_ntop(*it);
          x.port = it->getPort();
          x.transportType = it->getType();
          s.insert(x);

@@ -1,4 +1,5 @@
 #include "rutil/dns/AresDns.hxx"
+#include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 extern "C"
@@ -20,7 +21,7 @@ extern "C"
 using namespace resip;
 
 int 
-AresDns::init(const std::vector<Tuple>& additionalNameservers)
+AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers)
 {
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
@@ -53,19 +54,19 @@ AresDns::init(const std::vector<Tuple>& additionalNameservers)
          if (additionalNameservers[i].isV4())
          {
             opt.servers[i].family = AF_INET;            
-            opt.servers[i].addr = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+            opt.servers[i].addr = additionalNameservers[i].v4Address.sin_addr;
          }
          else
          {
             opt.servers[i].family = AF_INET6;            
-            opt.servers[i].addr6 = reinterpret_cast<const sockaddr_in6&>(additionalNameservers[i].getSockaddr()).sin6_addr;
+            opt.servers[i].addr6 = additionalNameservers[i].v6Address.sin6_addr;
          }                  
       }
 #else
       opt.servers = new in_addr[additionalNameservers.size()];
       for (size_t i =0; i < additionalNameservers.size(); i++)
       {
-         opt.servers[i] = reinterpret_cast<const sockaddr_in&>(additionalNameservers[i].getSockaddr()).sin_addr;
+         opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
       }
 #endif
       status = ares_init_options(&mChannel, &opt, optmask);

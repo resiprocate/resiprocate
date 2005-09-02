@@ -1,4 +1,4 @@
-#include "rutil/FlowId.hxx"
+#include "resip/stack/FlowId.hxx"
 
 #include <sstream>
 

@@ -1,6 +1,6 @@
-#include <cppunit/TestCase.h>
 #include <list>
 
+#include "cppunit/TestCase.h"
 #include "rutil/BaseException.hxx"
 #include "rutil/Logger.hxx"
 #include "tfm/Sequence.hxx"

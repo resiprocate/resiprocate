@@ -1,10 +1,10 @@
 #if !defined(RESIP_EXTERNAL_DNS_HXX)
 #define RESIP_EXTERNAL_DNS_HXX
 
-#include "resip/stack/external/AsyncID.hxx"
-#include "rutil/Tuple.hxx"
-
 #include <vector>
+
+#include "rutil/AsyncID.hxx"
+#include "rutil/GenericIPAddress.hxx"
 
 struct hostent;
 
@@ -26,7 +26,7 @@ class ExternalDns
          BuildMismatch = 4777
       };      
       
-      virtual int init(const std::vector<Tuple>& additionalNameservers) = 0; 
+      virtual int init(const std::vector<GenericIPAddress>& additionalNameservers) = 0; 
                           
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;

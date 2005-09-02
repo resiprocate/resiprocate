@@ -1,30 +1,98 @@
-#include "resip/stack/MessageWaitingContents.hxx"
-#include "resip/stack/HeaderFieldValue.hxx"
-#include "rutil/FileSystem.hxx"
 #include <iostream>
+
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
 using namespace std;
 
-int
-main()
-{
-#ifdef WIN32
-   FileSystem::Directory dir("c:\\windows\\");
-#else
-   FileSystem::Directory dir("/usr/bin/");
-#endif
-   for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
-   {
-      cerr << *it << endl;
-   }
-   return 0;
-}
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
+int
+main(int argc, char* argv[])
+{
+   Log::Level l = Log::Debug;
+   Log::initialize(Log::Cout, l, argv[0]);
+   
+   {
+      Data addr("1:1");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("1:1:192.168.2.233");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("1:1:::::");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("1:1::::::168.192.2.233");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("192.168.2.233");
+      cerr << "!! "<< addr << endl;
+      assert(!DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("u@a.tv:1290");
+      cerr << "!! "<< addr << endl;
+      assert(!DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("::1");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("::");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("FF01::43");
+      cerr << "!! "<< addr << endl;
+      assert(DnsUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data c("apple:5060");
+      Data addr(Data::Share, c.c_str(), 5);
+      cerr << "!! " << addr << endl;
+      assert(!DnsUtil::isIpV6Address(addr));
+   }
+
+   cerr << "All OK" << endl;
+}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

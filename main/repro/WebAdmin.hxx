@@ -5,7 +5,7 @@
 #include "rutil/Data.hxx"
 //#include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 
 //#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
