@@ -15,153 +15,184 @@ class TestData
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
-	 {
-	    {
-	       Data from;
-	       Data to;
-	       Data example;
 
-	       // asserts
-	       //example.replace(from, to);
-	    }
+         {
+            {
+               Data input("abcdefghij");
+               std::cerr << "T0: " << input << std::endl;
+               input.replace("a", "b");
+               std::cerr << "T1: " << input << std::endl;
+               assert(input == "bbcdefghij");
+               input.replace("bb", "");
+               std::cerr << "T2: " << input << std::endl;
+               assert(input == "cdefghij");
+            }
+            {
+               Data input("");
+               std::cerr << "T0: " << input << std::endl;
+               input.replace("a", "b");
+               std::cerr << "T1: " << input << std::endl;
+               assert(input == "");
+               input.replace("bb", "");
+               std::cerr << "T2: " << input << std::endl;
+               assert(input == "");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("b");
-	       Data example;
+            {
+               Data from;
+               Data to;
+               Data example;
 
-	       example.replace(from, to);
-	       assert(example.empty());
-	    }
+               // asserts
+               //example.replace(from, to);
+            }
 
-	    {
-	       Data from("a");
-	       Data to("b");
-	       Data example("c");
+            {
+               Data from("a");
+               Data to("b");
+               Data example;
 
-	       example.replace(from, to);
-	       assert(example == "c");
-	    }
+               example.replace(from, to);
+               assert(example.empty());
+            }
 
-	    {
-	       Data from("a");
-	       Data to("b");
-	       Data example("a");
+            {
+               Data from("a");
+               Data to("b");
+               Data example("c");
 
-	       example.replace(from, to);
-	       assert(example == "b");
-	    }
+               example.replace(from, to);
+               assert(example == "c");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("b");
-	       Data example("aaaa");
+            {
+               Data from("a");
+               Data to("b");
+               Data example("a");
 
-	       example.replace(from, to);
-	       assert(example == "bbbb");
-	    }
+               example.replace(from, to);
+               assert(example == "b");
+            }
+
+            {
+               Data from("a");
+               Data to("b");
+               Data example("aaaa");
+
+               example.replace(from, to);
+               assert(example == "bbbb");
+            }
 	    
-	    {
-	       Data from("a");
-	       Data to("b");
-	       Data example("abracadabra");
+            {
+               Data from("a");
+               Data to("b");
+               Data example("abracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "bbrbcbdbbrb");
-	    }
+               example.replace(from, to);
+               assert(example == "bbrbcbdbbrb");
+            }
 
-	    {
-	       Data from("aa");
-	       Data to("b");
-	       Data example("aa");
+            {
+               Data from("aa");
+               Data to("b");
+               Data example("aa");
 
-	       example.replace(from, to);
-	       assert(example == "b");
-	    }
+               example.replace(from, to);
+               assert(example == "b");
+            }
 
-	    {
-	       Data from("aa");
-	       Data to("b");
-	       Data example("aaaaa");
+            {
+               Data from("aa");
+               Data to("b");
+               Data example("aaaaa");
 
-	       example.replace(from, to);
-	       assert(example == "bba");
-	    }
+               example.replace(from, to);
+               assert(example == "bba");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("bb");
-	       Data example("a");
+            {
+               Data from("a");
+               Data to("bb");
+               Data example("a");
 
-	       example.replace(from, to);
-	       assert(example == "bb");
-	    }
+               example.replace(from, to);
+               assert(example == "bb");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("bb");
-	       Data example("abracadabra");
+            {
+               Data from("a");
+               Data to("bb");
+               Data example("abracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "bbbrbbcbbdbbbrbb");
-	    }
+               example.replace(from, to);
+               assert(example == "bbbrbbcbbdbbbrbb");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("bb");
-	       char* buffer = "abracadabra";
-	       Data example(Data::Share, buffer, sizeof(buffer));
+            {
+               Data from("a");
+               Data to("bb");
+               char* buffer = "abracadabra";
+               Data example(Data::Share, buffer, strlen(buffer));
 
-	       example.replace(from, to);
-	       assert(example == "bbbrbbcbbdbbbrbb");
-	    }
+               example.replace(from, to);
+               assert(example == "bbbrbbcbbdbbbrbb");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("aa");
-	       Data example("a");
+            {
+               Data from("a");
+               Data to("aa");
+               Data example("a");
 
-	       example.replace(from, to);
-	       assert(example == "aa");
-	    }
+               example.replace(from, to);
+               assert(example == "aa");
+            }
 
-	    {
-	       Data from("a");
-	       Data to("aa");
-	       Data example("abracadabra");
+            {
+               Data from("a");
+               Data to("aa");
+               Data example("abracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "aabraacaadaabraa");
-	    }
+               example.replace(from, to);
+               assert(example == "aabraacaadaabraa");
+            }
 	    
-	    {
-	       Data from("abracadabra");
-	       Data to("a");
-	       Data example("abracadabra");
+            {
+               Data from("abracadabra");
+               Data to("a");
+               Data example("abracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "a");
-	    }
+               example.replace(from, to);
+               assert(example == "a");
+            }
 
-	    {
-	       Data from("abracadabra");
-	       Data to("");
-	       Data example("abracadabra");
+            {
+               Data from("abracadabra");
+               Data to("");
+               Data example("abracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "");
-	    }
+               example.replace(from, to);
+               assert(example == "");
+            }
 
-	    {
-	       Data from("abracadabra");
-	       Data to("");
-	       Data example("abracadabraabracadabraabracadabra");
+            {
+               Data from("abracadabra");
+               Data to("");
+               Data example("abracadabraabracadabraabracadabra");
 
-	       example.replace(from, to);
-	       assert(example == "");
-	    }
-	 }
+               example.replace(from, to);
+               assert(example == "");
+            }
+         }
 
+         {
+            Data input("abc123abca");
+            std::cerr << "T0: " << input << std::endl;
+            input.replace("abc", "ABCD");
+            std::cerr << "T1: " << input << std::endl;
+            assert(input == "ABCD123ABCDa");
+         }
+         
+         
          {
             const char* s = "a";
             const char* ss = "bb";
@@ -282,36 +313,36 @@ class TestData
          }
 
          {
-           Data d;
-           char *q = "\0";
-           d += q;
+            Data d;
+            char *q = "\0";
+            d += q;
            
-           for(char *p = 
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-               *p;
-               ++p)
-           {
-             d += *p;
-             d += q;
-             d += "~";
-           }
+            for(char *p = 
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                *p;
+                ++p)
+            {
+               d += *p;
+               d += q;
+               d += "~";
+            }
            
          }
 
