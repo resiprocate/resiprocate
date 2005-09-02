@@ -247,6 +247,20 @@ InviteSession::provideOffer(const SdpContents& offer,
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          break;
 
+      case ReceivedReinviteNoOffer:
+         assert(!mProposedRemoteSdp.get());
+         transition(ReceivedReinviteSentOffer);
+         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
+         handleSessionTimerRequest(mInvite200, mLastSessionModification);
+         InviteSession::setSdp(mInvite200, offer, 0);
+         mProposedLocalSdp  = InviteSession::makeSdp(offer);
+
+         InfoLog (<< "Sending " << mInvite200.brief());
+         mDialog.send(mInvite200, mCurrentEncryptionLevel);
+         startRetransmit200Timer();
+         break;
+         
+         
       // ?slg? Can we handle all of the states listed in isConnected() ???
       default:
          WarningLog (<< "Can't provideOffer when not in Connected state");
@@ -547,6 +561,9 @@ InviteSession::dispatch(const SipMessage& msg)
       case ReceivedReinviteNoOffer:
          dispatchReceivedUpdateOrReinvite(msg);
          break;
+      case ReceivedReinviteSentOffer:
+         dispatchReceivedReinviteSentOffer(msg);
+         break;
       case Answered:
          dispatchAnswered(msg);
          break;
@@ -595,6 +612,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
              sendBye();
              transition(Terminated);
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         }
+         else if(mState == ReceivedReinviteSentOffer)
+         {
+            transition(Connected);
+            mProposedLocalSdp.release();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+            //!dcm! -- should this be onIllegalNegotiation?
+            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
          }
       }
    }
@@ -877,9 +902,50 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On489Invite:
          transition(Connected);
          mProposedLocalSdp.release();
-         handler->onOfferRejected(getSessionHandle(), msg);
+         handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
+      default:
+         dispatchOthers(msg);
+         break;
+   }
+}
+
+void InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SipMessage response;
+         mDialog.makeResponse(response, msg, 491);
+         send(response);
+         break;
+      }
+      case OnAckAnswer:
+         transition(Connected);
+         setCurrentLocalSdp(msg);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
+         break;         
+      case OnAck:
+         transition(Connected);
+         mProposedLocalSdp.release();
+         mProposedEncryptionLevel = DialogUsageManager::None;
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+		 //!dcm! -- should this be onIllegalNegotiation?
+		 handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
       default:
          dispatchOthers(msg);
          break;
@@ -895,13 +961,13 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    {
       // Received inbound reinvite, when waiting to resend outbound reinvite or update
       transition(ReceivedReinvite);
-      handler->onOfferRejected(getSessionHandle(), msg);
+      handler->onOfferRejected(getSessionHandle(), &msg);
    }
    else if (method == UPDATE && msg.isRequest())
    {
       // Received inbound update, when waiting to resend outbound reinvite or update
       transition(ReceivedUpdate);
-      handler->onOfferRejected(getSessionHandle(), msg);
+      handler->onOfferRejected(getSessionHandle(), &msg);
    }
    else
    {
@@ -1438,6 +1504,8 @@ InviteSession::toData(State state)
          return "InviteSession::ReceivedReinvite";
       case ReceivedReinviteNoOffer:
          return "InviteSession::ReceivedReinviteNoOffer";
+	  case ReceivedReinviteSentOffer:
+		  return "InviteSession::ReceivedReinviteSentOffer";
       case Answered:
          return "InviteSession::Answered";
       case WaitingToOffer:
