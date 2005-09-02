@@ -26,7 +26,7 @@ const bool Data::isCharHex[256] =
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //0
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //1
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //2
-    true,   true,   true,   true,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  //3
+   true,   true,   true,   true,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  //3
    false,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //4
    false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //5
    false,   true,   true,   true,   true,   true,   true,  false,  false,  false,  false,  false,  false,  false,  false,  false,  //6
@@ -191,7 +191,7 @@ Data::Data()
 }
 
 Data::Data(int capacity,
-	   const Data::PreallocateType&) 
+           const Data::PreallocateType&) 
    : mSize(0),
      mBuf(capacity > LocalAlloc 
           ? new char[capacity + 1]
@@ -450,7 +450,7 @@ Data::Data(unsigned long value)
 
 static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
-	   Data::DoubleDigitPrecision precision)
+           Data::DoubleDigitPrecision precision)
    : mSize(0),
      mBuf(DoubleMaxSize + precision > LocalAlloc 
           ? new char[DoubleMaxSize + precision + 1]
@@ -524,7 +524,7 @@ Data::Data(double value,
    {
       if (mCapacity < m.size() + d.size() + 1)
       {
-	 resize(m.size() + d.size() + 1, false);
+         resize(m.size() + d.size() + 1, false);
       }
       memcpy(mBuf, m.mBuf, m.size());
       mBuf[m.size()] = '.';
@@ -739,8 +739,8 @@ Data::truncate(size_type len)
 {
    if (len < mSize)
    {
-     (*this)[len] = 0;
-     mSize = len;
+      (*this)[len] = 0;
+      mSize = len;
    }
 
    return mSize;
@@ -1515,15 +1515,15 @@ Data::substr(size_type first, size_type count) const
 
 Data::size_type
 Data::find(const Data& match, 
-	   size_type start) const
+           size_type start) const
 {
-   if (start > mSize) 
+   if (start >= mSize) 
    {
       return Data::npos;
    }
    else
    {
-      ParseBuffer pb(mBuf+start, mSize);
+      ParseBuffer pb(mBuf+start, mSize-start);
       pb.skipToChars(match);
       if (pb.eof()) 
       {
@@ -1538,29 +1538,53 @@ Data::find(const Data& match,
 
 void
 Data::replace(const Data& match, 
-	      const Data& replaceWith)
+              const Data& replaceWith)
 {
    const int incr = replaceWith.size() - match.size();
-   for (size_type offset = find(match, 0); offset != Data::npos;
-	offset = find(match, offset+replaceWith.size()))
+   for (size_type offset = find(match, 0); 
+        offset != Data::npos; 
+        offset = find(match, offset+replaceWith.size()))
    {
+      assert(offset != Data::npos);
       if (mSize + incr >= mCapacity)
       {
          resize((mCapacity + incr) * 3 / 2, true);
       }
       else
       {
-	 own();
+         own();
       }
 
       // move the memory forward (or backward)
+#if 0
       std::cerr << mBuf + offset + replaceWith.size() << ", " 
-		<< mBuf + offset + match.size() << ", " 
-		<< mSize - offset - match.size() << std::endl;
+                << mBuf + offset + match.size() << ", " 
+                << mSize - offset - match.size() 
+                << std::endl;
+     
+      std::cerr << "offset=" << offset << " size=" << mSize << std::endl
+                << " move " << mSize - offset - match.size() << " bytes from " 
+                << offset + match.size() << " to " 
+                << offset + replaceWith.size() 
+                << std::endl
+                << " copy " << replaceWith.size() << " bytes"
+                << " to " << offset
+                << std::endl;
+#endif
+
       memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
       memcpy(mBuf + offset, replaceWith.data(), replaceWith.size());
       mSize += incr;
+      mBuf[mSize] = 0; // required due to bug in Data::find or ParseBuffer::skipToChars
+      
+#if 0
+      std::cerr << "offset=" << offset  
+                << " mSize=" << mSize 
+                << " buf=" << mBuf
+                << std::endl;
+#endif
    }
+   mBuf[mSize] = 0;
 }
 
 
@@ -1733,21 +1757,21 @@ Data::base64decode() const
    return Base64Coder::decode( *this );
 #else
    static signed char base64Lookup[128] = 
-   {
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
-      -1,-1,-1,62,-1,62,-2,63,52,53, 
-      54,55,56,57,58,59,60,61,-1,-1, 
-      -1,-2,-1,-1,-1,0, 1, 2, 3, 4,
-      5, 6, 7, 8, 9, 10,11,12,13,14, 
-      15,16,17,18,19,20,21,22,23,24, 
-      25,-1,-1,-1,-1,63,-1,26,27,28, 
-      29,30,31,32,33,34,35,36,37,38, 
-      39,40,41,42,43,44,45,46,47,48, 
-      49,50,51,-1,-1,-1,-1,-1            
-   };
+      {
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+         -1,-1,-1,62,-1,62,-2,63,52,53, 
+         54,55,56,57,58,59,60,61,-1,-1, 
+         -1,-2,-1,-1,-1,0, 1, 2, 3, 4,
+         5, 6, 7, 8, 9, 10,11,12,13,14, 
+         15,16,17,18,19,20,21,22,23,24, 
+         25,-1,-1,-1,-1,63,-1,26,27,28, 
+         29,30,31,32,33,34,35,36,37,38, 
+         39,40,41,42,43,44,45,46,47,48, 
+         49,50,51,-1,-1,-1,-1,-1            
+      };
 
    int wc=0;
    int val=0;
