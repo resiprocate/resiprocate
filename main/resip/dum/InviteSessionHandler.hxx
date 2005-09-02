@@ -76,8 +76,8 @@ class InviteSessionHandler
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)=0;      
       
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
-      /// useful 
-      virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
+      /// useful. A SipMessage is provided if one is available
+      virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg)=0;
       
       /// called when some state in the Dialog changes - typically remoteURI, or
       /// a re-invite. This is no longer necessary - use onOfferRequired and onOffer
