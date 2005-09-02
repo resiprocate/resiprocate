@@ -7,7 +7,7 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
                                bool success, 
                                const Data& body,
                                const Mime& type) :
-   mTid(tid),
+   DumFeatureMessage(tid),
    mSuccess(success),
    mBody(body),
    mType(type)
