@@ -2,7 +2,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/IdentityHandler.hxx"
 #include "resip/dum/HttpProvider.hxx"
-#include "resip/stack/external/HttpGetMessage.hxx"
+#include "resip/dum/HttpGetMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 
 using namespace resip;
