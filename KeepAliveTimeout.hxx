@@ -3,8 +3,8 @@
 
 
 #include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/dum/Handles.hxx"
-#include "rutil/Tuple.hxx"
 
 namespace resip
 {
