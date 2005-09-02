@@ -105,6 +105,7 @@ class InviteSession : public DialogUsage
          ReceivedUpdate, // Received an UPDATE
          ReceivedReinvite, // Received a reINVITE
          ReceivedReinviteNoOffer, // Received a reINVITE with no offer
+         ReceivedReinviteSentOffer, // Sent a 200 to a reINVITE with no offer
          Answered,
          WaitingToOffer,
          WaitingToTerminate,
@@ -207,6 +208,7 @@ class InviteSession : public DialogUsage
       void dispatchSentReinvite(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
+      void dispatchReceivedReinviteSentOffer(const SipMessage& msg);
       void dispatchAnswered(const SipMessage& msg);
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
