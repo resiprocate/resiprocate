@@ -2,10 +2,10 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "resip/stack/TcpConnection.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Tuple.hxx"
 #include "rutil/Socket.hxx"
+#include "resip/stack/TcpConnection.hxx"
+#include "resip/stack/Tuple.hxx"
 
 using namespace resip;
 

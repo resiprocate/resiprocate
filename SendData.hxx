@@ -2,7 +2,7 @@
 #define RESIP_SendData_HXX
 
 #include "rutil/Data.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 
 namespace resip
 {

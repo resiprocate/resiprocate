@@ -538,7 +538,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+               msg->header(h_Vias).front().sentHost() = Tuple::inet_ntop(source);
             }
             if (!topVia.sentPort())
             {
@@ -578,7 +578,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is.
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = DnsUtil::inet_ntop(source);
+                  contact.uri().host() = Tuple::inet_ntop(source);
                   contact.uri().port() = target.transport->port();
                   if (target.transport->transport() != UDP)
                   {
@@ -592,7 +592,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             NameAddr& rr = msg->header(h_RecordRoutes).back();
             if (rr.uri().host().empty())
             {
-               rr.uri().host() = DnsUtil::inet_ntop(source);
+               rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
                if (target.transport->transport() != UDP)
                {
