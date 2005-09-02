@@ -6,7 +6,7 @@
 
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/Tuple.hxx"
+#include "resip/stack/Tuple.hxx"
 
 namespace resip
 {
