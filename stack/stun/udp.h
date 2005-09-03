@@ -5,6 +5,9 @@
 #ifdef __MACH__
 #  ifdef __APPLE__
 #     include <sys/socket.h>
+#     if !defined(_BSD_SOCKLEN_T_) && !defined(_SOCKLEN_T)
+         typedef int socklen_t;
+#     endif
 #  else
       typedef int socklen_t;
 #  endif
