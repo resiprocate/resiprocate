@@ -1536,10 +1536,14 @@ Data::find(const Data& match,
    }
 }
 
-void
+int
 Data::replace(const Data& match, 
               const Data& replaceWith)
 {
+   assert(!match.empty());
+
+   int count = 0;
+
    const int incr = replaceWith.size() - match.size();
    for (size_type offset = find(match, 0); 
         offset != Data::npos; 
@@ -1558,7 +1562,11 @@ Data::replace(const Data& match,
       memmove(mBuf + offset + replaceWith.size(), mBuf + offset + match.size(), mSize - offset - match.size());
       memcpy(mBuf + offset, replaceWith.data(), replaceWith.size());
       mSize += incr;
+
+      ++count;
    }
+
+   return count;
 }
 
 bool
