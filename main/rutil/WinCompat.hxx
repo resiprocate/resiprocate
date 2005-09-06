@@ -6,7 +6,7 @@
 
 #include "rutil/BaseException.hxx"
 #include "rutil/Mutex.hxx"
-#include "rutil/Tuple.hxx"
+#include "rutil/GenericIPAddress.hxx"
 
 namespace resip
 {
@@ -39,15 +39,15 @@ class WinCompat
             const char* name() const { return "TransportException"; }
       };
 
-      static Tuple determineSourceInterface(const Tuple& destination);
+      static GenericIPAddress determineSourceInterface(const GenericIPAddress& destination);
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matching);
 
    private:
       static WinCompat* mInstance;
       static WinCompat* instance();
 
-      static Tuple WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination);
-      static Tuple WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination);
+      static GenericIPAddress WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination);
+      static GenericIPAddress WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
 
