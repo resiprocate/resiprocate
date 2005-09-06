@@ -356,8 +356,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #if defined(WIN32) && !defined(NO_IPHLPAPI)
       try
       {
-         // will not work on ipv6
-         source = WinCompat::determineSourceInterface(target);
+         source.getMutableSockaddr() = WinCompat::determineSourceInterface(target.toGenericIPAddress()).address;
       }
       catch (WinCompat::Exception&)
       {
