@@ -2,7 +2,7 @@
 #include <Iphlpapi.h>
 #include <atlconv.h>
 
-#include "rutil/Tuple.hxx"
+#include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
@@ -147,8 +147,8 @@ WinCompat::WinCompat() :
 #if !defined(NO_IPHLPAPI)
 // !slg! - This function is horribly slow (upto 200ms) and can cause serious performance issues for servers.
 //         We should consider finding more efficient APIs, or caching some of the results.
-Tuple
-WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
+GenericIPAddress
+WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
 {
    if (instance()->loadLibraryAlreadyFailed || (getVersion() < WinCompat::WindowsXP))
    {
@@ -156,7 +156,7 @@ WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
    }
 
    DWORD dwBestIfIndex;
-   const sockaddr* saddr = &destination.getSockaddr();
+   const sockaddr* saddr = &destination.address;
 
    if ((instance()->getBestInterfaceEx)((sockaddr *)saddr, &dwBestIfIndex) != NO_ERROR)
    {
@@ -197,9 +197,9 @@ WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
                 if ((saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex) ||
                    (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex))
                 {
-                   Tuple tuple(*AI->FirstUnicastAddress->Address.lpSockaddr, destination.getType());
+                   GenericIPAddress ipaddress(*AI->FirstUnicastAddress->Address.lpSockaddr);
                    LocalFree(pAdapterAddresses);
-                   return(tuple);
+                   return(ipaddress);
                 }
             } 
          }
@@ -209,18 +209,18 @@ WinCompat::determineSourceInterfaceWithIPv6(const Tuple& destination)
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
 
-   return Tuple();
+   return GenericIPAddress();
 }
 
 
-Tuple
-WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination)
+GenericIPAddress
+WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination)
 {
 
    // try to figure the best route to the destination
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
-   const sockaddr_in& sin = (const sockaddr_in&)destination.getSockaddr();
+   const sockaddr_in& sin = (const sockaddr_in&)destination.address;
    if (NO_ERROR != GetBestRoute(sin.sin_addr.s_addr, 0, &bestRoute)) 
    {
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
@@ -240,8 +240,8 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination)
       throw Exception("Can't find source address for destination", __FILE__,__LINE__);
    }
      
-   struct in_addr sourceIP;
-   sourceIP.s_addr = 0;
+   struct sockaddr_in sourceIP;
+   memset(&sourceIP, 0, sizeof(sockaddr_in));
          
    if (NO_ERROR == GetIpAddrTable(pIpAddrTable, &addrSize, FALSE)) 
    {
@@ -255,19 +255,20 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const Tuple& destination)
          if( (entry.dwIndex == bestRoute.dwForwardIfIndex) &&
              (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) )
          {
-            sourceIP.s_addr = entry.dwAddr;
+            sourceIP.sin_family = AF_INET;
+            sourceIP.sin_addr.s_addr = entry.dwAddr;
             break;
          }
       }
    }
    
    delete [] (char *) pIpAddrTable;
-   return Tuple(sourceIP, 0, destination.getType());
+   return GenericIPAddress(sourceIP);
 }
 #endif // !defined(NO_IPHLPAPI)
 
-Tuple
-WinCompat::determineSourceInterface(const Tuple& destination)
+GenericIPAddress
+WinCompat::determineSourceInterface(const GenericIPAddress& destination)
 {
 // Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's.
 //        If you don't care about Win95/98/Me as your target system - then
@@ -278,7 +279,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 #if defined(USE_IPV6)
    try
    {
-      if(destination.ipVersion() == V6)
+      if(destination.isVersion6())
       {
          return  determineSourceInterfaceWithIPv6(destination);
       }
@@ -301,7 +302,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 #else
    assert(0);
 #endif
-   return Tuple();
+   return GenericIPAddress();
 }
 
 

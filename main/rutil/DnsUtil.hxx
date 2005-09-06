@@ -5,8 +5,11 @@
 #include "BaseException.hxx"
 #include "Data.hxx"
 
-
-struct in_addr;
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
 
 namespace resip
 {
