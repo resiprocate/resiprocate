@@ -298,6 +298,9 @@
 				RelativePath=".\HandleManager.cxx">
 			</File>
 			<File
+				RelativePath=".\HttpGetMessage.cxx">
+			</File>
+			<File
 				RelativePath=".\HttpProvider.cxx">
 			</File>
 			<File
@@ -507,6 +510,9 @@
 				RelativePath=".\EncryptionRequest.hxx">
 			</File>
 			<File
+				RelativePath=".\ExternalTimer.hxx">
+			</File>
+			<File
 				RelativePath=".\Handle.hxx">
 			</File>
 			<File
@@ -520,6 +526,9 @@
 			</File>
 			<File
 				RelativePath=".\Handles.hxx">
+			</File>
+			<File
+				RelativePath=".\HttpGetMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\HttpProvider.hxx">
