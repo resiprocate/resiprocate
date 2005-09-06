@@ -2,7 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 
 #include <iostream>
 #include <string.h>
