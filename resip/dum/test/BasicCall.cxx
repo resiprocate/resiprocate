@@ -430,21 +430,24 @@ class TestShutdownHandler : public DumShutdownHandler
 int 
 main (int argc, char** argv)
 {
-
-   if ( argc < 5 ) {
-      cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
-      return 0;
-   }
-
    //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
    Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
 
+#if !defined(NO_REGISTRATION)
+   if ( argc < 5 ) {
+      cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
+      return 0;
+   }
    NameAddr uacAor(argv[1]);
    Data uacPasswd(argv[2]);
    NameAddr uasAor(argv[3]);
    Data uasPasswd(argv[4]);
+#else
+   NameAddr uacAor;
+   NameAddr uasAor;
+#endif
 
    //set up UAC
    SipStack stackUac;
