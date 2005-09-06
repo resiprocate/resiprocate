@@ -209,7 +209,7 @@ Tuple::presentationFormat() const
    }
    else if (IN6_IS_ADDR_V4MAPPED(&m_anonv6.sin6_addr))
    {
-      return Tuple::inet_ntop(*(reinterpret_cast<const in_addr*>(
+      return DnsUtil::inet_ntop(*(reinterpret_cast<const in_addr*>(
                                    (reinterpret_cast<const unsigned char*>(&m_anonv6.sin6_addr) + 12))));
    }
    else
@@ -420,7 +420,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
    if (tuple.mSockaddr.sa_family == AF_INET6)
    {
-      ostrm << "V6 " << Tuple::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
+      ostrm << "V6 " << DnsUtil::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
    }
    else
 #endif
