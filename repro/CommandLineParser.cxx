@@ -116,7 +116,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoRegistrar = noRegistrar != 0 ;
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
-   mRecursiveRedirect = recursiveRedirect;
+   mRecursiveRedirect = recursiveRedirect?true:false;
    
    if (mySqlServer) 
    {

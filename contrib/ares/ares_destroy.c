@@ -22,7 +22,7 @@
 
 void ares_destroy(ares_channel channel)
 {
-   ares_destroy(channel);
+   ares_destroy_internal(channel, 0);
 }
 
 void ares_destroy_suppress_callbacks(ares_channel channel)

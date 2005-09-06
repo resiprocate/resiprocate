@@ -236,9 +236,6 @@
 				RelativePath=".\FileSystem.cxx">
 			</File>
 			<File
-				RelativePath=".\FlowId.cxx">
-			</File>
-			<File
 				RelativePath=".\HeapInstanceCounter.cxx">
 			</File>
 			<File
@@ -311,9 +308,6 @@
 				RelativePath=".\Timer.cxx">
 			</File>
 			<File
-				RelativePath=".\Tuple.cxx">
-			</File>
-			<File
 				RelativePath=".\vmd5.cxx">
 			</File>
 			<File
@@ -329,6 +323,9 @@
 			</File>
 			<File
 				RelativePath=".\dns\AresDns.hxx">
+			</File>
+			<File
+				RelativePath=".\AsyncID.hxx">
 			</File>
 			<File
 				RelativePath=".\BaseException.hxx">
@@ -397,7 +394,7 @@
 				RelativePath=".\FiniteFifo.hxx">
 			</File>
 			<File
-				RelativePath=".\FlowId.hxx">
+				RelativePath=".\GenericIPAddress.hxx">
 			</File>
 			<File
 				RelativePath=".\HashMap.hxx">
@@ -497,12 +494,6 @@
 			</File>
 			<File
 				RelativePath=".\TransportType.hxx">
-			</File>
-			<File
-				RelativePath=".\Tuple.hxx">
-			</File>
-			<File
-				RelativePath=".\ValueFifo.hxx">
 			</File>
 			<File
 				RelativePath=".\vmd5.hxx">
