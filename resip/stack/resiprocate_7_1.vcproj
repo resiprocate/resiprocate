@@ -291,6 +291,9 @@
 				RelativePath=".\FloatParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\FlowId.cxx">
+			</File>
+			<File
 				RelativePath=".\GenericContents.cxx">
 			</File>
 			<File
@@ -313,9 +316,6 @@
 			</File>
 			<File
 				RelativePath=".\Helper.cxx">
-			</File>
-			<File
-				RelativePath=".\external\HttpGetMessage.cxx">
 			</File>
 			<File
 				RelativePath=".\IntegerCategory.cxx">
@@ -519,6 +519,9 @@
 				RelativePath=".\TuIM.cxx">
 			</File>
 			<File
+				RelativePath=".\Tuple.cxx">
+			</File>
+			<File
 				RelativePath=".\TuSelector.cxx">
 			</File>
 			<File
@@ -566,9 +569,6 @@
 			</File>
 			<File
 				RelativePath=".\ApplicationSip.hxx">
-			</File>
-			<File
-				RelativePath=".\external\AsyncID.hxx">
 			</File>
 			<File
 				RelativePath=".\AsyncProcessHandler.hxx">
@@ -649,16 +649,13 @@
 				RelativePath=".\ExternalBodyContents.hxx">
 			</File>
 			<File
-				RelativePath=".\external\ExternalTimer.hxx">
-			</File>
-			<File
 				RelativePath=".\FloatParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\GenericContents.hxx">
+				RelativePath=".\FlowId.hxx">
 			</File>
 			<File
-				RelativePath=".\GenericIPAddress.hxx">
+				RelativePath=".\GenericContents.hxx">
 			</File>
 			<File
 				RelativePath=".\GenericUri.hxx">
@@ -680,9 +677,6 @@
 			</File>
 			<File
 				RelativePath=".\Helper.hxx">
-			</File>
-			<File
-				RelativePath=".\external\HttpGetMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\IntegerCategory.hxx">
@@ -910,6 +904,9 @@
 				RelativePath=".\TuIM.hxx">
 			</File>
 			<File
+				RelativePath=".\Tuple.hxx">
+			</File>
+			<File
 				RelativePath=".\TuSelector.hxx">
 			</File>
 			<File
@@ -929,6 +926,9 @@
 			</File>
 			<File
 				RelativePath=".\Uri.hxx">
+			</File>
+			<File
+				RelativePath=".\ValueFifo.hxx">
 			</File>
 			<File
 				RelativePath=".\Via.hxx">

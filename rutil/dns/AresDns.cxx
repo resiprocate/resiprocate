@@ -51,7 +51,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers)
       opt.servers = new multiFamilyAddr[additionalNameservers.size()];
       for (size_t i =0; i < additionalNameservers.size(); i++)
       {
-         if (additionalNameservers[i].isV4())
+         if (additionalNameservers[i].isVersion4())
          {
             opt.servers[i].family = AF_INET;            
             opt.servers[i].addr = additionalNameservers[i].v4Address.sin_addr;
