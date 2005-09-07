@@ -192,6 +192,7 @@ InviteSession::isTerminated() const
    {
       case Terminated:
       case WaitingToTerminate:
+      case WaitingToHangup:
       case UAC_Cancelled:
       case UAS_WaitingToTerminate:
       case UAS_WaitingToHangup:
@@ -320,6 +321,9 @@ InviteSession::end()
    switch (mState)
    {
       case Connected:
+      case SentUpdate:
+      case SentUpdateGlare:
+      case SentReinviteGlare:
       {
          // !jf! do we need to store the BYE somewhere?
          sendBye();
@@ -328,14 +332,14 @@ InviteSession::end()
          break;
       }
 
-      case SentUpdate:
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
-         break;
-
       case SentReinvite:
          transition(WaitingToTerminate);
+         break;
+
+      case Answered:
+      case WaitingToOffer:
+      case ReceivedReinviteSentOffer:
+         transition(WaitingToHangup);
          break;
 
       case ReceivedUpdate:
@@ -353,7 +357,7 @@ InviteSession::end()
          break;
       }
 
-      case WaitingToTerminate:
+      case WaitingToTerminate:  // ?slg?  Why is this here?
       {
          sendBye();
          transition(Terminated);
@@ -573,6 +577,9 @@ InviteSession::dispatch(const SipMessage& msg)
       case WaitingToTerminate:
          dispatchWaitingToTerminate(msg);
          break;
+      case WaitingToHangup:
+         dispatchWaitingToHangup(msg);
+         break;
       case Terminated:
          dispatchTerminated(msg);
          break;
@@ -607,7 +614,8 @@ InviteSession::dispatch(const DumTimeout& timeout)
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
 
          // If we are waiting for an Ack and it times out, then end with a BYE
-         if(mState == UAS_WaitingToHangup)
+         if(mState == UAS_WaitingToHangup || 
+            mState == WaitingToHangup)
          {
              sendBye();
              transition(Terminated);
@@ -620,6 +628,22 @@ InviteSession::dispatch(const DumTimeout& timeout)
             mProposedEncryptionLevel = DialogUsageManager::None;
             //!dcm! -- should this be onIllegalNegotiation?
             mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
+         }
+         else if(mState == WaitingToOffer)
+         {
+            assert(mProposedLocalSdp.get());
+            //!dcm! -- should this be onIllegalNegotiation?
+            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
+            if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
+           {
+               provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
+                             mProposedEncryptionLevel,
+                             dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
+            }
+            else
+            {
+               provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
+            }
          }
       }
    }
@@ -1014,7 +1038,6 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-
       assert(mProposedLocalSdp.get());
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
       if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
@@ -1048,6 +1071,29 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       sendBye();
       transition(Terminated);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+   }
+}
+
+void
+InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
+{
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnAck:
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+
+         sendBye();
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+         break;
+      }
+      
+      default:
+         break;
    }
 }
 
@@ -1512,6 +1558,8 @@ InviteSession::toData(State state)
          return "InviteSession::WaitingToOffer";
       case WaitingToTerminate:
          return "InviteSession::WaitingToTerminate";
+      case WaitingToHangup:
+         return "InviteSession::WaitingToHangup";
       case Terminated:
          return "InviteSession::Terminated";
 
