@@ -134,7 +134,7 @@ digraph UAS {
   EarlyReliable -> EarlyReliable                        [ label = "onPRACK/send::200P" ];
   EarlyReliable -> EarlyReliable                        [ label = "dum::provisional/send::1xx,timer::1xx" ];
   EarlyReliable -> EarlyReliable                        [ label = "onTimer/resend::1xx" ];
-  EarlyReliable -> Connected                            [ label = "dum::accept/send::2xx,timer::2xx" ];
+  EarlyReliable -> Accepted                             [ label = "dum::accept/send::2xx,timer::2xx" ];
   EarlyReliable -> ReceivedUpdate                       [ label = "onUpdate/app::onOffer" ];
   EarlyReliable -> SentUpdate                           [ label = "dum::provideOffer/send::UPDATE" ];
   EarlyReliable -> Terminated                           [ label = "dum::end/send::4XXI,dum::destroy" ];
@@ -154,8 +154,8 @@ digraph UAS {
   SentUpdate -> Terminated                              [ label = "dum::end/send::4XXI,dum::destroy" ];
   SentUpdate -> Terminated                              [ label = "dum::reject/send::4XXI,dum::destroy" ]; 
 
-  SentUpdateAccepted -> Connected                       [ label = "on2xxU/app::onAnswer" ];
-  SentUpdateAccepted -> Connected                       [ label = "on4XXU/app::onOfferRejected" ];
+  SentUpdateAccepted -> Accepted                        [ label = "on2xxU/app::onAnswer" ];
+  SentUpdateAccepted -> Accepted                        [ label = "on4XXU/app::onOfferRejected" ];
   SentUpdateAccepted -> WaitingToHangup                 [ label = "dum::end" ];
   // reject is not allowed once accepted
 
@@ -164,7 +164,7 @@ digraph UAS {
   ReceivedUpdate -> Terminated                          [ label = "dum::end/send::488U,send::4XXI,dum::destroy" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::reject/send::488U,send::4XXI,dum::destroy" ]; 
 
-  ReceivedUpdateWaitingAnswer -> Connected              [ label = "dum::provideAnswer/send::2XXU-answer,send::2XXI" ];
+  ReceivedUpdateWaitingAnswer -> Accepted               [ label = "dum::provideAnswer/send::2XXU-answer,send::2XXI" ];
   ReceivedUpdateWaitingAnswer -> WaitingToHangup        [ label = "dum::end" ];
   // reject is not allowed once accepted
 
