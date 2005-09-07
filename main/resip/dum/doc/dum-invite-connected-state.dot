@@ -61,12 +61,14 @@ digraph UAC {
   Answered -> Answered                    [ label = "timer::2xx/resend::2xx" ];
   Answered -> WaitingToOffer              [ label = "dum::provideOffer/saveOffer" ];
   Answered -> Connected                   [ label = "onACK/timer::NoACK/app::onAckNotReceived()" ];
-  Answered -> WaitingToTerminate          [ label = "dum::end" ];
+  Answered -> WaitingToHangup             [ label = "dum::end" ];
 
   WaitingToOffer -> WaitingToOffer        [ label = "timer::2xx/resend::2xx" ];
   WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
   WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
-  WaitingToOffer -> Terminated            [ label = "timer::NoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
+  WaitingToOffer -> SentUpdate            [ label = "onTimerNoACK/app::onOfferRejected/send::UPDATE-offer" ];
+  WaitingToOffer -> SentReinvite          [ label = "onTimerNoACK/app::onOfferRejected/send::INVITE-offer" ];
+  WaitingToOffer -> WaitingToHangup       [ label = "dum::end" ];
 
   ReceivedReinviteNoOffer -> ReceivedReinviteSentOffer    [ label = "dum::provideOffer/send::200-offer,timer::200I,timer::NoACK" ];
   ReceivedReinviteNoOffer -> Connected    [ label = "dum::reject/send::488I" ];
@@ -77,11 +79,13 @@ digraph UAC {
   ReceivedReinviteSentOffer -> Connected                     [ label = "onACK/app::onOfferRejected" ];
   ReceivedReinviteSentOffer -> ReceivedReinviteSentOffer     [ label = "onTimer2xx/resend::2XXI" ]; 
   ReceivedReinviteSentOffer -> Connected                     [ label = "onTimerNoACK/app::onOfferRejected" ];
-  ReceivedReinviteSentOffer -> WaitingToTerminate            [ label = "dum::end" ];
+  ReceivedReinviteSentOffer -> WaitingToHangup               [ label = "dum::end" ];
 
   WaitingToTerminate -> Terminated        [ label = "on200I/send::ACK,send::BYE" ];
   WaitingToTerminate -> Terminated        [ label = "onFailureInvite/?send::BYE" ];
-  WaitingToTerminate -> Terminated        [ label = "onACK/send::BYE" ];
+
+  WaitingToHangup -> Terminated           [ label = "onACK/send::BYE" ];
+  WaitingToHangup -> Terminated           [ label = "onTimerNoACK/send::BYE" ];
 
   Terminated -> Terminated                [ label = "onResponse/destroy" ];
   Terminated -> Terminated                [ label = "onRequest/send::481,destroy" ];
