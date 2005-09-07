@@ -177,5 +177,6 @@ digraph UAS {
 
   WaitingToHangup -> Terminated                         [ label = "onPRACK/send::BYE" ];
   WaitingToHangup -> Terminated                         [ label = "onACK/send::BYE" ];
+  WaitingToHangup -> Terminated                         [ label = "onTimerNoACK/send::BYE" ];
   // reject is not allowed once accepted
 }
