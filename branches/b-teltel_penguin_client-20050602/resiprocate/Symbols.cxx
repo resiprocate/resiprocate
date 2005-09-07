@@ -85,6 +85,9 @@ const char* Symbols::NaptrTcp = "D2T";
 const char* Symbols::audio = "audio";
 const char* Symbols::RTP_AVP = "RTP/AVP";
 
+// Spt. 6th, 2005.
+const char* Symbols::data = "data"; // For Multi-Party Call/IM.
+
 const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
 const char* Symbols::Optional = "optional";
