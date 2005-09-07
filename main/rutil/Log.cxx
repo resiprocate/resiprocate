@@ -29,9 +29,9 @@ Data Log::mLogFileName;
 ExternalLogger* Log::mExternalLogger = 0;
 
 #ifdef WIN32
-	int Log::mPid=0;
+int Log::mPid=0;
 #else 
-	pid_t Log::mPid=0;
+pid_t Log::mPid=0;
 #endif
 
 volatile short Log::touchCount = 0;
@@ -102,7 +102,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    {
       mLogFileName = logFileName;
    }
-    mExternalLogger = externalLogger;
+   mExternalLogger = externalLogger;
 
    string::size_type pos = copy.find_last_of('/');
    if ( pos == string::npos || pos == copy.size())
@@ -236,7 +236,7 @@ Log::tags(Log::Level level,
         << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 
 #endif // #if defined( __APPLE__ )
-  return strm;
+   return strm;
 }
 
 Data
@@ -295,8 +295,8 @@ Log::timestamp(Data& res)
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
 
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
-                                        thereby leaving its last character at
-                                        the end, instead of a null terminator */
+                                       thereby leaving its last character at
+                                       the end, instead of a null terminator */
 
    // ugh, resize the Data
    res.at(strlen(datebuf)-1);
@@ -308,8 +308,8 @@ Log::getServiceLevel(int service)
 {
    Lock lock(_mutex);
 #ifdef WIN32
-	assert(0);
-	return Bogus;
+   assert(0);
+   return Bogus;
 #else
    HashMap<int, Level>::iterator res = Log::mServiceToLevel.find(service);
    if(res == Log::mServiceToLevel.end())
@@ -370,7 +370,7 @@ void
 Log::setThreadSetting(ThreadSetting info)
 {
 #ifndef LOG_ENABLE_THREAD_SETTING
-	assert(0);
+   assert(0);
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
    pthread_t thread = pthread_self();
@@ -396,7 +396,7 @@ Log::setServiceLevel(int service, Level l)
    Lock lock(_mutex);
    Log::mServiceToLevel[service] = l;
 #if defined(WIN32) || defined(TARGET_OS_MAC)
-	assert(0);
+   assert(0);
 #else
    set<pthread_t>& threads = Log::mServiceToThreads[service];
    for (set<pthread_t>::iterator i = threads.begin(); i != threads.end(); i++)
@@ -413,9 +413,9 @@ ExternalLogger::~ExternalLogger()
 {}
 
 Log::Guard::Guard(resip::Log::Level level,
-		  const resip::Subsystem& subsystem,
-		  const char* file,
-		  int line) :
+                  const resip::Subsystem& subsystem,
+                  const char* file,
+                  int line) :
    mLevel(level),
    mSubsystem(subsystem),
    mFile(file),
@@ -437,12 +437,17 @@ Log::Guard::~Guard()
    if (resip::Log::getExternal())
    {
       const resip::Data rest(resip::Data::Share,
-			     mData.data() + mHeaderLength,
-			     mData.size() - mHeaderLength);
-      if (!(*resip::Log::getExternal())(mLevel, mSubsystem, resip::Log::getAppName(),
-					__FILE__, __LINE__, rest, mData))
+                             mData.data() + mHeaderLength,
+                             mData.size() - mHeaderLength);
+      if (!(*resip::Log::getExternal())(mLevel, 
+                                        mSubsystem, 
+                                        resip::Log::getAppName(),
+                                        mFile,
+                                        mLine, 
+                                        rest, 
+                                        mData))
       {
-	 return;
+         return;
       }
    }
     
