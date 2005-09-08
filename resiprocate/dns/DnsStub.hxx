@@ -1,25 +1,26 @@
 #ifndef RESIP_DNS_STUB_HXX
 #define RESIP_DNS_STUB_HXX
 
-#include "resiprocate/os/Inserter.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
 
-#include "resiprocate/dns/RROverlay.hxx"
-#include "resiprocate/dns/RRList.hxx"
-#include "resiprocate/dns/RRCache.hxx"
 #include "resiprocate/dns/DnsResourceRecord.hxx"
-#include "resiprocate/dns/DnsNaptrRecord.hxx"
 #include "resiprocate/dns/DnsAAAARecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
-#include "resiprocate/dns/DnsSrvRecord.hxx"
-#include "resiprocate/dns/DnsHostRecord.hxx"
 #include "resiprocate/dns/DnsCnameRecord.hxx"
+#include "resiprocate/dns/DnsHostRecord.hxx"
+#include "resiprocate/dns/DnsNaptrRecord.hxx"
+#include "resiprocate/dns/DnsSrvRecord.hxx"
+#include "resiprocate/dns/RRCache.hxx"
+#include "resiprocate/dns/RROverlay.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/Socket.hxx"
+
 
 namespace resip
 {
-
-class DnsInterface;
 
 template<typename T>
 class DNSResult
@@ -53,7 +54,7 @@ class DnsRawSink
       virtual void onDnsRaw(int statuts, const unsigned char* abuf, int len) = 0;
 };
 
-class DnsStub
+class DnsStub : public ExternalDnsHandler
 {
    public:
       typedef RRCache::Protocol Protocol;
@@ -85,7 +86,7 @@ class DnsStub
             const char* name() const { return "DnsStubException"; }
       };
 
-      DnsStub(DnsInterface* dns);
+      DnsStub();
       ~DnsStub();
 
       void setResultTransform(ResultTransform*);
@@ -115,7 +116,11 @@ class DnsStub
          if (size > 0) RRCache::instance()->setSize(size);
       }
 
-      void process();
+      void process(FdSet& fdset);
+      bool requiresProcess();
+      void buildFdSet(FdSet& fdset);
+
+      virtual void handleDnsRaw(ExternalDnsRawResult);
       
    protected:
       void cache(const Data& key, const unsigned char* abuf, int alen);
@@ -165,10 +170,10 @@ class DnsStub
 
             enum {MAX_REQUERIES = 5};
 
-            void go(DnsInterface* dns);
+            void go();
             void process(int status, const unsigned char* abuf, const int alen);
             void onDnsRaw(int status, const unsigned char* abuf, int alen);
-            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis);
+            void followCname(const unsigned char* aptr, const unsigned char*abuf, const int alen, bool& bGotAnswers, bool& bDeleteThis, Data& targetToQuery);
 
          private:
             static DnsResourceRecordsByPtr Empty;
@@ -180,7 +185,6 @@ class DnsStub
             int mProto;
             int mReQuery;
             DnsResultSink* mSink;
-            DnsInterface* mDns;
             bool mFollowCname;
       };
 
@@ -190,7 +194,7 @@ class DnsStub
 
    public:
       // sailesh - due to a bug in CodeWarrior,
-      // QueryCommand::doIt() can only access this method
+      // QueryCommand::execute() can only access this method
       // if it's public. Even using "friend" doesn't work.
       template<class QueryType>
       void query(const Data& target, int proto, DnsResultSink* sink)
@@ -200,7 +204,7 @@ class DnsStub
                                   target, QueryType::getRRType(),
                                   QueryType::SupportsCName, proto, sink);
          mQueries.insert(query);
-         query->go(mDns);
+         query->go();
       }
       
    private:
@@ -209,7 +213,7 @@ class DnsStub
       {
          public:
             virtual ~Command() {}
-            virtual void doIt() = 0;
+            virtual void execute() = 0;
       };
 
 
@@ -232,7 +236,7 @@ class DnsStub
 
             ~QueryCommand() {}
 
-            void doIt()
+            void execute()
             {
                mStub.query<QueryType>(mTarget, mProto, mSink);
             }
@@ -259,7 +263,7 @@ class DnsStub
                  mTargetsToBlacklist(targetToBlacklist)
             {}             
             ~BlacklistingCommand() {}
-            void doIt()
+            void execute()
             {
                mStub.doBlacklisting(mTarget, mRRType, mProto, mTargetsToBlacklist);
             }
@@ -284,8 +288,11 @@ class DnsStub
                                          std::vector<RROverlay>&,
                                          bool discard=false);
       void removeQuery(Query*);
-      DnsInterface* mDns;
+      void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
+      Data errorMessage(int status);
+
       ResultTransform* mTransform;
+      ExternalDns* mDnsProvider;
       std::set<Query*> mQueries;
 
       typedef std::list<BlacklistListener*> Listeners;

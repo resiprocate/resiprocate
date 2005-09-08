@@ -171,7 +171,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   << mDialog.mRemoteTarget);
 
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-         mDum.send(sub);
+         mDialog.send(sub);
 
          delete this;
          return;
@@ -215,12 +215,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDum.send(sub);
+               mDialog.send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDum.send(sub);
+               mDialog.send(sub);
             }
             
             return;
@@ -269,12 +269,12 @@ ClientSubscription::dispatch(const DumTimeout& timer)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDum.send(sub);
+               mDialog.send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDum.send(sub);
+               mDialog.send(sub);
             }
             
             delete this;

@@ -1,5 +1,5 @@
 #ifndef RESIP_QUERY_TYPES_HXX
-#define RESIP_QURY_TYPES_HXX
+#define RESIP_QUERY_TYPES_HXX
 
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 #include "resiprocate/os/compat.hxx"
@@ -44,7 +44,7 @@ defineQueryType(CNAME, DnsCnameRecord, 5, false, "RFC 1035");
 defineQueryType(AAAA, DnsAAAARecord, 28, true, "RFC 3596");
 #endif
 
-defineQueryType(SRV, DnsSrvRecord, 33, false, "RFC 2782");
+defineQueryType(SRV, DnsSrvRecord, 33, true, "RFC 2782");
 defineQueryType(NAPTR, DnsNaptrRecord, 35, true, "RFC 2915");
 
 }
