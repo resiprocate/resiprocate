@@ -6,8 +6,8 @@
 #include "resiprocate/StatisticsMessage.hxx"
 
 // !dlb! part of the build script
-#define RESIP_STATISTICS(_x) _x
-//#define RESIP_STATISTICS(_x)
+//#define RESIP_STATISTICS(_x) _x
+#define RESIP_STATISTICS(_x)  // Disable stats manager
 
 namespace resip
 {
