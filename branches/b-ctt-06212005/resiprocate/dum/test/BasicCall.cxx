@@ -415,7 +415,95 @@ class TestShutdownHandler : public DumShutdownHandler
 int 
 main (int argc, char** argv)
 {
+   NameAddr uacAor("sip:from@sip.com");
+   NameAddr uasAor("sip:to@sip.com");
 
+   //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+
+   //set up UAC
+   SipStack stackUac;
+   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
+   dumUac->addTransport(UDP, 12005);
+
+   SharedPtr<MasterProfile> uacMasterProfile(new MasterProfile);
+   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   dumUac->setMasterProfile(uacMasterProfile);
+   dumUac->setClientAuthManager(uacAuth);
+
+   TestUac uac;
+   dumUac->setInviteSessionHandler(&uac);
+   dumUac->setClientRegistrationHandler(&uac);
+   dumUac->addOutOfDialogHandler(OPTIONS, &uac);
+
+   auto_ptr<AppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
+   dumUac->setAppDialogSetFactory(uac_dsf);
+
+   dumUac->getMasterProfile()->setDefaultFrom(uacAor);
+   dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
+
+   uac.registered = true;
+
+   bool finishedTest = false;
+   bool stoppedRegistering = false;
+   bool startedCallFlow = false;
+   bool hungup = false;   
+   TestShutdownHandler uacShutdownHandler("UAC");   
+
+   while (!uacShutdownHandler.dumShutDown)
+   {
+     if (!uacShutdownHandler.dumShutDown)
+     {
+        FdSet fdset;
+        stackUac.buildFdSet(fdset);
+        int err = fdset.selectMilliSeconds(resipMin((int)stackUac.getTimeTillNextProcessMS(), 50));
+        assert ( err != -1 );
+        stackUac.process(fdset);
+        while(dumUac->process());
+     }
+
+     if (!uac.done)
+     {
+        if (uac.registered && !startedCallFlow)
+        {
+           if (!startedCallFlow)
+           {
+              startedCallFlow = true;
+
+              cout << "UAC: Sending Invite Request to UAS." << endl;
+              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              uac.done = true;
+           }
+        }
+     }
+     else
+     {
+        if (!stoppedRegistering)
+        {
+           finishedTest = true;
+           stoppedRegistering = true;
+           dumUac->shutdown(&uacShutdownHandler);
+        }
+     }
+   }
+
+   // OK to delete DUM objects now
+   delete dumUac; 
+
+   cout << "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! " << endl;
+
+
+
+
+
+
+
+
+
+
+#if 0
    if ( argc < 5 ) {
       cout << "usage: " << argv[0] << " sip:user1 passwd1 sip:user2 passwd2" << endl;
       return 0;
@@ -584,6 +672,7 @@ main (int argc, char** argv)
    delete dumUas;
 
    cout << "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! " << endl;
+#endif
 }
 
 /* ====================================================================

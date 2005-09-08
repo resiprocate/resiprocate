@@ -42,7 +42,7 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send

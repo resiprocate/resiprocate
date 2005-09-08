@@ -189,6 +189,7 @@ InviteSession::isTerminated() const
    {
       case Terminated:
       case WaitingToTerminate:
+      case WaitingToHangup:
       case UAC_Cancelled:
       case UAS_WaitingToTerminate:
       case UAS_WaitingToHangup:
@@ -240,6 +241,20 @@ InviteSession::provideOffer(const SdpContents& offer)
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
 
+      case ReceivedReinviteNoOffer:
+         assert(!mProposedRemoteSdp.get());
+         transition(ReceivedReinviteSentOffer);
+         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
+         handleSessionTimerRequest(mInvite200, mLastSessionModification);
+         InviteSession::setSdp(mInvite200, offer);
+         mProposedLocalSdp  = InviteSession::makeSdp(offer);
+
+         InfoLog (<< "Sending " << mInvite200.brief());
+         mDialog.send(mInvite200);
+         startRetransmit200Timer();
+         break;
+         
+         
       // ?slg? Can we handle all of the states listed in isConnected() ???
       default:
          WarningLog (<< "Can't provideOffer when not in Connected state");
@@ -293,6 +308,9 @@ InviteSession::end()
    switch (mState)
    {
       case Connected:
+      case SentUpdate:
+      case SentUpdateGlare:
+      case SentReinviteGlare:
       {
          // !jf! do we need to store the BYE somewhere?
          sendBye();
@@ -301,14 +319,14 @@ InviteSession::end()
          break;
       }
 
-      case SentUpdate:
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
-         break;
-
       case SentReinvite:
          transition(WaitingToTerminate);
+         break;
+
+      case Answered:
+      case WaitingToOffer:
+      case ReceivedReinviteSentOffer:
+         transition(WaitingToHangup);
          break;
 
       case ReceivedUpdate:
@@ -326,7 +344,7 @@ InviteSession::end()
          break;
       }
 
-      case WaitingToTerminate:
+      case WaitingToTerminate:  // ?slg?  Why is this here?
       {
          sendBye();
          transition(Terminated);
@@ -403,7 +421,7 @@ InviteSession::refer(const NameAddr& referTo)
       SipMessage refer;
       mDialog.makeRequest(refer, REFER);
       refer.header(h_ReferTo) = referTo;
-      refer.header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
+      refer.header(h_ReferredBy) = mDialog.mLocalContact; // ?slg? is it ok to do this - should it be an option?
       mDialog.send(refer);
    }
    else
@@ -505,6 +523,9 @@ InviteSession::dispatch(const SipMessage& msg)
       case ReceivedReinviteNoOffer:
          dispatchReceivedUpdateOrReinvite(msg);
          break;
+      case ReceivedReinviteSentOffer:
+         dispatchReceivedReinviteSentOffer(msg);
+         break;
       case Answered:
          dispatchAnswered(msg);
          break;
@@ -513,6 +534,9 @@ InviteSession::dispatch(const SipMessage& msg)
          break;
       case WaitingToTerminate:
          dispatchWaitingToTerminate(msg);
+         break;
+      case WaitingToHangup:
+         dispatchWaitingToHangup(msg);
          break;
       case Terminated:
          dispatchTerminated(msg);
@@ -548,11 +572,24 @@ InviteSession::dispatch(const DumTimeout& timeout)
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
 
          // If we are waiting for an Ack and it times out, then end with a BYE
-         if(mState == UAS_WaitingToHangup)
+         if(mState == UAS_WaitingToHangup || 
+            mState == WaitingToHangup)
          {
              sendBye();
              transition(Terminated);
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         }
+         else if(mState == ReceivedReinviteSentOffer)
+         {
+            transition(Connected);
+            mProposedLocalSdp.release();
+            //!dcm! -- should this be onIllegalNegotiation?
+            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
+         }
+         else if(mState == WaitingToOffer)
+         {
+            assert(mProposedLocalSdp.get());
+            provideOffer(*mProposedLocalSdp);
          }
       }
    }
@@ -593,7 +630,6 @@ InviteSession::dispatch(const DumTimeout& timeout)
       }
    }
 }
-
 
 void
 InviteSession::dispatchConnected(const SipMessage& msg)
@@ -663,8 +699,6 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
    }
 }
-
-
 
 void
 InviteSession::dispatchSentUpdate(const SipMessage& msg)
@@ -829,9 +863,48 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On489Invite:
          transition(Connected);
          mProposedLocalSdp.release();
-         handler->onOfferRejected(getSessionHandle(), msg);
+         handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
+      default:
+         dispatchOthers(msg);
+         break;
+   }
+}
+
+void InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SipMessage response;
+         mDialog.makeResponse(response, msg, 491);
+         send(response);
+         break;
+      }
+      case OnAckAnswer:
+         transition(Connected);
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
+         break;         
+      case OnAck:
+         transition(Connected);
+         mProposedLocalSdp.release();
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+		 //!dcm! -- should this be onIllegalNegotiation?
+		 handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
       default:
          dispatchOthers(msg);
          break;
@@ -847,13 +920,13 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    {
       // Received inbound reinvite, when waiting to resend outbound reinvite or update
       transition(ReceivedReinvite);
-      handler->onOfferRejected(getSessionHandle(), msg);
+      handler->onOfferRejected(getSessionHandle(), &msg);
    }
    else if (method == UPDATE && msg.isRequest())
    {
       // Received inbound update, when waiting to resend outbound reinvite or update
       transition(ReceivedUpdate);
-      handler->onOfferRejected(getSessionHandle(), msg);
+      handler->onOfferRejected(getSessionHandle(), &msg);
    }
    else
    {
@@ -923,6 +996,29 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       sendBye();
       transition(Terminated);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+   }
+}
+
+void
+InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
+{
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnAck:
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+
+         sendBye();
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+         break;
+      }
+      
+      default:
+         break;
    }
 }
 
@@ -1350,12 +1446,16 @@ InviteSession::toData(State state)
          return "InviteSession::ReceivedReinvite";
       case ReceivedReinviteNoOffer:
          return "InviteSession::ReceivedReinviteNoOffer";
+	  case ReceivedReinviteSentOffer:
+		  return "InviteSession::ReceivedReinviteSentOffer";
       case Answered:
          return "InviteSession::Answered";
       case WaitingToOffer:
          return "InviteSession::WaitingToOffer";
       case WaitingToTerminate:
          return "InviteSession::WaitingToTerminate";
+      case WaitingToHangup:
+         return "InviteSession::WaitingToHangup";
       case Terminated:
          return "InviteSession::Terminated";
 

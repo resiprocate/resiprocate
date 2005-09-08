@@ -35,7 +35,7 @@ extern "C"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
 
-#include "resiprocate/ExternalDnsFactory.hxx"
+//#include "resiprocate/ExternalDnsFactory.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 
@@ -43,35 +43,19 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsInterface::DnsInterface() : 
-   mDnsProvider(ExternalDnsFactory::createExternalDns()),
-   	  mActiveQueryCount(0)
+DnsInterface::DnsInterface(DnsStub& dnsStub) : 
+   //mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   mActiveQueryCount(0),
+   mDnsStub(dnsStub)
 {
-   int retCode = mDnsProvider->init();
-   if (retCode != 0)
-   {
-      ErrLog (<< "Failed to initialize async dns library");
-      char* errmem = mDnsProvider->errorMessage(retCode);
-      ErrLog (<< errmem);
-      delete errmem;
-      throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
-   }
-   mDnsStub = new DnsStub(this);
+
 #ifdef USE_DNS_VIP
-   mDnsStub->setResultTransform(&mVip);
+   mDnsStub.setResultTransform(&mVip);
 #endif
 }
 
 DnsInterface::~DnsInterface()
 {
-   delete mDnsProvider;
-   delete mDnsStub;
-}
-
-Data 
-DnsInterface::errorMessage(int status)
-{
-   return Data(Data::Take, mDnsProvider->errorMessage(status));
 }
 
 void 
@@ -136,27 +120,28 @@ int DnsInterface::supportedProtocols()
 bool 
 DnsInterface::requiresProcess()
 {
-   return mDnsProvider->requiresProcess() && mActiveQueryCount;   
+   return mActiveQueryCount>0;
 }
 
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
-   mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   //mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
+   //mDnsStub->buildFdSet(fdset);
 }
 
 void 
 DnsInterface::process(FdSet& fdset)
 {
-   mDnsStub->process();
-   mDnsProvider->process(fdset.read, fdset.write);
+   //mDnsStub->process(fdset);
+   //mDnsProvider->process(fdset.read, fdset.write);
 }
 
 
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this, *mDnsStub, mVip, handler);
+   DnsResult* result = new DnsResult(*this, mDnsStub, mVip, handler);
    mActiveQueryCount++;  
    return result;
 }
@@ -181,6 +166,7 @@ DnsHandler::~DnsHandler()
 {
 }
 
+/* moved to DnsStub.
 void 
 DnsInterface::lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink)
 {
@@ -193,16 +179,17 @@ DnsInterface::handleDnsRaw(ExternalDnsRawResult res)
    reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
    mDnsProvider->freeResult(res);
 }
+*/
 
 void
 DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
-   mDnsStub->registerBlacklistListener(rrType, listener);
+   mDnsStub.registerBlacklistListener(rrType, listener);
 }
 
 void DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
-   mDnsStub->unregisterBlacklistListener(rrType, listener);
+   mDnsStub.unregisterBlacklistListener(rrType, listener);
 }
 
 //  Copyright (c) 2003, Jason Fischl 

@@ -82,19 +82,21 @@ class InviteSession : public DialogUsage
 
       typedef enum
       {
-         Undefined,  // Not used
+         Undefined,                 // Not used
          Connected,
-         SentUpdate, // Sent an UPDATE
-         SentUpdateGlare, // got a 491
-         SentReinvite, // Sent a reINVITE
-         SentReinviteGlare, // Got a 491
-         ReceivedUpdate, // Received an UPDATE
-         ReceivedReinvite, // Received a reINVITE
-         ReceivedReinviteNoOffer, // Received a reINVITE with no offer
+         SentUpdate,                // Sent an UPDATE
+         SentUpdateGlare,           // got a 491
+         SentReinvite,              // Sent a reINVITE
+         SentReinviteGlare,         // Got a 491
+         ReceivedUpdate,            // Received an UPDATE
+         ReceivedReinvite,          // Received a reINVITE
+         ReceivedReinviteNoOffer,   // Received a reINVITE with no offer
+         ReceivedReinviteSentOffer, // Sent a 200 to a reINVITE with no offer
          Answered,
          WaitingToOffer,
-         WaitingToTerminate,
-         Terminated, // Ended. waiting to delete
+         WaitingToTerminate,        // Waiting for 2xx response before sending BYE
+         WaitingToHangup,           // Waiting for ACK before sending BYE
+         Terminated,                // Ended. waiting to delete
 
          UAC_Start,
          UAC_Early,
@@ -193,9 +195,11 @@ class InviteSession : public DialogUsage
       void dispatchSentReinvite(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
+      void dispatchReceivedReinviteSentOffer(const SipMessage& msg);
       void dispatchAnswered(const SipMessage& msg);
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
+      void dispatchWaitingToHangup(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
       void startRetransmit200Timer();
@@ -234,8 +238,9 @@ class InviteSession : public DialogUsage
       NitState mNitState;
 
       std::auto_ptr<SdpContents> mCurrentLocalSdp;
-      std::auto_ptr<SdpContents> mCurrentRemoteSdp;
       std::auto_ptr<SdpContents> mProposedLocalSdp;
+
+      std::auto_ptr<SdpContents> mCurrentRemoteSdp;
       std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE

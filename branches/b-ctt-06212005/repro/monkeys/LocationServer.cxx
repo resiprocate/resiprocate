@@ -41,6 +41,11 @@ LocationServer::handleRequest(RequestContext& context)
            InfoLog (<< *this << " adding target " << contact.first);
            context.addTarget(NameAddr(contact.first));
         }
+        else
+        {
+            // remove expired contact 
+            mStore.removeContact(inputUri, Uri(contact.first));
+        }
      }
 	 // if target list is empty return a 480
 	 if (context.getCandidates().empty())
