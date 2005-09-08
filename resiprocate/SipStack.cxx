@@ -49,6 +49,7 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
+   mDnsStub(new DnsStub()),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
@@ -75,6 +76,7 @@ SipStack::~SipStack()
 #ifdef USE_SSL
    delete mSecurity;
 #endif
+   delete mDnsStub;
 }
 
 void
@@ -418,6 +420,7 @@ SipStack::process(FdSet& fdset)
    }
    mTransactionController.process(fdset);
    mTuSelector.process();
+   mDnsStub->process(fdset);
    
    Lock lock(mAppTimerMutex); 
    mAppTimers.process();   
@@ -442,6 +445,7 @@ void
 SipStack::buildFdSet(FdSet& fdset)
 {
    mTransactionController.buildFdSet(fdset);
+   mDnsStub->buildFdSet(fdset);
 }
 
 Security*
@@ -484,6 +488,12 @@ void
 SipStack::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
    mTransactionController.unregisterBlacklistListener(rrType, listener);
+}
+
+DnsStub&
+SipStack::getDnsStub() const
+{
+   return *mDnsStub;
 }
 
 std::ostream& 

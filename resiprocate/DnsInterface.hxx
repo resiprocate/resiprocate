@@ -8,7 +8,6 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/external/ExternalDns.hxx"
 #include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/dns/RRVip.hxx"
 
@@ -19,10 +18,10 @@ class DnsResultSink;
 class DnsResult;
 class Uri;
 class Via;
-class ExternalDns;
+//class ExternalDns;
 class DnsRawSink;
 
-class DnsInterface : public ExternalDnsHandler
+class DnsInterface
 {
    public:
       class Exception : public BaseException
@@ -37,18 +36,18 @@ class DnsInterface : public ExternalDnsHandler
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
       // Will throw DnsInterface::Exception if the Dns provider fails to initialize
-      DnsInterface();
+      DnsInterface(DnsStub& dnsStub);
 
       virtual ~DnsInterface();
 
-      Data errorMessage(int status);
+      //Data errorMessage(int status);
 
       // set the supported set of types that a UAC wishes to use
       void addTransportType(TransportType type, IpVersion version);
       
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
-      bool isSupported(TransportType t, IpVersion version);
+     bool isSupported(TransportType t, IpVersion version);
 
       // this is used if NAPTR doesn't return anything to decide which SRV
       // records to query
@@ -84,11 +83,11 @@ class DnsInterface : public ExternalDnsHandler
       DnsResult* createDnsResult(DnsHandler* handler=0);
       void lookup(DnsResult* res, const Uri& uri);
 
-//      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
-//      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
+      //DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
+      //DnsResult* lookup(const Via& via, DnsHandler* handler=0);
 
-      void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
-      virtual void handleDnsRaw(ExternalDnsRawResult);
+      //void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
+      //virtual void handleDnsRaw(ExternalDnsRawResult);
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
@@ -102,10 +101,10 @@ class DnsInterface : public ExternalDnsHandler
       TransportMap mSupportedTransports;
       //std::set<TransportType> mSupportedTransportTypes;
 
-      ExternalDns* mDnsProvider;
+      //ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
 
-      DnsStub* mDnsStub;
+      DnsStub& mDnsStub;
       RRVip mVip;
 };
 

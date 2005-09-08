@@ -12,6 +12,7 @@
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/TuSelector.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 
 namespace resip 
 {
@@ -418,6 +419,8 @@ class SipStack
                                    BlackListListener event sink
       */
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+
+      DnsStub& getDnsStub() const;
       
    private:
       /// Notify an async process handler - if one has been registered
@@ -425,6 +428,8 @@ class SipStack
 
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
+
+      DnsStub* mDnsStub;
 
       /// if this object exists, it get's notified when ApplicationMessage's get posted
       AsyncProcessHandler* mAsyncProcessHandler;

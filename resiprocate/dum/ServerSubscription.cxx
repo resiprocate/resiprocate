@@ -95,14 +95,14 @@ ServerSubscription::send(SipMessage& msg)
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
-         mDum.send(msg);
+         mDialog.send(msg);
       }
       else if (code < 300)
       {
          if(msg.exists(h_Expires))
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
-            mDum.send(msg);
+            mDialog.send(msg);
             mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
             mState = Established;            
          }
@@ -113,7 +113,7 @@ ServerSubscription::send(SipMessage& msg)
       }
       else if (code < 400)
       {
-         mDum.send(msg);
+         mDialog.send(msg);
          handler->onTerminated(getHandle());
          delete this;
          return;
@@ -122,20 +122,20 @@ ServerSubscription::send(SipMessage& msg)
       {
          if (shouldDestroyAfterSendingFailure(msg))
          {
-            mDum.send(msg);
+            mDialog.send(msg);
             handler->onTerminated(getHandle());
             delete this;
             return;
          }
          else
          {
-            mDum.send(msg);
+            mDialog.send(msg);
          }
       }
    }
    else
    {
-      mDum.send(msg);
+      mDialog.send(msg);
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
