@@ -974,14 +974,13 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
-Dialog::send(SipMessage& msg,
-             DialogUsageManager::EncryptionLevel level)
+Dialog::send(SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_CSeq).method() != ACK)
    {
       mRequests[msg.header(h_CSeq).sequence()] = msg;
    }
-   mDum.send(msg, level);
+   mDum.send(msg);
 }
 
 void
