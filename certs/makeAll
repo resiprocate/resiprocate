@@ -2,6 +2,8 @@
 
 foreach nm ( ` cat hosts.txt ` )
         ./makeCert $nm
+        ./makeCert h1.$nm
+        ./makeCert h2.$nm
 end
 
 tar cvfz allCerts.tgz *_cert.pem *_key.pem *.p12
