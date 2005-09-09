@@ -43,7 +43,7 @@ class Dialog
       
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
-      void send(SipMessage& msg, DialogUsageManager::EncryptionLevel level = DialogUsageManager::None);
+      void send(SipMessage& msg);
       
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);

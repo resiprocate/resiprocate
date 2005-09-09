@@ -22,6 +22,7 @@
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/dum/OutgoingEvent.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 
 #if defined(USE_SSL)
@@ -78,6 +79,14 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
          return DumFeature::FeatureDone;
       }
 
+      if (!event->message()->getSecurityAttributes() ||
+          event->message()->getSecurityAttributes()->getOutgoingEncryptionLevel() == SecurityAttributes::None || 
+          event->message()->getSecurityAttributes()->encryptionPerformed())
+      {
+         return DumFeature::FeatureDone;
+      }
+      
+
       Data senderAor;
       Data recipAor;
       if (event->message()->isRequest())
@@ -94,18 +103,19 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       Contents* contents = event->message()->getContents();
       bool setContents = true;
       bool noCerts = false;
-      switch (event->encryptionLevel())
+
+      switch (event->message()->getSecurityAttributes()->getOutgoingEncryptionLevel())
       {
-         case DialogUsageManager::None:
+         case SecurityAttributes::None:
             setContents = false;
             break;
-         case DialogUsageManager::Encrypt:
+         case SecurityAttributes::Encrypt:
             contents = encrypt(event->message(), recipAor, &noCerts);
             break;
-         case DialogUsageManager::Sign:
+         case SecurityAttributes::Sign:
             contents = sign(event->message(), senderAor, &noCerts);
             break;
-         case DialogUsageManager::SignAndEncrypt:
+         case SecurityAttributes::SignAndEncrypt:
             contents = signAndEncrypt(event->message(), senderAor, recipAor, &noCerts);
             break;
       }
@@ -115,6 +125,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
          if (setContents)
          {
             event->message()->setContents(auto_ptr<Contents>(contents));
+            DumHelper::setEncryptionPerformed(*event->message());
          }
          return DumFeature::FeatureDone;
       }
@@ -379,7 +390,8 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
          MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsg->getContents());
          auto_ptr<Contents> contents(msc);
          mMsg->setContents(contents);
-         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+         DumHelper::setEncryptionPerformed(*mMsg);
+         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg));
          mTaken = false;
          mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
          result = Complete;
@@ -473,7 +485,8 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
       InfoLog(<< "Encrypting message" << endl);
       Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsg->getContents(), aor);
       mMsg->setContents(auto_ptr<Contents>(encrypted));
-      OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+      DumHelper::setEncryptionPerformed(*mMsg);
+      OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg));
       mTaken = false;
       mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));      
    }
@@ -580,7 +593,8 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
          InfoLog(<< "Encrypting and signing message" << endl);
          Contents* contents = doWork();
          mMsg->setContents(auto_ptr<Contents>(contents));
-         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg), DialogUsageManager::None);
+         DumHelper::setEncryptionPerformed(*mMsg);
+         OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg));
          mTaken = false;
          mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
          result = Complete;

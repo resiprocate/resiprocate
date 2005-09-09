@@ -28,9 +28,13 @@ class InviteSessionCreator : public BaseCreator
 
       virtual void dispatch(const SipMessage& msg);
       const Contents* getInitialOffer() const;
-      DialogUsageManager::EncryptionLevel getEncryptionLevel() const;
-      
+            
       ServerSubscriptionHandle getServerSubscription() { return mServerSub; }
+
+      DialogUsageManager::EncryptionLevel getEncryptionLevel() const 
+      {
+         return mEncryptionLevel;
+      }
       
    private:
       typedef enum
@@ -43,8 +47,8 @@ class InviteSessionCreator : public BaseCreator
       State mState;
       //SdpContents* mInitialOffer;
       Contents* mInitialOffer;
-      DialogUsageManager::EncryptionLevel mEncryptionLevel;
       ServerSubscriptionHandle mServerSub;
+      DialogUsageManager::EncryptionLevel mEncryptionLevel;
 };
 
 }
