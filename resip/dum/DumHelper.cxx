@@ -1,53 +1,51 @@
-#include "resip/dum/OutgoingEvent.hxx"
+#include "resip/dum/DumHelper.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
-OutgoingEvent::OutgoingEvent(auto_ptr<SipMessage> msg)
-   : mMessage(msg)
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+void DumHelper::setOutgoingEncrptionLevel(SipMessage& message,
+                                          DialogUsageManager::EncryptionLevel level)
 {
+   SecurityAttributes* attr = new SecurityAttributes();
+   attr->setOutgoingEncryptionLevel(covert(level));
+   message.setSecurityAttributes(auto_ptr<SecurityAttributes>(attr));
 }
 
-OutgoingEvent::OutgoingEvent(const OutgoingEvent& from)
-   : mMessage(from.mMessage)
+void DumHelper::setEncryptionPerformed(SipMessage& message)
 {
+   SecurityAttributes* attr = new SecurityAttributes();
+   attr->setOutgoingEncryptionLevel(message.getSecurityAttributes()->getOutgoingEncryptionLevel());
+   attr->setEncryptionPerformed(true);
+   message.setSecurityAttributes(auto_ptr<SecurityAttributes>(attr));
 }
 
-OutgoingEvent::~OutgoingEvent()
+SecurityAttributes::OutgoingEncryptionLevel DumHelper::covert(DialogUsageManager::EncryptionLevel level)
 {
+   SecurityAttributes::OutgoingEncryptionLevel ret = SecurityAttributes::None;
+
+   switch(level)
+   {
+      case DialogUsageManager::None:
+         ret = SecurityAttributes::None;
+         break;
+      case DialogUsageManager::Encrypt:
+         ret = SecurityAttributes::Encrypt;
+         break;
+      case DialogUsageManager::Sign:
+         ret = SecurityAttributes::Sign;
+         break;
+      case DialogUsageManager::SignAndEncrypt:
+         ret = SecurityAttributes::SignAndEncrypt;
+         break;
+   }
+
+   return ret;
 }
 
-Message*
-OutgoingEvent::clone() const
-{
-   return new OutgoingEvent(*this);
-}
-
-SipMessage*
-OutgoingEvent::message()
-{
-   return mMessage.get();
-}
-
-void
-OutgoingEvent::releaseMessage()
-{
-   mMessage.release();
-}
-     
-std::ostream&
-OutgoingEvent::encodeBrief(std::ostream& strm) const
-{
-   return encode(strm);
-}
-
-std::ostream& 
-OutgoingEvent::encode(std::ostream& strm) const
-{
-   mMessage->encode(strm); 
-   return strm;
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

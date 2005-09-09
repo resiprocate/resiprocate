@@ -8,6 +8,7 @@
 #include "resip/dum/PagerMessageHandler.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
 
@@ -190,8 +191,9 @@ ClientPagerMessage::pageFirstMsgQueued ()
    assert(mMsgQueue.empty() == false);
    mRequest.header(h_CSeq).sequence()++;
    mRequest.setContents(mMsgQueue.front().contents);
+   DumHelper::setOutgoingEncrptionLevel(mRequest, mMsgQueue.front().encryptionLevel);
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
-   mDum.send(mRequest, mMsgQueue.front().encryptionLevel);
+   mDum.send(mRequest);
 }
 
 void
