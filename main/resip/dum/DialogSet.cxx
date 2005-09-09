@@ -18,6 +18,7 @@
 #include "resip/dum/UsageUseException.hxx"
 #include "resip/dum/ServerOutOfDialogReq.hxx"
 #include "resip/dum/ServerRegistration.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"

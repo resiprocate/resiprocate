@@ -7,6 +7,7 @@
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -951,7 +952,8 @@ ServerInviteSession::sendProvisional(int code)
          break;
    }
    startRetransmit1xxTimer();
-   mDialog.send(m1xx, mProposedEncryptionLevel);
+   DumHelper::setOutgoingEncrptionLevel(m1xx, mProposedEncryptionLevel);
+   mDialog.send(m1xx);
 }
 
 void
@@ -965,7 +967,8 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
-   mDialog.send(mInvite200, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
+   mDialog.send(mInvite200);
 }
 
 void
@@ -976,7 +979,8 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       SipMessage update;
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
-      mDialog.send(update, mProposedEncryptionLevel);
+      DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
+      mDialog.send(update);
       mLastSessionModification = update;
    }
    else

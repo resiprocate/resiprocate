@@ -3,6 +3,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/UserProfile.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
 namespace resip
 {
@@ -17,7 +18,7 @@ class BaseCreator
       SipMessage& getLastRequest();
       SharedPtr<UserProfile> getUserProfile();
       const SipMessage& getLastRequest() const;
-      
+
    protected:
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
       void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);

@@ -3,12 +3,15 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/BaseCreator.hxx"
+#include "resip/dum/DumHelper.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-BaseCreator::BaseCreator(DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile) : mDum(dum), mUserProfile(userProfile)
+BaseCreator::BaseCreator(DialogUsageManager& dum, 
+                         SharedPtr<UserProfile>& userProfile)
+   : mDum(dum), mUserProfile(userProfile)
 {}
 
 BaseCreator::~BaseCreator()
@@ -87,6 +90,8 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    // Merge Embedded parameters
    mLastRequest.mergeUri(target.uri());
+
+   //DumHelper::setOutgoingEncrptionLevel(mLastRequest, mEncryptionLevel);
 
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
