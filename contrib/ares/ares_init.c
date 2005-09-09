@@ -442,8 +442,9 @@ static int init_by_defaults(ares_channel channel)
            while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
 		   {
              // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-			 
+#ifdef USE_IPV6			 
 			 channel->servers[ channel->nservers ].family = AF_INET;
+#endif
 	         channel->servers[ channel->nservers ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
 			 channel->nservers++;
 
