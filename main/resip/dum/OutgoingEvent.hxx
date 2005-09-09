@@ -11,12 +11,11 @@ namespace resip
 class OutgoingEvent : public Message
 {
    public:
-      OutgoingEvent(std::auto_ptr<SipMessage> msg, DialogUsageManager::EncryptionLevel level);
+      OutgoingEvent(std::auto_ptr<SipMessage> msg);
       OutgoingEvent(const OutgoingEvent&);
       ~OutgoingEvent();
 
       SipMessage* message();
-      DialogUsageManager::EncryptionLevel encryptionLevel() const;
       const Data& getTransactionId() const { return mMessage->getTransactionId(); }
 
       void releaseMessage();
@@ -27,7 +26,6 @@ class OutgoingEvent : public Message
       
    private:
       mutable std::auto_ptr<SipMessage> mMessage;
-      DialogUsageManager::EncryptionLevel mLevel;
 };
 
 }

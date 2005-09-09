@@ -81,7 +81,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          SignAndEncrypt
       } EncryptionLevel;
   
-
       // If createDefaultFeatures is true dum will construct a
       // IdentityHandler->EncryptionManager chain.
       DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
@@ -217,7 +216,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       void end(DialogSetId invSessionId);
       void send(SipMessage& request);
-      void send(SipMessage& request, EncryptionLevel level);
+      //void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
@@ -463,7 +462,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ServerSubscriptions mServerSubscriptions;
 
       typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
-      InviteSessionEncryptionLevelMap mEncryptionLevels;
+      //InviteSessionEncryptionLevelMap mEncryptionLevels;
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;

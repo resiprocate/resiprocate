@@ -24,6 +24,8 @@ class SecurityAttributes
       SecurityAttributes();
       ~SecurityAttributes();      
 
+      typedef enum {None, Sign, Encrypt, SignAndEncrypt} OutgoingEncryptionLevel;
+
       typedef enum {From, FailedIdentity, Identity} IdentityStrength;
 
       SignatureStatus getSignatureStatus() const
@@ -50,6 +52,11 @@ class SecurityAttributes
          mIdentity = identity;
       }
 
+      const Data& getIdentity() const
+      {
+         return mIdentity;
+      }
+
       void setIdentityStrength(IdentityStrength strength)
       {
          mStrength = strength;         
@@ -65,6 +72,31 @@ class SecurityAttributes
          mSigner = signer;
       }
 
+      const Data& getSigner() const
+      {
+         return mSigner;
+      }
+
+      OutgoingEncryptionLevel getOutgoingEncryptionLevel() const
+      {
+         return mLevel;
+      }
+
+      void setOutgoingEncryptionLevel(OutgoingEncryptionLevel level)
+      {
+         mLevel = level;
+      }
+
+      bool encryptionPerformed() const
+      {
+         return mEncryptionPerformed;
+      }
+
+      void setEncryptionPerformed(bool performed)
+      {
+         mEncryptionPerformed = performed;
+      }
+
    friend std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);
 
    private:
@@ -73,6 +105,8 @@ class SecurityAttributes
       Data mSigner;
       Data mIdentity;
       IdentityStrength mStrength;
+      OutgoingEncryptionLevel mLevel; // for outgoing messages.
+      bool mEncryptionPerformed;
 };
 
    std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);

@@ -6,7 +6,9 @@ SecurityAttributes::SecurityAttributes()  :
    
    mIsEncrypted(false),
    mSigStatus(SignatureNone),
-   mStrength(From)
+   mStrength(From),
+   mLevel(None),
+   mEncryptionPerformed(false)
 {}
 
 SecurityAttributes::~SecurityAttributes() 
@@ -25,11 +27,19 @@ resip::operator<<(std::ostream& strm, const SecurityAttributes& sa)
          "None", "Bad", "Trusted", "CA Trusted", "Untrusted"
       };
 
+   const char* encryptionLevelText[] = 
+      {
+         "None", "Sign", "Encrypt", "SignAndEncrypt"
+      };
+
    strm << "SecurityAttributes: identity=" << sa.mIdentity
         << " strength=" << strengthText[sa.mStrength]
         << " encrypted=" << Data(sa.mIsEncrypted)
         << " status=" << sigstatusText[sa.mSigStatus]
-        << " signer=" << sa.mSigner;
+        << " signer=" << sa.mSigner
+        << " encryption level for outgoing message=" << encryptionLevelText[sa.mLevel]
+        << " encryption performed=" << Data(sa.mEncryptionPerformed);
+
    return strm;
 }
 
