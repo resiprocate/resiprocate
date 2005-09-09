@@ -1,53 +1,29 @@
-#include "resip/dum/OutgoingEvent.hxx"
-#include "rutil/WinLeakCheck.hxx"
+#if !defined(RESIP_DUMHELPER_HXX)
+#define RESIP_DUMHELPER_HXX 
 
-using namespace resip;
-using namespace std;
+#include "rutil/BaseException.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/dum/DialogUsageManager.hxx"
 
-OutgoingEvent::OutgoingEvent(auto_ptr<SipMessage> msg)
-   : mMessage(msg)
+namespace resip
 {
+
+class SipMessage;
+class SecurityAttributes;
+
+class DumHelper
+{
+   public:
+      static void setOutgoingEncrptionLevel(SipMessage& message, DialogUsageManager::EncryptionLevel level);
+      static void setEncryptionPerformed(SipMessage& message);
+
+   private:
+      static SecurityAttributes::OutgoingEncryptionLevel covert(DialogUsageManager::EncryptionLevel level);
+};
+
 }
 
-OutgoingEvent::OutgoingEvent(const OutgoingEvent& from)
-   : mMessage(from.mMessage)
-{
-}
-
-OutgoingEvent::~OutgoingEvent()
-{
-}
-
-Message*
-OutgoingEvent::clone() const
-{
-   return new OutgoingEvent(*this);
-}
-
-SipMessage*
-OutgoingEvent::message()
-{
-   return mMessage.get();
-}
-
-void
-OutgoingEvent::releaseMessage()
-{
-   mMessage.release();
-}
-     
-std::ostream&
-OutgoingEvent::encodeBrief(std::ostream& strm) const
-{
-   return encode(strm);
-}
-
-std::ostream& 
-OutgoingEvent::encode(std::ostream& strm) const
-{
-   mMessage->encode(strm); 
-   return strm;
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

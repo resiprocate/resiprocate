@@ -47,6 +47,7 @@
 #include "resip/dum/DumDecrypted.hxx"
 #include "resip/dum/CertMessage.hxx"
 #include "resip/dum/OutgoingEvent.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -459,16 +460,12 @@ DialogUsageManager::sendResponse(const SipMessage& response)
 SipMessage&
 DialogUsageManager::makeInviteSession(const NameAddr& target, SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   //SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer), appDs);
-   //return inv;
    return makeInviteSession(target, userProfile, initialOffer, None, 0, appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   //SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, getMasterUserProfile(), initialOffer), appDs);
-   //return inv;
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, None, 0, appDs);
 }
 
@@ -481,10 +478,15 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       AppDialogSet* appDs)
 {
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
+   DumHelper::setOutgoingEncrptionLevel(inv, level);
+
+   /*
    if (None != level)
    {
       mEncryptionLevels.insert(InviteSessionEncryptionLevelMap::value_type((UInt32)&inv, level));
    }
+   */
+
    return inv;
 }
 
@@ -535,6 +537,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                              target,
                                                              serverSub->mDialog.mDialogSet.getUserProfile(),
                                                              initialOffer, level, alternative, serverSub), appDs);
+   DumHelper::setOutgoingEncrptionLevel(inv, level);
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
@@ -671,6 +674,7 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs
    return makePagerMessage(target, getMasterUserProfile(), appDs);
 }
 
+/*
 void
 DialogUsageManager::send(SipMessage& msg)
 {
@@ -685,9 +689,10 @@ DialogUsageManager::send(SipMessage& msg)
       send(msg, None);
    }
 }
+*/
 
 void
-DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
+DialogUsageManager::send(SipMessage& msg)
 {
    // !slg! There is probably a more efficient way to get the userProfile here (pass it in?)
    DialogSet* ds = findDialogSet(DialogSetId(msg));
@@ -737,7 +742,8 @@ DialogUsageManager::send(SipMessage& msg, EncryptionLevel level)
       }
    }
 
-   OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(msg.clone())), level);
+   // Todo: get rid of the OutgoingEvent, no more needed.
+   OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(msg.clone())));
    outgoingProcess(auto_ptr<Message>(event));
 }
 

@@ -4,6 +4,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
+#include "resip/dum/DumHelper.hxx"
 
 using namespace resip;
 
@@ -17,10 +18,11 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    : BaseCreator(dum, userProfile),
      mState(Initialized),
      mInitialOffer(0),
-     mEncryptionLevel(level),
-     mServerSub(serverSub)
+     mServerSub(serverSub),
+     mEncryptionLevel(level)
 {
    makeInitialRequest(target, INVITE);
+   DumHelper::setOutgoingEncrptionLevel(mLastRequest, level);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
        assert(userProfile.get());
@@ -69,12 +71,6 @@ const Contents*
 InviteSessionCreator::getInitialOffer() const
 {
    return mInitialOffer;
-}
-
-DialogUsageManager::EncryptionLevel
-InviteSessionCreator::getEncryptionLevel() const
-{
-   return mEncryptionLevel;
 }
 
 
