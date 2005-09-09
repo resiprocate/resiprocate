@@ -8,8 +8,8 @@ mkdir demoCA/certs
 mkdir demoCA/crl 
 mkdir demoCA/newcerts
 mkdir demoCA/private
-#echo "01" > demoCA/serial
-hexdump -n 4 -e '4/1 "%04d"' /dev/random > demoCA/serial
+echo "01" > demoCA/serial
+hexdump -n 4 -e '4/1 "%04u"' /dev/random > demoCA/serial
 touch demoCA/index.txt
 	    
 # You may need to modify this for where your default file is
