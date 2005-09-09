@@ -8,6 +8,7 @@
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
@@ -74,7 +75,8 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
          mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         mDialog.send(req, mProposedEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(req, mProposedEncryptionLevel);
+         mDialog.send(req);
          break;
       }
 
@@ -538,7 +540,8 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   mDialog.send(prack, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncrptionLevel(prack, mCurrentEncryptionLevel);
+   mDialog.send(prack);
 }
 
 
@@ -959,7 +962,8 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             //  Remember last seesion modification.
             mLastSessionModification = update;
 
-            mDialog.send(update, mProposedEncryptionLevel);
+            DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
+            mDialog.send(update);
          }
          break;
 
@@ -971,6 +975,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
             InviteSession::setSdp(update, mProposedLocalSdp.get());
+            DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
             mDialog.send(update);
          }
          handleFinalResponse(msg);

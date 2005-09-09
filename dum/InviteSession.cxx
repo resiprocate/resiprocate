@@ -13,6 +13,7 @@
 #include "resip/dum/InviteSessionHandler.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UsageUseException.hxx"
+#include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Timer.hxx"
@@ -238,7 +239,8 @@ InviteSession::provideOffer(const SdpContents& offer,
          InviteSession::setSdp(mLastSessionModification, offer, alternative);
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
-         mDialog.send(mLastSessionModification, mProposedEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(mLastSessionModification, mProposedEncryptionLevel);
+         mDialog.send(mLastSessionModification);
          break;
 
       case Answered:
@@ -257,7 +259,8 @@ InviteSession::provideOffer(const SdpContents& offer,
          mProposedLocalSdp  = InviteSession::makeSdp(offer);
 
          InfoLog (<< "Sending " << mInvite200.brief());
-         mDialog.send(mInvite200, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
+         mDialog.send(mInvite200);
          startRetransmit200Timer();
          break;
          
@@ -288,7 +291,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InfoLog (<< "Sending " << mInvite200.brief());
-         mDialog.send(mInvite200, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
+         mDialog.send(mInvite200);
          startRetransmit200Timer();
          break;
 
@@ -303,7 +307,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InfoLog (<< "Sending " << response.brief());
-         mDialog.send(response, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(response, mCurrentEncryptionLevel);
+         mDialog.send(response);
          break;
       }
 
@@ -495,7 +500,8 @@ InviteSession::info(const Contents& contents)
          mDialog.makeRequest(info, INFO);
          // !jf! handle multipart here
          info.setContents(&contents);
-         mDialog.send(info, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(info, mCurrentEncryptionLevel);
+         mDialog.send(info);
       }
       else
       {
@@ -523,7 +529,8 @@ InviteSession::message(const Contents& contents)
          mDialog.makeRequest(message, MESSAGE);
          // !jf! handle multipart here
          message.setContents(&contents);
-         mDialog.send(message, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(message, mCurrentEncryptionLevel);
+         mDialog.send(message);
          InfoLog (<< "Trying to send MESSAGE: " << message);
       }
       else
@@ -598,7 +605,8 @@ InviteSession::dispatch(const DumTimeout& timeout)
       if (mCurrentRetransmit200)
       {
          InfoLog (<< "Retransmitting: " << endl << mInvite200);
-         mDialog.send(mInvite200, mCurrentEncryptionLevel);
+         DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
+         mDialog.send(mInvite200);
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
       }
@@ -654,14 +662,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentUpdate);
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
-         mDialog.send(mLastSessionModification, DialogUsageManager::None);
+         mDialog.send(mLastSessionModification);
       }
       else if (mState == SentReinviteGlare)
       {
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
-         mDialog.send(mLastSessionModification, DialogUsageManager::None);
+         mDialog.send(mLastSessionModification);
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
@@ -1376,7 +1384,8 @@ InviteSession::sessionRefresh()
    setSessionTimerHeaders(mLastSessionModification);
 
    InfoLog (<< "sessionRefresh: Sending " << mLastSessionModification.brief());
-   mDialog.send(mLastSessionModification, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncrptionLevel(mLastSessionModification, mCurrentEncryptionLevel);
+   mDialog.send(mLastSessionModification);
 }
 
 void

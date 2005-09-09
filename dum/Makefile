@@ -75,7 +75,8 @@ SRC =   \
 	DumFeature.cxx \
 	OutgoingEvent.cxx \
 	HttpProvider.cxx \
-	HttpGetMessage.cxx
+	HttpGetMessage.cxx \
+	DumHelper.cxx
 
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/dum
