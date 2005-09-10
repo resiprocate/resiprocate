@@ -349,10 +349,10 @@ SdpContents::Session::Email::operator=(const Email& rhs)
 ostream&
 SdpContents::Session::Email::encode(ostream& s) const
 {
-   s << "e="
-     << mAddress;
+   s << "e=" << mAddress;
    if (!mFreeText.empty())
    {
+      s << Symbols::SPACE[0];
       s << Symbols::LPAREN[0] << mFreeText << Symbols::RPAREN[0];
    }
    s << Symbols::CRLF;
@@ -441,10 +441,10 @@ SdpContents::Session::Phone::operator=(const Phone& rhs)
 ostream&
 SdpContents::Session::Phone::encode(ostream& s) const
 {
-   s << "e="
-     << mNumber << Symbols::SPACE[0];
+  s << "p=" << mNumber;
    if (!mFreeText.empty())
    {
+      s << Symbols::SPACE[0];
       s << Symbols::LPAREN[0] << mFreeText << Symbols::RPAREN[0];
    }
    s << Symbols::CRLF;
