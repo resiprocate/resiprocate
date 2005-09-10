@@ -38,6 +38,30 @@ main(int argc, char* argv[])
     CritLog(<<"Test Driver Starting");
     
     {
+       Data txt("v=0\r\n"  
+		"o=- 333525334858460 333525334858460 IN IP4 192.168.0.156\r\n"
+		"s=test123\r\n"
+		"e=unknown@invalid.net\r\n"
+		"p=+972 683 1000\r\n"
+		"t=4058038202 0\r\n"
+		"m=audio 41466 RTP/AVP 0 101\r\n"
+		"c=IN IP4 192.168.0.156\r\n"
+		"a=fmtp:101 0-11\r\n"
+		"a=ptime:20\r\n"
+		"a=rtpmap:101 telephone-event/8000\r\n");
+
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+       assert(sdp.session().getPhones().size() == 1);
+       assert(sdp.session().getEmails().size() == 1);
+
+       assert(Data::from(sdp) == txt);
+       
+       CritLog(<< "Email + Phone Test Ok");
+    }
+
+    {
        Data txt("v=0\r\n"
                 "o=ViPr 1 1 IN IP4 72.29.231.47\r\n"
                 "s=eyeBeam\r\n"
