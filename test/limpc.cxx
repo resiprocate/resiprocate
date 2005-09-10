@@ -181,6 +181,10 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
    }
    switch ( sigStatus )
    {
+      case  SignatureSelfSigned:
+         //cout << " -self signed signature (bad)- ";
+         waddstr(textWin,"bad signature");
+	 break;
       case  SignatureIsBad:
          //cout << " -bad signature- ";
          waddstr(textWin,"bad signature");
@@ -472,6 +476,8 @@ myMain(int argc, char* argv[])
    bool noRegister = false;
    Data tlsDomain = Data::Empty;
 
+   Data sendMsg = Data::Empty;
+   
    int numAdd=0;
    Data addList[100];
    int numPub=0;
@@ -606,6 +612,12 @@ myMain(int argc, char* argv[])
 	    exit(-1);
          }
       } 
+      else if (!strcmp(argv[i],"-send"))
+      {
+         i++;
+         assert( i<argc );
+         sendMsg = Data(argv[i]);
+      } 
       else if (!strcmp(argv[i],"-contact"))
       {
          i++;
@@ -693,7 +705,8 @@ myMain(int argc, char* argv[])
               << "\t [-outbound \"sip:example.com;lr\"] " << endl
               << "\t [-noRegister] " << endl
               << "\t [-pub sip:foo.com] " << endl
-              << "\t [-tlsDomain foo.com] " << endl; 
+              << "\t [-tlsDomain foo.com] " << endl
+              << "\t [-send myMessage] " << endl; 
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
@@ -717,6 +730,8 @@ myMain(int argc, char* argv[])
               << " -add adds a budy who's presence will be monitored" << endl
               << " -pub adds a State Agent to send publishes too" << endl
               << " -sign signs message you send and -encryp encrypt them " << endl
+              << " -send takes a string (needs to be quoted if it has spaces) " 
+              <<                                      "and sends it as an IM " << endl
               << "\t(You need PKI certs for this to work)" << endl
               << " -key allows you to enter a secret used to load your private key."<< endl
               << "  If you set the secret to - the system will querry you for it."<< endl
@@ -972,6 +987,12 @@ myMain(int argc, char* argv[])
    waddstr(textWin,"\n");
    wrefresh(textWin);     
 
+   if ( !sendMsg.empty() )
+   {
+         tuIM->sendPage( sendMsg , dest, sign , (encryp) ?
+                         (dest.getAorNoPort()) : (Data::Empty) );
+   }
+   
    while (1)
    {
       FdSet fdset; 
