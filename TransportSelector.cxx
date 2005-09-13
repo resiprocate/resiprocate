@@ -45,6 +45,8 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET )
 {
+   mEnumSuffixes.push_back("e164.arpa");
+   
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
 
@@ -230,7 +232,7 @@ TransportSelector::dnsResolve(DnsResult* result,
       if (msg->hasForceTarget())
       {
          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
-         mDns.lookup(result, msg->getForceTarget());
+         mDns.lookup(result, msg->getForceTarget(), mEnumSuffixes);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
@@ -238,12 +240,12 @@ TransportSelector::dnsResolve(DnsResult* result,
          // lose the target
          msg->setForceTarget(msg->header(h_Routes).front().uri());
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-         mDns.lookup(result, msg->getForceTarget());
+         mDns.lookup(result, msg->getForceTarget(), mEnumSuffixes);
       }
       else
       {
          DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
-         mDns.lookup(result, msg->header(h_RequestLine).uri());
+         mDns.lookup(result, msg->header(h_RequestLine).uri(), mEnumSuffixes);
       }
    }
    else if (msg->isResponse())

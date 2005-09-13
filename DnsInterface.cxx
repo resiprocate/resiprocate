@@ -147,9 +147,9 @@ DnsInterface::createDnsResult(DnsHandler* handler)
 }
 
 void 
-DnsInterface::lookup(DnsResult* res, const Uri& uri)
+DnsInterface::lookup(DnsResult* res, const Uri& uri, std::vector<Data> enumSuffixes)
 {
-   res->lookup(uri);   
+   res->lookup(uri, enumSuffixes);   
 }
 
 // DnsResult* 

@@ -18,6 +18,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ThreadIf.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
@@ -137,11 +138,13 @@ main(int argc, const char** argv)
 {
    char* logType = "cout";
    char* logLevel = "STACK";
-
+   char* enumSuffix = "e164.arpa";
+   
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"log-level",   'e', POPT_ARG_STRING, &enumSuffix,  0, "specify what enum domain to search in", "e164.arpa"},      
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -164,6 +167,9 @@ main(int argc, const char** argv)
    const char** args = argv;
 #endif
 
+   std::vector<Data> enumSuffixes;
+   enumSuffixes.push_back(enumSuffix);
+
    // default query: sip:yahoo.com
    if (argc == 1)
    {
@@ -178,7 +184,8 @@ main(int argc, const char** argv)
       query.result = res;      
       queries.push_back(query);
       cerr << rf << "Looking up" << ub << endl;
-      dns.lookup(res, uri);
+
+      dns.lookup(res, uri, enumSuffixes);
    }
 
    while (argc > 1 && args && *args != 0)
@@ -187,14 +194,23 @@ main(int argc, const char** argv)
       query.handler = new TestDnsHandler;
       //query.listener = new VipListener;
       cerr << "Creating Uri: " << *args << endl;       
-      uri = Uri(*(++args));
-      query.uri = uri;
-      cerr << "Creating DnsResult" << endl;      
-      DnsResult* res = dns.createDnsResult(query.handler);
-      query.result = res;      
-      queries.push_back(query);
-      cerr << rf << "Looking up" << ub << endl;
-      dns.lookup(res, uri);
+      try
+      {
+         Data input(*args++);
+         uri = Uri(input);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri, enumSuffixes);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << "Couldn't parse arg " << *(args-1) << endl;
+      }
+      
       argc--;
    }
 
