@@ -10,7 +10,7 @@
 using namespace resip;
 
 BaseCreator::BaseCreator(DialogUsageManager& dum, 
-                         SharedPtr<UserProfile>& userProfile)
+                         const SharedPtr<UserProfile>& userProfile)
    : mDum(dum), mUserProfile(userProfile)
 {}
 
