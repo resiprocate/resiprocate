@@ -270,11 +270,12 @@ TlsConnection::checkState()
    X509* cert = SSL_get_peer_certificate(mSsl);
    if (cert)
    {
-      if (!mSecurity->compareCertName(cert, mDomain)) //who().getTargetDomain()))
+      const Data& domain = who().getTargetDomain().empty() ? mDomain : who().getTargetDomain();
+      if (!mSecurity->compareCertName(cert, domain)) 
       {
          mState = Broken;
          mBio = 0;
-         ErrLog (<< "Certificate name mismatch " << mDomain); //who().getTargetDomain());
+         ErrLog (<< "Certificate name mismatch " << domain);
          return mState;
       }
 
