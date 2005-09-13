@@ -13,7 +13,7 @@ class DialogUsageManager;
 class BaseCreator
 {
    public:
-      BaseCreator(DialogUsageManager& dum, SharedPtr<UserProfile>& userProfile);
+      BaseCreator(DialogUsageManager& dum, const SharedPtr<UserProfile>& userProfile);
       virtual ~BaseCreator();
       SipMessage& getLastRequest();
       SharedPtr<UserProfile> getUserProfile();
