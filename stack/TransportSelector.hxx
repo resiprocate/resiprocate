@@ -86,6 +86,8 @@ class TransportSelector
 
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void setEnumSuffixes(const std::vector<Data>& suffixes);
+
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
