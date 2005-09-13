@@ -17,6 +17,7 @@ extern "C"
 #endif
 
 #include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/dns/RROverlay.hxx"
@@ -24,6 +25,7 @@ extern "C"
 #include "rutil/dns/DnsNaptrRecord.hxx"
 
 using namespace resip;
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 DnsNaptrRecord::RegExp::RegExp()
 {
@@ -44,6 +46,7 @@ DnsNaptrRecord::RegExp::RegExp(const Data& data)
       pb.skipToChar(delim);
       pb.data(mReplacement, start);
       start = pb.skipChar(delim);
+      
 #if 0
       //pb.data(mFlags, start);
 
@@ -83,10 +86,11 @@ DnsNaptrRecord::RegExp::replacement() const
 Data
 DnsNaptrRecord::RegExp::apply(const Data& input) const
 {
+   // !jf! should be doing a real regexp here
    //regmatch_t matches[10];
    //regexec(&mRe, input.c_str(), 10, matches, 0);
    
-   return Data::Empty;
+   return mReplacement;
 }
 
 
@@ -127,15 +131,20 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
    }
-   mRegexp = Data(pPos + 1, len);
+   Data regexp(pPos + 1, len);
    pPos += len + 1;
+   mRegexp = DnsNaptrRecord::RegExp(regexp);
+   InfoLog (<< "regexp=" << mRegexp.regexp() << " rep=" << mRegexp.replacement());
 
-   if (ARES_SUCCESS != ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len))
+   if (pPos[0] != 0)
    {
-      throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+      if (ARES_SUCCESS != ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len))
+      {
+         throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
+      }
+      mReplacement = name;
+      free(name);
    }
-   mReplacement = name;
-   free(name);
 }
 
 bool DnsNaptrRecord::isSameValue(const Data& value) const
