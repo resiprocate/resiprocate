@@ -30,8 +30,8 @@ class RedirectManager
             virtual ~Ordering() {}
             virtual bool operator()(const NameAddr& lhs, const NameAddr& rhs) const;
       };
-
-      bool handle(DialogSet& dSet, SipMessage& origRequest, const SipMessage& response);
+      virtual ~RedirectManager() {}
+      virtual bool handle(DialogSet& dSet, SipMessage& origRequest, const SipMessage& response);
       
       //deafult is by q-value, no q-value last
       void setOrdering(const Ordering& order);      
