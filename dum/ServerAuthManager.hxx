@@ -27,17 +27,17 @@ class ServerAuthManager : public DumFeature
       ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~ServerAuthManager();
 
-      ProcessingResult process(Message* msg);      
+      virtual ProcessingResult process(Message* msg);      
       
       // can return Authorized, Rejected or Skipped
       //Result handleUserAuthInfo(Message* msg);
 
       // returns the SipMessage that was authorized if succeeded or returns 0 if
       // rejected. 
-      SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
+      virtual SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
 
       // can return Challenged, RequestedCredentials, Rejected, Skipped
-      Result handle(const SipMessage& msg);
+      virtual Result handle(const SipMessage& msg);
       
    protected:
       // this call back should async cause a post of UserAuthInfo

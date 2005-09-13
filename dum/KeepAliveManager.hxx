@@ -21,10 +21,11 @@ class KeepAliveManager
       typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
       KeepAliveManager() {}
+      virtual ~KeepAliveManager() {}
       void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
-      void add(const Tuple& target, int keepAliveInterval);
-      void remove(const Tuple& target);
-      void process(KeepAliveTimeout& timeout);
+      virtual void add(const Tuple& target, int keepAliveInterval);
+      virtual void remove(const Tuple& target);
+      virtual void process(KeepAliveTimeout& timeout);
 
    protected:
       DialogUsageManager* mDum;
