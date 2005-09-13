@@ -53,6 +53,8 @@ class TransactionController
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
+      void setEnumSuffixes(const std::vector<Data>& suffixes);
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
