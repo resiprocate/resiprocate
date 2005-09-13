@@ -1113,6 +1113,23 @@ InviteSession::rejectInfo(int statusCode)
 }
 
 void
+InviteSession::setReInviteHeader(const ExtensionHeader&        extensionHeader,
+                                 const std::set<resip::Data >& data)
+{
+   StringCategories& extensions = mLastSessionModification.header(extensionHeader);
+   // Clean up old extensions.
+   for(int size = extensions.size(); size > 0; --size)
+   {
+      extensions.pop_back();
+   }
+   for(std::set<resip::Data >::const_iterator it = data.begin(); it != data.end(); ++it)
+   {
+      extensions.push_back(StringCategory(*it));
+   }
+}
+
+
+void
 InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;

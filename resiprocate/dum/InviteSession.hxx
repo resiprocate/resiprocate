@@ -52,6 +52,11 @@ class InviteSession : public DialogUsage
       virtual void acceptInfo(int statusCode = 200);
       virtual void rejectInfo(int statusCode = 488);
 
+      // !polo!: Set reINVITE headers for multi-party call (2005/09/13).
+      void setReInviteHeader(const ExtensionHeader&        extensionHeader,
+                             const std::set<resip::Data >& data);
+      SipMessage&  getReInviteMessage() { return mLastSessionModification; } 
+
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
