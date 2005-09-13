@@ -102,7 +102,9 @@ readIntoData(const Data& filename)
    int length = is.tellg();
    is.seekg (0, ios::beg);
    
-   char* buffer = new char [length];
+   // !jf! +1 is a workaround for a bug in Data::c_str() that adds the 0 without
+   // resizing. 
+   char* buffer = new char [length+1]; 
    
    // read data as a block:
    is.read (buffer,length);
