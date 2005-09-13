@@ -81,7 +81,7 @@ class DnsInterface
       // transport (if there is one)
 
       DnsResult* createDnsResult(DnsHandler* handler=0);
-      void lookup(DnsResult* res, const Uri& uri);
+      void lookup(DnsResult* res, const Uri& uri, std::vector<Data> enumSuffixes);
 
       //DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
       //DnsResult* lookup(const Via& via, DnsHandler* handler=0);

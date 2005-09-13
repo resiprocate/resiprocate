@@ -46,7 +46,7 @@ class DnsResult : public DnsResultSink
       // Starts a lookup.  Has the rules for determining the transport
       // from a uri as per rfc3263 and then does a NAPTR lookup or an A
       // lookup depending on the uri
-      void lookup(const Uri& uri);
+      void lookup(const Uri& uri, const std::vector<Data> enumSuffixes);
 
       // Check if there are tuples available now. Will load new tuples in if
       // necessary at a lower priority. 
@@ -102,6 +102,7 @@ class DnsResult : public DnsResultSink
       };
 
    private:
+      void lookupInternal(const Uri& uri);
 
       // Given a transport and port from uri, return the default port to use
       int getDefaultPort(TransportType transport, int port);
@@ -129,6 +130,9 @@ class DnsResult : public DnsResultSink
       RRVip& mVip;
       DnsHandler* mHandler;
       int mSRVCount;
+      Uri mInputUri;
+      bool mDoingEnum;
+      
       bool mSips;
       Data mTarget;
       Data mSrvKey;
@@ -169,6 +173,10 @@ class DnsResult : public DnsResultSink
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
+
+      void onEnumResult(const DNSResult<DnsNaptrRecord>& result);
+      void onNaptrResult(const DNSResult<DnsNaptrRecord>& result);
+      
 
       typedef struct
       {
