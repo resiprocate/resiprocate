@@ -32,7 +32,10 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    mDomain(domain)
 {
 #if defined(USE_SSL)
-   DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
+   InfoLog (<< "Creating TLS connection for domain " 
+            << mDomain 
+            << " " << tuple 
+            << " on " << fd);
 
    mSsl = NULL;
    mPeerName = Data::Empty;
@@ -267,11 +270,11 @@ TlsConnection::checkState()
    X509* cert = SSL_get_peer_certificate(mSsl);
    if (cert)
    {
-      if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
+      if (!mSecurity->compareCertName(cert, mDomain)) //who().getTargetDomain()))
       {
          mState = Broken;
          mBio = 0;
-         ErrLog (<< "Certificate name mismatch ");
+         ErrLog (<< "Certificate name mismatch " << mDomain); //who().getTargetDomain());
          return mState;
       }
 
