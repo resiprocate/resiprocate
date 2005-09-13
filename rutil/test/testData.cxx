@@ -18,6 +18,19 @@ class TestData
 
          {
             {
+               int length = 16;
+               char* buffer = new char [length];
+   
+               for (int i=0; i<16; ++i)
+               {
+                  buffer[i] = ' ';
+               }
+   
+               Data target(Data::Take, buffer, length);
+               std::cerr << target.c_str() << endl;
+            }
+            
+            {
                Data input("abcdefghij");
                std::cerr << "T0: " << input << std::endl;
                input.replace("a", "b");
