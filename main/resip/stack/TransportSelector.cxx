@@ -45,8 +45,6 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET )
 {
-   mEnumSuffixes.push_back("e164.arpa");
-   
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
 
@@ -844,6 +842,12 @@ TransportSelector::registerBlacklistListener(int rrType, DnsStub::BlacklistListe
 void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
    mDns.unregisterBlacklistListener(rrType, listener);
+}
+
+void
+TransportSelector::setEnumSuffixes(const std::vector<Data>& suffixes)
+{
+   mEnumSuffixes = suffixes;
 }
 
 /* ====================================================================
