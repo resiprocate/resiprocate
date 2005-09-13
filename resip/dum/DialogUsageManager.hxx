@@ -119,7 +119,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //There is a default RedirectManager.  Setting one may cause the old one
       //to be deleted. 
       void setRedirectManager(std::auto_ptr<RedirectManager> redirect);
-
       //informational, so a RedirectHandler is not required
       void setRedirectHandler(RedirectHandler* handler);      
       RedirectHandler* getRedirectHandler();      
