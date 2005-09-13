@@ -95,6 +95,7 @@ class TransportSelector
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
       Security* mSecurity;// for computing identity header
+      std::vector<Data> mEnumSuffixes; // where to do enum lookups
 
       // specific port and interface
       typedef std::map<Tuple, Transport*> ExactTupleMap;
