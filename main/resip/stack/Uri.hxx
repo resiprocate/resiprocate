@@ -48,7 +48,7 @@ class Uri : public ParserCategory
 
       /** Return a vector of domains to do a NAPTR lookup for enum */
       std::vector<Data> getEnumLookups(const std::vector<Data>& suffixes) const;
-
+      
       bool hasEmbedded() const;
       SipMessage& embedded();
       const SipMessage& embedded() const;

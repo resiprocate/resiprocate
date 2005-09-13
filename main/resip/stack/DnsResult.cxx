@@ -35,12 +35,14 @@ extern "C"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsHandler.hxx"
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/Tuple.hxx"
@@ -62,6 +64,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
      mVip(vip),
      mHandler(handler),
      mSRVCount(0),
+     mDoingEnum(false),
      mSips(false),
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
@@ -178,11 +181,31 @@ void DnsResult::success()
 }
 
 void
-DnsResult::lookup(const Uri& uri)
+DnsResult::lookup(const Uri& uri, const std::vector<Data> enumSuffixes)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
    //int type = this->mType;
-   
+   if (!enumSuffixes.empty() && uri.isEnumSearchable())
+   {
+      mInputUri = uri;
+      mDoingEnum = true;
+      std::vector<Data> enums = uri.getEnumLookups(enumSuffixes);
+      assert(enums.size() <= 1);
+      if (!enums.empty())
+      {
+         InfoLog (<< "Doing ENUM lookup on " << *enums.begin());
+         mDns.lookup<RR_NAPTR>(*enums.begin(), Protocol::Enum, this); 
+         return;
+      }
+   }
+
+   mDoingEnum = false;
+   lookupInternal(uri);
+}
+
+void
+DnsResult::lookupInternal(const Uri& uri)
+{
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mSips = (uri.scheme() == Symbols::Sips);
    mTarget = (!mSips && uri.exists(p_maddr)) ? uri.param(p_maddr) : uri.host();
@@ -858,21 +881,77 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
    }
 }
 
-void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
+void
+DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
 {
-   StackLog (<< "Received NAPTR result for: " << mTarget);
-   StackLog (<< "DnsResult::onDnsResult() " << result.status);
-
-   // This function assumes that the NAPTR query that caused this
-   // callback is the ONLY outstanding query that might cause
-   // a callback into this object
-   if (mType == Destroyed)
+   mDoingEnum = false;
+   
+   if (result.status == 0)
    {
+      static Data enumService1("e2u+sip");
+      static Data enumService2("sip+e2u");
 
-      destroy();
-      return;
+      DnsNaptrRecord best;
+      best.order() = -1;
+
+      for (vector<DnsNaptrRecord>::const_iterator i = result.records.begin(); i != result.records.end(); ++i)
+      {
+         InfoLog (<< "service=" << i->service()
+                  << " order=" << i->order()
+                  << " flags="  << i->flags() 
+                  << " regexp substitution=" << i->regexp().replacement()
+                  << " replacement=" << i->replacement());
+
+         if ( (isEqualNoCase(i->service(), enumService1) ||
+               isEqualNoCase(i->service(), enumService2) )  && // only E2U records
+              //i->flags().find("u") != Data::npos && // must be terminal record
+              i->replacement().empty() )
+               
+         {
+            if (best.order() == -1)
+            {
+               best = *i;
+            }
+            else if (i->order() < best.order())
+            {
+               best = *i;
+            }
+            else if (i->order() == best.order() && 
+                     i->preference() < best.preference())
+            {
+               best = *i;
+            }
+         }
+      }
+      
+      if (best.order() != -1)
+      {
+         InfoLog (<< "Found an enum result: " << best.regexp().replacement());
+         try
+         {
+            Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
+            InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
+            lookupInternal(rewrite);
+         }
+         catch (ParseBuffer::Exception& e)
+         {
+            lookupInternal(mInputUri);
+         }
+      }
+      else
+      {
+         lookupInternal(mInputUri);
+      }
    }
+   else
+   {
+      lookupInternal(mInputUri);
+   }
+}
 
+void
+DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
+{
    bool bFail = false;
    if (result.status == 0)
    {
@@ -886,8 +965,9 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          naptr.regex = (*it).regexp();
          naptr.replacement = (*it).replacement();
          naptr.service = (*it).service();
-
+         
          StackLog (<< "Adding NAPTR record: " << naptr);
+         
          if ( mSips && naptr.service.find("SIPS") == 0)
          {
             if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
@@ -920,6 +1000,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
          mCurrResultPath.push(item);
          mCurrSuccessPath.push(item);
          mSRVCount++;
+         InfoLog (<< "Doing SRV lookup of " << mPreferredNAPTR.replacement);
          mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
       }
    }
@@ -938,6 +1019,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
 
    if (bFail)
    {
+
       if (mSips)
       {
          if (!mInterface.isSupportedProtocol(TLS))
@@ -970,6 +1052,32 @@ void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
+}
+
+void 
+DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
+{
+   StackLog (<< "Received NAPTR result for: " << mInputUri << " target=" << mTarget);
+   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+
+   // This function assumes that the NAPTR query that caused this
+   // callback is the ONLY outstanding query that might cause
+   // a callback into this object
+   if (mType == Destroyed)
+   {
+      destroy();
+      return;
+   }
+
+   if (mDoingEnum)
+   {
+      onEnumResult(result);
+   }
+   else
+   {
+      onNaptrResult(result);
+   }
+  
 }
 
 void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
