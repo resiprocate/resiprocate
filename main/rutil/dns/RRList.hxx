@@ -19,6 +19,7 @@ class RRList : public IntrusiveListElement<RRList*>
             static const int Sip = 1;
             static const int Stun = 2;
             static const int Http = 3;
+            static const int Enum = 4;
       };
 
       typedef std::vector<DnsResourceRecord*> Records;
