@@ -29,7 +29,7 @@ class EncryptionManager : public DumFeature
       EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~EncryptionManager();
       void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
-      DumFeature::ProcessingResult process(Message* msg);
+      virtual DumFeature::ProcessingResult process(Message* msg);
 
    private:
 
