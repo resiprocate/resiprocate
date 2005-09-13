@@ -2334,8 +2334,12 @@ BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
 
    Data certName = getCertName(cert);
    if(Data::Empty == certName)
+   {
+      InfoLog (<< "No cert name to match against " << domainName);
       return false;
+   }
 
+   DebugLog (<< "Matching " << certName << " cert against " << domainName);
    bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
 
    return isMatching;
