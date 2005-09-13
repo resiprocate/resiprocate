@@ -421,6 +421,13 @@ class SipStack
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
       DnsStub& getDnsStub() const;
+
+      /** 
+          Specify which enum domains will be searched when sending to URIs that
+          return true to Uri::isEnumSearchable(). An enum query will be done for
+          each suffix in parallel. 
+      */
+      void setEnumSuffixes(const std::vector<Data>& suffixes);
       
    private:
       /// Notify an async process handler - if one has been registered
