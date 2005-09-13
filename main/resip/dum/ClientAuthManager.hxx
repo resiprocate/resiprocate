@@ -17,14 +17,15 @@ class ClientAuthManager
 {
    public:
       ClientAuthManager();
+      virtual ~ClientAuthManager() {}
 
       // return true if request is authorized
-      bool handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response);
-      void addAuthentication(SipMessage& origRequest);
+      virtual bool handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response);
+      virtual void addAuthentication(SipMessage& origRequest);
       
    private:
       friend class DialogSet;
-      void dialogSetDestroyed(const DialogSetId& dsId);      
+      virtual void dialogSetDestroyed(const DialogSetId& dsId);      
 
       class CompareAuth  : public std::binary_function<const Auth&, const Auth&, bool>
       {
