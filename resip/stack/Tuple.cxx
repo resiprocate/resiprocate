@@ -433,8 +433,11 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
       assert(0);
    }
 
-   ostrm  << " " 
-          << Tuple::toData(tuple.mTransportType);
+   ostrm << " " << Tuple::toData(tuple.mTransportType);
+   ostrm << " target domain=";
+   if (tuple.mTargetDomain.empty()) ostrm << "unspecified";
+   else ostrm << tuple.mTargetDomain;
+   
    if (tuple.transport)
    {
       ostrm << " received on: " << *tuple.transport;
