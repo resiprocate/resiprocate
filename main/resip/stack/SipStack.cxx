@@ -498,6 +498,13 @@ SipStack::getDnsStub() const
    return *mDnsStub;
 }
 
+void
+SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
+{
+   mTransactionController.setEnumSuffixes(suffixes);
+}
+
+
 std::ostream& 
 SipStack::dump(std::ostream& strm)  const
 {
