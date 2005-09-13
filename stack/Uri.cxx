@@ -232,6 +232,37 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
 }
 
 bool
+Uri::isEnumSearchable() const
+{
+   return (!user().empty() && user().size() >= 2 && user()[0] == '+');
+}
+
+std::vector<Data> 
+Uri::getEnumLookups(const std::vector<Data>& suffixes) const
+{
+   std::vector<Data> results;
+   Data prefix;
+   if (isEnumSearchable())
+   {
+      // skip the leading +
+      for (const char* i=user().end()-1 ; i!= user().begin(); --i)
+      {
+         if (isdigit(*i))
+         {
+            prefix += *i;
+            prefix += Symbols::DOT;
+         }
+      }
+      for (std::vector<Data>::const_iterator j=suffixes.begin(); j != suffixes.end(); ++j)
+      {
+         results.push_back(prefix + *j);
+      }
+   }
+   return results;
+}
+
+
+bool
 Uri::hasEmbedded() const
 {
    checkParsed(); 
