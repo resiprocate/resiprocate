@@ -58,7 +58,7 @@ Connection::performWrite()
 {
    assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
-   DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
+   //DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
    int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
 
    if (nBytes < 0)
@@ -121,8 +121,8 @@ Connection::read(Fifo<TransactionMessage>& fifo)
    {
       return bytesRead;
    }  
-   preparseNewBytes(bytesRead, fifo);
    getConnectionManager().touch(this);
+   preparseNewBytes(bytesRead, fifo);  // .dcm. may delete this
    return bytesRead;
 }
 
