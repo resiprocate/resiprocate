@@ -110,7 +110,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          {
             //.jacob. Not a terribly informative warning.
             WarningLog(<< "Discarding preparse!");
-            delete mBuffer;
+            delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
