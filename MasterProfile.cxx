@@ -10,7 +10,7 @@ using namespace resip;
 MasterProfile::MasterProfile() : 
    mValidateContentEnabled(true),
    mValidateContentLanguageEnabled(false),
-   mValidateAcceptEnabled(true)
+   mValidateAcceptEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -222,7 +222,7 @@ MasterProfile::validateAcceptEnabled()
 const bool 
 MasterProfile::validateAcceptEnabled() const
 {
-   return mValidateContentEnabled;   
+   return mValidateAcceptEnabled;   
 }
 
 
