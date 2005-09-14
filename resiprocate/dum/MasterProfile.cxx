@@ -222,7 +222,7 @@ MasterProfile::validateAcceptEnabled()
 const bool 
 MasterProfile::validateAcceptEnabled() const
 {
-   return mValidateContentEnabled;   
+   return mValidateAcceptEnabled;   
 }
 
 
