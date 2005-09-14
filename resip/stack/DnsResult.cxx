@@ -933,7 +933,7 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
             InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
             lookupInternal(rewrite);
          }
-         catch (ParseBuffer::Exception& e)
+         catch (ParseBuffer::Exception& /* e */)
          {
             lookupInternal(mInputUri);
          }
