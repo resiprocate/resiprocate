@@ -1042,7 +1042,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
    if (command)
    {
-      InfoLog(<< "DumCommand" );
+      //DebugLog(<< "DumCommand" );
       command->execute();
       return;      
    }
@@ -1064,7 +1064,7 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
       DumFeatureMessage* featureMsg = dynamic_cast<DumFeatureMessage*>(msg.get());
       if (featureMsg)
       {
-         InfoLog(<<"Got a DumFeatureMessage" << featureMsg);
+         //DebugLog(<<"Got a DumFeatureMessage" << featureMsg);
          tid = featureMsg->getTransactionId();
       }
    }
@@ -1091,13 +1091,13 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
       {
          delete it->second;
          mIncomingFeatureChainMap.erase(it);
-         InfoLog(<< "feature chain deleted" << endl);
+         //DebugLog(<< "feature chain deleted" << endl);
       }
  
       if (res & DumFeatureChain::EventTakenBit)
       {
          msg.release();
-         InfoLog(<< "event taken" << endl);
+         //DebugLog(<< "event taken");
          return;
       }
    }

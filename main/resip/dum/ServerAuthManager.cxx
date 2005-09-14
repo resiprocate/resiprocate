@@ -52,7 +52,7 @@ ServerAuthManager::process(Message* msg)
    UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
    if (userAuth)
    {
-      InfoLog(<< "Got UserAuthInfo");
+      //InfoLog(<< "Got UserAuthInfo");
       UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
       if (userAuth)
       {
