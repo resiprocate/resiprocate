@@ -927,7 +927,7 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   if (mMine == Data::Share)
+   if (mMine == Data::Share || mSize == mCapacity)
    {
       const_cast<Data*>(this)->resize(mSize+1,true);
    }
@@ -1329,6 +1329,45 @@ int
 Data::convertInt() const
 {
    int val = 0;
+   char* p = mBuf;
+   int l = mSize;
+   int s = 1;
+
+   while (isspace(*p++))
+   {
+      l--;
+   }
+   p--;
+   
+   if (*p == '-')
+   {
+      s = -1;
+      ++p;
+      l--;
+   }
+   
+   while (l--)
+   {
+      char c = *p++;
+      if (!isdigit(c)) break;
+      if ((c >= '0') && (c <= '9'))
+      {
+         val *= 10;
+         val += c - '0';
+      }
+      else
+      {
+         return s*val;
+      }
+   }
+
+   return s*val;
+}
+
+unsigned long
+Data::convertUnsignedLong() const
+{
+   unsigned long val = 0;
    char* p = mBuf;
    int l = mSize;
    int s = 1;
