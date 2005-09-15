@@ -32,8 +32,11 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mServerSub(serverSub)
 {
    assert(request.isRequest());
-   mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
-   mProposedEncryptionLevel = level;
+   if(initialOffer)  
+   {
+      mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
+      mProposedEncryptionLevel = level;
+   }
    mInvite = request;
 
    mState=UAC_Start;
