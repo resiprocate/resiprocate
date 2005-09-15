@@ -350,64 +350,7 @@ Helper::makeResponse(SipMessage& response,
    }
    else
    {
-      Data &reason(response.header(h_StatusLine).reason());
-      switch (responseCode)
-      {
-         case 100: reason = "Trying"; break;
-         case 180: reason = "Ringing"; break;
-         case 181: reason = "Call Is Being Forwarded"; break;
-         case 182: reason = "Queued"; break;
-         case 183: reason = "Session Progress"; break;
-         case 200: reason = "OK"; break;
-         case 202: reason = "Accepted"; break;
-         case 300: reason = "Multiple Choices"; break;
-         case 301: reason = "Moved Permanently"; break;
-         case 302: reason = "Moved Temporarily"; break;
-         case 305: reason = "Use Proxy"; break;
-         case 380: reason = "Alternative Service"; break;
-         case 400: reason = "Bad Request"; break;
-         case 401: reason = "Unauthorized"; break;
-         case 402: reason = "Payment Required"; break;
-         case 403: reason = "Forbidden"; break;
-         case 404: reason = "Not Found"; break;
-         case 405: reason = "Method Not Allowed"; break;
-         case 406: reason = "Not Acceptable"; break;
-         case 407: reason = "Proxy Authentication Required"; break;
-         case 408: reason = "Request Timeout"; break;
-         case 410: reason = "Gone"; break;
-         case 412: reason = "Precondition Failed"; break;
-         case 413: reason = "Request Entity Too Large"; break;
-         case 414: reason = "Request-URI Too Long"; break;
-         case 415: reason = "Unsupported Media Type"; break;
-         case 416: reason = "Unsupported URI Scheme"; break;
-         case 420: reason = "Bad Extension"; break;
-         case 421: reason = "Extension Required"; break;
-         case 422: reason = "Session Interval Too Small"; break;
-         case 423: reason = "Interval Too Brief"; break;
-         case 480: reason = "Temporarily Unavailable"; break;
-         case 481: reason = "Call/Transaction Does Not Exist"; break;
-         case 482: reason = "Loop Detected"; break;
-         case 483: reason = "Too Many Hops"; break;
-         case 484: reason = "Address Incomplete"; break;
-         case 485: reason = "Ambiguous"; break;
-         case 486: reason = "Busy Here"; break;
-         case 487: reason = "Request Terminated"; break;
-         case 488: reason = "Not Acceptable Here"; break;
-         case 489: reason = "Event Package Not Supported"; break;
-         case 491: reason = "Request Pending"; break;
-         case 493: reason = "Undecipherable"; break;
-         case 500: reason = "Server Internal Error"; break;
-         case 501: reason = "Not Implemented"; break;
-         case 502: reason = "Bad Gateway"; break;
-         case 503: reason = "Service Unavailable"; break;
-         case 504: reason = "Server Time-out"; break;
-         case 505: reason = "Version Not Supported"; break;
-         case 513: reason = "Message Too Large"; break;
-         case 600: reason = "Busy Everywhere"; break;
-         case 603: reason = "Decline"; break;
-         case 604: reason = "Does Not Exist Anywhere"; break;
-         case 606: reason = "Not Acceptable"; break;
-      }
+      getResponseCodeReason(responseCode, response.header(h_StatusLine).reason());
    }
 }
 
@@ -441,6 +384,68 @@ Helper::makeResponse(const SipMessage& request,
    SipMessage* response = new SipMessage;
    makeResponse(*response, request, responseCode, reason, hostname, warning);
    return response;
+}
+
+void   
+Helper::getResponseCodeReason(int responseCode, Data& reason)
+{
+   switch (responseCode)
+   {
+      case 100: reason = "Trying"; break;
+      case 180: reason = "Ringing"; break;
+      case 181: reason = "Call Is Being Forwarded"; break;
+      case 182: reason = "Queued"; break;
+      case 183: reason = "Session Progress"; break;
+      case 200: reason = "OK"; break;
+      case 202: reason = "Accepted"; break;
+      case 300: reason = "Multiple Choices"; break;
+      case 301: reason = "Moved Permanently"; break;
+      case 302: reason = "Moved Temporarily"; break;
+      case 305: reason = "Use Proxy"; break;
+      case 380: reason = "Alternative Service"; break;
+      case 400: reason = "Bad Request"; break;
+      case 401: reason = "Unauthorized"; break;
+      case 402: reason = "Payment Required"; break;
+      case 403: reason = "Forbidden"; break;
+      case 404: reason = "Not Found"; break;
+      case 405: reason = "Method Not Allowed"; break;
+      case 406: reason = "Not Acceptable"; break;
+      case 407: reason = "Proxy Authentication Required"; break;
+      case 408: reason = "Request Timeout"; break;
+      case 410: reason = "Gone"; break;
+      case 412: reason = "Precondition Failed"; break;
+      case 413: reason = "Request Entity Too Large"; break;
+      case 414: reason = "Request-URI Too Long"; break;
+      case 415: reason = "Unsupported Media Type"; break;
+      case 416: reason = "Unsupported URI Scheme"; break;
+      case 420: reason = "Bad Extension"; break;
+      case 421: reason = "Extension Required"; break;
+      case 422: reason = "Session Interval Too Small"; break;
+      case 423: reason = "Interval Too Brief"; break;
+      case 480: reason = "Temporarily Unavailable"; break;
+      case 481: reason = "Call/Transaction Does Not Exist"; break;
+      case 482: reason = "Loop Detected"; break;
+      case 483: reason = "Too Many Hops"; break;
+      case 484: reason = "Address Incomplete"; break;
+      case 485: reason = "Ambiguous"; break;
+      case 486: reason = "Busy Here"; break;
+      case 487: reason = "Request Terminated"; break;
+      case 488: reason = "Not Acceptable Here"; break;
+      case 489: reason = "Event Package Not Supported"; break;
+      case 491: reason = "Request Pending"; break;
+      case 493: reason = "Undecipherable"; break;
+      case 500: reason = "Server Internal Error"; break;
+      case 501: reason = "Not Implemented"; break;
+      case 502: reason = "Bad Gateway"; break;
+      case 503: reason = "Service Unavailable"; break;
+      case 504: reason = "Server Time-out"; break;
+      case 505: reason = "Version Not Supported"; break;
+      case 513: reason = "Message Too Large"; break;
+      case 600: reason = "Busy Everywhere"; break;
+      case 603: reason = "Decline"; break;
+      case 604: reason = "Does Not Exist Anywhere"; break;
+      case 606: reason = "Not Acceptable"; break;
+   }
 }
 
 SipMessage*
