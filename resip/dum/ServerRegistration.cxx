@@ -174,7 +174,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       }
 
       static ExtensionParameter p_cid("cid");
-      i->param(p_cid) = Data(msg.getSource().connectionId);
+      i->uri().param(p_cid) = Data(msg.getSource().connectionId);
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -189,6 +189,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       else
       {
         RegistrationPersistenceManager::update_status_t status;
+        InfoLog (<< "Adding " << mAor << " -> " << i->uri());
         status = database->updateContact(mAor, i->uri(), now + expires);
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
