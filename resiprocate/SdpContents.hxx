@@ -509,10 +509,7 @@ class SdpContents : public Contents
       static const Mime& getStaticType() ;
 
       static bool init();
-
-      static void makeDefaultSdp(SdpContents& outSdp);
-      static void makeMultiPartyCallSdp(SdpContents& outSdp);
-
+      
    private:
       SdpContents(const Data& data, const Mime& contentTypes);
       Session mSession;
