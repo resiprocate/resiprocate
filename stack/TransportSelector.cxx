@@ -12,6 +12,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/Uri.hxx"
 
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionState.hxx"
