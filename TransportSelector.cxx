@@ -620,15 +620,26 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #endif
          }
 
+         // poor man's outbound instead of using flow ids
+         // assumes the registrar (for a proxy has stored the connection id
+         // (cid) 
+         static ExtensionParameter p_cid("cid");
+         if (msg->header(h_RequestLine).uri().exists(p_cid))
+         {
+            unsigned long cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
+            target.connectionId = cid;
+            msg->header(h_RequestLine).uri().remove(p_cid);
+         }
 
          Data& encoded = msg->getEncoded();
          encoded.clear();
          DataStream encodeStream(encoded);
          msg->encode(encodeStream);
          encodeStream.flush();
-
+         
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
+                   << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
                    << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
