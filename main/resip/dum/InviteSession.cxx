@@ -1285,6 +1285,7 @@ InviteSession::acceptNIT(int statusCode)
    }
 
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
+   Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
    send(mLastNitResponse);   
 } 
 
@@ -1295,7 +1296,8 @@ InviteSession::rejectNIT(int statusCode)
    {
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
-   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
+   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;  
+   Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
    send(mLastNitResponse);
 }
 
@@ -1307,6 +1309,7 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    {
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(mLastNitResponse, msg, 200);
+      mLastNitResponse.header(h_Contacts).clear();
       handler->onMessage(getSessionHandle(), msg);
    }
    else
