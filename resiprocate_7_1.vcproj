@@ -201,9 +201,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
-			Name="ares"/>
 	</References>
 	<Files>
 		<Filter
