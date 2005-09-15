@@ -24,32 +24,6 @@ SdpContents::init()
    return true;
 }
 
-void
-SdpContents::makeDefaultSdp(SdpContents& outSdp)
-{
-   static const Data rtpInterface = "127.0.0.1";
-   static SdpContents empty;
-   outSdp = empty;
-   assert (outSdp.session().getTimes().size() == 0);
-   outSdp.session().version() = 0;
-   outSdp.session().name() = "-";
-   outSdp.session().origin() = SdpContents::Session::Origin(Data("M2TUA"), 
-                                                            Random::getRandom(), 
-                                                            Random::getRandom(), 
-                                                            SdpContents::IP4,
-                                                            rtpInterface);
-   outSdp.session().addTime(SdpContents::Session::Time(0,0));
-   outSdp.session().connection() = SdpContents::Session::Connection(SdpContents::IP4, rtpInterface, 0);
-}
-
-void
-SdpContents::makeMultiPartyCallSdp(SdpContents& outSdp)
-{
-   makeDefaultSdp(outSdp);
-   outSdp.session().addMedium(Session::Medium(Symbols::data, 0, 1, Symbols::UDP));
-}
-
-
 const char* NetworkType[] = {"???", "IP4", "IP6"};
 
 static const Data rtpmap("rtpmap");
