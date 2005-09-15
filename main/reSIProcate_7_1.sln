@@ -39,6 +39,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basicRegister", "resip\dum\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "rutil\rutil_7_1.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
 	ProjectSection(ProjectDependencies) = postProject
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "db_static", "contrib\db\build_win32\db_static_7_1.vcproj", "{9E5A7645-1502-4467-91F8-BCF2EB06EF72}"
