@@ -524,6 +524,7 @@ class Data
         made for leading negative signs).
       */ 
       int convertInt() const;
+      unsigned long convertUnsignedLong() const;
 
       /**
         Takes the contents of the Data and converts them to a 
