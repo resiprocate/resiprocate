@@ -903,7 +903,7 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   if (mMine == Data::Share)
+   if (mMine == Data::Share || mSize == mCapacity)
    {
       const_cast<Data*>(this)->resize(mSize+1,true);
    }
