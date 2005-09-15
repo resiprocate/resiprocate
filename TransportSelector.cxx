@@ -625,7 +625,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // assumes the registrar (for a proxy has stored the connection id
          // (cid) 
          static ExtensionParameter p_cid("cid");
-         if (msg->header(h_RequestLine).uri().exists(p_cid))
+         if (msg->isRequest() && msg->header(h_RequestLine).uri().exists(p_cid))
          {
             unsigned long cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
             target.connectionId = cid;
