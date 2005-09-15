@@ -1,3 +1,4 @@
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ServerRegistration.hxx"
@@ -172,6 +173,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
+      static ExtensionParameter p_cid("cid");
+      i->param(p_cid) = Data(msg.getSource().connectionId);
+      
       // Check to see if this is a removal.
       if (expires == 0)
       {
