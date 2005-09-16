@@ -7,6 +7,7 @@
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
 #include "rutil/Logger.hxx"
+#include "resip/stack/Security.hxx"
 #include "tfm/repro/TestRepro.hxx"
 
 using namespace resip;
@@ -16,37 +17,50 @@ using namespace repro;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-static RequestProcessorChain&  
-makeRequestProcessorChain(RequestProcessorChain& chain, 
+static ProcessorChain&  
+makeRequestProcessorChain(ProcessorChain& chain, 
                           RouteStore& store, 
                           RegistrationPersistenceManager& regData)
 {
    // Either the chainName is default or we don't know about it
    // Use default if we don't recognize the name
    // Should log about it.
-   RequestProcessorChain* locators = new RequestProcessorChain();
+   ProcessorChain* locators = new ProcessorChain();
    
    StrictRouteFixup* srf = new StrictRouteFixup;
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(srf));
+   locators->addProcessor(std::auto_ptr<Processor>(srf));
 
    IsTrustedNode* isTrusted = new IsTrustedNode;
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(isTrusted));
+   locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
    DigestAuthenticator* da = new DigestAuthenticator;
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+   locators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    AmIResponsible* isme = new AmIResponsible;
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
+   locators->addProcessor(std::auto_ptr<Processor>(isme));
       
    StaticRoute* sr = new StaticRoute(store);
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(sr));
+   locators->addProcessor(std::auto_ptr<Processor>(sr));
  
    LocationServer* ls = new LocationServer(regData);
-   locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
+   locators->addProcessor(std::auto_ptr<Processor>(ls));
  
-   chain.addProcessor(std::auto_ptr<RequestProcessor>(locators));
+   chain.addProcessor(std::auto_ptr<Processor>(locators));
    return chain;
 }
+
+static ProcessorChain&  
+makeResponseProcessorChain(ProcessorChain& chain) 
+{
+   return chain;
+}
+
+static ProcessorChain&  
+makeTargetProcessorChain(ProcessorChain& chain) 
+{
+   return chain;
+}
+
 
 static Uri  
 makeUri(const resip::Data& domain, int port)
@@ -64,9 +78,10 @@ makeUri(const resip::Data& domain, int port)
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
-                     const resip::Data& interface) : 
+                     const resip::Data& interface,
+                     Security* security) : 
    TestProxy(name, host, port, interface),
-   mStack(),
+   mStack(security),
    mStackThread(mStack),
    mRegistrar(),
    mProfile(new MasterProfile),
@@ -77,12 +92,15 @@ TestRepro::TestRepro(const resip::Data& name,
    mProxy(mStack, 
           makeUri(host, port),
           makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore, mRegData),
+          makeResponseProcessorChain(mResponseProcessors),
+          makeTargetProcessorChain(mTargetProcessors),
           mStore.mUserStore),
    mDum(mStack),
    mDumThread(mDum)
 {
    mStack.addTransport(UDP, port, V4);
-   mStack.addTransport(TCP, port, V4);
+   //mStack.addTransport(TCP, port, V4);
+   mStack.addTransport(TLS, port, V4, StunDisabled, Data::Empty, host );
    mProxy.addDomain(host);
    
    mProfile->clearSupportedMethods();

@@ -26,6 +26,7 @@ namespace resip
 class SdpContents;
 class NameAddr;
 class DeprecatedDialog;
+class Security;
 }
 
 class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
@@ -37,12 +38,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
                       const resip::Uri& contact, 
                       const resip::Uri& outboundProxy=NoOutboundProxy,
                       bool hasStack=true,
-                      const resip::Data& interfaceObj = resip::Data::Empty);
+                      const resip::Data& interfaceObj = resip::Data::Empty,
+                      resip::Security* security = 0);
       
       explicit TestSipEndPoint(const resip::Uri& contact, 
                                const resip::Uri& outboundProxy=NoOutboundProxy,
                                bool hasStack=true,
-                               const resip::Data& interfaceObj = resip::Data::Empty);
+                               const resip::Data& interfaceObj = resip::Data::Empty,
+                               resip::Security* security = 0);
       
       virtual ~TestSipEndPoint();
       virtual void clean();
@@ -586,7 +589,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       resip::Fifo<resip::TransactionMessage> mIncoming;
       resip::Transport* mTransport;
-
+      resip::Security* mSecurity;
+      
       typedef std::list< boost::shared_ptr<resip::SipMessage> > InviteList;
       typedef std::list< boost::shared_ptr<resip::SipMessage> > ReceivedSubscribeList;
       typedef std::list<DialogSet> SentSubscribeList;
