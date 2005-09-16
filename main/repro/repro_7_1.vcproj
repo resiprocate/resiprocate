@@ -271,7 +271,16 @@
 				RelativePath=".\stateAgents\PrivateKeySubscriptionHandler.cxx">
 			</File>
 			<File
+				RelativePath=".\Processor.cxx">
+			</File>
+			<File
+				RelativePath=".\ProcessorChain.cxx">
+			</File>
+			<File
 				RelativePath=".\Proxy.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RecursiveRedirect.cxx">
 			</File>
 			<File
 				RelativePath=".\Registrar.cxx">
@@ -284,12 +293,6 @@
 			</File>
 			<File
 				RelativePath=".\RequestContext.cxx">
-			</File>
-			<File
-				RelativePath=".\RequestProcessor.cxx">
-			</File>
-			<File
-				RelativePath=".\RequestProcessorChain.cxx">
 			</File>
 			<File
 				RelativePath=".\ResponseContext.cxx">
@@ -372,7 +375,16 @@
 				RelativePath=".\stateAgents\PrivateKeySubscriptionHandler.hxx">
 			</File>
 			<File
+				RelativePath=".\Processor.hxx">
+			</File>
+			<File
+				RelativePath=".\ProcessorChain.hxx">
+			</File>
+			<File
 				RelativePath=".\Proxy.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\RecursiveRedirect.hxx">
 			</File>
 			<File
 				RelativePath=".\Registrar.hxx">
@@ -382,12 +394,6 @@
 			</File>
 			<File
 				RelativePath=".\RequestContext.hxx">
-			</File>
-			<File
-				RelativePath=".\RequestProcessor.hxx">
-			</File>
-			<File
-				RelativePath=".\RequestProcessorChain.hxx">
 			</File>
 			<File
 				RelativePath=".\ResponseContext.hxx">
