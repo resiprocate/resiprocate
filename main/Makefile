@@ -7,7 +7,10 @@ all: repro dum tests tfm
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
 
-resiprocate: contrib 
+rutil: contrib
+	cd rutil; $(MAKE) 
+
+resiprocate: rutil
 	cd resip/stack; $(MAKE)
 
 dum: resiprocate
