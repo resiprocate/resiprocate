@@ -630,6 +630,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // layer for retransmission.
                      assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
                      sendToWire(mMsgToRetransmit, true);
+		     delete msg;
                   }
                   else
                   {
