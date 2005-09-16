@@ -22,8 +22,8 @@ IsTrustedNode::IsTrustedNode()
 IsTrustedNode::~IsTrustedNode()
 {}
 
-RequestProcessor::processor_action_t
-IsTrustedNode::handleRequest(RequestContext& context)
+Processor::processor_action_t
+IsTrustedNode::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -69,7 +69,7 @@ IsTrustedNode::handleRequest(RequestContext& context)
    //    request->header(h_PAssertedIdentities).remove();
    // }
    
-   return RequestProcessor::Continue;
+   return Processor::Continue;
 }
 
 void

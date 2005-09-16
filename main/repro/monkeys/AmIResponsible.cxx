@@ -22,8 +22,8 @@ AmIResponsible::AmIResponsible()
 AmIResponsible::~AmIResponsible()
 {}
 
-RequestProcessor::processor_action_t
-AmIResponsible::handleRequest(RequestContext& context)
+Processor::processor_action_t
+AmIResponsible::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -67,17 +67,17 @@ AmIResponsible::handleRequest(RequestContext& context)
                         << request.header(h_From).uri() << ", send 403");
                Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
                context.sendResponse(response);
-               return RequestProcessor::SkipThisChain;
+               return Processor::SkipThisChain;
             }
          }
          
          context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
          // skip the rest of the monkeys
-         return RequestProcessor::SkipThisChain;	
+         return Processor::SkipThisChain;	
       }
    }
-   return RequestProcessor::Continue;
+   return Processor::Continue;
 }
 
 void

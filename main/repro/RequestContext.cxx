@@ -4,11 +4,12 @@
 
 #include <iostream>
 
-#include "resip/stack/SipMessage.hxx"
-#include "rutil/Inserter.hxx"
-#include "resip/stack/TransactionTerminated.hxx"
-#include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/RequestContext.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/TransactionTerminated.hxx"
+#include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 
 // Remove warning about 'this' use in initiator list
@@ -23,13 +24,18 @@ using namespace repro;
 using namespace std;
 
 RequestContext::RequestContext(Proxy& proxy, 
-                               RequestProcessorChain& chain) : 
+                               ProcessorChain& requestP,
+                               ProcessorChain& responseP,
+                               ProcessorChain& targetP) :
    mOriginalRequest(0),
    mCurrentEvent(0),
-   mRequestProcessorChain(chain),
+   mRequestProcessorChain(requestP),
+   mResponseProcessorChain(responseP),
+   mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
    mHaveSentFinalResponse(false),
+   mTargetConnectionId(0),
    mResponseContext(*this)
 {
 }
@@ -84,7 +90,7 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       removeTopRouteIfSelf();
    }
 
-   RequestProcessor::processor_action_t ret=RequestProcessor::Continue;
+   Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 
    if (sip && sip->isRequest())
    {
@@ -94,21 +100,32 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       }
       else
       {
-         ret = mRequestProcessorChain.handleRequest(*this);
+         ret = mRequestProcessorChain.process(*this);
       }
    }
    else if (sip && sip->isResponse())
    {
       // Do the lemurs if its a response (response processor chain)
       // Call handle Response if its a response
-      mResponseContext.processResponse(*sip);
+      
+      Processor::processor_action_t ret = Processor::Continue;
+      ret = mResponseProcessorChain.process(*this);
+      // this is temporarily not allowed since to allow async requests in the
+      // response chain we will need to maintain a collection of all of the
+      // outstanding responses that are still processing. 
+      assert(ret != Processor::WaitingForEvent);
+      if (ret == Processor::Continue) 
+      {
+         mResponseContext.processResponse(*sip);
+         return;
+      }
    }
    else
    {
-      ret = mRequestProcessorChain.handleRequest(*this);
+      ret = mRequestProcessorChain.process(*this);
    }
 
-   if (!mHaveSentFinalResponse && ret != RequestProcessor::WaitingForEvent)
+   if (!mHaveSentFinalResponse && ret != Processor::WaitingForEvent)
    {
       InfoLog (<< "process candidates for " << *this);
       mResponseContext.processCandidates();
@@ -213,21 +230,41 @@ RequestContext::removeTopRouteIfSelf()
            &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri())
       )
    {
+      // !jf! this is to get tcp connections to go over the correct connection id
+      const Uri& route = mOriginalRequest->header(h_Routes).front().uri();
+
+      static ExtensionParameter p_cid("cid");
+      static ExtensionParameter p_cid1("cid1");
+      static ExtensionParameter p_cid2("cid2");
+
+      ConnectionId cid1 = route.exists(p_cid1) ? route.param(p_cid1).convertUnsignedLong() : 0;
+      ConnectionId cid2 = route.exists(p_cid2) ? route.param(p_cid2).convertUnsignedLong() : 0;
+      if (mOriginalRequest->getSource().connectionId != 0 && 
+          mOriginalRequest->getSource().connectionId == cid1)
+      {
+         mTargetConnectionId = cid2;
+      }
+      else if (mOriginalRequest->getSource().connectionId != 0 && 
+               mOriginalRequest->getSource().connectionId == cid2)
+      {
+         mTargetConnectionId = cid1;
+      }
+         
       mOriginalRequest->header(h_Routes).pop_front();
    }
 
 }
 
 void
-RequestContext::pushChainIterator(RequestProcessorChain::Chain::iterator& i)
+RequestContext::pushChainIterator(ProcessorChain::Chain::iterator& i)
 {
    mChainIteratorStack.push_back(i);
 }
 
-RequestProcessorChain::Chain::iterator
+ProcessorChain::Chain::iterator
 RequestContext::popChainIterator()
 {
-   RequestProcessorChain::Chain::iterator i;
+   ProcessorChain::Chain::iterator i;
    i = mChainIteratorStack.back();
    mChainIteratorStack.pop_back();
    return i;
