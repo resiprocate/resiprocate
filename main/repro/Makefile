@@ -44,8 +44,8 @@ SRC 	+=   \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
-        RequestProcessor.cxx \
-        RequestProcessorChain.cxx \
+        Processor.cxx \
+        ProcessorChain.cxx \
 	\
         monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
@@ -53,6 +53,7 @@ SRC 	+=   \
 	monkeys/IsTrustedNode.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/LocationServer.cxx \
+	monkeys/RecursiveRedirect.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	\

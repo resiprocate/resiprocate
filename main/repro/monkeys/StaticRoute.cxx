@@ -28,8 +28,8 @@ StaticRoute::~StaticRoute()
 {}
 
 
-RequestProcessor::processor_action_t
-StaticRoute::handleRequest(RequestContext& context)
+Processor::processor_action_t
+StaticRoute::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -65,10 +65,10 @@ StaticRoute::handleRequest(RequestContext& context)
       Data realm = msg.header(h_RequestLine).uri().host();
       
       challengeRequest(context, realm);
-      return RequestProcessor::SkipAllChains;
+      return Processor::SkipAllChains;
    }
    
-   return RequestProcessor::Continue;
+   return Processor::Continue;
 }
 
 void

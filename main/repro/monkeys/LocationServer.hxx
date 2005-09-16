@@ -1,12 +1,12 @@
 #if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
 #define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
 {
 
-  class LocationServer: public RequestProcessor
+  class LocationServer: public Processor
   {
     public:
       LocationServer(resip::RegistrationPersistenceManager& store)
@@ -14,7 +14,7 @@ namespace repro
 
       virtual ~LocationServer(){};
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
 
     private:

@@ -1,19 +1,19 @@
 #if !defined(RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX)
 #define RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 #include <iosfwd>
 
 namespace repro
 {
 
-  class AmIResponsible: public RequestProcessor
+  class AmIResponsible: public Processor
   {
     public:
       AmIResponsible();
       virtual ~AmIResponsible();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
   };
 }

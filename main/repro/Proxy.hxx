@@ -16,12 +16,17 @@ namespace repro
 {
 
 class UserStore;
-class RequestProcessorChain;
+class ProcessorChain;
 
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, const resip::Uri& recordRoute, RequestProcessorChain&, UserStore& );
+      Proxy(resip::SipStack&,
+            const resip::Uri& recordRoute, 
+            ProcessorChain& requestP, 
+            ProcessorChain& responseP,
+            ProcessorChain& targetP,
+            UserStore& );
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
@@ -42,7 +47,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       resip::NameAddr mRecordRoute;
       
       // needs to be a reference since parent owns it
-      RequestProcessorChain& mRequestProcessorChain;
+      ProcessorChain& mRequestProcessorChain;
+      ProcessorChain& mResponseProcessorChain;
+      ProcessorChain& mTargetProcessorChain;
       
       /** a map from transaction id to RequestContext. Store the server
           transaction and client transactions in this map. The
