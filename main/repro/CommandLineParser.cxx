@@ -41,6 +41,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* mySqlServer = 0;
    int httpPort = 5080;
    int recursiveRedirect = 0;
+   char* enumSuffix = 0;
    
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -55,7 +56,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
       {"log-type",     'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
       {"record-route",  'r',  POPT_ARG_STRING, &recordRoute,  0, "specify uri to use as Record-Route", "sip:example.com"},
       {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
       {"mysqlServer",    'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,  0, "enable MySQL and provide name of server", "localhost"},
@@ -76,6 +77,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
+      {"enum-suffix",     'e',   POPT_ARG_STRING, &enumSuffix,  0, "specify enum suffix to search", "e164.arp"},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -117,6 +119,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;
+   if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 
    {

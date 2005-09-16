@@ -18,6 +18,7 @@ class CommandLineParser
       Data mLogType;
       Data mLogLevel;
       Data mTlsDomain;
+      Data mEnumSuffix;
       resip::Uri mRecordRoute;
       int mUdpPort;
       int mTcpPort;
