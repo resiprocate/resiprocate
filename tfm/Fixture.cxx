@@ -22,9 +22,9 @@
 
 using namespace CppUnit;
 using namespace std;
-using resip::Data;
-using resip::Uri;
+using namespace resip;
 
+Security* Fixture::security = 0;
 TestProxy* Fixture::proxy = 0;
 TestUser* Fixture::jason = 0;
 TestUser* Fixture::jason1 = 0;
@@ -47,12 +47,18 @@ Fixture::~Fixture()
 {
 }
 
-static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host)
+static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host, Security* security)
 {
    Uri j;
    j.user() = user;
    j.host() = host;
-   return new TestReproUser(proxy, j, j.user(), j.user());
+#if 0 // enable for TLS testing
+   j.param(p_transport) = Symbols::TLS;
+   return new TestReproUser(proxy, j, j.user(), j.user(), TLS, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
+#else
+   return new TestReproUser(proxy, j, j.user(), j.user(), UDP, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
+#endif
+
 }
 
 void
@@ -63,15 +69,17 @@ Fixture::initialize(int argc, char** argv)
                          "localhost", 
                          5060);
 #else
-   proxy = new TestRepro("proxy", "localhost", 5060);
-   jason = makeReproUser(*proxy, "jason", "localhost");
-   jason1 = makeReproUser(*proxy, "jason", "localhost");
-   jason2 = makeReproUser(*proxy, "jason", "localhost");
-   jason3 = makeReproUser(*proxy, "jason", "localhost");
-   derek = makeReproUser(*proxy, "derek", "localhost");
-   david = makeReproUser(*proxy, "david", "localhost");
-   enlai = makeReproUser(*proxy, "enlai", "localhost");
-   cullen = makeReproUser(*proxy, "cullen", "localhost");
+   // enable for TLS testing
+   //security = new resip::Security(getenv("PWD"));
+   proxy = new TestRepro("proxy", "localhost", 5060, Data::Empty, security);
+   jason = makeReproUser(*proxy, "jason", "localhost", security);
+   jason1 = makeReproUser(*proxy, "jason", "localhost", security);
+   jason2 = makeReproUser(*proxy, "jason", "localhost", security);
+   jason3 = makeReproUser(*proxy, "jason", "localhost", security);
+   derek = makeReproUser(*proxy, "derek", "localhost", security);
+   david = makeReproUser(*proxy, "david", "localhost", security);
+   enlai = makeReproUser(*proxy, "enlai", "localhost", security);
+   cullen = makeReproUser(*proxy, "cullen", "localhost", security);
 #endif
 }
 

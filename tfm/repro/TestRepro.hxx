@@ -4,7 +4,7 @@
 #include "repro/AbstractDb.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Registrar.hxx"
-#include "repro/RequestProcessorChain.hxx"
+#include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
@@ -21,7 +21,8 @@ class TestRepro : public TestProxy
       TestRepro(const resip::Data& name,
                 const resip::Data& host, 
                 int port, 
-                const resip::Data& interface = resip::Data::Empty);
+                const resip::Data& interface = resip::Data::Empty,
+                resip::Security* security=0);
       ~TestRepro();
 
       virtual void addUser(const resip::Data& userid, const resip::Uri& aor, const resip::Data& password);
@@ -45,7 +46,9 @@ class TestRepro : public TestProxy
       resip::SharedPtr<resip::MasterProfile> mProfile;
       repro::AbstractDb* mDb;
       repro::Store mStore;
-      repro::RequestProcessorChain mRequestProcessors;
+      repro::ProcessorChain mRequestProcessors;
+      repro::ProcessorChain mResponseProcessors;
+      repro::ProcessorChain mTargetProcessors;
       resip::InMemoryRegistrationDatabase mRegData;
       repro::Proxy mProxy;
       resip::DialogUsageManager mDum;

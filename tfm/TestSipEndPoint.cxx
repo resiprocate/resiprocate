@@ -41,11 +41,13 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
                                  const Uri& contactUrl,
                                  const Uri& outboundProxy,
                                  bool hasStack,
-                                 const Data& interfaceObj)
+                                 const Data& interfaceObj,
+                                 Security* security)                                 
    : mAor(addressOfRecord),
      mContact(contactUrl),
      mOutboundProxy(outboundProxy),
-     mTransport(0)
+     mTransport(0),
+     mSecurity(security)
 {
 #ifdef RTP_ON
    mRtpSession = 0;
@@ -64,12 +66,12 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TCP " << interfaceObj);
          mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
       }
-/*
-      else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(Transport::TLS)))
+      else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TLS)))
       {
-         mTransport = new TlsTransport(Resolver::getHostName(), mContact.uri().port(), "", mIncoming);
+         InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj);
+         mTransport = new TlsTransport(mIncoming, mContact.uri().port(), V4, interfaceObj, 
+                                       *mSecurity, "localhost", SecurityTypes::TLSv1);
       }
-*/
       else
       {
          assert(0);
@@ -88,11 +90,13 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
 TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
                                  const Uri& outboundProxy,
                                  bool hasStack,
-                                 const Data& interfaceObj)
+                                 const Data& interfaceObj,
+                                 Security* security)
    : mAor(contactUrl),
      mContact(contactUrl),
      mOutboundProxy(outboundProxy),
-     mTransport(0)
+     mTransport(0),
+     mSecurity(security)
 {
 #ifdef RTP_ON
    mRtpSession = 0;

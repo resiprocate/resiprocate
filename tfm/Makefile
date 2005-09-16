@@ -4,14 +4,13 @@ BUILD = ../build
 include $(BUILD)/Makefile.pre
 
 CODE_SUBDIRS = predicates repro
-PACKAGES += 	TFMLIBS REPRO DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT 
+PACKAGES += 	REPRO DUM RESIP RUTIL TFMLIBS OPENSSL ARES DB4CXX PTHREAD POPT 
 TESTPROGRAMS = 	sanityTests.cxx 
 TARGET_LIBRARY = libtfm
 
 CXXFLAGS += -I../ -Icontrib
 
-SRC = \
-	ActionBase.cxx \
+SRC = ActionBase.cxx \
 	AsciiGraphic.cxx \
 	Box.cxx \
 	CommandLineParser.cxx \
