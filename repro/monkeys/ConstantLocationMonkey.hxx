@@ -1,17 +1,17 @@
 #if !defined(RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX)
 #define RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {
 
-  class ConstantLocationMonkey: public RequestProcessor
+  class ConstantLocationMonkey: public Processor
   {
     public:
       ConstantLocationMonkey();
       virtual ~ConstantLocationMonkey();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
   };
 }

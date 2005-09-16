@@ -4,7 +4,7 @@
 #include <vector>
 #include <iosfwd>
 #include "resip/stack/Uri.hxx"
-#include "repro/RequestProcessorChain.hxx"
+#include "repro/ProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "repro/ResponseContext.hxx"
@@ -23,7 +23,9 @@ class RequestContext
 {
    public:
       RequestContext(Proxy& proxy,
-                     RequestProcessorChain& chain);
+                     ProcessorChain& requestP, // monkeys
+                     ProcessorChain& responseP, // lemurs
+                     ProcessorChain& targetP); // baboons
       virtual ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
@@ -42,8 +44,8 @@ class RequestContext
       void setDigestIdentity (const resip::Data&);
       const resip::Data& getDigestIdentity() const;
 
-      void pushChainIterator(RequestProcessorChain::Chain::iterator&);
-      RequestProcessorChain::Chain::iterator popChainIterator();
+      void pushChainIterator(ProcessorChain::Chain::iterator&);
+      ProcessorChain::Chain::iterator popChainIterator();
       bool chainIteratorStackIsEmpty();
 
       Proxy& getProxy();
@@ -55,15 +57,19 @@ class RequestContext
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
-      RequestProcessorChain& mRequestProcessorChain;
+      ProcessorChain& mRequestProcessorChain; // monkeys
+      ProcessorChain& mResponseProcessorChain; // lemurs
+      ProcessorChain& mTargetProcessorChain; // baboons
+
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
       Proxy& mProxy;
       bool mHaveSentFinalResponse;
+      resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
 
-      typedef std::vector<RequestProcessorChain::Chain::iterator>
+      typedef std::vector<ProcessorChain::Chain::iterator>
 
       /** Stack of iterators used to keep track of where
           we are in the request processor chain(s) for

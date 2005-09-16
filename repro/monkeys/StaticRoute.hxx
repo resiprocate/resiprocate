@@ -1,19 +1,19 @@
 #if !defined(RESIP_STATICROUTE_HXX)
 #define RESIP_STATICROUTE_HXX 
 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {
 class RouteStore;
 
-class StaticRoute: public RequestProcessor
+class StaticRoute: public Processor
 {
    public:
       StaticRoute(RouteStore& store);
       virtual ~StaticRoute();
       
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
       
    private:

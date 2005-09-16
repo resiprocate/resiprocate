@@ -28,8 +28,8 @@ StrictRouteFixup::~StrictRouteFixup()
  *        set is exactly the RURI of the received request
  *        (after the above preprocessing).
  */
-RequestProcessor::processor_action_t
-StrictRouteFixup::handleRequest(RequestContext& context)
+Processor::processor_action_t
+StrictRouteFixup::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -44,10 +44,10 @@ StrictRouteFixup::handleRequest(RequestContext& context)
       // candidate
       assert(context.getCandidates().empty());
       context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-      return RequestProcessor::SkipThisChain;
+      return Processor::SkipThisChain;
    }
   
-   return RequestProcessor::Continue;
+   return Processor::Continue;
 }
 
 void

@@ -15,8 +15,8 @@ using namespace repro;
 using namespace std;
 
 
-RequestProcessor::processor_action_t
-LocationServer::handleRequest(RequestContext& context)
+Processor::processor_action_t
+LocationServer::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
@@ -55,12 +55,12 @@ LocationServer::handleRequest(RequestContext& context)
         InfoLog (<< *this << ": no registered target for " << inputUri << " send 480");
 		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
 		context.sendResponse(response);
-	    return RequestProcessor::SkipThisChain;
+	    return Processor::SkipThisChain;
 	 }
 	 else
 	 {
         InfoLog (<< *this << " there are " << context.getCandidates().size() << " candidates -> continue");
-	    return RequestProcessor::Continue;
+	    return Processor::Continue;
 	 }
    }
    else
@@ -71,7 +71,7 @@ LocationServer::handleRequest(RequestContext& context)
 	  resip::SipMessage response;
 	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
 	  context.sendResponse(response);
-	  return RequestProcessor::SkipThisChain;
+	  return Processor::SkipThisChain;
    }
 }
 

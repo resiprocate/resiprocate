@@ -1,19 +1,19 @@
 #if !defined(RESIP_GRUU_REQUEST_PROCESSOR_HXX)
 #define RESIP_GRUU_REQUEST_PROCESSOR_HXX 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 #include <iosfwd>
 
 namespace repro
 {
 
-  class GruuMonkey: public RequestProcessor
+  class GruuMonkey: public Processor
   {
     public:
       GruuMonkey();
       virtual ~GruuMonkey();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
   };
 }

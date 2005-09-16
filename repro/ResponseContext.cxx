@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -55,12 +56,15 @@ ResponseContext::processCandidates()
       // make sure each target is only inserted once
       if (mSecure && target.scheme() == Symbols::Sips || !mSecure)
       {
+         // !jf!
+         // This is where we need to run the target ProcessorChain - it needs a
+         // different interface from request and response processors
          if (mTargetSet.insert(target).second)
          {
             added = true;
             NameAddr pending(target);
             pending.param(p_q) = candidate.param(p_q);
-         
+               
             mPendingTargetSet.insert(pending);
             InfoLog (<< "Added " << pending);
          }
@@ -105,9 +109,14 @@ ResponseContext::processPendingTargets()
          request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
       }
       
+      static ExtensionParameter p_cid("cid");
+      static ExtensionParameter p_cid1("cid1");
+      static ExtensionParameter p_cid2("cid2");
+      
       // Record-Route addition only for dialogs
-      if (request.header(h_RequestLine).method() == INVITE ||
-          request.header(h_RequestLine).method() == SUBSCRIBE)
+      if ( !request.header(h_To).exists(p_tag) &&  // only for dialog-creating request
+           (request.header(h_RequestLine).method() == INVITE ||
+            request.header(h_RequestLine).method() == SUBSCRIBE ) )
       {
          NameAddr rt;
          // !jf! could put unique id for this instance of the proxy in user portion
@@ -125,6 +134,17 @@ ResponseContext::processPendingTargets()
          if (sentTransport != Symbols::UDP)
          {
             rt.uri().param(p_transport) = sentTransport;
+            
+            if (mRequestContext.getOriginalRequest().getSource().connectionId != 0)
+            {
+               rt.uri().param(p_cid1) = Data(mRequestContext.getOriginalRequest().getSource().connectionId);
+            }
+            
+            if (request.header(h_RequestLine).uri().exists(p_cid))
+            {
+               rt.uri().param(p_cid2) = request.header(h_RequestLine).uri().param(p_cid);
+            }
+            InfoLog (<< "Added Record-Route: " << rt);
          }
 
          // !jf! By not specifying host in Record-Route, the TransportSelector
@@ -141,6 +161,13 @@ ResponseContext::processPendingTargets()
       
       Helper::processStrictRoute(request);
       request.header(h_Vias).push_front(branch.via);
+
+      if (mRequestContext.mTargetConnectionId != 0)
+      {
+         request.header(h_RequestLine).uri().param(p_cid) = Data(mRequestContext.mTargetConnectionId);
+         InfoLog (<< "Use an existing connection id: " << request.header(h_RequestLine).uri());
+      }
+
       
       // add a Timer C if one hasn't already been added
       

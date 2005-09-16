@@ -2,17 +2,17 @@
 #define RESIP_DIGEST_AUTHENTICATOR_HXX 
 
 #include "rutil/Data.hxx"
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public RequestProcessor
+  class DigestAuthenticator : public Processor
   {
     public:
       DigestAuthenticator();
       ~DigestAuthenticator();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
 
     private:

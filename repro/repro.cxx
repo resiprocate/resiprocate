@@ -26,7 +26,7 @@
 #include "repro/Registrar.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
-#include "repro/RequestProcessorChain.hxx"
+#include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/RouteStore.hxx"
@@ -39,6 +39,7 @@
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
+#include "repro/monkeys/RecursiveRedirect.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
 
@@ -169,6 +170,13 @@ main(int argc, char** argv)
     SipStack stack;
 #endif
 
+    std::vector<Data> enumSuffixes;
+    if (!args.mEnumSuffix.empty())
+    {
+       enumSuffixes.push_back(args.mEnumSuffix);
+       stack.setEnumSuffixes(enumSuffixes);
+    }
+
    try
    {
       if (args.mUseV4) InfoLog (<< "V4 enabled");
@@ -234,39 +242,41 @@ main(int argc, char** argv)
    Store store(*db);
 
    /* Initialize a proxy */
-   RequestProcessorChain requestProcessors;
+   ProcessorChain requestProcessors;
+   ProcessorChain responseProcessors;
+   ProcessorChain targetProcessors;
    
    if (args.mRequestProcessorChainName=="StaticTest")
    {
       ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
-      requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(testMonkey));
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(testMonkey));
    }
    else
    {
       // Either the chainName is default or we don't know about it
       // Use default if we don't recognize the name
       // Should log about it.
-      RequestProcessorChain* locators = new RequestProcessorChain();
+      ProcessorChain* locators = new ProcessorChain();
       
       StrictRouteFixup* srf = new StrictRouteFixup;
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(srf));
+      locators->addProcessor(std::auto_ptr<Processor>(srf));
       
 #if 0  // this is for request uri manipulation
       ManipulationMonkey* manip = new ManipulationMonkey
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(manip));
+      locators->addProcessor(std::auto_ptr<Processor>(manip));
 #endif
 
       IsTrustedNode* isTrusted = new IsTrustedNode;
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(isTrusted));
+      locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator;
-         locators->addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         locators->addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
       AmIResponsible* isme = new AmIResponsible;
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
+      locators->addProcessor(std::auto_ptr<Processor>(isme));
       
       // [TODO] !rwm! put Gruu monkey here
       
@@ -276,19 +286,33 @@ main(int argc, char** argv)
 
 #if 0 // static routes here
       ConstantLocationMonkey* cls = new ConstantLocationMonkey;
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
+      locators->addProcessor(std::auto_ptr<Processor>(cls));
 #endif
      
       StaticRoute* sr = new StaticRoute(store.mRouteStore);
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(sr));
+      locators->addProcessor(std::auto_ptr<Processor>(sr));
  
       LocationServer* ls = new LocationServer(regData);
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
+      locators->addProcessor(std::auto_ptr<Processor>(ls));
  
-      requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));      
+      requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
+
+   }
+
+   if (args.mRecursiveRedirect)
+   {
+      ProcessorChain* lemurs = new ProcessorChain;
+      RecursiveRedirect* red = new RecursiveRedirect;
+      lemurs->addProcessor(std::auto_ptr<Processor>(red));
+      responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
    }
    
-   Proxy proxy(stack, args.mRecordRoute, requestProcessors, store.mUserStore );
+   Proxy proxy(stack, 
+               args.mRecordRoute, 
+               requestProcessors, 
+               responseProcessors, 
+               targetProcessors, 
+               store.mUserStore );
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL

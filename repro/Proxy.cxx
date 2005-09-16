@@ -2,7 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "repro/RequestProcessorChain.hxx"
+#include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
@@ -21,11 +21,15 @@ using namespace std;
 
 Proxy::Proxy(SipStack& stack, 
              const Uri& recordRoute,
-             RequestProcessorChain& requestProcessors, 
+             ProcessorChain& requestP, 
+             ProcessorChain& responseP, 
+             ProcessorChain& targetP, 
              UserStore& userStore) 
    : mStack(stack), 
      mRecordRoute(recordRoute),
-     mRequestProcessorChain(requestProcessors), 
+     mRequestProcessorChain(requestP), 
+     mResponseProcessorChain(responseP),
+     mTargetProcessorChain(targetP),
      mUserStore(userStore)
 {
    if (!mRecordRoute.uri().host().empty())
@@ -116,7 +120,10 @@ Proxy::thread()
                      RequestContext* context=0;
                      if (mServerRequestContexts.count(tid) == 0)
                      {
-                        context = new RequestContext(*this, mRequestProcessorChain);
+                        context = new RequestContext(*this, 
+                                                     mRequestProcessorChain, 
+                                                     mResponseProcessorChain, 
+                                                     mTargetProcessorChain);
                         mServerRequestContexts[tid] = context;
                      }
                      else
@@ -135,7 +142,10 @@ Proxy::thread()
                      InfoLog (<< "New RequestContext tid=" << sip->getTransactionId() << " : " << sip->brief());
                      
                      assert(mServerRequestContexts.count(sip->getTransactionId()) == 0);                  
-                     RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
+                     RequestContext* context = new RequestContext(*this,
+                                                                  mRequestProcessorChain, 
+                                                                  mResponseProcessorChain, 
+                                                                  mTargetProcessorChain);
                      InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
                      mServerRequestContexts[sip->getTransactionId()] = context;
                      DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));

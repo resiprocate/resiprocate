@@ -36,8 +36,8 @@ DigestAuthenticator::~DigestAuthenticator()
 {
 }
 
-repro::RequestProcessor::processor_action_t
-DigestAuthenticator::handleRequest(repro::RequestContext &rc)
+repro::Processor::processor_action_t
+DigestAuthenticator::process(repro::RequestContext &rc)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << rc);
    
@@ -257,7 +257,7 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
 }
 
 
-repro::RequestProcessor::processor_action_t
+repro::Processor::processor_action_t
 DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data &realm)
 {
    Message *message = rc.getCurrentEvent();
