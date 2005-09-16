@@ -20,14 +20,7 @@
 #endif
 
 #include <map>
-
-
-#ifdef USE_DTLS
 #include <openssl/ssl.h>
-#else
-typedef void BIO;
-typedef void SSL;
-#endif
 
 namespace resip
 {
@@ -87,10 +80,16 @@ class DtlsTransport : public UdpTransport
 
    private:
 
+#if defined(HASH_MAP_NAMESPACE)
       typedef HashMap<struct sockaddr_in, 
                       SSL*, 
                       DtlsTransport::addr_hash, 
                       DtlsTransport::addr_cmp> DtlsConnectionMap ;
+#else
+      typedef std::map<struct sockaddr_in, 
+                      SSL*, 
+                      DtlsTransport::addr_cmp> DtlsConnectionMap ;
+#endif
 
       SSL_CTX             *mClientCtx ;
       SSL_CTX             *mServerCtx ;
