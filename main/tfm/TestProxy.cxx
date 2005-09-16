@@ -28,6 +28,8 @@ TestProxy::TestProxy(const Data& name,
    addSource(s);
    Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
    addSource(s2);
+   Source s3(resip::DnsUtil::getLocalIpAddress(), mPort, TLS);
+   addSource(s2);
 
    // .dlb. other ethi
    for (int i = 1; i < 11; ++i)
@@ -36,6 +38,8 @@ TestProxy::TestProxy(const Data& name,
       addSource(ssu);
       Source sst("127.0.0." + Data(i), mPort, TCP);
       addSource(sst);
+      Source sss("127.0.0." + Data(i), mPort, TLS);
+      addSource(sss);
    }
 }
 
@@ -45,10 +49,12 @@ TestProxy::TestProxy()
    mProxyUrl.uri().host() = resip::DnsUtil::getLocalHostName();
    mProxyUrl.uri().port() = mPort;
 
-   Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
-   addSource(s);
-   Source s1(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
+   Source s1(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
    addSource(s1);
+   Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
+   addSource(s2);
+   Source s3(resip::DnsUtil::getLocalIpAddress(), mPort, TLS);
+   addSource(s3);
 }
 
 TestProxy::~TestProxy()

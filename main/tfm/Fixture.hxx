@@ -35,6 +35,7 @@ class Fixture : public CppUnit::TestFixture
       static void initialize(int argc, char** argv);
       static void destroyStatic();
 
+      static resip::Security* security;
       static TestProxy* proxy;
       static TestUser* jason;
       static TestUser* jason1;
