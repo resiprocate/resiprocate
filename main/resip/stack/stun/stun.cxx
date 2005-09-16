@@ -1382,7 +1382,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          if (relay->fd)
          {
             FD_SET(relay->fd, &fdSet);
-            if (relay->fd >= maxFd) 
+            if ((Socket)relay->fd >= maxFd) 
 			{
 				maxFd=relay->fd+1;
 			}
