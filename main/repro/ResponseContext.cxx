@@ -118,7 +118,8 @@ ResponseContext::processPendingTargets()
            (request.header(h_RequestLine).method() == INVITE ||
             request.header(h_RequestLine).method() == SUBSCRIBE ) )
       {
-         NameAddr rt;
+         
+         NameAddr rt(mRequestContext.mProxy.getRecordRoute());
          // !jf! could put unique id for this instance of the proxy in user portion
 
          if (request.exists(h_Routes) && request.header(h_Routes).size() != 0)
@@ -151,7 +152,7 @@ ResponseContext::processPendingTargets()
          //will fill it in. 
          if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
          {
-            request.header(h_RecordRoutes).push_front(mRequestContext.mProxy.getRecordRoute());
+            request.header(h_RecordRoutes).push_front(rt);
          }
       }
       
