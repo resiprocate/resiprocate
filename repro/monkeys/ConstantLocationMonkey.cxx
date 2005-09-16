@@ -20,8 +20,8 @@ ConstantLocationMonkey::ConstantLocationMonkey()
 ConstantLocationMonkey::~ConstantLocationMonkey()
 {}
 
-RequestProcessor::processor_action_t
-ConstantLocationMonkey::handleRequest(RequestContext& context)
+Processor::processor_action_t
+ConstantLocationMonkey::process(RequestContext& context)
 {
   DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << context);
@@ -35,7 +35,7 @@ ConstantLocationMonkey::handleRequest(RequestContext& context)
      context.addTarget(NameAddr("<sip:101@sipedge.sipit.net>"));     
   }
   
-  return RequestProcessor::Continue;
+  return Processor::Continue;
 }
 
 void

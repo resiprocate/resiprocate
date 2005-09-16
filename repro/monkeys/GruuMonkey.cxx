@@ -23,8 +23,8 @@ GruuMonkey::GruuMonkey()
 GruuMonkey::~GruuMonkey()
 {}
 
-RequestProcessor::processor_action_t
-GruuMonkey::handleRequest(RequestContext& context)
+Processor::processor_action_t
+GruuMonkey::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
@@ -49,7 +49,7 @@ GruuMonkey::handleRequest(RequestContext& context)
          InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu" << uri << ", sending 404");
          Helper::makeResponse(response, request, 404); 
          context.sendResponse(response);
-         return RequestProcessor::SkipThisChain;                     
+         return Processor::SkipThisChain;                     
       }
       else
       {
@@ -66,7 +66,7 @@ GruuMonkey::handleRequest(RequestContext& context)
             InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu" << uri << ", sending 404");
             Helper::makeResponse(response, request, 404); 
             context.sendResponse(response);
-            return RequestProcessor::SkipThisChain;            
+            return Processor::SkipThisChain;            
          }
          
          if (mStore.isContactRegistered(aor.getAor(), instance))
@@ -118,7 +118,7 @@ GruuMonkey::handleRequest(RequestContext& context)
             }
             InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
             // skip the rest of the monkeys
-            return RequestProcessor::SkipThisChain;	            
+            return Processor::SkipThisChain;	            
          }
          else  // nobody home with that GRUU
          {
@@ -127,11 +127,11 @@ GruuMonkey::handleRequest(RequestContext& context)
             InfoLog (<< *this << ": no contacts matching this GRUU found.  Gruu" << uri << ", sending 480");
             Helper::makeResponse(response, request, 480); 
             context.sendResponse(response);
-            return RequestProcessor::SkipThisChain;
+            return Processor::SkipThisChain;
          }
       }
    }
-   return RequestProcessor::Continue;
+   return Processor::Continue;
 }
    
 

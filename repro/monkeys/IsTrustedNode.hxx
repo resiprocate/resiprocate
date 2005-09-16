@@ -1,19 +1,19 @@
 #if !defined(RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX)
 #define RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX 
-#include "repro/RequestProcessor.hxx"
+#include "repro/Processor.hxx"
 
 #include <iosfwd>
 
 namespace repro
 {
 
-  class IsTrustedNode: public RequestProcessor
+  class IsTrustedNode: public Processor
   {
     public:
       IsTrustedNode();
       virtual ~IsTrustedNode();
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
   };
 }
