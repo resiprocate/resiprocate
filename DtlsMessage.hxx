@@ -18,9 +18,7 @@ class DtlsMessage : public Message
 {
    public:
       RESIP_HeapCount(DtlsMessage);
-      DtlsMessage(SSL *ssl)
-         : mSsl(ssl) 
-            {}
+      DtlsMessage(SSL *ssl);
       virtual ~DtlsMessage() 
             {}
       virtual Message * clone() const { return new DtlsMessage(mSsl); }
