@@ -10,8 +10,9 @@ TestReproUser::TestReproUser(TestProxy& proxy,
                              const resip::Data& password, 
                              resip::TransportType transport,
                              const resip::Uri& outboundProxy,
-                             const resip::Data& interface) : 
-   TestUser(aor, authName, password, transport, outboundProxy, interface),
+                             const resip::Data& interface,
+                             resip::Security* security) : 
+   TestUser(aor, authName, password, transport, outboundProxy, interface, security),
    mProxy(proxy)
 {
    mProxy.addUser(mAuthName, aor, password);

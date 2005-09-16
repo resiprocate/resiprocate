@@ -3,6 +3,11 @@
 
 #include "tfm/TestUser.hxx"
 
+namespace resip
+{
+class Security;
+}
+
 class TestRepro;
 
 class TestReproUser : public TestUser
@@ -14,7 +19,8 @@ class TestReproUser : public TestUser
                     const resip::Data& password, 
                     resip::TransportType transport = resip::UDP,
                     const resip::Uri& outboundProxy = TestSipEndPoint::NoOutboundProxy,
-                    const resip::Data& interface = resip::Data::Empty);
+                    const resip::Data& interface = resip::Data::Empty,
+                    resip::Security* security=0);
       virtual ~TestReproUser();
       virtual void clean();
       
