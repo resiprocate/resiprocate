@@ -5,7 +5,7 @@
 using namespace resip ;
 
 DtlsMessage::DtlsMessage( SSL *ssl )
-    : mSSL( ssl )
+    : mSsl( ssl )
 {
 }
 
