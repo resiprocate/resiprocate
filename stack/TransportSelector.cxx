@@ -630,6 +630,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             unsigned long cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
             target.connectionId = cid;
             msg->header(h_RequestLine).uri().remove(p_cid);
+            InfoLog (<< "Using existing connection id " << cid);
          }
 
          Data& encoded = msg->getEncoded();
