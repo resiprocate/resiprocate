@@ -426,7 +426,7 @@ SdpContents::Session::Phone::operator=(const Phone& rhs)
 ostream&
 SdpContents::Session::Phone::encode(ostream& s) const
 {
-   s << "e="
+   s << "p="
      << mNumber << Symbols::SPACE[0];
    if (!mFreeText.empty())
    {
