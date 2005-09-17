@@ -1,4 +1,5 @@
 #include <iostream>
+#include "assert.h"
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
