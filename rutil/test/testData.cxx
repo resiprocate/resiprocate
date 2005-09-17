@@ -15,6 +15,52 @@ class TestData
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
+	 {
+	   const char* txt = "buffer";
+	   Data d(txt);
+	   // copies
+	   assert(txt != d.data());
+
+	   const char* b = d.data();
+	   d.c_str();
+	   // not reallocated
+	   assert(b == d.data());
+	 }
+	 
+	 {
+	   const char* txt = "buffer";
+	   Data d(Data::Share, txt, strlen(txt));
+	   // shared
+	   assert(txt == d.data());
+
+	   d.c_str();
+	   // reallocated
+	   assert(txt != d.data());
+	 }
+
+	 {
+	   const char* txt = "buffer";
+	   Data d(Data::Borrow, txt, strlen(txt));
+	   // shared
+	   assert(txt == d.data());
+	   const char* b = d.data();
+
+	   d.c_str();
+	   // reallocated
+	   assert(b != d.data());
+	 }
+
+	 {
+	   const int s = 12;
+	   char* txt = new char[s];
+	   Data d(Data::Take, txt, s);
+	   // shared
+	   assert(txt == d.data());
+
+	   d.c_str();
+	   // reallocated
+	   assert(txt != d.data());
+	 }
 
          {
             {
