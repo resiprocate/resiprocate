@@ -17,7 +17,9 @@ class ExternalDns
    public:
       //returns 0 for success, otherwise message can be pulled from errorMessage
       virtual int init() = 0; 
-                          
+
+      virtual ~ExternalDns() {};
+
       //null terminated strings; lifespan of strings passed in is not guaranteed
       //beyond the duration of the call.  
       virtual void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
