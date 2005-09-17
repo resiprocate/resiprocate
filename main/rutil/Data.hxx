@@ -106,13 +106,13 @@ class Data
 #endif      
 
       /**
-        Creates a data with the contents of the null-terminated
-        string. This constructor uses "share" mode.
+        Creates a data with a copy of the contents of the
+        null-terminated string.
 
         @warning Passing a non-null-terminated string to this
                  method would be a Really Bad Thing.
       */
-      Data(const char* str);// Uses share mode
+      Data(const char* str);
 
       /**
         Creates a data with the contents of the buffer.
