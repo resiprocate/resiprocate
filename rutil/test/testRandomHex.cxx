@@ -15,12 +15,11 @@ int main(int argc, char** argv)
 
    if(argc == 3)
    {
-      int runs = atoi(argv[1]);
-      int length = atoi(argv[2]);
+      runs = atoi(argv[1]);
+      length = atoi(argv[2]);
    }
 
    //Random::initialize();
-   
 
    if (runs <= 0 || length <= 0)
    {
