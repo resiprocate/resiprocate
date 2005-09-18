@@ -7,11 +7,6 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RUTIL ARES OPENSSL PTHREAD POPT
 
-ifeq ($(USE_SSL), true)
-TESTPROGRAMS += makeSelfCert.cxx \
-		testTls.cxx 
-endif
-
 TESTPROGRAMS += \
 	testCoders.cxx \
 	testCountStream.cxx \
@@ -26,7 +21,6 @@ TESTPROGRAMS += \
 	testLogger.cxx \
 	testMD5Stream.cxx \
 	testMem.cxx \
-	testParseBuffer.cxx \
 	testRandomHex.cxx \
 	testSHA1Stream.cxx \
 	testThreadIf.cxx \
