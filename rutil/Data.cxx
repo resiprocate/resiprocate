@@ -1330,37 +1330,38 @@ Data::convertInt() const
 {
    int val = 0;
    char* p = mBuf;
-   int l = mSize;
+   const char* const end = mBuf + mSize;
    int s = 1;
 
-   while (isspace(*p++))
+   for (; p != end; ++p)
    {
-      l--;
+      if (!isspace(*p))
+      {
+	 goto sign_char;
+      }
    }
-   p--;
+   return val;
+  sign_char:
    
    if (*p == '-')
    {
       s = -1;
       ++p;
-      l--;
+   }
+   else if (*p == '+')
+   {
+      ++p;
    }
    
-   while (l--)
+   for(; p != end; ++p)
    {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      if (!isdigit(*p))
       {
-         val *= 10;
-         val += c - '0';
+	 break;
       }
-      else
-      {
-         return s*val;
-      }
+      val *= 10;
+      val += (*p) - '0';
    }
-
    return s*val;
 }
 
@@ -1369,38 +1370,33 @@ Data::convertUnsignedLong() const
 {
    unsigned long val = 0;
    char* p = mBuf;
-   int l = mSize;
-   int s = 1;
+   const char* const end = mBuf + mSize;
 
-   while (isspace(*p++))
+   for (; p != end; ++p)
    {
-      l--;
+      if (!isspace(*p))
+      {
+	 goto sign_char;
+      }
    }
-   p--;
-   
-   if (*p == '-')
+   return val;
+  sign_char:
+
+   if (*p == '+')
    {
-      s = -1;
       ++p;
-      l--;
    }
    
-   while (l--)
+   for(; p != end; ++p)
    {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      if (!isdigit(*p))
       {
-         val *= 10;
-         val += c - '0';
+	 break;
       }
-      else
-      {
-         return s*val;
-      }
+      val *= 10;
+      val += (*p) - '0';
    }
-
-   return s*val;
+   return val;
 }
 
 UInt64
@@ -1408,39 +1404,33 @@ Data::convertUInt64() const
 {
    UInt64 val = 0;
    char* p = mBuf;
-   int l = mSize;
-   int s = 1;
+   const char* const end = mBuf + mSize;
 
-   while (isspace(*p++))
+   for (; p != end; ++p)
    {
-      l--;
+      if (!isspace(*p))
+      {
+	 goto sign_char;
+      }
    }
-   p--;
+   return val;
+  sign_char:
 
-   // ?abr? Doesn't the "U" in "UInt" mean unsigned?   
-   if (*p == '-')
+   if (*p == '+')
    {
-      s = -1;
       ++p;
-      l--;
    }
    
-   while (l--)
+   for(; p != end; ++p)
    {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      if (!isdigit(*p))
       {
-         val *= 10;
-         val += c - '0';
+	 break;
       }
-      else
-      {
-         return s*val;
-      }
+      val *= 10;
+      val += (*p) - '0';
    }
-
-   return s*val;
+   return val;
 }
 
 size_t
@@ -1448,29 +1438,32 @@ Data::convertSize() const
 {
    size_t val = 0;
    char* p = mBuf;
-   int l = mSize;
+   const char* const end = mBuf + mSize;
 
-   while (isspace(*p++))
+   for (; p != end; ++p)
    {
-      l--;
+      if (!isspace(*p))
+      {
+	 goto sign_char;
+      }
    }
-   p--;
+   return val;
+  sign_char:
+
+   if (*p == '+')
+   {
+      ++p;
+   }
    
-   while (l--)
+   for(; p != end; ++p)
    {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      if (!isdigit(*p))
       {
-         val *= 10;
-         val += c - '0';
+	 break;
       }
-      else
-      {
-         return val;
-      }
+      val *= 10;
+      val += (*p) - '0';
    }
-
    return val;
 }
 
@@ -1479,40 +1472,59 @@ Data::convertDouble() const
 {
    long val = 0;
    char* p = mBuf;
+   const char* const end = p + mSize;
    int s = 1;
 
-   while (isspace(*p++));
-   p--;
+   for (; p != end; ++p)
+   {
+      if (!isspace(*p))
+      {
+	 goto sign_char;
+      }
+   }
+   return val;
+  sign_char:
    
    if (*p == '-')
    {
       s = -1;
       ++p;
    }
-   
-   while (isdigit(*p))
+   else if (*p == '+')
    {
-      val *= 10;
-      val += *p - '0';
       ++p;
    }
 
-   if (*p == '.')
+   for(; p != end; ++p)
    {
-      ++p;
-      long d = 0;
-      double div = 1.0;
-      while (isdigit(*p))
+      if (*p == '.')
       {
-         d *= 10;
-         d += *p - '0';
-         div *= 10;
-         ++p;
+	 goto decimals;
       }
-      return s*(val + d/div);
+      if (!isdigit(*p))
+      {
+	 return s*val;
+      }
+      val *= 10;
+      val += (*p) - '0';
    }
-
    return s*val;
+
+  decimals:
+   ++p;
+   long d = 0;
+   double div = 1.0;
+   for(; p != end; ++p)
+   {
+      if (!isdigit(*p)) 
+      {
+	 break;
+      }
+      d *= 10;
+      d += *p - '0';
+      div *= 10;
+   }
+   return s*(val + d/div);
 }
 
 bool
