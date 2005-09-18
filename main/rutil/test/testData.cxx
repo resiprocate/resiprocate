@@ -358,10 +358,184 @@ class TestData
             
             Data s3("12");
             assert(s3.convertInt() == 12);
-            
+
             Data s4("foo");
             assert(s4.convertInt() == 0);
+
+	    Data s5("     ");
+	    assert(s5.convertInt() == 0);
+
+	    Data s6("    +");
+	    assert(s6.convertInt() == 0);
+
+	    Data s7("    +17");
+	    assert(s7.convertInt() == 17);
+
+	    Data s8("    -17");
+	    assert(s8.convertInt() == -17);
+
+	    Data s9("    --17");
+	    assert(s9.convertInt() == 0);
          }
+
+         {
+            Data s1;
+            assert(s1.convertUnsignedLong() == 0);
+            
+            Data s2("12foo");
+            assert(s2.convertUnsignedLong() == 12);
+            
+            Data s3("12");
+            assert(s3.convertUnsignedLong() == 12);
+
+            Data s4("foo");
+            assert(s4.convertUnsignedLong() == 0);
+
+	    Data s5("     ");
+	    assert(s5.convertUnsignedLong() == 0);
+
+	    Data s6("    +");
+	    assert(s6.convertUnsignedLong() == 0);
+
+	    Data s7("    +17");
+	    assert(s7.convertUnsignedLong() == 17);
+
+	    Data s8("    -17");
+	    assert(s8.convertUnsignedLong() == 0);
+         }
+
+         {
+            Data s1;
+            assert(s1.convertUInt64() == 0);
+            
+            Data s2("12foo");
+            assert(s2.convertUInt64() == 12);
+            
+            Data s3("12");
+            assert(s3.convertUInt64() == 12);
+
+            Data s4("foo");
+            assert(s4.convertUInt64() == 0);
+
+	    Data s5("     ");
+	    assert(s5.convertUInt64() == 0);
+
+	    Data s6("    +");
+	    assert(s6.convertUInt64() == 0);
+
+	    Data s7("    +17");
+	    assert(s7.convertUInt64() == 17);
+
+	    Data s8("    -17");
+	    assert(s8.convertUInt64() == 0);
+         }
+
+         {
+            Data s1;
+            assert(s1.convertSize() == 0);
+            
+            Data s2("12foo");
+            assert(s2.convertSize() == 12);
+            
+            Data s3("12");
+            assert(s3.convertSize() == 12);
+
+            Data s4("foo");
+            assert(s4.convertSize() == 0);
+
+	    Data s5("     ");
+	    assert(s5.convertSize() == 0);
+
+	    Data s6("    +");
+	    assert(s6.convertSize() == 0);
+
+	    Data s7("    +17");
+	    assert(s7.convertSize() == 17);
+
+	    Data s8("    -17");
+	    assert(s8.convertSize() == 0);
+         }
+
+         {
+            Data s1;
+            assert(s1.convertDouble() == 0);
+            
+            Data s2("12foo");
+            assert(s2.convertDouble() == 12);
+            
+            Data s3("12");
+            assert(s3.convertDouble() == 12);
+
+            Data s4("foo");
+            assert(s4.convertDouble() == 0);
+
+	    Data s5("     ");
+	    assert(s5.convertDouble() == 0);
+
+	    Data s6("    +");
+	    assert(s6.convertDouble() == 0);
+
+	    Data s7("    +17");
+	    assert(s7.convertDouble() == 17);
+
+	    Data s8("    -17");
+	    assert(s8.convertDouble() == -17);
+
+	    Data s9("    --17");
+	    assert(s9.convertDouble() == 0);
+         }
+
+         {
+            Data s1(".");
+            assert(s1.convertDouble() == 0);
+            
+            Data s2("12.12foo");
+            assert(s2.convertDouble() == 12.12);
+            
+            Data s3("12.12");
+            assert(s3.convertDouble() == 12.12);
+
+            Data s4(".foo");
+            assert(s4.convertDouble() == 0);
+
+	    Data s5("     .");
+	    assert(s5.convertDouble() == 0);
+
+	    Data s6("    +.");
+	    assert(s6.convertDouble() == 0);
+
+	    Data s6a("    -.");
+	    assert(s6a.convertDouble() == 0);
+
+	    Data s7("    +17.17");
+	    assert(s7.convertDouble() == 17.17);
+
+	    Data s8("    -17.17");
+	    assert(s8.convertDouble() == -17.17);
+
+	    Data s9("    -17.17foo");
+	    assert(s9.convertDouble() == -17.17);
+
+	    Data s10("    --17.17");
+	    assert(s10.convertDouble() == 0);
+
+	    Data s11("    -0000.017");
+	    assert(s11.convertDouble() == -0.017);
+
+	    Data s12(".017");
+	    assert(s12.convertDouble() == 0.017);
+
+	    Data s13("    .017");
+	    assert(s13.convertDouble() == 0.017);
+
+	    Data s14("    +.017");
+	    assert(s14.convertDouble() == 0.017);
+
+	    Data s15("    -.017");
+	    assert(s15.convertDouble() == -0.017);
+
+         }
+
          {
             Data s;
             s = "some text";
