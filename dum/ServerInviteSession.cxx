@@ -189,6 +189,8 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
+      case UAS_Offer:
+      case UAS_EarlyOffer:
       case UAS_OfferReliable: 
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
@@ -199,6 +201,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
+      case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
       default:
@@ -266,6 +269,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
+      case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
       default:
@@ -288,19 +292,17 @@ ServerInviteSession::end()
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
-      case UAS_AcceptedWaitingAnswer:
          reject(480);
          break;         
          
       case UAS_OfferReliable: 
-      case UAS_ReceivedUpdate:
       case UAS_EarlyReliable:
-      case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
+      case UAS_FirstEarlyReliable:
       case UAS_NoOfferReliable:
-      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_ReceivedUpdate:   // !slg! todo: send 488U
+      case UAS_ReceivedUpdateWaitingAnswer: // !slg! todo: send 488U
       case UAS_SentUpdate:
-      case UAS_SentUpdateAccepted:
       case UAS_WaitingToTerminate:
          reject(480);
          break;
@@ -311,6 +313,8 @@ ServerInviteSession::end()
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_SentUpdateAccepted:
+      case UAS_AcceptedWaitingAnswer:
          if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
          {
             transition(UAS_WaitingToHangup);
