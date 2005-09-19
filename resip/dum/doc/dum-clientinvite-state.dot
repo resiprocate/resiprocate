@@ -4,6 +4,7 @@
 //  names start with lower case are actions
 //  names start with on are events
 
+//  Note:  not all Assert transitions are shown here
 digraph UAC {
     rankdir=LR;
     node [shape = box];
@@ -16,7 +17,7 @@ digraph UAC {
     Start -> Answered                       [ label = "on2xx-offer/app::onNewSession,app::onOffer,app::onConnected" ];
     Start -> Connected                      [ label = "on2xx-answer/send::ACK,app::onNewSession,app::onAnswer,app::onConnected" ];
     Start -> Terminated                     [ label = "on2xx/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
-    Start -> Terminated                     [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    Start -> Terminated                     [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     Start -> Terminated                     [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
     Start -> Assert                         [ label = "dum::cancel/assert" ];
 
@@ -27,7 +28,7 @@ digraph UAC {
     Early -> Answered                       [ label = "on2xx-offer/app::onOffer,app::onConnected" ];
     Early -> Connected                      [ label = "on2xx-answer/send::ACK,app::onAnswer,app::onConnected" ];
     Early -> Terminated                     [ label = "on2xx/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
-    Early -> Terminated                     [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    Early -> Terminated                     [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     Early -> Canceled                       [ label = "dum::cancel/timer::cancel" ];
     Early -> Terminated                     [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
     Early -> Assert                         [ label = "dum::provideAnswer/assert(0)" ];
@@ -40,7 +41,7 @@ digraph UAC {
     EarlyWithOffer -> SentAnswer            [ label = "dum::provideAnswer/send::PRACK-answer" ];
     EarlyWithOffer -> Terminated            [ label = "on2xx|on2xx-answer/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
     EarlyWithOffer -> Terminated            [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
-    EarlyWithOffer -> Terminated            [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    EarlyWithOffer -> Terminated            [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     EarlyWithOffer -> Canceled              [ label = "dum::cancel/timer::cancel" ];
     EarlyWithOffer -> Assert                [ label = "dum::provideOffer/assert(0)" ];
     EarlyWithOffer -> Terminated            [ label = "dum::end/send::BYE,app::onTerminated" ];
@@ -51,7 +52,7 @@ digraph UAC {
     EarlyWithAnswer -> ReceivedUpdateEarly  [ label = "onUPDATE/app::onOffer" ];
     EarlyWithAnswer -> SentUpdateEarly      [ label = "dum::provideOffer/send::UPDATE" ];    // Can I send the UPDATE before I get 200/PRACK
     EarlyWithAnswer -> Terminated           [ label = "onRedirect/app::onRedirected" ];
-    EarlyWithAnswer -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    EarlyWithAnswer -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     EarlyWithAnswer -> Canceled             [ label = "dum::cancel/timer::cancel" ];
     EarlyWithAnswer -> Terminated           [ label = "dum::end/send::BYE,app::onTerminated" ];
     EarlyWithAnswer -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
@@ -64,7 +65,7 @@ digraph UAC {
     SentUpdateEarly -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
     SentUpdateEarly -> Assert               [ label = "dum::provideOffer/assert(0)" ];
     SentUpdateEarly -> Terminated           [ label = "onRedirect/app::onRedirected" ];
-    SendUpdateEarly -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    SendUpdateEarly -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     SentUpdateEarly -> Terminated           [ label = "dum::end/send::BYE,app::onTerminated" ];
 
     SentUpdateConnected -> Connected        [ label = "on200U/app::onAnswer" ];
@@ -94,7 +95,7 @@ digraph UAC {
     SentAnswer -> Terminated                [ label = "on2xx-offer|on2xx-answer/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
     SentAnswer -> EarlyWithAnswer           [ label = "on1xx/timer::StaleCall,app::onProvisional,send::PRACK" ];
     SentAnswer -> Terminated                [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
-    SentAnswer -> Terminated                [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    SentAnswer -> Terminated                [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     SentAnswer -> Terminated                [ label = "dum::end/send::BYE,app::onTerminated" ];
     SentAnswer -> QueuedUpdate              [ label = "dum::provideOffer/queueOffer" ];
     SentAnswer -> Canceled                  [ label = "dum::cancel/timer::cancel" ];
@@ -106,7 +107,7 @@ digraph UAC {
     QueuedUpdate -> Terminated              [ label = "on2xx-offer|on2xx-answer/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
     QueuedUpdate -> QueuedUpdate            [ label = "on1xx/timer::StaleCall,app::onProvisional,send::PRACK" ];
     QueuedUpdate -> Terminated              [ label = "onRedirect/app::onRedirected" ];
-    QueuedUpdate -> Terminated              [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    QueuedUpdate -> Terminated              [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     QueuedUpdate -> Terminated              [ label = "dum::end/send::BYE,app::onTerminated" ];
     QueuedUpdate -> Canceled                [ label = "dum::cancel/timer::cancel" ];
     QueuedUpdate -> Assert                  [ label = "dum::provideAnswer/assert(0)" ];
@@ -115,7 +116,7 @@ digraph UAC {
     Canceled -> Terminated                  [ label = "onTimer/send::487,app::onTerminated" ];
     Canceled -> Terminated                  [ label = "on2xx|on2xx-offer|on2xx-answer/send::ACK,send::BYE,app::onTerminated" ];
     Canceled -> Terminated                  [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
-    Canceled -> Terminated                  [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated" ];
+    Canceled -> Terminated                  [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     Canceled -> Canceled                    [ label = "dum::cancel" ];  // No-op
     Canceled -> Terminated                  [ label = "dum::end/send::BYE,app::onTerminated" ];  // !jf! possibly incorrect to always BYE in UAC_Cancelled
 }
