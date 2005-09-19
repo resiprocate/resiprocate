@@ -4,6 +4,7 @@
 //  names start with lower case are actions
 //  names start with on are events
 
+//  Note:  not all Assert transitions are shown here
 digraph UAC {
   rankdir=LR;
   node [shape = box];
@@ -16,6 +17,7 @@ digraph UAC {
   Connected -> ReceivedReinviteNoOffer    [ label = "onINVITE/app::onDialogModified" ];
   Connected -> Connected                  [ label = "on200P" ]; 
   Connected -> Connected                  [ label = "on200I/resend::ACK" ]; 
+  Connected -> Connected                  [ label = "onTimer200/resend::2xx" ];
   Connected -> Connected                  [ label = "onCANCEL/send::200C" ]; // is this right?
   Connected -> Terminated                 [ label = "dum::end/send::BYE" ];
   Connected -> Terminated                 [ label = "onBYE/send::200B,app::onTerminated(PeerEnded)" ];
