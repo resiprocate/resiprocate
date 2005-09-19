@@ -95,8 +95,11 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
       case UAC_EarlyWithOffer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_Cancelled:
+      case UAC_QueuedUpdate:
+      case Terminated:
          assert(0);
          break;
 
@@ -136,20 +139,23 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       {
          transition(Connected);
          sendAck(&answer);
+
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
 
-
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Cancelled:
+      case UAC_QueuedUpdate:
+      case Terminated:
          assert(0);
          break;
 
@@ -173,6 +179,7 @@ ClientInviteSession::end()
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
+      case UAC_QueuedUpdate:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
          sendBye();
@@ -637,7 +644,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
             handler->onOffer(getSessionHandle(), msg, *sdp);
             if(!isTerminated())  
             {
-               handler->onConnected(getHandle(), msg);
+               handler->onConnected(getHandle(), msg);  
             }
          }
          break;
@@ -720,11 +727,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
-         handler->onNewSession(getHandle(), Offer, msg);
-         if(!isTerminated())  
-         {
-            handleOffer(msg, *sdp);
-         }
+         handleOffer(msg, *sdp);
          break;
 
       case On1xxAnswer:
@@ -743,7 +746,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          handler->onOffer(getSessionHandle(), msg, *sdp);
          if(!isTerminated())  
          {
-            handler->onConnected(getHandle(), msg);
+            handler->onConnected(getHandle(), msg);   
          }
          break;
 
