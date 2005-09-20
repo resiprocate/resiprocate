@@ -62,7 +62,7 @@ pemTypePrefixes(  Security::PEMType pType )
    static const Data domainKey("domain_key_");
    static const Data userCert("user_cert_");
    static const Data userKey("user_key_");
-   static const Data unkonwKey("user_key_");
+   static const Data unknownKey("user_key_");
 
    switch (pType)
    {
@@ -77,7 +77,7 @@ pemTypePrefixes(  Security::PEMType pType )
          assert(0);
       }
    }
-   return unkonwKey;
+   return unknownKey;
 }
 
 
