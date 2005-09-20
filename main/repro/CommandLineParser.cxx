@@ -47,7 +47,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
 #endif
-   // strcpy(certPath,"C:\\sipCerts");   Note:  certPath is not used in Win32 - WinSecurity is used instead and certificates come from windows certificate store
+   strcpy(certPath,"C:\\sipCerts");   
 #else
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
@@ -71,9 +71,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
       {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
-#if !defined(WIN32)
       {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
-#endif
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
