@@ -71,7 +71,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
       {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+#ifdef WIN32
+      {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: c:\\sipCerts)", 0},
+#else
       {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
+#endif
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
