@@ -45,9 +45,6 @@
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
-#ifdef WIN32
-#include "resip/stack/WinSecurity.hxx"
-#endif
 #endif
 
 #if defined(USE_MYSQL)
@@ -160,22 +157,18 @@ main(int argc, char** argv)
    }
 
 #ifdef USE_SSL
-#ifdef WIN32
-   WinSecurity security;
-#else
    Security security(args.mCertPath);
-#endif
    SipStack stack(&security);
 #else
-    SipStack stack;
+   SipStack stack;
 #endif
 
-    std::vector<Data> enumSuffixes;
-    if (!args.mEnumSuffix.empty())
-    {
-       enumSuffixes.push_back(args.mEnumSuffix);
-       stack.setEnumSuffixes(enumSuffixes);
-    }
+   std::vector<Data> enumSuffixes;
+   if (!args.mEnumSuffix.empty())
+   {
+      enumSuffixes.push_back(args.mEnumSuffix);
+      stack.setEnumSuffixes(enumSuffixes);
+   }
 
    try
    {

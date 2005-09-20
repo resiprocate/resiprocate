@@ -93,7 +93,7 @@ class Log
 	    resip::Data::size_type mHeaderLength;
 	    const char* mFile;
 	    int mLine;
-	    char mBuffer[8096];
+	    char mBuffer[128];
 	    Data mData;
 	    oDataStream mStream;
 	    Guard& operator=(const Guard&);
