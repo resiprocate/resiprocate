@@ -675,7 +675,8 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp.get()))
+   Event e = toEvent(msg, sdp.get());
+   switch (e)
    {
       case On1xx:
          transition(UAC_Early);
@@ -744,17 +745,22 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          break;
       }
 
-      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
-      case OnGeneralFailure:
       case On422Invite:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::InviteFailure, &msg);
+         mDum.destroy(this);
+         break;
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
+      case OnGeneralFailure:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
          break;
-
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
