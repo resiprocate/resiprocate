@@ -245,6 +245,7 @@ DnsResult::lookupInternal(const Uri& uri)
                }
                mSRVCount++;
                mDns.lookup<RR_SRV>("_sips._udp." + mTarget, Protocol::Sip, this);
+               StackLog (<< "Doing SRV lookup of _sips._udp." << mTarget);
             }
             else
             {
@@ -257,6 +258,7 @@ DnsResult::lookupInternal(const Uri& uri)
                }
                mSRVCount++;
                mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip,  this);
+               StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
             }
          }
          else
@@ -273,14 +275,17 @@ DnsResult::lookupInternal(const Uri& uri)
                case TLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
                   mDns.lookup<RR_SRV>("_sip._tls." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sip._tls." << mTarget);
                   break;
                case DTLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
                   mDns.lookup<RR_SRV>("_sip._dtls." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sip._dtls." << mTarget);
                   break;
                case TCP:
                   mSRVCount++;
                   mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sip._tcp." << mTarget);
                   break;
                case SCTP:
                case DCCP:
@@ -288,6 +293,7 @@ DnsResult::lookupInternal(const Uri& uri)
                default: //fall through to UDP for unimplemented & unknown
                   mSRVCount++;
                   mDns.lookup<RR_SRV>("_sip._udp." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sip._udp." << mTarget);
             }
          }
       }
@@ -469,10 +475,10 @@ DnsResult::primeResults()
    }
 
    // Either we are finished or there are results primed
-   assert(mType == Finished || 
-          mType == Pending || 
-          (mType == Available && !mResults.empty())
-      );
+   //assert(mType == Finished ||        // !slg! handle() might end up destroying the DnsResult - so we can't safely do this assert
+   //       mType == Pending || 
+   //       (mType == Available && !mResults.empty())
+   //   );
 }
 
 // implement the selection algorithm from rfc2782 (SRV records)
@@ -1031,6 +1037,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
 
          mSRVCount++;
          mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
+         StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
       }
       else
       {
@@ -1038,19 +1045,27 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          {
             mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
             ++mSRVCount;
+            StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
+         }
+         if (mInterface.isSupportedProtocol(DTLS))
+         {
+            mDns.lookup<RR_SRV>("_sips._udp." + mTarget, Protocol::Sip, this);
+            ++mSRVCount;
+            StackLog (<< "Doing SRV lookup of _sips._udp." << mTarget);
          }
          if (mInterface.isSupportedProtocol(TCP))
          {
             mDns.lookup<RR_SRV>("_sip._tcp." + mTarget, Protocol::Sip, this);
             ++mSRVCount;
+            StackLog (<< "Doing SRV lookup of _sip._tcp." << mTarget);
          }
          if (mInterface.isSupportedProtocol(UDP))
          {
             mDns.lookup<RR_SRV>("_sip._udp." + mTarget, Protocol::Sip, this);
             ++mSRVCount;
+            StackLog (<< "Doing SRV lookup of _sip._udp." << mTarget);
          }
       }
-      StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
 }
 
