@@ -29,7 +29,10 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mServerSub(serverSub)
 {
    assert(request.isRequest());
-   mProposedLocalSdp = InviteSession::makeSdp(*initialOffer);
+   if(initialOffer)  
+   {
+      mProposedLocalSdp = InviteSession::makeSdp(*initialOffer);
+   }
    mInvite = request;
 
    mState=UAC_Start;
@@ -85,8 +88,11 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
       case UAC_EarlyWithOffer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_Cancelled:
+      case UAC_QueuedUpdate:
+      case Terminated:
          assert(0);
          break;
 
@@ -120,20 +126,23 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       {
          transition(Connected);
          sendAck(&answer);
+
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
 
-
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
+      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Cancelled:
+      case UAC_QueuedUpdate:
+      case Terminated:
          assert(0);
          break;
 
@@ -157,6 +166,7 @@ ClientInviteSession::end()
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
+      case UAC_QueuedUpdate:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
          sendBye();
@@ -697,11 +707,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
-         handler->onNewSession(getHandle(), Offer, msg);
-         if(!isTerminated())  
-         {
             handleOffer(msg, *sdp);
-         }
          break;
 
       case On1xxAnswer:
@@ -794,6 +800,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          // too late
          break;
 
+      // !slg! This probably doesn't even make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
       {
