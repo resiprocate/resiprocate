@@ -98,13 +98,13 @@ ServerPublication::dispatch(const SipMessage& msg)
    assert(msg.isRequest());
    ServerPublicationHandler* handler = mDum.getServerPublicationHandler(mEventType);
    mLastRequest = msg;
+   mExpires = 3600; //bad
+   if (msg.exists(h_Expires))
+   {
+      mExpires = msg.header(h_Expires).value();
+   }
    if (msg.exists(h_SIPIfMatch))
    {      
-      mExpires = 3600; //bad
-      if (msg.exists(h_Expires))
-      {
-         mExpires = msg.header(h_Expires).value();
-      }
       if (mExpires == 0)
       {
          handler->onRemoved(getHandle(), mEtag, msg, mExpires);
