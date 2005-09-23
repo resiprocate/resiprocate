@@ -1,10 +1,6 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
-#if defined(HAVE_CONFIG_H)
-#  include "rutil/config.hxx"
-#endif
-
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
 #  undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
 #endif
