@@ -663,8 +663,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       {
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
-         //Tuple tuple(addr, mPort, mTransport, mTarget);
-         Tuple tuple(addr, mPort, mTransport, it->name());
+         Tuple tuple(addr, mPort, mTransport, mTarget);
          StackLog (<< "Adding " << tuple << " to result set");
          mResults.push_back(tuple);
       }
