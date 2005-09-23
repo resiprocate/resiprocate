@@ -3,6 +3,10 @@
 #include <ctype.h>
 #include <math.h>
 
+#if defined(HAVE_CONFIG_HXX)
+#include "resip/stack/config.hxx"
+#endif
+
 #include "rutil/Data.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/vmd5.hxx"
