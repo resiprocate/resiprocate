@@ -7,11 +7,7 @@
 #include "rutil/compat.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
-
-#include "HashMap.hxx"
-#if defined(HAVE_CONFIG_HXX)
-#include "resip/stack/config.hxx"
-#endif
+#include "rutil/HashMap.hxx"
 
 #ifndef RESIP_DATA_LOCAL_SIZE
 #define RESIP_DATA_LOCAL_SIZE 16
