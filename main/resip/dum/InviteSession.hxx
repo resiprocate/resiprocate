@@ -76,6 +76,7 @@ class InviteSession : public DialogUsage
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
+      const Data& getDialogId() const;
       
       bool isConnected() const;
       bool isTerminated() const;
@@ -249,6 +250,7 @@ class InviteSession : public DialogUsage
       Mimes mPeerSupportedMimeTypes;
       Tokens mPeerSupportedEncodings;
       Tokens mPeerSupportedLanguages;
+      Tokens mPeerAllowedEvents;
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       
@@ -350,3 +352,4 @@ class InviteSession : public DialogUsage
  * <http://www.vovida.org/>.
  *
  */
+

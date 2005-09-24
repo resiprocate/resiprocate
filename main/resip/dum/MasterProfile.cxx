@@ -189,6 +189,37 @@ MasterProfile::clearSupportedLanguages()
    mSupportedLanguages.clear();
 }
 
+void 
+MasterProfile::addAllowedEvent(const Token& event)
+{
+   mAllowedEvents.push_back(event);
+}
+
+bool 
+MasterProfile::isEventAllowed(const Tokens& events) const
+{
+   for (Tokens::const_iterator i=events.begin(); i != events.end(); ++i)
+   {
+      if (mAllowedEvents.find(*i) == false)
+      {
+         return false;
+      }
+   }
+   return true;
+}
+
+Tokens 
+MasterProfile::getAllowedEvents() const
+{
+   return mAllowedEvents;
+}
+
+void 
+MasterProfile::clearAllowedEvents()
+{
+   mAllowedEvents.clear();
+}
+
 bool& 
 MasterProfile::validateContentEnabled()
 {
@@ -275,3 +306,4 @@ MasterProfile::validateAcceptEnabled() const
  * <http://www.vovida.org/>.
  *
  */
+

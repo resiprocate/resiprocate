@@ -86,6 +86,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
    if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
    if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) mLastRequest.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
    if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    // Merge Embedded parameters
@@ -146,3 +147,4 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
  * <http://www.vovida.org/>.
  *
  */
+
