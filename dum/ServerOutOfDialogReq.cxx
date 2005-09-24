@@ -86,6 +86,7 @@ ServerOutOfDialogReq::answerOptions()
 	mResponse.header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes(INVITE);
 	mResponse.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
 	mResponse.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+	mResponse.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
 	mResponse.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
 	return mResponse;
@@ -166,3 +167,4 @@ ServerOutOfDialogReq::reject(int statusCode)
  * <http://www.vovida.org/>.
  *
  */
+
