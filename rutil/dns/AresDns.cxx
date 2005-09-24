@@ -1,3 +1,4 @@
+#include <sys/types.h>
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinLeakCheck.hxx"
