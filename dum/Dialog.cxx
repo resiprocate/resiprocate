@@ -861,6 +861,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) request.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
@@ -924,6 +925,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
          if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
          if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
          if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) response.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
          if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
       }
    }
@@ -1070,4 +1072,5 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
  * <http://www.vovida.org/>.
  *
  */
+
 
