@@ -57,6 +57,12 @@ class MasterProfile : public UserProfile
       virtual Tokens getSupportedLanguages() const;
       virtual void clearSupportedLanguages(void);
       
+      // Default is to not send an Allow-Events header.
+      virtual void addAllowedEvent(const Token& event);         
+      virtual bool isEventAllowed(const Tokens& event) const;
+      virtual Tokens getAllowedEvents() const;
+      virtual void clearAllowedEvents(void);
+      
       //enable/disable content validation
       virtual bool& validateContentEnabled();
       virtual const bool validateContentEnabled() const;
@@ -77,6 +83,7 @@ class MasterProfile : public UserProfile
       std::map<MethodTypes, Mimes> mSupportedMimeTypes;
       Tokens mSupportedEncodings;
       Tokens mSupportedLanguages;
+      Tokens mAllowedEvents;
 
       bool mValidateContentEnabled;
       bool mValidateContentLanguageEnabled;
@@ -136,3 +143,4 @@ class MasterProfile : public UserProfile
  * <http://www.vovida.org/>.
  *
  */
+
