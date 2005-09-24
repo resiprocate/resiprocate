@@ -175,6 +175,7 @@ InviteSession::isEarly() const
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
+         
          //case UAC_Answered:
          //case UAC_Terminated:
       case UAC_SentUpdateEarly:
@@ -182,6 +183,15 @@ InviteSession::isEarly() const
       case UAC_ReceivedUpdateEarly:
          //case UAC_SentAnswer:
       case UAC_QueuedUpdate:
+
+      case UAS_Start:
+      case UAS_Offer:
+      case UAS_OfferProvidedAnswer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyNoOffer:
+      case UAS_FirstEarlyReliable:
+      case UAS_EarlyReliable:
          return true;
 
       default:
