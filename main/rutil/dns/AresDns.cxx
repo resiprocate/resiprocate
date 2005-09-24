@@ -1,4 +1,7 @@
+#if !defined(WIN32)
 #include <sys/types.h>
+#endif
+
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinLeakCheck.hxx"
