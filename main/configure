@@ -249,7 +249,7 @@ sub parseOptions
     if ($option eq '-y' || $option eq '--non-interactive')
     {
       $non_interactive = 1;
-      next;
+      next option;
     }
 
     foreach $parameter (@parameters)
@@ -274,10 +274,10 @@ sub parseOptions
         }
       }
 
-      print "\nUnknown option: $option\n\n";
-      &usage;
     }
 
+    print "\nUnknown option: $option\n\n";
+    &usage;
   }
 }
 
