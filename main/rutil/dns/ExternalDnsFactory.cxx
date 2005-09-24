@@ -1,4 +1,5 @@
 //#define USE_LOCAL_DNS 
+#include <sys/types.h>
 
 #ifdef USE_LOCAL_DNS
 #include <map>
