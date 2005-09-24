@@ -10,7 +10,7 @@ include $(BUILD)/Makefile.pre
 CXXFLAGS += -I../
 PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT
 
-ifeq ($(USE_MYSQL),true)
+ifeq ($(USE_MYSQL),yes)
 PACKAGES += MYSQL
 SRC += MySqlDb.cxx
 endif
@@ -59,7 +59,7 @@ SRC 	+=   \
 	\
 
 
-ifeq ($(USE_SSL), true)
+ifeq ($(USE_SSL), yes)
 SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/CertPublicationHandler.cxx \
 	stateAgents/CertSubscriptionHandler.cxx \

@@ -299,5 +299,9 @@ endif
 
 -include $(DEPENDENCIES)
 
+# If the make configuration isn't there, create a default one.
+$(BUILD)/Makefile.conf:
+	$(ROOT)/configure -y
+
 # this MUST be the last item in the makefile -- it will be done first always.
 -include $(BUILD)/fakepre
