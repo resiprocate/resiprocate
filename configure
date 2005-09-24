@@ -1,0 +1,163 @@
+#!/usr/bin/perl -ws
+
+######################################################################
+# Usage:
+#   ./configure [-y]
+#
+#   Options:
+#     -y  Run non-interactively
+######################################################################
+
+# Change directory so that we can find the Makefile.conf file
+$mydir = $0;
+$mydir =~ s/\/[^\/]*$//;
+chdir ($mydir);
+
+$uname = `uname`;
+
+@toolchains = ('gnu','intel','armcross','sunpro','msgnu');
+
+@parameters = (
+  {
+    name        => "VOCAL_TOOLCHAIN_TYPE",
+    description => "Which toolchain do you want to use? ("
+                   .join(", ",@toolchains).")?",
+    default     => &detectToolchain
+  },
+  {
+    name        => "VOCAL_CROSS_ROOT",
+    description => "Where is your cross compiler installed?",
+    default     => "/skiff/local/bin"
+  },
+  {
+    name        => "BUILD_SHARED_LIBS",
+    description => "Should the resip libraries be built shared?",
+    default     => "no"
+  },
+  {
+    name        => "USE_DISTCC",
+    description => "Will you be using distcc?",
+    default     => &detectDistcc
+  },
+  {
+    name        => "USE_CCACHE",
+    description => "Will you be using ccache?",
+    default     => "no"
+  },
+  {
+    name        => "USE_DTLS",
+    description => "Do you want to include DTLS support?",
+    default     => "no"
+  },
+  {
+    name        => "USE_SSL",
+    description => "Do you want to include SSL support?",
+    default     => "yes"
+  },
+  {
+    name        => "USE_POPT",
+    description => "Should the binaries use popt to read commandline options?",
+    default     => "yes"
+  },
+  {
+    name        => "USE_CURL",
+    description => "Should DUM use CURL to retreive identity information?",
+    default     => "no"
+  },
+  {
+    name        => "USE_GOOGLE_MALLOC",
+    description => "Use the Google malloc() implementation?",
+    default     => "no"
+  },
+  {
+    name        => "USE_GOOGLE_CPUPERF",
+    description => "Use Google cpuperf?",
+    default     => "no"
+  },
+  {
+    name        => "USE_IPV6",
+    description => "Compile in IPv6 support?",
+    default     => "no"
+  },
+  {
+    name        => "INSTALL_PREFIX",
+    description => "Where should the libraries be installed?",
+    default     => "/usr/local"
+  },
+);
+
+if (open (CONF, "build/Makefile.conf"))
+{
+  print "Reading current configuration...\n";
+  while (<CONF>)
+  {
+    chomp;
+    if (/([^ :=]+) *:?= *([^ #]*)/)
+    {
+      $config{$1} = $2;
+    }
+  }
+  close (CONF);
+}
+
+foreach $parameter (@parameters)
+{
+  if (!exists($config{$parameter->{name}}))
+  {
+    $config{$parameter->{name}} = $parameter->{default};
+  }
+
+  # If we're not cross compiling, don't ask about the cross compiler.
+  if ($parameter->{name} eq "VOCAL_CROSS_ROOT"
+      && $config{VOCAL_TOOLCHAIN_TYPE} !~ /cross/)
+  {
+    next;
+  }
+
+  # If we're running interactively, confirm with the user
+  if (!$y)
+  {
+    print "".$parameter->{description}." [".$config{$parameter->{name}}."] ";
+    $userinput = readline(*STDIN);
+    chomp ($userinput);
+    if (length($userinput))
+    {
+      $config{$parameter->{name}} = $userinput;
+    }
+    print "\n";
+  }
+
+}
+
+# Supress warning
+$y = $y;
+
+# Write out the resulting configure file to Makefile.conf
+open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
+print "Writing Makefile.conf...\n";
+foreach $parameter (@parameters)
+{
+  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n");
+}
+close (CONF);
+
+######################################################################
+# Here are functions to determine reasonable defaults
+
+sub detectToolchain
+{
+  if ($uname =~ /SunOS/ || $uname =~ /Solaris/)
+  {
+    return "sunpro";
+  }
+  "gnu";
+}
+
+sub detectDistcc
+{
+  if ($ENV{DISTCC_HOSTS})
+  {
+    return "yes";
+  }
+  "no";
+}

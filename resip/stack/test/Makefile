@@ -7,7 +7,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT
 
-ifeq ($(USE_SSL), true)
+ifeq ($(USE_SSL), yes)
 TESTPROGRAMS += makeSelfCert.cxx \
 		testTls.cxx 
 endif

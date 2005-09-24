@@ -62,11 +62,11 @@ endif
 	CXXFLAGS += -D_REENTRANT 
 	CFLAGS   += -D_REENTRANT 
 
-ifeq ($(USE_GOOGLE_MALLOC),true)
+ifeq ($(USE_GOOGLE_MALLOC),yes)
 LDLIBS_LAST += -lprofiler
 endif
 
-ifeq ($(USE_GOOGLE_CPUPERF),true)
+ifeq ($(USE_GOOGLE_CPUPERF),yes)
 LDLIBS_LAST += -ltcmalloc
 endif
 
@@ -79,7 +79,7 @@ ifeq ($(OSTYPE),QNX)
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
     LDLIBS_LAST   += -lsocket -lstdc++ 
-    USE_SSL = false
+    USE_SSL = no
 endif
 
 
