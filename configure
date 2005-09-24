@@ -17,8 +17,9 @@ $non_interactive = 0;
 
 $uname = `uname`;
 
-@toolchains = ('gnu','intel','armcross','sunpro','msgnu');
 @yesno = ('yes','no');
+@toolchains = ('gnu','intel','armcross','sunpro','msgnu');
+@compiletypes = ('debug','nodebug','opt','gopt','prof','small');
 
 ######################################################################
 # The entries in the following array have the following
@@ -48,6 +49,13 @@ $uname = `uname`;
     default     => &detectToolchain,
     validate    => [@toolchains],
     option      => 'with-toolchain',
+  },
+  {
+    name        => "VOCAL_COMPILE_TYPE",
+    description => "What compile profile will you use?",
+    default     => "debug",
+    validate    => [@compiletypes],
+    option      => 'with-compile-type',
   },
   {
     name        => "VOCAL_CROSS_ROOT",
