@@ -79,6 +79,12 @@ InviteSession::getRemoteSdp() const
    return *mCurrentRemoteSdp;
 }
 
+const Data& 
+InviteSession::getDialogId() const
+{
+   return mDialog.getId().getCallId();
+}
+
 InviteSessionHandle
 InviteSession::getSessionHandle()
 {
@@ -103,6 +109,10 @@ void InviteSession::storePeerCapabilities(const SipMessage& msg)
    if (msg.exists(h_AcceptLanguages))
    {
       mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
+   }
+   if (msg.exists(h_AllowEvents))
+   {
+      mPeerAllowedEvents = msg.header(h_AllowEvents);
    }
    if (msg.exists(h_Accepts))
    {
@@ -2024,3 +2034,4 @@ void InviteSession::setCurrentLocalSdp(const SipMessage& msg)
  * <http://www.vovida.org/>.
  *
  */
+
