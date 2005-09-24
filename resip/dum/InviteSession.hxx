@@ -76,7 +76,6 @@ class InviteSession : public DialogUsage
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
-      const Data& getDialogId() const;
       
       bool isConnected() const;
       bool isTerminated() const;

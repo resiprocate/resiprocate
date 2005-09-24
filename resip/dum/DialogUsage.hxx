@@ -10,6 +10,7 @@ namespace resip
 
 class DialogUsageManager;
 class Dialog;
+class DialogId;
 class DumTimeout;
 class SipMessage;
 class NameAddr;
@@ -26,6 +27,10 @@ class DialogUsage : public BaseUsage
 
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();     
+
+      const DialogId& getDialogId() const;
+      const Data& getCallId() const;
+      
    protected:
       friend class DialogSet;
       friend class DialogUsageManager;
