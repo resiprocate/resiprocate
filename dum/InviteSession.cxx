@@ -79,12 +79,6 @@ InviteSession::getRemoteSdp() const
    return *mCurrentRemoteSdp;
 }
 
-const Data& 
-InviteSession::getDialogId() const
-{
-   return mDialog.getId().getCallId();
-}
-
 InviteSessionHandle
 InviteSession::getSessionHandle()
 {
