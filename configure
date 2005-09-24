@@ -18,6 +18,17 @@ $uname = `uname`;
 @toolchains = ('gnu','intel','armcross','sunpro','msgnu');
 @yesno = ('yes','no');
 
+######################################################################
+# The entries in the following array have the following
+# fields:
+#
+#   name        - Variable name to be used by the make system
+#   description - Question to ask the user
+#   default     - Value to use by default
+#   validate    - Optional array of allowed values
+#   predicate   - Optional logical test; if false, the user
+#                 will not be asked to configure the value
+
 @parameters = (
   {
     name        => "VOCAL_TOOLCHAIN_TYPE",
@@ -29,6 +40,7 @@ $uname = `uname`;
     name        => "VOCAL_CROSS_ROOT",
     description => "Where is your cross compiler installed?",
     default     => "/skiff/local/bin",
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
   },
   {
     name        => "BUILD_SHARED_LIBS",
@@ -68,7 +80,7 @@ $uname = `uname`;
   },
   {
     name        => "USE_CURL",
-    description => "Should DUM use CURL to retreive identity information?",
+    description => "Should DUM use curl to retreive identity information?",
     default     => "no",
     validate    => [@yesno],
   },
@@ -118,9 +130,7 @@ foreach $parameter (@parameters)
     $config{$parameter->{name}} = $parameter->{default};
   }
 
-  # If we're not cross compiling, don't ask about the cross compiler.
-  if ($parameter->{name} eq "VOCAL_CROSS_ROOT"
-      && $config{VOCAL_TOOLCHAIN_TYPE} !~ /cross/)
+  if (exists($parameter->{predicate}) && !eval($parameter->{predicate}))
   {
     next;
   }
@@ -176,7 +186,12 @@ open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.co
 print "Writing Makefile.conf...\n";
 foreach $parameter (@parameters)
 {
-  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n");
+  print CONF ("# ".$parameter->{description}."\n");
+  if (exists $parameter->{validate})
+  {
+    print CONF ("# Allowed values: ".join(', ',@{$parameter->{validate}})."\n");
+  }
+  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
 }
 close (CONF);
 
