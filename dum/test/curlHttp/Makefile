@@ -7,7 +7,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL PTHREAD POPT CURL
 
-ifeq ($(USE_SSL), true)
+ifeq ($(USE_SSL), yes)
 TESTPROGRAMS +=
 endif
 
