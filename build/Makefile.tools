@@ -168,7 +168,7 @@ endif
 
 ############################## distcc/ccache ##############################
 
-ifeq ($(USE_DISTCC),true)
+ifeq ($(USE_DISTCC),yes)
 
   ifdef DISTCC_HOSTS
   export DISTCC_HOSTS
@@ -179,7 +179,7 @@ ifeq ($(USE_DISTCC),true)
 
 endif
 
-ifeq ($(USE_CCACHE),true)
+ifeq ($(USE_CCACHE),yes)
 
   ifdef CCACHE_DIR
   export CCACHE_DIR
