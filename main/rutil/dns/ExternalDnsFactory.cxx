@@ -1,6 +1,8 @@
-//#define USE_LOCAL_DNS 
+#if !defined(WIN32)
 #include <sys/types.h>
+#endif
 
+//#define USE_LOCAL_DNS 
 #ifdef USE_LOCAL_DNS
 #include <map>
 #include "rutil/dns/LocalDns.hxx"
