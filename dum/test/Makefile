@@ -13,7 +13,7 @@ TESTPROGRAMS += basicRegister.cxx BasicCall.cxx testSMIMEMessage.cxx basicMessag
 TESTPROGRAMS += limpc.cxx
 SRC = CommandLineParser.cxx UserAgent.cxx
 
-ifeq ($(USE_CURL),true)
+ifeq ($(USE_CURL),yes)
 TESTPROGRAMS += testIdentity.cxx
 PACKAGES += CURL
 SRC += curlHttp/CurlHttpProvider.cxx
