@@ -119,3 +119,17 @@ ifeq ($(OSTYPE),NetBSD)
 TFMLIBS_INCLUDEDIRS += /usr/pkg/include/boost-1_31
 endif
 
+ifndef SIPXBASE
+SIPXBASE := $(ROOT)/sipX
+endif
+
+SIPX_INCLUDEDIRS := $(SIPXBASE)/bbridge/include $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPXBASE)/sipXmediaAdapterLib/interface  $(SIPXBASE)/sipXmediaLib/include $(SIPXBASE)/sipXtackLib/include $(SIPXBASE)/sipXportLib/include $(SIPXBASE)
+SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
+SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack sipXport
+SIPX_DEFINES := __pingtel_on_posix__
+
+
+
+
+
+
