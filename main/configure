@@ -1,4 +1,4 @@
-#!/usr/bin/perl -ws
+#!/usr/bin/perl -w
 
 ######################################################################
 # Usage:
@@ -13,6 +13,8 @@ $mydir = $0;
 $mydir =~ s/\/[^\/]*$//;
 chdir ($mydir);
 
+$non_interactive = 0;
+
 $uname = `uname`;
 
 @toolchains = ('gnu','intel','armcross','sunpro','msgnu');
@@ -23,11 +25,21 @@ $uname = `uname`;
 # fields:
 #
 #   name        - Variable name to be used by the make system
+#
 #   description - Question to ask the user
+#
 #   default     - Value to use by default
+#
 #   validate    - Optional array of allowed values
+#
 #   predicate   - Optional logical test; if false, the user
 #                 will not be asked to configure the value
+#
+#   flag        - For "yes/no" entries, adds commandline
+#                 flags of "--enable-foo" and "--disable-foo"
+#
+#   option      - Adds commandline options of "--foo=..."
+#
 
 @parameters = (
   {
@@ -35,83 +47,95 @@ $uname = `uname`;
     description => "Which toolchain do you want to use?",
     default     => &detectToolchain,
     validate    => [@toolchains],
+    option      => 'with-toolchain',
   },
   {
     name        => "VOCAL_CROSS_ROOT",
     description => "Where is your cross compiler installed?",
     default     => "/skiff/local/bin",
     predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    option      => 'with-cross-compiler-dir',
   },
   {
     name        => "BUILD_SHARED_LIBS",
     description => "Should the resip libraries be built shared?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'shared-libs',
   },
   {
     name        => "USE_DISTCC",
     description => "Will you be using distcc?",
     default     => &detectDistcc,
     validate    => [@yesno],
+    flag        => 'distcc',
   },
   {
     name        => "USE_CCACHE",
     description => "Will you be using ccache?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'ccache',
   },
   {
     name        => "USE_DTLS",
     description => "Do you want to include DTLS support?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'dtls',
   },
   {
     name        => "USE_SSL",
     description => "Do you want to include SSL support?",
     default     => "yes",
     validate    => [@yesno],
+    flag        => 'ssl',
   },
   {
     name        => "USE_POPT",
-    description => "Should the binaries use popt to read commandline options?",
+    description => "Use popt to read commandline options?",
     default     => "yes",
     validate    => [@yesno],
+    flag        => 'popt',
   },
   {
     name        => "USE_CURL",
     description => "Should DUM use curl to retreive identity information?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'curl',
   },
   {
     name        => "USE_GOOGLE_MALLOC",
     description => "Use the Google malloc() implementation?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'google-malloc',
   },
   {
     name        => "USE_GOOGLE_CPUPERF",
     description => "Use Google cpuperf?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'google-cpuperf',
   },
   {
     name        => "USE_IPV6",
     description => "Compile in IPv6 support?",
     default     => "no",
     validate    => [@yesno],
+    flag        => 'ipv6',
   },
   {
     name        => "INSTALL_PREFIX",
     description => "Where should the libraries be installed?",
     default     => "/usr/local",
+    option      => "prefix",
   },
 );
 
 if (open (CONF, "build/Makefile.conf"))
 {
-  print "Reading current configuration...\n\n";
   while (<CONF>)
   {
     chomp;
@@ -122,6 +146,8 @@ if (open (CONF, "build/Makefile.conf"))
   }
   close (CONF);
 }
+
+&parseOptions;
 
 foreach $parameter (@parameters)
 {
@@ -136,7 +162,7 @@ foreach $parameter (@parameters)
   }
 
   # If we're running interactively, confirm with the user
-  if (!$y)
+  if (!$non_interactive)
   {
     do
     {
@@ -178,9 +204,6 @@ foreach $parameter (@parameters)
 
 }
 
-# Supress warning
-$y = $y;
-
 # Write out the resulting configure file to Makefile.conf
 open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
 print "Writing Makefile.conf...\n";
@@ -215,6 +238,88 @@ sub validate
   }
 
   return 0;
+}
+
+sub parseOptions
+{
+  my($option);
+  my($curr);
+  option: foreach $option (@ARGV)
+  {
+    if ($option eq '-y' || $option eq '--non-interactive')
+    {
+      $non_interactive = 1;
+      next;
+    }
+
+    foreach $parameter (@parameters)
+    {
+      if (defined $parameter->{flag})
+      {
+        $curr = $parameter->{flag};
+        if ($option =~ /^--(enable|disable)-$curr$/)
+        {
+          $config{$parameter->{name}} = ($1 eq 'enable'?'yes':'no');
+          next option;
+        }
+      }
+
+      if (defined $parameter->{option})
+      {
+        $curr = $parameter->{option};
+        if ($option =~ /^--$curr\=\"?([^"]*)\"?$/)
+        {
+          $config{$parameter->{name}} = $1;
+          next option;
+        }
+      }
+
+      print "\nUnknown option: $option\n\n";
+      &usage;
+    }
+
+  }
+}
+
+sub usage
+{
+  print <<EOT
+Usage:
+  $0 [options]
+
+  Options:
+
+      -y, --non-interactive
+        Run non-interactively
+
+EOT
+
+;
+  foreach $parameter (@parameters)
+  {
+    if (defined $parameter->{flag})
+    {
+      print "      --enable-".$parameter->{flag}."\n";
+      print "      --disable-".$parameter->{flag}."\n";
+      print "        ".$parameter->{description}." ";
+      print "(Now ".($config{$parameter->{name}} eq 'yes'?
+             "enabled":"disabled").")\n";
+    }
+    if (defined $parameter->{option})
+    {
+      print "      --".$parameter->{option}."=\"...\"\n";
+      print "        ".$parameter->{description}." ";
+      print "(Now \"".$config{$parameter->{name}}."\")\n";
+      if (defined $parameter->{validate})
+      {
+        print "        Valid values are: [".
+              join(', ',@{$parameter->{validate}})."]\n";
+      }
+    }
+
+    print "\n";
+  }
+  exit;
 }
 
 ######################################################################
