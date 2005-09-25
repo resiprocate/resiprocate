@@ -49,7 +49,7 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
 {
    if ( hdrLen != 8 )
    {
-      clog << "hdrLen wrong for Address" <<endl;
+      // clog << "hdrLen wrong for Address" <<endl;
       return false;
    }
    result.pad = *body++;
@@ -67,11 +67,11 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
    }
    else if (result.family == IPv6Family)
    {
-      clog << "ipv6 not supported" << endl;
+      //clog << "ipv6 not supported" << endl;
    }
    else
    {
-      clog << "bad address family: " << result.family << endl;
+      //clog << "bad address family: " << result.family << endl;
    }
 	
    return false;
@@ -82,9 +82,9 @@ stunParseAtrChangeRequest( char* body, unsigned int hdrLen,  StunAtrChangeReques
 {
    if ( hdrLen != 4 )
    {
-      clog << "hdr length = " << hdrLen << " expecting " << sizeof(result) << endl;
+      //clog << "hdr length = " << hdrLen << " expecting " << sizeof(result) << endl;
 		
-      clog << "Incorrect size for ChangeRequest" << endl;
+      //clog << "Incorrect size for ChangeRequest" << endl;
       return false;
    }
    else
@@ -100,7 +100,7 @@ stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 {
    if ( hdrLen >= sizeof(result) )
    {
-      clog << "head on Error too large" << endl;
+      //clog << "head on Error too large" << endl;
       return false;
    }
    else
@@ -143,14 +143,14 @@ stunParseAtrString( char* body, unsigned int hdrLen,  StunAtrString& result )
 {
    if ( hdrLen >= STUN_MAX_STRING )
    {
-      clog << "String is too large" << endl;
+      //clog << "String is too large" << endl;
       return false;
    }
    else
    {
       if (hdrLen % 4 != 0)
       {
-         clog << "Bad length string " << hdrLen << endl;
+         //clog << "Bad length string " << hdrLen << endl;
          return false;
       }
 		
@@ -167,7 +167,7 @@ stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& resul
 {
    if ( hdrLen != 20)
    {
-      clog << "MessageIntegrity must be 20 bytes" << endl;
+      //clog << "MessageIntegrity must be 20 bytes" << endl;
       return false;
    }
    else
@@ -186,7 +186,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
-      clog << "Bad message" << endl;
+      //clog << "Bad message" << endl;
       return false;
    }
 	
@@ -196,8 +196,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    if (msg.msgHdr.msgLength + sizeof(StunMsgHdr) != bufLen)
    {
-      clog << "Message header length doesn't match message size: "
-           << msg.msgHdr.msgLength << " - " << bufLen << endl;
+      //clog << "Message header length doesn't match message size: " << msg.msgHdr.msgLength << " - " << bufLen << endl;
       return false;
    }
 	
@@ -218,8 +217,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
       //if (verbose) clog << "Found attribute type=" << AttrNames[atrType] << " length=" << attrLen << endl;
       if ( attrLen+4 > size ) 
       {
-         clog << "claims attribute is larger than size of message " 
-              <<"(attribute type="<<atrType<<")"<< endl;
+         //clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
          return false;
       }
 		
@@ -232,7 +230,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasMappedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.mappedAddress )== false )
             {
-               clog << "problem parsing MappedAddress" << endl;
+               //clog << "problem parsing MappedAddress" << endl;
                return false;
             }
             else
@@ -246,7 +244,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasResponseAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.responseAddress )== false )
             {
-               clog << "problem parsing ResponseAddress" << endl;
+               if (verbose) clog << "problem parsing ResponseAddress" << endl;
                return false;
             }
             else
@@ -259,7 +257,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasChangeRequest = true;
             if (stunParseAtrChangeRequest( body, attrLen, msg.changeRequest) == false)
             {
-               clog << "problem parsing ChangeRequest" << endl;
+               if (verbose) clog << "problem parsing ChangeRequest" << endl;
                return false;
             }
             else
@@ -272,7 +270,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasSourceAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.sourceAddress )== false )
             {
-               clog << "problem parsing SourceAddress" << endl;
+               if (verbose) clog << "problem parsing SourceAddress" << endl;
                return false;
             }
             else
@@ -285,7 +283,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasChangedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.changedAddress )== false )
             {
-               clog << "problem parsing ChangedAddress" << endl;
+               if (verbose) clog << "problem parsing ChangedAddress" << endl;
                return false;
             }
             else
@@ -298,7 +296,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasUsername = true;
             if (stunParseAtrString( body, attrLen, msg.username) == false)
             {
-               clog << "problem parsing Username" << endl;
+               if (verbose) clog << "problem parsing Username" << endl;
                return false;
             }
             else
@@ -312,7 +310,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasPassword = true;
             if (stunParseAtrString( body, attrLen, msg.password) == false)
             {
-               clog << "problem parsing Password" << endl;
+               if (verbose) clog << "problem parsing Password" << endl;
                return false;
             }
             else
@@ -325,7 +323,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasMessageIntegrity = true;
             if (stunParseAtrIntegrity( body, attrLen, msg.messageIntegrity) == false)
             {
-               clog << "problem parsing MessageIntegrity" << endl;
+               if (verbose) clog << "problem parsing MessageIntegrity" << endl;
                return false;
             }
             else
@@ -343,7 +341,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasErrorCode = true;
             if (stunParseAtrError(body, attrLen, msg.errorCode) == false)
             {
-               clog << "problem parsing ErrorCode" << endl;
+               if (verbose) clog << "problem parsing ErrorCode" << endl;
                return false;
             }
             else
@@ -359,7 +357,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasUnknownAttributes = true;
             if (stunParseAtrUnknown(body, attrLen, msg.unknownAttributes) == false)
             {
-               clog << "problem parsing UnknownAttribute" << endl;
+               if (verbose) clog << "problem parsing UnknownAttribute" << endl;
                return false;
             }
             break;
@@ -368,7 +366,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasReflectedFrom = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.reflectedFrom ) == false )
             {
-               clog << "problem parsing ReflectedFrom" << endl;
+               if (verbose) clog << "problem parsing ReflectedFrom" << endl;
                return false;
             }
             break;  
@@ -377,7 +375,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasXorMappedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.xorMappedAddress ) == false )
             {
-               clog << "problem parsing XorMappedAddress" << endl;
+               if (verbose) clog << "problem parsing XorMappedAddress" << endl;
                return false;
             }
             else
@@ -390,7 +388,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.xorOnly = true;
             if (verbose) 
             {
-               clog << "xorOnly = true" << endl;
+               if (verbose) clog << "xorOnly = true" << endl;
             }
             break;  
 				
@@ -398,7 +396,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasServerName = true;
             if (stunParseAtrString( body, attrLen, msg.serverName) == false)
             {
-               clog << "problem parsing ServerName" << endl;
+               if (verbose) clog << "problem parsing ServerName" << endl;
                return false;
             }
             else
@@ -411,7 +409,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasSecondaryAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.secondaryAddress ) == false )
             {
-               clog << "problem parsing secondaryAddress" << endl;
+               if (verbose) clog << "problem parsing secondaryAddress" << endl;
                return false;
             }
             else
@@ -1280,7 +1278,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
    
    if ((info.myFd = openPort(myAddr.port, myAddr.addr,verbose)) == INVALID_SOCKET)
    {
-      clog << "Can't open " << myAddr << endl;
+      if (verbose) clog << "Can't open " << myAddr << endl;
       stunStopServer(info);
 
       return false;
@@ -1289,7 +1287,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
 
    if ((info.altPortFd = openPort(altAddr.port,myAddr.addr,verbose)) == INVALID_SOCKET)
    {
-      clog << "Can't open " << myAddr << endl;
+      if (verbose) clog << "Can't open " << myAddr << endl;
       stunStopServer(info);
       return false;
    }
@@ -1301,7 +1299,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
    {
       if ((info.altIpFd = openPort( myAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
       {
-         clog << "Can't open " << altAddr << endl;
+         if (verbose) clog << "Can't open " << altAddr << endl;
          stunStopServer(info);
          return false;
       }
@@ -1312,7 +1310,7 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
    if (  altAddr.addr != 0 )
    {  if ((info.altIpPortFd = openPort(altAddr.port, altAddr.addr,verbose)) == INVALID_SOCKET)
       {
-         clog << "Can't open " << altAddr << endl;
+         if (verbose) clog << "Can't open " << altAddr << endl;
          stunStopServer(info);
          return false;
       }
@@ -1409,7 +1407,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
    if (e < 0)
    {
       int err = getErrno();
-      clog << "Error on select: " << strerror(err) << endl;
+      if (verbose) clog << "Error on select: " << strerror(err) << endl;
    }
    else if (e >= 0)
    {
