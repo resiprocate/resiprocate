@@ -30,7 +30,7 @@ ifeq (${BUILD_SHARED_LIBS},no)
    CPPUNIT_USE_SHARED_LIBS=--enable-shared=false
 endif
 
-ifeq (${USE_IPV6},true)
+ifeq (${USE_IPV6},yes)
    ARES_IPV6=--with-ipv6
 endif
 
