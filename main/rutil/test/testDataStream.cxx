@@ -10,6 +10,19 @@ using namespace std;
 int main()
 {
    {
+      // test overflow and synch with flush
+      char buf[16];
+      Data data(Data::Borrow, buf, sizeof(buf));
+      data.clear();
+      
+      DataStream str(data);
+      for (int i = 0; i < 32; ++i) {
+	 str << 'a';
+	 str.flush();
+      }
+   }
+
+   {
       Data foo;
       {
 	 oDataStream str(foo);
