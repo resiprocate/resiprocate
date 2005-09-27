@@ -96,6 +96,7 @@ ServerInviteSession::provisional(int code)
          break;
 
       case UAS_OfferProvidedAnswer:
+      case UAS_EarlyProvidedAnswer:
          transition(UAS_EarlyProvidedAnswer);
          sendProvisional(code);
          break;
@@ -124,7 +125,6 @@ ServerInviteSession::provisional(int code)
          assert(0);
          break;
          
-      case UAS_EarlyProvidedAnswer:
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_FirstEarlyReliable:
