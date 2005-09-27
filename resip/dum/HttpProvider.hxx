@@ -30,7 +30,7 @@ class HttpProvider
       virtual ~HttpProvider(){} //impl. singleton destructor pattern later
    private:
       static HttpProvider* mInstance;
-      static HttpProviderFactory* mFactory;
+      static std::auto_ptr<HttpProviderFactory> mFactory;
       static Mutex mMutex;      
 };
 
