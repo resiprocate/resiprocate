@@ -58,6 +58,7 @@ digraph UAS {
   EarlyOffer -> Terminated                              [ label = "onCancel/send::200C,send::487I" ];
   EarlyOffer -> Terminated                              [ label = "onBye/app::onTerminated,send::200B,send::487I" ];
 
+  EarlyProvidedAnswer -> EarlyProvidedAnswer            [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
   EarlyProvidedAnswer -> Accepted                       [ label = "dum::accept/send::2xx-answer,timer::2xx,timer::NoAck,app::onConnected" ];
   EarlyProvidedAnswer -> Terminated                     [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   EarlyProvidedAnswer -> Terminated                     [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
