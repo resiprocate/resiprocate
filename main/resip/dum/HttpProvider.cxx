@@ -4,24 +4,24 @@
 using namespace resip;
 
 HttpProvider* HttpProvider::mInstance = 0;
-HttpProviderFactory* HttpProvider::mFactory = 0;
+std::auto_ptr<HttpProviderFactory> HttpProvider::mFactory;
 Mutex HttpProvider::mMutex;      
 
 void 
 HttpProvider::setFactory(std::auto_ptr<HttpProviderFactory> fact)
 {
-   mFactory = fact.release();
+   mFactory = fact;
 }
 
 HttpProvider* 
 HttpProvider::instance()
 {
-   if (mFactory && mInstance == 0)
+   if (mFactory.get() && mInstance == 0)
    {
       Lock lock(mMutex);
       if (mInstance == 0)
       {
-         mInstance = mFactory->createHttpProvider();
+         mInstance = mFactory.get()->createHttpProvider();
       }
    }
    return mInstance;   
