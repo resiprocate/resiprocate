@@ -948,7 +948,7 @@ ServerInviteSession::sendProvisional(int code)
       case UAS_EarlyProvidedAnswer:
          if (mCurrentLocalSdp.get()) // early media
          {
-            setSdp(m1xx, mProposedLocalSdp.get());
+            setSdp(m1xx, mCurrentLocalSdp.get());
          }
          break;
 
