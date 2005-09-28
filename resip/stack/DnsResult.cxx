@@ -936,6 +936,7 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
          {
             Uri rewrite(best.regexp().apply(Data::from(mInputUri)));
             InfoLog (<< "Rewrote uri " << mInputUri << " -> " << rewrite);
+            mHandler->rewriteRequest(rewrite);
             lookupInternal(rewrite);
          }
          catch (ParseBuffer::Exception& /* e */)
