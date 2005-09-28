@@ -52,6 +52,7 @@ class TransactionState : public DnsHandler
                        const Data& tid, 
                        TransactionUser* tu=0);
       
+      void rewriteRequest(const Uri& rewrite);
       void handle(DnsResult*);
 
       void processStateless(TransactionMessage* msg);
