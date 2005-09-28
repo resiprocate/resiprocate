@@ -73,13 +73,14 @@ void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
    DebugLog (<< "RequestContext::process(Message) " << *this);
-
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
    }
    mCurrentEvent = msg.release();
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
+   if (sip) DebugLog (<< "requri = " << sip->header(h_RequestLine).uri());
+
    if (!mOriginalRequest) 
    { 
       assert(sip);
@@ -89,6 +90,8 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       fixStrictRouterDamage();
       removeTopRouteIfSelf();
    }
+
+   DebugLog (<< "RequestContext::process(Message) " << *this);
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 
@@ -291,7 +294,7 @@ repro::operator<<(std::ostream& strm, const RequestContext& rc)
         << " count=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
 
-   //if (rc.mOriginalRequest) strm << " original=" << rc.mOriginalRequest->brief();
+   if (rc.mOriginalRequest) strm << " orig requri=" << rc.mOriginalRequest->brief();
    //if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
    return strm;
 }
