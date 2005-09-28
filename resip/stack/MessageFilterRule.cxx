@@ -102,7 +102,7 @@ MessageFilterRule::schemeIsInList(const Data& scheme) const
    // Emtpy list means "sip or sips"
    if (mSchemeList.empty())
    {
-     return (scheme == "sip" || scheme == "sips");
+      return (scheme == "sip" || scheme == "sips" || scheme == "tel");
    }
 
    // step through mSchemeList looking for supported schemes
