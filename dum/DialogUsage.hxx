@@ -2,6 +2,8 @@
 #define RESIP_DIALOGUSAGE_HXX
 
 #include "rutil/BaseException.hxx"
+#include "rutil/SharedPtr.hxx"
+#include "resip/dum/UserProfile.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
 
@@ -30,6 +32,7 @@ class DialogUsage : public BaseUsage
 
       const DialogId& getDialogId() const;
       const Data& getCallId() const;
+      SharedPtr<UserProfile> getUserProfile();
       
    protected:
       friend class DialogSet;
