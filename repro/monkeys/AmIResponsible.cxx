@@ -41,11 +41,7 @@ AmIResponsible::process(RequestContext& context)
       // !RjS! - Jason - check the RURI to see if the domain is
       // something this request is responsible for. If yes, then
       // just return Continue. If no make this call below.
-      Uri& uri = request.header(h_RequestLine).uri();
-      if (uri.port() == 5060)
-      {
-         uri.port() = 0;
-      }
+      const Uri& uri = request.header(h_RequestLine).uri();
       if (!context.getProxy().isMyUri(uri))
       {
          // if this is not for a domain for which the proxy is responsible,
