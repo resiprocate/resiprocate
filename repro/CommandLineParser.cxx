@@ -29,6 +29,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int disableV4 = false;
    int enableV6 = false;
    char* domains = 0;
+   char* interfaces = 0;
+   char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
    int noChallenge = false;
@@ -70,7 +72,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
       {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
+      {"interfaces",  'i',   POPT_ARG_STRING, &interfaces,  0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
       {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"route",       'R',   POPT_ARG_STRING, &routeSet,  0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
 #ifdef WIN32
       {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: c:\\sipCerts)", 0},
 #else
@@ -113,7 +117,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mDtlsPort = dtlsPort;
    mUseV4 = !disableV4;
    mUseV6 = enableV6?true:false;
+   mInterfaces = toVector(interfaces, "interfaces"); 
    mDomains = toVector(domains, "domains"); 
+   mRouteSet = toVector(routeSet, "routeSet"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
    mNoWebChallenge = noWebChallenge != 0;
