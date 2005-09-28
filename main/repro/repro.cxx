@@ -12,8 +12,10 @@
 #include <signal.h>
 #include "resip/stack/MessageFilterRule.hxx"
 #include "resip/stack/Security.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -40,6 +42,7 @@
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/RecursiveRedirect.hxx"
+#include "repro/monkeys/SimpleStaticRoute.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
 
@@ -172,39 +175,51 @@ main(int argc, char** argv)
 
    try
    {
-      if (args.mUseV4) InfoLog (<< "V4 enabled");
-      if (args.mUseV6) InfoLog (<< "V6 enabled");         
+      // An example of how to use this follows. This sets up 2 transports, 1 TLS
+      // and 1 UDP. TLS domain is bound to example.com. 
+      // repro -i "sip:192.168.1.200:5060;transport=tls;tls=example.com,sip:192.168.1.200:5060;transport=udp"
+      // Note: If you specify interfaces the other transport arguments have no effect
+      if (!args.mInterfaces.empty())
+      {
+         for (std::vector<Data>::iterator i=args.mInterfaces.begin(); 
+              i != args.mInterfaces.end(); ++i)
+         {
+            Uri intf(*i);
+            ExtensionParameter p_tls("tls"); // for specifying tls domain
+            stack.addTransport(Tuple::toTransport(intf.param(p_transport)),
+                               intf.port(), 
+                               DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
+                               StunEnabled, 
+                               intf.host(), // interface to bind to
+                               intf.param(p_tls));
+         }
+      }
+      else
+      {
+         if (args.mUseV4) InfoLog (<< "V4 enabled");
+         if (args.mUseV6) InfoLog (<< "V6 enabled");         
 
-      if (args.mUdpPort)
-      {
-         if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
-#ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
-#endif
+         if (args.mUdpPort)
+         {
+            if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
+            if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
+         }
+         if (args.mTcpPort)
+         {
+            if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
+            if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
+         }
+         if (args.mTlsPort)
+         {
+            if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
+         }
+         if (args.mDtlsPort)
+         {
+            if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
+         }
       }
-      if (args.mTcpPort)
-      {
-         if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
-#ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
-#endif
-      }
-#ifdef USE_SSL
-      if (args.mTlsPort)
-      {
-         if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-#ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
-#endif
-      }
-      if (args.mDtlsPort)
-      {
-         if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-#ifdef USE_IPV6
-         if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
-#endif
-      }
-#endif
    }
    catch (Transport::Exception& e)
    {
@@ -282,9 +297,23 @@ main(int argc, char** argv)
       locators->addProcessor(std::auto_ptr<Processor>(cls));
 #endif
      
-      StaticRoute* sr = new StaticRoute(store.mRouteStore);
-      locators->addProcessor(std::auto_ptr<Processor>(sr));
- 
+      if (args.mRouteSet.empty())
+      {
+         StaticRoute* sr = new StaticRoute(store.mRouteStore);
+         locators->addProcessor(std::auto_ptr<Processor>(sr));
+      }
+      else
+      {
+         resip::NameAddrs routes;
+         for (std::vector<Data>::iterator i=args.mRouteSet.begin(); 
+              i != args.mRouteSet.end(); ++i)
+         {
+            routes.push_back(NameAddr(*i));
+         }
+         SimpleStaticRoute* sr = new SimpleStaticRoute(routes);
+         locators->addProcessor(std::auto_ptr<Processor>(sr));
+      }
+      
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<Processor>(ls));
  
