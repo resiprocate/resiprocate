@@ -198,7 +198,7 @@ XMLCursor::parseNextRootChild()
          // so we add volatile here so CW is completely unconfused what to do.
 		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
 		 const char* end = pb.position();
-         if ( pb.end() < end + mTag.size() )
+         if ( (const char*)pb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
@@ -540,7 +540,7 @@ XMLCursor::Node::skipToEndTag()
          // so we add volatile here so CW is completely unconfused what to do.
 		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
 		 const char* end = mPb.position();
-         if ( mPb.end() < end + mTag.size() )
+         if ( (const char*)mPb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);
