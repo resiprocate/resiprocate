@@ -20,7 +20,7 @@ LocationServer::process(RequestContext& context)
 {
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
-  resip::Uri& inputUri
+   const resip::Uri& inputUri
     = context.getOriginalRequest().header(h_RequestLine).uri();
 
   //!RjS! This doesn't look exception safe - need guards
