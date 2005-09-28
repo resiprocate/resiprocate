@@ -673,7 +673,10 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             }
             if (i->param(p_nonce) != makeNonce(request, then))
             {
-               InfoLog(<< "Not my nonce.");
+               InfoLog(<< "Not my nonce. expected=" << makeNonce(request, then) 
+                       << " received=" << i->param(p_nonce)
+                       << " then=" << then);
+               
                return make_pair(Failed,username);
             }
          
