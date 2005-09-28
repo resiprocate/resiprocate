@@ -1318,12 +1318,23 @@ TransactionState::processTransportFailure()
 }
 
 // called by DnsResult
+void
+TransactionState::rewriteRequest(const Uri& rewrite)
+{
+   assert(mMsgToRetransmit->isRequest());
+   if (mMsgToRetransmit->header(h_RequestLine).uri() != rewrite)
+   {
+      InfoLog (<< "Rewriting request-uri to " << rewrite);
+      mMsgToRetransmit->header(h_RequestLine).uri() = rewrite;
+   }
+}
+
 void 
 TransactionState::handle(DnsResult* result)
 {
    // got a DNS response, so send the current message
    StackLog (<< *this << " got DNS result: " << *result);
-
+   
    if (mTarget.getType() == UNKNOWN_TRANSPORT) 
    {
       assert(mDnsResult);

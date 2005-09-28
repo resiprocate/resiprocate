@@ -144,7 +144,7 @@ main(int argc, const char** argv)
   struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
-      {"log-level",   'e', POPT_ARG_STRING, &enumSuffix,  0, "specify what enum domain to search in", "e164.arpa"},      
+      {"enum-suffix",   'e', POPT_ARG_STRING, &enumSuffix,  0, "specify what enum domain to search in", "e164.arpa"},      
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };

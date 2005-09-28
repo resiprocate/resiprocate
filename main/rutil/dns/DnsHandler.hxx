@@ -6,6 +6,7 @@ namespace resip
 
 class DnsResult;
 class TransactionState;
+class Uri;
 
 class DnsHandler
 {
@@ -15,6 +16,7 @@ class DnsHandler
       // call when dns entries are available (or nothing found)
       // this may be called synchronously with the call to lookup
       virtual void handle(DnsResult* result)=0;
+      virtual void rewriteRequest(const Uri& uri)=0;
 };
  
 }
