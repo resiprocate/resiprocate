@@ -54,6 +54,7 @@ SRC 	+=   \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/LocationServer.cxx \
 	monkeys/RecursiveRedirect.cxx \
+	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	\

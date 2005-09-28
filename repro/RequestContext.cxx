@@ -72,7 +72,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
-   DebugLog (<< "RequestContext::process(Message) " << *this);
+   DebugLog (<< "process(Message) " << *this);
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
@@ -89,7 +89,7 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       removeTopRouteIfSelf();
    }
 
-   DebugLog (<< "RequestContext::process(Message) " << *this);
+   DebugLog (<< "process(Message) " << *this);
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 

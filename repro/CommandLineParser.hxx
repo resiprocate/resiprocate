@@ -27,6 +27,8 @@ class CommandLineParser
       bool mUseV4;
       bool mUseV6;
       std::vector<Data> mDomains;
+      std::vector<Data> mInterfaces;
+      std::vector<Data> mRouteSet;
       Data mCertPath;
       bool mNoChallenge;
       bool mNoWebChallenge;
