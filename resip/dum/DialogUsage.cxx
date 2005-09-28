@@ -56,6 +56,13 @@ DialogUsage::getCallId() const
    return mDialog.getId().getCallId();
 }
 
+SharedPtr<UserProfile> 
+DialogUsage::getUserProfile() 
+{
+   return mDialog.mDialogSet.getUserProfile();
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

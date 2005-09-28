@@ -2,6 +2,8 @@
 #define RESIP_NONDIALOGUSAGE_HXX
 
 #include "rutil/BaseException.hxx"
+#include "rutil/SharedPtr.hxx"
+#include "resip/dum/UserProfile.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
 
@@ -25,6 +27,8 @@ class NonDialogUsage : public BaseUsage
       };
 
       AppDialogSetHandle getAppDialogSet();
+      SharedPtr<UserProfile> getUserProfile();
+
    protected:
       NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet);
       virtual ~NonDialogUsage();
