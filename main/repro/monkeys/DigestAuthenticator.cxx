@@ -101,7 +101,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       switch (result.first)
       {
          case Helper::Failed:
-            InfoLog (<< "Authentication failed for " << user << " at realm " << realm);
+            InfoLog (<< "Authentication failed for " << user << " at realm " << realm << ". Sending 403");
             rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Authentication Failed")));
             return SkipAllChains;
