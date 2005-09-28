@@ -27,6 +27,7 @@ class StatelessMessage : public DnsHandler
       ~StatelessMessage() {};
          
       void handle(DnsResult* result);
+      void rewriteRequest(const Uri& rewrite);
 
    private:
       TransportSelector& mSelector;

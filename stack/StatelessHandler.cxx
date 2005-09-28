@@ -123,6 +123,18 @@ StatelessMessage::StatelessMessage(TransportSelector& selector, SipMessage* msg)
 }
 
 void 
+StatelessMessage::rewriteRequest(const Uri& rewrite)
+{
+   assert(mMsg->isRequest());
+   if (mMsg->header(h_RequestLine).uri() != rewrite)
+   {
+      InfoLog (<< "Rewriting request-uri to " << rewrite);
+      mMsg->header(h_RequestLine).uri() = rewrite;
+   }
+}
+
+
+void 
 StatelessMessage::handle(DnsResult* result)
 {
    if (result->available() == DnsResult::Available)
