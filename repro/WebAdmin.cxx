@@ -1,28 +1,16 @@
-#ifdef WIN32
-#include <db_cxx.h>
-#elif HAVE_CONFIG_H
-#include "config.hxx"
-#include DB_HEADER
-#else 
-#include <db4/db_cxx.h>
-#endif
-
 #include <cassert>
 #include <time.h>
 
+#include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "resip/stack/Symbols.hxx"
-
+#include "resip/stack/Tuple.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/MD5Stream.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/Tuple.hxx"
-#include "rutil/DnsUtil.hxx"
-#include "rutil/ParseBuffer.hxx"
-#include "rutil/MD5Stream.hxx"
-
-//#include "resip/dum/ServerAuthManager.hxx"
-#include "resip/dum/RegistrationPersistenceManager.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
