@@ -294,7 +294,7 @@ repro::operator<<(std::ostream& strm, const RequestContext& rc)
         << " count=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
 
-   if (rc.mOriginalRequest) strm << " orig requri=" << rc.mOriginalRequest->brief();
+   //if (rc.mOriginalRequest) strm << " orig requri=" << rc.mOriginalRequest->brief();
    //if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
    return strm;
 }
