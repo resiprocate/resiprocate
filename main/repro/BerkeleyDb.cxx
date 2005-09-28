@@ -1,16 +1,10 @@
-
-#include <fcntl.h>
-
-#ifdef WIN32
-#include <db_cxx.h>
-#elif HAVE_CONFIG_H
-#include "config.hxx"
-#include DB_HEADER
-#else 
-#include <db4/db_cxx.h>
+#ifdef HAVE_CONFIG_H
+#include <config.hxx>
 #endif
 
+#include <fcntl.h>
 #include <cassert>
+#include <db4/db_cxx.h>
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
