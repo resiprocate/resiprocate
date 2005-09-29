@@ -587,6 +587,17 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }
             }
          }
+
+         // Fix the Referred-By header if no host specified.
+         if (msg->exists(h_ReferredBy))
+         {
+            if (msg->header(h_ReferredBy).uri().host().empty())
+            {
+               msg->header(h_ReferredBy).uri().host() = Tuple::inet_ntop(source);
+               msg->header(h_ReferredBy).uri().port() = target.transport->port();
+            }
+         }
+
          if (msg->exists(h_RecordRoutes) && !msg->header(h_RecordRoutes).empty())
          {
             NameAddr& rr = msg->header(h_RecordRoutes).back();
