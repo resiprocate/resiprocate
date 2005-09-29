@@ -106,9 +106,9 @@ endif
 # you choose to override any of the above options
 ######################################################################
 
-USE_IPV6=no
-USE_SSL=yes
-USE_DTLS=no
+USE_IPV6?=no
+USE_SSL?=yes
+USE_DTLS?=no
 
 #include $(BUILD)/Makefile.opt
 
