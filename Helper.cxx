@@ -684,24 +684,27 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop)  == Symbols::authInt)
                {
-                  if (i->param(p_response) == makeResponseMD5WithA1(a1,
-                                                              getMethodName(request.header(h_RequestLine).getMethod()),
-                                                              i->param(p_uri),
-                                                              i->param(p_nonce),
-                                                              i->param(p_qop),
-                                                              i->param(p_cnonce),
-                                                              i->param(p_nc),
-                                                              request.getContents()))
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
                   {
-                     if(i->exists(p_username))
+                     if (i->param(p_response) == makeResponseMD5WithA1(a1,
+                                                               getMethodName(request.header(h_RequestLine).getMethod()),
+                                                               i->param(p_uri),
+                                                               i->param(p_nonce),
+                                                               i->param(p_qop),
+                                                               i->param(p_cnonce),
+                                                               i->param(p_nc),
+                                                               request.getContents()))
                      {
-                        username = i->param(p_username);
+                        if(i->exists(p_username))
+                        {
+                           username = i->param(p_username);
+                        }
+                        return make_pair(Authenticated,username);
                      }
-                     return make_pair(Authenticated,username);
-                  }
-                  else
-                  {
-                     return make_pair(Failed,username);
+                     else
+                     {
+                        return make_pair(Failed,username);
+                     }
                   }
                }
                else
@@ -710,20 +713,23 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                   return make_pair(Failed,username);
                }
             }
-            else if (i->param(p_response) == makeResponseMD5WithA1(a1,
-                                                             getMethodName(request.header(h_RequestLine).getMethod()),
-                                                             i->param(p_uri),
-                                                             i->param(p_nonce)))
+            else if(i->exists(p_uri))
             {
-               if(i->exists(p_username))
+               if (i->param(p_response) == makeResponseMD5WithA1(a1,
+                                                               getMethodName(request.header(h_RequestLine).getMethod()),
+                                                               i->param(p_uri),
+                                                               i->param(p_nonce)))
                {
-                  username = i->param(p_username);
+                  if(i->exists(p_username))
+                  {
+                     username = i->param(p_username);
+                  }
+                  return make_pair(Authenticated,username);
                }
-               return make_pair(Authenticated,username);
-            }
-            else
-            {
-               return make_pair(Failed,username);
+               else
+               {
+                  return make_pair(Failed,username);
+               }
             }
          }
          else
@@ -801,22 +807,25 @@ Helper::authenticateRequest(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
                {
-                  if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                              password,
-                                                              realm, 
-                                                              getMethodName(request.header(h_RequestLine).getMethod()),
-                                                              i->param(p_uri),
-                                                              i->param(p_nonce),
-                                                              i->param(p_qop),
-                                                              i->param(p_cnonce),
-                                                              i->param(p_nc)),
-                                                              request.getContents())
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
                   {
-                     return Authenticated;
-                  }
-                  else
-                  {
-                     return Failed;
+                     if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                               password,
+                                                               realm, 
+                                                               getMethodName(request.header(h_RequestLine).getMethod()),
+                                                               i->param(p_uri),
+                                                               i->param(p_nonce),
+                                                               i->param(p_qop),
+                                                               i->param(p_cnonce),
+                                                               i->param(p_nc)),
+                                                               request.getContents())
+                     {
+                        return Authenticated;
+                     }
+                     else
+                     {
+                        return Failed;
+                     }
                   }
                }
                else
@@ -825,18 +834,22 @@ Helper::authenticateRequest(const SipMessage& request,
                   return Failed;
                }
             }
-            else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                             password,
-                                                             realm, 
-                                                             getMethodName(request.header(h_RequestLine).getMethod()),
-                                                             i->param(p_uri),
-                                                             i->param(p_nonce)))
+            else if(i->exists(p_uri))
             {
-               return Authenticated;
-            }
-            else
-            {
-               return Failed;
+            
+               if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                               password,
+                                                               realm, 
+                                                               getMethodName(request.header(h_RequestLine).getMethod()),
+                                                               i->param(p_uri),
+                                                               i->param(p_nonce)))
+               {
+                  return Authenticated;
+               }
+               else
+               {
+                  return Failed;
+               }
             }
          }
          else
@@ -912,20 +925,23 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
                {
-                  if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
-                                                                    getMethodName(request.header(h_RequestLine).getMethod()),
-                                                                    i->param(p_uri),
-                                                                    i->param(p_nonce),
-                                                                    i->param(p_qop),
-                                                                    i->param(p_cnonce),
-                                                                    i->param(p_nc),
-                                                                    request.getContents()))
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
                   {
-                     return Authenticated;
-                  }
-                  else
-                  {
-                     return Failed;
+                     if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
+                                                                     getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                     i->param(p_uri),
+                                                                     i->param(p_nonce),
+                                                                     i->param(p_qop),
+                                                                     i->param(p_cnonce),
+                                                                     i->param(p_nc),
+                                                                     request.getContents()))
+                     {
+                        return Authenticated;
+                     }
+                     else
+                     {
+                        return Failed;
+                     }
                   }
                }
                else
@@ -934,16 +950,19 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                   return Failed;
                }
             }
-            else if (i->param(p_response) == makeResponseMD5WithA1(hA1,
-                                                                   getMethodName(request.header(h_RequestLine).getMethod()),
-                                                                   i->param(p_uri),
-                                                                   i->param(p_nonce)))
+            else if(i->exists(p_uri))
             {
-               return Authenticated;
-            }
-            else
-            {
-               return Failed;
+               if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+                                                                     getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                     i->param(p_uri),
+                                                                     i->param(p_nonce)))
+               {
+                  return Authenticated;
+               }
+               else
+               {
+                  return Failed;
+               }
             }
          }
          else
