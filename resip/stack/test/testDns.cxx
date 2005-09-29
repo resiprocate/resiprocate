@@ -67,6 +67,12 @@ class TestDnsHandler : public DnsHandler
             mComplete = true;
          }         
       }
+      void rewriteRequest(const Uri& rewrite)
+      {
+         std::cout << "Rewriting uri (enum) to " << rewrite << std::endl;
+      }
+      
+
       bool complete()
       {
          Lock lock(mutex);
