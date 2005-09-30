@@ -264,40 +264,27 @@ TlsConnection::checkState()
             return mState;
       }
    }
-   //post-connection verification: check that certificate name matches domain name
-   
-
-   X509* cert = SSL_get_peer_certificate(mSsl);
-   if (cert)
-   {
-      const Data& domain = mDomain.empty() ? who().getTargetDomain() : mDomain;
-      if (!mSecurity->compareCertName(cert, domain)) 
-      {
-         mState = Broken;
-         mBio = 0;
-         ErrLog (<< "Certificate name mismatch " << domain);
-         return mState;
-      }
-
-   }
-   else
-   {
-      if (!mServer)
-      {
-         ErrLog(<< "No server certificate in TLS connection" );
-         mState = Broken;
-         mBio = 0;
-         return mState;
-      }
-   }
-   X509_free(cert); 
-   cert=NULL;
-    
-   InfoLog( << "TLS handshake done" ); 
-   mState = Up;
 
    // force peer name to get checked and perhaps cert loaded
    computePeerName();
+
+   //post-connection verification: check that certificate name matches domain name
+   if (!mServer)
+   {
+      if (getPeerName() != who().getTargetDomain())
+      {
+         mState = Broken;
+         mBio = 0;
+         ErrLog (<< "Certificate name mismatch: trying to connect to " 
+                 << who().getTargetDomain()
+                 << " remote cert domain is " 
+                 << getPeerName() );
+         return mState;
+      }
+   }
+
+   InfoLog( << "TLS handshake done for peer " << getPeerName()); 
+   mState = Up;
 
 #endif // USE_SSL   
    return mState;
@@ -479,8 +466,8 @@ TlsConnection::isGood() // has data that can be read
 }
 
 
-Data 
-TlsConnection::getPeerName()
+const Data&
+TlsConnection::getPeerName() const
 {
    return mPeerName;
 }
