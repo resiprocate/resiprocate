@@ -32,7 +32,7 @@ class TlsConnection : public Connection
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
       
-      Data getPeerName();
+      const Data& getPeerName() const;
       
       typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
       static const char * fromState(State);
