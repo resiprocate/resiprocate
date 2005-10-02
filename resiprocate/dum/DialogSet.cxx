@@ -506,12 +506,21 @@ DialogSet::dispatch(const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
-         case SUBSCRIBE:
          case BYE:
          case ACK:
          case CANCEL:
          case REFER:  
             break; 
+
+         case SUBSCRIBE:
+            if (dialog == 0 &&
+                response.header(h_StatusLine).statusCode() < 300 &&
+                (!response.exists(h_Expires) ||
+                 response.header(h_Expires).value() == 0))
+            {
+               return;
+            }
+            break;
 
          case PUBLISH:
             if (mClientPublication == 0)
