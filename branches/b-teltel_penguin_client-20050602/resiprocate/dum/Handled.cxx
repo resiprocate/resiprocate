@@ -1,5 +1,6 @@
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/dum/HandleException.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -13,6 +14,11 @@ Handled::Handled(HandleManager& ham) :
    mId(Handled::npos)
 {
    mId = mHam.create(this);
+   if (mId == Handled::npos)
+   {
+      throw HandleException("cannot create handled most likely DUM is shutting down !", __FILE__, __LINE__);
+   }
+
    StackLog ( << "&&&&&& Handled::Handled " << mId << "this(" << this << ") " << &ham );
 }
 
