@@ -46,7 +46,7 @@ void skipEol(ParseBuffer& pb)
    }
    else
    {
-      // allow extra '\r'.
+      // allow extra 0x0d bytes.
       while(*pb.position() == Symbols::CR[0])
       {
          pb.skipChar();
