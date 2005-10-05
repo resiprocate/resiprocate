@@ -185,6 +185,9 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
          break;
 
       case UAS_WaitingToOffer:
+         InviteSession::provideOffer(offer, level, alternative);
+	 break;
+
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
