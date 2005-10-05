@@ -275,10 +275,10 @@ TlsConnection::checkState()
       {
          mState = Broken;
          mBio = 0;
-         ErrLog (<< "Certificate name mismatch: trying to connect to " 
+         ErrLog (<< "Certificate name mismatch: trying to connect to <" 
                  << who().getTargetDomain()
-                 << " remote cert domain is " 
-                 << getPeerName() );
+                 << "> remote cert domain is <" 
+                 << getPeerName() << ">" );
          return mState;
       }
    }
@@ -478,11 +478,6 @@ TlsConnection::computePeerName()
 {
 #if defined(USE_SSL)
    assert(mSsl);
-   
-   if (checkState() != Up)
-   {
-      return;
-   }
 
    if (!mBio)
    {
