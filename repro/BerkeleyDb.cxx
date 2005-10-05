@@ -4,7 +4,11 @@
 
 #include <fcntl.h>
 #include <cassert>
+#ifdef WIN32
+#include <db_cxx.h>
+#else
 #include <db4/db_cxx.h>
+#endif
 
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
