@@ -301,6 +301,9 @@
 				RelativePath=".\RouteStore.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\StaticRoute.cxx">
 			</File>
 			<File
@@ -400,6 +403,9 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\SimpleStaticRoute.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\StaticRoute.hxx">
