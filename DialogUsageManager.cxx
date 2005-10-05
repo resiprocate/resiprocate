@@ -1753,7 +1753,8 @@ DialogUsageManager::addIncomingFeature(resip::SharedPtr<DumFeature> feat)
 void
 DialogUsageManager::addOutgoingFeature(resip::SharedPtr<DumFeature> feat)
 {
-   mOutgoingFeatureList.push_back(feat);
+   // make sure EncryptionManager is the last feature in the list.
+   mOutgoingFeatureList.insert(mOutgoingFeatureList.begin(), feat);
 }
 
 void
