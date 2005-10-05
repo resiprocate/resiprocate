@@ -245,10 +245,9 @@ InviteSession::provideOffer(const SdpContents& offer,
          else
          {
             transition(SentReinvite);
-            // remove remote credentials.
-            mLastSessionModification.remove(h_ProxyAuthorizations);
             mDialog.makeRequest(mLastSessionModification, INVITE);
-         }
+         }         
+         mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
          setSessionTimerHeaders(mLastSessionModification);
 
          InfoLog (<< "Sending " << mLastSessionModification.brief());
@@ -1396,11 +1395,11 @@ InviteSession::sessionRefresh()
    else
    {
       transition(SentReinvite);
-      mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
       mDialog.makeRequest(mLastSessionModification, INVITE);
       InviteSession::setSdp(mLastSessionModification, mCurrentLocalSdp.get());
       mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp.get(), 0);
    }
+   mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
    setSessionTimerHeaders(mLastSessionModification);
 
    InfoLog (<< "sessionRefresh: Sending " << mLastSessionModification.brief());
