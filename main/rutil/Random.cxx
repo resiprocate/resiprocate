@@ -65,6 +65,10 @@ Random::initialize()
          //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
          srand(seed);
          mIsInitialized = true;
+
+#if defined(USE_SSL)
+         RAND_screen ();
+#endif
       }
    }
 
