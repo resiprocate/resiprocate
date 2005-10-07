@@ -79,7 +79,7 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
 
          //  Send the req and do state transition.
          DumHelper::setOutgoingEncrptionLevel(req, mProposedEncryptionLevel);
-         mDialog.send(req);
+         send(req);
          break;
       }
 
@@ -223,7 +223,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          }
 
          //  Send the req and do state transition.
-         mDialog.send(req);
+         send(req);
          transition(UAC_EarlyWithAnswer);
          break;
       }
@@ -532,7 +532,7 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
       SipMessage prack;
       mDialog.makeRequest(prack, PRACK);
       prack.header(h_RSeq) = msg.header(h_RSeq);
-      mDialog.send(prack);
+      send(prack);
    }
 }
 
@@ -551,7 +551,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    // mLastSessionModification = prack; // ?slg? is this needed?
 
    DumHelper::setOutgoingEncrptionLevel(prack, mCurrentEncryptionLevel);
-   mDialog.send(prack);
+   send(prack);
 }
 
 
@@ -970,7 +970,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             mLastSessionModification = update;
 
             DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
-            mDialog.send(update);
+            send(update);
          }
          break;
 
@@ -983,7 +983,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             mDialog.makeRequest(update, UPDATE);
             InviteSession::setSdp(update, mProposedLocalSdp.get());
             DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
-            mDialog.send(update);
+            send(update);
          }
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);

@@ -12,6 +12,7 @@ class DefaultServerReferHandler : public ServerSubscriptionHandler
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onTerminated(ServerSubscriptionHandle);
+      virtual void onReadyToSend(ServerSubscriptionHandle, SipMessage&);
 
       static DefaultServerReferHandler* Instance();
 

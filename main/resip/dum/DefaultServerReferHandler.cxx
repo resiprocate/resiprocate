@@ -18,6 +18,9 @@ void
 DefaultServerReferHandler::onTerminated(ServerSubscriptionHandle)
 {}
 
+void DefaultServerReferHandler::onReadyToSend(ServerSubscriptionHandle, SipMessage&)
+{}
+
 //!dcm! -- not thread-safe
 DefaultServerReferHandler* DefaultServerReferHandler::Instance()
 {
