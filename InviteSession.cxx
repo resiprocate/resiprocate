@@ -255,7 +255,8 @@ InviteSession::provideOffer(const SdpContents& offer,
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
          DumHelper::setOutgoingEncrptionLevel(mLastSessionModification, mProposedEncryptionLevel);
-         mDialog.send(mLastSessionModification);
+         // call send to give app an chance to adorn the message.
+         send(mLastSessionModification);
          break;
 
       case Answered:
@@ -275,7 +276,7 @@ InviteSession::provideOffer(const SdpContents& offer,
 
          InfoLog (<< "Sending " << mInvite200.brief());
          DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
-         mDialog.send(mInvite200);
+         send(mInvite200);
          startRetransmit200Timer();
          break;
          
@@ -307,7 +308,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InfoLog (<< "Sending " << mInvite200.brief());
          DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
-         mDialog.send(mInvite200);
+         send(mInvite200);
          startRetransmit200Timer();
          break;
 
@@ -323,7 +324,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InfoLog (<< "Sending " << response.brief());
          DumHelper::setOutgoingEncrptionLevel(response, mCurrentEncryptionLevel);
-         mDialog.send(response);
+         send(response);
          break;
       }
 
@@ -369,7 +370,7 @@ InviteSession::end()
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 488);
          InfoLog (<< "Sending " << response.brief());
-         mDialog.send(response);
+         send(response);
 
          sendBye();
          transition(Terminated);
@@ -413,7 +414,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
             response.header(h_Warnings).push_back(*warning);
          }
          InfoLog (<< "Sending " << response.brief());
-         mDialog.send(response);
+         send(response);
          break;
       }
 
@@ -455,7 +456,7 @@ InviteSession::refer(const NameAddr& referTo)
       mDialog.makeRequest(refer, REFER);
       refer.header(h_ReferTo) = referTo;
       refer.header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
-      mDialog.send(refer);
+      send(refer);
    }
    else
    {
@@ -493,7 +494,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       replaces.param(p_fromTag) = id.getLocalTag();
 
       refer.header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
-      mDialog.send(refer);
+      send(refer);
    }
    else
    {
@@ -516,7 +517,7 @@ InviteSession::info(const Contents& contents)
          // !jf! handle multipart here
          info.setContents(&contents);
          DumHelper::setOutgoingEncrptionLevel(info, mCurrentEncryptionLevel);
-         mDialog.send(info);
+         send(info);
       }
       else
       {
@@ -545,7 +546,7 @@ InviteSession::message(const Contents& contents)
          // !jf! handle multipart here
          message.setContents(&contents);
          DumHelper::setOutgoingEncrptionLevel(message, mCurrentEncryptionLevel);
-         mDialog.send(message);
+         send(message);
          InfoLog (<< "Trying to send MESSAGE: " << message);
       }
       else
@@ -621,7 +622,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          InfoLog (<< "Retransmitting: " << endl << mInvite200);
          DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
-         mDialog.send(mInvite200);
+         send(mInvite200);
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
       }
@@ -677,14 +678,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentUpdate);
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
-         mDialog.send(mLastSessionModification);
+         send(mLastSessionModification);
       }
       else if (mState == SentReinviteGlare)
       {
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
-         mDialog.send(mLastSessionModification);
+         send(mLastSessionModification);
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
@@ -759,7 +760,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mLastSessionModification = msg;
          mDialog.makeResponse(response, mLastSessionModification, 200);
          handleSessionTimerRequest(response, mLastSessionModification);
-         send(response);
+         BaseUsage::send(response);
          break;
       }
 
@@ -797,7 +798,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          // glare
          SipMessage response;
          mDialog.makeResponse(response, msg, 491);
-         send(response);
+         BaseUsage::send(response);
          break;
       }
 
@@ -879,7 +880,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       {
          SipMessage response;
          mDialog.makeResponse(response, msg, 491);
-         send(response);
+         BaseUsage::send(response);
          break;
       }
 
@@ -974,7 +975,7 @@ void InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       {
          SipMessage response;
          mDialog.makeResponse(response, msg, 491);
-         send(response);
+         BaseUsage::send(response);
          break;
       }
       case OnAckAnswer:
@@ -1033,7 +1034,7 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
       SipMessage response;
       mDialog.makeResponse(response, msg, 500);
       response.header(h_RetryAfter).value() = Random::getRandom() % 10;
-      mDialog.send(response);
+      send(response);
    }
    else
    {
@@ -1129,7 +1130,7 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
    {
       SipMessage response;
       mDialog.makeResponse(response, msg, 481);
-      mDialog.send(response);
+      send(response);
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
       //mDum.destroy(this);
@@ -1189,7 +1190,7 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    SipMessage response;
    mDialog.makeResponse(response, msg, 400); // !jf! what code to use?
    InfoLog (<< "Sending " << response.brief());
-   mDialog.send(response);
+   send(response);
 
    sendBye();
    transition(Terminated);
@@ -1204,7 +1205,7 @@ InviteSession::dispatchPrack(const SipMessage& msg)
    {
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 481);
-      mDialog.send(rsp);
+      send(rsp);
 
       sendBye();
       // !jf! should we make some other callback here
@@ -1226,7 +1227,7 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    {
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 200);
-      mDialog.send(rsp);
+      send(rsp);
 
       sendBye();
       // !jf! should we make some other callback here
@@ -1251,7 +1252,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
       SipMessage rsp;
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(rsp, msg, 200);
-      mDialog.send(rsp);
+      send(rsp);
 
       // !jf! should we make some other callback here
       transition(Terminated);
@@ -1301,7 +1302,7 @@ InviteSession::acceptNIT(int statusCode)
 
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
    Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
-   send(mLastNitResponse);   
+   BaseUsage::send(mLastNitResponse);   
 } 
 
 void
@@ -1313,7 +1314,7 @@ InviteSession::rejectNIT(int statusCode)
    }
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;  
    Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
-   send(mLastNitResponse);
+   BaseUsage::send(mLastNitResponse);
 }
 
 void
@@ -1404,7 +1405,7 @@ InviteSession::sessionRefresh()
 
    InfoLog (<< "sessionRefresh: Sending " << mLastSessionModification.brief());
    DumHelper::setOutgoingEncrptionLevel(mLastSessionModification, mCurrentEncryptionLevel);
-   mDialog.send(mLastSessionModification);
+   send(mLastSessionModification);
 }
 
 void
@@ -1947,7 +1948,7 @@ void InviteSession::sendAck(const SdpContents *sdp)
       setSdp(ack, *sdp);
    }
    InfoLog (<< "Sending " << ack.brief());
-   mDialog.send(ack);
+   send(ack);
 }
 
 void InviteSession::sendBye()
@@ -1955,7 +1956,7 @@ void InviteSession::sendBye()
    SipMessage bye;
    mDialog.makeRequest(bye, BYE);
    InfoLog (<< "Sending " << bye.brief());
-   mDialog.send(bye);
+   send(bye);
 }
 
 DialogUsageManager::EncryptionLevel InviteSession::getEncryptionLevel(const SipMessage& msg)
@@ -1993,6 +1994,22 @@ void InviteSession::setCurrentLocalSdp(const SipMessage& msg)
       mCurrentLocalSdp = auto_ptr<SdpContents>(static_cast<SdpContents*>(mProposedLocalSdp.get()->clone()));
    }
    mProposedLocalSdp.release();
+}
+
+void InviteSession::onReadyToSend(SipMessage& msg)
+{
+   mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), msg);
+}
+
+void InviteSession::send(SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      // give app an chance to adorn the message.
+      onReadyToSend(msg);
+   }
+
+   mDialog.send(msg);
 }
 
 
