@@ -26,6 +26,18 @@ InviteSessionHandler::onSessionExpired(InviteSessionHandle handle)
 }
 
 
+void 
+InviteSessionHandler::onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
+{
+}
+
+void 
+InviteSessionHandler::onReadyToSend(InviteSessionHandle, SipMessage& msg)
+{
+   // default is to do nothing. this is for adornment   
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -31,7 +31,7 @@ class ClientSubscriptionHandler
       virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 
       /// called to allow app to adorn a message.
-      virtual void onReadyToSend(ClientSubscriptionHandle, SipMessage& msg)=0;
+      virtual void onReadyToSend(ClientSubscriptionHandle, SipMessage& msg);
 };
 
 class ServerSubscriptionHandler
@@ -53,7 +53,7 @@ class ServerSubscriptionHandler
       //method that MUST be implemented by a handler
       virtual void onTerminated(ServerSubscriptionHandle)=0;
 
-      virtual void onReadyToSend(ServerSubscriptionHandle, SipMessage& msg)=0;
+      virtual void onReadyToSend(ServerSubscriptionHandle, SipMessage& msg);
 
       //will be called when a NOTIFY is not delivered(with a usage terminating
       //statusCode), or the Dialog is destroyed
