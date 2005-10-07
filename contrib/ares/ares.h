@@ -17,13 +17,18 @@
 #define ARES__H
 
 #ifdef WIN32
-#include <winsock2.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <io.h>
-#include <string.h>
-#include <stdio.h>
-#include <Ws2tcpip.h>
+	#include <winsock2.h>
+	#include <stdlib.h>
+	#include <errno.h>
+	#include <io.h>
+	#include <string.h>
+	#include <stdio.h>
+	#include <WS2tcpip.h>
+#endif
+
+
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 #if defined(__APPLE__)
@@ -38,6 +43,7 @@
 /* why was this commented out?! ah, it was a 'fix for windows' */
 #include <netinet/in.h>
 #endif
+
 
 #define ARES_SUCCESS		0
 
@@ -125,46 +131,47 @@ typedef void (*ares_callback)(void *arg, int status, unsigned char *abuf,
 typedef void (*ares_host_callback)(void *arg, int status,
 				   struct hostent *hostent);
 
-int ares_init(ares_channel *channelptr);
 
-int ares_capabilities(int capmask);
+extern int ares_init(ares_channel *channelptr);
 
-int ares_init_options(ares_channel *channelptr, struct ares_options *options,
-		      int optmask);
+extern 	int ares_capabilities(int capmask);
 
-void ares_destroy(ares_channel channel);
-void ares_destroy_suppress_callbacks(ares_channel channel);
+extern 	int ares_init_options(ares_channel *channelptr, struct ares_options *options,
+				int optmask);
 
-void ares_destroy_internal(ares_channel channel, int suppressCallbacks);
+extern 	void ares_destroy(ares_channel channel);
+extern 	void ares_destroy_suppress_callbacks(ares_channel channel);
 
-void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
-	       ares_callback callback, void *arg);
-void ares_query(ares_channel channel, const char *name, int dnsclass,
-		int type, ares_callback callback, void *arg);
-void ares_search(ares_channel channel, const char *name, int dnsclass,
-		 int type, ares_callback callback, void *arg);
-void ares_gethostbyname(ares_channel channel, const char *name, int family,
-			ares_host_callback callback, void *arg);
-void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
-			int family, ares_host_callback callback, void *arg);
+extern 	void ares_destroy_internal(ares_channel channel, int suppressCallbacks);
 
-int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
-struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
-			     struct timeval *tv);
-void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+extern 	void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
+			ares_callback callback, void *arg);
+extern 	void ares_query(ares_channel channel, const char *name, int dnsclass,
+			int type, ares_callback callback, void *arg);
+extern 	void ares_search(ares_channel channel, const char *name, int dnsclass,
+			int type, ares_callback callback, void *arg);
+extern 	void ares_gethostbyname(ares_channel channel, const char *name, int family,
+				ares_host_callback callback, void *arg);
+extern 	void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
+				int family, ares_host_callback callback, void *arg);
 
-int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
-		 int rd, unsigned char **buf, int *buflen);
-int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
-		     int alen, char **s, int *enclen);
-int ares_parse_a_reply(const unsigned char *abuf, int alen,
-		       struct hostent **host);
-int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
-			 int addrlen, int family, struct hostent **host);
-void ares_free_string(char *str);
-void ares_free_hostent(struct hostent *host);
-const char *ares_strerror(int code);
-void ares_free_errmem(char *mem);
+extern 	int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+extern 	struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
+					struct timeval *tv);
+extern 	void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+
+extern 	int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
+			int rd, unsigned char **buf, int *buflen);
+extern 	int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
+				int alen, char **s, int *enclen);
+extern 	int ares_parse_a_reply(const unsigned char *abuf, int alen,
+				struct hostent **host);
+extern 	int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
+				int addrlen, int family, struct hostent **host);
+extern 	void ares_free_string(char *str);
+extern 	void ares_free_hostent(struct hostent *host);
+extern 	const char *ares_strerror(int code);
+extern 	void ares_free_errmem(char *mem);
 
 
 #if defined(WIN32) || defined (__CYGWIN__)
@@ -240,5 +247,10 @@ void ares_free_errmem(char *mem);
 #define MAXLABEL 63
 
 #endif
+
+#if defined(__cplusplus)
+}
+#endif
+
 
 #endif /* ARES__H */

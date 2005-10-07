@@ -25,11 +25,8 @@
 #endif
 
 #if defined(USE_ARES)
-extern "C"
-{
 #include "ares.h"
 #include "ares_dns.h"
-}
 #endif
 
 #include "rutil/DnsUtil.hxx"
