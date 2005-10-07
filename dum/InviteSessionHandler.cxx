@@ -6,12 +6,6 @@
 using namespace resip;
 
 void 
-InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
-{
-   handle->send(msg);
-}
-
-void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
    InfoLog(<< "InviteSessionHandler::onAckNotReceived");
