@@ -51,7 +51,7 @@ Fifo<Msg>::Fifo() :
 }
 
 template <class Msg>
-Fifo<Msg>::~Fifo<Msg>()
+Fifo<Msg>::~Fifo()
 {
    clear();
 }
