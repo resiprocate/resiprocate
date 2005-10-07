@@ -24,6 +24,7 @@
 #include "resip/dum/OutgoingEvent.hxx"
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 #if defined(USE_SSL)
 
@@ -251,26 +252,43 @@ Contents* EncryptionManager::signAndEncrypt(SipMessage* msg,
 bool EncryptionManager::decrypt(SipMessage* msg)
 {
    Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
-   Helper::ContentsSecAttrs csa;
-   bool ret = request->decrypt(csa);
-   if (ret)
+   bool ret = true;
+   
+   try
    {
-      if (csa.mContents.get())
+      Helper::ContentsSecAttrs csa;
+      ret = request->decrypt(csa);
+
+      if (ret)
       {
-         msg->setContents(csa.mContents);
-      }
-      if (csa.mAttributes.get()) 
+         if (csa.mContents.get())
+         {
+            // trigger the parsing, prevent the original message from being
+            // altered in case parser throws.
+            csa.mContents->checkParsed();
+            msg->setContents(csa.mContents);
+         }
+         if (csa.mAttributes.get()) 
+         {
+            msg->setSecurityAttributes(csa.mAttributes);
+         }
+         delete request;
+      }   
+      else
       {
-         msg->setSecurityAttributes(csa.mAttributes);
+         InfoLog(<< "Async decrypt" << endl);
+         request->setTaken();
+         mRequests.push_back(request);
       }
-      delete request;
    }
-   else
+   catch (ParseBuffer::Exception&)
    {
-      InfoLog(<< "Async decrypt" << endl);
-      request->setTaken();
-      mRequests.push_back(request);
+      DebugLog(<< "Invalid message received");
    }
+   catch (...)
+   {
+   }
+
    return ret;
 }
 
@@ -780,17 +798,29 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
 
    if (Complete == result)
    {
-      Helper::ContentsSecAttrs csa;
-      csa = getContents(mMsg, *mDum.getSecurity(), 
-                        (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
-      if (csa.mContents.get())
+      try
       {
-         mMsg->setContents(csa.mContents);
+         Helper::ContentsSecAttrs csa;
+         csa = getContents(mMsg, *mDum.getSecurity(), 
+                           (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
+         if (csa.mContents.get())
+         {
+            csa.mContents->checkParsed();
+            mMsg->setContents(csa.mContents);
+         }
+         if (csa.mAttributes.get()) 
+         {
+            mMsg->setSecurityAttributes(csa.mAttributes);
+         }
       }
-      if (csa.mAttributes.get()) 
+      catch (ParseBuffer::Exception&)
       {
-         mMsg->setSecurityAttributes(csa.mAttributes);
+         DebugLog(<< "Invalid message received");
       }
+      catch (...)
+      {
+      }
+
       DumDecrypted* decrypted = new DumDecrypted(*mMsg);
       mDum.post(decrypted);
    }
