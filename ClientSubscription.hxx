@@ -29,7 +29,12 @@ class ClientSubscription: public BaseSubscription
 
    protected:
       virtual ~ClientSubscription();
-      virtual void dialogDestroyed(const SipMessage& msg);      
+      virtual void dialogDestroyed(const SipMessage& msg);
+      virtual void onReadyToSend(SipMessage& msg);
+
+      // override BaseUsage send.
+      virtual void send(SipMessage& msg);
+
    private:
       friend class Dialog;
       friend class InviteSession;      
