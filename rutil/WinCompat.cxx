@@ -276,29 +276,16 @@ WinCompat::determineSourceInterface(const GenericIPAddress& destination)
 //        library. (SLG)
 
 #if !defined(NO_IPHLPAPI)
-#if defined(USE_IPV6)
-   try
+
+   if(destination.isVersion6())
    {
-      if(destination.isVersion6())
-      {
-         return  determineSourceInterfaceWithIPv6(destination);
-      }
-      else
-      {
-         return determineSourceInterfaceWithoutIPv6(destination);
-      }
+      return  determineSourceInterfaceWithIPv6(destination);
    }
-   catch (...)
-   {
-   }
-#endif
-   try
+   else
    {
       return determineSourceInterfaceWithoutIPv6(destination);
-   }
-   catch (...)
-   {
-   }
+   }  
+
 #else
    assert(0);
 #endif
