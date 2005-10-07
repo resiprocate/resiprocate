@@ -6,11 +6,8 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-extern "C"
-{
 #include "ares.h"
 #include "ares_dns.h"
-}
 
 #if !defined(USE_ARES)
 #error Must have ARES

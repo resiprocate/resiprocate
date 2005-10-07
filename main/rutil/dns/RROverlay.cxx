@@ -3,11 +3,8 @@
 #endif
 
 #if defined(USE_ARES)
-extern "C"
-{
 #include "ares.h"
 #include "ares_dns.h"
-}
 #endif
 
 #ifndef __CYGWIN__
