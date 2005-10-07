@@ -110,7 +110,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {            
             mDialog.makeResponse(mLastResponse, msg, 400);
             mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-            send(mLastResponse);
+            BaseUsage::send(mLastResponse);
             handler->onTerminated(getHandle(), msg);
             delete this;
          }
@@ -171,7 +171,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   << mDialog.mRemoteTarget);
 
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-         mDialog.send(sub);
+         send(sub);
 
          delete this;
          return;
@@ -215,12 +215,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDialog.send(sub);
+               send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDialog.send(sub);
+               send(sub);
             }
             
             return;
@@ -269,12 +269,12 @@ ClientSubscription::dispatch(const DumTimeout& timer)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDialog.send(sub);
+               send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDialog.send(sub);
+               send(sub);
             }
             
             delete this;
@@ -301,7 +301,7 @@ ClientSubscription::requestRefresh(int expires)
       }
       mExpires = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
-      send(mLastRequest);
+      BaseUsage::send(mLastRequest);
    }
 }
 
@@ -315,7 +315,7 @@ ClientSubscription::end()
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
       mLastRequest.header(h_Expires).value() = 0;
       mEnded = true;
-      send(mLastRequest);
+      BaseUsage::send(mLastRequest);
    }
 }
 
@@ -323,7 +323,7 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   send(mLastResponse);
+   BaseUsage::send(mLastResponse);
 }
 
 void 
@@ -337,7 +337,7 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
       mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
    }
    
-   send(mLastResponse);
+   BaseUsage::send(mLastResponse);
    switch (Helper::determineFailureMessageEffect(mLastResponse))
    {
       case Helper::TransactionTermination:
@@ -369,6 +369,24 @@ ClientSubscription::dump(std::ostream& strm) const
 {
    strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
    return strm;
+}
+
+void ClientSubscription::onReadyToSend(SipMessage& msg)
+{
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onReadyToSend(getHandle(), msg);
+}
+
+void ClientSubscription::send(SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      // give app an chance to adorn the message.
+      onReadyToSend(msg);
+   }
+
+   mDialog.send(msg);
 }
 
 
