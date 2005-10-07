@@ -58,9 +58,23 @@ ServerSubscriptionHandler::onPublished(ServerSubscriptionHandle associated,
 
 
 void 
-ServerSubscriptionHandler::onNotifyRejected(ServerSubscriptionHandle, const SipMessage& msg)
-{   
+ServerSubscriptionHandler::onNotifyRejected(ServerSubscriptionHandle h, const SipMessage& msg)
+{
 }
+
+void 
+ClientSubscriptionHandler::onReadyToSend(ClientSubscriptionHandle h, SipMessage& msg)
+{
+   // default is to do nothing. this is for adornment
+}
+
+void 
+ServerSubscriptionHandler::onReadyToSend(ServerSubscriptionHandle h, SipMessage& msg)
+{
+   // default is to do nothing. this is for adornment   
+}
+
+
 
 
 /* ====================================================================

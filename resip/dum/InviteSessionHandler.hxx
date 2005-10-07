@@ -62,7 +62,7 @@ class InviteSessionHandler
       virtual void onRedirected(ClientInviteSessionHandle, const SipMessage& msg)=0;
 
       /// called to allow app to adorn a message. default is to send immediately
-      virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg)=0;
+      virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
       /// called when an SDP answer is received - has nothing to do with user
       /// answering the call 
@@ -70,6 +70,12 @@ class InviteSessionHandler
 
       /// called when an SDP offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
+
+      /** called when a modified SDP is received in a 2xx response to a
+          session-timer reINVITE. Under normal circumstances where the response
+          SDP is unchanged from current remote SDP no handler is called
+      */
+      virtual void onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
 
       /// called when an Invite w/out SDP is sent, or any other context which
       /// requires an SDP offer from the user
