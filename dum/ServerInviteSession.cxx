@@ -62,7 +62,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
          response.header(h_Contacts) = contacts;
-         mDialog.send(response);
+         send(response);
 
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
@@ -374,7 +374,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          {
             response.header(h_Warnings).push_back(*warning);
          }
-         mDialog.send(response);
+         send(response);
 
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
@@ -545,7 +545,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit1xx && m1xx.header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
-         mDialog.send(m1xx);
+         send(m1xx);
 		 startRetransmit1xxTimer();
       }
    }
@@ -664,7 +664,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -672,7 +672,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
-         mDialog.send(b200);
+         send(b200);
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -730,7 +730,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -738,7 +738,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       {
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
-         mDialog.send(b200);
+         send(b200);
 
          transition(Terminated);
     	 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -782,7 +782,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -792,7 +792,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage p200;
          mDialog.makeResponse(p200, msg, 200);
-         mDialog.send(p200);
+         send(p200);
          
          sendAccept(200, 0);         
          break;
@@ -886,11 +886,11 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
    SipMessage c200;
    mDialog.makeResponse(c200, msg, 200);
-   mDialog.send(c200);
+   send(c200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, mFirstRequest, 487);
-   mDialog.send(i487);
+   send(i487);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -902,11 +902,11 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
    SipMessage b200;
    mDialog.makeResponse(b200, msg, 200);
-   mDialog.send(b200);
+   send(b200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, mFirstRequest, 487);
-   mDialog.send(i487);
+   send(i487);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -918,11 +918,11 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
    SipMessage r481; // !jf! what should we send here? 
    mDialog.makeResponse(r481, msg, 481);
-   mDialog.send(r481);
+   send(r481);
    
    SipMessage i400;
    mDialog.makeResponse(i400, mFirstRequest, 400);
-   mDialog.send(i400);
+   send(i400);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -960,7 +960,7 @@ ServerInviteSession::sendProvisional(int code)
    }
    startRetransmit1xxTimer();
    DumHelper::setOutgoingEncrptionLevel(m1xx, mProposedEncryptionLevel);
-   mDialog.send(m1xx);
+   send(m1xx);
 }
 
 void
@@ -975,7 +975,7 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
    DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
-   mDialog.send(mInvite200);
+   send(mInvite200);
 }
 
 void
@@ -987,7 +987,7 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
       DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
-      mDialog.send(update);
+      send(update);
       mLastSessionModification = update;
    }
    else
