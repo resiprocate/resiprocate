@@ -491,6 +491,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
    }
 }
 
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

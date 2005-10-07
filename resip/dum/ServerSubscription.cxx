@@ -95,14 +95,14 @@ ServerSubscription::send(SipMessage& msg)
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
-         mDialog.send(msg);
+         sendViaDialog(msg);
       }
       else if (code < 300)
       {
          if(msg.exists(h_Expires))
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
-            mDialog.send(msg);
+            sendViaDialog(msg);
             mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
             mState = Established;            
          }
@@ -113,7 +113,7 @@ ServerSubscription::send(SipMessage& msg)
       }
       else if (code < 400)
       {
-         mDialog.send(msg);
+         sendViaDialog(msg);
          handler->onTerminated(getHandle());
          delete this;
          return;
@@ -122,20 +122,20 @@ ServerSubscription::send(SipMessage& msg)
       {
          if (shouldDestroyAfterSendingFailure(msg))
          {
-            mDialog.send(msg);
+            sendViaDialog(msg);
             handler->onTerminated(getHandle());
             delete this;
             return;
          }
          else
          {
-            mDialog.send(msg);
+            sendViaDialog(msg);
          }
       }
    }
    else
    {
-      mDialog.send(msg);
+      sendViaDialog(msg);
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -369,6 +369,27 @@ ServerSubscription::dialogDestroyed(const SipMessage& msg)
    handler->onTerminated(getHandle());
    delete this;
 }
+
+void ServerSubscription::onReadyToSend(SipMessage& msg)
+{
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);
+   handler->onReadyToSend(getHandle(), msg);
+}
+
+void ServerSubscription::sendViaDialog(SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      // give app an chance to adorn the message.
+      onReadyToSend(msg);
+   }
+
+   mDialog.send(msg);
+}
+
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
