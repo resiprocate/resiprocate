@@ -2,11 +2,8 @@
 #include "rutil/config.hxx"
 #endif
 
-extern "C"
-{
 #include "ares.h"
 #include "ares_dns.h"
-}
 
 #ifndef WIN32
 #include <sys/types.h>
