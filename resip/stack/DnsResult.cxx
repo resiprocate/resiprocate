@@ -271,8 +271,8 @@ DnsResult::lookupInternal(const Uri& uri)
             {
                case TLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
-                  mDns.lookup<RR_SRV>("_sip._tls." + mTarget, Protocol::Sip, this);
-                  StackLog (<< "Doing SRV lookup of _sip._tls." << mTarget);
+                  mDns.lookup<RR_SRV>("_sips._tcp." + mTarget, Protocol::Sip, this);
+                  StackLog (<< "Doing SRV lookup of _sips._tcp." << mTarget);
                   break;
                case DTLS: //deprecated, mean TLS over TCP
                   mSRVCount++;
