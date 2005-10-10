@@ -80,7 +80,6 @@ pemTypePrefixes(  Security::PEMType pType )
    return unknownKey;
 }
 
-
 static Data
 readIntoData(const Data& filename)
 {
@@ -149,7 +148,11 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
-Security::Security()
+const char* BaseSecurity::CipherSuite::ExportableSuite = "!SSLv2:!ADH:EXPORT56:!RC4:!RC2:!IDEA";  //exportable 56 bits, not patented
+const char* BaseSecurity::CipherSuite::StrongestSuite = "!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES"; //strongest available ciphersuites
+
+
+Security::Security(const char *cipherSuites):BaseSecurity(cipherSuites)
 {
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
@@ -159,7 +162,7 @@ Security::Security()
 #endif
 }
 
-Security::Security(const Data& directory) : mPath(directory)
+Security::Security(const Data& directory, const char *cipherSuites) : mPath(directory), BaseSecurity(cipherSuites)  
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
@@ -858,40 +861,28 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 }
 
 
-BaseSecurity::BaseSecurity () :
+BaseSecurity::BaseSecurity (const char *cipherSuites) :
    mTlsCtx(0),
    mSslCtx(0),
    mRootCerts(0)
 { 
    int ret;
-   
+   if(NULL == cipherSuites)
+   {
+      WarningLog( <<"Invalid ciphersuites; exportable ciphersuites will be used instead");
+      cipherSuites = CipherSuite::ExportableSuite;
+   }
    initialize(); 
    
    mRootCerts = X509_STORE_new();
    assert(mRootCerts);
 
-   // static char* cipher="RSA+SHA+AES+3DES";
-   // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
-   //static char* cipher="ALL";
-   //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
-   static char* cipher="!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES";
-    /* 
-      use: openssl ciphers -v <string>  to test cipher string
-      The resulting cipher suite using OpenSSL 0.97g is:
-      AES256-SHA              SSLv3 Kx=RSA       Au=RSA  Enc=AES(256)  Mac=SHA1
-      AES128-SHA              SSLv3 Kx=RSA       Au=RSA  Enc=AES(128)  Mac=SHA1
-      DHE-DSS-AES256-SHA      SSLv3 Kx=DH        Au=DSS  Enc=AES(256)  Mac=SHA1
-      DHE-DSS-AES128-SHA      SSLv3 Kx=DH        Au=DSS  Enc=AES(128)  Mac=SHA1
-      DES-CBC3-SHA            SSLv3 Kx=RSA       Au=RSA  Enc=3DES(168) Mac=SHA1
-      EDH-DSS-DES-CBC3-SHA    SSLv3 Kx=DH        Au=DSS  Enc=3DES(168) Mac=SHA1
-    */
-   
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
+   ret = SSL_CTX_set_cipher_list(mTlsCtx,cipherSuites);
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
@@ -899,7 +890,7 @@ BaseSecurity::BaseSecurity () :
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
+   ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuites);
    assert(ret);
 }
 

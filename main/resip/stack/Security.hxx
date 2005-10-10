@@ -31,6 +31,7 @@ class Security;
 class MultipartSignedContents;
 class SipMessage;
 
+
 class BaseSecurity
 {
    public:
@@ -41,7 +42,14 @@ class BaseSecurity
             const char* name() const { return "SecurityException"; }
       };
 
-      BaseSecurity();
+      class CipherSuite
+      {
+         public:
+            static const char* ExportableSuite;
+            static const char* StrongestSuite;
+      };
+
+      BaseSecurity(const char *cipherSuites);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -72,8 +80,8 @@ class BaseSecurity
             Data validTo;
       };
 
-        typedef std::vector<CertificateInfo> CertificateInfoContainer;
-        CertificateInfoContainer getRootCertDescriptions() const;
+      typedef std::vector<CertificateInfo> CertificateInfoContainer;
+      CertificateInfoContainer getRootCertDescriptions() const;
 
       // All of these guys can throw SecurityException
 
@@ -184,8 +192,8 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts);
-      Security();
+      Security(const Data& pathToCerts, const char *cipherSuites = CipherSuite::ExportableSuite);
+      Security(const char *cipherSuites = CipherSuite::ExportableSuite);
 
       virtual void preload();
 
