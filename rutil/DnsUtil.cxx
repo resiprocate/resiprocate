@@ -55,6 +55,11 @@ DnsUtil::lookupARecords(const Data& host)
    struct hostent hostbuf; 
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
+#elif defined(__APPLE__)
+   // gethostbyname in os/x is thread-safe...
+   // http://developer.apple.com/technotes/tn2002/pdf/tn2053.pdf
+   result = gethostbyname( host.c_str() );
+   ret = (result == 0);
 #else
    assert(0);
    return names;
@@ -121,6 +126,7 @@ DnsUtil::getLocalHostName()
          throw Exception("could not find local hostname",__FILE__,__LINE__);
       }
    }
+
    struct hostent* he;
    if ((he = gethostbyname(buffer)) != NULL) {
      if (strchr(he->h_name, '.') != NULL) {

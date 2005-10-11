@@ -143,6 +143,11 @@ Resolver::lookupARecords()
     //!dcm! -- not threadsafe
     result = gethostbyname(mHost.c_str());    
     int ret = errno;    
+#elif defined(__APPLE__)
+    // gethostbyname in os/x is thread-safe...
+    // http://developer.apple.com/technotes/tn2002/pdf/tn2053.pdf
+    result = gethostbyname(mHost.c_str());
+    int ret = (result==0);
 #else
    int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
 #endif
