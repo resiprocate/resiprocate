@@ -45,7 +45,7 @@ class MessageWaitingContents : public Contents
       bool exists(const Data& hn) const;
       void remove(const Data& hn);
 
-      bool& hasMessages() { return mHasMessages; }
+      bool& hasMessages() { checkParsed(); return mHasMessages; }
 
       class Header
       {
