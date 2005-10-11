@@ -42,6 +42,26 @@ main()
    }
 
    {
+      const Data txt("Messages-Waiting: yes\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "simple-message-summary");
+      MessageWaitingContents mwb(&hfv, type);
+      
+      assert(mwb.hasMessages() == true);      
+   }
+
+   {
+      const Data txt("Messages-Waiting: no\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "simple-message-summary");
+      MessageWaitingContents mwb(&hfv, type);
+      
+      assert(mwb.hasMessages() == false);      
+   }
+
+   {
       const Data txt("Messages-Waiting: yes\r\n"
                      "Message-Account: sip:alice@vmail.example.com\r\n"
                      "Voice-Message: 4/8 (1/2)\r\n");
@@ -62,6 +82,7 @@ main()
 
       assert(mwb.exists(mw_fax) == false);
    }
+
 
    {
       const Data txt("Messages-Waiting: yes\r\n"
