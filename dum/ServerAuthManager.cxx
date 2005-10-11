@@ -187,7 +187,9 @@ ServerAuthManager::Result
 ServerAuthManager::handle(const SipMessage& sipMsg)
 {
    //InfoLog( << "trying to do auth" );
-   if (sipMsg.isRequest() && sipMsg.header(h_RequestLine).method() != ACK)  // Do not challenge ACKs
+   if (sipMsg.isRequest() && 
+       sipMsg.header(h_RequestLine).method() != ACK && 
+       sipMsg.header(h_RequestLine).method() != CANCEL)  // Do not challenge ACKs or CANCELs
    {
       if (!sipMsg.exists(h_ProxyAuthorizations))
       {
