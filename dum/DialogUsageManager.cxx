@@ -75,7 +75,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
 {
    //TODO -- create default features
    mStack.registerTransactionUser(*this);
-   addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
+   addServerSubscriptionHandler("refer", new DefaultServerReferHandler());
 
    mIncomingTarget = new IncomingTarget(*this);
    mOutgoingTarget = new OutgoingTarget(*this);
@@ -362,14 +362,12 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
 {
    assert(handler);
    //default do-nothing server side refer handler can be replaced
-   if (eventType == "refer")
+   if (eventType == "refer" && mServerSubscriptionHandlers.count(eventType))
    {
       delete mServerSubscriptionHandlers[eventType];
+      //mServerSubscriptionHandlers.erase(eventType);
    }
-   else
-   {
-      assert(mServerSubscriptionHandlers.count(eventType) == 0);
-   }
+
    mServerSubscriptionHandlers[eventType] = handler;
 }
 
