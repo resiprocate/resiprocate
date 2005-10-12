@@ -9,18 +9,19 @@ namespace resip
 class DefaultServerReferHandler : public ServerSubscriptionHandler
 {
   public:   
+      DefaultServerReferHandler() {}
+      virtual ~DefaultServerReferHandler() {}
+
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onTerminated(ServerSubscriptionHandle);
       virtual void onReadyToSend(ServerSubscriptionHandle, SipMessage&);
 
-      static DefaultServerReferHandler* Instance();
+      //static DefaultServerReferHandler* Instance();
 
       virtual bool hasDefaultExpires() const;
       virtual int getDefaultExpires() const;
    protected:
-      DefaultServerReferHandler() {}
-      virtual ~DefaultServerReferHandler() {}
 };
 
 }
