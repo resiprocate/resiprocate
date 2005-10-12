@@ -1,4 +1,49 @@
-#!/usr/bin/env perl
+#!/bin/sh
+
+for PERL in /usr/bin/perl \
+            /bin/perl \
+            /usr/local/bin/perl \
+            /usr/pkg/bin/perl \
+            /usr/athena/bin/perl \
+            $(which perl)
+{
+  if [ -e $PERL ]
+  then
+    break
+  fi
+}
+
+if [ ! -e $PERL ]
+then
+  echo ""
+  echo "*** Warning: Could not find perl interpreter."
+  if [ ! -e build/Makefile.conf ]
+  then
+    echo "*** Creating default config file in build/Makefile.conf"
+    echo "*** Please install perl and re-run $0"
+    echo "VOCAL_TOOLCHAIN_TYPE := gnu
+VOCAL_COMPILE_TYPE := debug
+VOCAL_CROSS_ROOT := /skiff/local/bin
+BUILD_SHARED_LIBS := no
+USE_DISTCC := no
+USE_CCACHE := no
+USE_DTLS := no
+USE_SSL := yes
+USE_POPT := yes
+USE_CURL := no
+USE_GOOGLE_MALLOC := no
+USE_GOOGLE_CPUPERF := no
+USE_IPV6 := no
+INSTALL_PREFIX := /usr/local" > build/Makefile.conf
+    exit
+  fi
+  echo "*** Leaving build/Makefile.conf unmodified"
+  exit
+fi
+
+exec $PERL -wx $0 $@
+
+#!perl
 
 ######################################################################
 # Usage:
@@ -350,3 +395,4 @@ sub detectDistcc
   }
   "no";
 }
+__END__
