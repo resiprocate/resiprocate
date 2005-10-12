@@ -127,7 +127,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          mExpires = now + refreshInterval;
       }
 
-      if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
+      if (!mEnded && isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Active))
       {
          if (refreshInterval)
          {
@@ -137,7 +137,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          
          handler->onUpdateActive(getHandle(), msg);
       }
-      else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
+      else if (!mEnded && isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Pending))
       {
          if (refreshInterval)
          {
@@ -147,7 +147,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
          handler->onUpdatePending(getHandle(), msg);
       }
-      else if (msg.header(h_SubscriptionState).value() == "terminated")
+      else if (isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Terminated))
       {
          acceptUpdate();
          handler->onTerminated(getHandle(), msg);
