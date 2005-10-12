@@ -7,13 +7,13 @@ for PERL in /usr/bin/perl \
             /usr/athena/bin/perl \
             $(which perl)
 {
-  if [ -e $PERL ]
+  if [ -x $PERL ]
   then
     break
   fi
 }
 
-if [ ! -e $PERL ]
+if [ ! -x $PERL ]
 then
   echo ""
   echo "*** Warning: Could not find perl interpreter."
