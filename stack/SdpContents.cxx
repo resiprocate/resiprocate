@@ -1613,6 +1613,7 @@ SdpContents::Session::Medium::codecs()
       // don't store twice
       mFormats.clear();
       mAttributeHelper.clearAttribute(rtpmap);
+      mAttributeHelper.clearAttribute(fmtp);  // parsed out in codec.parse
    }
 #endif
 
