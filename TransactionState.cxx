@@ -932,7 +932,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                if (mIsReliable)
                {
                   //StackLog (<< "Received ACK in Completed (reliable) - delete transaction");
-                  //terminateServerTransaction(mId);
+                  terminateServerTransaction(mId);
                   delete this; 
                   delete msg;
                }
