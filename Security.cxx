@@ -148,11 +148,10 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
-const char* BaseSecurity::CipherSuite::ExportableSuite = "!SSLv2:!ADH:EXPORT56:!RC4:!RC2:!IDEA";  //exportable 56 bits, not patented
-const char* BaseSecurity::CipherSuite::StrongestSuite = "!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES"; //strongest available ciphersuites
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:!ADH:EXPORT56:!RC4:!RC2:!IDEA");  //exportable 56 bits, not patented
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES"); //strongest available ciphersuitesx
 
-
-Security::Security(const char *cipherSuites):BaseSecurity(cipherSuites)
+Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 {
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
@@ -162,7 +161,7 @@ Security::Security(const char *cipherSuites):BaseSecurity(cipherSuites)
 #endif
 }
 
-Security::Security(const Data& directory, const char *cipherSuites) : mPath(directory), BaseSecurity(cipherSuites)  
+Security::Security(const Data& directory, const CipherList& cipherSuite) : mPath(directory), BaseSecurity(cipherSuite)  
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
@@ -861,17 +860,12 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 }
 
 
-BaseSecurity::BaseSecurity (const char *cipherSuites) :
+BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mTlsCtx(0),
    mSslCtx(0),
    mRootCerts(0)
 { 
    int ret;
-   if(NULL == cipherSuites)
-   {
-      WarningLog( <<"Invalid ciphersuites; exportable ciphersuites will be used instead");
-      cipherSuites = CipherSuite::ExportableSuite;
-   }
    initialize(); 
    
    mRootCerts = X509_STORE_new();
@@ -882,7 +876,7 @@ BaseSecurity::BaseSecurity (const char *cipherSuites) :
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mTlsCtx,cipherSuites);
+   ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
@@ -890,7 +884,7 @@ BaseSecurity::BaseSecurity (const char *cipherSuites) :
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuites);
+   ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
    assert(ret);
 }
 
