@@ -12,6 +12,7 @@
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

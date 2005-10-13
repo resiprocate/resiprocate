@@ -12,6 +12,7 @@
 
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;
