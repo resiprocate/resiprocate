@@ -42,14 +42,21 @@ class BaseSecurity
             const char* name() const { return "SecurityException"; }
       };
 
-      class CipherSuite
+      class CipherList
       {
          public:
-            static const char* ExportableSuite;
-            static const char* StrongestSuite;
+            CipherList(){}
+            CipherList(const Data& cipherList) : mCipherList(cipherList) {}
+            Data& cipherList() { return mCipherList; }
+            const Data& cipherList() const { return mCipherList; }
+         private:
+            Data mCipherList;
       };
-
-      BaseSecurity(const char *cipherSuites);
+      
+      static CipherList ExportableSuite;
+      static CipherList StrongestSuite;
+      
+      BaseSecurity(const CipherList& cipherSuite = ExportableSuite);
       virtual ~BaseSecurity();
 
       // used to initialize the openssl library
@@ -192,8 +199,8 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const char *cipherSuites = CipherSuite::ExportableSuite);
-      Security(const char *cipherSuites = CipherSuite::ExportableSuite);
+      Security(const Data& pathToCerts, const CipherList& = ExportableSuite);
+      Security(const CipherList& = ExportableSuite);
 
       virtual void preload();
 
