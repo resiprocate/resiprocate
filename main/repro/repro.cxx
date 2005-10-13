@@ -42,6 +42,7 @@
 #if defined(USE_MYSQL)
 #include "repro/MySqlDb.hxx"
 #endif
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
@@ -148,9 +149,13 @@ main(int argc, char** argv)
       Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
    }
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   { FindMemoryLeaks fml;
+#endif
+
 #ifdef USE_SSL
-   Security security(args.mCertPath);
-   SipStack stack(&security);
+   Security* security = new Security(args.mCertPath);
+   SipStack stack(security);
 #else
    SipStack stack;
 #endif
@@ -327,7 +332,7 @@ main(int argc, char** argv)
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, &security, args.mNoWebChallenge, realm, args.mHttpPort  );
+   WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mHttpPort  );
 #else
    WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mHttpPort  );
 #endif
@@ -363,10 +368,12 @@ main(int argc, char** argv)
                                            methodList) );
    }
    
+#if defined(USE_SSL)
+   CertServer* certServer = 0;
+#endif
    if (args.mCertServer)
    {
 #if defined(USE_SSL)
-      CertServer* certServer = 0;
       certServer = new CertServer(*dum);
 
       // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
@@ -411,7 +418,14 @@ main(int argc, char** argv)
    usleep(100000);
 #endif
    }
-   exit(0);
+
+   proxy.shutdown();
+   stackThread.shutdown();
+   adminThread.shutdown();
+   if (dumThread)
+   {
+       dumThread->shutdown();
+   }
 
    proxy.join();
    stackThread.join();
@@ -419,7 +433,23 @@ main(int argc, char** argv)
    if (dumThread)
    {
       dumThread->join();
+      delete dumThread;
+   }
+
+#if defined(USE_SSL)
+   if(certServer)
+   {
+       delete certServer;
+   }
+#endif
+
+   if(dum) 
+   {
+       delete dum;
    }
 
    delete db; db=0;
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   }
+#endif
 }
