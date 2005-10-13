@@ -46,7 +46,7 @@ SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler, bool stateless) : 
 #ifdef USE_SSL
-   mSecurity( pSecurity ? pSecurity : new Security("~/")),
+   mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
