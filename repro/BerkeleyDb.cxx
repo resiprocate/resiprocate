@@ -16,6 +16,7 @@
 
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;
