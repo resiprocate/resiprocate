@@ -614,19 +614,19 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
    }
    else if (transport == rhs.transport)
    {
-      if (target < rhs.target)
+      if (priority < rhs.priority)
       {
          return true;
       }
-      else if (target == rhs.target)
+      else if (priority == rhs.priority)
       {
-         if (priority < rhs.priority)
+         if (weight < rhs.weight)
          {
             return true;
          }
-         else if (priority == rhs.priority)
+         else if (weight == rhs.weight)
          {
-            if (weight < rhs.weight)
+            if (transport < rhs.transport)
             {
                return true;
             }
