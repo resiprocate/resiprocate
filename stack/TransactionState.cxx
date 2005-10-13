@@ -1196,6 +1196,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
       if (timer->getType() == Timer::TimerStaleServer)
       {
          delete msg;
+         terminateServerTransaction(mId);
          delete this;
       }
       else
