@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 
+#include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Timer.hxx"
@@ -14,6 +15,8 @@
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 RRList::RRList() : mRRType(0), mStatus(0), mAbsoluteExpiry(ULONG_MAX) {}
 
@@ -57,14 +60,22 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
    {
       mAbsoluteExpiry = ULONG_MAX;
    }
+
    for (Itr it = begin; it != end; it++)
    {
-      RecordItem item;
-      item.record = factory->create(*it);
-      mRecords.push_back(item);
-      if ((UInt64)it->ttl() < mAbsoluteExpiry)
+      try
       {
-         mAbsoluteExpiry = it->ttl();
+         RecordItem item;
+         item.record = factory->create(*it);
+         mRecords.push_back(item);
+         if ((UInt64)it->ttl() < mAbsoluteExpiry)
+         {
+            mAbsoluteExpiry = it->ttl();
+         }
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.getMessage() << endl);
       }
    }
 
