@@ -51,6 +51,7 @@ ConnectionBase::~ConnectionBase()
       delete sendData;
       mOutstandingSends.pop_front();
    }
+   DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
 //   delete mBuffer;
 //   delete mMessage;
 }
