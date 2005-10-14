@@ -46,9 +46,8 @@ class BaseSecurity
       {
          public:
             CipherList(){}
-            CipherList(const Data& cipherList) : mCipherList(cipherList) {}
-            Data& cipherList() { return mCipherList; }
-            const Data& cipherList() const { return mCipherList; }
+            CipherList(const Data& cipherList) : mCipherList(cipherList) {}            
+            Data cipherList() const { return mCipherList; }
          private:
             Data mCipherList;
       };
