@@ -168,7 +168,17 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 void
 ClientInviteSession::end()
 {
+   end(NotSpecified);
+}
+
+void
+ClientInviteSession::end(EndReason reason)
+{
    InfoLog (<< toData(mState) << ": end");
+   if (mEndReason != NotSpecified)
+   {
+      mEndReason = reason;   
+   }
 
    switch(mState)
    {
@@ -198,7 +208,7 @@ ClientInviteSession::end()
          break;
 
       default:
-         InviteSession::end();
+         InviteSession::end(reason);
          break;
    }
 }
