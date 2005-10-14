@@ -281,10 +281,21 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    }
 }
 
-void 
+void
 ServerInviteSession::end()
 {
+   end(NotSpecified);
+}
+
+void 
+ServerInviteSession::end(EndReason reason)
+{
    InfoLog (<< toData(mState) << ": end");
+   if (mEndReason != NotSpecified)
+   {
+      mEndReason = reason;   
+   }
+   
    switch (mState)
    {
       case UAS_EarlyNoOffer:
@@ -335,7 +346,7 @@ ServerInviteSession::end()
           break;
          
       default:
-         InviteSession::end();
+         InviteSession::end(reason);
          break;
    }
 }
