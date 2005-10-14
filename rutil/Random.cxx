@@ -47,6 +47,19 @@ void
 Random::initialize()
 {  
 #ifdef WIN32
+//#if defined(USE_SSL)
+#if 0 //!dcm! - this shouldn't be per thread for win32, and this is slow. Going
+      //to re-work openssl initialization
+   if ( !Random::mIsInitialized)
+   {
+      Lock lock(mMutex);
+      if (!Random::mIsInitialized)
+      {
+         mIsInitialized = true;
+         RAND_screen ();
+      }
+   }
+#else      
    if (!Random::mInitializer.isInitialized())
    {
       Lock lock(mMutex);      
@@ -66,11 +79,9 @@ Random::initialize()
          srand(seed);
          mIsInitialized = true;
 
-#if defined(USE_SSL)
-         RAND_screen ();
-#endif
       }
    }
+#endif
 
 #else
    
