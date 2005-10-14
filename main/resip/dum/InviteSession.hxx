@@ -32,8 +32,20 @@ class InviteSession : public DialogUsage
           the state. */
       virtual void provideAnswer(const SdpContents& answer);
 
+      enum EndReason
+      {
+         NotSpecified=0,
+         UserHangup,
+         AppRejectedSdp,
+         IllegalNegotiation,
+         AckNotReceived,
+         SessionExpired,
+         ENDREASON_MAX
+      };
+
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end();
+      virtual void end(EndReason reason);
+      virtual void end();      
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
@@ -283,6 +295,8 @@ class InviteSession : public DialogUsage
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
+
+      EndReason mEndReason;      
       
    private:
       friend class Dialog;
@@ -301,6 +315,7 @@ class InviteSession : public DialogUsage
       void dispatchInfo(const SipMessage& msg);
       void dispatchMessage(const SipMessage& msg);
 
+ 
 };
 
 }
