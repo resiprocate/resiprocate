@@ -22,7 +22,7 @@ class WinSecurity : public Security
       } MsCertStoreType;
       //for details on certificate stores, see
       //http://msdn.microsoft.com/library/default.asp?url=/library/en-us/seccrypto/security/certificate_services.asp
-      WinSecurity(const char *cipherSuites = CipherSuite::ExportableSuite):Security(cipherSuites){};
+      WinSecurity(const CipherList& cipherList = ExportableSuite) : Security(cipherList){}
 
       virtual void preload();
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer);
