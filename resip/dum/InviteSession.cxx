@@ -33,6 +33,22 @@
 using namespace resip;
 using namespace std;
 
+Data EndReasons[] =
+{
+   "Not Specified",
+   "User Hung Up",
+   "Application Rejected Sdp(usually no common codec)",
+   "Illegal Sdp Negotiation",
+   "ACK not received",
+   "Session Timer Expired"
+};
+
+const Data& getEndReasonString(InviteSession::EndReason reason)
+{
+   assert(reason >= InviteSession::NotSpecified && reason < InviteSession::ENDREASON_MAX); //!dcm! -- necessary?
+   return EndReasons[reason];
+}
+
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : DialogUsage(dum, dialog),
      mState(Undefined),
@@ -44,7 +60,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionTimerSeq(0),
      mSentRefer(false),
      mCurrentEncryptionLevel(DialogUsageManager::None),
-     mProposedEncryptionLevel(DialogUsageManager::None)
+     mProposedEncryptionLevel(DialogUsageManager::None),
+     mEndReason(NotSpecified)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
    assert(mDum.mInviteSessionHandler);
@@ -337,6 +354,17 @@ InviteSession::provideAnswer(const SdpContents& answer)
 void
 InviteSession::end()
 {
+   end(NotSpecified);
+}
+
+void
+InviteSession::end(EndReason reason)
+{
+   if (mEndReason != NotSpecified)
+   {
+      mEndReason = reason;   
+   }
+   
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    switch (mState)
@@ -1955,7 +1983,14 @@ void InviteSession::sendBye()
 {
    SipMessage bye;
    mDialog.makeRequest(bye, BYE);
-   InfoLog (<< "Sending " << bye.brief());
+   Data reason;
+   if (mEndReason != NotSpecified)
+   {
+      reason = getEndReasonString(mEndReason);
+      bye.header(h_Reasons).push_back(Token(reason));      
+   }
+   
+   InfoLog (<< myAddr() << " Sending BYE " << reason);
    send(bye);
 }
 
@@ -2011,7 +2046,6 @@ void InviteSession::send(SipMessage& msg)
 
    mDialog.send(msg);
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
