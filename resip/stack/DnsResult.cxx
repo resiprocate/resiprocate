@@ -626,7 +626,7 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
          }
          else if (weight == rhs.weight)
          {
-            if (transport < rhs.transport)
+            if (target < rhs.target)
             {
                return true;
             }
