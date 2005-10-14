@@ -148,8 +148,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
-BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:!ADH:EXPORT56:!RC4:!RC2:!IDEA");  //exportable 56 bits, not patented
-BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:!ADH:RSA+AES:DSS+AES:RSA+3DES:DSS+3DES"); //strongest available ciphersuitesx
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("RSA+DSS+AES+3DES+RC4+SHA1+MD5");
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("RSA+DSS+AES+3DES+SHA1");
 
 Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 {
@@ -1315,7 +1315,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    strm.flush();
 
    DebugLog( << "signing data <" << bodyData.escaped() << ">" );
-   Security::dumpAsn("resip-sign-out-data",bodyData);
+   //Security::dumpAsn("resip-sign-out-data",bodyData);
 
    const char* p = bodyData.data();
    int s = bodyData.size();
