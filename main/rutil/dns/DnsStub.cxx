@@ -94,6 +94,9 @@ void DnsStub::cache(const Data& key,
                     const unsigned char* abuf, 
                     int alen)
 {
+
+   vector<RROverlay> overlays;
+
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
 
@@ -102,8 +105,6 @@ void DnsStub::cache(const Data& key,
    {
       aptr = skipDNSQuestion(aptr, abuf, alen);
    }
-
-   vector<RROverlay> overlays;
 
    // answers.
    int ancount = DNS_HEADER_ANCOUNT(abuf);
@@ -139,7 +140,7 @@ void DnsStub::cache(const Data& key,
       {
          itHigh = upper_bound(itLow, overlays.end(), *itLow);
       }
-   }   
+   }
 }
 
 void DnsStub::cacheTTL(const Data& key,
@@ -368,7 +369,10 @@ DnsStub::Query::go()
       }
    }
 
-   cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
+   if (targetToQuery != mTarget)
+   {
+      cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
+   }
    
    if (!cached)
    {
@@ -393,7 +397,14 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    {
       if (status == 4 || status == 1) // domain name not found or no answer.
       {
-         mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
+         try
+         {
+            mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
+         }
+         catch (BaseException& e)
+         {
+            ErrLog(<< e.getMessage() << endl);
+         }
       }
       mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), Empty, mSink);
       mReQuery = 0;
@@ -410,7 +421,18 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
    for (int i = 0; i < qdcount && aptr; ++i)
    {
-      aptr = mStub.skipDNSQuestion(aptr, abuf, alen);
+      try
+      {
+         aptr = mStub.skipDNSQuestion(aptr, abuf, alen);
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.getMessage() << endl);
+         mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+         mStub.removeQuery(this);
+         delete this;
+         return;
+      }
    }
 
    int ancount = DNS_HEADER_ANCOUNT(abuf);
@@ -459,7 +481,18 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    ares_expand_name(aptr, abuf, alen, &name, &len);
    targetToQuery = name;
    aptr += len;
-   mStub.cache(name, abuf, alen);
+
+   try
+   {
+      mStub.cache(name, abuf, alen);
+   }
+   catch (BaseException& e)
+   {
+      ErrLog(<< e.getMessage() << endl);
+      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+      bGotAnswers = false;
+      return;
+   }
 
    if (mRRType != T_CNAME)
    {
