@@ -45,7 +45,10 @@ void skipEol(ParseBuffer& pb)
    }
    else
    {
-      pb.skipChar(Symbols::CR[0]);
+      while(*pb.position() == Symbols::CR[0])
+      {
+          pb.skipChar();
+      }
       pb.skipChar(Symbols::LF[0]);
    }
 }

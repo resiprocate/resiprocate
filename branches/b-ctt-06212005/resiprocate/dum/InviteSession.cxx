@@ -227,6 +227,7 @@ InviteSession::provideOffer(const SdpContents& offer)
             transition(SentReinvite);
             mDialog.makeRequest(mLastSessionModification, INVITE);
          }
+         mLastSessionModification.remove(h_ProxyAuthorizations);
          setSessionTimerHeaders(mLastSessionModification);
 
          InfoLog (<< "Sending " << mLastSessionModification.brief());
@@ -1269,6 +1270,7 @@ InviteSession::sessionRefresh()
       InviteSession::setSdp(mLastSessionModification, *mCurrentLocalSdp);
       mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp);
    }
+   mLastSessionModification.remove(h_ProxyAuthorizations);
    setSessionTimerHeaders(mLastSessionModification);
 
    InfoLog (<< "sessionRefresh: Sending " << mLastSessionModification.brief());
@@ -1561,11 +1563,27 @@ InviteSession::getSdp(const SipMessage& msg)
       SdpContents* cloned = static_cast<SdpContents*>(sdp->clone());
       return std::auto_ptr<SdpContents>(cloned);
    }
-   else
+
+   MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(msg.getContents());
+   if ( mixed )
    {
-      static std::auto_ptr<SdpContents> empty;
-      return empty;
+      // Look for first SDP Contents in a multipart contents    
+      MultipartMixedContents::Parts& parts = mixed->parts();
+      for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
+           i != parts.end();  
+           ++i)
+      {
+         sdp = dynamic_cast<SdpContents*>(*i);
+         if(sdp != NULL)   // Found SDP contents
+         {
+            SdpContents* cloned = static_cast<SdpContents*>(sdp->clone());
+            return std::auto_ptr<SdpContents>(cloned);
+         }
+      }
    }
+
+   static std::auto_ptr<SdpContents> empty;
+   return empty;
 }
 
 std::auto_ptr<SdpContents>

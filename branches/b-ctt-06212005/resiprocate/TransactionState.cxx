@@ -1524,11 +1524,16 @@ TransactionState::sendToTU(TransactionMessage* msg) const
          case 503:
          case 504:
          case 600:
+            // blacklist last target
+            if (mDnsResult->available() == DnsResult::Available)
+            {
+               mDnsResult->next();
+            }
             break;
          default:
             if (mDnsResult != NULL)
             {
-            mDnsResult->success();
+               mDnsResult->success();
             }
             break;
       }
