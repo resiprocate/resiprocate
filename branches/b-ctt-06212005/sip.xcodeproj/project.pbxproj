@@ -219,6 +219,10 @@
 		124D7A5E086CC69300BCA5A9 /* vmd5.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7A43086CC69300BCA5A9 /* vmd5.cxx */; };
 		124D7A61086CC77900BCA5A9 /* HttpGetMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7A5F086CC77900BCA5A9 /* HttpGetMessage.cxx */; };
 		124D7A62086CC77900BCA5A9 /* HttpProvider.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124D7A60086CC77900BCA5A9 /* HttpProvider.cxx */; };
+		124EC468087217600017C8BB /* TransportFailure.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC467087217600017C8BB /* TransportFailure.cxx */; };
+		124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47408721A880017C8BB /* TransportMessage.cxx */; };
+		124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */; };
+		124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */; };
 		12F79733086CBA1E00AF4EDF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
 		D2AAC0700554677100DB518D /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
 /* End PBXBuildFile section */
@@ -461,6 +465,10 @@
 		124D7A43086CC69300BCA5A9 /* vmd5.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = vmd5.cxx; path = resiprocate/os/vmd5.cxx; sourceTree = "<group>"; };
 		124D7A5F086CC77900BCA5A9 /* HttpGetMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpGetMessage.cxx; path = resiprocate/external/HttpGetMessage.cxx; sourceTree = SOURCE_ROOT; };
 		124D7A60086CC77900BCA5A9 /* HttpProvider.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HttpProvider.cxx; path = resiprocate/external/HttpProvider.cxx; sourceTree = SOURCE_ROOT; };
+		124EC467087217600017C8BB /* TransportFailure.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportFailure.cxx; path = resiprocate/TransportFailure.cxx; sourceTree = SOURCE_ROOT; };
+		124EC47408721A880017C8BB /* TransportMessage.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TransportMessage.cxx; path = resiprocate/TransportMessage.cxx; sourceTree = SOURCE_ROOT; };
+		124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionHeader.cxx; path = resiprocate/ExtensionHeader.cxx; sourceTree = SOURCE_ROOT; };
+		124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ExtensionParameter.cxx; path = resiprocate/ExtensionParameter.cxx; sourceTree = SOURCE_ROOT; };
 		12F79738086CBA1E00AF4EDF /* libresiprocate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libresiprocate.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		32BAE0B70371A74B00C91783 /* sip_MacPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sip_MacPrefix.pch; sourceTree = "<group>"; };
 		D2AAC06F0554671400DB518D /* libares.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libares.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -691,6 +699,8 @@
 				124D78D9086CC3CE00BCA5A9 /* Embedded.cxx */,
 				124D78DA086CC3CE00BCA5A9 /* ExistsParameter.cxx */,
 				124D78DB086CC3CE00BCA5A9 /* ExpiresCategory.cxx */,
+				124EC47B08721CFF0017C8BB /* ExtensionHeader.cxx */,
+				124EC47C08721CFF0017C8BB /* ExtensionParameter.cxx */,
 				124D78DC086CC3CE00BCA5A9 /* ExternalBodyContents.cxx */,
 				124D78DD086CC3CE00BCA5A9 /* ExternalDnsFactory.cxx */,
 				124D78DE086CC3CE00BCA5A9 /* FloatParameter.cxx */,
@@ -762,6 +772,8 @@
 				124D7920086CC3CE00BCA5A9 /* TransactionUser.cxx */,
 				124D7921086CC3CE00BCA5A9 /* TransactionUserMessage.cxx */,
 				124D7922086CC3CE00BCA5A9 /* Transport.cxx */,
+				124EC47408721A880017C8BB /* TransportMessage.cxx */,
+				124EC467087217600017C8BB /* TransportFailure.cxx */,
 				124D7923086CC3CE00BCA5A9 /* TransportSelector.cxx */,
 				124D7924086CC3CE00BCA5A9 /* TuSelector.cxx */,
 				124D7925086CC3CE00BCA5A9 /* UdpTransport.cxx */,
@@ -1069,6 +1081,10 @@
 				124D7A5E086CC69300BCA5A9 /* vmd5.cxx in Sources */,
 				124D7A61086CC77900BCA5A9 /* HttpGetMessage.cxx in Sources */,
 				124D7A62086CC77900BCA5A9 /* HttpProvider.cxx in Sources */,
+				124EC468087217600017C8BB /* TransportFailure.cxx in Sources */,
+				124EC47508721A880017C8BB /* TransportMessage.cxx in Sources */,
+				124EC47D08721CFF0017C8BB /* ExtensionHeader.cxx in Sources */,
+				124EC47E08721CFF0017C8BB /* ExtensionParameter.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

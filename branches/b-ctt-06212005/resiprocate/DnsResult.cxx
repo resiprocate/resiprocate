@@ -588,19 +588,19 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
    }
    else if (transport == rhs.transport)
    {
-      if (target < rhs.target)
+      if (priority < rhs.priority)
       {
          return true;
       }
-      else if (target == rhs.target)
+      else if (priority == rhs.priority)
       {
-         if (priority < rhs.priority)
+         if (weight < rhs.weight)
          {
             return true;
          }
-         else if (priority == rhs.priority)
+         else if (weight == rhs.weight)
          {
-            if (weight < rhs.weight)
+            if (target < rhs.target)
             {
                return true;
             }
@@ -634,8 +634,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       {
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
-         //Tuple tuple(addr, mPort, mTransport, mTarget);
-         Tuple tuple(addr, mPort, mTransport, it->name());
+         Tuple tuple(addr, mPort, mTransport, mTarget);
          StackLog (<< "Adding " << tuple << " to result set");
          mResults.push_back(tuple);
       }

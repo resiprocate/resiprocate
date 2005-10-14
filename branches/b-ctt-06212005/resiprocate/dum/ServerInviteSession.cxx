@@ -174,7 +174,6 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
 
-      case UAS_WaitingToOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
@@ -194,6 +193,8 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
       case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
+
+      case UAS_WaitingToOffer:
       default:
          InviteSession::provideOffer(offer);
          break;
