@@ -128,6 +128,12 @@ class Profile
       virtual bool hasUserAgent() const;
       virtual void unsetUserAgent(); 
 
+      //if set then ProxyRequires header is added to outbound messages
+      virtual void setProxyRequires( const Tokens& proxyRequires );
+      virtual const Tokens& getProxyRequires() const;
+      virtual bool hasProxyRequires() const;
+      virtual void unsetProxyRequires(); 
+
       //time between CR/LF keepalive messages in seconds.  Set to 0 to disable.  Default is 30.
       //Note:  You must set a KeepAliveManager on DUM for this to work.
       virtual void setKeepAliveTime(int keepAliveTime);
@@ -193,6 +199,9 @@ class Profile
 
       bool mHasFixedTransportPort;
       int  mFixedTransportPort;
+
+      bool mHasProxyRequires;
+      Tokens mProxyRequires;
       
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
