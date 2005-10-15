@@ -710,6 +710,15 @@ DialogUsageManager::send(SipMessage& msg)
       msg.header(h_UserAgent).value() = userProfile->getUserAgent();
    }
 
+   assert(userProfile);
+   if (msg.isRequest() 
+       && userProfile->hasProxyRequires() 
+       && msg.header(h_RequestLine).method() != ACK 
+       && msg.header(h_RequestLine).method() != CANCEL)
+   {
+      msg.header(h_ProxyRequires) = userProfile->getProxyRequires();
+   }
+   
    DebugLog (<< "SEND: " << msg);
    if (msg.isRequest())
    {
