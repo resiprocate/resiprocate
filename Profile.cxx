@@ -46,6 +46,7 @@ Profile::Profile()
    mRportEnabled = true;
 
    mHasUserAgent = false;
+   mHasProxyRequires = false;   
 
    mHasOverrideHostPort = false;
 
@@ -74,6 +75,7 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
    mHasAdvertisedCapabilities = false;
    mHasRportEnabled = false;
    mHasUserAgent = false;
+   mHasProxyRequires = false;
    mHasOverrideHostPort = false;
    mHasKeepAliveTime = false;
    mHasFixedTransportPort = false;
@@ -505,6 +507,45 @@ Profile::unsetUserAgent()
    if(mBaseProfile.get()) 
    {
       mHasUserAgent = false;
+   }
+}
+
+void 
+Profile::setProxyRequires( const Tokens& proxyRequires )
+{
+   mProxyRequires = proxyRequires;   
+   mHasProxyRequires = true;   
+}
+
+const Tokens& 
+Profile::getProxyRequires() const
+{
+   // Fall through seting (if required)
+   if(!mHasProxyRequires && mBaseProfile.get())
+   {
+       return mBaseProfile->getProxyRequires();
+   }
+   assert(mHasProxyRequires);
+   return mProxyRequires;
+}
+ 
+bool 
+Profile::hasProxyRequires() const
+{
+   // Fall through seting (if required)
+   if(!mHasProxyRequires && mBaseProfile.get())
+   {
+       return mBaseProfile->hasProxyRequires();
+   }
+   return mHasProxyRequires;
+}
+
+void
+Profile::unsetProxyRequires()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasProxyRequires = false;
    }
 }
 
