@@ -97,9 +97,14 @@ REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
 REPRO_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/librepro.$(LIBSUFFIX)
 $(REPRO_DEPENDS): 
-	cd $(ROOT)/repro; $(MAKE)
+	cd $(ROOT)/repro; $(MAKE) 
 
-
+TFM_INCLUDEDIRS := $(ROOT)
+TFM_LIBDIRS := $(ROOT)/tfm/obj.$(TARGET_NAME) 
+TFM_LIBNAME := tfm
+TFM_DEPENDS := $(ROOT)/tfm/obj.$(TARGET_NAME)/libtfm.$(LIBSUFFIX)
+$(TFM_DEPENDS): 
+	cd $(ROOT)/tfm; $(MAKE) 
 
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),yes)
