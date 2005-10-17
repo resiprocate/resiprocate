@@ -280,11 +280,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
          return *mOutgoingTarget;
       }
 
+      //exposed so DumThread variants can be written
+      Message* getNext(int ms) { return mFifo.getNext(ms); }
+      void internalProcess(std::auto_ptr<Message> msg);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
       virtual const Data& name() const;
-      void internalProcess(std::auto_ptr<Message> msg);
       friend class DumThread;
 
       DumFeatureChain::FeatureList mIncomingFeatureList;
