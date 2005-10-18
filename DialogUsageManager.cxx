@@ -980,7 +980,8 @@ DialogUsageManager::findInviteSession(CallId replaces)
             ErrorStatusCode = 486; // Busy Here
             is = InviteSessionHandle::NotValid();
          }
-      }      else if(!is->isEarly())
+      }      
+      else if(!is->isEarly())
       {
          // replaces can't be used on early dialogs that were not initiated by this UA - ie. InviteSession::Proceeding state
          ErrorStatusCode = 481; // Call/Transaction Does Not Exist
@@ -1615,6 +1616,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             {
                failureCode = 489;
             }
+            break;
          default:
             assert(0);
       }
