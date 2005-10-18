@@ -195,7 +195,10 @@ RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
    mProxy.send(msg);
-   mHaveSentFinalResponse=true;
+   if (msg.header(h_StatusLine).statusCode()>199)
+   {
+      mHaveSentFinalResponse=true;
+   }
 }
 
 //      This function assumes that if ;lr shows up in the
