@@ -34,7 +34,6 @@
 #  include <errno.h>
 #  include <winsock2.h>
 #  include <io.h>
-typedef unsigned int u_int32_t; //!dcm! -- any other platforms?
 #endif
 
 #if defined(__APPLE__) 
@@ -116,6 +115,7 @@ typedef unsigned int   UInt32;
 
 #if defined( WIN32 )
   typedef unsigned __int64 UInt64;
+  typedef unsigned int u_int32_t; //!dcm! -- any other platforms?
 #else
   typedef unsigned long long UInt64;
 #endif
