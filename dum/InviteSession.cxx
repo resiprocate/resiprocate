@@ -16,6 +16,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/MD5Stream.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
@@ -58,6 +59,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mMinSE(90), 
      mSessionRefresher(false),
      mSessionTimerSeq(0),
+     mSessionRefreshReInvite(false),
      mSentRefer(false),
      mCurrentEncryptionLevel(DialogUsageManager::None),
      mProposedEncryptionLevel(DialogUsageManager::None),
@@ -263,7 +265,7 @@ InviteSession::provideOffer(const SdpContents& offer,
          {
             transition(SentReinvite);
             mDialog.makeRequest(mLastSessionModification, INVITE);
-         }         
+         }
          mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
          setSessionTimerHeaders(mLastSessionModification);
 
@@ -721,19 +723,22 @@ InviteSession::dispatch(const DumTimeout& timeout)
       if(timeout.seq() == mSessionTimerSeq)
       {
          // this is so the app can decided to ignore this. default implementation
-         // will call end next
+         // will call end next - which will send a BYE
          mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
       }
    }
    else if (timeout.type() == DumTimeout::SessionRefresh)
    {
      if(timeout.seq() == mSessionTimerSeq)
-      {
-         if(mState == Connected)  // Note:  If not connected then we must be issueing a reinvite/update or receiving one - in either case the session timer stuff will get reset/renegotiated - thus just ignore this referesh
-         {
-            sessionRefresh();
-         }
-      }
+     {
+        // Note: If not connected then we must be issueing a reinvite/update or
+        // receiving one - in either case the session timer stuff will get
+        // reset/renegotiated - thus just ignore this referesh
+        if(mState == Connected)  
+        {
+           sessionRefresh();
+        }
+     }
    }
 }
 
@@ -923,13 +928,32 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          transition(Connected);
          handleSessionTimerResponse(msg);
          setCurrentLocalSdp(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+
          // !jf! I need to potentially include an answer in the ACK here
          sendAck();
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         
+         if (mSessionRefreshReInvite)
+         {
+            mSessionRefreshReInvite = false;
+         
+            MD5Stream currentRemote;
+            currentRemote<< *mCurrentRemoteSdp;
+            MD5Stream newRemote;
+            newRemote << *sdp;
+            bool changed = currentRemote.getHex() != newRemote.getHex();
 
-
+            if (changed)
+            {
+               mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+               handler->onRemoteSdpChanged(getSessionHandle(), msg, *sdp);
+            }
+         }
+         else
+         {
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+         }
+         
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
          // ACK messages for 64*T1
@@ -987,7 +1011,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
    }
 }
 
-void InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
+void 
+InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
@@ -1427,6 +1452,7 @@ InviteSession::sessionRefresh()
       mDialog.makeRequest(mLastSessionModification, INVITE);
       InviteSession::setSdp(mLastSessionModification, mCurrentLocalSdp.get());
       mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp.get(), 0);
+      mSessionRefreshReInvite = true;      
    }
    mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
    setSessionTimerHeaders(mLastSessionModification);
