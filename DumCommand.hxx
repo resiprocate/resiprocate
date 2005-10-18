@@ -10,7 +10,7 @@ class DumCommand : public ApplicationMessage
 {
    public:
       virtual ~DumCommand() {}
-      virtual void execute() = 0;
+      virtual void executeCommand() = 0;
 };
 
 }

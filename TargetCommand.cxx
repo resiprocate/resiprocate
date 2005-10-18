@@ -18,7 +18,7 @@ TargetCommand::TargetCommand(const TargetCommand& from)
 {
 }
 
-void TargetCommand::execute()
+void TargetCommand::executeCommand()
 {
    mTarget.post(mMessage);
 }
