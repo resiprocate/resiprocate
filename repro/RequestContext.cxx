@@ -58,13 +58,15 @@ RequestContext::process(resip::TransactionTerminated& msg)
 {
    InfoLog (<< "RequestContext::process(TransactionTerminated) " 
             << msg.getTransactionId() << " : " << *this);
-   if (mResponseContext.removeClientTransaction(msg.getTransactionId()))
+
+   if (msg.isClientTransaction())
    {
-      mTransactionCount--;
-      if (mTransactionCount == 0)
-      {
-         delete this;
-      }
+      mResponseContext.removeClientTransaction(msg.getTransactionId());
+   }
+   mTransactionCount--;
+   if (mTransactionCount == 0)
+   {
+      delete this;
    }
 }
 
