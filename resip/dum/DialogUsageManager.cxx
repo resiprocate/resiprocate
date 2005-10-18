@@ -1050,7 +1050,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    if (command)
    {
       //DebugLog(<< "DumCommand" );
-      command->execute();
+      command->executeCommand();
       return;      
    }
 

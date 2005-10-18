@@ -26,7 +26,7 @@ class TargetCommand : public DumCommand
 
       TargetCommand(Target& target, std::auto_ptr<Message> message);
       TargetCommand(const TargetCommand&);
-      void execute();
+      void executeCommand();
 
 
       Message* clone() const;
