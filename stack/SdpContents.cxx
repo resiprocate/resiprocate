@@ -506,7 +506,7 @@ SdpContents::Session::Connection::encode(ostream& s) const
 
    if (mTTL)
    {
-      s  << Symbols::SPACE[0] << Symbols::SLASH[0] << mTTL;
+      s << Symbols::SLASH[0] << mTTL;
    }
    s << Symbols::CRLF;
    return s;
