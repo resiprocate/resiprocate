@@ -290,6 +290,7 @@ class InviteSession : public DialogUsage
       int  mMinSE;
       bool mSessionRefresher;
       int  mSessionTimerSeq;
+      bool mSessionRefreshReInvite;      
 
       bool mSentRefer;
 
