@@ -109,7 +109,8 @@ ServerPublication::dispatch(const SipMessage& msg)
       {
          handler->onRemoved(getHandle(), mEtag, msg, mExpires);
          Helper::makeResponse(mLastResponse, mLastRequest, 200);
-         mDum.send(mLastRequest);
+         mLastResponse.header(h_Expires).value() = mExpires;
+         mDum.send(mLastResponse);
          delete this;
          return;
       }
