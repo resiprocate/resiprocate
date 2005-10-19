@@ -28,7 +28,7 @@ class RRCache
 
       static RRCache* instance();
       ~RRCache();
-      void setTTL(int ttl) { mUserDefinedTTL = ttl; }
+      void setTTL(int ttl) { mUserDefinedTTL = ttl * MIN_TO_SEC; }
       void setSize(int size) { mSize = size; }
       void updateCache(const Data& target,
                        const int rrType,
@@ -42,6 +42,8 @@ class RRCache
       void blacklist(const Data& target, int rrType, int protocol, const DataArr& targetsToBlacklist);
 
    private:
+      static const int MIN_TO_SEC = 60;
+
       RRCache();
       static const int DEFAULT_SIZE = 512;
       static std::auto_ptr<RRCache> mInstance;
@@ -88,7 +90,7 @@ class RRCache
       typedef std::map<int, resip::RRFactoryBase*> FactoryMap;
       FactoryMap  mFactoryMap;
       
-      int mUserDefinedTTL; // in minutes
+      int mUserDefinedTTL; // used when the ttl in RR is 0. in seconds.
       unsigned int mSize;
 };
 
