@@ -85,7 +85,7 @@ namespace resip
 #  define strncasecmp(a,b,c) strnicmp(a,b,c)
 #endif
 
-#if defined(__QNX__) || defined(__sun)
+#if defined(__QNX__) || defined(__sun) || defined(WIN32)
   typedef unsigned int u_int32_t;
 #endif
 
@@ -115,7 +115,6 @@ typedef unsigned int   UInt32;
 
 #if defined( WIN32 )
   typedef unsigned __int64 UInt64;
-  typedef unsigned int u_int32_t; //!dcm! -- any other platforms?
 #else
   typedef unsigned long long UInt64;
 #endif
