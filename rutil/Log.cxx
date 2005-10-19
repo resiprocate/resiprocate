@@ -60,8 +60,13 @@ bool
 Log::init()
 {
 #ifdef LOG_ENABLE_THREAD_SETTING
-   Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
-   pthread_key_create(Log::mLevelKey, freeThreadSetting);
+   static bool hasRun = 0;
+   if (!hasRun)
+   {
+     Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
+     pthread_key_create(Log::mLevelKey, freeThreadSetting);
+     hasRun = 1;
+   }
 #endif
    return true;
 }
