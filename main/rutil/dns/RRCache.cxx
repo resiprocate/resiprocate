@@ -52,7 +52,7 @@ std::auto_ptr<RRCache> RRCache::mInstance(new RRCache);
 RRCache::RRCache() 
    : mHead(),
      mLruHead(LruListType::makeList(&mHead)),
-     mUserDefinedTTL(-1),
+     mUserDefinedTTL(60),
      mSize(DEFAULT_SIZE)
 {
    mFactoryMap[T_CNAME] = &mCnameRecordFactory;
@@ -106,11 +106,17 @@ void RRCache::cacheTTL(const Data& target,
                        RROverlay overlay)
 {
    int ttl = getTTL(overlay);
-   if (ttl < 0) return; // not soa.
-   if (mUserDefinedTTL > 0)
+
+   if (ttl < 0) 
    {
-      ttl = ttl < mUserDefinedTTL? ttl : mUserDefinedTTL;
+      return;
    }
+
+   if (ttl == 0)
+   {
+      ttl = mUserDefinedTTL;
+   }
+
    RRList* val = new RRList(target, rrType, ttl, status);
    RRSet::iterator it = mRRSet.find(val);
    if (it != mRRSet.end())

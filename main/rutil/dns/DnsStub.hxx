@@ -127,16 +127,6 @@ class DnsStub : public ExternalDnsHandler
          mCommandFifo.add(command);
       }
 
-      void setTTL(int ttl) // in minute. 
-      {
-         RRCache::instance()->setTTL(ttl);
-      }
-
-      void setCacheSize(int size)
-      {
-         if (size > 0) RRCache::instance()->setSize(size);
-      }
-
       void process(FdSet& fdset);
       bool requiresProcess();
       void buildFdSet(FdSet& fdset);

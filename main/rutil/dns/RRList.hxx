@@ -1,6 +1,8 @@
 #ifndef RESIP_DNS_RR_LIST
 #define RESIP_DNS_RR_LIST
 
+#include <vector>
+
 #include "rutil/IntrusiveListElement.hxx"
 #include "rutil/dns/RRFactory.hxx"
 
@@ -49,7 +51,6 @@ class RRList : public IntrusiveListElement<RRList*>
       UInt64& absoluteExpiry() { return mAbsoluteExpiry; }
 
    private:
-      static const int MIN_TO_SEC = 60;
 
       struct RecordItem
       {
