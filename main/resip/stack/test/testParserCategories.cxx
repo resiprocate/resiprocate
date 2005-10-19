@@ -1542,6 +1542,27 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Branch parameter 10; magic cookie case mismatch");
+
+      Data txt("=z9hG4bk15775865934415"); //little k
+      ParseBuffer pb(txt.data(), txt.size());
+      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      assert(bp.hasMagicCookie());
+      
+      assert(bp.getTransactionId() == "15775865934415");
+      Data enc;
+      {
+         DataStream ds(enc);
+         bp.encode(ds);
+      }
+      cout << "!bb! " << enc << endl;
+      cout.flush();
+      cerr <<"wtf is going on?" << endl;
+      
+      assert(enc == "branch=z9hG4bk15775865934415");
+   }
+
+   {
       TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));

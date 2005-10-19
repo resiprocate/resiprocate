@@ -25,12 +25,17 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mIsMyBranch(false),
      mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
-     mClientData()
+     mClientData(),
+     mInteropMagicCookie(0)
 {
    pb.skipChar(Symbols::EQUALS[0]);
    if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
    {
       mHasMagicCookie = true;
+      if (strncmp(pb.position(), Symbols::MagicCookie, 7) != 0)
+      {
+         mInteropMagicCookie = new Data(pb.position(), 7);         
+      }
       pb.skipN(7);
    }
 
@@ -89,7 +94,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
      mHasMagicCookie(true),
      mIsMyBranch(true),
      mTransactionId(Random::getRandomHex(8)),
-     mTransportSeq(1)
+     mTransportSeq(1),
+     mInteropMagicCookie(0)
 {
 }
 
@@ -99,8 +105,14 @@ BranchParameter::BranchParameter(const BranchParameter& other)
      mIsMyBranch(other.mIsMyBranch),
      mTransactionId(other.mTransactionId),
      mTransportSeq(other.mTransportSeq),
-     mClientData(other.mClientData)
+     mClientData(other.mClientData),
+     mInteropMagicCookie(0)
 {
+}
+
+BranchParameter::~BranchParameter()
+{
+   delete mInteropMagicCookie;
 }
 
 BranchParameter& 
@@ -191,7 +203,14 @@ BranchParameter::encode(ostream& stream) const
    stream << getName() << Symbols::EQUALS;
    if (mHasMagicCookie)
    {
-      stream << Symbols::MagicCookie;
+      if (mInteropMagicCookie)
+      {
+         stream << *mInteropMagicCookie;         
+      }
+      else
+      {
+         stream << Symbols::MagicCookie;
+      }
    }
    if (mIsMyBranch)
    {
