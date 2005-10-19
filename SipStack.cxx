@@ -58,6 +58,7 @@ SipStack::SipStack(Security* pSecurity,
    mStatsManager(*this),
    mTransactionController(*this),
    mShuttingDown(false),
+   mStatisticsManagerEnabled(true),
    mTuSelector(mTUFifo)
 {
    Timer::getTimeMs(); // initalize time offsets
@@ -416,9 +417,9 @@ SipStack::receiveAny()
 void 
 SipStack::process(FdSet& fdset)
 {
-   if(!mShuttingDown)
+   if(!mShuttingDown && mStatisticsManagerEnabled)
    {
-      RESIP_STATISTICS(mStatsManager.process());
+      mStatsManager.process();
    }
    mTransactionController.process(fdset);
    mTuSelector.process();
@@ -504,6 +505,17 @@ SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
    mTransactionController.setEnumSuffixes(suffixes);
 }
 
+bool& 
+SipStack::statisticsManagerEnabled()
+{
+   return mStatisticsManagerEnabled;   
+}
+
+const bool 
+SipStack::statisticsManagerEnabled() const
+{
+   return mStatisticsManagerEnabled;   
+}
 
 std::ostream& 
 SipStack::dump(std::ostream& strm)  const

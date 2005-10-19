@@ -428,7 +428,15 @@ class SipStack
           each suffix in parallel. 
       */
       void setEnumSuffixes(const std::vector<Data>& suffixes);
-      
+
+      /**
+          Enable Statistics Manager.  SIP Statistics will be collected and 
+          dispatched periodically via a StatisticsMessage.  Note:  By default 
+          the Statistics Manager is enabled.
+      */
+      bool& statisticsManagerEnabled();
+      const bool statisticsManagerEnabled() const;
+
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
@@ -471,6 +479,7 @@ class SipStack
       std::set<Data> mDomains;
 
       bool mShuttingDown;
+      bool mStatisticsManagerEnabled;
 
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
