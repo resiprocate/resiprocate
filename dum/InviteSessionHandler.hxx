@@ -71,11 +71,13 @@ class InviteSessionHandler
       /// called when an SDP offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
 
-      /** called when a modified SDP is received in a 2xx response to a
-          session-timer reINVITE. Under normal circumstances where the response
-          SDP is unchanged from current remote SDP no handler is called
-      */
+      /// called when a modified SDP is received in a 2xx response to a
+      /// session-timer reINVITE. Under normal circumstances where the response
+      /// SDP is unchanged from current remote SDP no handler is called
       virtual void onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
+
+      /// Called when an error response is received for a reinvite-nosdp request (via requestOffer)
+      virtual void onOfferRequestRejected(InviteSessionHandle, const SipMessage& msg);
 
       /// called when an Invite w/out SDP is sent, or any other context which
       /// requires an SDP offer from the user
