@@ -1073,6 +1073,8 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case OnUpdateOffer:
          transition(UAC_ReceivedUpdateEarly);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 

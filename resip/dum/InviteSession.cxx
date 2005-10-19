@@ -173,6 +173,9 @@ InviteSession::isConnected() const
       case SentUpdateGlare:
       case SentReinvite:
       case SentReinviteGlare:
+      case SentReinviteNoOffer:
+      case SentReinviteAnswered:
+      case SentReinviteNoOfferGlare:
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
@@ -190,34 +193,39 @@ InviteSession::isEarly() const
 {
    switch (mState)
    {
-      case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
-         
-         //case UAC_Answered:
-         //case UAC_Terminated:
       case UAC_SentUpdateEarly:
-      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
-         //case UAC_SentAnswer:
+      case UAC_SentAnswer:
       case UAC_QueuedUpdate:
-
-      case UAS_Start:
-      case UAS_Offer:
-      case UAS_OfferProvidedAnswer:
-      case UAS_EarlyOffer:
-      case UAS_EarlyProvidedAnswer:
-      case UAS_EarlyNoOffer:
-      case UAS_FirstEarlyReliable:
-      case UAS_EarlyReliable:
          return true;
-
       default:
          return false;
    }
 }
 
+bool 
+InviteSession::isAccepted() const
+{
+   switch (mState)
+   {
+      case UAS_Start:
+      case UAS_Offer:
+      case UAS_OfferProvidedAnswer:
+      case UAS_EarlyOffer:
+      case UAS_EarlyProvidedOffer:
+      case UAS_EarlyProvidedAnswer:
+      case UAS_EarlyNoOffer:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_EarlyReliable:
+         return true;
+      default:
+         return false;
+   }
+}
 
 bool
 InviteSession::isTerminated() const
@@ -244,6 +252,36 @@ InviteSession::dump(std::ostream& strm) const
         << " ADDR=" << myAddr()
         << " PEER=" << peerAddr();
    return strm;
+}
+
+void
+InviteSession::requestOffer()
+{
+   switch (mState)
+   {
+      case Connected:
+      case WaitingToRequestOffer:
+         transition(SentReinviteNoOffer);
+         mDialog.makeRequest(mLastSessionModification, INVITE);
+         mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
+         mLastSessionModification.setContents(0);		// Clear the SDP contents from the INVITE
+         setSessionTimerHeaders(mLastSessionModification);
+
+         InfoLog (<< "Sending " << mLastSessionModification.brief());
+         // call send to give app an chance to adorn the message.
+         send(mLastSessionModification);
+         break;
+
+      case Answered:
+         // queue the offer to be sent after the ACK is received
+         transition(WaitingToRequestOffer);
+         break;        
+         
+      // ?slg? Can we handle all of the states listed in isConnected() ???
+      default:
+         WarningLog (<< "Can't requestOffer when not in Connected state");
+         throw DialogUsage::Exception("Can't request an offer", __FILE__,__LINE__);
+   }
 }
 
 void
@@ -347,6 +385,14 @@ InviteSession::provideAnswer(const SdpContents& answer)
          break;
       }
 
+      case SentReinviteAnswered:
+         transition(Connected);
+         sendAck(&answer);
+
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         break;
+
       default:
          WarningLog (<< "Can't provideAnswer when not in Connected state");
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
@@ -375,6 +421,8 @@ InviteSession::end(EndReason reason)
       case SentUpdate:
       case SentUpdateGlare:
       case SentReinviteGlare:
+      case SentReinviteNoOfferGlare:
+      case SentReinviteAnswered:
       {
          // !jf! do we need to store the BYE somewhere?
          sendBye();
@@ -384,6 +432,7 @@ InviteSession::end(EndReason reason)
       }
 
       case SentReinvite:
+      case SentReinviteNoOffer:
          transition(WaitingToTerminate);
          break;
 
@@ -608,10 +657,19 @@ InviteSession::dispatch(const SipMessage& msg)
       case SentReinvite:
          dispatchSentReinvite(msg);
          break;
+      case SentReinviteNoOffer:
+         dispatchSentReinviteNoOffer(msg);
+         break;
+      case SentReinviteAnswered:
+         dispatchSentReinviteAnswered(msg);
+         break;
       case SentUpdateGlare:
       case SentReinviteGlare:
          // The behavior is the same except for timer which is handled in dispatch(Timer)
          dispatchGlare(msg);
+         break;
+      case SentReinviteNoOfferGlare:
+         dispatchReinviteNoOfferGlare(msg);
          break;
       case ReceivedUpdate:
       case ReceivedReinvite:
@@ -626,6 +684,9 @@ InviteSession::dispatch(const SipMessage& msg)
          break;
       case WaitingToOffer:
          dispatchWaitingToOffer(msg);
+         break;
+      case WaitingToRequestOffer:
+         dispatchWaitingToRequestOffer(msg);
          break;
       case WaitingToTerminate:
          dispatchWaitingToTerminate(msg);
@@ -688,16 +749,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             assert(mProposedLocalSdp.get());
             //!dcm! -- should this be onIllegalNegotiation?
             mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
-            if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
-           {
-               provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
-                             mProposedEncryptionLevel,
-                             dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
-            }
-            else
-            {
-               provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
-            }
+            provideProposedOffer(); 
          }
       }
    }
@@ -715,6 +767,13 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
+         send(mLastSessionModification);
+      }
+      else if (mState == SentReinviteNoOfferGlare)
+      {
+         transition(SentReinviteNoOffer);
+
+         InfoLog (<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
          send(mLastSessionModification);
       }
    }
@@ -763,6 +822,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
@@ -783,6 +844,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          mLastSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
@@ -923,7 +985,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On2xxAnswer:
-      case On2xxOffer:
+      case On2xxOffer:  // !slg! doesn't really make sense
       {
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -1011,6 +1073,101 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
    }
 }
 
+void
+InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SipMessage response;
+         mDialog.makeResponse(response, msg, 491);
+         BaseUsage::send(response);
+         break;
+      }
+
+      case On1xx:
+      case On1xxEarly:
+         // Some UA's send a 100 response to a ReInvite - just ignore it
+         break;
+
+      case On2xxAnswer:  // !slg! doesn't really make sense
+      case On2xxOffer:
+      {
+         transition(SentReinviteAnswered);
+         handleSessionTimerResponse(msg);
+         mLastSessionModification = msg;
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
+
+         // !jf! do I need to allow a reINVITE overlapping the retransmission of
+         // the ACK when a 200I is received? If yes, then I need to store all
+         // ACK messages for 64*T1
+         break;
+      }
+
+      case On2xx:
+         sendAck();
+         transition(Connected);
+         handleSessionTimerResponse(msg);
+         handler->onIllegalNegotiation(getSessionHandle(), msg);
+         mProposedLocalSdp.release();
+         mProposedEncryptionLevel = DialogUsageManager::None;
+         break;
+
+      case On422Invite:
+         if(msg.exists(h_MinSE))
+         {
+            // Change interval to min from 422 response
+            mSessionInterval = msg.header(h_MinSE).value();
+            mMinSE = mSessionInterval;
+            setSessionTimerHeaders(mLastSessionModification);
+            send(mLastSessionModification);
+         }
+         else
+         {
+            // Response must contact Min_SE - if not - just ignore
+            // ?slg? callback?
+            transition(Connected);
+            mProposedLocalSdp.release();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+         }
+         break;
+
+      case On491Invite:
+         transition(SentReinviteNoOfferGlare);
+         start491Timer();
+         break;
+
+      case OnGeneralFailure:
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         break;
+
+      case OnInviteFailure:
+      case On487Invite:
+      case On489Invite:
+         transition(Connected);
+         mProposedLocalSdp.release();
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
+
+      default:
+         dispatchOthers(msg);
+         break;
+   }
+}
+
 void 
 InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 {
@@ -1058,17 +1215,28 @@ InviteSession::dispatchGlare(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    MethodTypes method = msg.header(h_CSeq).method();
-   if (method == INVITE && msg.isRequest())
+   if (msg.isRequest() && (method == INVITE || method == UPDATE))
    {
-      // Received inbound reinvite, when waiting to resend outbound reinvite or update
-      transition(ReceivedReinvite);
+      // Received inbound reinvite or update, when waiting to resend outbound reinvite or update
       handler->onOfferRejected(getSessionHandle(), &msg);
+      dispatchConnected(msg);  // act as if we received message in Connected state
    }
-   else if (method == UPDATE && msg.isRequest())
+   else
    {
-      // Received inbound update, when waiting to resend outbound reinvite or update
-      transition(ReceivedUpdate);
-      handler->onOfferRejected(getSessionHandle(), &msg);
+      dispatchOthers(msg);
+   }
+}
+
+void
+InviteSession::dispatchReinviteNoOfferGlare(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   MethodTypes method = msg.header(h_CSeq).method();
+   if (msg.isRequest() && (method == INVITE || method == UPDATE))
+   {
+      // Received inbound reinvite or update, when waiting to resend outbound reinvite or update
+      handler->onOfferRequestRejected(getSessionHandle(), msg);
+      dispatchConnected(msg);  // act as if we received message in Connected state
    }
    else
    {
@@ -1111,22 +1279,34 @@ InviteSession::dispatchAnswered(const SipMessage& msg)
 }
 
 void
+InviteSession::dispatchSentReinviteAnswered(const SipMessage& msg)
+{
+   dispatchOthers(msg);
+}
+
+void
 InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
       assert(mProposedLocalSdp.get());
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-      if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
-      {
-         provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
-                       mProposedEncryptionLevel,
-                       dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
-      }
-      else
-      {
-         provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
-      }
+      provideProposedOffer(); 
+   }
+   else
+   {
+      dispatchOthers(msg);
+   }
+}
+
+void
+InviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
+{
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+   {
+      assert(mProposedLocalSdp.get());
+      mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      requestOffer(); 
    }
    else
    {
@@ -1627,6 +1807,12 @@ InviteSession::toData(State state)
          return "InviteSession::SentReinvite";
       case SentReinviteGlare:
          return "InviteSession::SentReinviteGlare";
+      case SentReinviteNoOffer:
+         return "InviteSession::SentReinviteNoOffer";
+      case SentReinviteAnswered:
+         return "InviteSession::SentReinviteAnswered";
+      case SentReinviteNoOfferGlare:
+         return "InviteSession::SentReinviteNoOfferGlare";
       case ReceivedUpdate:
          return "InviteSession::ReceivedUpdate";
       case ReceivedReinvite:
@@ -1639,6 +1825,8 @@ InviteSession::toData(State state)
          return "InviteSession::Answered";
       case WaitingToOffer:
          return "InviteSession::WaitingToOffer";
+      case WaitingToRequestOffer:
+         return "InviteSession::WaitingToRequestOffer";
       case WaitingToTerminate:
          return "InviteSession::WaitingToTerminate";
       case WaitingToHangup:
@@ -1803,6 +1991,21 @@ InviteSession::setSdp(SipMessage& msg, const Contents* sdp)
 {
    assert(sdp);
    msg.setContents(sdp);
+}
+
+void 
+InviteSession::provideProposedOffer()
+{
+   if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
+   {
+      provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
+                    mProposedEncryptionLevel,
+                    dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
+   }
+   else
+   {
+      provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
+   }
 }
 
 InviteSession::Event

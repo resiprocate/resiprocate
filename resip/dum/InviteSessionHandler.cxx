@@ -37,6 +37,11 @@ InviteSessionHandler::onReadyToSend(InviteSessionHandle, SipMessage& msg)
    // default is to do nothing. this is for adornment   
 }
 
+void 
+InviteSessionHandler::onOfferRequestRejected(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

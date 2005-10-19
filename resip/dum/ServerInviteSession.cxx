@@ -714,16 +714,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       {
          assert(mProposedLocalSdp.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         if (dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))
-         {
-            provideOffer( *(dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().back())),
-                          mProposedEncryptionLevel,
-                          dynamic_cast<SdpContents*>((dynamic_cast<MultipartAlternativeContents*>(mProposedLocalSdp.get()))->parts().front()));
-         }
-         else
-         {
-            provideOffer(*(dynamic_cast<SdpContents*>(mProposedLocalSdp.get())), mProposedEncryptionLevel, 0);
-         }
+         provideProposedOffer(); 
          break;
       }
 
