@@ -24,6 +24,8 @@ class BranchParameter : public Parameter
       BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       explicit BranchParameter(ParameterTypes::Type);
 
+      ~BranchParameter();
+
       // contains z9hG4bK
       bool hasMagicCookie() const;
 
@@ -55,12 +57,15 @@ class BranchParameter : public Parameter
    private:
       friend class ParserCategory;
       Type& value() {return *this;}
-
+      
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
       unsigned long mTransportSeq;
       Data mClientData;
+      //magic cookie for interop; if case is different some proxies will treat this as a different tid
+      const Data* mInteropMagicCookie; 
+                                
 };
  
 }
