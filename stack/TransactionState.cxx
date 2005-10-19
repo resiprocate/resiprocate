@@ -101,7 +101,10 @@ TransactionState::process(TransactionController& controller)
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
-   RESIP_STATISTICS(sip && sip->isExternal() && controller.mStatsManager.received(sip));
+   if(controller.mStack.statisticsManagerEnabled() && sip && sip->isExternal())
+   {
+      controller.mStatsManager.received(sip);
+   }
 
    // !jf! this is a first cut at elementary back pressure. hope it works :)
    if (sip && sip->isExternal() && sip->isRequest() && 
@@ -1456,7 +1459,10 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       return;
    }
 
-   RESIP_STATISTICS(mController.mStatsManager.sent(sip, resend));
+   if(mController.mStack.statisticsManagerEnabled())
+   {
+      mController.mStatsManager.sent(sip, resend);
+   }
 
    // !jf! for responses, go back to source always (not RFC exactly)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
