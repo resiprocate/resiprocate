@@ -112,27 +112,22 @@ class Data
 
       /**
         Creates a data with the contents of the buffer.
-        This constructor uses "share" mode.
 
         @param length Number of bytes in the buffer
       */
-      Data(const char* buffer, int length); // Uses share mode
+      Data(const char* buffer, int length);
 
       /**
         Creates a data with the contents of the buffer.
-        This constructor uses "share" mode.
 
         @param length Number of bytes in the buffer
       */
-      Data(const unsigned char* buffer, int length);// Uses share mode
+      Data(const unsigned char* buffer, int length);
 
       Data(const Data& data);
 
       /**
         Creates a data with the contents of the string.
-        This constructor uses "share" mode.
-
-        @param length Number of bytes in the buffer
       */
       explicit Data(const std::string& str);
 
