@@ -5,10 +5,6 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/StatisticsMessage.hxx"
 
-// !dlb! part of the build script
-#define RESIP_STATISTICS(_x) _x
-//#define RESIP_STATISTICS(_x)
-
 namespace resip
 {
 class SipStack;
