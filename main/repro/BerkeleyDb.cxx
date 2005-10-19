@@ -93,8 +93,8 @@ BerkeleyDb::dbWriteRecord( const Table table,
                           const resip::Data& pKey, 
                           const resip::Data& pData )
 {
-   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
-   Dbt data( (void*)pData.data(), (u_int32_t)pData.size() );
+   Dbt key( (void*)pKey.data(), (::u_int32_t)pKey.size() );
+   Dbt data( (void*)pData.data(), (::u_int32_t)pData.size() );
    int ret;
    
    assert( mDb );
@@ -110,7 +110,7 @@ BerkeleyDb::dbReadRecord( const Table table,
                          const resip::Data& pKey, 
                          resip::Data& pData ) const
 { 
-   Dbt key( (void*)pKey.data(), (u_int32_t)pKey.size() );
+   Dbt key( (void*)pKey.data(), (::u_int32_t)pKey.size() );
    Dbt data;
    int ret;
    
@@ -143,7 +143,7 @@ void
 BerkeleyDb::dbEraseRecord( const Table table, 
                           const resip::Data& pKey )
 { 
-   Dbt key( (void*) pKey.data(), (u_int32_t)pKey.size() );
+   Dbt key( (void*) pKey.data(), (::u_int32_t)pKey.size() );
 
    assert( mDb );
    mDb[table]->del(NULL,&key, 0);
