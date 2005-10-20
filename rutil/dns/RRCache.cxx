@@ -52,7 +52,7 @@ std::auto_ptr<RRCache> RRCache::mInstance(new RRCache);
 RRCache::RRCache() 
    : mHead(),
      mLruHead(LruListType::makeList(&mHead)),
-     mUserDefinedTTL(60),
+     mUserDefinedTTL(DEFAULT_USER_DEFINED_TTL),
      mSize(DEFAULT_SIZE)
 {
    mFactoryMap[T_CNAME] = &mCnameRecordFactory;
@@ -112,7 +112,7 @@ void RRCache::cacheTTL(const Data& target,
       return;
    }
 
-   if (ttl == 0)
+   if (ttl < mUserDefinedTTL)
    {
       ttl = mUserDefinedTTL;
    }
