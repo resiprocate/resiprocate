@@ -72,7 +72,7 @@ class RouteStore
       {
          public:
             Key key;
-            regex_t preq;
+            regex_t *preq;
             AbstractDb::RouteRecord routeRecord;
       };
       
