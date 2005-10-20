@@ -43,7 +43,7 @@ class RRCache
 
    private:
       static const int MIN_TO_SEC = 60;
-      static const int DEFAULT_USER_DEFINED_TTL = 60; // in seconds.
+      static const int DEFAULT_USER_DEFINED_TTL = 10; // in seconds.
 
       RRCache();
       static const int DEFAULT_SIZE = 512;
