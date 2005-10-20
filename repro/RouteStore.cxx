@@ -24,9 +24,24 @@ RouteStore::RouteStore(AbstractDb& db):
       route.routeRecord =  mDb.getRoute(key);
       route.key = key;
       
-      // TODO - !cj! - compile regex when create the route object instead of
-      // doing it every time 
-      
+      if( !route.routeRecord.mMatchingPattern.empty() )
+      {
+        int flags = REG_EXTENDED;
+        if( route.routeRecord.mRewriteExpression.find("$") == Data::npos )
+        {
+          flags |= REG_NOSUB;
+        }
+        route.preq = new regex_t;
+        int ret = regcomp( route.preq, route.routeRecord.mMatchingPattern.c_str(), flags );
+        if( ret != 0 )
+        {
+          delete route.preq;
+          ErrLog( << "Routing rule has invalid match expression: "
+                  << route.routeRecord.mMatchingPattern );
+          route.preq = 0;
+        }
+      }
+
       mRouteOperators.push_back( route ); 
 
       key = mDb.nextRouteKey();
@@ -37,6 +52,17 @@ RouteStore::RouteStore(AbstractDb& db):
 
 RouteStore::~RouteStore()
 {
+  Key key = mDb.firstRouteKey();
+  while ( !key.empty() )
+  {
+    RouteOp route;
+    route.routeRecord =  mDb.getRoute(key);
+    route.key = key;
+    if( route.preq )
+      regfree( route.preq );
+    route.preq = 0;
+    key = mDb.nextRouteKey();
+  }
 }
 
       
@@ -59,10 +85,21 @@ RouteStore::addRoute(const resip::Data& method,
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
    route.key = key;
-   
-   // TODO - !cj! - compile regex when create the route object instead of
-   // doing it every time 
-   
+   if( !route.routeRecord.mMatchingPattern.empty() )
+   {
+     int flags = REG_EXTENDED;
+     if( route.routeRecord.mRewriteExpression.find("$") == Data::npos )
+     {
+       flags |= REG_NOSUB;
+     }
+     route.preq = new regex_t;
+     int ret = regcomp( route.preq, route.routeRecord.mMatchingPattern.c_str(), flags );
+     if( ret != 0 )
+     {
+       delete route.preq;
+       route.preq = 0;
+     }
+   }
    mRouteOperators.push_back( route ); 
 
    mDb.addRoute( key , route.routeRecord );
@@ -114,7 +151,8 @@ RouteStore::eraseRoute(const resip::Data& key )
       {
          RouteOpList::iterator i = it;
          it++;
-         
+         regfree (i->preq);
+         i->preq = 0;
          mRouteOperators.erase(i);
       }
       else
@@ -285,26 +323,11 @@ RouteStore::process(const resip::Uri& ruri,
       }
       Data& rewrite = rec.mRewriteExpression;
       Data& match = rec.mMatchingPattern;
-
-      if ( !match.empty() ) 
+      if ( it->preq ) 
       {
-         // TODO - www.pcre.org looks like it has better performance 
-                  
-         // TODO - !cj! - compile regex when create the route object instead of
-         // doing it every time 
-         int flags = REG_EXTENDED;
-         if ( rewrite.find("$") == Data::npos )
-         {
-            flags |= REG_NOSUB;
-         }
-         int ret = regcomp(&(it->preq),match.c_str(), flags );
-         if ( ret != 0 )
-         { 
-            ErrLog( << "Routing rule has invalid match expression: " 
-                    << match );
-            continue;
-         }
-         
+         int ret;
+         // TODO - !cj! www.pcre.org looks like it has better performance
+         // !mbg! is this true now that the compiled regexp is used?
          Data uri;
          {
             DataStream s(uri);
@@ -315,7 +338,7 @@ RouteStore::process(const resip::Uri& ruri,
          const int nmatch=10;
          regmatch_t pmatch[nmatch];
          
-         ret = regexec(&(it->preq), uri.c_str(), nmatch, pmatch, 0/*eflags*/);
+         ret = regexec(it->preq, uri.c_str(), nmatch, pmatch, 0/*eflags*/);
          if ( ret != 0 )
          {
             // did not match 
