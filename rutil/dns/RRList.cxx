@@ -72,7 +72,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
       }
    }
 
-   if (mAbsoluteExpiry == 0)
+   if (mAbsoluteExpiry < (UInt64)ttl)
    {
       mAbsoluteExpiry = ttl;
    }
