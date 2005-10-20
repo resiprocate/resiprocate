@@ -59,8 +59,11 @@ RouteStore::~RouteStore()
     route.routeRecord =  mDb.getRoute(key);
     route.key = key;
     if( route.preq )
+    {
       regfree( route.preq );
-    route.preq = 0;
+      delete route.preq;
+      route.preq = 0;
+    }
     key = mDb.nextRouteKey();
   }
 }
@@ -151,8 +154,12 @@ RouteStore::eraseRoute(const resip::Data& key )
       {
          RouteOpList::iterator i = it;
          it++;
-         regfree (i->preq);
-         i->preq = 0;
+         if ( i->preq )
+         {
+           regfree ( i->preq );
+           delete i->preq;
+           i->preq = 0;
+         }
          mRouteOperators.erase(i);
       }
       else
