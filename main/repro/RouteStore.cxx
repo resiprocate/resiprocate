@@ -52,20 +52,6 @@ RouteStore::RouteStore(AbstractDb& db):
 
 RouteStore::~RouteStore()
 {
-  Key key = mDb.firstRouteKey();
-  while ( !key.empty() )
-  {
-    RouteOp route;
-    route.routeRecord =  mDb.getRoute(key);
-    route.key = key;
-    if( route.preq )
-    {
-      regfree( route.preq );
-      delete route.preq;
-      route.preq = 0;
-    }
-    key = mDb.nextRouteKey();
-  }
 }
 
       
