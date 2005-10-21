@@ -739,7 +739,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          else if(mState == ReceivedReinviteSentOffer)
          {
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
             mProposedEncryptionLevel = DialogUsageManager::None;
             //!dcm! -- should this be onIllegalNegotiation?
             mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
@@ -911,7 +911,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             // If we sent an offer in the Update Request and no answer is received
             handler->onIllegalNegotiation(getSessionHandle(), msg);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
             mProposedEncryptionLevel = DialogUsageManager::None;
          }
          break;
@@ -934,14 +934,14 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             // Response must contact Min_SE - if not - just ignore
             // ?slg? callback?
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
             mProposedEncryptionLevel = DialogUsageManager::None;
          }
          break;
 
       case OnUpdateRejected:
          // !jf! - callback?
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          mProposedEncryptionLevel = DialogUsageManager::None;
          transition(Connected);
          break;
@@ -1026,7 +1026,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          mProposedEncryptionLevel = DialogUsageManager::None;
          break;
 
@@ -1043,7 +1043,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
             // Response must contact Min_SE - if not - just ignore
             // ?slg? callback?
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
             mProposedEncryptionLevel = DialogUsageManager::None;
          }
          break;
@@ -1063,7 +1063,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On487Invite:
       case On489Invite:
          transition(Connected);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
@@ -1120,7 +1120,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          mProposedEncryptionLevel = DialogUsageManager::None;
          break;
 
@@ -1138,7 +1138,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
             // Response must contact Min_SE - if not - just ignore
             // ?slg? callback?
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
             mProposedEncryptionLevel = DialogUsageManager::None;
          }
          break;
@@ -1158,7 +1158,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       case On487Invite:
       case On489Invite:
          transition(Connected);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
@@ -1198,7 +1198,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          break;         
       case OnAck:
          transition(Connected);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          mProposedEncryptionLevel = DialogUsageManager::None;
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 		 //!dcm! -- should this be onIllegalNegotiation?
@@ -2257,7 +2257,7 @@ void InviteSession::setCurrentLocalSdp(const SipMessage& msg)
    {
       mCurrentLocalSdp = auto_ptr<SdpContents>(static_cast<SdpContents*>(mProposedLocalSdp.get()->clone()));
    }
-   mProposedLocalSdp.release();
+   mProposedLocalSdp.reset();   
 }
 
 void InviteSession::onReadyToSend(SipMessage& msg)
