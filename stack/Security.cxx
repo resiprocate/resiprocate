@@ -148,8 +148,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
-BaseSecurity::CipherList BaseSecurity::ExportableSuite("RSA+DSS+AES+3DES+RC4+SHA1+MD5");
-BaseSecurity::CipherList BaseSecurity::StrongestSuite("RSA+DSS+AES+3DES+SHA1");
+BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
+BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
 Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 {
