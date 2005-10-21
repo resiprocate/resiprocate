@@ -65,13 +65,27 @@ InviteSession::dialogDestroyed(const SipMessage& msg)
 const SdpContents&
 InviteSession::getLocalSdp() const
 {
-   return *mCurrentLocalSdp;
+   if (mCurrentLocalSdp.get())
+   {
+      return *mCurrentLocalSdp;
+   }
+   else
+   {
+      return *mCurrentLocalSdp;
+   }
 }
 
 const SdpContents&
 InviteSession::getRemoteSdp() const
 {
-   return *mCurrentRemoteSdp;
+   if (mCurrentRemoteSdp.get())
+   {
+      return *mCurrentRemoteSdp;
+   }
+   else
+   {
+      return SdpContents::Empty;
+   }
 }
 
 const Data& 
