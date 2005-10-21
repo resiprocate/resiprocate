@@ -13,6 +13,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/Ack200DoneMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -38,6 +39,13 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
    {
       mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
       mRequestContext.mTransactionCount++;
+   }
+
+   if (request.header(h_RequestLine).method() == ACK)
+   {
+     DebugLog(<<"Posting Ack200DoneMessage");
+     static Data ack("ack");
+     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()+ack));
    }
 }
 
