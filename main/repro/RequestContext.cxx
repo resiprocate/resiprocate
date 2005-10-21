@@ -12,6 +12,8 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 
+#include "repro/Ack200DoneMessage.hxx"
+
 // Remove warning about 'this' use in initiator list
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
@@ -70,16 +72,27 @@ RequestContext::process(resip::TransactionTerminated& msg)
    }
 }
 
-
 void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
    DebugLog (<< "process(Message) " << *this);
+
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
    }
    mCurrentEvent = msg.release();
+
+   // !RjS! Wedging this in here for now. I think we should pull
+   // this function apart into separate handling for sip messages
+   // and Application messages in the long run.
+   Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
+   if (ackDone)
+   {
+     delete this;
+     return;
+   }
+
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
    { 
@@ -91,7 +104,6 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       removeTopRouteIfSelf();
    }
 
-   DebugLog (<< "process(Message) " << *this);
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 

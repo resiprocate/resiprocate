@@ -4,6 +4,7 @@
 
 #include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/Ack200DoneMessage.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
@@ -173,16 +174,27 @@ Proxy::thread()
             }
             else if (app)
             {
+               DebugLog(<< "Trying to dispatch : " << *app );
                HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(app->getTransactionId());
                // the underlying RequestContext may not exist
                if (i != mServerRequestContexts.end())
                {
-                  i->second->process(std::auto_ptr<Message>(msg));
+                  DebugLog(<< "Sending " << *app << " to " << *(i->second));
+                  // This goes in as a Message and not an ApplicationMessage
+                  // so that we have one peice of code doing dispatch to Monkeys
+                  // (the intent is that Monkeys may eventually handle non-SIP
+                  //  application messages).
+                  bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
+                  i->second->process(std::auto_ptr<resip::Message>(msg));
+                  if (eraseThisTid)
+                  {
+                     mServerRequestContexts.erase(i);
+                  }
                }
                else
                {
-                  //InfoLog (<< "No matching request context...ignoring " << *msg);
-                  // [TODO] !rwm! do we need to delete the app event message?
+                  InfoLog (<< "No matching request context...ignoring " << *app);
+                  delete app;
                }
             }
             else if (term)
@@ -205,6 +217,7 @@ Proxy::thread()
                      mServerRequestContexts.erase(i);
                   }
                }
+               delete term;
             }
          }
       }

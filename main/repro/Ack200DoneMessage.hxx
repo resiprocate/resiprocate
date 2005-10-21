@@ -1,19 +1,24 @@
-#ifndef RESIP_ApplicationMessage_hxx
-#define RESIP_ApplicationMessage_hxx 
+#ifndef RESIP_Ack200DoneMessage_hxx
+#define RESIP_Ack200DoneMessage_hxx 
 
 #include "assert.h"
-#include "resip/stack/Message.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
 
-namespace resip
+namespace repro
 {
 
-class ApplicationMessage : public Message
+class Ack200DoneMessage : public resip::ApplicationMessage
 {
    public:
-      ApplicationMessage() {};
-      virtual ~ApplicationMessage() {};
+      Ack200DoneMessage(const resip::Data& tid) {mTid=tid;}
+      virtual ~Ack200DoneMessage() {}
 
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
+      virtual const resip::Data& getTransactionId() const { return mTid; }
+      virtual Ack200DoneMessage* clone() const {return new Ack200DoneMessage(mTid);}
+      virtual std::ostream& encode(std::ostream& ostr) const { ostr << "Ack200DoneMessage("<<mTid<<") "; return ostr; }
+      virtual std::ostream& encodeBrief(std::ostream& ostr) const { return encode(ostr);}
+   private:
+      resip::Data mTid;
 };
  
 }
