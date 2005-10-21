@@ -11,6 +11,7 @@ class ApplicationMessage : public Message
 {
    public:
       ApplicationMessage() {};
+      virtual ~ApplicationMessage() {};
 
       virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
 };
