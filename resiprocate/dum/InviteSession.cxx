@@ -700,7 +700,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             // If we sent an offer in the Update Request and no answer is received
             handler->onIllegalNegotiation(getSessionHandle(), msg);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
          }
          break;
 
@@ -721,13 +721,13 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             // Response must contact Min_SE - if not - just ignore
             // !slg! callback?
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
          }
          break;
 
       case OnUpdateRejected:
          // !jf! - callback?
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          transition(Connected);
          break;
 
@@ -791,7 +791,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          break;
 
       case On422Invite:
@@ -806,7 +806,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
             // Response must contact Min_SE - if not - just ignore
             // !slg! callback?
             transition(Connected);
-            mProposedLocalSdp.release();
+            mProposedLocalSdp.reset();
          }
          break;
 
@@ -823,7 +823,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnInviteFailure:
          transition(Connected);
-         mProposedLocalSdp.release();
+         mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), msg);
          break;
 
