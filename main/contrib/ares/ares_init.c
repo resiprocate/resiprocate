@@ -458,6 +458,11 @@ static int init_by_defaults(ares_channel channel)
 		   channel->servers = malloc(sizeof(struct server_state));
 		   if (!channel->servers)
               return ARES_ENOMEM;
+
+#ifdef USE_IPV6			 
+           channel->servers[0].family = AF_INET;
+#endif
+
 		   channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
 		   channel->nservers = 1;
         }
