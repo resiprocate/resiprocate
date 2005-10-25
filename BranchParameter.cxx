@@ -105,9 +105,16 @@ BranchParameter::BranchParameter(const BranchParameter& other)
      mIsMyBranch(other.mIsMyBranch),
      mTransactionId(other.mTransactionId),
      mTransportSeq(other.mTransportSeq),
-     mClientData(other.mClientData),
-     mInteropMagicCookie(0)
+     mClientData(other.mClientData)
 {
+   if (other.mInteropMagicCookie)
+   {
+      mInteropMagicCookie = new Data(*other.mInteropMagicCookie);
+   }
+   else
+   {
+      mInteropMagicCookie = 0;
+   }
 }
 
 BranchParameter::~BranchParameter()
@@ -125,6 +132,16 @@ BranchParameter::operator=(const BranchParameter& other)
       mTransactionId = other.mTransactionId;
       mTransportSeq = other.mTransportSeq;
       mClientData = other.mClientData;
+      if (other.mInteropMagicCookie)
+      {
+         delete mInteropMagicCookie;         
+         mInteropMagicCookie = new Data(*other.mInteropMagicCookie);
+      }
+      else
+      {
+         delete mInteropMagicCookie;
+         mInteropMagicCookie = 0;
+      }
    }
    return *this;
 }
@@ -179,6 +196,8 @@ BranchParameter::reset(const Data& transactionId)
 {
    mHasMagicCookie = true;
    mIsMyBranch = true;
+   delete mInteropMagicCookie;
+   mInteropMagicCookie = 0;   
 
    mTransportSeq = 1;
    if (!transactionId.empty())
