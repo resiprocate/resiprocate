@@ -75,7 +75,6 @@ MultipartMixedContents::setBoundary()
 void
 MultipartMixedContents::clear()
 {
-   Contents::clear();
    for (vector<Contents*>::iterator i = mContents.begin(); 
         i != mContents.end(); ++i)
    {
