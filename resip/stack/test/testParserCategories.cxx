@@ -1555,11 +1555,34 @@ main(int arc, char** argv)
          DataStream ds(enc);
          bp.encode(ds);
       }
-      cout << "!bb! " << enc << endl;
-      cout.flush();
-      cerr <<"wtf is going on?" << endl;
-      
+      cout << "!! " << enc << endl;
+
       assert(enc == "branch=z9hG4bk15775865934415");
+
+      BranchParameter bpCopyCons(bp);
+      Data encCopyCons;
+      {
+         DataStream ds(encCopyCons);
+         bpCopyCons.encode(ds);
+      }
+      cout << "!! " << encCopyCons << endl;
+      assert(bp == bpCopyCons);      
+      assert(encCopyCons == "branch=z9hG4bk15775865934415");
+
+      Data txt2("=z9hG4bk1577234fhg8df");
+      ParseBuffer pb2(txt2.data(), txt2.size());
+
+      BranchParameter bpAssignOp(ParameterTypes::branch, pb2, ";");      
+      bpAssignOp = bp;
+      
+      Data encAssignOp;
+      {
+         DataStream ds(encAssignOp);
+         bpAssignOp.encode(ds);
+      }
+      cout << "!! " << encAssignOp << endl;
+      assert(bp == bpAssignOp);      
+      assert(encAssignOp == "branch=z9hG4bk15775865934415");
    }
 
    {
