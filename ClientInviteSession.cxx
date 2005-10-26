@@ -78,7 +78,7 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
          mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         DumHelper::setOutgoingEncrptionLevel(req, mProposedEncryptionLevel);
+         DumHelper::setOutgoingEncryptionLevel(req, mProposedEncryptionLevel);
          send(req);
          break;
       }
@@ -560,7 +560,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   DumHelper::setOutgoingEncrptionLevel(prack, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(prack, mCurrentEncryptionLevel);
    send(prack);
 }
 
@@ -979,7 +979,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             //  Remember last seesion modification.
             mLastSessionModification = update;
 
-            DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
+            DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
             send(update);
          }
          break;
@@ -992,7 +992,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
             InviteSession::setSdp(update, mProposedLocalSdp.get());
-            DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
+            DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
             send(update);
          }
          handleFinalResponse(msg);

@@ -961,7 +961,7 @@ ServerInviteSession::sendProvisional(int code)
          break;
    }
    startRetransmit1xxTimer();
-   DumHelper::setOutgoingEncrptionLevel(m1xx, mProposedEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(m1xx, mProposedEncryptionLevel);
    send(m1xx);
 }
 
@@ -976,7 +976,7 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
-   DumHelper::setOutgoingEncrptionLevel(mInvite200, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(mInvite200, mCurrentEncryptionLevel);
    send(mInvite200);
 }
 
@@ -988,7 +988,7 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       SipMessage update;
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
-      DumHelper::setOutgoingEncrptionLevel(update, mProposedEncryptionLevel);
+      DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
       send(update);
       mLastSessionModification = update;
    }

@@ -476,7 +476,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       AppDialogSet* appDs)
 {
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
-   DumHelper::setOutgoingEncrptionLevel(inv, level);
+   DumHelper::setOutgoingEncryptionLevel(inv, level);
 
    /*
    if (None != level)
@@ -535,7 +535,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                              target,
                                                              serverSub->mDialog.mDialogSet.getUserProfile(),
                                                              initialOffer, level, alternative, serverSub), appDs);
-   DumHelper::setOutgoingEncrptionLevel(inv, level);
+   DumHelper::setOutgoingEncryptionLevel(inv, level);
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
