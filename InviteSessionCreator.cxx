@@ -22,7 +22,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
      mEncryptionLevel(level)
 {
    makeInitialRequest(target, INVITE);
-   DumHelper::setOutgoingEncrptionLevel(mLastRequest, level);
+   DumHelper::setOutgoingEncryptionLevel(mLastRequest, level);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
        assert(userProfile.get());
