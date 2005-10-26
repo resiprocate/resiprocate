@@ -7,7 +7,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-void DumHelper::setOutgoingEncrptionLevel(SipMessage& message,
+void DumHelper::setOutgoingEncryptionLevel(SipMessage& message,
                                           DialogUsageManager::EncryptionLevel level)
 {
    SecurityAttributes* attr = new SecurityAttributes();
