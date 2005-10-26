@@ -14,7 +14,7 @@ class SecurityAttributes;
 class DumHelper
 {
    public:
-      static void setOutgoingEncrptionLevel(SipMessage& message, DialogUsageManager::EncryptionLevel level);
+      static void setOutgoingEncryptionLevel(SipMessage& message, DialogUsageManager::EncryptionLevel level);
       static void setEncryptionPerformed(SipMessage& message);
 
    private:

@@ -32,7 +32,7 @@ public:
         _CrtMemState diff;
         _CrtMemDifference(&diff, &m_checkpoint, &checkpoint);
         _CrtMemDumpStatistics(&diff);
-        _CrtMemDumpAllObjectsSince(&diff);
+        _CrtMemDumpAllObjectsSince(&m_checkpoint);
     };
 };
 
