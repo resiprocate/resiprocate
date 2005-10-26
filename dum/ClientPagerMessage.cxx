@@ -191,7 +191,7 @@ ClientPagerMessage::pageFirstMsgQueued ()
    assert(mMsgQueue.empty() == false);
    mRequest.header(h_CSeq).sequence()++;
    mRequest.setContents(mMsgQueue.front().contents);
-   DumHelper::setOutgoingEncrptionLevel(mRequest, mMsgQueue.front().encryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(mRequest, mMsgQueue.front().encryptionLevel);
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
    mDum.send(mRequest);
 }
