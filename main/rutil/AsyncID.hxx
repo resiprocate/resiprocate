@@ -7,7 +7,7 @@ namespace resip
 // ?dcm? -- I originally wanted a flexible class that would map to any asyncronous
 // completetion token.  One way to do this is with templates in the function
 // that accept Async ids, another way is to have them passed around by
-// reference, but in the xTen case(for example) ids are simle ulongs, so this
+// reference, but in the CounterPath case(for example) ids are simle ulongs, so this
 // would cause a lot of work in the glue code.  Of course, this definition is
 // located here, so it would be easy to change to a lightweight wrapper class to
 // other implementation.  A templatized class w/ a conversion operator would
