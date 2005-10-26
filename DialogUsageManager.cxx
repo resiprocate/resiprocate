@@ -66,6 +66,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mRedirectHandler(0),
    mDialogSetHandler(0),
    mRegistrationPersistenceManager(0),
+   mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
@@ -136,6 +137,11 @@ DialogUsageManager::~DialogUsageManager()
    {
       DialogSet*  ds = mDialogSetMap.begin()->second;
       delete ds;
+   }
+
+   if(mIsDefaultServerReferHandler)
+   {
+       delete mServerSubscriptionHandlers["refer"];
    }
 
    delete mIncomingTarget;
@@ -365,6 +371,7 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
    if (eventType == "refer" && mServerSubscriptionHandlers.count(eventType))
    {
       delete mServerSubscriptionHandlers[eventType];
+      mIsDefaultServerReferHandler = false;
       //mServerSubscriptionHandlers.erase(eventType);
    }
 
