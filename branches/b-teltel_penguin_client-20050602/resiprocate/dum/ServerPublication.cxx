@@ -113,9 +113,9 @@ ServerPublication::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
-      mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
       if (msg.getContents())
       {
+         mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
          handler->onUpdate(getHandle(), mEtag, msg, 
                            mLastBody.mContents.get(), 
                            mLastBody.mAttributes.get(), 
@@ -131,7 +131,10 @@ ServerPublication::dispatch(const SipMessage& msg)
    }
    else
    {
-      mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
+      if (msg.getContents())
+      {
+         mLastBody = Helper::extractFromPkcs7(msg, *mDum.getSecurity());
+      }
       handler->onInitial(getHandle(), mEtag, msg, 
                          mLastBody.mContents.get(), 
                          mLastBody.mAttributes.get(), 
