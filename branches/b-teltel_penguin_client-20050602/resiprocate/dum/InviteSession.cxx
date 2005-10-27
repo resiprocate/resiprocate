@@ -71,7 +71,7 @@ InviteSession::getLocalSdp() const
    }
    else
    {
-      return *mCurrentLocalSdp;
+      return SdpContents::Empty;
    }
 }
 
