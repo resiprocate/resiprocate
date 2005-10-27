@@ -1472,6 +1472,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             {
                failureCode = 489;
             }
+            break;
          default:
             assert(0);
       }
