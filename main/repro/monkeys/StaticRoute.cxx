@@ -78,7 +78,7 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
-   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, false /*auth-int*/, false /*stale*/);
+   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, true /*auth-int*/, false /*stale*/);
    rc.sendResponse(*challenge);
 
    delete challenge;
