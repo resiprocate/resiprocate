@@ -71,6 +71,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
 
+      // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
    private:

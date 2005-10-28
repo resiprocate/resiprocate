@@ -17,17 +17,17 @@ class DumTimeout : public ApplicationMessage
          SessionRefresh,
          Registration,
          RegistrationRetry,
-         Provisional1,
-         Provisional2,
+         Provisional1,  // ?slg? not used - remove?
+         Provisional2,  // ?slg? not used - remove?
          Publication,
          Retransmit200,
          Retransmit1xx,
-         WaitForAck, // UAS gets no ACK
-         CanDiscardAck,
-         StaleCall, // UAC gets no final response
+         WaitForAck,    // UAS gets no ACK
+         CanDiscardAck, 
+         StaleCall,     // UAC gets no final response
          Subscription,
          SubscriptionRetry,
-         StaleReInvite,
+         StaleReInvite, // ?slg? not used - remove?  probably should be used
          Glare,
          Cancelled,
          WaitingForForked2xx
