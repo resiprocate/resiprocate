@@ -35,7 +35,8 @@ class InviteSessionHandler
       virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// UAC gets no final response within the stale call timeout (default is 3 minutes)
-      virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
+      /// Default implementation is to send a BYE
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle);
 
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
