@@ -985,12 +985,10 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
    if (updateMethodSupported())
    {
-      SipMessage update;
-      mDialog.makeRequest(update, UPDATE);
-      InviteSession::setSdp(update, sdp);
-      DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
-      send(update);
-      mLastSessionModification = update;
+      mDialog.makeRequest(mLastSessionModification, UPDATE);
+      InviteSession::setSdp(mLastSessionModification, sdp);
+      DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
+      send(mLastSessionModification);
    }
    else
    {
