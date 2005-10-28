@@ -29,7 +29,7 @@ ReproServerAuthManager::~ReproServerAuthManager()
 bool 
 ReproServerAuthManager::useAuthInt() const
 {
-   return false;
+   return true;
 }
 
 
