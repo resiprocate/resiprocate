@@ -11,6 +11,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -313,7 +314,13 @@ void
 ClientInviteSession::startStaleCallTimer()
 {
    InfoLog (<< toData(mState) << ": startStaleCallTimer");
-   mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
+   unsigned long when = mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime();
+   when += Random::getRandom() % 120;
+   
+   mDum.addTimer(DumTimeout::StaleCall, 
+                 when, 
+                 getBaseHandle(), 
+                 ++mStaleCallTimerSeq);
 }
 
 void
@@ -418,7 +425,7 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
       if(timer.seq() == mStaleCallTimerSeq)
       {
          mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
-         //end();  Handler now decides whether BYE or CANCEL is more appropriate - default is to BYE
+         mDum.mInviteSessionHandler->terminate(getHandle());
       }
    }
    else if (timer.type() == DumTimeout::WaitingForForked2xx)
