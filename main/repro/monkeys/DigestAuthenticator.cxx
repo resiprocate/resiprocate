@@ -240,7 +240,7 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
    Data realm = getRealm(rc);
 
    SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, 
-                                                      true, stale);
+                                                      true /*auth-int*/, stale);
    rc.sendResponse(*challenge);
 
    delete challenge;
