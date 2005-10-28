@@ -39,7 +39,8 @@ class Profile
       virtual void unsetDefaultMaxRegistrationTime();   
 
       // The time to retry registrations on error responses (if Retry-After header is not present in error)
-      // Set to 0 to never retry on errors
+      // Set to 0 to never retry on errors.  Note:  onRequestRetry is called before this setting is
+      // checked.  Return -1 from onRequestRetry in order to use this setting.
       virtual void setDefaultRegistrationRetryTime(int secs);
       virtual int getDefaultRegistrationRetryTime() const;
       virtual void unsetDefaultRegistrationRetryTime();   

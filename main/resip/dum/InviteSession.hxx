@@ -44,6 +44,7 @@ class InviteSession : public DialogUsage
          IllegalNegotiation,
          AckNotReceived,
          SessionExpired,
+         StaleCall,
          ENDREASON_MAX
       };
 
@@ -266,7 +267,7 @@ class InviteSession : public DialogUsage
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
 
-      void sendAck(const SdpContents *sdp=0);
+      void sendAck(SipMessage& originalInvite, const SdpContents *sdp=0);
       void sendBye();
 
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
@@ -293,9 +294,9 @@ class InviteSession : public DialogUsage
       std::auto_ptr<SdpContents> mCurrentRemoteSdp;
       std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
-      SipMessage mLastSessionModification; // UPDATE or reINVITE
-      SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
-      SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
+      SipMessage mLastSessionModification; // last UPDATE or reINVITE sent or received
+      SipMessage mInvite200;               // 200 OK for reINVITE for retransmissions
+      SipMessage mLastNitResponse;         //?dcm? -- ptr, delete when not needed?
       
       unsigned long mCurrentRetransmit200;
 
@@ -311,7 +312,10 @@ class InviteSession : public DialogUsage
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
 
-      EndReason mEndReason;      
+      EndReason mEndReason;   
+
+      typedef std::map<int,SipMessage> AckMap;  // Used to respond to 2xx retransmissions
+      AckMap mAcks;
       
    private:
       friend class Dialog;

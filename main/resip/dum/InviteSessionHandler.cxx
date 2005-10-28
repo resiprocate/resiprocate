@@ -1,9 +1,17 @@
 #include "InviteSessionHandler.hxx"
+#include "ClientInviteSession.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+
+void 
+InviteSessionHandler::onStaleCallTimeout(ClientInviteSessionHandle handle)
+{
+    InfoLog(<< "InviteSessionHandler::onStaleCallTimeout");
+    handle->end(InviteSession::StaleCall);   // Send BYE - to use CANCEL override this and call handle->getAppDialogSet()->end() instead
+}
 
 void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
