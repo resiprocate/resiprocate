@@ -505,7 +505,7 @@ SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
    mTransactionController.setEnumSuffixes(suffixes);
 }
 
-bool& 
+volatile bool& 
 SipStack::statisticsManagerEnabled()
 {
    return mStatisticsManagerEnabled;   
