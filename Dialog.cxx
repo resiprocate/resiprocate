@@ -36,7 +36,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
-     mAckId(0),
      mRemoteTarget(),
      mLocalNameAddr(),
      mRemoteNameAddr(),
@@ -500,15 +499,17 @@ Dialog::dispatch(const SipMessage& msg)
             InfoLog( << r->second );
 
             assert (r->second.isRequest());
-            if (r->second.header(h_RequestLine).method() == ACK)
-            {
-               // store the CSeq for ACK
-               mAckId = mLocalCSeq;
-            }
 
             mLocalCSeq++;
             send(r->second);
 			handledByAuth = true;
+
+            if((r->second.header(h_RequestLine).method() == INVITE || r->second.header(h_RequestLine).method() == UPDATE) &&
+               mInviteSession != 0)
+            {
+                // Copy INVITE or UPDATE with Authorization headers back to InviteSession - needed to populate ACKs with Authoriziation headers
+                mInviteSession->mLastSessionModification = r->second;
+            }
          }
          mRequests.erase(r);
 		 if (handledByAuth) return;
@@ -529,15 +530,8 @@ Dialog::dispatch(const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
-            // store the CSeq for ACK
-            mAckId = msg.header(h_CSeq).sequence();
             if (mInviteSession == 0)
             {
-               // #if!jf! don't think creator needs a dispatch
-               //BaseCreator* creator = mDum.findCreator(mId);
-               //assert (creator); // stray responses have been rejected already
-               //creator->dispatch(response);
-               // #endif!jf!
                DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
 
                mInviteSession = makeClientInviteSession(response);
@@ -852,7 +846,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Requires);
       request.remove(h_ProxyRequires);
       request.remove(h_Supporteds);
-      request.header(h_CSeq).sequence() = mAckId;
+      // request.header(h_CSeq).sequence() = ?;  // Caller should provide original request, or modify CSeq to proper value after calling this method
    }
 
    // If method is INVITE then advertise required headers
@@ -868,28 +862,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
-void
-Dialog::makeCancel(SipMessage& request)
-{
-   //minimal for cancel
-   request.header(h_RequestLine).method() = CANCEL;
-   request.header(h_CSeq).method() = CANCEL;
-   request.remove(h_Accepts);
-   request.remove(h_AcceptEncodings);
-   request.remove(h_AcceptLanguages);
-   request.remove(h_Allows);
-   request.remove(h_Requires);
-   request.remove(h_ProxyRequires);
-   request.remove(h_Supporteds);
-   assert(request.exists(h_Vias));
-
-   //not sure of these
-   request.header(h_To).remove(p_tag);
-   request.remove(h_RecordRoutes);
-   request.remove(h_Contacts);
-   request.header(h_Contacts).push_front(mLocalContact);
-   request.header(h_MaxForwards).value() = 70;
-}
 
 void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
