@@ -313,14 +313,18 @@ DialogSet::dispatch(const SipMessage& msg)
 
                   SipMessage ack;
                   dialog.makeRequest(ack, ACK);
+                  ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
                   dialog.send(ack);
                   
                   SipMessage bye;
                   dialog.makeRequest(bye, BYE);
                   dialog.send(bye);
+
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
                else
                {
+                  mState = Destroying;
                   mDum.destroy(this);
                }
                break;
@@ -611,6 +615,7 @@ DialogSet::dispatch(const SipMessage& msg)
             if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -623,6 +628,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -704,6 +710,7 @@ DialogSet::end()
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
+            mState = Destroying;
             mDum.destroy(this);
          }
          else
@@ -742,7 +749,8 @@ DialogSet::end()
       }
       case Terminating:
       case Destroying:
-         assert(0);
+         DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
+         //assert(0);
    }
 }
 

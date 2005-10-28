@@ -401,7 +401,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
 
       case SentReinviteAnswered:
          transition(Connected);
-         sendAck(&answer);
+         sendAck(mLastSessionModification, &answer);
 
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
@@ -659,6 +659,17 @@ InviteSession::message(const Contents& contents)
 void
 InviteSession::dispatch(const SipMessage& msg)
 {
+   // Look for 2xx retransmissions - resend ACK and filter out of state machine
+   if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 200 == 1)
+   {
+      AckMap::iterator i = mAcks.find(msg.header(h_CSeq).sequence());
+      if (i != mAcks.end())
+      {
+         send(i->second);  // resend ACK
+         return;
+      }
+   }
+
    // !jf! do we need to handle 3xx here or is it handled elsewhere?
    switch (mState)
    {
@@ -767,6 +778,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
          }
       }
    }
+   else if (timeout.type() == DumTimeout::CanDiscardAck)
+   {
+      AckMap::iterator i = mAcks.find(timeout.seq());
+      if (i != mAcks.end())
+      {
+         mAcks.erase(i);
+      }
+   }
    else if (timeout.type() == DumTimeout::Glare)
    {
       if (mState == SentUpdateGlare)
@@ -847,7 +866,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case On2xxAnswer:
          // retransmission of 200I
          // !jf! Need to include the answer here.
-         sendAck();
+         sendAck(mLastSessionModification);  // !slg! ?????????  Look up ACK map???
          break;
 
       case OnUpdateOffer:
@@ -1006,7 +1025,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          setCurrentLocalSdp(msg);
 
          // !jf! I need to potentially include an answer in the ACK here
-         sendAck();
+         sendAck(mLastSessionModification);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          
          if (mSessionRefreshReInvite)
@@ -1036,7 +1055,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
       }
       case On2xx:
-         sendAck();
+         sendAck(mLastSessionModification);
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -1118,7 +1137,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       {
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
-         mLastSessionModification = msg;
+         // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -1130,7 +1149,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       }
 
       case On2xx:
-         sendAck();
+         sendAck(mLastSessionModification);
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -1337,7 +1356,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       if(msg.header(h_StatusLine).statusCode() / 200 == 1)  // Note: stack ACK's non-2xx final responses only
       {
          // !jf! Need to include the answer here.
-         sendAck();
+         sendAck(mLastSessionModification);
       }
       sendBye();
       transition(Terminated);
@@ -2210,14 +2229,32 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
 }
 
-void InviteSession::sendAck(const SdpContents *sdp)
+void InviteSession::sendAck(SipMessage& originalInvite, const SdpContents *sdp)
 {
    SipMessage ack;
+
+   assert(mAcks.count(originalInvite.header(h_CSeq).sequence()) == 0);
+
    mDialog.makeRequest(ack, ACK);
+
+   // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
+   if(originalInvite.exists(h_Authorizations))
+   {
+      ack.header(h_Authorizations) = originalInvite.header(h_Authorizations);
+   }
+   if(originalInvite.exists(h_ProxyAuthorizations))
+   {
+      ack.header(h_ProxyAuthorizations) = originalInvite.header(h_ProxyAuthorizations);
+   }
+   ack.header(h_CSeq).sequence() = originalInvite.header(h_CSeq).sequence();
+
    if(sdp != 0)
    {
       setSdp(ack, *sdp);
    }
+   mAcks[ack.header(h_CSeq).sequence()] = ack;
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack.header(h_CSeq).sequence());
+
    InfoLog (<< "Sending " << ack.brief());
    send(ack);
 }
