@@ -1,5 +1,6 @@
-#include "InviteSessionHandler.hxx"
-#include "ClientInviteSession.hxx"
+#include "resip/dum/AppDialogSet.hxx"
+#include "resip/dum/InviteSessionHandler.hxx"
+#include "resip/dum/ClientInviteSession.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -10,7 +11,12 @@ void
 InviteSessionHandler::onStaleCallTimeout(ClientInviteSessionHandle handle)
 {
     InfoLog(<< "InviteSessionHandler::onStaleCallTimeout");
-    handle->end(InviteSession::StaleCall);   // Send BYE - to use CANCEL override this and call handle->getAppDialogSet()->end() instead
+}
+
+void 
+InviteSessionHandler::terminate(ClientInviteSessionHandle h)
+{
+   h->getAppDialogSet()->end();
 }
 
 void 
