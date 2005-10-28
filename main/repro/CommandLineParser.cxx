@@ -106,8 +106,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
+   mShouldRecordRoute = false;
    if (recordRoute) 
    {
+      mShouldRecordRoute = true;
       mRecordRoute = toUri(recordRoute, "Record-Route");
    }
    
