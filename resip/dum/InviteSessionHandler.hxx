@@ -34,10 +34,17 @@ class InviteSessionHandler
       /// called when a dialog initiated as a UAS enters the connected state
       virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
 
-      /// UAC gets no final response within the stale call timeout (default is 3 minutes)
-      /// Default implementation is to send a BYE
-      virtual void onStaleCallTimeout(ClientInviteSessionHandle);
+      /** UAC gets no final response within the stale call timeout (default is 3
+       * minutes). This is just a notification. After the notification is
+       * called, the InviteSession will then call
+       * InviteSessionHandler::terminate() */
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle h);
 
+      /** called when an early dialog decides it wants to terminate the
+       * dialog. Default behavior is to CANCEL all related early dialogs as
+       * well.  */
+      virtual void terminate(ClientInviteSessionHandle h);
+      
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
       /// times out
