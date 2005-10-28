@@ -161,7 +161,9 @@ Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 #endif
 }
 
-Security::Security(const Data& directory, const CipherList& cipherSuite) : mPath(directory), BaseSecurity(cipherSuite)  
+Security::Security(const Data& directory, const CipherList& cipherSuite) : 
+   BaseSecurity(cipherSuite), 
+   mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
