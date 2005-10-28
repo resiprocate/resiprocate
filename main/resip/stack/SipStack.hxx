@@ -91,7 +91,8 @@ class SipStack
                                       you can pass in domainname = DnsUtil::getLocalDomainName().
 
          @param privateKeyPassPhrase  Private key pass phrase used to decrypt private key 
-                                      certificates.
+                                      certificates.  Note:  For now this parameter is not used
+                                      we are loading PKCS7 keys, so a pass phrase is not required.
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
       */      
@@ -434,7 +435,7 @@ class SipStack
           dispatched periodically via a StatisticsMessage.  Note:  By default 
           the Statistics Manager is enabled.
       */
-      bool& statisticsManagerEnabled();
+      volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
 
    private:
@@ -479,7 +480,7 @@ class SipStack
       std::set<Data> mDomains;
 
       bool mShuttingDown;
-      bool mStatisticsManagerEnabled;
+      volatile bool mStatisticsManagerEnabled;
 
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
