@@ -120,6 +120,11 @@ class Tuple
       };
       friend class AnyPortAnyInterfaceCompare;
 
+      void setTargetDomain(const Data& target)
+      {
+         mTargetDomain = target;
+      }
+      
       const Data& getTargetDomain() const
       {
          return mTargetDomain;
