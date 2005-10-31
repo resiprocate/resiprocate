@@ -1657,6 +1657,112 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
    }
 }
 
+SdpContents* getSdpRecurse(Contents* tree)
+{
+   if (dynamic_cast<SdpContents*>(tree))
+   {
+      return static_cast<SdpContents*>(tree);
+   }
+
+   MultipartSignedContents* mps;
+   if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
+   {
+      try
+      {
+         MultipartSignedContents::Parts::const_iterator it = mps->parts().begin();
+         Contents* contents = getSdpRecurse(*it);
+         return static_cast<SdpContents*>(contents);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());       
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+      }
+
+      return 0;
+   }
+
+   MultipartAlternativeContents* alt;
+   if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
+   {
+      try
+      {
+         for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
+              i != alt->parts().rend(); ++i)
+         {
+            Contents* contents = getSdpRecurse(*i);
+            if (contents)
+            {
+               return static_cast<SdpContents*>(contents);
+            }
+         }
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+      }
+
+      return 0;
+   }
+
+   MultipartMixedContents* mult;
+   if ((mult = dynamic_cast<MultipartMixedContents*>(tree)))
+   {
+
+      try
+      {
+         for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
+              i != mult->parts().end(); ++i)
+         {
+            Contents* contents = getSdpRecurse(*i);
+            if (contents)
+            {
+               return static_cast<SdpContents*>(contents);
+            }
+         }
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+      }
+
+      return 0;
+   }
+
+   return 0;
+}
+
+auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
+{
+   static std::auto_ptr<SdpContents> empty;
+
+   if (tree) 
+   {
+      SdpContents* sdp = getSdpRecurse(tree);
+
+      if (sdp)
+      {
+         DebugLog(<< "Got sdp" << endl);
+         return auto_ptr<SdpContents>(static_cast<SdpContents*>(sdp->clone()));
+      }
+   }
+
+   DebugLog(<< "No sdp" << endl);
+   return empty;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

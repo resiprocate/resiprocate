@@ -766,6 +766,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnAckAnswer:
+      {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
          setCurrentLocalSdp(msg);
@@ -777,6 +778,17 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
             handler->onConnected(getSessionHandle(), msg);
          }
          break;
+      }
+
+      case OnAck:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         mEndReason = IllegalNegotiation;
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         break;
+      }
          
       case OnCancel:
       {
