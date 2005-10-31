@@ -10,6 +10,7 @@
 #include "rutil/Data.hxx"
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/SdpContents.hxx"
 
 namespace resip
 {
@@ -451,6 +452,10 @@ class Helper
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
       
       static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
+
+      // Just simply walk the contents tree and return the first SdpContents in
+      // the tree.
+      static std::auto_ptr<SdpContents> getSdp(Contents* tree);
 
    private:
       static Data qopOption(const Auth& challenge);
