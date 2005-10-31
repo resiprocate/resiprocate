@@ -24,6 +24,7 @@
 #include <time.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define NO_REGISTRATION 1
 
 using namespace resip;
 using namespace std;
@@ -161,7 +162,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": ClientInviteSession-onConnected - " << msg.brief() << endl;
       }
 
-      virtual void onStaleCallTimeout(ClientInviteSessionHandle)
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle handle)
       {
          cout << name << ": ClientInviteSession-onStaleCallTimeout" << endl;
       }
@@ -321,6 +322,20 @@ class TestUac : public TestInviteSessionHandler
          delete sdp;
       }
 
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
+      {
+         cout << name << ": InviteSession-onOffer(SDP)" << endl;
+         //sdp->encode(cout);
+         is->provideAnswer(sdp);
+      }
+
+      virtual void onConnected(ClientInviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": ClientInviteSession-onConnected - " << msg.brief() << endl;
+         cout << "Connected now - requestingOffer from UAS" << endl;
+         is->requestOffer();
+      }
+
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
@@ -333,6 +348,7 @@ class TestUas : public TestInviteSessionHandler
 
    public:
       bool done;
+      bool requestedOffer;
       time_t* pHangupAt;
 
       SdpContents* sdp;
@@ -342,11 +358,10 @@ class TestUas : public TestInviteSessionHandler
       TestUas(time_t* pH) 
          : TestInviteSessionHandler("UAS"), 
            done(false),
+           requestedOffer(false),
            pHangupAt(pH),
            hfv(0)
       { 
-         pHangupAt = pHangupAt;
-
          txt = new Data("v=0\r\n"
                         "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
                         "s=X-Lite\r\n"
@@ -392,7 +407,22 @@ class TestUas : public TestInviteSessionHandler
          cout << name << ": Sending 200 response with SDP answer." << endl;
          is->provideAnswer(sdp);
          mSis->accept();
-         *pHangupAt = time(NULL) + 5;
+      }
+
+      virtual void onOfferRequired(InviteSessionHandle is, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onOfferRequired - " << msg.brief() << endl;
+         is->provideOffer(*sdp);
+      }
+
+      virtual void onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
+      {
+         cout << name << ": InviteSession-onAnswer(SDP)" << endl;
+         if(*pHangupAt == 0)
+         {
+            is->provideOffer(sdp);
+            *pHangupAt = time(NULL) + 5;
+         }
       }
 
       // Normal people wouldn't put this functionality in the handler
@@ -426,14 +456,13 @@ class TestShutdownHandler : public DumShutdownHandler
 };
 
 
-//#define NO_REGISTRATION 1
 int 
 main (int argc, char** argv)
 {
-   //Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
-   Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
 
 #if !defined(NO_REGISTRATION)
    if ( argc < 5 ) {
