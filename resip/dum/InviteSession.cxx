@@ -678,7 +678,7 @@ InviteSession::dispatch(const SipMessage& msg)
          break;
       case SentUpdate:
          dispatchSentUpdate(msg);
-         break;
+         break; 
       case SentReinvite:
          dispatchSentReinvite(msg);
          break;
@@ -747,34 +747,39 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         if (timeout.seq() == mLastSessionModification.header(h_CSeq).sequence())
+         {
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         // this is so the app can decided to ignore this. default implementation
-         // will call end next
-         mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
-
-         // If we are waiting for an Ack and it times out, then end with a BYE
-         if(mState == UAS_WaitingToHangup || 
-            mState == WaitingToHangup)
-         {
-             sendBye();
-             transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
-         }
-         else if(mState == ReceivedReinviteSentOffer)
-         {
-            transition(Connected);
-            mProposedLocalSdp.reset();
-            mProposedEncryptionLevel = DialogUsageManager::None;
-            //!dcm! -- should this be onIllegalNegotiation?
-            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
-         }
-         else if(mState == WaitingToOffer)
-         {
-            assert(mProposedLocalSdp.get());
-            //!dcm! -- should this be onIllegalNegotiation?
-            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
-            provideProposedOffer(); 
+            // If we are waiting for an Ack and it times out, then end with a BYE
+            if(mState == UAS_WaitingToHangup || 
+               mState == WaitingToHangup)
+            {
+               sendBye();
+               transition(Terminated);
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+            }
+            else if(mState == ReceivedReinviteSentOffer)
+            {
+               transition(Connected);
+               mProposedLocalSdp.reset();
+               mProposedEncryptionLevel = DialogUsageManager::None;
+               //!dcm! -- should this be onIllegalNegotiation?
+               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
+            }
+            else if(mState == WaitingToOffer)
+            {
+               assert(mProposedLocalSdp.get());
+               //!dcm! -- should this be onIllegalNegotiation?
+               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
+               provideProposedOffer(); 
+            }
+            else
+            {
+               // this is so the app can decided to ignore this. default implementation
+               // will call end next
+               mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
+            }
          }
       }
    }
@@ -1250,6 +1255,7 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    MethodTypes method = msg.header(h_CSeq).method();
    if (msg.isRequest() && (method == INVITE || method == UPDATE))
    {
+      DebugLog(<< "Re-INVITE or UPDATE received when in SentReinviteGlare or SentUpdateGlare" << endl);
       // Received inbound reinvite or update, when waiting to resend outbound reinvite or update
       handler->onOfferRejected(getSessionHandle(), &msg);
       dispatchConnected(msg);  // act as if we received message in Connected state
@@ -1619,12 +1625,34 @@ InviteSession::startRetransmit200Timer()
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
 
+// RFC3261 section 14.1
+// If a UAC receives a 491 response to a re-INVITE, it SHOULD start a timer with
+// a value T chosen as follows:
+//  1. If the UAC is the owner of the Call-ID of the dialog ID, T has a randomly
+//  chosen value between 2.1 and 4 seconds in units of 10 ms.
+//  2. If the UAC is not the owner of the Call-ID of the dialog ID, T has a
+//  randomly chosen value of between 0 and 2 seconds in units of 10 ms.
 void
 InviteSession::start491Timer()
 {
    int seq = mLastSessionModification.header(h_CSeq).sequence();
-   int timer = Random::getRandom() % 4000;
-   mDum.addTimerMs(DumTimeout::Glare, timer, getBaseHandle(), seq);
+
+   if (dynamic_cast<ClientInviteSession*>(this))
+   {
+      int timer = Random::getRandom() % (4000 - 2100);
+      timer += 2100;
+      timer -= timer % 10;
+      
+      DebugLog(<< "491 timer value: " << timer << "ms" << endl);
+      mDum.addTimerMs(DumTimeout::Glare, timer, getBaseHandle(), seq);
+   }
+   else
+   {
+      int timer = Random::getRandom() % 2000;
+      timer -= timer % 10;
+      DebugLog(<< "491 timer value: " << timer << "ms" << endl);
+      mDum.addTimerMs(DumTimeout::Glare, timer, getBaseHandle(), seq);
+   }
 }
 
 void 
@@ -1960,20 +1988,7 @@ InviteSession::isReliable(const SipMessage& msg)
 std::auto_ptr<SdpContents>
 InviteSession::getSdp(const SipMessage& msg)
 {
-   // !jf! this code doesn't yet work - definitely if USE_SSL=false
-   //Helper::ContentsSecAttrs attrs = Helper::extractFromPkcs7(msg, mDum.getSecurity());
-   //return std::auto_ptr<SdpContents>(dynamic_cast<SdpContents*>(attrs.mContents.get()));
-   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-   if (sdp)
-   {
-      SdpContents* cloned = static_cast<SdpContents*>(sdp->clone());
-      return std::auto_ptr<SdpContents>(cloned);
-   }
-   else
-   {
-      static std::auto_ptr<SdpContents> empty;
-      return empty;
-   }
+   return Helper::getSdp(msg.getContents());
 }
 
 std::auto_ptr<SdpContents>
