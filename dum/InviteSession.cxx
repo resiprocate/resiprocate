@@ -1565,7 +1565,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
 }
 
 void
-InviteSession::acceptNIT(int statusCode)
+InviteSession::acceptNIT(int statusCode, const Contents * contents)
 {
    if (statusCode / 100  != 2)
    {
@@ -1573,6 +1573,7 @@ InviteSession::acceptNIT(int statusCode)
    }
 
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
+   mLastNitResponse.setContents(contents);
    Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
    BaseUsage::send(mLastNitResponse);   
 } 
@@ -1585,6 +1586,7 @@ InviteSession::rejectNIT(int statusCode)
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
    mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;  
+   mLastNitResponse.releaseContents();
    Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
    BaseUsage::send(mLastNitResponse);
 }
