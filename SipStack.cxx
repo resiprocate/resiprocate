@@ -143,7 +143,7 @@ SipStack::addTransport( TransportType protocol,
                                           *mSecurity,
                                           sipDomainname);
 #else
-            CritLog (<< "TLS not supported in this stack. You don't have openssl");
+            CritLog (<< "DTLS not supported in this stack.");
             assert(0);
 #endif
             break;
