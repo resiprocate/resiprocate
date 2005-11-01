@@ -77,11 +77,20 @@ clean:
 	cd resip/stack/test; $(MAKE) clean
 	cd presSvr; $(MAKE) clean
 
-install:
+install: install-rutil install-resip install-dum install-repro
+
+install-rutil:
 	cd rutil; $(MAKE) install
+
+install-resip:
 	cd resip/stack; $(MAKE) install
+
+install-dum:
 	cd resip/dum; $(MAKE) install
+
+install-repro:
 	cd repro; $(MAKE) install
 
 .PHONY : resiprocate tests contrib ares dtls
+.PHONY : install install-rutil install-resip install-repro install-dum
 
