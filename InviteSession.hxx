@@ -82,8 +82,8 @@ class InviteSession : public DialogUsage
       */
       virtual void message(const Contents& contents);
 
-      /** accepts an INFO or MESSAGE request with a 2xx */
-      virtual void acceptNIT(int statusCode = 200);
+      /** accepts an INFO or MESSAGE request with a 2xx and an optional contents */
+      virtual void acceptNIT(int statusCode = 200, const Contents * contents = 0);
 
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
