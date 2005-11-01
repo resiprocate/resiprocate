@@ -349,10 +349,29 @@ DialogSet::dispatch(const SipMessage& msg)
       return;
    }
 
-   Dialog* dialog = findDialog(msg);
+   Dialog* dialog = 0;
+   if (!(msg.isResponse() && msg.header(h_StatusLine).statusCode() == 100))  // Don't look for dialog if msg is a 100 response
+   {
+      DialogMap::iterator i = mDialogs.find(DialogId(msg));
+      if (i != mDialogs.end())
+      {
+         dialog = i->second;
+      }
+   }
    if (dialog)
    {
-      DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      if(dialog->isDestroying())
+      {
+         StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
+		 SipMessage response;         
+         mDum.makeResponse(response, msg, 481);
+         mDum.send(response);
+  		 return;
+      }
+      else
+      {
+         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      }
    }
    else
    {
