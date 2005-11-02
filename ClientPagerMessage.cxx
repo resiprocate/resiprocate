@@ -163,6 +163,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
                contents->contents = 0;
            }
+           mMsgQueue.clear();
         }
     }
 }
