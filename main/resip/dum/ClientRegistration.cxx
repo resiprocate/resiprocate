@@ -251,11 +251,27 @@ ClientRegistration::dispatch(const SipMessage& msg)
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
-      int keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTime();
-      if(keepAliveTime > 0)
+
+      if (msg.getReceivedTransport())
       {
-         mNetworkAssociation.update(msg, keepAliveTime);
+         TransportType type = msg.getReceivedTransport()->getTuple().getType();
+         int keepAliveTime = 0;
+
+         if (type == TCP || type == TLS || type == SCTP)
+         {
+            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForStream();
+         }
+         else
+         {
+            keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForDatagram();
+         }
+
+         if(keepAliveTime > 0)
+         {
+            mNetworkAssociation.update(msg, keepAliveTime);
+         }
       }
+
       const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
