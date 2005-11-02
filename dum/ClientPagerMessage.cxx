@@ -87,7 +87,8 @@ ClientPagerMessage::getHandle()
 
 ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(dialogSet.getCreator()->getLastRequest())
+     mRequest(dialogSet.getCreator()->getLastRequest()),
+     mEnded(false)
 {
 }
 
@@ -162,8 +163,6 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
                contents->contents = 0;
            }
-
-           mMsgQueue.clear();
         }
     }
 }
@@ -176,7 +175,11 @@ ClientPagerMessage::dispatch(const DumTimeout& timer)
 void
 ClientPagerMessage::end()
 {
-   mDum.destroy(this);
+   if(!mEnded)
+   {
+      mEnded = true;
+      mDum.destroy(this);
+   }
 }
 
 size_t
