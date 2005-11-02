@@ -50,8 +50,11 @@ Profile::Profile()
 
    mHasOverrideHostPort = false;
 
-   mHasKeepAliveTime = true;
-   mKeepAliveTime = 30;      // 30 seconds
+   mHasKeepAliveTimeForDatagram = true;
+   mKeepAliveTimeForDatagram = 30; // 30 seconds.
+
+   mHasKeepAliveTimeForStream = true;
+   mKeepAliveTimeForStream = 180; // 3 minutes.
 
    mHasFixedTransportPort = true;
    mFixedTransportPort = 0;
@@ -77,7 +80,8 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
    mHasUserAgent = false;
    mHasProxyRequires = false;
    mHasOverrideHostPort = false;
-   mHasKeepAliveTime = false;
+   mHasKeepAliveTimeForDatagram = false;
+   mHasKeepAliveTimeForStream = false;
    mHasFixedTransportPort = false;
 }
 
@@ -550,29 +554,56 @@ Profile::unsetProxyRequires()
 }
 
 void 
-Profile::setKeepAliveTime(int keepAliveTime)
+Profile::setKeepAliveTimeForDatagram(int keepAliveTime)
 {
-   mKeepAliveTime = keepAliveTime;
-   mHasKeepAliveTime = true;
+   mKeepAliveTimeForDatagram = keepAliveTime;
+   mHasKeepAliveTimeForDatagram = true;
 }
 
 int 
-Profile::getKeepAliveTime() const
+Profile::getKeepAliveTimeForDatagram() const
 {
    // Fall through seting (if required)
-   if(!mHasKeepAliveTime && mBaseProfile.get())
+   if(!mHasKeepAliveTimeForDatagram && mBaseProfile.get())
    {
-       return mBaseProfile->getKeepAliveTime();
+       return mBaseProfile->getKeepAliveTimeForDatagram();
    }
-   return mKeepAliveTime;
+   return mKeepAliveTimeForDatagram;
 }
 
 void
-Profile::unsetKeepAliveTime()
+Profile::unsetKeepAliveTimeForDatagram()
 {
    if(mBaseProfile.get()) 
    {
-      mHasKeepAliveTime = false;
+      mHasKeepAliveTimeForDatagram = false;
+   }
+}
+
+void 
+Profile::setKeepAliveTimeForStream(int keepAliveTime)
+{
+   mKeepAliveTimeForStream = keepAliveTime;
+   mHasKeepAliveTimeForStream = true;
+}
+
+int 
+Profile::getKeepAliveTimeForStream() const
+{
+   // Fall through seting (if required)
+   if(!mHasKeepAliveTimeForStream && mBaseProfile.get())
+   {
+       return mBaseProfile->getKeepAliveTimeForStream();
+   }
+   return mKeepAliveTimeForStream;
+}
+
+void
+Profile::unsetKeepAliveTimeForStream()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasKeepAliveTimeForStream = false;
    }
 }
 
