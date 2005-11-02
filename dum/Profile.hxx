@@ -135,11 +135,15 @@ class Profile
       virtual bool hasProxyRequires() const;
       virtual void unsetProxyRequires(); 
 
-      //time between CR/LF keepalive messages in seconds.  Set to 0 to disable.  Default is 30.
+      //time between CR/LF keepalive messages in seconds.  Set to 0 to disable. 
+      //Default is 30 seconds for datagram and 180 seconds for stream.
       //Note:  You must set a KeepAliveManager on DUM for this to work.
-      virtual void setKeepAliveTime(int keepAliveTime);
-      virtual int getKeepAliveTime() const;      
-      virtual void unsetKeepAliveTime(); 
+      virtual void setKeepAliveTimeForDatagram(int keepAliveTime);
+      virtual int getKeepAliveTimeForDatagram() const;
+      virtual void unsetKeepAliveTimeForDatagram();
+      virtual void setKeepAliveTimeForStream(int keepAliveTime);
+      virtual int getKeepAliveTimeForStream() const;
+      virtual void unsetKeepAliveTimeForStream();
 
       //If set dum will provide a port in the via for requests sent down to the stack.  This
       //will tell the transport selector to only look at those transports using this port.
@@ -195,8 +199,11 @@ class Profile
       bool mHasOverrideHostPort;
       Uri  mOverrideHostPort;
       
-      bool mHasKeepAliveTime;
-      int  mKeepAliveTime;
+      bool mHasKeepAliveTimeForDatagram;
+      int  mKeepAliveTimeForDatagram;
+
+      bool mHasKeepAliveTimeForStream;
+      int  mKeepAliveTimeForStream;
 
       bool mHasFixedTransportPort;
       int  mFixedTransportPort;
