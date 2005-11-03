@@ -362,10 +362,17 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if(dialog->isDestroying())
       {
-         StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
-		 SipMessage response;         
-         mDum.makeResponse(response, msg, 481);
-         mDum.send(response);
+		 if( msg.isRequest() )
+		 {
+		    StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
+			SipMessage response;         
+			mDum.makeResponse(response, msg, 481);
+			mDum.send(response);
+		 }
+		 else
+		 {
+		    StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+		 }
   		 return;
       }
       else
