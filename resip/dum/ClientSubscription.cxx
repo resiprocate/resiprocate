@@ -241,9 +241,17 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_StatusLine).statusCode() >= 300)
       {
-         handler->onTerminated(getHandle(), msg);
-         delete this;
-         return;
+         if (msg.header(h_StatusLine).statusCode() == 423 
+             && msg.exists(h_MinExpires))
+         {
+            requestRefresh(msg.header(h_MinExpires).value());            
+         }
+         else
+         {
+            handler->onTerminated(getHandle(), msg);
+            delete this;
+            return;
+         }
       }
    }
 }
