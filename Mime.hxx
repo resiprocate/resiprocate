@@ -44,8 +44,8 @@ typedef ParserContainer<Mime> Mimes;
  
 }
 
-#if  defined(__INTEL_COMPILER )
-namespace std
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+namespace HASH_MAP_NAMESPACE
 {
 size_t hash_value(const resip::Mime& data);
 }

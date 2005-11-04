@@ -373,9 +373,10 @@ DnsResult::getDefaultPort(TransportType transport, int port)
          case TCP:
             return mSips ? Symbols::DefaultSipsPort : Symbols::DefaultSipPort;
          case TLS:
+         case DTLS:
             return Symbols::DefaultSipsPort;
          default:
-            InfoLog( << "Should not get this - unkown transport" );
+            ErrLog( << "Should not get this - unknown transport" );
             return Symbols::DefaultSipPort; // !cj! todo - remove 
             assert(0);
       }
