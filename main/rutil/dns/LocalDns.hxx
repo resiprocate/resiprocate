@@ -1,6 +1,7 @@
 #if !defined(RESIP_LOCAL_DNS_HXX)
 #define RESIP_LOCAL_DNS_HXX
 
+#include <map>
 #include "rutil/Data.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 
