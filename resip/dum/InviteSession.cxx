@@ -235,9 +235,9 @@ InviteSession::isAccepted() const
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_EarlyReliable:
-         return true;
-      default:
          return false;
+      default:
+         return true;
    }
 }
 
