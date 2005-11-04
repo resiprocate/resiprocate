@@ -112,15 +112,13 @@ resip::operator<<(std::ostream& os, const DialogSetId& id)
     return os << id.mCallId << '-' << id.mTag ;
 }
 
-#if defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
+#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+size_t HASH_MAP_NAMESPACE::hash_value(const resip::DialogSetId& id)
 {
     return id.hash();
 }
-#endif
-
-#if defined(__INTEL_COMPILER)
-size_t std::hash_value(const resip::DialogSetId& id)
+#elif defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {
     return id.hash();
 }
