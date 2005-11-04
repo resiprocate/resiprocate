@@ -149,16 +149,16 @@ class Tuple
 
 }
 
-#if  defined(__INTEL_COMPILER )
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310)) 
 
-namespace std
+namespace HASH_MAP_NAMESPACE
 {
 size_t hash_value(const resip::Tuple& tuple);
 }
 
 #elif defined(HASH_MAP_NAMESPACE)
 
-namespace __gnu_cxx
+namespace HASH_MAP_NAMESPACE
 {
 
 template<>

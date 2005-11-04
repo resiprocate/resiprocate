@@ -1027,13 +1027,13 @@ Uri::encodeEmbeddedHeaders(std::ostream& str) const
    return str;
 }
 
-#if defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::Uri>::operator()(const resip::Uri& v) const
+#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+size_t HASH_MAP_NAMESPACE::hash_value(const resip::Uri& v)
 {
    return resip::Data::from(v).hash();
 }
-#elif defined(__INTEL_COMPILER)
-size_t std::hash_value(const resip::Uri& v)
+#elif defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::Uri>::operator()(const resip::Uri& v) const
 {
    return resip::Data::from(v).hash();
 }

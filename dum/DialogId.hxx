@@ -26,10 +26,10 @@ class DialogId
 
       size_t hash() const;
 
-#if defined(HASH_MAP_NAMESPACE)
-      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogId>;
-#elif defined(__INTEL_COMPILER )
-      friend size_t hash_value(const resip::DialogId& id);
+#if defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+      //friend size_t hash_value(const resip::DialogId& id);
+#elif defined(HASH_MAP_NAMESPACE)
+      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogId>;  // ?slg? is this even needed?
 #endif
 
    private:
@@ -38,7 +38,13 @@ class DialogId
       Data mRemoteTag;
 };
 }
-#if defined(HASH_MAP_NAMESPACE)
+
+#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+namespace HASH_MAP_NAMESPACE 
+{ 
+size_t hash_value(const resip::DialogId& id); 
+}
+#elif defined(HASH_MAP_NAMESPACE)
 namespace HASH_MAP_NAMESPACE
 {
 
@@ -49,8 +55,6 @@ struct hash<resip::DialogId>
 };
 
 }
-#elif defined(__INTEL_COMPILER)
-namespace std { size_t hash_value(const resip::DialogId& id); }
 #endif
 
   
