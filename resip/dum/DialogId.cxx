@@ -127,15 +127,13 @@ size_t DialogId::hash() const
 }
 
 
-#if defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::DialogId>::operator()(const resip::DialogId& id) const
+#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+size_t HASH_MAP_NAMESPACE::hash_value(const resip::DialogId& id)
 {
     return id.hash();
 }
-#endif
-
-#if defined(__INTEL_COMPILER)
-size_t std::hash_value(const resip::DialogId& id)
+#elif defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::DialogId>::operator()(const resip::DialogId& id) const
 {
     return id.hash();
 }
