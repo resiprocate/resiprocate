@@ -460,6 +460,19 @@ DialogSet::dispatch(const SipMessage& msg)
       const SipMessage& response = msg;
 
       int code = msg.header(h_StatusLine).statusCode();
+      if (code == 423
+          && msg.header(h_CSeq).method() == SUBSCRIBE
+          && msg.exists(h_MinExpires)
+          && getCreator()
+          && msg.header(h_CSeq) == getCreator()->getLastRequest().header(h_CSeq))
+      {
+         getCreator()->getLastRequest().header(h_CSeq).sequence()++;
+         getCreator()->getLastRequest().header(h_Expires).value() = msg.header(h_MinExpires).value();
+         DebugLog( << "Re sending inital(dialog forming) SUBSCRIBE due to 423, MinExpires is: " << msg.header(h_MinExpires).value());
+         mDum.send(getCreator()->getLastRequest());
+         return;
+      }
+      
       switch(mState)
       {
          case Initial:
@@ -473,6 +486,7 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             else
             {
+
                if (mDialogs.empty())
                {
                   mState = Established;
