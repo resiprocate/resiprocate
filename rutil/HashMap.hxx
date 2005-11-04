@@ -30,6 +30,12 @@ struct hash<T*>
 #    define HASH_MAP_NAMESPACE std
 #    define HashMap std::hash_map
 #    define HashSet std::hash_set
+#  elif  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310)  // hash_map is in stdext namespace for VS.NET 2003
+#    include <hash_map>
+#    include <hash_set>
+#    define HASH_MAP_NAMESPACE stdext
+#    define HashMap stdext::hash_map
+#    define HashSet stdext::hash_set
 #  else
 #    include <map>
 #    define HashMap std::map

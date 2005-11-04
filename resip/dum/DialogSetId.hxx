@@ -32,11 +32,10 @@ class DialogSetId
       Data mCallId;
       Data mTag;
 
-#if defined(HASH_MAP_NAMESPACE)
-      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogSetId>;
-#endif
-#if defined(__INTEL_COMPILER )
-      friend size_t hash_value(const resip::DialogSetId& id);
+#if defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+      //friend size_t hash_value(const resip::DialogSetId& id);
+#elif defined(HASH_MAP_NAMESPACE)
+      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogSetId>;  // ?slg? is this even needed?
 #endif
 };
 
@@ -44,8 +43,8 @@ class DialogSetId
 
 }
 
-#if  defined(__INTEL_COMPILER )
-namespace std
+#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
+namespace HASH_MAP_NAMESPACE
 {
 size_t hash_value(const resip::DialogSetId& id);
 }
