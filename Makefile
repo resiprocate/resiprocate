@@ -1,3 +1,5 @@
+# If the ARES_PREFIX make variable is set, it will be passed to ares'
+# ./configure as ares' install location.
 
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
@@ -34,6 +36,16 @@ ifeq (${USE_IPV6},yes)
    ARES_IPV6=--with-ipv6
 endif
 
+# Setting the ARES_PREFIX make variable means that its value should be
+# passed to ares' ./configure as ares' install prefix.
+# Here we construct the ARES_PREFIX_ARG make variable, which is either empty
+# or the appropriate --prefix option for ares' ./configure.
+ifeq (${ARES_PREFIX},)
+   ARES_PREFIX_ARG=
+else
+   ARES_PREFIX_ARG=--prefix=${PREFIX}
+endif
+
 configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 
 tfm/contrib/Netxx-0.3.2/Makefile:
@@ -51,8 +63,11 @@ cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)
 configure_ares: contrib/ares/Makefile
 
+# If we are building ares under Resiprocate, ares needs to know the
+# Resiprocate install directory.  It is passed in via the ARES_PREFIX
+# make variable.
 contrib/ares/Makefile:
-	cd contrib/ares && ./configure ${ARES_IPV6}
+	cd contrib/ares && ./configure ${ARES_IPV6} ${ARES_PREFIX_ARG}
 
 configure_ares: contrib/ares/Makefile
 
@@ -77,7 +92,14 @@ clean:
 	cd resip/stack/test; $(MAKE) clean
 	cd presSvr; $(MAKE) clean
 
+# install does not include install-ares, because it did not in the
+# past.  (As far as I know, installing ares is needed only when
+# resiprocateLib is used as part of sipX, and the sipX Makefiles
+# invoke the install-ares target directly.)
 install: install-rutil install-resip install-dum install-repro
+
+install-ares:
+	cd contrib/ares; $(MAKE) install
 
 install-rutil:
 	cd rutil; $(MAKE) install
@@ -92,5 +114,4 @@ install-repro:
 	cd repro; $(MAKE) install
 
 .PHONY : resiprocate tests contrib ares dtls
-.PHONY : install install-rutil install-resip install-repro install-dum
-
+.PHONY : install install-ares install-rutil install-resip install-repro install-dum
