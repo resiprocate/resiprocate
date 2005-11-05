@@ -58,6 +58,10 @@ Profile::Profile()
 
    mHasFixedTransportPort = true;
    mFixedTransportPort = 0;
+
+   mHasFixedTransportInterface = true;
+   mFixedTransportInterface = Data::Empty;
+
 }
 
 Profile::Profile(SharedPtr<Profile> baseProfile) : 
@@ -83,6 +87,7 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
    mHasKeepAliveTimeForDatagram = false;
    mHasKeepAliveTimeForStream = false;
    mHasFixedTransportPort = false;
+   mHasFixedTransportInterface = false;
 }
 
 Profile::~Profile()
@@ -631,6 +636,33 @@ Profile::unsetFixedTransportPort()
    if(mBaseProfile.get()) 
    {
       mHasFixedTransportPort = false;
+   }
+}
+
+void 
+Profile::setFixedTransportInterface(const Data& interface)
+{
+   mFixedTransportInterface = interface;
+   mHasFixedTransportInterface = true;
+}
+
+const Data&
+Profile::getFixedTransportInterface() const
+{
+   // Fall through seting (if required)
+   if(!mHasFixedTransportInterface && mBaseProfile.get())
+   {
+       return mBaseProfile->getFixedTransportInterface();
+   }
+   return mFixedTransportInterface;
+}
+
+void
+Profile::unsetFixedTransportInterface()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasFixedTransportInterface = false;
    }
 }
 
