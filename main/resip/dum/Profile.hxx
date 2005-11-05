@@ -156,6 +156,12 @@ class Profile
       virtual int getFixedTransportPort() const;
       virtual void unsetFixedTransportPort(); 
 
+      //If set dum will provide a interface in the via for requests sent down to the stack.  This
+      //will tell the transport selector to only look at those transports using this interface.
+      virtual void setFixedTransportInterface(const Data& interface);
+      virtual const Data& getFixedTransportInterface() const;
+      virtual void unsetFixedTransportInterface(); 
+
    private:
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
@@ -207,6 +213,9 @@ class Profile
 
       bool mHasFixedTransportPort;
       int  mFixedTransportPort;
+      
+      bool mHasFixedTransportInterface;
+      Data mFixedTransportInterface;
 
       bool mHasProxyRequires;
       Tokens mProxyRequires;
