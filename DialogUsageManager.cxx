@@ -748,6 +748,11 @@ DialogUsageManager::send(SipMessage& msg)
          {
             msg.header(h_Vias).front().sentPort() = fixedTransportPort;
          }
+         const Data& fixedTransportInterface = userProfile->getFixedTransportInterface();
+         if(!fixedTransportInterface.empty())
+         {
+            msg.header(h_Vias).front().sentHost() = fixedTransportInterface;
+         }
       }
 
       if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
