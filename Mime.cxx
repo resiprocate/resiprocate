@@ -133,17 +133,7 @@ Mime::encodeParsed(std::ostream& str) const
    return str;
 }
 
-#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-size_t HASH_MAP_NAMESPACE::hash_value(const resip::Mime& data)
-{
-   return data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash();
-}
-#elif defined(HASH_MAP_NAMESPACE) 
-size_t HASH_MAP_NAMESPACE::hash<resip::Mime>::operator()(const resip::Mime& data) const
-{
-   return data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash();
-}
-#endif
+HashValueImp(resip::Mime, data.type().caseInsensitivehash() ^ data.subType().caseInsensitivehash());
 
 
 /* ====================================================================
