@@ -130,7 +130,12 @@ class Tuple
          return mTargetDomain;
       }
       
-   private:
+      /**
+        Creates a 32-bit hash based on the contents of this Tuple.
+      */
+      size_t hash() const;   
+
+private:
       union 
       {
             sockaddr mSockaddr;
@@ -149,28 +154,7 @@ class Tuple
 
 }
 
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310)) 
-
-namespace HASH_MAP_NAMESPACE
-{
-size_t hash_value(const resip::Tuple& tuple);
-}
-
-#elif defined(HASH_MAP_NAMESPACE)
-
-namespace HASH_MAP_NAMESPACE
-{
-
-template<>
-struct hash<resip::Tuple>
-{
-      size_t operator()(const resip::Tuple& addrPort) const;
-};
- 
-}
-
-#endif // hash stuff
-
+HashValue(resip::Tuple);
 
 #endif
 /* ====================================================================
