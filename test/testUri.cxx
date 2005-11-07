@@ -21,6 +21,7 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::Debug;
    Log::initialize(Log::Cerr, l, argv[0]);
+   initNetwork();
    
    {
       Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");
@@ -595,6 +596,41 @@ main(int argc, char* argv[])
     assert( sip2a.getAorNoPort() == Data("carol@chicago.com") );
     assert( sip3a.getAorNoPort() == Data("1.2.3.4") );
     assert( sip4a.getAorNoPort() == Data("1.2.3.4") );
+  }
+
+  // Displayname parse tests
+  {
+    NameAddr sip1("\"DispName\" <sip:user@host.com>");
+    NameAddr sip2("\"DispName \"<sip:user@host.com>");
+    NameAddr sip3("\"  DispName\"<sip:user@host.com>");
+    NameAddr sip4("DispName <sip:user@host.com>");
+    NameAddr sip5("DispName<sip:user@host.com>");
+    NameAddr sip6("  DispName <sip:user@host.com>");
+    NameAddr sip7("  DispName<sip:user@host.com>");
+
+    DebugLog( << "sip1.displayName=='" << sip1.displayName() << "'" );
+    DebugLog( << "sip2.displayName=='" << sip2.displayName() << "'" );
+    DebugLog( << "sip3.displayName=='" << sip3.displayName() << "'" );
+    DebugLog( << "sip4.displayName=='" << sip4.displayName() << "'" );
+    DebugLog( << "sip5.displayName=='" << sip5.displayName() << "'" );
+    DebugLog( << "sip6.displayName=='" << sip6.displayName() << "'" );
+    DebugLog( << "sip7.displayName=='" << sip7.displayName() << "'" );
+    
+    assert( sip1.displayName() == Data("DispName") );
+    assert( sip2.displayName() == Data("DispName ") );
+    assert( sip3.displayName() == Data("  DispName") );
+    assert( sip4.displayName() == Data("DispName ") );  // ?slg? should the trailing space be present?
+    assert( sip5.displayName() == Data("DispName") );
+    assert( sip6.displayName() == Data("DispName ") );  // ?slg? should the trailing space be present?
+    assert( sip7.displayName() == Data("DispName") );
+
+    assert( sip1.uri().getAor() == Data("user@host.com") );
+    assert( sip2.uri().getAor() == Data("user@host.com") );
+    assert( sip3.uri().getAor() == Data("user@host.com") );
+    assert( sip4.uri().getAor() == Data("user@host.com") );
+    assert( sip5.uri().getAor() == Data("user@host.com") );
+    assert( sip6.uri().getAor() == Data("user@host.com") );
+    assert( sip7.uri().getAor() == Data("user@host.com") );
   }
 
    cerr << endl << "All OK" << endl;
