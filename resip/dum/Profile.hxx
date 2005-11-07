@@ -158,7 +158,8 @@ class Profile
 
       //If set dum will provide a interface in the via for requests sent down to the stack.  This
       //will tell the transport selector to only look at those transports using this interface.
-      virtual void setFixedTransportInterface(const Data& interface);
+      //Default is Data::Empty (Disabled).
+      virtual void setFixedTransportInterface(const Data& fixedTransportInterface);
       virtual const Data& getFixedTransportInterface() const;
       virtual void unsetFixedTransportInterface(); 
 
