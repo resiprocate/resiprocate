@@ -106,6 +106,7 @@ Data
 DnsUtil::getLocalHostName()
 {
    char buffer[MAXHOSTNAMELEN];
+   buffer[0] = '\0';
    if (int e = gethostname(buffer,sizeof(buffer)) == -1)
    {
       if ( e != 0 )
@@ -117,7 +118,7 @@ DnsUtil::getLocalHostName()
 //       current hack (see the #define in .hxx) needs
 //       to be reworked.
             case WSANOTINITIALISED:
-               CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
+               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
                break;
             default:
                CritLog( << "could not find local hostname:" << strerror(err) );
@@ -128,14 +129,18 @@ DnsUtil::getLocalHostName()
    }
 
    struct hostent* he;
-   if ((he = gethostbyname(buffer)) != NULL) {
-     if (strchr(he->h_name, '.') != NULL) {
-       strncpy(buffer, he->h_name, sizeof(buffer));
-     }
-	 else {
-       WarningLog( << "local hostname does not contain a domain part");
-     }
+   if ((he = gethostbyname(buffer)) != 0) 
+   {
+      if (strchr(he->h_name, '.') != 0) 
+      {
+         strncpy(buffer, he->h_name, sizeof(buffer));
+      }
+      else 
+      {
+         WarningLog( << "local hostname does not contain a domain part");
+      }
    }
+
    return Data(buffer);
 }
 
