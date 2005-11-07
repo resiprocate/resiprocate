@@ -25,21 +25,46 @@ struct hash<T*>
  
 }
 
+#define HashValue(type)                           \
+namespace HASH_MAP_NAMESPACE                      \
+{                                                 \
+template <>                                       \
+struct hash<type>                                 \
+{                                                 \
+      size_t operator()(const type& data) const;  \
+};                                                \
+}                                   
+#define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const type& data) const { return ret; }
+
 #  elif  defined(__INTEL_COMPILER )
 #    include <hash_map>
 #    define HASH_MAP_NAMESPACE std
 #    define HashMap std::hash_map
 #    define HashSet std::hash_set
+#    define HashValue(type)              \
+     namespace HASH_MAP_NAMESPACE        \
+     {                                   \
+     size_t hash_value(const type& data);\
+     }                                   
+#    define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash_value(const type& data) { return ret; }
 #  elif  defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310)  // hash_map is in stdext namespace for VS.NET 2003
 #    include <hash_map>
 #    include <hash_set>
 #    define HASH_MAP_NAMESPACE stdext
 #    define HashMap stdext::hash_map
 #    define HashSet stdext::hash_set
+#    define HashValue(type)              \
+     namespace HASH_MAP_NAMESPACE        \
+     {                                   \
+     size_t hash_value(const type& data);\
+     }                                   
+#    define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash_value(const type& data) { return ret; }
 #  else
 #    include <map>
 #    define HashMap std::map
 #    define HashSet std::set
+#    define HashValue(type)    
+#    define HashValueImp(type, ret) 
 #  endif
 
 #endif

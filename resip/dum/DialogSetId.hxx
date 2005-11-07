@@ -31,36 +31,13 @@ class DialogSetId
       
       Data mCallId;
       Data mTag;
-
-#if defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-      //friend size_t hash_value(const resip::DialogSetId& id);
-#elif defined(HASH_MAP_NAMESPACE)
-      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogSetId>;  // ?slg? is this even needed?
-#endif
 };
 
     std::ostream& operator<<(std::ostream&, const DialogSetId&);
 
 }
 
-#if  defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-namespace HASH_MAP_NAMESPACE
-{
-size_t hash_value(const resip::DialogSetId& id);
-}
-
-#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-namespace HASH_MAP_NAMESPACE
-{
-
-template<>
-struct hash<resip::DialogSetId>
-{
-      size_t operator()(const resip::DialogSetId& id) const;
-};
-
-}
-#endif
+HashValue(resip::DialogSetId);
 
 #endif
    
