@@ -640,9 +640,9 @@ Profile::unsetFixedTransportPort()
 }
 
 void 
-Profile::setFixedTransportInterface(const Data& interface)
+Profile::setFixedTransportInterface(const Data& fixedTransportInterface)
 {
-   mFixedTransportInterface = interface;
+   mFixedTransportInterface = fixedTransportInterface;
    mHasFixedTransportInterface = true;
 }
 
