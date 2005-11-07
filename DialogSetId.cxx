@@ -112,17 +112,7 @@ resip::operator<<(std::ostream& os, const DialogSetId& id)
     return os << id.mCallId << '-' << id.mTag ;
 }
 
-#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-size_t HASH_MAP_NAMESPACE::hash_value(const resip::DialogSetId& id)
-{
-    return id.hash();
-}
-#elif defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
-{
-    return id.hash();
-}
-#endif
+HashValueImp(resip::DialogSetId, data.hash());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
