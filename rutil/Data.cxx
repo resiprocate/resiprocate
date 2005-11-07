@@ -1770,17 +1770,7 @@ Data::caseInsensitivehash() const
    return rawCaseInsensitiveHash(this->data(), this->size());
 }
 
-#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-size_t HASH_MAP_NAMESPACE::hash_value(const resip::Data& data)
-{
-   return data.hash();
-}
-#elif defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data) const
-{
-   return data.hash();
-}
-#endif
+HashValueImp(resip::Data, data.hash());
 
 Data 
 Data::base64decode() const

@@ -126,18 +126,7 @@ size_t DialogId::hash() const
    return mDialogSetId.hash() ^ mRemoteTag.hash();
 }
 
-
-#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-size_t HASH_MAP_NAMESPACE::hash_value(const resip::DialogId& id)
-{
-    return id.hash();
-}
-#elif defined(HASH_MAP_NAMESPACE)
-size_t HASH_MAP_NAMESPACE::hash<resip::DialogId>::operator()(const resip::DialogId& id) const
-{
-    return id.hash();
-}
-#endif
+HashValueImp(resip::DialogId, data.hash());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

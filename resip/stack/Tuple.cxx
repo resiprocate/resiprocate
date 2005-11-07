@@ -448,55 +448,33 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
    return ostrm;
 }
 
-
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-
 size_t 
-__gnu_cxx::hash<resip::Tuple>::operator()(const resip::Tuple& tuple) const
+Tuple::hash() const
 {
    // !dlb! do not include the connection
-   const sockaddr& theSockaddr = tuple.getSockaddr();
 #ifdef USE_IPV6
-   if (theSockaddr.sa_family == AF_INET6)
+   if (mSockaddr.sa_family == AF_INET6)
    {
       const sockaddr_in6& in6 =
-         reinterpret_cast<const sockaddr_in6&>(theSockaddr);
+         reinterpret_cast<const sockaddr_in6&>(mSockaddr);
 
       return size_t(in6.sin6_addr.s6_addr +
                     5*in6.sin6_port +
-                    25*tuple.getType());
+                    25*mTransportType);
    }
    else
 #endif
    {
       const sockaddr_in& in4 =
-         reinterpret_cast<const sockaddr_in&>(theSockaddr);
+         reinterpret_cast<const sockaddr_in&>(mSockaddr);
          
       return size_t(in4.sin_addr.s_addr +
                     5*in4.sin_port +
-                    25*tuple.getType());
-   }
+                    25*mTransportType);
+   }    
 }
 
-#elif  defined(__INTEL_COMPILER )
-size_t 
-std::hash_value(const resip::Tuple& tuple) 
-{
-   // !dlb! do not include the connection
-   const sockaddr& sockaddr = tuple.getSockaddr();
-   if (sockaddr.sa_family == AF_INET6)
-   {
-      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(sockaddr);
-      return size_t(addr.sin6_addr.s6_addr + 5*addr.sin6_port + 25*tuple.getType());
-   }
-   else
-   {
-      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(sockaddr);
-      return size_t(addr.sin_addr.s_addr + 5*addr.sin_port + 25*tuple.getType());
-   }
-}
-
-#endif
+HashValueImp(resip::Tuple, data.hash());
 
 static const Data transportNames[MAX_TRANSPORT] =
 {
