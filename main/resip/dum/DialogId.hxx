@@ -26,12 +26,6 @@ class DialogId
 
       size_t hash() const;
 
-#if defined(__INTEL_COMPILER ) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-      //friend size_t hash_value(const resip::DialogId& id);
-#elif defined(HASH_MAP_NAMESPACE)
-      friend struct HASH_MAP_NAMESPACE::hash<resip::DialogId>;  // ?slg? is this even needed?
-#endif
-
    private:
       friend std::ostream& operator<<(std::ostream&, const DialogId& id);
       DialogSetId mDialogSetId;
@@ -39,24 +33,7 @@ class DialogId
 };
 }
 
-#if defined(__INTEL_COMPILER) || (defined(WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1310))
-namespace HASH_MAP_NAMESPACE 
-{ 
-size_t hash_value(const resip::DialogId& id); 
-}
-#elif defined(HASH_MAP_NAMESPACE)
-namespace HASH_MAP_NAMESPACE
-{
-
-template<>
-struct hash<resip::DialogId>
-{
-      size_t operator()(const resip::DialogId& id) const;
-};
-
-}
-#endif
-
+HashValue(resip::DialogId);
   
 #endif
 
