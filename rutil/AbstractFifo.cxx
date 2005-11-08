@@ -79,7 +79,8 @@ AbstractFifo::getNext(int ms)
       return getNext();
    }
 
-   const UInt64 end(Timer::getTimeMs() + ms);
+   const UInt64 begin(Timer::getTimeMs());
+   const UInt64 end(begin + (unsigned int)(ms)); // !kh! ms should've been unsigned :(
    Lock lock(mMutex); (void)lock;
 
    // Wait until there are messages available
@@ -91,11 +92,7 @@ AbstractFifo::getNext(int ms)
           return 0;
       }
 
-      unsigned int timeout((unsigned int)(now));
-      if(now > UINT_MAX)
-      {
-          timeout = UINT_MAX;
-      }
+      unsigned int timeout((unsigned int)(end - now));
               
       // bail if total wait time exceeds limit
       bool signaled = mCondition.wait(mMutex, timeout);
@@ -103,7 +100,6 @@ AbstractFifo::getNext(int ms)
       {
          return 0;
       }
-      ms = (int)(end - Timer::getTimeMs());
    }
 
    // Return the first message on the fifo.
