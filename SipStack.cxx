@@ -281,6 +281,7 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
+   checkAsyncProcessHandler();
 }
 
 
@@ -297,6 +298,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu)
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
+   checkAsyncProcessHandler();
 }
 
 // this is only if you want to send to a destination not in the route. You
@@ -314,6 +316,7 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUse
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
+   checkAsyncProcessHandler();
 }
 
 void 
@@ -435,7 +438,7 @@ SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
    return resipMin(mTransactionController.getTimeTillNextProcessMS(),
-                   mAppTimers.msTillNextTimer());
+                   resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()));
 } 
 
 void
@@ -473,12 +476,14 @@ void
 SipStack::requestTransactionUserShutdown(TransactionUser& tu)
 {
    mTuSelector.requestTransactionUserShutdown(tu);
+   checkAsyncProcessHandler();
 }
 
 void 
 SipStack::unregisterTransactionUser(TransactionUser& tu)
 {
    mTuSelector.unregisterTransactionUser(tu);
+   checkAsyncProcessHandler();
 }
 
 void
