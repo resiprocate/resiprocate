@@ -89,6 +89,7 @@ class ParseBuffer
 
       // inverse of skipChar() -- end up at char not before it
       const char* skipBackChar();
+      const char* skipBackWhitespace();
       const char* skipBackN(int count);
       const char* skipBackChar(char c);
       const char* skipBackToChar(char c);
@@ -110,6 +111,7 @@ class ParseBuffer
       UInt64 unsignedLongLong();
       unsigned long unsignedInteger();
       float floatVal();
+      int qVal();
       static const char* Whitespace;
       static const char* ParamTerm;
    private:
