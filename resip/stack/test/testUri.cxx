@@ -607,6 +607,7 @@ main(int argc, char* argv[])
     NameAddr sip5("DispName<sip:user@host.com>");
     NameAddr sip6("  DispName <sip:user@host.com>");
     NameAddr sip7("  DispName<sip:user@host.com>");
+    NameAddr sip8("  Disp Name  <sip:user@host.com>");
 
     DebugLog( << "sip1.displayName=='" << sip1.displayName() << "'" );
     DebugLog( << "sip2.displayName=='" << sip2.displayName() << "'" );
@@ -615,14 +616,16 @@ main(int argc, char* argv[])
     DebugLog( << "sip5.displayName=='" << sip5.displayName() << "'" );
     DebugLog( << "sip6.displayName=='" << sip6.displayName() << "'" );
     DebugLog( << "sip7.displayName=='" << sip7.displayName() << "'" );
+    DebugLog( << "sip8.displayName=='" << sip8.displayName() << "'" );
     
     assert( sip1.displayName() == Data("DispName") );
     assert( sip2.displayName() == Data("DispName ") );
     assert( sip3.displayName() == Data("  DispName") );
-    assert( sip4.displayName() == Data("DispName ") );  // ?slg? should the trailing space be present?
+    assert( sip4.displayName() == Data("DispName") );  
     assert( sip5.displayName() == Data("DispName") );
-    assert( sip6.displayName() == Data("DispName ") );  // ?slg? should the trailing space be present?
-    assert( sip7.displayName() == Data("DispName") );
+    assert( sip6.displayName() == Data("DispName") );  
+    assert( sip7.displayName() == Data("DispName") ); 
+    assert( sip8.displayName() == Data("Disp Name") );   
 
     assert( sip1.uri().getAor() == Data("user@host.com") );
     assert( sip2.uri().getAor() == Data("user@host.com") );
@@ -631,6 +634,7 @@ main(int argc, char* argv[])
     assert( sip5.uri().getAor() == Data("user@host.com") );
     assert( sip6.uri().getAor() == Data("user@host.com") );
     assert( sip7.uri().getAor() == Data("user@host.com") );
+    assert( sip8.uri().getAor() == Data("user@host.com") );
   }
 
    cerr << endl << "All OK" << endl;

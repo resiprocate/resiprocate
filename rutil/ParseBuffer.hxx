@@ -89,6 +89,7 @@ class ParseBuffer
 
       // inverse of skipChar() -- end up at char not before it
       const char* skipBackChar();
+      const char* skipBackWhitespace();
       const char* skipBackN(int count);
       const char* skipBackChar(char c);
       const char* skipBackToChar(char c);

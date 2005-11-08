@@ -484,6 +484,27 @@ ParseBuffer::skipBackChar()
 }
 
 const char*
+ParseBuffer::skipBackWhitespace()
+{
+   while (!bof())
+   {
+      switch (*(--mPosition))
+      {
+         case ' ' :
+         case '\t' : 
+         case '\r' : 
+         case '\n' : 
+         {
+            break;
+         }
+         default : 
+            return ++mPosition;
+      }
+   }
+   return mBuff;
+}
+
+const char*
 ParseBuffer::skipBackN(int count)
 {
    mPosition -= count;
