@@ -192,6 +192,19 @@ TuSelector::exists(TransactionUser* tu)
    return false;
 }
 
+unsigned int 
+TuSelector::getTimeTillNextProcessMS()
+{
+    if(mShutdownFifo.messageAvailable()) //  || !mFallBackFifo.messageAvailable())  // .slg. fallback fifo is not really used
+    {
+        return 0;
+    }
+    else
+    {
+        return INT_MAX;
+    }
+} 
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
