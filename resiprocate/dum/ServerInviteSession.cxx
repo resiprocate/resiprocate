@@ -745,6 +745,15 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          }
          break;
          
+      case OnAck:
+      {
+          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+          sendBye();
+          transition(Terminated);
+          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+          break;
+      }
+
       case OnCancel:
       {
          // no transition

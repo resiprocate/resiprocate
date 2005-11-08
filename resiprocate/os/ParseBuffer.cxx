@@ -296,28 +296,36 @@ ParseBuffer::skipToChars(const char* cs)
 }
 
 ParseBuffer::Pointer
-ParseBuffer::skipToChars(const Data& cs)
+ParseBuffer::skipToChars(const Data& sub)
 {
-   const unsigned int l = static_cast<unsigned int>(cs.size());
+   const char* begSub = sub.mBuf;
+   const char* endSub = sub.mBuf + sub.mSize;
+   assert(begSub != endSub);
 
-   const char* rpos;
-   const char* cpos;
-   while (mPosition < mEnd)
+   while (true)
    {
-      cpos = cs.data();
-      rpos = mPosition;
-      for (size_t i = 0; i < l; i++)
-      {
-         if (*cpos++ != *rpos++)
-         {
-            mPosition++;
-            goto skip;
-         }
-      }
-      return Pointer(*this, mPosition, false);
-     skip: ;
+next:
+     const char* searchPos = mPosition;
+     const char* subPos = sub.mBuf;
+
+     while (subPos != endSub) 
+     {
+	if (searchPos == mEnd)
+	{
+	   // nope
+	   mPosition = mEnd;
+	   return Pointer(*this, mPosition, true);
+	}
+	if (*subPos++ != *searchPos++)
+	{
+	   // nope, but try the next position
+	   ++mPosition;
+	   goto next;
+	}
+     }
+     // found a match
+     return Pointer(*this, searchPos, false);
    }
-   return Pointer(*this, mPosition, true);
 }
 
 bool oneOf(char c, const char* cs)
@@ -473,6 +481,27 @@ ParseBuffer::skipBackChar()
    }
    mPosition--;
    return mPosition;
+}
+
+const char*
+ParseBuffer::skipBackWhitespace()
+{
+   while (!bof())
+   {
+      switch (*(--mPosition))
+      {
+         case ' ' :
+         case '\t' : 
+         case '\r' : 
+         case '\n' : 
+         {
+            break;
+         }
+         default : 
+            return ++mPosition;
+      }
+   }
+   return mBuff;
 }
 
 const char*
@@ -801,6 +830,49 @@ ParseBuffer::floatVal()
      return 0.0;
    }
 }
+
+
+int
+ParseBuffer::qVal()
+{
+   // parse a qvalue into an integer between 0 and 1000  (ex: 1.0 -> 1000,  0.8 -> 800, 0.05 -> 50)
+   const char* s = mPosition;
+   try
+   {
+      int num = integer();
+      if (num == 1)
+      {
+         num = 1000;
+      }
+      else if (num != 0)
+      {
+         // error: qvalue must start with 1 or 0
+         return 0;
+      }
+      
+      if (*mPosition == '.')
+      {
+         skipChar();
+         
+         int i = 100;
+         while(isdigit(*mPosition) && i)
+         {
+            num += (*mPosition) * i;
+            i /= 10;
+            skipChar();
+         }
+      }
+      return num;
+   }
+   catch (Exception&)
+   {
+      Data msg("Expected a floating point value, got: ");
+      msg += Data(s, mPosition - s);
+      fail(__FILE__, __LINE__,msg);
+      return 0;
+   }
+}
+   
 
 void
 ParseBuffer::assertEof() const
