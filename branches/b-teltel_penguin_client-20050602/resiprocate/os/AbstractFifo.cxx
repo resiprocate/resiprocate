@@ -37,7 +37,8 @@ AbstractFifo ::getNext()
 void*
 AbstractFifo::getNext(int ms)
 {
-   const UInt64 end(Timer::getTimeMs() + ms);
+   const UInt64 begin(Timer::getTimeMs());
+   const UInt64 end(begin + ms);
 
    Lock lock(mMutex); (void)lock;
 
@@ -50,8 +51,8 @@ AbstractFifo::getNext(int ms)
           return 0;
       }
 
-      unsigned int timeout((unsigned int)(now));
-      if(now > UINT_MAX)
+      unsigned int timeout((unsigned int)(end - begin));
+      if(timeout > UINT_MAX)
       {
           timeout = UINT_MAX;
       }
