@@ -71,6 +71,50 @@ AbstractFifo::getNext(int ms)
    return firstMessage;
 }
 
+void*
+AbstractFifo::getNext(int ms)
+{
+   if(ms == 0) 
+   {
+      return getNext();
+   }
+
+   const UInt64 end(Timer::getTimeMs() + ms);
+   Lock lock(mMutex); (void)lock;
+
+   // Wait until there are messages available
+   while (mFifo.empty())
+   {
+      const UInt64 now(Timer::getTimeMs());
+      if(end <= now)
+      {
+          return 0;
+      }
+
+      unsigned int timeout((unsigned int)(now));
+      if(now > UINT_MAX)
+      {
+          timeout = UINT_MAX;
+      }
+              
+      // bail if total wait time exceeds limit
+      bool signaled = mCondition.wait(mMutex, timeout);
+      if (!signaled)
+      {
+         return 0;
+      }
+      ms = (int)(end - Timer::getTimeMs());
+   }
+
+   // Return the first message on the fifo.
+   //
+   void* firstMessage = mFifo.front();
+   mFifo.pop_front();
+   assert(mSize != 0);
+   mSize--;
+   return firstMessage;
+}
+
 bool
 AbstractFifo::empty() const
 {
