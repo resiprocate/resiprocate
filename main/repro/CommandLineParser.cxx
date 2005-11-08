@@ -65,7 +65,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"udp",            0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort, 0, "add UDP transport on specified port", "5060"},
       {"tcp",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tcpPort, 0, "add TCP transport on specified port", "5060"},
       {"tls",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tlsPort, 0, "add TLS transport on specified port", "5061"},
-      {"dtls",           0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPort, 0, "add DTLS transport on specified port", "5061"},
+      {"dtls",           0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPort, 0, "add DTLS transport on specified port", "0"},
       {"enable-v6",      0,  POPT_ARG_NONE,   &enableV6, 0, "enable IPV6", 0},
       {"disable-v4",     0,  POPT_ARG_NONE,   &disableV4, 0, "disable IPV4", 0},
       {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
