@@ -148,6 +148,7 @@ TlsConnection::checkState()
       else
       {
          ok = SSL_connect(mSsl);
+         //StackLog( << "TLS SSL_connect - state = " << fromState(mState) );
       }
 
       if ( ok <= 0 )
