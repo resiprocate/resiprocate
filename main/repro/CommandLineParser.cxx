@@ -83,7 +83,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
       {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
-      {"enum-suffix",     'e',   POPT_ARG_STRING, &enumSuffix,  0, "specify enum suffix to search", "e164.arp"},
+      {"enum-suffix",     'e',   POPT_ARG_STRING, &enumSuffix,  0, "specify enum suffix to search", "e164.arpa"},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
