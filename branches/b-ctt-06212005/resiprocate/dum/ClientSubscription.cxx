@@ -117,7 +117,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
          return;
       }
 
-      assert(expires);
       unsigned long refreshInterval = 0;
       UInt64 now = Timer::getTimeMs() / 1000;
       
