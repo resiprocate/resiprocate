@@ -38,7 +38,7 @@ void*
 AbstractFifo::getNext(int ms)
 {
    const UInt64 begin(Timer::getTimeMs());
-   const UInt64 end(begin + ms);
+   const UInt64 end(begin + (unsigned int)(ms)); // !kh! the parameter ms should've been unsigned :(
 
    Lock lock(mMutex); (void)lock;
 
@@ -52,11 +52,7 @@ AbstractFifo::getNext(int ms)
       }
 
       unsigned int timeout((unsigned int)(end - begin));
-      if(timeout > UINT_MAX)
-      {
-          timeout = UINT_MAX;
-      }
-              
+      
       // bail if total wait time exceeds limit
       bool signaled = mCondition.wait(mMutex, timeout);
       if (!signaled)
