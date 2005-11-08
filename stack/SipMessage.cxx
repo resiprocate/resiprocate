@@ -149,7 +149,7 @@ SipMessage::operator=(const SipMessage& rhs)
       {
          if (mSecurityAttributes.get())
          {
-            mSecurityAttributes.release();
+            mSecurityAttributes.reset();
          }
       }
    }
