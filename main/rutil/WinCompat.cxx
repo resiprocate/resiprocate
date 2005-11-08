@@ -1,6 +1,6 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
-#include <atlconv.h>
+#include <atlbase.h>
 
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
