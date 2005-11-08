@@ -34,7 +34,7 @@ struct hash<type>                                 \
       size_t operator()(const type& data) const;  \
 };                                                \
 }                                   
-#define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const type& data) const { return ret; }
+#define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<type>::operator()(const type& data) const { return ret; }
 
 #  elif  defined(__INTEL_COMPILER )
 #    include <hash_map>
