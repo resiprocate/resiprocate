@@ -51,7 +51,7 @@ AbstractFifo::getNext(int ms)
           return 0;
       }
 
-      unsigned int timeout((unsigned int)(end - begin));
+      unsigned int timeout((unsigned int)(now - end));
       
       // bail if total wait time exceeds limit
       bool signaled = mCondition.wait(mMutex, timeout);
