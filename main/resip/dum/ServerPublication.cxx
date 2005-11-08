@@ -62,8 +62,8 @@ ServerPublication::updateMatchingSubscriptions()
                            mLastBody.mContents.get(), 
                            mLastBody.mAttributes.get());
    }
-   mLastBody.mContents.release();
-   mLastBody.mAttributes.release();
+   mLastBody.mContents.reset();
+   mLastBody.mAttributes.reset();
 }
 
 
