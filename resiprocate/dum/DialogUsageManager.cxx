@@ -313,6 +313,7 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
    if (eventType == "refer")
    {
       delete mServerSubscriptionHandlers[eventType];
+      mServerSubscriptionHandlers[eventType] = NULL;
    }
    else
    {
