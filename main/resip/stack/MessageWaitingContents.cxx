@@ -147,7 +147,9 @@ MessageWaitingContents::encodeParsed(ostream& s) const
 
    if (exists(mw_account))
    {
+      s << "Message-Account" << Symbols::COLON[0] << Symbols::SPACE[0];
       header(mw_account).encode(s);
+      s << Symbols::CRLF;
    }
 
    for(int i = 0; i < (int)MW_MAX; i++)
@@ -157,12 +159,14 @@ MessageWaitingContents::encodeParsed(ostream& s) const
          s << MessageHeaders[i] << Symbols::COLON[0] << Symbols::SPACE[0]
            << mHeaders[i]->mNew << Symbols::SLASH[0] 
            << mHeaders[i]->mOld;
+
          if (mHeaders[i]->mHasUrgent)
          {
-            s << Symbols::LPAREN[0]
+            s << Symbols::SPACE[0] << Symbols::LPAREN[0]    
               << mHeaders[i]->mUrgentNew << Symbols::SLASH[0] 
-              << mHeaders[i]->mUrgentOld;
+              << mHeaders[i]->mUrgentOld << Symbols::RPAREN[0]; 
          }
+
          s << Symbols::CRLF;
       }
    }
