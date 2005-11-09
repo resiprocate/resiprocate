@@ -19,6 +19,8 @@ class SdpContents;
 class InviteSession : public DialogUsage
 {
    public:
+      static std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
+
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
@@ -209,7 +211,6 @@ class InviteSession : public DialogUsage
       static Data toData(State state);
       void transition(State target);
 
-      std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
       bool isReliable(const SipMessage& msg);
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
