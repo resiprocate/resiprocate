@@ -2342,7 +2342,7 @@ BaseSecurity::isSelfSigned(X509 *cert)
 void
 BaseSecurity::dumpAsn( char* name, Data data)
 {
-#if 1 // !CJ! TODO turn off
+#if 0 // for debugging
    assert(name);
 
    if (true) // dump asn.1 stuff to debug file
