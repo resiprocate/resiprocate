@@ -56,6 +56,7 @@ class ClientRegistration: public NonDialogUsage
       } State;
 
       SipMessage& tryModification(ClientRegistration::State state);
+      void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
 
       friend class DialogSet;
 
@@ -66,6 +67,7 @@ class ClientRegistration: public NonDialogUsage
 
       State mState;
       bool mEndWhenDone;
+      bool mUserRefresh;
       UInt64 mExpires;
       State mQueuedState;
       SipMessage mQueuedRequest;
