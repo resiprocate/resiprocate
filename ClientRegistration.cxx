@@ -352,8 +352,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
                mState = Registered;
                if(mUserRefresh)
                {
-                   mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                    mUserRefresh = false;
+                   mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                }
                break;
 
