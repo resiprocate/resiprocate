@@ -29,6 +29,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mTimerSeq(0),
      mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
+     mUserRefresh(false),
      mExpires(0),
      mQueuedState(None)
 {
@@ -198,6 +199,14 @@ void ClientRegistration::stopRegistering()
 void
 ClientRegistration::requestRefresh(int expires)
 {
+    // Set flag so that handlers get called for success/failure
+    mUserRefresh = true;
+    internalRequestRefresh(expires);
+}
+
+void
+ClientRegistration::internalRequestRefresh(int expires)
+{
    InfoLog (<< "requesting refresh of " << *this);
    
    assert (mState == Registered);
@@ -341,6 +350,11 @@ ClientRegistration::dispatch(const SipMessage& msg)
             case Registered:
             case Refreshing:
                mState = Registered;
+               if(mUserRefresh)
+               {
+                   mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+                   mUserRefresh = false;
+               }
                break;
 
             default:
@@ -436,7 +450,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                mState = RetryRefreshing;
                break;
             default:
-               assert(false);
+                assert(false);
                break;
             }
 
@@ -476,7 +490,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
          {
             if (!mMyContacts.empty())
             {
-               requestRefresh();
+               internalRequestRefresh();
             }
          }
          break;
