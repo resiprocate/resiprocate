@@ -86,7 +86,7 @@ SelectInterruptor::interrupt()
    static char* wakeUp = "w";
 #ifdef WIN32
    int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
-   assert(count = 1);
+   //assert(count == 1);
 #else
    size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
    assert(res == sizeof(wakeUp));   
