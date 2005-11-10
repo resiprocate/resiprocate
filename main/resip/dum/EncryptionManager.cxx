@@ -270,6 +270,13 @@ bool EncryptionManager::decrypt(SipMessage* msg)
          }
          if (csa.mAttributes.get()) 
          {
+            // Security Attributes might already exist on the message if the Identity Handler is enabled
+            // if so, ensure we maintain the Identity Strength
+            const SecurityAttributes *origSecurityAttributes = msg->getSecurityAttributes();
+            if(origSecurityAttributes)
+            {
+                csa.mAttributes->setIdentityStrength(origSecurityAttributes->getIdentityStrength());
+            }
             msg->setSecurityAttributes(csa.mAttributes);
          }
          delete request;
