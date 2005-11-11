@@ -8,7 +8,7 @@
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
-#include "resiprocate/dum/RefCountedDestroyer.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -18,6 +18,7 @@ class Dialog;
 class DialogUsageManager;
 class AppDialogSet;
 class ClientOutOfDialogReq;
+class UserProfile;
 
 class DialogSet
 {
@@ -26,10 +27,13 @@ class DialogSet
       DialogSet(const SipMessage& request, DialogUsageManager& dum);
       virtual ~DialogSet();
       
-      DialogSetId getId();
+      DialogSetId getId() const;
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
+
+      UserProfile* getUserProfile();
+      void setUserProfile(UserProfile *userProfile);
 
       void end();
       void dispatch(const SipMessage& msg);
@@ -64,11 +68,18 @@ class DialogSet
          Terminating
       } State;
 
-      State mState;
-
       void possiblyDie();
 
+      void onForkAccepted();
       bool handledByAuthOrRedirect(const SipMessage& msg);
+
+      /// Abandon this dialog set, but keep the AppDialogSet around
+      void appDissociate()
+      {
+         assert(mAppDialogSet);
+         mAppDialogSet = 0;
+      }
+      friend class AppDialogSet;
 
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
@@ -84,18 +95,17 @@ class DialogSet
       
       ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
 
+      void dispatchToAllDialogs(const SipMessage& msg);      
+
       MergedRequestKey mMergeKey;
+      Data mCancelKey;
       typedef std::map<DialogId,Dialog*> DialogMap;
       DialogMap mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
-
-      //inelegant, but destruction can happen both automatically and forced by
-      //the user.  Extremely single threaded.
-      bool mDestroying;
-
+      State mState;
       ClientRegistration* mClientRegistration;
       ServerRegistration* mServerRegistration;
       ClientPublication* mClientPublication;
@@ -104,13 +114,59 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
-
-      typedef RefCountedDestroyer<DialogSet> Destroyer;
-      Destroyer mDestroyer;
-      friend class Destroyer::Guard;      
-
+      UserProfile* mUserProfile;
 };
  
 }
 
 #endif
+
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */

@@ -3,6 +3,8 @@
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/NetworkAssociation.hxx"
 
 namespace resip
 {
@@ -22,21 +24,37 @@ class ClientRegistration: public NonDialogUsage
       void removeBinding(const NameAddr& contact);
       void removeAll(bool stopRegisteringWhenDone=false);
       void removeMyBindings(bool stopRegisteringWhenDone=false);
-      void requestRefresh();
+      void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
       
       //kills the usgage, call removeMyBindings to deregister
       void stopRegistering(); 
       
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
-
+      int whenExpires() const; // relative in seconds
+      
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
    
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ClientRegistration();
+
    private:
+      typedef enum
+      {
+         Querying,
+         Adding,
+         Refreshing,
+         Registered,
+         Removing,
+         None // for queued only
+      } State;
+
+      SipMessage& tryModification(ClientRegistration::State state);
+
       friend class DialogSet;
 
       SipMessage& mLastRequest;
@@ -44,15 +62,13 @@ class ClientRegistration: public NonDialogUsage
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
       int mTimerSeq; // expected timer seq (all < are stale)
 
-      typedef enum
-      {
-         Querying,
-         Adding,
-         Registered,
-         Removing,
-      } State;
       State mState;
       bool mEndWhenDone;
+      UInt64 mExpires;
+      State mQueuedState;
+      SipMessage mQueuedRequest;
+
+      NetworkAssociation mNetworkAssociation;
       
       // disabled
       ClientRegistration(const ClientRegistration&);

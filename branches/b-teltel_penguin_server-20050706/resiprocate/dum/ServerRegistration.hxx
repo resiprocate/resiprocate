@@ -2,6 +2,8 @@
 #define RESIP_SERVERREGISTRATION_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -9,14 +11,13 @@ namespace resip
 class ServerRegistration: public NonDialogUsage 
 {
    public:
-      typedef Handle<ServerRegistration> ServerRegistrationHandle;
       ServerRegistrationHandle getHandle();
-
-      /// helper function to creat the 
-      SipMessage* makeRegistrationResponse(SipMessage& msg);
       
-      /// accept a SIP registration 
-      void accept(const SipMessage& ok);
+      /// accept a SIP registration with a specific response
+      void accept(SipMessage& ok);
+
+      /// accept a SIP registration with the contacts known to the DUM
+      void accept(int statusCode = 200);
 
       /// reject a SIP registration 
       void reject(int statusCode);
@@ -30,6 +31,9 @@ class ServerRegistration: public NonDialogUsage
       friend class DialogSet;
       ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
 
+      SipMessage mRequest;
+      Uri mAor;
+      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
 
       // disabled
       ServerRegistration(const ServerRegistration&);
