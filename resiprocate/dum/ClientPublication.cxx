@@ -24,6 +24,8 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      DialogSet& dialogSet,
                                      SipMessage& req)
    : NonDialogUsage(dum, dialogSet),
+     mWaitingForResponse(false),
+     mPendingPublish(false),
      mPublish(req),
      mEventType(req.header(h_Event).value()),
      mTimerSeq(0),
@@ -42,6 +44,7 @@ ClientPublication::~ClientPublication()
 void
 ClientPublication::end()
 {
+   InfoLog (<< "End client publication to " << mPublish.header(h_RequestLine).uri());
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    send(mPublish);
@@ -59,12 +62,16 @@ ClientPublication::dispatch(const SipMessage& msg)
    }
    else
    {
-      const int& code = msg.header(h_StatusLine).statusCode();
+      const int code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
          return;
       }
-      else if (code < 300)
+
+      assert(code >= 200);
+      mWaitingForResponse = false;
+
+      if (code < 300)
       {
          if (mPublish.header(h_Expires).value() == 0)
          {
@@ -83,8 +90,12 @@ ClientPublication::dispatch(const SipMessage& msg)
          }
          else
          {
+            // Any PUBLISH/200 must have an ETag. This should not happen. Not
+            // sure what the app can do in this case. 
+            WarningLog (<< "PUBLISH/200 received with no ETag " << mPublish.header(h_From).uri());
             handler->onFailure(getHandle(), msg);
             delete this;
+            return;
          }
       }
       else
@@ -107,13 +118,66 @@ ClientPublication::dispatch(const SipMessage& msg)
             {
                handler->onFailure(getHandle(), msg);
                delete this;
+               return;
+            }
+         }
+         else if (code == 408 ||
+                  ((code == 404 ||
+                    code == 413 ||
+                    code == 480 ||
+                    code == 486 ||
+                    code == 500 ||
+                    code == 503 ||
+                    code == 600 ||
+                    code == 603) &&
+                   msg.exists(h_RetryAfter)))
+         {
+            int retryMinimum = 0;
+            if (msg.exists(h_RetryAfter))
+            {
+               retryMinimum = msg.header(h_RetryAfter).value();
+            }
+
+            // RFC 3261:20.33 Retry-After
+            int retry = handler->onRequestRetry(getHandle(), retryMinimum, msg);
+            if (retry < 0)
+            {
+               DebugLog(<< "Application requested failure on Retry-After");
+               handler->onFailure(getHandle(), msg);
+               delete this;
+               return;
+            }
+            else if (retry == 0 && retryMinimum == 0)
+            {
+               DebugLog(<< "Application requested immediate retry on Retry-After");
+               refresh();
+               return;
+            }
+            else
+            {
+               retry = resipMax(retry, retryMinimum);
+               DebugLog(<< "Application requested delayed retry on Retry-After: " << retry);
+               mDum.addTimer(DumTimeout::Publication, 
+                             retry, 
+                             getBaseHandle(),
+                             ++mTimerSeq);       
+               return;
+               
             }
          }
          else
          {
             handler->onFailure(getHandle(), msg);
             delete this;
+            return;
          }
+
+      }
+
+      if (mPendingPublish)
+      {
+         InfoLog (<< "Sending pending PUBLISH: " << mPublish.brief());
+         send(mPublish);
       }
    }
 }
@@ -135,24 +199,53 @@ ClientPublication::refresh(unsigned int expiration)
       expiration = mPublish.header(h_Expires).value();
    }
    mPublish.header(h_CSeq).sequence()++;
-   mDum.send(mPublish);
-   mPublish.releaseContents();
+   send(mPublish);
 }
 
 void
 ClientPublication::update(const Contents* body)
 {
-   assert(body);
+   InfoLog (<< "Updating presence document: " << mPublish.header(h_To).uri());
 
    if (mDocument != body)
    {
       delete mDocument;
-      mDocument = body->clone();
+      if (body)
+      {
+         mDocument = body->clone();
+      }
+      else
+      {
+         mDocument = body;
+      }
    }
 
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
-   refresh();
+   send(mPublish);
+}
+
+void 
+ClientPublication::send(SipMessage& request)
+{
+   if (mWaitingForResponse)
+   {
+      mPendingPublish = true;
+   }
+   else
+   {
+      mDum.send(request);
+      mWaitingForResponse = true;
+      mPendingPublish = false;
+      mPublish.releaseContents();
+   }
+}
+
+std::ostream& 
+ClientPublication::dump(std::ostream& strm) const
+{
+   strm << "ClientPublication " << mId << " " << mPublish.header(h_From).uri();
+   return strm;
 }
 
 /* ====================================================================

@@ -1,8 +1,11 @@
-#include "resiprocate/Helper.hxx"
+#include "resiprocate/Security.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
@@ -15,113 +18,139 @@
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/DefaultServerReferHandler.hxx"
+#include "resiprocate/dum/DestroyUsage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/dum/KeepAliveManager.hxx"
+#include "resiprocate/dum/KeepAliveTimeout.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/OutOfDialogReqCreator.hxx"
 #include "resiprocate/dum/PagerMessageCreator.hxx"
-#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Security.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
-
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif // defined(WIN32) && defined(_DEBUG)
+#include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/external/HttpProvider.hxx"
+#include "resiprocate/external/HttpGetMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
-   mProfile(0),
+DialogUsageManager::DialogUsageManager(SipStack& stack) :
+   mMasterProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
    mDialogSetHandler(0),
+   mRegistrationPersistenceManager(0),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
-   mStackThread(*mStack),
    mDumShutdownHandler(0),
    mShutdownState(Running)
 {
-   addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());   
+   mStack.registerTransactionUser(*this);
+   addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());
 }
 
 DialogUsageManager::~DialogUsageManager()
-{  
+{
    mShutdownState = Destroying;
-   InfoLog ( << "~DialogUsageManager" );
+   //InfoLog ( << "~DialogUsageManager" );
+
+   if(!mDialogSetMap.empty())
+   {
+      InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
+      DialogSetMap::const_iterator ds = mDialogSetMap.begin();
+      for(; ds != mDialogSetMap.end(); ++ds)
+      {
+         InfoLog(<< "DialgSetId:" << ds->first);
+         DialogSet::DialogMap::const_iterator   d = ds->second->mDialogs.begin();
+         for(; d != ds->second->mDialogs.end(); ++d)
+         {
+            //const Dialog* p = &(d->second);
+            InfoLog(<<"DialogId:" << d->first << ", " << *d->second);
+         }
+      }
+   }
+
    while(!mDialogSetMap.empty())
    {
-      delete mDialogSetMap.begin()->second;
+      DialogSet*  ds = mDialogSetMap.begin()->second;
+      delete ds;
    }
-   InfoLog ( << "~DialogUsageManager done" );
+   //InfoLog ( << "~DialogUsageManager done" );
 }
 
-bool 
+const Data& 
+DialogUsageManager::name() const
+{
+   static Data n("DialogUsageManager");
+   return n;
+}
+
+void
 DialogUsageManager::addTransport( TransportType protocol,
-                                  int port, 
+                                  int port,
                                   IpVersion version,
-                                  const Data& ipInterface, 
+                                  const Data& ipInterface,
                                   const Data& sipDomainname, // only used
                                   const Data& privateKeyPassPhrase,
                                   SecurityTypes::SSLType sslType)
 {
-   return mStack->addTransport(protocol, port, version, ipInterface, 
-                               sipDomainname, privateKeyPassPhrase, sslType);
+   mStack.addTransport(protocol, port, version, ipInterface,
+                       sipDomainname, privateKeyPassPhrase, sslType);
 }
 
-Security&
+SipStack& 
+DialogUsageManager::getSipStack()
+{
+   return mStack;
+}
+
+Security*
 DialogUsageManager::getSecurity()
 {
-   return *mStack->getSecurity();
-}
-   
-Data 
-DialogUsageManager::getHostAddress()
-{
-    return mStack->getHostAddress();
+   return mStack.getSecurity();
 }
 
-void 
-DialogUsageManager::shutdown()
+Data
+DialogUsageManager::getHostAddress()
+{
+   return mStack.getHostAddress();
+}
+
+void
+DialogUsageManager::onAllHandlesDestroyed()
 {
    if (mDumShutdownHandler)
    {
       switch (mShutdownState)
       {
          case ShutdownRequested:
-            mShutdownState = ShuttingDownStack;
-            InfoLog (<< "shutdown SipStack");
-            mStack->shutdown();
-            break;
-         case ShuttingDownStack:
-            InfoLog (<< "Finished dum shutdown");
-            mShutdownState = Shutdown;
-            mDumShutdownHandler->onDumCanBeDeleted();      
+            InfoLog (<< "DialogUsageManager::onAllHandlesDestroyed: removing TU");
+            //assert(mHandleMap.empty());
+            mShutdownState = RemovingTransactionUser;
+            mStack.unregisterTransactionUser(*this);
             break;
          default:
             break;
@@ -130,29 +159,40 @@ DialogUsageManager::shutdown()
 }
 
 
-void 
+void
 DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
+   InfoLog (<< "shutdown giveup=" << giveUpSeconds << " dialogSets=" << mDialogSetMap.size());
+   
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
+   mStack.requestTransactionUserShutdown(*this);
    shutdownWhenEmpty();
 }
 
-void 
+void
 DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
+   InfoLog (<< "shutdown when no usages giveup=" << giveUpSeconds);
+
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
    assert(0);
 }
 
-void 
+void
 DialogUsageManager::forceShutdown(DumShutdownHandler* h)
 {
-   mDumShutdownHandler = h;
-   //HandleManager::shutdown();  // clear out usages
-   mShutdownState = ShutdownRequested;
-   DialogUsageManager::shutdown();
+   if (mHandleMap.size() > 0)
+   {
+      WarningLog (<< "force shutdown ");
+      dumpHandles();
+      
+      mDumShutdownHandler = h;
+      //HandleManager::shutdown();  // clear out usages
+      mShutdownState = ShutdownRequested;
+      DialogUsageManager::onAllHandlesDestroyed();
+   }
 }
 
 void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
@@ -160,15 +200,23 @@ void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactor
    mAppDialogSetFactory = factory;
 }
 
-Profile* 
-DialogUsageManager::getProfile()
+MasterProfile*
+DialogUsageManager::getMasterProfile()
 {
-   return mProfile;
+   assert(mMasterProfile);
+   return mMasterProfile;
 }
 
-void DialogUsageManager::setProfile(Profile* profile)
+void DialogUsageManager::setMasterProfile(MasterProfile* masterProfile)
 {
-   mProfile = profile;
+   assert(!mMasterProfile);
+   mMasterProfile = masterProfile;
+}
+
+void DialogUsageManager::setKeepAliveManager(std::auto_ptr<KeepAliveManager> manager)
+{
+   mKeepAliveManager = manager;
+   mKeepAliveManager->setDialogUsageManager(this);
 }
 
 void DialogUsageManager::setRedirectManager(std::auto_ptr<RedirectManager> manager)
@@ -180,68 +228,76 @@ void DialogUsageManager::setRedirectHandler(RedirectHandler* handler)
 {
    mRedirectHandler = handler;
 }
-   
+
 RedirectHandler* DialogUsageManager::getRedirectHandler()
 {
    return mRedirectHandler;
 }
 
-void 
+void
 DialogUsageManager::setClientAuthManager(std::auto_ptr<ClientAuthManager> manager)
 {
    mClientAuthManager = manager;
 }
 
-void 
+void
 DialogUsageManager::setServerAuthManager(std::auto_ptr<ServerAuthManager> manager)
 {
    mServerAuthManager = manager;
 }
 
-void 
+void
 DialogUsageManager::setClientRegistrationHandler(ClientRegistrationHandler* handler)
 {
    assert(!mClientRegistrationHandler);
    mClientRegistrationHandler = handler;
 }
 
-void 
+void
 DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* handler)
 {
    assert(!mServerRegistrationHandler);
    mServerRegistrationHandler = handler;
 }
 
-void 
+void
 DialogUsageManager::setDialogSetHandler(DialogSetHandler* handler)
 {
-   mDialogSetHandler = handler;   
+   mDialogSetHandler = handler;
 }
 
-void 
+void
 DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 {
    assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
 }
 
-void 
-DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 
+void
+DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceManager* manager)
+{
+   assert(!mRegistrationPersistenceManager);
+   mRegistrationPersistenceManager = manager;
+}
+
+
+void
+DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
                              BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack->post(t, duration);
+   mStack.post(t, duration, this);
 }
 
-void 
-DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration, 
+void
+DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
                                BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack->postMS(t, duration);
+   mStack.postMS(t, duration, this);
 }
 
-void 
+void
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
    assert(handler);
@@ -249,14 +305,15 @@ DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSu
    mClientSubscriptionHandlers[eventType] = handler;
 }
 
-void 
+void
 DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler* handler)
 {
    assert(handler);
    //default do-nothing server side refer handler can be replaced
    if (eventType == "refer")
    {
-      delete mServerSubscriptionHandlers[eventType];      
+      delete mServerSubscriptionHandlers[eventType];
+      mServerSubscriptionHandlers[eventType] = NULL;
    }
    else
    {
@@ -265,7 +322,7 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
    mServerSubscriptionHandlers[eventType] = handler;
 }
 
-void 
+void
 DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler* handler)
 {
    assert(handler);
@@ -273,7 +330,7 @@ DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPub
    mClientPublicationHandlers[eventType] = handler;
 }
 
-void 
+void
 DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler* handler)
 {
    assert(handler);
@@ -281,7 +338,7 @@ DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPub
    mServerPublicationHandlers[eventType] = handler;
 }
 
-void 
+void
 DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* handler)
 {
    assert(handler);
@@ -289,54 +346,53 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* 
    mOutOfDialogHandlers[type] = handler;
 }
 
-void 
+void
 DialogUsageManager::setClientPagerMessageHandler(ClientPagerMessageHandler* handler)
 {
    mClientPagerMessageHandler = handler;
 }
-    
-void 
+
+void
 DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* handler)
 {
    mServerPagerMessageHandler = handler;
 }
 
-DialogSet* 
+DialogSet*
 DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
 {
    if (mDumShutdownHandler)
    {
       throw DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
    }
-      
+
    if (appDs == 0)
    {
       appDs = new AppDialogSet(*this);
    }
-   prepareInitialRequest(creator->getLastRequest());
    DialogSet* ds = new DialogSet(creator, *this);
-   
-   appDs->mDialogSetId = ds->getId();
+
+   appDs->mDialogSet = ds;
    ds->mAppDialogSet = appDs;
-   
-   DebugLog ( << "************* Adding DialogSet ***************" ); 
+
+   DebugLog ( << "************* Adding DialogSet ***************" );
    DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
    DebugLog ( << "After: " << Inserter(mDialogSetMap) );
-   return ds;   
+   return ds;
 }
 
-SipMessage& 
+SipMessage&
 DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
 {
-   makeUacDialogSet(creator, appDs);   
+   makeUacDialogSet(creator, appDs);
    return creator->getLastRequest();
 }
 
-void 
-DialogUsageManager::makeResponse(SipMessage& response, 
-                                 const SipMessage& request, 
-                                 int responseCode, 
+void
+DialogUsageManager::makeResponse(SipMessage& response,
+                                 const SipMessage& request,
+                                 int responseCode,
                                  const Data& reason) const
 {
    assert(request.isRequest());
@@ -347,55 +403,60 @@ void
 DialogUsageManager::sendResponse(SipMessage& response)
 {
    assert(response.isResponse());
-   mStack->send(response);
+   mStack.send(response, this);
 }
-   
 
 SipMessage&
-DialogUsageManager::makeInviteSession(const NameAddr& target, const NameAddr& from, const SdpContents* initialOffer, AppDialogSet* appDs)
+DialogUsageManager::makeInviteSession(const NameAddr& target, UserProfile& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, from, initialOffer), appDs);
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer), appDs);
+   return inv;
+}
+
+SipMessage&
+DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
+{
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, *getMasterProfile(), initialOffer), appDs);
    return inv;
 }
 
 SipMessage&
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
-                                               ServerSubscriptionHandle serverSub, 
-                                               const SdpContents* initialOffer, 
+                                               ServerSubscriptionHandle serverSub,
+                                               const SdpContents* initialOffer,
                                                AppDialogSet* appDs)
 {
    //generate and send 100
    SipFrag contents;
-   contents.message().header(h_StatusLine).statusCode() = 100;   
+   contents.message().header(h_StatusLine).statusCode() = 100;
    contents.message().header(h_StatusLine).reason() = "Trying";
    //will be cloned...ServerSub may not have the most efficient API possible
-   serverSub->setSubscriptionState(Active);   
+   serverSub->setSubscriptionState(Active);
    SipMessage& notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
    serverSub->send(notify);
 
    //19.1.5
    NameAddr target = refer.header(h_ReferTo);
-   target.uri().embedded() = SipMessage();   
+   target.uri().removeEmbedded();
    target.uri().remove(p_method);
-   
-   //could pass dummy target, then apply merge rules from 19.1.5...or
-   //makeNewSession would use rules from 19.1.5
-   NameAddr from  = serverSub->mDialog.mLocalNameAddr;
-   from.remove(p_tag);   
-   
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, 
-                                                             target,                                                                                                                  from,
+
+   // !jf! this code assumes you have a UserProfile
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this,
+                                                             target,
+                                                             *serverSub->mDialog.mDialogSet.getUserProfile(),
                                                              initialOffer, serverSub), appDs);
 
+   //could pass dummy target, then apply merge rules from 19.1.5...or
+   //makeNewSession would use rules from 19.1.5
    if (refer.exists(h_ReferredBy))
    {
-      inv.header(h_ReferredBy) =  refer.header(h_ReferredBy);
+      inv.header(h_ReferredBy) = refer.header(h_ReferredBy);
    }
 
    const Uri& referTo = refer.header(h_ReferTo).uri();
    //19.1.5
-   if (referTo.hasEmbedded() && referTo.embedded().exists(h_Replaces))      
+   if (referTo.hasEmbedded() && referTo.embedded().exists(h_Replaces))
    {
       inv.header(h_Replaces) = referTo.embedded().header(h_Replaces);
    }
@@ -403,137 +464,210 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 }
 
 
-
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* appDs)
+DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, getProfile()->getDefaultSubscriptionTime()), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, userProfile.getDefaultSubscriptionTime()), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
+DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType,
                                      int subscriptionTime, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, subscriptionTime), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
+DialogUsageManager::makeSubscription(const NameAddr& target, UserProfile& userProfile, const Data& eventType,
                                      int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, subscriptionTime, refreshInterval), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
 }
 
-SipMessage& 
+SipMessage&
+DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, getMasterProfile()->getDefaultSubscriptionTime()), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
+                                     int subscriptionTime, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, subscriptionTime), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
+                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, *getMasterProfile(), eventType, subscriptionTime, refreshInterval), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeRegistration(const NameAddr& target, UserProfile& userProfile, AppDialogSet* appDs)
+{
+   return makeNewSession(new RegistrationCreator(*this, target, userProfile, userProfile.getDefaultRegistrationTime()), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeRegistration(const NameAddr& target, UserProfile& userProfile, int registrationTime, AppDialogSet* appDs)
+{
+   return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
+}
+
+SipMessage&
 DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target, getProfile()->getDefaultRegistrationTime()), appDs); 
+   return makeNewSession(new RegistrationCreator(*this, target, *getMasterProfile(), getMasterProfile()->getDefaultRegistrationTime()), appDs);
 }
 
-SipMessage& 
+SipMessage&
 DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target, registrationTime), appDs); 
+   return makeNewSession(new RegistrationCreator(*this, target, *getMasterProfile(), registrationTime), appDs);
 }
 
-SipMessage& 
-DialogUsageManager::makePublication(const NameAddr& targetDocument,  
-                                    const NameAddr& from, 
-                                    const Contents& body, 
-                                    const Data& eventType, 
-                                    unsigned expiresSeconds, 
+SipMessage&
+DialogUsageManager::makePublication(const NameAddr& targetDocument,
+                                    UserProfile& userProfile,
+                                    const Contents& body,
+                                    const Data& eventType,
+                                    unsigned expiresSeconds,
                                     AppDialogSet* appDs)
-{ 
-   return makeNewSession(new PublicationCreator(*this, targetDocument, from, body, eventType, expiresSeconds), appDs); 
-}
-
-SipMessage& 
-DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* appDs)
 {
-	return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, from), appDs);
+   return makeNewSession(new PublicationCreator(*this, targetDocument, userProfile, body, eventType, expiresSeconds), appDs);
 }
 
-ClientPagerMessageHandle 
-DialogUsageManager::makePagerMessage(const NameAddr& target, const NameAddr& from, AppDialogSet* appDs)
+SipMessage&
+DialogUsageManager::makePublication(const NameAddr& targetDocument,
+                                    const Contents& body,
+                                    const Data& eventType,
+                                    unsigned expiresSeconds,
+                                    AppDialogSet* appDs)
+{
+   return makeNewSession(new PublicationCreator(*this, targetDocument, *getMasterProfile(), body, eventType, expiresSeconds), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, UserProfile& userProfile, const MethodTypes meth, AppDialogSet* appDs)
+{
+   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, userProfile), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* appDs)
+{
+   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, *getMasterProfile()), appDs);
+}
+
+ClientPagerMessageHandle
+DialogUsageManager::makePagerMessage(const NameAddr& target, UserProfile& userProfile, AppDialogSet* appDs)
 {
    if (!mClientPagerMessageHandler)
    {
       throw DumException("Cannot send MESSAGE messages without a ClientPagerMessageHandler", __FILE__, __LINE__);
    }
-   DialogSet* ds = makeUacDialogSet(new PagerMessageCreator(*this, target, from), appDs);
+   DialogSet* ds = makeUacDialogSet(new PagerMessageCreator(*this, target, userProfile), appDs);
    ClientPagerMessage* cpm = new ClientPagerMessage(*this, *ds);
    ds->mClientPagerMessage = cpm;
    return cpm->getHandle();
 }
 
+ClientPagerMessageHandle
+DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs)
+{
+   return makePagerMessage(target, *getMasterProfile(), appDs);
+}
+
 void
 DialogUsageManager::send(SipMessage& msg)
 {
+   // !slg! There is probably a more efficient way to get the userProfile here (pass it in?)
+   DialogSet* ds = findDialogSet(DialogSetId(msg));
+   UserProfile* userProfile;
+   if (ds == 0)
+   {
+      userProfile = getMasterProfile();
+   }
+   else
+   {
+      userProfile = ds->getUserProfile();
+   }
+
+   if (userProfile->hasUserAgent())
+   {
+      msg.header(h_UserAgent).value() = userProfile->getUserAgent();
+   }
+
    DebugLog (<< "SEND: " << msg);
    if (msg.isRequest())
    {
-      if (getProfile()->hasUserAgent())
-      {
-         msg.header(h_UserAgent).value() = getProfile()->getUserAgent();
-      }      
-         
-      //this is all very scary and error-prone, as the TU has some retramissions
+      // We may not need to call reset() if makeRequest is always used.
       if (msg.header(h_RequestLine).method() != CANCEL &&
-          msg.header(h_RequestLine).method() != ACK && 
+          msg.header(h_RequestLine).method() != ACK &&
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
       }
 
-      if (msg.exists(h_Vias) && !mProfile->rportEnabled())
+      if (msg.exists(h_Vias))
       {
-         msg.header(h_Vias).front().remove(p_rport);
+         if(!userProfile->getRportEnabled())
+         {
+            msg.header(h_Vias).front().remove(p_rport);
+         }
+         int fixedTransportPort = userProfile->getFixedTransportPort();
+         if(fixedTransportPort != 0)
+         {
+            msg.header(h_Vias).front().sentPort() = fixedTransportPort;
+         }
       }
-      
+
       if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
       {
          mClientAuthManager->addAuthentication(msg);
       }
-      
+
       //copy message if processStrictRoute will modify it
-      if (msg.exists(h_Routes) && 
+      if (msg.exists(h_Routes) &&
           !msg.header(h_Routes).empty() &&
           !msg.header(h_Routes).front().uri().exists(p_lr))
       {
          SipMessage copyOfMessage(msg);
          Helper::processStrictRoute(copyOfMessage);
-         sendUsingOutboundIfAppropriate(copyOfMessage);          
+         sendUsingOutboundIfAppropriate(*userProfile, copyOfMessage);
       }
       else
       {
-         sendUsingOutboundIfAppropriate(msg);          
+         sendUsingOutboundIfAppropriate(*userProfile, msg);
       }
-   }   
-   else
-   {
-      sendResponse(msg);
-   }   
-}
-
-void 
-DialogUsageManager::sendUsingOutboundIfAppropriate(SipMessage& msg)
-{
-   //a little inefficient, branch parameter might be better
-   DialogId id(msg);
-   if (getProfile()->hasOutboundProxy() && !findDialog(id))
-   {
-      DebugLog ( << "Using outbound proxy");
-      mStack->sendTo(msg, getProfile()->getOutboundProxy().uri());         
    }
    else
    {
-      mStack->send(msg);
+      sendResponse(msg);
+   }
+}
+
+void
+DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, SipMessage& msg)
+{
+   //a little inefficient, branch parameter might be better
+   DialogId id(msg);
+   if (userProfile.hasOutboundProxy() && !findDialog(id))
+   {
+      DebugLog ( << "Using outbound proxy");
+      mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+   }
+   else
+   {
+      mStack.send(msg, this);
    }
 }
 
 
 void
-DialogUsageManager::cancel(DialogSetId setid)
+DialogUsageManager::end(DialogSetId setid)
 {
    DialogSet* ds = findDialogSet(setid);
    if (ds == 0)
@@ -546,30 +680,47 @@ DialogUsageManager::cancel(DialogSetId setid)
    }
 }
 
-
-// !jf! maybe this should just be a handler that the application can provide
-// (one or more of) to futz with the request before it goes out
 void
-DialogUsageManager::prepareInitialRequest(SipMessage& request)
+DialogUsageManager::destroy(const BaseUsage* usage)
 {
-   // !jf! 
-   //request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
-   //request.header(h_Allows) = mProfile->getAllowedMethods();
+   if (mShutdownState != Destroying)
+   {
+      post(new DestroyUsage(usage->mHandle));
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
-void 
-DialogUsageManager::buildFdSet(FdSet& fdset)
+void
+DialogUsageManager::destroy(DialogSet* dset)
 {
-   mStack->buildFdSet(fdset);   
+   if (mShutdownState != Destroying)
+   {
+      post(new DestroyUsage(dset));
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
-int 
-DialogUsageManager::getTimeTillNextProcessMS()
+void
+DialogUsageManager::destroy(Dialog* d)
 {
-   return mStack->getTimeTillNextProcessMS();   
+   if (mShutdownState != Destroying)
+   {
+      post(new DestroyUsage(d));
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
-Dialog* 
+
+Dialog*
 DialogUsageManager::findDialog(const DialogId& id)
 {
    DialogSet* ds = findDialogSet(id.getDialogSetId());
@@ -584,7 +735,7 @@ DialogUsageManager::findDialog(const DialogId& id)
 }
 
 
-InviteSessionHandle 
+InviteSessionHandle
 DialogUsageManager::findInviteSession(DialogId id)
 {
    Dialog* dialog = findDialog(id);
@@ -598,30 +749,30 @@ DialogUsageManager::findInviteSession(DialogId id)
    }
 }
 
-pair<InviteSessionHandle, int> 
+pair<InviteSessionHandle, int>
 DialogUsageManager::findInviteSession(CallId replaces)
 {
    //486/481/603 decision making logic where?  App may not wish to keep track of
    //invitesession state
    // !slg! Logic is here for now.
-   InviteSessionHandle is = findInviteSession(DialogId(replaces.value(), 
-                                               replaces.param(p_toTag), 
-                                               replaces.param(p_fromTag)));
+   InviteSessionHandle is = findInviteSession(DialogId(replaces.value(),
+                                                       replaces.param(p_toTag),
+                                                       replaces.param(p_fromTag)));
    int ErrorStatusCode = 481; // Call/Transaction Does Not Exist
 
    // If we matched a session - Do RFC3891 Section 3 Processing
    if(!(is == InviteSessionHandle::NotValid()))
    {
       // Note some missing checks are:
-      // 1.  If the Replaces header field matches more than one dialog, the UA must act as 
+      // 1.  If the Replaces header field matches more than one dialog, the UA must act as
       //     if no match was found
       // 2.  Verify that the initiator of the new Invite is authorized
-      if(is->mState == InviteSession::Terminated || is->mState == InviteSession::Cancelled)
+      if(is->isTerminated())
       {
          ErrorStatusCode = 603; // Declined
          is = InviteSessionHandle::NotValid();
       }
-      else if(is->mState == InviteSession::Connected || is->mState == InviteSession::ReInviting) // Confirmed dialog
+      else if(is->isConnected())
       {
          // Check if early-only flag is present in replaces header
          if(replaces.exists(p_earlyOnly))
@@ -629,8 +780,8 @@ DialogUsageManager::findInviteSession(CallId replaces)
             ErrorStatusCode = 486; // Busy Here
             is = InviteSessionHandle::NotValid();
          }
-      } 
-      else if(is->mState != InviteSession::Early)  
+      }
+      else if(!is->isEarly())
       {
          // replaces can't be used on early dialogs that were not initiated by this UA - ie. InviteSession::Proceeding state
          ErrorStatusCode = 481; // Call/Transaction Does Not Exist
@@ -640,126 +791,168 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
+// !jf! When should this function return false?
 void
-DialogUsageManager::run()
-{
-   mStackThread.run();
-}
-
-bool
-DialogUsageManager::process()
+DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
-   if (mShutdownState == Shutdown) 
+   if (mShutdownState == Shutdown)
    {
-      return false;
+      return;
    }
-   
-   try 
+
+   bool authorized = false;
+   if (mServerAuthManager.get())
    {
-      std::auto_ptr<Message> msg( mStack->receiveAny() );
-      if (msg.get()) 
+      UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg.get());
+      if (userAuth)
       {
-         InfoLog (<< "Got: " << msg->brief());
-         
-         SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-         if (sipMsg)
+         Message* result = mServerAuthManager->handleUserAuthInfo(userAuth);
+         if (result)
          {
-            DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
-            if (sipMsg->isRequest())
+            authorized = true;
+            msg = std::auto_ptr<Message>(result);
+         }
+         else
+         {
+            InfoLog(<< "ServerAuth rejected request " << *userAuth);
+            return;
+         }
+      }
+   }
+
+   try
+   {
+      InfoLog (<< "Got: " << msg->brief());
+
+      //InfoLog(<< "Test if sip message" );
+      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+      if (sipMsg)
+      {
+         //DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
+         if (sipMsg->isRequest())
+         {
+            // Validate Request URI
+            if( !validateRequestURI(*sipMsg) )
             {
-               if( !validateRequestURI(*sipMsg) )
-               {
-                  DebugLog (<< "Failed RequestURI validation " << *sipMsg);
-                  return true;
-               }
+               DebugLog (<< "Failed RequestURI validation " << *sipMsg);
+               return;
+            }
+
+            // Continue validation on all requests, except ACK and CANCEL
+            if(sipMsg->header(h_RequestLine).method() != ACK &&
+               sipMsg->header(h_RequestLine).method() != CANCEL)
+            {
                if( !validateRequiredOptions(*sipMsg) )
                {
                   DebugLog (<< "Failed required options validation " << *sipMsg);
-                  return true;
+                  return;
                }
-               if( mProfile->validateContentEnabled() && !validateContent(*sipMsg) )
+               if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
                {
                   DebugLog (<< "Failed content validation " << *sipMsg);
-                  return true;
+                  return;
                }
-               if( mProfile->validateAcceptEnabled() && !validateAccept(*sipMsg) )
+               if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
                {
                   DebugLog (<< "Failed accept validation " << *sipMsg);
-                  return true;
-               }
-//             if ( !validateTo(*sipMsg) )
-//             {
-//                DebugLog (<< "Failed to validation " << *sipMsg);
-//                return true;
-//             }
-               if (sipMsg->header(h_From).exists(p_tag))
-               {
-                  if (mergeRequest(*sipMsg) )
-                  {
-                     InfoLog (<< "Merged request: " << *sipMsg);
-                     return true;
-                  }
-               }
-         
-               if ( mServerAuthManager.get() )
-               { 
-                  if ( mServerAuthManager->handle(*sipMsg) )
-                  {
-                     return true;
-                  }
-               }
-               if (queueForIdentityCheck(sipMsg))
-               {
-                  msg.release();                  
-               }
-               else
-               {
-                  processRequest(*sipMsg);
+                  return;
                }
             }
-            else if (sipMsg->isResponse())
+            if (sipMsg->header(h_From).exists(p_tag))
             {
-               if (!processIdentityCheckResponse(*sipMsg))
+               if (mergeRequest(*sipMsg) )
                {
-                  processResponse(*sipMsg);
+                  InfoLog (<< "Merged request: " << *sipMsg);
+                  return;
                }
             }
-            return true;
-         }
 
-         DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-         if (dumMsg )
-         {
-            if ( !dumMsg->getBaseUsage().isValid())
+            if (mServerAuthManager.get() && !authorized)
             {
-               return true;
+               switch ( mServerAuthManager->handle(*sipMsg) )
+               {
+                  case ServerAuthManager::Challenged:
+                     InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
+                     return;
+                  case ServerAuthManager::RequestedCredentials:
+                     InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
+                     return;
+                  case ServerAuthManager::Rejected:
+                     InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
+                     return;
+                  default:
+                     break;
+               }
             }
       
-            dumMsg->getBaseUsage()->dispatch(*dumMsg);
-            return true;
+            if (queueForIdentityCheck(sipMsg))
+            {
+               msg.release();
+            }
+            else
+            {
+               processRequest(*sipMsg);
+            }
          }
-
-         StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
-         if (stats)
+         else
          {
-            stats->loadOut(mStatsPayload);
-            stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
+            processResponse(*sipMsg);
          }
+         return;
+      }
 
-         ShutdownMessage* end = dynamic_cast<ShutdownMessage*>(msg.get());
-         if (end)
+      HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg.get());
+      if (httpMsg)
+      {
+         processIdentityCheckResponse(*httpMsg);         
+         return;         
+      }
+
+      TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
+      if (tuMsg)
+      {
+         InfoLog (<< "TU unregistered ");
+         assert(mShutdownState == RemovingTransactionUser);
+         assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
+         mShutdownState = Shutdown;
+         if (mDumShutdownHandler)
          {
-            InfoLog (<< "Shutting down stack thread");
-            mStackThread.shutdown();
-            mStackThread.join();
-            DialogUsageManager::shutdown();
+            mDumShutdownHandler->onDumCanBeDeleted();
+            mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
+         }
+         return;
+      }
+
+      DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
+      if (destroyUsage)
+      {
+         DebugLog(<< "Destroying usage" << *destroyUsage);
+         destroyUsage->destroy();
+         return;
+      }
+
+      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+      if (dumMsg)
+      {
+         InfoLog(<< "Timeout Message" );
+         if (!dumMsg->getBaseUsage().isValid())
+         {
+            return;
          }
 
-         // !jf! might want to do something with StatisticsMessage
-         //ErrLog(<<"Unknown message received." << msg->brief());
-         //assert(0);
-         return true;
+         dumMsg->getBaseUsage()->dispatch(*dumMsg);
+         return;
+      }
+
+      KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
+      if (keepAliveMsg)
+      {
+          InfoLog(<< "Keep Alive Message" );
+        if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAliveMsg);
+         }
       }
    }
    catch(BaseException& e)
@@ -767,35 +960,22 @@ DialogUsageManager::process()
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
-   return false;
 }
 
-bool 
-DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
+void
+DialogUsageManager::processIdentityCheckResponse(const HttpGetMessage& msg)
 {
 #if defined(USE_SSL)
-   if (msg.header(h_CSeq).method() == OPTIONS)
+   InfoLog(<< "DialogUsageManager::processIdentityCheckResponse: " << msg.brief());   
+   RequiresCerts::iterator it = mRequiresCerts.find(msg.tid());
+   if (it != mRequiresCerts.end())
    {
-      RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
-      if (it == mRequiresCerts.end())
-      {
-         return false;
-      }
-      else
-      {
-         getSecurity().checkAndSetIdentity(msg);
-         processRequest(*it->second);
-         delete it->second;
-         mRequiresCerts.erase(it);
-         return true;
-      }
+      getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
+      InfoLog(<< "Passing msg onto processRequest: " << msg.brief());      
+      processRequest(*it->second);
+      delete it->second;
+      mRequiresCerts.erase(it);
    }
-   else
-   {
-      return false;
-   }
-#else
-   return false;
 #endif
 }
 
@@ -803,28 +983,32 @@ bool
 DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 {
 #if defined(USE_SSL)
-   if (sipMsg->exists(h_Identity) && 
-       sipMsg->exists(h_IdentityInfo) && 
+   if (sipMsg->exists(h_Identity) &&
+       sipMsg->exists(h_IdentityInfo) &&
        sipMsg->exists(h_Date))
    {
-      if (getSecurity().hasDomainCert(sipMsg->header(h_From).uri().host()))
+      if (getSecurity()->hasDomainCert(sipMsg->header(h_From).uri().host()))
       {
-         getSecurity().checkAndSetIdentity(*sipMsg);
-         return false;         
+         getSecurity()->checkAndSetIdentity(*sipMsg);
+         return false;
       }
       else
       {
-         try 
+         if (!HttpProvider::instance())
          {
-            Uri certTarget(sipMsg->header(h_IdentityInfo).uri());
-            //?dcm? -- IdentityInfo must use TLS
-            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg->header(h_From), OPTIONS);
-            mRequiresCerts[opt->getTransactionId()] = sipMsg;
-            //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
-            //are there issues with outbound proxies.
-            mStack->send(*opt);
+            return false;
+         }
+         
+         try
+         {
+            mRequiresCerts[sipMsg->getTransactionId()] = sipMsg;
+            InfoLog( << "Dum::queueForIdentityCheck, sending http request to: " 
+                     << sipMsg->header(h_IdentityInfo));
             
-            return true;            
+            HttpProvider::instance()->get(sipMsg->header(h_IdentityInfo), 
+                                          sipMsg->getTransactionId(),
+                                          *this);
+            return true;
          }
          catch (BaseException&)
          {
@@ -839,41 +1023,36 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
    sipMsg->setSecurityAttributes(sec);
    return false;
 }
-          
-void
-DialogUsageManager::process(FdSet& fdset)
-{
-   try 
-   {
-      mStack->process(fdset);
-      while(process());
-   }
-   catch(BaseException& e)
-   {
-      //unparseable, bad 403 w/ 2543 trans it from FWD, etc
-	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
-   }
-}
 
+// return false if there is more to do
+bool 
+DialogUsageManager::process()
+{
+   if (mFifo.messageAvailable())
+   {
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   return mFifo.messageAvailable();
+}
 
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
    // RFC3261 - 8.2.1
-   if (!mProfile->isMethodSupported(request.header(h_RequestLine).getMethod()))
+   if (!getMasterProfile()->isMethodSupported(request.header(h_RequestLine).getMethod()))
    {
       InfoLog (<< "Received an unsupported method: " << request.brief());
 
       SipMessage failure;
       makeResponse(failure, request, 405);
-      failure.header(h_Allows) = mProfile->getAllowedMethods();
+      failure.header(h_Allows) = getMasterProfile()->getAllowedMethods();
       sendResponse(failure);
 
       return false;
    }
 
    // RFC3261 - 8.2.2
-   if (!mProfile->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
+   if (!getMasterProfile()->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
    {
       InfoLog (<< "Received an unsupported scheme: " << request.brief());
       SipMessage failure;
@@ -882,20 +1061,20 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
 
 	  return false;
    }
-            
+
    return true;
 }
 
 
 bool
 DialogUsageManager::validateRequiredOptions(const SipMessage& request)
-{   
+{
    // RFC 2162 - 8.2.2
    if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
       (request.header(h_RequestLine).getMethod() != ACK ||
-       request.header(h_RequestLine).getMethod() != CANCEL)) 
+       request.header(h_RequestLine).getMethod() != CANCEL))
    {
-      Tokens unsupported = mProfile->getUnsupportedOptionsTags(request.header(h_Requires));
+      Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
 	  if (!unsupported.empty())
 	  {
 	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
@@ -914,44 +1093,44 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 
 bool
 DialogUsageManager::validateContent(const SipMessage& request)
-{   
+{
    // RFC3261 - 8.2.3
    // Don't need to validate content headers if they are specified as optional in the content-disposition
-   if (!(request.exists(h_ContentDisposition) && 
-	     request.header(h_ContentDisposition).exists(p_handling) && 
+   if (!(request.exists(h_ContentDisposition) &&
+	     request.header(h_ContentDisposition).exists(p_handling) &&
 	     isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
    {
-	  if (request.exists(h_ContentType) && !mProfile->isMimeTypeSupported(request.header(h_ContentType)))
+	  if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), request.header(h_ContentType)))
       {
          InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentType) << " for " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 415);
-         failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
+         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
          sendResponse(failure);
 
          return false;
       }
-      
-	  if (request.exists(h_ContentEncoding) && !mProfile->isContentEncodingSupported(request.header(h_ContentEncoding)))
+
+	  if (request.exists(h_ContentEncoding) && !getMasterProfile()->isContentEncodingSupported(request.header(h_ContentEncoding)))
       {
          InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentEncoding) << " for " << request.brief());
          SipMessage failure;
          makeResponse(failure, request, 415);
-         failure.header(h_AcceptEncodings) = mProfile->getSupportedEncodings();
+         failure.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
          sendResponse(failure);
 
          return false;
       }
-      
-      if (mProfile->validateContentLanguageEnabled() &&
-          request.exists(h_ContentLanguages) && !mProfile->isLanguageSupported(request.header(h_ContentLanguages)))
+
+      if (getMasterProfile()->validateContentLanguageEnabled() &&
+          request.exists(h_ContentLanguages) && !getMasterProfile()->isLanguageSupported(request.header(h_ContentLanguages)))
       {
          InfoLog (<< "Received an unsupported language: " << request.header(h_ContentLanguages).front() << " for " << request.brief());
-         
+
          SipMessage failure;
          makeResponse(failure, request, 415);
-         failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+         failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
          sendResponse(failure);
 
          return false;
@@ -963,51 +1142,43 @@ DialogUsageManager::validateContent(const SipMessage& request)
 
 bool
 DialogUsageManager::validateAccept(const SipMessage& request)
-{   
+{
+   MethodTypes method = request.header(h_RequestLine).method();
    // checks for Accept to comply with SFTF test case 216
    if(request.exists(h_Accepts))
    {
       for (Mimes::const_iterator i = request.header(h_Accepts).begin();
            i != request.header(h_Accepts).end(); i++)
       {
-	     if (!mProfile->isMimeTypeSupported(*i))
+	     if (getMasterProfile()->isMimeTypeSupported(method, *i))
          {
-            InfoLog (<< "Received an unsupported mime type in accept header: " << request.brief());
-
-            SipMessage failure;
-            makeResponse(failure, request, 406);
-            failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
-            sendResponse(failure);
-
-            return false;
+            return true;  // Accept header passes validation if we support as least one of the mime types
          }
       }
    }
-   else // If no Accept header then application/sdp should be assumed
+   // If no Accept header then application/sdp should be assumed for certain methods
+   else if(method == INVITE ||
+           method == OPTIONS ||
+           method == PRACK ||
+           method == UPDATE)
    {
-	  if (!mProfile->isMimeTypeSupported(Mime("application", "sdp")))
+	  if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
       {
-         InfoLog (<< "Received an unsupported default mime type application/sdp for accept header: " << request.brief());
-
-         SipMessage failure;
-         makeResponse(failure, request, 406);
-         failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
-         sendResponse(failure);
-
-         return false;
+         return true;
       }
    }
-         
-   return true;
-}
+   else
+   {
+      // Other method without an Accept Header
+      return true;
+   }
 
-bool
-DialogUsageManager::validateTo(const SipMessage& request)
-{
-   // !jf! check that the request is targeted at me!
-   // will require support in profile
-   // This should check the Request-Uri (not the To)
-   return true;
+   InfoLog (<< "Received unsupported mime types in accept header: " << request.brief());
+   SipMessage failure;
+   makeResponse(failure, request, 406);
+   failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
+   sendResponse(failure);
+   return false;
 }
 
 bool
@@ -1015,19 +1186,19 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 {
    assert(request.isRequest());
    assert(request.isExternal());
-   
+
    if (!request.header(h_To).exists(p_tag))
    {
       if (mMergedRequests.count(MergedRequestKey(request)))
       {
          SipMessage failure;
          makeResponse(failure, request, 482, "Merged Request");
-         failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+         failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
          sendResponse(failure);
          return true;
       }
    }
-   
+
    return false;
 }
 
@@ -1036,57 +1207,97 @@ DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
 
+   if (mShutdownState != Running && mShutdownState != ShutdownRequested)
+   {
+      WarningLog (<< "Ignoring a request since we are shutting down " << request.brief());
+
+      SipMessage failure;
+      makeResponse(failure, request, 480, "UAS is shutting down");
+      sendResponse(failure);
+      return;
+   }
+
    if (request.header(h_RequestLine).method() == PUBLISH)
    {
       processPublish(request);
       return;
    }
-      
+
    assert(mAppDialogSetFactory.get());
-   //!dcm! -- fix to use findDialog
-   if (!request.header(h_To).exists(p_tag))
+   // !jf! note, the logic was reversed during ye great merge of March of Ought 5
+   if (request.header(h_To).exists(p_tag) ||
+       findDialogSet(DialogSetId(request)))
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         case REGISTER:
+         {
+            SipMessage failure;
+            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
+            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+            sendResponse(failure);
+            break;
+         }
+
+         default:
+         {
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
+            {
+               if (request.header(h_RequestLine).method() != ACK)
+               {
+                  SipMessage failure;
+                  makeResponse(failure, request, 481);
+                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
+                  sendResponse(failure);
+               }
+               else
+               {
+                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());
+               }
+            }
+            else
+            {
+               InfoLog (<< "Handling in-dialog request: " << request.brief());
+               ds->dispatch(request);
+            }
+         }
+      }
+   }
+   else
    {
       switch (request.header(h_RequestLine).getMethod())
       {
          case ACK:
             DebugLog (<< "Discarding request: " << request.brief());
             break;
-                        
+
          case PRACK:
          case BYE:
          case UPDATE:
-            //case INFO: // !rm! in an ideal world
-            //case NOTIFY: // !rm! in an ideal world
+         case INFO: // !rm! in an ideal world
          {
             SipMessage failure;
             makeResponse(failure, request, 481);
-            failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
             sendResponse(failure);
             break;
          }
          case CANCEL:
          {
             // find the appropropriate ServerInvSession
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
+            CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+            if (i != mCancelMap.end())
             {
-               //!dcm! -- temporary hack...do a map by TID?
-               for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
-               {
-                  if (it->second->getId().getCallId() == request.header(h_CallID).value())
-                  {
-                     it->second->dispatch(request);
-                     return;
-                  }
-               }
+               i->second->dispatch(request);
+            }
+            else
+            {
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
                SipMessage failure;
                makeResponse(failure, request, 481);
                sendResponse(failure);
-            }
-            else
-            {
-               ds->dispatch(request);
             }
             break;
          }
@@ -1094,64 +1305,64 @@ DialogUsageManager::processRequest(const SipMessage& request)
             assert(false);
          case SUBSCRIBE:
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
-            if (!checkEventPackage(request))
-            {
-               InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
-               return;
-            }
+            //.dcm. Illegal NOTIFY messages aren't handler through a
+            //ClientSubscriptionHandler so this check will always fail unless
+            //the corresponding event packacke is also installed
+            //in-dialog. Taking it out for now.
+//             if (!checkEventPackage(request))
+//             {
+//                InfoLog (<< "Rejecting request (unsupported package) " 
+//                         << request.brief());
+//                return;
+//             }
+            // no break
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
-         case INFO :    // handle non-dialog (illegal) INFOs
+            //case INFO :    // handle non-dialog (illegal) INFOs
          case OPTIONS : // handle non-dialog OPTIONS
          case MESSAGE :
+         case REGISTER:
          {
             {
                DialogSetId id(request);
                //cryptographically dangerous
-               assert(mDialogSetMap.find(id) == mDialogSetMap.end()); 
+               assert(mDialogSetMap.find(id) == mDialogSetMap.end());
             }
             if (mDumShutdownHandler)
             {
                SipMessage forbidden;
                makeResponse(forbidden, request, 480);
-               forbidden.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+               forbidden.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
                sendResponse(forbidden);
                return;
             }
             try
-            {               
+            {
                DialogSet* dset =  new DialogSet(request, *this);
 
                DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
-               appDs->mDialogSetId = dset->getId();
+               appDs->mDialogSet = dset;
+               dset->setUserProfile(appDs->selectUASUserProfile(request));
                dset->mAppDialogSet = appDs;
 
-               DebugLog ( << "************* Adding DialogSet ***************" ); 
+               DebugLog ( << "************* Adding DialogSet ***************" );
                DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
                mDialogSetMap[dset->getId()] = dset;
                DebugLog ( << "After: Req" << Inserter(mDialogSetMap) );
-               
+
                dset->dispatch(request);
             }
             catch (BaseException& e)
             {
                SipMessage failure;
                makeResponse(failure, request, 400, e.getMessage());
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+               failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
                sendResponse(failure);
             }
-            
+
             break;
          }
-         case REGISTER:
-         {
-               SipMessage failure;
-               makeResponse(failure, request, 405);
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               sendResponse(failure);
-         }
-         break;         
          case RESPONSE:
          case SERVICE:
             assert(false);
@@ -1162,49 +1373,24 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
       }
    }
-   else // in a specific dialog
-   {
-      switch (request.header(h_RequestLine).getMethod())
-      {
-         case REGISTER:
-         {
-            SipMessage failure;
-            makeResponse(failure, request, 400, "rjs says, Go to hell");
-            failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-            sendResponse(failure);
-            break;
-         }
-         
-         default:
-         {
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
-            {
-               SipMessage failure;
-               makeResponse(failure, request, 481);
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
-               sendResponse(failure);
-            }
-            else
-            {
-               InfoLog (<< "Handling in-dialog request: " << request.brief());
-               ds->dispatch(request);
-            }
-         }
-      }
-   }
 }
 
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
-   if (/*response.header(h_StatusLine).statusCode() > 100 && */
-      response.header(h_CSeq).method() != CANCEL)
+
+   // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
+   //if (mShutdownState != Running)
+   //{
+   //   InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
+   //   return;
+   //}
+
+   if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
-  
+
       if (ds)
       {
          DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
@@ -1214,7 +1400,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
       {
          InfoLog (<< "Throwing away stray response: " << response.brief());
       }
-   }   
+   }
 }
 
 void
@@ -1254,19 +1440,19 @@ DialogUsageManager::processPublish(const SipMessage& request)
    }
 }
 
-bool 
+bool
 DialogUsageManager::checkEventPackage(const SipMessage& request)
 {
-   int failureCode = 0;   
+   int failureCode = 0;
    MethodTypes method = request.header(h_RequestLine).method();
 
 //       || (method == NOTIFY && !request.exists(h_SubscriptionState)))
 
    if (!request.exists(h_Event))
-   {      
+   {
       failureCode = 400;
    }
-   else 
+   else
    {
       switch(method)
       {
@@ -1287,11 +1473,12 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             {
                failureCode = 489;
             }
+            break;
          default:
             assert(0);
       }
    }
-   
+
    if (failureCode > 0)
    {
       SipMessage response;
@@ -1299,24 +1486,24 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
       send(response);
       return false;
    }
-   return true;   
+   return true;
 }
- 
+
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
    DebugLog ( << "Looking for dialogSet: " << id << " in map:" );
-   DebugLog ( << Inserter(mDialogSetMap) );   
+   DebugLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
-   
-    if (it == mDialogSetMap.end())
-    {
-       return 0;
-    }
-    else
-    {
-       return it->second;
-    }
+
+   if (it == mDialogSetMap.end())
+   {
+      return 0;
+   }
+   else
+   {
+      return it->second;
+   }
 }
 
 BaseCreator*
@@ -1327,26 +1514,30 @@ DialogUsageManager::findCreator(const DialogId& id)
    {
       return ds->getCreator();
    }
-   else 
+   else
    {
       return 0;
    }
 }
 
-void 
+void
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
-   DebugLog ( << "************* Removing DialogSet ***************" ); 
-   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
-   mDialogSetMap.erase(dsId);
-   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   DebugLog ( << "************* Removing DialogSet ***************" );
+   DialogSetMap::iterator found = mDialogSetMap.find(dsId);
+   if (found != mDialogSetMap.end())
+   {
+      DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+      mDialogSetMap.erase(dsId);
+      DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   }
    if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);
-   }   
+   }
 }
 
-ClientSubscriptionHandler* 
+ClientSubscriptionHandler*
 DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
 {
    map<Data, ClientSubscriptionHandler*>::iterator res = mClientSubscriptionHandlers.find(eventType);
@@ -1360,7 +1551,7 @@ DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
    }
 }
 
-ServerSubscriptionHandler* 
+ServerSubscriptionHandler*
 DialogUsageManager::getServerSubscriptionHandler(const Data& eventType)
 {
    map<Data, ServerSubscriptionHandler*>::iterator res = mServerSubscriptionHandlers.find(eventType);
@@ -1374,7 +1565,7 @@ DialogUsageManager::getServerSubscriptionHandler(const Data& eventType)
    }
 }
 
-ClientPublicationHandler* 
+ClientPublicationHandler*
 DialogUsageManager::getClientPublicationHandler(const Data& eventType)
 {
    map<Data, ClientPublicationHandler*>::iterator res = mClientPublicationHandlers.find(eventType);
@@ -1388,7 +1579,7 @@ DialogUsageManager::getClientPublicationHandler(const Data& eventType)
    }
 }
 
-ServerPublicationHandler* 
+ServerPublicationHandler*
 DialogUsageManager::getServerPublicationHandler(const Data& eventType)
 {
    map<Data, ServerPublicationHandler*>::iterator res = mServerPublicationHandlers.find(eventType);
@@ -1402,7 +1593,7 @@ DialogUsageManager::getServerPublicationHandler(const Data& eventType)
    }
 }
 
-OutOfDialogHandler*   
+OutOfDialogHandler*
 DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
 {
    map<MethodTypes, OutOfDialogHandler*>::iterator res = mOutOfDialogHandlers.find(type);
@@ -1421,22 +1612,22 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -1446,7 +1637,7 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -1460,9 +1651,9 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
