@@ -1,6 +1,12 @@
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/RegistrationHandler.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -11,7 +17,8 @@ ServerRegistration::getHandle()
 }
 
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& request)
-   : NonDialogUsage(dum, dialogSet)
+   : NonDialogUsage(dum, dialogSet),
+     mRequest(request)
 {}
 
 ServerRegistration::~ServerRegistration()
@@ -24,9 +31,192 @@ ServerRegistration::end()
 {
 }
 
+void
+ServerRegistration::accept(SipMessage& ok)
+{
+  ok.remove(h_Contacts);
+
+  InfoLog( << "accepted a registration " << mAor );
+  
+  // Add all registered contacts to the message.
+  RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+  RegistrationPersistenceManager::ContactPairList contacts;
+  RegistrationPersistenceManager::ContactPairList::iterator i;
+  contacts = database->getContacts(mAor);
+  database->unlockRecord(mAor);
+
+  time_t now;
+  time(&now);
+
+  NameAddr contact;
+  for (i = contacts.begin(); i != contacts.end(); i++)
+  {
+    if (i->second - now <= 0)
+    {
+      continue;
+    }
+    contact.uri() = i->first;
+    contact.param(p_expires) = i->second - now;
+    ok.header(h_Contacts).push_back(contact);
+  }
+
+  mDum.send(ok);
+  delete(this);
+}
+
+void
+ServerRegistration::accept(int statusCode)
+{
+   SipMessage success;
+   mDum.makeResponse(success, mRequest, statusCode);
+   accept(success);
+}
+
+void
+ServerRegistration::reject(int statusCode)
+{
+   InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
+
+  // First, we roll back the contact database to
+  // the state it was before the registration request.
+  RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+  database->removeAor(mAor);
+  database->addAor(mAor, mOriginalContacts);
+  database->unlockRecord(mAor);
+
+  SipMessage failure;
+  mDum.makeResponse(failure, mRequest, statusCode);
+  failure.remove(h_Contacts);
+  mDum.send(failure);
+  delete(this);
+}
+
 void 
 ServerRegistration::dispatch(const SipMessage& msg)
 {
+   DebugLog( << "got a registration" );
+   
+   assert(msg.isRequest());
+   ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+
+    enum {ADD, REMOVE, REFRESH} operation = REFRESH;
+
+    if (!handler || !database)
+    {
+       DebugLog( << "No handler or DB - sending 405" );
+       
+       SipMessage failure;
+       mDum.makeResponse(failure, msg, 405);
+       mDum.send(failure);
+       delete(this);
+       return;
+    }
+
+    mAor = msg.header(h_To).uri();
+
+    database->lockRecord(mAor);
+
+    int globalExpires = 0;
+
+    if (msg.exists(h_Expires))
+    {
+      globalExpires = msg.header(h_Expires).value();
+    }
+    else
+    {
+      globalExpires = 3600;
+    }
+
+    mOriginalContacts = database->getContacts(mAor);
+
+    // If no conacts are present in the request, this is simply a query.
+    if (!msg.exists(h_Contacts))
+    {
+      handler->onQuery(getHandle(), msg);
+      return;
+    }
+
+    ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
+    ParserContainer<NameAddr>::iterator i;
+    int expires;
+    time_t now;
+    time(&now);
+
+    for(i = contactList.begin(); i != contactList.end(); i++)
+    {
+      if (i->exists(p_expires))
+      {
+        expires = i->param(p_expires);
+      }
+      else
+      {
+        expires = globalExpires;
+      }
+
+      // Check for "Contact: *" style deregistration
+      if (i->isAllContacts())
+      {
+        if (contactList.size() > 1 || expires != 0)
+        {
+          SipMessage failure;
+          mDum.makeResponse(failure, msg, 400, "Invalid use of 'Contact: *'");
+          mDum.send(failure);
+          database->unlockRecord(mAor);
+          delete(this);
+          return;
+        }
+
+        database->removeAor(mAor);
+        handler->onRemoveAll(getHandle(), msg);
+        return;
+      }
+
+      // Check to see if this is a removal.
+      if (expires == 0)
+      {
+        if (operation == REFRESH)
+        {
+          operation = REMOVE;
+        }
+        database->removeContact(mAor, i->uri());
+      }
+      // Otherwise, it's an addition or refresh.
+      else
+      {
+        RegistrationPersistenceManager::update_status_t status;
+        status = database->updateContact(mAor, i->uri(), now + expires);
+        if (status == RegistrationPersistenceManager::CONTACT_CREATED)
+        {
+          operation = ADD;
+        }
+      }
+    }
+
+    // The way this works is:
+    //
+    //  - If no additions or removals are performed, this is a refresh
+    //
+    //  - If at least one contact is removed and none are added, this
+    //    is a removal.
+    //
+    //  - If at least one contact is added, this is an addition, *even*
+    //    *if* a contact was also removed.
+
+    switch (operation)
+    {
+      case REFRESH:
+        handler->onRefresh(getHandle(), msg);
+        break;
+
+      case REMOVE:
+        handler->onRemove(getHandle(), msg);
+        break;
+
+      case ADD:
+        handler->onAdd(getHandle(), msg);
+        break;
+    }
 }
 
 void
