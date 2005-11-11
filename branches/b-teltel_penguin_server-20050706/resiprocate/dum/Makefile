@@ -15,6 +15,7 @@ SRC =   \
 	AppDialogSetFactory.cxx \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
+	UserAuthInfo.cxx \
 	BaseSubscription.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
@@ -24,16 +25,20 @@ SRC =   \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
 	DefaultServerReferHandler.cxx \
+	DestroyUsage.cxx \
 	Dialog.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \
 	DialogSetId.cxx \
 	DialogUsage.cxx \
 	DialogUsageManager.cxx \
+	DumProcessHandler.cxx \
+	DumThread.cxx \
 	DumTimeout.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
 	Handled.cxx \
+	InMemoryRegistrationDatabase.cxx \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
@@ -41,6 +46,8 @@ SRC =   \
 	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
 	PagerMessageCreator.cxx \
+	MasterProfile.cxx \
+	UserProfile.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
 	RedirectManager.cxx \
@@ -56,5 +63,8 @@ SRC =   \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
 	UInt64Hash.cxx \
+	KeepAliveManager.cxx \
+	KeepAliveTimeout.cxx \
+	NetworkAssociation.cxx
 
 include $(BUILD)/Makefile.post

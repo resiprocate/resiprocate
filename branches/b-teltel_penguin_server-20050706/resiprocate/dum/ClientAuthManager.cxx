@@ -3,7 +3,7 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/UserProfile.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
@@ -12,14 +12,13 @@
 using namespace resip;
 using namespace std;
 
-ClientAuthManager::ClientAuthManager(Profile& profile) :
-   mProfile(profile)
+ClientAuthManager::ClientAuthManager() 
 {
 }
 
 
 bool 
-ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
+ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response)
 {
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
@@ -74,20 +73,25 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
          }
          if (!stale)
          {
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             it->second.state = Failed;         
 //         mAttemptedAuths.erase(it);
             return false;
+         }
+         else
+         {
+            it->second.clear();
          }
       }
       else if (it->second.state == Failed)
       {
          it->second.state = Failed;         
+         InfoLog (<< "Failed client auth for " << userProfile << endl << response);
 //         mAttemptedAuths.erase(it);
          return false;
       }
       else
       {
-         //not sure about this clear
          it->second.clear();
       }
    }
@@ -105,6 +109,7 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
    if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
    {
       it->second.state = Failed;
+      InfoLog (<< "Failed client auth for " << userProfile << endl << response);
       return false;
    }
 
@@ -113,9 +118,10 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
       for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
            i != response.header(h_WWWAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(*i, it, origRequest, response, false))
+         if (!handleAuthHeader(userProfile, *i, it, origRequest, response, false))
          {
             it->second.state = Failed;   
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             return false;
          }
       }
@@ -125,36 +131,38 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
       for (Auths::const_iterator i = response.header(h_ProxyAuthenticates).begin();  
            i != response.header(h_ProxyAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(*i, it, origRequest, response, true))
+         if (!handleAuthHeader(userProfile, *i, it, origRequest, response, true))
          {
             it->second.state = Failed;   
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             return false;
          }
       }
    }
    assert(origRequest.header(h_Vias).size() == 1);
    origRequest.header(h_CSeq).sequence()++;
+   DebugLog (<< "Produced response to digest challenge for " << userProfile );
    return true;
 }
 
-bool ClientAuthManager::handleAuthHeader(const Auth& auth, AttemptedAuthMap::iterator authState,
-                                         SipMessage& origRequest, 
-                                         const SipMessage& response, bool proxy)
+bool 
+ClientAuthManager::handleAuthHeader(UserProfile& userProfile, 
+                                    const Auth& auth, 
+                                    AttemptedAuthMap::iterator authState,
+                                    SipMessage& origRequest, 
+                                    const SipMessage& response, 
+                                    bool proxy)
 {
    const Data& realm = auth.param(p_realm);                   
    
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
-   Profile::DigestCredential credential = mProfile.getDigestCredential(realm);
-   if ( credential.password.empty() )                       
+   UserProfile::DigestCredential credential = userProfile.getDigestCredential(realm);
+   if ( credential.realm.empty() )                       
    {                                        
-      credential = mProfile.getDigestCredential(response);
-      if ( credential.password.empty() )                       
-      {                                        
-         InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
-         DebugLog (<< auth);
-         DebugLog (<< response);
-         return false;                                        
-      }
+      InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
+      DebugLog (<< auth);
+      DebugLog (<< response);
+      return false;                                        
    }                                                           
    if (proxy)
    {
@@ -167,7 +175,8 @@ bool ClientAuthManager::handleAuthHeader(const Auth& auth, AttemptedAuthMap::ite
    return true;   
 }
 
-void ClientAuthManager::addAuthentication(SipMessage& request)
+void 
+ClientAuthManager::addAuthentication(SipMessage& request)
 {
    DialogSetId id(request);
    AttemptedAuthMap::iterator itState = mAttemptedAuths.find(id);
@@ -183,30 +192,32 @@ void ClientAuthManager::addAuthentication(SipMessage& request)
       
       request.remove(h_ProxyAuthorizations);
       request.remove(h_Authorizations);  
+
+      authState.cnonce = Random::getCryptoRandomHex(8); //!dcm! -- inefficient
       
       for (AuthState::CredentialMap::iterator it = authState.wwwCredentials.begin(); 
            it != authState.wwwCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
-         request.header(h_Authorizations).push_back(Helper::makeChallengeResponseAuth(request,
-                                                                                      it->second.user,
-                                                                                      it->second.password,
-                                                                                      it->first,
-                                                                                      authState.cnonce, 
-                                                                                      authState.cnonceCount,
-                                                                                      authState.cnonceCountString));
+         request.header(h_Authorizations).push_back( Helper::makeChallengeResponseAuth(request,
+                                                                                             it->second.user,
+                                                                                             it->second.password,
+                                                                                             it->first,
+                                                                                             authState.cnonce, 
+                                                                                             authState.cnonceCount,
+                                                                                             authState.cnonceCountString) );
       }
       for (AuthState::CredentialMap::iterator it = authState.proxyCredentials.begin(); 
            it != authState.proxyCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
          request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuth(request,
-                                                                                           it->second.user,
-                                                                                           it->second.password,
-                                                                                           it->first,
-                                                                                           authState.cnonce, 
-                                                                                           authState.cnonceCount,
-                                                                                           authState.cnonceCountString));
+                                                                                                 it->second.user,
+                                                                                                 it->second.password,
+                                                                                                 it->first,
+                                                                                                 authState.cnonce, 
+                                                                                                 authState.cnonceCount,
+                                                                                                 authState.cnonceCountString));
       }
 
    }
@@ -239,6 +250,64 @@ ClientAuthManager::CompareAuth::operator()(const Auth& lhs, const Auth& rhs) con
 
 ClientAuthManager::AuthState::AuthState() :
    state(Invalid),
-   cnonceCount(0),
-   cnonce(Random::getCryptoRandomHex(8)) //weak, should have ntp or something
+   cnonceCount(0)
 {}            
+
+void 
+ClientAuthManager::AuthState::clear()
+{
+   proxyCredentials.clear();
+   wwwCredentials.clear();
+   cnonceCount = 0;   
+}
+
+
+/* ====================================================================
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
+ */

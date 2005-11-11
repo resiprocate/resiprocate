@@ -26,14 +26,13 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mExpires(60),
      mAbsoluteExpiry(0)
 {
-   mLastRequest = req;
    Data key = getEventType() + getDocumentKey();
    mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
 {
-   DebugLog(<< "ServerSubscription::ServerSubscription");
+   DebugLog(<< "ServerSubscription::~ServerSubscription");
    
    Data key = getEventType() + getDocumentKey();
 
@@ -137,7 +136,6 @@ ServerSubscription::send(SipMessage& msg)
    else
    {
       mDum.send(msg);
-      msg.releaseContents();
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -178,6 +176,9 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
                return true;
          }
       }
+      default: // !jf!
+         break;
+         
    }
    return false;   
 }
@@ -231,7 +232,10 @@ ServerSubscription::dispatch(const SipMessage& msg)
       {
          //!dcm! -- should initial state be pending?
          mSubscriptionState = Init;
-         handler->onNewSubscription(getHandle(), msg);            
+         if (mEventType != "refer")
+         {
+            handler->onNewSubscription(getHandle(), msg);
+         }
       }
       else
       {
@@ -239,7 +243,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
       }
    }
    else
-   {
+   {     
+      //.dcm. - will need to change if retry-afters are reaching here
+      mLastNotify.releaseContents();
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 300)
       { 

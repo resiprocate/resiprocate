@@ -3,16 +3,21 @@
 BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
-ifdef USE_POPT
-LDLIBS += -lpopt
-endif
-
-PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD POPT CURL
 
 TARGET_LIBRARY = 
 
-TESTPROGRAMS = certServer.cxx
-#basicRegister.cxx BasicCall.cxx #testDumTimer.cxx
-SRC =   
+#testDumTimer.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx
+
+CODE_SUBDIRS += curlHttp
+
+TESTPROGRAMS += limpc.cxx
+SRC = CommandLineParser.cxx UserAgent.cxx
+
+ifeq ($(USE_CURL),true)
+TESTPROGRAMS += testIdentity.cxx
+SRC += curlHttp/CurlHttpProvider.cxx
+endif
 
 include $(BUILD)/Makefile.post

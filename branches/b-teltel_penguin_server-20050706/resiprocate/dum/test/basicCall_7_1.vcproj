@@ -43,6 +43,7 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/test.pdb"
 				SubSystem="1"
+				StackReserveSize="2000000"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
