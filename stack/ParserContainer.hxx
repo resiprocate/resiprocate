@@ -1,6 +1,8 @@
 #ifndef RESIP_ParserContainer_hxx
 #define RESIP_ParserContainer_hxx
 
+#include <iterator>
+
 #include "resip/stack/HeaderFieldValueList.hxx"
 #include "resip/stack/ParserContainerBase.hxx"
 
@@ -63,7 +65,7 @@ class ParserContainer : public ParserContainerBase
       // .dlb. these can be partially hoisted as well
       class const_iterator;
       
-      class iterator
+      class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
       {
          public:
             iterator(typename std::vector<ParserCategory*>::iterator i) : mIt(i){}
@@ -86,7 +88,7 @@ class ParserContainer : public ParserContainerBase
             friend class ParserContainer;
       };
 
-      class const_iterator
+      class const_iterator : public std::iterator<std::bidirectional_iterator_tag, T>
       {
          public:
             const_iterator(std::vector<ParserCategory*>::const_iterator i) : mIt(i) {}

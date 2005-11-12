@@ -197,7 +197,7 @@ main(int arc, char** argv)
 
       cerr << "!!" << legal << endl;
 
-      assert(legal.displayName() == "A. Bell ");
+      assert(legal.displayName() == "A. Bell");
    }
 
    {
