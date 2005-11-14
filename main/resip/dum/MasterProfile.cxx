@@ -256,6 +256,18 @@ MasterProfile::validateAcceptEnabled() const
    return mValidateAcceptEnabled;   
 }
 
+const bool 
+MasterProfile::allowBadRegistrationEnabled() const
+{
+   return mAllowBadRegistrationEnabled;   
+}
+
+bool& 
+MasterProfile::allowBadRegistrationEnabled()
+{
+   return mAllowBadRegistrationEnabled;   
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

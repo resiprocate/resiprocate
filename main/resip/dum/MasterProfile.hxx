@@ -18,62 +18,67 @@ class MasterProfile : public UserProfile
 {
    public:  
       
-       // Creates an Indentity/Profile with no BaseProfile - this is the root of all profiles
-       MasterProfile();  
+      /// Creates an Indentity/Profile with no BaseProfile - this is the root of all profiles
+      MasterProfile();  
       
-      // Default is "sip"
+      /// Default is "sip"
       virtual void addSupportedScheme(const Data& scheme);          
       virtual bool isSchemeSupported(const Data& scheme) const;
       virtual void clearSupportedSchemes(void);
 
-      // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
+      /// Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
       virtual void addSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
       virtual void clearSupportedMethods(void);
 
-      // Default is none
+      /// Default is none
       virtual void addSupportedOptionTag(const Token& tag);        
       virtual Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags(void);
 
-      // Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
+      /// Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
       virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
       virtual bool isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType);
       virtual Mimes getSupportedMimeTypes(const MethodTypes& method);
       virtual void clearSupportedMimeTypes(const MethodTypes& method);
       virtual void clearSupportedMimeTypes(void);  // Clear for all Methods
 
-      // Default is no encoding
+      /// Default is no encoding
       virtual void addSupportedEncoding(const Token& encoding);     
       virtual bool isContentEncodingSupported(const Token& contentEncoding) const;
       virtual Tokens getSupportedEncodings() const;
       virtual void clearSupportedEncodings(void);
 
-      // Default is all - if nothing is set, then all are allowed
+      /// Default is all - if nothing is set, then all are allowed
       virtual void addSupportedLanguage(const Token& lang);         
       virtual bool isLanguageSupported(const Tokens& lang) const;
       virtual Tokens getSupportedLanguages() const;
       virtual void clearSupportedLanguages(void);
       
-      // Default is to not send an Allow-Events header.
+      /// Default is to not send an Allow-Events header.
       virtual void addAllowedEvent(const Token& event);         
       virtual bool isEventAllowed(const Tokens& event) const;
       virtual Tokens getAllowedEvents() const;
       virtual void clearAllowedEvents(void);
       
-      //enable/disable content validation
+      ///enable/disable content validation
       virtual bool& validateContentEnabled();
       virtual const bool validateContentEnabled() const;
 
-      //enable/disable content language validation
+      ///enable/disable content language validation
       virtual bool& validateContentLanguageEnabled();
       virtual const bool validateContentLanguageEnabled() const;
 
-      //enable/disable Accept header validation
+      ///enable/disable Accept header validation
       virtual bool& validateAcceptEnabled();
       virtual const bool validateAcceptEnabled() const;
+
+      ///Set this to allow the Registration Server to accept registration requests that contain 
+      ///a To Tag.
+      virtual bool& allowBadRegistrationEnabled();
+      virtual const bool allowBadRegistrationEnabled() const;      
 
    private:
       std::set<Data> mSupportedSchemes;
@@ -88,6 +93,7 @@ class MasterProfile : public UserProfile
       bool mValidateContentEnabled;
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
+      bool mAllowBadRegistrationEnabled;      
 };
    
 }
