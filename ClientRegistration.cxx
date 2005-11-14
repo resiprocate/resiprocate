@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iterator>
 
 #include "resip/stack/Helper.hxx"
@@ -10,6 +11,7 @@
 #include "resip/dum/UsageUseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -298,14 +300,26 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
             // make timers to re-register
             int expiry = INT_MAX;
+            //!dcm! -- should do set intersection with my bindings and walk that
+            //small size, n^2, don't care
             for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
                  it != msg.header(h_Contacts).end(); it++)
             {
+               //add to boolean exp. but needs testing
+               //std::find(myContacts().begin(), myContacts().end(), *it) != myContacts().end()
                if (it->exists(p_expires))
                {
-                  expiry = resipMin(it->param(p_expires), expiry);
+                  try
+                  {
+                     expiry = resipMin(it->param(p_expires), expiry);
+                  }
+                  catch(ParseBuffer::Exception& e)
+                  {
+                     DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
+                  }
                }
             }
+            
             if (expiry == INT_MAX)
             {
                if (msg.exists(h_Expires))
