@@ -1390,9 +1390,15 @@ DialogUsageManager::processRequest(const SipMessage& request)
       return;
    }
 
+   bool toTag = request.header(h_To).exists(p_tag);
+   if(request.header(h_RequestLine).getMethod() == REGISTER && toTag && getMasterProfile()->allowBadRegistrationEnabled())
+   {
+       toTag = false;
+   }
+
    assert(mAppDialogSetFactory.get());
    // !jf! note, the logic was reversed during ye great merge of March of Ought 5
-   if (request.header(h_To).exists(p_tag) ||
+   if (toTag ||
        findDialogSet(DialogSetId(request)))
    {
       switch (request.header(h_RequestLine).getMethod())
