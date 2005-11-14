@@ -44,6 +44,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int httpPort = 5080;
    int recursiveRedirect = 0;
    char* enumSuffix = 0;
+   int allowBadReg = 0;
    
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -57,33 +58,38 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
-      {"log-type",     'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",    'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,  0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"record-route",  'r',  POPT_ARG_STRING, &recordRoute,  0, "specify uri to use as Record-Route", "sip:example.com"},
-      {"tls-domain",   't',  POPT_ARG_STRING, &tlsDomain,  0, "act as a TLS server for specified domain", "example.com"},
-      {"mysqlServer",    'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,  0, "enable MySQL and provide name of server", "localhost"},
-      {"udp",            0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort, 0, "add UDP transport on specified port", "5060"},
-      {"tcp",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tcpPort, 0, "add TCP transport on specified port", "5060"},
-      {"tls",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &tlsPort, 0, "add TLS transport on specified port", "5061"},
-      {"dtls",           0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,    &dtlsPort, 0, "add DTLS transport on specified port", "0"},
-      {"enable-v6",      0,  POPT_ARG_NONE,   &enableV6, 0, "enable IPV6", 0},
-      {"disable-v4",     0,  POPT_ARG_NONE,   &disableV4, 0, "disable IPV4", 0},
-      {"disable-auth",   0,  POPT_ARG_NONE,   &noChallenge, 0, "disable DIGEST challenges", 0},
-      {"disable-web-auth",0, POPT_ARG_NONE,   &noWebChallenge, 0, "disable HTTP challenges", 0},
-      {"disable-reg",  0,    POPT_ARG_NONE,   &noRegistrar, 0, "disable registrar", 0},
-      {"enable-cert-server", 0,POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
-      {"interfaces",  'i',   POPT_ARG_STRING, &interfaces,  0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
-      {"domains",     'd',   POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
-      {"route",       'R',   POPT_ARG_STRING, &routeSet,  0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
-#ifdef WIN32
-      {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: c:\\sipCerts)", 0},
-#else
-      {"cert-path",   'c',   POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
+      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
+#if defined(USE_MYSQL)
+      {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
-      {"reqChainName",   0,  POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
-      {"http",            0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT, &httpPort, 0, "run HTTP server on specified port", "5080"},
-      {"recursive-redirect", 0,  POPT_ARG_NONE, &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
-      {"enum-suffix",     'e',   POPT_ARG_STRING, &enumSuffix,  0, "specify enum suffix to search", "e164.arpa"},
+      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        0, "add UDP transport on specified port", "5060"},
+      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        0, "add TCP transport on specified port", "5060"},
+#if defined(USE_SSL)
+      {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      0, "act as a TLS server for specified domain", "example.com"},
+      {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        0, "add TLS transport on specified port", "5061"},
+      {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
+      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
+#ifdef WIN32
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: c:\\sipCerts)", 0},
+#else
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: ~/.sipCerts)", 0},
+#endif
+#endif
+      {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
+      {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
+      {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
+      {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
+      {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
+      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
+      {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
+      {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
+      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
+      {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
+      {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
+      {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -129,6 +135,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;
+   mAllowBadReg = allowBadReg?true:false;
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 

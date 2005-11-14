@@ -39,6 +39,7 @@ class CommandLineParser
       Data mMySqlServer;
       int mHttpPort;
       bool mRecursiveRedirect;
+      bool mAllowBadReg;
 };
  
 }
