@@ -530,7 +530,11 @@ Dialog::dispatch(const SipMessage& msg)
          mRequests.erase(r);
 		 if (handledByAuth) return;
       }
-
+      else
+      {
+         InfoLog( << "Dialog::dispatch, ignoring stray response: " << msg.brief() );
+      }
+      
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
       if (code >=200 && code < 300)
