@@ -61,7 +61,6 @@ Profile::Profile()
 
    mHasFixedTransportInterface = true;
    mFixedTransportInterface = Data::Empty;
-
 }
 
 Profile::Profile(SharedPtr<Profile> baseProfile) : 
