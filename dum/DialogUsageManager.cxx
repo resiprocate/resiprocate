@@ -1546,8 +1546,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   DebugLog ( << "DialogUsageManager::processResponse: " << response);
-
    if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
