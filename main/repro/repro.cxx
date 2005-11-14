@@ -341,6 +341,10 @@ main(int argc, char** argv)
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
    profile->addSupportedScheme(Symbols::Sips);
+   if(args.mAllowBadReg)
+   {
+       profile->allowBadRegistrationEnabled() = true;
+   }
    
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
