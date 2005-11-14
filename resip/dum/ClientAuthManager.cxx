@@ -36,6 +36,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
    {
       if (it != mAttemptedAuths.end())
       {
+         DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");         
          it->second.state = Cached;
       }      
       return false;
@@ -80,6 +81,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          }
          else
          {
+            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
             it->second.clear();
          }
       }
@@ -92,6 +94,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       }
       else
       {
+         DebugLog (<< "ClientAuthManager::handle: clearing state for " << id);
          it->second.clear();
       }
    }
