@@ -291,7 +291,7 @@ void
 ServerInviteSession::end(EndReason reason)
 {
    InfoLog (<< toData(mState) << ": end");
-   if (mEndReason != NotSpecified)
+   if (mEndReason == NotSpecified)
    {
       mEndReason = reason;   
    }
