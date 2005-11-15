@@ -22,6 +22,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mEnded(false),
      mExpires(0)
 {
+   DebugLog (<< "ClientSubscription::ClientSubscription from " << request.brief());   
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 

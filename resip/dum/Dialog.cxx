@@ -511,8 +511,7 @@ Dialog::dispatch(const SipMessage& msg)
          if (mDum.mClientAuthManager.get() && 
              mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
          {
-            InfoLog( << "about to re-send request with digest credentials" );
-            InfoLog( << r->second );
+            InfoLog( << "about to re-send request with digest credentials" << r->second.brief());
 
             assert (r->second.isRequest());
 
