@@ -110,7 +110,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {            
             mDialog.makeResponse(mLastResponse, msg, 400);
             mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-            BaseUsage::send(mLastResponse);
+            send(mLastResponse);
             handler->onTerminated(getHandle(), msg);
             delete this;
          }
@@ -308,7 +308,7 @@ ClientSubscription::requestRefresh(int expires)
       }
       mExpires = 0;
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
-      BaseUsage::send(mLastRequest);
+      send(mLastRequest);
    }
 }
 
@@ -322,7 +322,7 @@ ClientSubscription::end()
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
       mLastRequest.header(h_Expires).value() = 0;
       mEnded = true;
-      BaseUsage::send(mLastRequest);
+      send(mLastRequest);
    }
 }
 
@@ -330,7 +330,7 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   BaseUsage::send(mLastResponse);
+   send(mLastResponse);
 }
 
 void 
@@ -344,7 +344,7 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
       mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
    }
    
-   BaseUsage::send(mLastResponse);
+   send(mLastResponse);
    switch (Helper::determineFailureMessageEffect(mLastResponse))
    {
       case Helper::TransactionTermination:
@@ -384,18 +384,6 @@ void ClientSubscription::onReadyToSend(SipMessage& msg)
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
 }
-
-void ClientSubscription::send(SipMessage& msg)
-{
-   if (msg.isRequest())
-   {
-      // give app an chance to adorn the message.
-      onReadyToSend(msg);
-   }
-
-   mDialog.send(msg);
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

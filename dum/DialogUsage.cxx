@@ -62,6 +62,17 @@ DialogUsage::getUserProfile()
    return mDialog.mDialogSet.getUserProfile();
 }
 
+void 
+DialogUsage::send(SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      // give app an chance to adorn the message.
+      onReadyToSend(msg);
+   }
+   mDialog.send(msg);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

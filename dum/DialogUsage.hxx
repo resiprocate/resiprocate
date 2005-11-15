@@ -27,6 +27,8 @@ class DialogUsage : public BaseUsage
             virtual const char* name() const;
       };
 
+      virtual void send(SipMessage& request);
+
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();     
 

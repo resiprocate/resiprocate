@@ -2333,17 +2333,6 @@ void InviteSession::onReadyToSend(SipMessage& msg)
    mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), msg);
 }
 
-void InviteSession::send(SipMessage& msg)
-{
-   if (msg.isRequest())
-   {
-      // give app an chance to adorn the message.
-      onReadyToSend(msg);
-   }
-
-   mDialog.send(msg);
-}
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

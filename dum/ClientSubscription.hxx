@@ -32,9 +32,6 @@ class ClientSubscription: public BaseSubscription
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
 
-      // override BaseUsage send.
-      virtual void send(SipMessage& msg);
-
    private:
       friend class Dialog;
       friend class InviteSession;      
