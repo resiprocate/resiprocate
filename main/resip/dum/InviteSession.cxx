@@ -422,7 +422,7 @@ InviteSession::end()
 void
 InviteSession::end(EndReason reason)
 {
-   if (mEndReason != NotSpecified && reason != NotSpecified)
+   if (mEndReason == NotSpecified)
    {
       mEndReason = reason;   
    }
