@@ -726,7 +726,6 @@ DialogUsageManager::send(SipMessage& msg)
       msg.header(h_ProxyRequires) = userProfile->getProxyRequires();
    }
    
-   DebugLog (<< "SEND: " << msg);
    if (msg.isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
@@ -760,6 +759,8 @@ DialogUsageManager::send(SipMessage& msg)
          mClientAuthManager->addAuthentication(msg);
       }
    }
+
+   DebugLog (<< "SEND: " << msg);
 
    // Todo: get rid of the OutgoingEvent, no more needed.
    OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(msg.clone())));
