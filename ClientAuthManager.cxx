@@ -72,24 +72,22 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
                }
             }
          }
-         if (!stale)
+         if (stale)
          {
-            InfoLog (<< "Failed client auth for " << userProfile << endl << response);
-            it->second.state = Failed;         
-//         mAttemptedAuths.erase(it);
-            return false;
+            InfoLog (<< "Stale client auth for " << userProfile << endl << response);
+            it->second.clear();
          }
          else
          {
             InfoLog (<< "Failed client auth for " << userProfile << endl << response);
-            it->second.clear();
+            it->second.state = Failed;         
+            return false;
          }
       }
       else if (it->second.state == Failed)
       {
          it->second.state = Failed;         
          InfoLog (<< "Failed client auth for " << userProfile << endl << response);
-//         mAttemptedAuths.erase(it);
          return false;
       }
       else
