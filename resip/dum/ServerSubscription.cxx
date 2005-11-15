@@ -95,14 +95,14 @@ ServerSubscription::send(SipMessage& msg)
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
-         sendViaDialog(msg);
+         DialogUsage::send(msg);
       }
       else if (code < 300)
       {
          if(msg.exists(h_Expires))
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
-            sendViaDialog(msg);
+            DialogUsage::send(msg);
             mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
             mState = Established;            
          }
@@ -113,7 +113,7 @@ ServerSubscription::send(SipMessage& msg)
       }
       else if (code < 400)
       {
-         sendViaDialog(msg);
+         DialogUsage::send(msg);
          handler->onTerminated(getHandle());
          delete this;
          return;
@@ -122,20 +122,20 @@ ServerSubscription::send(SipMessage& msg)
       {
          if (shouldDestroyAfterSendingFailure(msg))
          {
-            sendViaDialog(msg);
+            DialogUsage::send(msg);
             handler->onTerminated(getHandle());
             delete this;
             return;
          }
          else
          {
-            sendViaDialog(msg);
+            DialogUsage::send(msg);
          }
       }
    }
    else
    {
-      sendViaDialog(msg);
+      DialogUsage::send(msg);
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -376,18 +376,6 @@ void ServerSubscription::onReadyToSend(SipMessage& msg)
    assert(handler);
    handler->onReadyToSend(getHandle(), msg);
 }
-
-void ServerSubscription::sendViaDialog(SipMessage& msg)
-{
-   if (msg.isRequest())
-   {
-      // give app an chance to adorn the message.
-      onReadyToSend(msg);
-   }
-
-   mDialog.send(msg);
-}
-
 
 
 
