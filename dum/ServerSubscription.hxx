@@ -44,7 +44,6 @@ class ServerSubscription : public BaseSubscription
       virtual ~ServerSubscription();
       virtual void dialogDestroyed(const SipMessage& msg);           
       void onReadyToSend(SipMessage& msg);
-      void sendViaDialog(SipMessage& msg);
       
    private:
       friend class Dialog;
