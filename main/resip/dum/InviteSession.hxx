@@ -273,9 +273,6 @@ class InviteSession : public DialogUsage
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
       void setCurrentLocalSdp(const SipMessage& msg);
 
-      // override BaseUsage send.
-      virtual void send(SipMessage& msg);
-
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
       Mimes mPeerSupportedMimeTypes;
