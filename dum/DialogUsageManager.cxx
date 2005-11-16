@@ -1031,7 +1031,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
    if (destroyUsage)
    {
-      InfoLog(<< "Destroying usage" );
+      //DebugLog(<< "Destroying usage" );
       destroyUsage->destroy();
       return;
    }
@@ -1039,7 +1039,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
    if (dumMsg)
    {
-      InfoLog(<< "Timeout Message" );
+      //DebugLog(<< "Timeout Message" );
       if (!dumMsg->getBaseUsage().isValid())
       {
          return;
@@ -1052,7 +1052,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
    if (keepAliveMsg)
    {
-      InfoLog(<< "Keep Alive Message" );
+      //DebugLog(<< "Keep Alive Message" );
       if (mKeepAliveManager.get())
       {
          mKeepAliveManager->process(*keepAliveMsg);
