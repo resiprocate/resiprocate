@@ -379,7 +379,12 @@ DialogSet::dispatch(const SipMessage& msg)
          case INFO:
          case ACK:
          case UPDATE:
-            assert(dialog);
+            if(!dialog)
+            {
+               SipMessage response;
+               mDum.makeResponse(response, msg, 481);
+               mDum.send(response);
+            }
             break;
             
          case NOTIFY:
