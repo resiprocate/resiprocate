@@ -130,13 +130,13 @@ DnsInterface::isSupportedProtocol(TransportType t)
 }
 
 bool 
-DnsInterface::requiresProcess()
+DnsInterface::requiresProcess() const
 {
    return mDnsProvider->requiresProcess() && mActiveQueryCount;   
 }
 
 void 
-DnsInterface::buildFdSet(FdSet& fdset)
+DnsInterface::buildFdSet(FdSet& fdset) const
 {
    mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
 }

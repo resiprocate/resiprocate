@@ -25,8 +25,8 @@ class AresDns : public ExternalDns
       void lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData);
       void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData);    
 
-      virtual bool requiresProcess();
-      virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
+      virtual bool requiresProcess() const;
+      virtual void buildFdSet(fd_set& read, fd_set& write, int& size) const;
       virtual void process(fd_set& read, fd_set& write);
 
       //?dcm?  I believe these need to do nothing in the ARES case.

@@ -19,6 +19,8 @@ class TlsConnection;
 
 class Connection;
 
+class ConnectionManager;
+
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;

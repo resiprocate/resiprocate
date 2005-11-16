@@ -40,7 +40,7 @@ class TransportSelector
       bool isFinished() const; // anything pending to send? 
       
       void process(FdSet& fdset);
-      void buildFdSet(FdSet& fdset);
+      void buildFdSet(FdSet& fdset) const;
      
       void addTransport( std::auto_ptr<Transport> transport);
 
@@ -58,7 +58,7 @@ class TransportSelector
       
       unsigned int sumTransportFifoSizes() const;
 
-      unsigned int getTimeTillNextProcessMS();
+      unsigned int getTimeTillNextProcessMS() const;
       Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
    private:
       Transport* findTransport(const Tuple& src);

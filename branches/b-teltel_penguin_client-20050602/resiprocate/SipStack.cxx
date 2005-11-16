@@ -517,7 +517,7 @@ SipStack::process(FdSet& fdset)
 
 /// returns time in milliseconds when process next needs to be called 
 unsigned int 
-SipStack::getTimeTillNextProcessMS()
+SipStack::getTimeTillNextProcessMS() const
 {
    Lock lock(mAppTimerMutex);
    return resipMin(mTransactionController.getTimeTillNextProcessMS(),
