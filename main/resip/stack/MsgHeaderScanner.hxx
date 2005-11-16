@@ -53,6 +53,8 @@ class MsgHeaderScanner
       
    public:
       enum { MaxNumCharsChunkOverflow = 5 };
+      static char* allocateBuffer(int size);
+      
       enum TextPropBitMaskEnum 
       {
          tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired
