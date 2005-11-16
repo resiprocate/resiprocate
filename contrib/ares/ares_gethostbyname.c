@@ -111,7 +111,7 @@ static void next_lookup(struct host_query *hquery)
   const char *p;
   struct hostent *host;
 
-  for (p = hquery->remaining_lookups; *p; p++)
+  for (p = hquery->remaining_lookups; p && *p; p++)
     {
       switch (*p)
 	{
