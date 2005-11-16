@@ -58,11 +58,11 @@ class DnsInterface : public ExternalDnsHandler
 
       
       //only call buildFdSet and process if requiresProcess is true.  
-      bool requiresProcess();
+      bool requiresProcess() const;
 
       // adds the appropriate file descriptors to the fdset to allow a
       // select/poll call to be made 
-      void buildFdSet(FdSet& fdset);
+      void buildFdSet(FdSet& fdset) const;
 
       // process any dns results back from the async dns library (e.g. ares). If
       // there are results to report, post an event to the fifo

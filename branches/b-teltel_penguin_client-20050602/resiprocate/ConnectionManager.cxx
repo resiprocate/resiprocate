@@ -122,20 +122,36 @@ ConnectionManager::getNextWrite()
 }
 
 void
-ConnectionManager::buildFdSet(FdSet& fdset)
+ConnectionManager::buildFdSet(FdSet& fdset) const
 {
+   //
+   // !kh!
+   // The two const_cast hacks used here are not beautiful, but safe.
+   // Since setting fdset doesn't alter the state of the descriptor of
+   // a connection and this allows ConnectionManager::buildFdSet() to
+   // be a const memeber, which is more semantically correct.
+   // Connection::getSocket() isn't const, that's understandable, one
+   // might use it to alter the state of the descriptor, such as close().
+   // Anyone knows why STD containers was not used for read/write
+   // connections? I am guessing this is a legacy, should rewrite using
+   // STD containers.
+   // 
    for (ConnectionReadList::iterator i = mReadHead->begin(); 
         i != mReadHead->end(); ++i)
    {
-      fdset.setRead((*i)->getSocket());
-      fdset.setExcept((*i)->getSocket());
+      Connection* conn(const_cast<Connection*>(*i));
+      Socket sock(conn->getSocket());
+      fdset.setRead(sock);
+      fdset.setExcept(sock);
    }
 
    for (ConnectionWriteList::iterator i = mWriteHead->begin(); 
         i != mWriteHead->end(); ++i)
    {
-      fdset.setWrite((*i)->getSocket());
-      fdset.setExcept((*i)->getSocket());
+      Connection* conn(const_cast<Connection*>(*i));
+      Socket sock(conn->getSocket());
+      fdset.setWrite(sock);
+      fdset.setExcept(sock);
    }
 }
 

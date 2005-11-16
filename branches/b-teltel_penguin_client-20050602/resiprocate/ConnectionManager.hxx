@@ -25,7 +25,7 @@ class ConnectionManager
       // Return 0 if nothing to do
       Connection* getNextRead(FdSet &fdset);
       Connection* getNextWrite();
-      void buildFdSet(FdSet& fdset);
+      void buildFdSet(FdSet& fdset) const;
       
    private:
       void addToWritable(Connection* conn); // add the specified conn to end

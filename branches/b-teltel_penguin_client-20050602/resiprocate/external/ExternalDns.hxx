@@ -26,12 +26,12 @@ class ExternalDns
       virtual void lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData) = 0;
 
       //only call buildFdSet and process if requiresProcess is true.  
-      virtual bool requiresProcess() = 0;
+      virtual bool requiresProcess() const = 0;
 
       //this is scary on windows; the standard way to get a bigger fd_set is to
       //redefine FD_SETSIZE befor each inclusion of winsock2.h, so make sure
       //external libraries have been properly configured      
-      virtual void buildFdSet(fd_set& read, fd_set& write, int& size) = 0;
+      virtual void buildFdSet(fd_set& read, fd_set& write, int& size) const = 0;
       virtual void process(fd_set& read, fd_set& write) = 0;
 
       virtual void freeResult(ExternalDnsRawResult res) = 0;

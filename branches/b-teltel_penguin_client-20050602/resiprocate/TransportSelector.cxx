@@ -165,10 +165,10 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 }
   
 void
-TransportSelector::buildFdSet(FdSet& fdset)
+TransportSelector::buildFdSet(FdSet& fdset) const
 {
    mDns.buildFdSet(fdset);
-   for(TransportList::iterator it = mSharedProcessTransports.begin(); 
+   for(TransportList::const_iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
       (*it)->buildFdSet(fdset);
@@ -848,7 +848,7 @@ TransportSelector::findDtlsTransport(const Data& domainname)
 
 
 unsigned int 
-TransportSelector::getTimeTillNextProcessMS()
+TransportSelector::getTimeTillNextProcessMS() const
 {
    if (mDns.requiresProcess())
    {
