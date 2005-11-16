@@ -38,6 +38,12 @@ enum CharCategoryEnum
 };
 typedef char CharCategory;
 
+char* 
+MsgHeaderScanner::allocateBuffer(int size)
+{
+   return new char[size + MaxNumCharsChunkOverflow];
+}
+
 struct CharInfo
 {
       CharCategory category;
