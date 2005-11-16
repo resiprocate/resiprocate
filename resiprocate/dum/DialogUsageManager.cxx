@@ -1028,13 +1028,11 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 bool 
 DialogUsageManager::process()
 {
-   std::auto_ptr<Message> msg(mFifo.getNext(0));
-   if(msg.get())
+   if (mFifo.messageAvailable())
    {
-      internalProcess(msg);
-      return true;
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
-   return false;
+   return mFifo.messageAvailable();
 }
 
 bool
