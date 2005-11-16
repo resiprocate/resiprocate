@@ -1192,15 +1192,17 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
    }
 }
 
-// return false if there is more to do
+// return false if there is nothing to do at the moment
 bool 
 DialogUsageManager::process()
 {
-   if (mFifo.messageAvailable())
+   std::auto_ptr<Message> msg(mFifo.getNext(0));
+   if(msg.get())
    {
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      internalProcess(msg);
+      return true;
    }
-   return mFifo.messageAvailable();
+   return false;
 }
 
 bool
