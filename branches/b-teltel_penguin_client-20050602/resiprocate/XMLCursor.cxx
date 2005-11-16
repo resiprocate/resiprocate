@@ -25,13 +25,13 @@ The line breaks and spaces after the <root> and before </root> are
 tagless children.
 
 --->
-  <root><child>child content</child></root>
+<root><child>child content</child></root>
 <--
-  vs.
+vs.
 --->
-  <root>
-     <child>child content</child>
-  </root>
+<root>
+<child>child content</child>
+</root>
 <--
 
 Treating whitespace as children is consistent with the spec but not usually
@@ -55,9 +55,9 @@ static const Data COMMENT_END("-->");
 // 1. lazier parsing
 // 2. embedded wierdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
-   : mRoot(0),
-     mCursor(0),
-     mAttributesSet(false)
+: mRoot(0),
+mCursor(0),
+mAttributesSet(false)
 {
    ParseBuffer lPb(pb);
 
@@ -118,7 +118,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
       lPb.skipWhitespace();
    }
    if (*lPb.position() == Symbols::LA_QUOTE[0] &&
-       *(lPb.position()+1) == Symbols::SLASH[0])
+      *(lPb.position()+1) == Symbols::SLASH[0])
    {
       lPb.skipChar();
       lPb.skipChar();
@@ -189,21 +189,21 @@ XMLCursor::parseNextRootChild()
    if (*mRoot->mPb.position() == Symbols::LA_QUOTE[0])
    {
       ParseBuffer pb(mRoot->mPb.position(), 
-                     mRoot->mPb.end() - mRoot->mPb.position());
+         mRoot->mPb.end() - mRoot->mPb.position());
       pb.skipChar();
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
          // so we add volatile here so CW is completely unconfused what to do.
-		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
-		 const char* end = pb.position();
+         // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
+         const char* end = pb.position();
          if ( pb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
          }
-         
+
          if (strncmp(mTag.data(), pb.position(), mRoot->mTag.size()) == 0)
          {
             mRoot->mPb.skipToEnd();
@@ -268,7 +268,7 @@ bool
 XMLCursor::firstChild()
 {
    if (atRoot() &&
-       mRoot->mChildren.empty())
+      mRoot->mChildren.empty())
    {
       parseNextRootChild();
    }
@@ -337,11 +337,11 @@ const XMLCursor::AttributeMap&
 XMLCursor::getAttributes() const
 {
    if (!atLeaf() &&
-       !mAttributesSet)
+      !mAttributesSet)
    {
       mAttributes.clear();
       mAttributesSet = true;
-   
+
       ParseBuffer pb(mCursor->mPb);
       pb.reset(mCursor->mPb.start());
 
@@ -352,8 +352,8 @@ XMLCursor::getAttributes() const
       pb.skipToOneOf(ParseBuffer::Whitespace, term);
 
       while (!pb.eof() && 
-             *pb.position() != Symbols::RA_QUOTE[0] &&
-             *pb.position() != Symbols::SLASH[0])
+         *pb.position() != Symbols::RA_QUOTE[0] &&
+         *pb.position() != Symbols::SLASH[0])
       {
          attribute.clear();
          value.clear();
@@ -369,25 +369,25 @@ XMLCursor::getAttributes() const
          pb.skipToChar(Symbols::EQUALS[0]);
          pb.skipChar();
          pb.skipWhitespace();
-	 if (!pb.eof())
-	 {
-	    const char quote = *pb.position();
+         if (!pb.eof())
+         {
+            const char quote = *pb.position();
 
-	    StackLog(<< "quote is <" << quote << ">");
-	    
-	    if (quote != Symbols::DOUBLE_QUOTE[0] &&
-		quote != '\'')
-	    {
-	       InfoLog(<< "XML: badly quoted attribute value");
-	       pb.fail(__FILE__, __LINE__);
-	    }
-	    anchor = pb.skipChar();
-	    pb.skipToChar(quote);
-	    pb.data(value, anchor);
-	    XMLCursor::decode(value);
-	    pb.skipChar();
-	    mAttributes[attribute] = value;
-	 }
+            StackLog(<< "quote is <" << quote << ">");
+
+            if (quote != Symbols::DOUBLE_QUOTE[0] &&
+               quote != '\'')
+            {
+               InfoLog(<< "XML: badly quoted attribute value");
+               pb.fail(__FILE__, __LINE__);
+            }
+            anchor = pb.skipChar();
+            pb.skipToChar(quote);
+            pb.data(value, anchor);
+            XMLCursor::decode(value);
+            pb.skipChar();
+            mAttributes[attribute] = decodeXMLCompatible(value);
+         }
          pb.skipWhitespace();
       }
    }
@@ -412,29 +412,125 @@ XMLCursor::getValue() const
    return mValue;
 }
 
+Data
+XMLCursor::encodeXMLCompatible(const Data& strData)
+{
+   Data encodedStr;
+   int charCount = strData.size();
+   for (register int i = 0; i < charCount; ++i)
+   {
+      switch (strData[i])
+      {
+      case '"':
+         encodedStr.append("&quot;", strlen("&quot;"));
+         break;
+      case '<':
+         encodedStr.append("&lt;", strlen("&lt;"));
+         break;
+      case '>':
+         encodedStr.append("&gt;", strlen("&gt;"));
+      default:
+         encodedStr.append(strData.c_str() + i, 1);
+         break;
+      }
+   }
+   return encodedStr;
+}
+
+class FindStruct
+{
+public:
+   FindStruct(const char* findStr, const char* replaceStr)
+      :mFoundPos(Data::npos)
+      ,mFindStr(findStr)
+      ,mFindStrLen(::strlen(findStr))
+      ,mReplaceStr(replaceStr)
+   {
+   }
+
+
+public: // members
+   int         mFoundPos;
+   const char* mFindStr;
+   const int   mFindStrLen;
+   const char* mReplaceStr;
+};
+
+Data
+XMLCursor::decodeXMLCompatible(const Data& strData)
+{
+   FindStruct findDatas[] = 
+      { 
+         FindStruct("&quot;", "\""), 
+         FindStruct("&lt;", "<"), 
+         FindStruct("&gt;", ">"),
+         FindStruct("&nbsp;", " ") 
+      };
+
+   Data decodedStr;
+   Data lowerStrData(strData);
+   lowerStrData.lowercase();
+   int lastIdx = 0;
+   while (true)
+   {
+      int minIdx = Data::npos;
+      int foundIdx = -1;
+      for (int i = 0; i < (sizeof(findDatas) / sizeof(findDatas[0])); ++i)
+      {
+         findDatas[i].mFoundPos = lowerStrData.find(findDatas[i].mFindStr, lastIdx);
+         if (findDatas[i].mFoundPos != Data::npos)
+         {
+            if (foundIdx == -1)
+            {
+               minIdx = findDatas[i].mFoundPos;
+               foundIdx = i;
+            }
+            else if (findDatas[i].mFoundPos < minIdx)
+            {
+               minIdx = findDatas[i].mFoundPos;
+               foundIdx = i;
+            }
+         }
+      }
+
+      if (foundIdx != -1)
+      {
+         decodedStr += strData.substr(lastIdx, findDatas[foundIdx].mFoundPos - lastIdx);
+         decodedStr += findDatas[foundIdx].mReplaceStr;
+         lastIdx = findDatas[foundIdx].mFoundPos + findDatas[foundIdx].mFindStrLen;
+      }
+      else
+      {
+         break;
+      }
+   }
+   decodedStr += strData.substr(lastIdx);
+   return decodedStr;
+}
+
 std::ostream&
 XMLCursor::encode(std::ostream& str, const AttributeMap& attrs)
 {
    for(AttributeMap::const_iterator i = attrs.begin();
-       i != attrs.end(); ++i)
+      i != attrs.end(); ++i)
    {
       if (i != attrs.begin())
       {
          str << " ";
       }
       // !dlb! some sort of character encoding required here
-      str << i->first << "=\"" << i->second << "\"";
+      str << i->first << "=\"" << encodeXMLCompatible(i->second) << "\"";
    }
 
    return str;
 }
 
 XMLCursor::Node::Node(const ParseBuffer& pb)
-   : mPb(pb.position(), pb.end() - pb.position()),
-     mParent(0),
-     mChildren(),
-     mNext(mChildren.begin()),
-     mIsLeaf(false)
+: mPb(pb.position(), pb.end() - pb.position()),
+mParent(0),
+mChildren(),
+mNext(mChildren.begin()),
+mIsLeaf(false)
 {
    mPb.assertNotEof();
    StackLog(<< "XMLCursor::Node::Node" << *this);
@@ -443,7 +539,7 @@ XMLCursor::Node::Node(const ParseBuffer& pb)
 XMLCursor::Node::~Node()
 {
    for (vector<Node*>::iterator i = mChildren.begin();
-        i != mChildren.end(); ++i)
+      i != mChildren.end(); ++i)
    {
       delete *i;
    }
@@ -538,8 +634,8 @@ XMLCursor::Node::skipToEndTag()
          mPb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
          // so we add volatile here so CW is completely unconfused what to do.
-		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
-		 const char* end = mPb.position();
+         // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
+         const char* end = mPb.position();
          if ( mPb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
@@ -577,7 +673,7 @@ XMLCursor::Node::skipToEndTag()
       mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
       StackLog(<< mTag << "(" << child->mTag << ")");
-    }
+   }
 }
 
 //<!-- declarations for <head> & <body> -->
@@ -585,9 +681,9 @@ const char*
 XMLCursor::Node::skipComments(ParseBuffer& pb)
 {
    while (*pb.position() == Symbols::LA_QUOTE[0] &&
-          *(pb.position()+1) == BANG[0] &&
-          *(pb.position()+2) == HYPHEN[0] &&
-          *(pb.position()+3) == HYPHEN[0])
+      *(pb.position()+1) == BANG[0] &&
+      *(pb.position()+2) == HYPHEN[0] &&
+      *(pb.position()+3) == HYPHEN[0])
    {
       pb.skipToChars(COMMENT_END);
       pb.assertNotEof();
@@ -604,9 +700,9 @@ resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
    static const Data::size_type showSize(35);
 
    str << &node << "[" 
-       << Data(node.mPb.start(), 
-               min(showSize, size))
-        << "]" << (size ? "" : "...");
+      << Data(node.mPb.start(), 
+      min(showSize, size))
+      << "]" << (size ? "" : "...");
 
    return str;
 }
@@ -620,51 +716,51 @@ resip::operator<<(std::ostream& str, const XMLCursor& cursor)
 
 #endif // WIN32
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 
- * 3. The names "VOCAL", "Vovida Open Communication Application Library",
- *    and "Vovida Open Communication Application Library (VOCAL)" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
- *
- * 4. Products derived from this software may not be called "VOCAL", nor
- *    may "VOCAL" appear in their name, without prior written
- *    permission of Vovida Networks, Inc.
- * 
- * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
- * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
- * 
- * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
- */
+* The Vovida Software License, Version 1.0 
+* 
+* Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+* 
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+* 
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+* 
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in
+*    the documentation and/or other materials provided with the
+*    distribution.
+* 
+* 3. The names "VOCAL", "Vovida Open Communication Application Library",
+*    and "Vovida Open Communication Application Library (VOCAL)" must
+*    not be used to endorse or promote products derived from this
+*    software without prior written permission. For written
+*    permission, please contact vocal@vovida.org.
+*
+* 4. Products derived from this software may not be called "VOCAL", nor
+*    may "VOCAL" appear in their name, without prior written
+*    permission of Vovida Networks, Inc.
+* 
+* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+* NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+* NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+* IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+* EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+* PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+* USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+* DAMAGE.
+* 
+* ====================================================================
+* 
+* This software consists of voluntary contributions made by Vovida
+* Networks, Inc. and many individuals on behalf of Vovida Networks,
+* Inc.  For more information on Vovida Networks, Inc., please see
+* <http://www.vovida.org/>.
+*
+*/

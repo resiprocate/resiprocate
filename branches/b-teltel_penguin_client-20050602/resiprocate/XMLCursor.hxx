@@ -95,6 +95,10 @@ namespace resip
 
 class XMLCursor
 {
+   public: // statics
+      static Data encodeXMLCompatible(const Data& strData);
+      static Data decodeXMLCompatible(const Data& strData);
+
    public:
       // !dlb! should be determined by the document
       // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-white-space
