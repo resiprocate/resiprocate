@@ -61,7 +61,11 @@ class ThreadIf
       bool isShutdown() const;
 
 #ifdef WIN32
+#ifdef _WIN32_WCE
       typedef DWORD Id;
+#else
+      typedef unsigned int Id;
+#endif
 #else
       typedef pthread_t Id;
       static Id selfId();
