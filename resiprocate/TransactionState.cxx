@@ -204,6 +204,7 @@ TransactionState::process(TransactionController& controller)
                Tuple target(sip->getSource());
                delete sip;
                controller.mTransportSelector.transmit(noMatch, target);
+               delete noMatch;
                return;
             }
             else
@@ -335,7 +336,7 @@ TransactionState::process(TransactionController& controller)
                {
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
-                  state->processReliability(matchingInvite->mTarget.getType());
+                  //state->processReliability(matchingInvite->mTarget.getType());  // !slg! Not needed - timer started in makeCancelTransaction
                   state->processClientNonInvite(sip);
                   
                   // for the INVITE in case we never get a 487
@@ -1282,7 +1283,7 @@ TransactionState::processTransportFailure()
       warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
       response->header(h_Warnings).push_back(warning);
       
-      sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
+      sendToTU(response);
       return;
    }
 
