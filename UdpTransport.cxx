@@ -90,7 +90,7 @@ UdpTransport::process(FdSet& fdset)
       // something about MSG_PEEK|MSG_TRUNC in Stevens..
       // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
       // adjust the UDP buffer as well...
-      char* buffer = new char[MaxBufferSize + 5];
+      char* buffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize);      
 
       // !jf! how do we tell if it discarded bytes 
       // !ah! we use the len-1 trick :-(

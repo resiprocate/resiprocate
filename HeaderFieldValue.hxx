@@ -16,6 +16,11 @@ class ParseBuffer;
 class HeaderFieldValue
 {
    public:
+      enum CopyPaddingEnum      
+      {
+         CopyPadding
+      };
+         
       HeaderFieldValue()
          : mField(0), //this must be initialized to 0 or ParserCategory will parse
            mFieldLength(0),
@@ -23,6 +28,7 @@ class HeaderFieldValue
       {}
       HeaderFieldValue(const char* field, unsigned int fieldLength);
       HeaderFieldValue(const HeaderFieldValue& hfv);
+      HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum);
 
       ~HeaderFieldValue();
 
