@@ -114,7 +114,7 @@ SipMessage::operator=(const SipMessage& rhs)
       }
       else if (rhs.mContentsHfv != 0)
       {
-         mContentsHfv = new HeaderFieldValue(*rhs.mContentsHfv);
+         mContentsHfv = new HeaderFieldValue(*rhs.mContentsHfv, HeaderFieldValue::CopyPadding);
       }
       else
       {
