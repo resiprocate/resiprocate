@@ -1024,7 +1024,7 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
    return false;
 }
 
-// return false if there is more to do
+// return false if there is nothing to do at the moment
 bool 
 DialogUsageManager::process()
 {
