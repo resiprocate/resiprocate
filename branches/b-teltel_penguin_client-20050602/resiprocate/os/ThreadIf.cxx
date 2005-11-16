@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
+#include <process.h>
 //from Random.cxx
 #include "resiprocate/os/Socket.hxx"
 #endif
@@ -56,14 +57,27 @@ ThreadIf::run()
    assert(mId == 0);
 
 #if defined(WIN32)
-   mThread = CreateThread(
-      NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
-      0, // DWORD dwStackSize,                         // initial thread stack size
-      (LPTHREAD_START_ROUTINE)threadWrapper, // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
-      this, //LPVOID lpParameter,                        // argument for new thread
-      0, //DWORD dwCreationFlags,                     // creation flags
-      &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
-      );
+   // !kh!
+   // Why _beginthreadex() instead of CreateThread():
+   //   http://support.microsoft.com/support/kb/articles/Q104/6/41.ASP
+   // Example of using _beginthreadex() mixed with WaitForSingleObject() and CloseHandle():
+   //   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__beginthread.2c_._beginthreadex.asp
+   
+   mThread =
+#ifdef _WIN32_WCE
+       // there is no _beginthreadex() for WINCE
+       CreateThread(
+#else
+       (HANDLE)_beginthreadex(
+#endif // _WIN32_WCE
+           
+         NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
+         0, // DWORD dwStackSize,                         // initial thread stack size
+         (LPTHREAD_START_ROUTINE)threadWrapper, // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
+         this, //LPVOID lpParameter,                        // argument for new thread
+         0, //DWORD dwCreationFlags,                     // creation flags
+         &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
+         );
    assert( mThread != 0 );
 #else
    // spawn the thread
