@@ -58,7 +58,7 @@ void KeepAliveManager::process(KeepAliveTimeout& timeout)
       stack.sendTo(msg, timeout.target(), mDum);
       KeepAliveTimeout t(it->first);
       stack.post(t, it->second.keepAliveInterval, mDum);
-      InfoLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
+      DebugLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
    }
 }
 
