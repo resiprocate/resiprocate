@@ -199,10 +199,10 @@ TransactionState::process(TransactionController& controller)
                //InfoLog (<< "Didn't find a TU for " << sip->brief());
 
                InfoLog( << "No TU found for message: " << sip->brief());               
-               SipMessage* noMatch = Helper::makeResponse(*sip, 500);
+               std::auto_ptr<SipMessage> noMatch(Helper::makeResponse(*sip, 500));
                Tuple target(sip->getSource());
                delete sip;
-               controller.mTransportSelector.transmit(noMatch, target);
+               controller.mTransportSelector.transmit(noMatch.get(), target);
                return;
             }
             else
