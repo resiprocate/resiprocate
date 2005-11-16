@@ -47,7 +47,7 @@ BaseTimerQueue::~BaseTimerQueue()
 }
 
 unsigned int
-BaseTimerQueue::msTillNextTimer()
+BaseTimerQueue::msTillNextTimer() const
 {
    if (!mTimers.empty())
    {

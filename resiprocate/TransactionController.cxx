@@ -95,7 +95,7 @@ TransactionController::process(FdSet& fdset)
 }
 
 unsigned int 
-TransactionController::getTimeTillNextProcessMS()
+TransactionController::getTimeTillNextProcessMS() const
 {
    if ( mStateMacFifo.messageAvailable() ) 
    {

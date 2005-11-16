@@ -75,7 +75,7 @@ TcpBaseTransport::~TcpBaseTransport()
 }
 
 void
-TcpBaseTransport::buildFdSet( FdSet& fdset)
+TcpBaseTransport::buildFdSet( FdSet& fdset) const
 {
    mConnectionManager.buildFdSet(fdset);
    fdset.setRead(mFd); // for the transport itself

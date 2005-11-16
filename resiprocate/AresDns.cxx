@@ -130,13 +130,13 @@ AresDns::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
 }                             
       
 bool 
-AresDns::requiresProcess()
+AresDns::requiresProcess() const
 {
    return true; 
 }
 
 void 
-AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
+AresDns::buildFdSet(fd_set& read, fd_set& write, int& size) const
 {
    int newsize = ares_fds(mChannel, &read, &write);
    if ( newsize > size )

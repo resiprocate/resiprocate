@@ -179,7 +179,7 @@ class SipStack
       virtual void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
-      virtual unsigned int getTimeTillNextProcessMS(); 
+      virtual unsigned int getTimeTillNextProcessMS() const;
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
