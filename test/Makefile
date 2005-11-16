@@ -23,6 +23,7 @@ testConnectionBase.cxx \
 testCorruption.cxx \
 testDigestAuthentication.cxx \
 testDns.cxx \
+testDtlsTransport.cxx \
 testEmbedded.cxx \
 testEmptyHeader.cxx \
 testExternalLogger.cxx \
