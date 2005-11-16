@@ -67,7 +67,7 @@ main(int argc, char* argv[])
          clientStack.process(fdset);
       }
 
-      SipMessage* msg = clientStack.receive();
+      msg = clientStack.receive();
       if (msg)
       {
          InfoLog( << "Got from server: " << msg->brief());
