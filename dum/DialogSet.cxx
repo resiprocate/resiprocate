@@ -364,10 +364,10 @@ DialogSet::dispatch(const SipMessage& msg)
       {
 		 if( msg.isRequest() )
 		 {
-		    StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
-			SipMessage response;         
-			mDum.makeResponse(response, msg, 481);
-			mDum.send(response);
+            StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
+            SipMessage response;         
+            mDum.makeResponse(response, msg, 481);
+            mDum.send(response);
 		 }
 		 else
 		 {
@@ -402,9 +402,9 @@ DialogSet::dispatch(const SipMessage& msg)
          case UPDATE:
             if(!dialog)
             {
-   			   SipMessage response;         
-			   mDum.makeResponse(response, msg, 481);
-			   mDum.send(response);
+               SipMessage response;         
+               mDum.makeResponse(response, msg, 481);
+               mDum.send(response);
                return;
             }
             break;
