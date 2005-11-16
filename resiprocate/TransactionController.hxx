@@ -27,7 +27,7 @@ class TransactionController
       ~TransactionController();
 
       void process(FdSet& fdset);
-      unsigned int getTimeTillNextProcessMS();
+      unsigned int getTimeTillNextProcessMS() const;
       void buildFdSet(FdSet& fdset);
       
       // graceful shutdown (eventually)

@@ -40,7 +40,7 @@ class Transport
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
-      virtual void buildFdSet( FdSet& fdset) =0;
+      virtual void buildFdSet( FdSet& fdset) const =0;
 
       void fail(const Data& tid); // called when transport failed
       static void error(int e);

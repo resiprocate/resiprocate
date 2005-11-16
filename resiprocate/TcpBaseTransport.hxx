@@ -18,7 +18,7 @@ class TcpBaseTransport : public InternalTransport
       virtual  ~TcpBaseTransport();
       
       void process(FdSet& fdset);
-      void buildFdSet( FdSet& fdset);
+      void buildFdSet( FdSet& fdset) const;
       bool isReliable() const { return true; }
       int maxFileDescriptors() const { return MaxFileDescriptors; }
 

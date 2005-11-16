@@ -202,7 +202,7 @@ UdpTransport::process(FdSet& fdset)
 
 
 void 
-UdpTransport::buildFdSet( FdSet& fdset )
+UdpTransport::buildFdSet( FdSet& fdset ) const
 {
    fdset.setRead(mFd);
     

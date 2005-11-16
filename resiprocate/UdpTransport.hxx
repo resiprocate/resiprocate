@@ -24,7 +24,7 @@ class UdpTransport : public InternalTransport
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
       TransportType transport() const { return UDP; }
-      virtual void buildFdSet( FdSet& fdset);
+      virtual void buildFdSet( FdSet& fdset) const;
 
       static const int MaxBufferSize = 8192;
 
