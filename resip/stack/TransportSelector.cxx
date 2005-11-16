@@ -118,7 +118,7 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          assert(mExactTransports.find(key) == mExactTransports.end() &&
                 mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-         //DebugLog (<< "Adding transport: " << key);
+         DebugLog (<< "Adding transport: " << key);
 
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
@@ -349,6 +349,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    if (msg->isRequest() && !via.sentHost().empty())
       // hint provided in sent-by of via by application
    {
+      DebugLog( << "hint provided by app: " <<  msg->header(h_Vias).front());      
       return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
    }
    else
