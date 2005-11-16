@@ -1188,7 +1188,7 @@ main(int argc, char** argv)
       cerr << "!! " << d;
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
-                   "From: \"Alice \"<sip:alice@atlanta.com>;tag=1928301774\r\n"
+                   "From: \"Alice\"<sip:alice@atlanta.com>;tag=1928301774\r\n"
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
@@ -1242,7 +1242,7 @@ main(int argc, char** argv)
       cerr << "!! " << d;
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
-                   "From: \"Alice \"<sip:alice@atlanta.com>;tag=1928301774\r\n"
+                   "From: \"Alice\"<sip:alice@atlanta.com>;tag=1928301774\r\n"
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
@@ -1257,8 +1257,8 @@ main(int argc, char** argv)
    {
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
-               "To: \"Bob \"<sip:bob@biloxi.com>\r\n"
-               "From: \"Alice \"<sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "To: \"Bob\"<sip:bob@biloxi.com>\r\n"
+               "From: \"Alice\"<sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
                "CSeq: 314159 INVITE\r\n"
                "Max-Forwards: 70\r\n"
