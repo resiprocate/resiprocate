@@ -43,7 +43,7 @@ endif
 ifeq (${ARES_PREFIX},)
    ARES_PREFIX_ARG=
 else
-   ARES_PREFIX_ARG=--prefix=${PREFIX}
+   ARES_PREFIX_ARG=--prefix=${ARES_PREFIX}
 endif
 
 configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
