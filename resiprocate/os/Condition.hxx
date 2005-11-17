@@ -1,30 +1,38 @@
 #if !defined(RESIP_CONDITION_HXX)
-#define RESIP_CONDITION_HXX 
+#define RESIP_CONDITION_HXX
 
-#if defined(WIN32) 
+#if defined(WIN32)
 #  include <windows.h>
 #  include <winbase.h>
 #else
 #  include <pthread.h>
 #endif
 
+// !kh!
+// Attempt to resolve POSIX behaviour conformance for win32 build.
+#define RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
 
 namespace resip
 {
 
-	class Mutex;
-	
+class Mutex;
+
 class Condition
 {
    public:
       Condition();
       virtual ~Condition();
 
-      void wait (Mutex* mutex);
+      void wait (Mutex& mtx);
+      /** returns true if the condition was woken up by activity, false if timeout.
+       *  or interrupt.
+       */
+      bool wait (Mutex& mutex, unsigned int ms);
 
-      //returns true if the condition was woken up by activity, false if timeout
-      //or interrupt
-      bool wait (Mutex* mutex, int ms);
+      // !kh!
+      //  deprecate these?
+      void wait (Mutex* mutex);
+      bool wait (Mutex* mutex, unsigned int ms);
 
       /** Signal one waiting thread.
        *  Returns 0, if successful, or an errorcode.
@@ -36,16 +44,31 @@ class Condition
        */
       void broadcast();
 
-      /** Returns the operating system dependent unique id of the condition.
-       */
-      //const vcondition_t* getId() const;
+   private:
+      // !kh!
+      //  no value sematics, therefore private and not implemented.
+      Condition (const Condition&);
+      Condition& operator= (const Condition&);
 
    private:
-
 #ifdef WIN32
-	HANDLE mId;
+#  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
+   // !kh!
+   // boost clone with modification
+   // credit boost?
+   void enterWait ();
+   void* m_gate;
+   void* m_queue;
+   void* m_mutex;
+   unsigned m_gone;  // # threads that timed out and never made it to m_queue
+   unsigned long m_blocked; // # threads blocked on the condition
+   unsigned m_waiting; // # threads no longer waiting for the condition but
+                        // still waiting to be removed from m_queue
+#  else
+   HANDLE mId;
+#  endif
 #else
-	mutable  pthread_cond_t mId;
+   mutable  pthread_cond_t mId;
 #endif
 };
 
@@ -54,22 +77,22 @@ class Condition
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -79,7 +102,7 @@ class Condition
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -93,9 +116,9 @@ class Condition
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

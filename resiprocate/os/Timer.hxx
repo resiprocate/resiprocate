@@ -8,8 +8,8 @@
 namespace resip
 {
 
-class Message;
-
+   class Message;
+   class BaseTimeLimitTimerQueue;
 // Note: Timers are not thread safe; if the application needs to create timers
 // do something else
 class Timer
@@ -96,6 +96,7 @@ class Timer
       friend bool operator>(const Timer& t1, const Timer& t2);
       friend std::ostream& operator<<(std::ostream&, const Timer&);
       friend class BaseTimerQueue;
+      friend class BaseTimeLimitTimerQueue;
       friend class TimerQueue;
       friend class DtlsTimerQueue;
       friend class TimeLimitTimerQueue;

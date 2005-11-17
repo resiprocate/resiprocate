@@ -49,17 +49,17 @@ class Headers
          defineMultiHeader(Accept, "Accept", Mime, "RFC ????"),
          defineMultiHeader(AcceptEncoding, "Accept-Encoding", AcceptEncoding, "RFC ????"),
          defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????"),
-         defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????"),
+         defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC ????"),
          defineMultiHeader(Allow, "Allow", Token, "RFC ????"),
          defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC ????"),
-         defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????"),
+         defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC ????"),
          defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????"),
          defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????"),
          defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????"),
          defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", Token, "RFC ????"), // !dlb! defineMultiHeader
          defineHeader(ContentType, "Content-Type", Mime, "RFC ????"),
          defineHeader(Date, "Date", DateCategory, "RFC ????"),
-         defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????"),
+         defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC ????"),
          defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????"),
          defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????"),
          defineHeader(MIMEVersion, "MIME-Version", Token, "RFC ????"),
@@ -94,7 +94,7 @@ class Headers
          defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
 
          defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
-         defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),
+         defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03"),
 
          defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),
 

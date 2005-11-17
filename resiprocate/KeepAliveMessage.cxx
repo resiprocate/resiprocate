@@ -1,42 +1,48 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "resiprocate/KeepAliveMessage.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+using namespace resip;
 
-namespace resip
+KeepAliveMessage::KeepAliveMessage()
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
 }
 
-#endif
+KeepAliveMessage::KeepAliveMessage(const KeepAliveMessage& message)
+   : SipMessage(message)
+{
+   header(h_RequestLine).method() = OPTIONS;
+   Via via;
+   header(h_Vias).push_back(via);
+}
+
+KeepAliveMessage::~KeepAliveMessage()
+{   
+}
+
+
+KeepAliveMessage&
+KeepAliveMessage::operator=(const KeepAliveMessage& rhs)
+{
+   if (this != &rhs)
+   {
+      SipMessage::operator=(rhs); 
+   }
+   return *this;
+}
+
+Message*
+KeepAliveMessage::clone() const
+{
+   return new KeepAliveMessage(*this);
+}
+
+std::ostream&
+KeepAliveMessage::encode(std::ostream& str) const
+{
+   str << Symbols::CRLF << Symbols::CRLF;
+   return str;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

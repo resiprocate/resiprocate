@@ -1,103 +1,54 @@
-#if !defined(RESIP_TIMERQUEUE_HXX)
-#define RESIP_TIMERQUEUE_HXX 
+#if !defined(RESIP_TuSelector_HXX)
+#define RESIP_TuSelector_HXX 
 
-#include <set>
-#include <iosfwd>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/DtlsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Timer.hxx"
-
-// .dlb. 
-// to do: timer wheel for transaction-bound timers and a heap for
-// everything longer.
 
 namespace resip
 {
-
 class Message;
-class TransactionMessage;
-class TuSelector;
+class TransactionUser;
 
-class BaseTimerQueue
+class TuSelector
 {
    public:
-      virtual ~BaseTimerQueue()=0;
-      virtual void process()=0;
-      int size() const;
-      bool empty() const;
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      ~TuSelector();
       
-      // returns ms until the next timer will fire, returns 0 if timers occur in
-      // the past and returs INT_MAX if there are no timers 
-      unsigned int msTillNextTimer();
-      
-   protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-      std::multiset<Timer> mTimers;
-};
-
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
-{
-   public:
-      void add(const Timer& timer);
-      virtual void process();
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
-};
-
-
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TimeLimitFifo<Message>& mFifo;
-};
-
-
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TuSelector& mFifoSelector;
-};
-
-
-class TimerQueue : public BaseTimerQueue
-{
-   public:
-      TimerQueue(Fifo<TransactionMessage>& fifo);
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void process();
-   private:
-      Fifo<TransactionMessage>& mFifo;
-};
-
-#ifdef USE_DTLS
-
-#include <openssl/ssl.h>
-
-class DtlsTimerQueue : public BaseTimerQueue
-{
-   public:
-      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      void add( SSL *, unsigned long msOffset ) ;
-      virtual void process() ;
+      void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      unsigned int size() const;      
+      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+  
+      TransactionUser* selectTransactionUser(const SipMessage& msg);
+      bool haveTransactionUsers() const { return mTuSelectorMode; }
+      void registerTransactionUser(TransactionUser&);
+      void requestTransactionUserShutdown(TransactionUser&);
+      void unregisterTransactionUser(TransactionUser&);
+      void process();
       
    private:
-      Fifo<DtlsMessage>& mFifo ;
+      void remove(TransactionUser* tu);
+      void markShuttingDown(TransactionUser* tu);
+      bool exists(TransactionUser* tu);
+
+   private:
+      struct Item
+      {
+            Item(TransactionUser* ptu) : tu(ptu), shuttingDown(false) {}
+            TransactionUser* tu;
+            bool shuttingDown;
+            bool operator==(const Item& rhs) { return tu == rhs.tu; }
+      };
+      
+      typedef std::vector<Item> TuList;
+      TuList mTuList;
+      TimeLimitFifo<Message>& mFallBackFifo;
+      Fifo<TransactionUserMessage> mShutdownFifo;
+      bool mTuSelectorMode;
+      StatisticsMessage::Payload mStatsPayload;
 };
-
-#endif
-
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-
 }
 
 #endif
@@ -105,7 +56,7 @@ std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

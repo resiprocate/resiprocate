@@ -1,42 +1,42 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "resiprocate/TransactionUserMessage.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+using namespace resip;
 
-namespace resip
+TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) :
+   mType(type)
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
+   tu = ptu;
+   assert(tu);
 }
 
-#endif
+
+std::ostream& 
+TransactionUserMessage::encodeBrief(std::ostream& strm) const
+{ 
+   return strm << "TransactionUserMessage";
+}
+
+std::ostream& 
+TransactionUserMessage::encode(std::ostream& strm) const
+{
+   return encodeBrief(strm); 
+}
+
+const Data& 
+TransactionUserMessage::getTransactionId() const
+{
+   assert(0);
+   return Data::Empty;
+}
+
+bool 
+TransactionUserMessage::isClientTransaction() const
+{
+   assert(0);
+   return false;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

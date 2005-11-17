@@ -1,107 +1,36 @@
-#if !defined(RESIP_TIMERQUEUE_HXX)
-#define RESIP_TIMERQUEUE_HXX 
+#ifndef RESIP_HttpGetMessage_hxx
+#define RESIP_HttpGetMessage_hxx 
 
-#include <set>
-#include <iosfwd>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/DtlsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Timer.hxx"
-
-// .dlb. 
-// to do: timer wheel for transaction-bound timers and a heap for
-// everything longer.
+#include "resiprocate/Message.hxx"
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
 
-class Message;
-class TransactionMessage;
-class TuSelector;
-
-class BaseTimerQueue
+class HttpGetMessage : public Message
 {
    public:
-      virtual ~BaseTimerQueue()=0;
-      virtual void process()=0;
-      int size() const;
-      bool empty() const;
-      
-      // returns ms until the next timer will fire, returns 0 if timers occur in
-      // the past and returs INT_MAX if there are no timers 
-      unsigned int msTillNextTimer();
-      
-   protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-      std::multiset<Timer> mTimers;
-};
+      HttpGetMessage(const Data& tid, bool success, const Data& x509, const Mime& type);
 
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
-{
-   public:
-      void add(const Timer& timer);
-      virtual void process();
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
-};
+      bool success() const { return mSuccess; }
+      const Data& getBodyData() const { return mBody; }
+      const Mime& getType() const {return mType;}
+      const Data& tid() const { return mTid; } //replace w/ act
 
-
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      virtual Message* clone() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
-      TimeLimitFifo<Message>& mFifo;
+      Data mTid;
+      bool mSuccess;
+      Data mBody;
+      Mime mType;
 };
-
-
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TuSelector& mFifoSelector;
-};
-
-
-class TimerQueue : public BaseTimerQueue
-{
-   public:
-      TimerQueue(Fifo<TransactionMessage>& fifo);
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void process();
-   private:
-      Fifo<TransactionMessage>& mFifo;
-};
-
-#ifdef USE_DTLS
-
-#include <openssl/ssl.h>
-
-class DtlsTimerQueue : public BaseTimerQueue
-{
-   public:
-      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      void add( SSL *, unsigned long msOffset ) ;
-      virtual void process() ;
-      
-   private:
-      Fifo<DtlsMessage>& mFifo ;
-};
-
-#endif
-
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-
+ 
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

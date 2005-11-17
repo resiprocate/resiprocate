@@ -43,11 +43,12 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
 #endif
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
-   mAppTimers(mTUFifo),
+   mAppTimers(mTuSelector),
    mStatsManager(*this),
    mTransactionController(multiThreaded, mTUFifo, mStatsManager, mSecurity, stateless),
    mStrictRouting(false),
-   mShuttingDown(false)   
+   mShuttingDown(false),
+   mTuSelector(mTUFifo)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -184,22 +185,32 @@ SipStack::getUri() const
 }
 
 void 
-SipStack::send(std::auto_ptr<SipMessage> msg)
+SipStack::send(std::auto_ptr<SipMessage> msg, 
+               TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg->brief());
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   } 
    msg->setFromTU();
 
    mTransactionController.send(msg.release());
 }
 
 void 
-SipStack::send(const SipMessage& msg)
+SipStack::send(const SipMessage& msg, 
+               TransactionUser* tu)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   } 
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
@@ -210,9 +221,14 @@ SipStack::send(const SipMessage& msg)
 // probably don't want to use it. 
 void 
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
-                 const Uri& uri)
+                 const Uri& uri, 
+               TransactionUser* tu)
 {
    msg->setForceTarget(uri);
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   } 
    msg->setFromTU();
 
    mTransactionController.send(msg.release());
@@ -222,10 +238,15 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg,
 // probably don't want to use it. 
 void 
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, 
-                 const Tuple& destination)
+                 const Tuple& destination, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
    assert(destination.transport);
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   } 
    msg->setDestination(destination);
    msg->setFromTU();
 
@@ -235,11 +256,16 @@ SipStack::sendTo(std::auto_ptr<SipMessage> msg,
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::sendTo(const SipMessage& msg, const Uri& uri)
+SipStack::sendTo(const SipMessage& msg, const Uri& uri, 
+               TransactionUser* tu)
 {
    //assert(!mShuttingDown);
 
    SipMessage* toSend = new SipMessage(msg);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   } 
    toSend->setForceTarget(uri);
    toSend->setFromTU();
 
@@ -249,12 +275,17 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
+SipStack::sendTo(const SipMessage& msg, const Tuple& destination, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
    assert(destination.transport);
    
-   SipMessage* toSend = new SipMessage(msg);
+   SipMessage* toSend = new SipMessage(msg); 
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   } 
    toSend->setDestination(destination);
    toSend->setFromTU();
 
@@ -270,7 +301,8 @@ SipStack::post(std::auto_ptr<ApplicationMessage> message)
 
 void
 SipStack::post(std::auto_ptr<ApplicationMessage> message,
-               unsigned int secondsLater)
+               unsigned int secondsLater, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
    postMS(message, secondsLater*1000);
@@ -278,10 +310,14 @@ SipStack::post(std::auto_ptr<ApplicationMessage> message,
 
 void
 SipStack::postMS(std::auto_ptr<ApplicationMessage> message, 
-                 unsigned int ms)
+                 unsigned int ms, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
-
+   if (tu) 
+   {
+      message->setTransactionUser(tu);
+   }
    Lock lock(mAppTimerMutex);
    mAppTimers.add(Timer(ms, message.release()));
 }
@@ -295,17 +331,20 @@ SipStack::post(const ApplicationMessage& message)
 }
 
 void
-SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater)
+SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   postMS(message, secondsLater*1000);
+   postMS(message, secondsLater*1000,tu);
 }
 
 void
-SipStack::postMS(const ApplicationMessage& message, unsigned int ms)
+SipStack::postMS(const ApplicationMessage& message, unsigned int ms, 
+               TransactionUser* tu)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
+   if (tu) toPost->setTransactionUser(tu);
    Lock lock(mAppTimerMutex);
    mAppTimers.add(Timer(ms, toPost));
 }
@@ -341,7 +380,7 @@ SipStack::receive()
       }
    }
    else
-   {
+   {     
       return 0;
    }
 }
@@ -376,6 +415,7 @@ SipStack::process(FdSet& fdset)
       RESIP_STATISTICS(mStatsManager.process());
    }
    mTransactionController.process(fdset);
+   mTuSelector.process();
 
    Lock lock(mAppTimerMutex);
    mAppTimers.process();
@@ -413,6 +453,24 @@ void
 SipStack::setStatisticsInterval(unsigned long seconds)
 {
    mStatsManager.setInterval(seconds);
+}
+
+void 
+SipStack::registerTransactionUser(TransactionUser& tu)
+{
+   mTuSelector.registerTransactionUser(tu);
+}
+
+void 
+SipStack::requestTransactionUserShutdown(TransactionUser& tu)
+{
+   mTuSelector.requestTransactionUserShutdown(tu);
+}
+
+void 
+SipStack::unregisterTransactionUser(TransactionUser& tu)
+{
+   mTuSelector.unregisterTransactionUser(tu);
 }
 
 std::ostream& 

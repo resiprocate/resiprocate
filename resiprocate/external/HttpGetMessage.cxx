@@ -1,42 +1,37 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "resiprocate/external/HttpGetMessage.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+using namespace resip;
 
-namespace resip
+
+HttpGetMessage::HttpGetMessage(const Data& tid, 
+                               bool success, 
+                               const Data& body,
+                               const Mime& type) :
+   mTid(tid),
+   mSuccess(success),
+   mBody(body),
+   mType(type)
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
 }
 
-#endif
+std::ostream& 
+HttpGetMessage::encodeBrief(std::ostream& strm) const
+{ 
+   return strm << "HttpGetMessage: " << mTid << " " << mType;
+}
+
+std::ostream& 
+HttpGetMessage::encode(std::ostream& strm) const
+{
+   return strm << brief() << "body: " << mBody;   
+}
+
+Message* 
+HttpGetMessage::clone() const 
+{ 
+   return new HttpGetMessage(mTid, mSuccess, mBody, mType); 
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
