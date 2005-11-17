@@ -16,11 +16,14 @@
 # port/package for older versions.
 
 ifeq ($(OSTYPE),FreeBSD)
-
+    INCDIRS += /usr/local/include
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
+    CXXFLAGS += -DHAVE_POPT_H
+    CFLAGS   += -DHAVE_POPT_H
+    LDFLAGS += -lkvm
+    LIBDIRS  += /usr/local/lib
 endif
-
 ############################## Linux ##############################
 
 ifeq ($(OSTYPE),Linux)
