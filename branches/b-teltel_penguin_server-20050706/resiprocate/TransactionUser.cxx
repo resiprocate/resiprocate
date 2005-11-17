@@ -1,42 +1,105 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 
-namespace resip
+using namespace resip;
+
+TransactionUser::TransactionUser() 
+   : mFifo(0, 0)
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
+  // This creates a default message filter rule, which
+  // handles all sip: and sips: requests.
+  mRuleList.push_back(MessageFilterRule());
 }
 
-#endif
+TransactionUser::TransactionUser(MessageFilterRuleList &mfrl) 
+  : mFifo(0, 0), 
+    mRuleList(mfrl)
+{
+}
+
+TransactionUser::~TransactionUser()
+{
+}
+
+void 
+TransactionUser::post(Message* msg)
+{
+  mFifo.add(msg, TimeLimitFifo<Message>::InternalElement);
+}
+
+void 
+TransactionUser::postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
+{
+   mFifo.add(msg, usage);
+   //DebugLog (<< "TransactionUser::postToTransactionUser " << msg->brief() << " &=" << &mFifo << " size=" << mFifo.size());
+}
+
+unsigned int 
+TransactionUser::size() const
+{
+   return mFifo.size();
+}    
+
+bool 
+TransactionUser::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
+{
+   return mFifo.wouldAccept(usage);
+}
+
+bool
+TransactionUser::isForMe(const SipMessage& msg) const
+{
+   DebugLog (<< "Checking if " << msg.brief() << " is for me");
+   // do this for each MessageFilterRule
+   for (MessageFilterRuleList::const_iterator i = mRuleList.begin() ; 
+        i != mRuleList.end() ; ++i)
+   {
+       DebugLog (<< "Checking rule...");
+       if (i->matches(msg))
+       {
+          DebugLog (<< "Match!");
+          return true;
+       }       
+   }
+   DebugLog (<< "No matching rule found");
+   return false;
+}
+
+bool 
+TransactionUser::isMyDomain(const Data& domain) const
+{
+   return mDomainList.count(domain) > 0;
+}
+
+void TransactionUser::addDomain(const Data& domain)
+{
+   mDomainList.insert(domain);
+}
+
+std::ostream& 
+TransactionUser::encode(std::ostream& strm) const
+{
+   strm << "TU: " << name() << " size=" << mFifo.size();
+   return strm;
+}
+
+void
+TransactionUser::setMessageFilterRuleList(MessageFilterRuleList &rules)
+{
+   mRuleList = rules;
+}
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
+{
+   tu.encode(strm);
+   return strm;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

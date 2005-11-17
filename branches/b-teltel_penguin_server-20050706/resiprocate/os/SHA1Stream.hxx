@@ -1,111 +1,61 @@
-#if !defined(RESIP_TIMERQUEUE_HXX)
-#define RESIP_TIMERQUEUE_HXX 
+#if !defined(RESIP_SHA1STREAM_HXX)
+#define RESIP_SHA1STREAM_HXX 
 
-#include <set>
-#include <iosfwd>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/DtlsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include <iostream>
+#include <memory>
+#include <vector>
+#include "resiprocate/os/Data.hxx"
 
-// .dlb. 
-// to do: timer wheel for transaction-bound timers and a heap for
-// everything longer.
+#if defined (USE_SSL)
+# include "openssl/sha.h"
+#else
+// !kh!
+// so it would compile without openssl.
+// also see my comment below.
+typedef int SHA_CTX;
+#endif // USE_SSL
 
 namespace resip
 {
 
-class Message;
-class TransactionMessage;
-class TuSelector;
-
-class BaseTimerQueue
+class SHA1Buffer : public std::streambuf
 {
    public:
-      virtual ~BaseTimerQueue()=0;
-      virtual void process()=0;
-      int size() const;
-      bool empty() const;
-      
-      // returns ms until the next timer will fire, returns 0 if timers occur in
-      // the past and returs INT_MAX if there are no timers 
-      unsigned int msTillNextTimer();
-      
+      SHA1Buffer();
+      virtual ~SHA1Buffer();
+      Data getHex();
+      Data getBin();
    protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-      std::multiset<Timer> mTimers;
-};
-
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
-{
-   public:
-      void add(const Timer& timer);
-      virtual void process();
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
-};
-
-
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      virtual int sync();
+      virtual int overflow(int c = -1);
    private:
-      TimeLimitFifo<Message>& mFifo;
+      // !kh!
+      // used pointers to keep the same object layout.
+      // this adds overhead, two additional new/delete.
+      // could get rid of the overhead if, sizeof(SHA_CTX) and SHA_DIGEST_LENGTH are known and FIXED.
+      // could use pimpl to get rid of one new/delete pair.
+      std::auto_ptr<SHA_CTX> mContext;
+      std::vector<char> mBuf;
 };
 
-
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
+class SHA1Stream : private SHA1Buffer, public std::ostream
 {
    public:
-      TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      SHA1Stream();
+      ~SHA1Stream();
+      Data getHex();
+      Data getBin();
    private:
-      TuSelector& mFifoSelector;
+      //SHA1Buffer mStreambuf;
 };
-
-
-class TimerQueue : public BaseTimerQueue
-{
-   public:
-      TimerQueue(Fifo<TransactionMessage>& fifo);
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void process();
-   private:
-      Fifo<TransactionMessage>& mFifo;
-};
-
-#ifdef USE_DTLS
-
-#include <openssl/ssl.h>
-
-class DtlsTimerQueue : public BaseTimerQueue
-{
-   public:
-      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      void add( SSL *, unsigned long msOffset ) ;
-      virtual void process() ;
-      
-   private:
-      Fifo<DtlsMessage>& mFifo ;
-};
-
-#endif
-
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
 
 }
 
 #endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -435,7 +435,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
          else if (mState != Completed) // prevent TimerK reproduced
          {
             mState = Completed;
-            mController.mTimers.add(Timer::TimerK, mId, Timer::T4 );            
+            mController.mTimers.add(Timer::TimerK, mId, Timer::T4 );
          }
       }
    }

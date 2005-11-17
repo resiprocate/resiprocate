@@ -38,7 +38,7 @@ class Helper
       {
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
-      
+
       // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
       static int jitterValue(int input, int lowerPercentage, int upperPercentage, int minimum=0);
 
@@ -118,13 +118,20 @@ class Helper
                                                   const Data& hA1,
                                                   int expiresDelta = 0);
       
+      static std::pair<AuthResult,Data> 
+                advancedAuthenticateRequest(const SipMessage& request, 
+                                            const Data& realm,
+                                            const Data& a1,
+                                            int expiresDelta = 0);
+      
       // create a 407 response with Proxy-Authenticate header filled in
       static SipMessage* makeProxyChallenge(const SipMessage& request, 
                                             const Data& realm,
-                                            bool useAuth = true);
+                                            bool useAuth = true,
+                                            bool stale = false);
 
       // adds authorization headers in reponse to the 401 or 407--currently
-      // only supports md5, the only qop supported is auth.
+      // only supports md5.
       static SipMessage& addAuthorization(SipMessage& request,
                                           const SipMessage& challenge,
                                           const Data& username,
@@ -138,25 +145,25 @@ class Helper
                                             const Auth& challenge,
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
-                                            Data& nonceCountString);
-
+                                            Data& nonceCountString);      
       static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
                                                   const Data& passwordHashA1,
                                                   const Auth& challenge,
                                                   const Data& cnonce,
                                                   unsigned int& nonceCount,
-                                                  Data& nonceCountString);
-
-      static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
-                                  const Data& method, const Data& digestUri, const Data& nonce,
-                                  const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
-                                  const Data& cnonceCount = Data::Empty);
+                                                  Data& nonceCountString);      
 
       static Data makeResponseMD5WithA1(const Data& a1,
                                         const Data& method, const Data& digestUri, const Data& nonce,
                                         const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
                                         const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
+
+      static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
+                                  const Data& method, const Data& digestUri, const Data& nonce,
+                                  const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
+                                  const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
+      
       
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
@@ -200,8 +207,11 @@ class Helper
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
       
       static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
+
+   private:
+      static Data qopOption(const Auth& challenge);
 };
- 
+
 }
 
 #endif

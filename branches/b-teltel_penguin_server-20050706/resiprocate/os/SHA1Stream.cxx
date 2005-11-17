@@ -1,42 +1,92 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "resiprocate/os/SHA1Stream.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#if defined(USE_SSL)
 
-namespace resip
+// Remove warning about 'this' use in initiator list - pointer is only stored
+# if defined(WIN32)
+#   pragma warning( disable : 4355 ) // using this in base member initializer list 
+# endif // WIN32
+
+using namespace resip;
+
+SHA1Buffer::SHA1Buffer()
+        : mContext(new SHA_CTX()),
+          mBuf(SHA_DIGEST_LENGTH)
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
+   SHA1_Init(mContext.get());
+   setp(&mBuf[0], &mBuf[mBuf.size()]);
 }
 
-#endif
+SHA1Buffer::~SHA1Buffer()
+{
+}
+
+int
+SHA1Buffer::sync()
+{
+   size_t len = pptr() - pbase();
+   if (len > 0) 
+   {
+      SHA1_Update(mContext.get(), reinterpret_cast <unsigned const char*>(pbase()), len);
+      // reset the put buffer
+      setp(&mBuf[0], &mBuf[mBuf.size()]);
+   }
+   return 0;
+}
+
+int
+SHA1Buffer::overflow(int c)
+{
+   sync();
+   if (c != -1) 
+   {
+      mBuf[0] = c;
+      pbump(1);
+      return c;
+   }
+   return 0;
+}
+
+Data 
+SHA1Buffer::getHex()
+{
+   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   Data digest(Data::Share, (const char*)&mBuf[0], mBuf.size());
+   return digest.hex();   
+}
+
+Data
+SHA1Buffer::getBin()
+{
+   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   return Data(&mBuf[0], mBuf.size());
+}
+
+SHA1Stream::SHA1Stream()
+   : std::ostream(this)
+{
+}
+
+SHA1Stream::~SHA1Stream()
+{}
+
+Data 
+SHA1Stream::getHex()
+{
+   flush();
+   return SHA1Buffer::getHex();
+   //return mStreambuf.getHex();
+}
+
+Data
+SHA1Stream::getBin()
+{
+   flush();
+   return SHA1Buffer::getBin();
+}
+
+#endif // USE_SSL
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

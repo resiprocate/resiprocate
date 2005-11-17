@@ -1,42 +1,55 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#if !defined(RESIP_MESSAGE_FILTER_RULE_HXX)
+#define RESIP_MESSAGE_FILTER_RULE_HXX 
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#include <vector>
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
+class MessageFilterRule
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
+      typedef std::vector<Data> SchemeList;
+      typedef std::vector<Data> HostpartList;
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
+      typedef std::vector<Data> EventList;
+      typedef std::vector<MethodTypes> MethodList;
 
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
+      MessageFilterRule(SchemeList    schemeList     = SchemeList(),
+                        HostpartTypes hostpartType   = Any,
+                        MethodList    methodList     = MethodList(),
+                        EventList eventTypeList      = EventList());
 
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      MessageFilterRule(SchemeList    schemeList,
+                        HostpartList  hostpartList,
+                        MethodList    methodList     = MethodList(),
+                        EventList     eventList      = EventList());
 
-      Data& uri();
-      const Data& uri() const;
+
+      bool matches(const SipMessage &) const;
+
 
    private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
-}
+      bool schemeIsInList(const Data &scheme) const;
+      bool hostIsInList(const Data &hostpart) const;
+      bool methodIsInList(MethodTypes method) const;
+      bool eventIsInList(const Data &event) const;
 
+      SchemeList mSchemeList;
+      HostpartTypes mHostpartMatches;
+      HostpartList mHostpartList;
+      MethodList mMethodList;
+      EventList mEventList;
+
+      bool mAnyEventType;
+      bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
+};
+
+typedef std::vector<MessageFilterRule> MessageFilterRuleList;
+
+}
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

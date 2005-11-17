@@ -1,42 +1,25 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#if !defined(RESIP_KEEPALIVEMESSAGE_HXX)
+#define RESIP_KEEPALIVEMESSAGE_HXX 
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
+class KeepAliveMessage : public SipMessage
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
+      RESIP_HeapCount(KeepAliveMessage);
+      KeepAliveMessage();      
+      KeepAliveMessage(const KeepAliveMessage& message);
+      virtual Message* clone() const;
+      KeepAliveMessage& operator=(const KeepAliveMessage& rhs);      
+      virtual ~KeepAliveMessage();
+      virtual std::ostream& encode(std::ostream& str) const;
 };
-typedef ParserContainer<GenericUri> GenericUris;
- 
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

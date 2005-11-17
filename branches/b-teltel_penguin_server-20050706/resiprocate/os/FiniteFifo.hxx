@@ -63,7 +63,7 @@ FiniteFifo<Msg>::add(Msg* msg)
    }
    else
    {
-      mFiniteFifo.push_back(msg);
+      mFifo.push_back(msg);
       mSize++;
       mCondition.signal();
       return true;

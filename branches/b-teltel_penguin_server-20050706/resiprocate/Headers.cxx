@@ -134,14 +134,14 @@ defineMultiHeader(Accept, "Accept", Mime);
 defineHeader(ContentType, "Content-Type", Mime);
 
 //====================
-// GenericURIs:
+// GenericUris:
 //====================
-defineHeader(IdentityInfo, "Identity-Info", GenericURI);
+defineHeader(IdentityInfo, "Identity-Info", GenericUri);
 
-typedef ParserContainer<GenericURI> GenericURIs;
-defineMultiHeader(CallInfo, "Call-Info", GenericURI);
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI);
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI);
+typedef ParserContainer<GenericUri> GenericUris;
+defineMultiHeader(CallInfo, "Call-Info", GenericUri);
+defineMultiHeader(AlertInfo, "Alert-Info", GenericUri);
+defineMultiHeader(ErrorInfo, "Error-Info", GenericUri);
 
 //====================
 // NameAddr:

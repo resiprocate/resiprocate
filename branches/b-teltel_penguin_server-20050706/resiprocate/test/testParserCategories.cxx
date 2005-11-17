@@ -1110,7 +1110,7 @@ main(int arc, char** argv)
       char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
-      GenericURI generic(&hfv, Headers::UNKNOWN);
+      GenericUri generic(&hfv, Headers::UNKNOWN);
 
       assert(generic.uri() == "http://www.google.com");
       cerr << generic.param(p_purpose) << endl;

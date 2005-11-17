@@ -1,42 +1,21 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
-
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+#ifndef RESIP_AsyncProcessHandler_HXX
+#define RESIP_AsyncProcessHandler_HXX
 
 namespace resip
 {
 
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
+//called when an event from outside the process() lookp of the sipstack occurs
+//which requires the sipstack to all process()
+class AsyncProcessHandler
 {
    public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
+      virtual void handleProcessNotification() = 0; 
 };
-typedef ParserContainer<GenericUri> GenericUris;
- 
+
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
