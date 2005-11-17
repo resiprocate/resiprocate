@@ -1,4 +1,4 @@
-#if !defined(RESIP_TimeLimitFifo_hxx)
+#ifndef RESIP_TimeLimitFifo_hxx
 #define RESIP_TimeLimitFifo_hxx 
 
 #include <cassert>
@@ -55,7 +55,8 @@ class TimeLimitFifo : public AbstractFifo
        *  prior to calling getNext.
        */
       Msg* getNext();
-
+      Msg* getNext(int ms);
+      
       /** Return the time depth of the queue. Zero if no depth. */
       virtual time_t timeDepth() const;
 
@@ -129,6 +130,21 @@ TimeLimitFifo<Msg>::getNext()
 {
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext()));
    return tm->mMsg;
+}
+
+template <class Msg>
+Msg*
+TimeLimitFifo<Msg>::getNext(int ms)
+{
+   std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext(ms)));
+   if (tm.get())
+   {
+      return tm->mMsg;
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 template <class Msg>
@@ -231,8 +247,6 @@ TimeLimitFifo<Msg>::getTimeDepth() const
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

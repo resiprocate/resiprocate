@@ -11,7 +11,8 @@
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/StatisticsManager.hxx"
-
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/TuSelector.hxx"
 namespace resip 
 {
 
@@ -92,27 +93,27 @@ class SipStack
       /** interface for the TU to send a message.Loose Routing processing as per
           RFC3261 must be done before calling send by the TU. See
           Helper::processStrictRoute */
-      void send(std::auto_ptr<SipMessage> msg);
+      void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu=0);
 
       /** interface for the TU to send a message. makes a copy of the
           SipMessage. Caller is responsible for deleting the memory and may do
           so as soon as it returns. Loose Routing processing as per RFC3261 must
           be done before calling send by the TU. See Helper::processStrictRoute */
-      void send(const SipMessage& msg);
+      void send(const SipMessage& msg, TransactionUser* tu=0);
       
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri);
+      void sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu=0);
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
-      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple);
+      void sendTo(std::auto_ptr<SipMessage> msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. message is copied. */
-      void sendTo(const SipMessage& msg, const Uri& uri);
+      void sendTo(const SipMessage& msg, const Uri& uri, TransactionUser* tu=0);
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. message is copied. */
-      void sendTo(const SipMessage& msg, const Tuple& tuple);
+      void sendTo(const SipMessage& msg, const Tuple& tuple, TransactionUser* tu=0);
 
       /** makes the message available to the TU, TranasctionUser subclasses
           can just post to themselves. */
@@ -121,17 +122,17 @@ class SipStack
       /** makes the message available to the TU later, TranasctionUser subclasses
           can just post to themselves. */
       void post(std::auto_ptr<ApplicationMessage>, 
-                unsigned int secondsLater);
+                unsigned int secondsLater, TransactionUser* tu=0);
 
       /** makes the message available to the TU later, TranasctionUser subclasses
           can just post to themselves. */
       void postMS(std::auto_ptr<ApplicationMessage> message, 
-                  unsigned int ms);
+                  unsigned int ms, TransactionUser* tu=0);
       /** makes the message available to the TU, TranasctionUser subclasses
           can just post to themselves. message is copied. */
       void post(const ApplicationMessage& message);
-      void post(const ApplicationMessage& message, unsigned int secondsLater);
-      void postMS(const ApplicationMessage& message, unsigned int ms);
+      void post(const ApplicationMessage& message, unsigned int secondsLater, TransactionUser* tu=0);
+      void postMS(const ApplicationMessage& message, unsigned int ms, TransactionUser* tu=0);
 
       // Return true if the stack has new messages for the TU
       bool hasMessage() const;
@@ -168,6 +169,14 @@ class SipStack
       std::ostream& dump(std::ostream& strm) const;
       
       Security* getSecurity() const;
+
+      //adds a Tu to the tu selection chain. Tu do not call receive or
+      //receiveAny, the SipStack will call postToTu on the appropriate
+      //Tu. Messages no associated with a registered TU go into SipStack::mTuFifo
+      void registerTransactionUser(TransactionUser&);
+      void requestTransactionUserShutdown(TransactionUser&);
+      void unregisterTransactionUser(TransactionUser&);
+
    private:
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
@@ -181,7 +190,7 @@ class SipStack
       // timers associated with the application. When a timer fires, it is
       // placed in the mTUFifo
       mutable Mutex mAppTimerMutex;
-      TimeLimitTimerQueue  mAppTimers;
+      TuSelectorTimerQueue mAppTimers;
       
       // Track stack statistics
       StatisticsManager mStatsManager;
@@ -196,12 +205,16 @@ class SipStack
       bool mStrictRouting;
       bool mShuttingDown;
 
+      TuSelector mTuSelector;
+
       friend class Executive;
       friend class StatelessHandler;
       friend class StatisticsManager;
       friend class TestDnsResolver;
       friend class TestFSM;
       friend class TransactionState;
+      friend class TransactionController;
+      friend class TuSelector;
 };
 
 std::ostream& operator<<(std::ostream& strm, const SipStack& stack);

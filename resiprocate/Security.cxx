@@ -17,6 +17,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/SHA1Stream.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
@@ -51,32 +52,50 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+static const Data PEM(".pem");
 
-static const Data rootCert("root_cert_");
-static const Data domainCert("domain_cert_");
-static const Data domainKey("domain_key_");
-static const Data userCert("user_cert_");
-static const Data userKey("user_key_");
-static const Data pem(".pem");
-
-static const Data pemTypePrefixes[] =
+static const Data 
+pemTypePrefixes(  Security::PEMType pType )
 {
-   rootCert,
-   domainCert,
-   domainKey,
-   userCert,
-   userKey
-};
+   static const Data rootCert("root_cert_");
+   static const Data domainCert("domain_cert_");
+   static const Data domainKey("domain_key_");
+   static const Data userCert("user_cert_");
+   static const Data userKey("user_key_");
+   static const Data unkonwKey("user_key_");
+
+   switch (pType)
+   {
+      case  Security::RootCert:         return rootCert;
+      case  Security::DomainCert:       return domainCert;
+      case  Security::DomainPrivateKey: return domainKey;
+      case  Security::UserCert:         return userCert;
+      case  Security::UserPrivateKey:   return userKey;
+      default:
+      {
+         ErrLog( << "Some unkonw pem type prefix requested" << (int)(pType) );
+         assert(0);
+      }
+   }
+   return unkonwKey;
+}
 
 
-Data
+static Data
 readIntoData(const Data& filename)
 {
    DebugLog( << "Trying to read file " << filename );
    
    ifstream is;
    is.open(filename.c_str(), ios::binary );
-   assert(is.is_open()); // TODO should thorw not assert 
+   if ( !is.is_open() )
+   {
+      ErrLog( << "Could not open file " << filename << " for read");
+      throw BaseSecurity::Exception("Could not read file ", 
+                                    __FILE__,__LINE__);
+   }
+   
+   assert(is.is_open());
    
    // get length of file:
    is.seekg (0, ios::end);
@@ -96,53 +115,97 @@ readIntoData(const Data& filename)
 }
 
 
-Data
-getAor(const Data& filename, const Data& prefix)
+static Data
+getAor(const Data& filename, const  Security::PEMType &pemType )
 {
-   return filename.substr(prefix.size(), filename.size() - prefix.size() - pem.size());
+   const Data& prefix = pemTypePrefixes( pemType );
+   return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
+static int 
+verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
+{
+   char cBuf1[500];
+   char cBuf2[500];
+   X509 *pErrCert;
+   int iErr = 0;
+   int iDepth = 0;
+   pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
+   iErr = X509_STORE_CTX_get_error(pInStore);
+   iDepth =	X509_STORE_CTX_get_error_depth(pInStore);
+
+   if (NULL != pErrCert)
+      X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
+
+   sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
+   if(!iInCode)
+   {
+      memset(cBuf2, 0, sizeof(cBuf2) ); 
+      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
+   }
+ 
+   return iInCode;
+}
 
 Security::Security(const Data& directory) : mPath(directory)
 {
+   // since the preloader won't work otherwise and VERY difficult to figure
+   // out. 
+   if ( mPath[mPath.size()-1] != Symbols::SLASH[0] )
+   {
+      mPath += Symbols::SLASH;
+   }
 }
 
 
 void
 Security::preload()
 {
-#if 0
+#if 1
    FileSystem::Directory dir(mPath);
-   char buffer[8192];
-   Data fileT(Data::Borrow, buffer, sizeof(buffer));
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
    {
-      if (it->postfix(pem))
+      Data name = *it;
+           
+      if (name.postfix(PEM))
       {
-         if (it->prefix(userCert))
+         Data fileName = mPath + name;
+         
+         DebugLog(<< "Trying to load file " << name );
+         try
          {
-            addUserCertPEM(getAor(*it, userCert), readIntoData(*it));
+            if (name.prefix(pemTypePrefixes(UserCert)))
+            {
+               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
+            }
+            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
+            {
+               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainCert)))
+            {
+               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
+            {
+               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(RootCert)))
+            {
+               addRootCertPEM(readIntoData(fileName));
+            }
          }
-         else if (it->prefix(userKey))
-         {
-            addUserPrivateKeyPEM(getAor(*it, userKey), readIntoData(*it));
+         catch (...)
+         {  
+            ErrLog(<< "Some problem reading " << fileName );
          }
-         else if (it->prefix(domainCert))
-         {
-            addDomainPrivateKeyPEM(getAor(*it, domainCert), readIntoData(*it));
-         }
-         else if (it->prefix(domainKey))
-         {
-            addDomainPrivateKeyPEM(getAor(*it, domainKey), readIntoData(*it));
-         }
-         else if (it->prefix(rootCert))
-         {
-            addRootCertPEM(readIntoData(*it));
-         }
+         
+         InfoLog(<<"Sucessfully loaded " << fileName );
       }
    }
 #else
+   // CJ - TODO - delete this old crap 
    DIR* dir = opendir( mPath.c_str() );
 
    if (!dir )
@@ -161,31 +224,41 @@ Security::preload()
       }
 
       Data name( d->d_name );
-
-      if (name.postfix(pem))
+      Data fileName = mPath+name;
+      
+      if (name.postfix(PEM))
       {
-         InfoLog( << "Going to read file " << mPath + name );
+         InfoLog( << "Going to try to read file " << fileName );
          
-         if (name.prefix(userCert))
+         try
          {
-            addUserCertPEM(getAor(name, userCert), readIntoData(mPath + name));
+            if (name.prefix(pemTypePrefixes(UserCert)))
+            {
+               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
+            }
+            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
+            {
+               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainCert)))
+            {
+               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
+            {
+               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
+            }
+            else if (name.prefix(pemTypePrefixes(RootCert)))
+            {
+               addRootCertPEM(readIntoData(fileName));
+            }
          }
-         else if (name.prefix(userKey))
-         {
-            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(mPath + name));
+         catch (...)
+         {  
+            ErrLog(<< "Some problem reading " << fileName );
          }
-         else if (name.prefix(domainCert))
-         {
-            addDomainCertPEM(getAor(name, domainCert), readIntoData(mPath + name));
-         }
-         else if (name.prefix(domainKey))
-         {
-            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(mPath + name));
-         }
-         else if (name.prefix(rootCert))
-         {
-            addRootCertPEM(readIntoData(mPath + name));
-         }
+         
+         InfoLog(<<"Sucessfully loaded " << fileName );
       }
    }
    closedir( dir );
@@ -196,8 +269,9 @@ Security::preload()
 void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
-   Data filename = mPath + pemTypePrefixes[type] + name + pem;
+   Data filename = mPath + pemTypePrefixes(type) + name + PEM;
 
+   InfoLog (<< "Reading PEM file " << filename << " into " << name);
    // .dlb. extra copy
    buffer = readIntoData(filename);
 }
@@ -206,10 +280,23 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
-   Data filename = mPath + pemTypePrefixes[type] + name + pem;
-
+   Data filename = mPath + pemTypePrefixes(type) + name + PEM;
+   InfoLog (<< "Writing PEM file " << filename << " for " << name);
    ofstream str(filename.c_str(), ios::binary);
-   str.write(buffer.data(), buffer.size());
+   if (!str)
+   {
+      ErrLog (<< "Can't write to " << filename);
+      throw BaseSecurity::Exception("Failed opening PEM file", __FILE__,__LINE__);
+   }
+   else
+   {
+      str.write(buffer.data(), buffer.size());
+      if (!str)
+      {
+         ErrLog (<< "Failed writing to " << filename << " " << buffer.size() << " bytes");
+         throw BaseSecurity::Exception("Failed writing PEM file", __FILE__,__LINE__);
+      }
+   }
 }
 
 
@@ -221,145 +308,6 @@ Security::onRemovePEM(const Data& name, PEMType type) const
 }
 
 
-namespace
-{
-FILE* 
-fopenHelper (const char* pathname, const char* option)
-{
-   FILE* fp = fopen(pathname, option);
-
-   if ( !fp )
-   {
-      Data msg;
-      DataStream strm(msg);
-
-      strm << "fopen(" << pathname << ", " << option << ")" << "failed";
-
-      ErrLog(<< msg);
-      throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-   }
-
-   return   fp;
-}
-
-
-void 
-clearError ()
-{
-    while (ERR_get_error())
-        ;
-}
-
-
-void 
-onReadError (bool do_throw = false)
-{
-    Data msg;
-    while (true)
-    {
-        const char* file;
-        int line;
-
-        unsigned long code = ERR_get_error_line(&file,&line);
-        if ( code == 0 )
-        {
-            break;
-        }
-
-        msg.clear();
-        DataStream strm(msg);
-        char err_str[256];
-        ERR_error_string_n(code, err_str, sizeof(err_str));
-        strm << err_str << ", file=" << file 
-             << ", line= " << line << ", error code=" << code;
-
-        ErrLog(<< msg);
-    }
-    if (do_throw)
-    {
-       throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
-    }
-}
-
-
-void 
-logReadError ()
-{
-   onReadError(false);
-}
-
-
-void 
-throwReadError ()
-{
-   onReadError(true);
-}
-
-
-struct FileGuard
-{
-    FileGuard (FILE* fp)
-    :   mFp(fp) {}
-    ~FileGuard ()
-    {
-        fclose(mFp);
-    }
-
-    FILE* mFp;
-};
-
-
-#if defined(WIN32)
-
-struct FindGuard
-{
-    FindGuard (HANDLE findHandle)
-    :   mHandle(findHandle) {}
-    ~FindGuard ()
-    {
-        FindClose(mHandle);
-    }
-
-    HANDLE  mHandle;
-};
-
-#else
-
-struct DirGuard
-{
-    DirGuard (DIR* dir)
-    :   mDir(dir) {}
-    ~DirGuard ()
-    {
-        closedir(mDir);
-    }
-
-    DIR*  mDir;
-};
-#endif
-
-
-void
-setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, 
-              const Data& key, 
-              const Data& passPhrase)
-{
-   passPhrases.insert(std::make_pair(key, passPhrase));
-}
-
-
-bool
-hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
-{
-   BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
-   return (iter != passPhrases.end());
-}
-
-
-}  // namespace
-
-
-
 void
 BaseSecurity::addCertDER (PEMType type, 
                           const Data& key, 
@@ -368,7 +316,7 @@ BaseSecurity::addCertDER (PEMType type,
 {
    assert( !certDER.empty() );
 
-   X509* cert;
+   X509* cert = 0;
    unsigned char* in = (unsigned char*)certDER.data();
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
@@ -376,7 +324,6 @@ BaseSecurity::addCertDER (PEMType type,
       throw BaseSecurity::Exception("Could not read DER certificate ", 
                                     __FILE__,__LINE__);
    }
-   
    addCertX509(type,key,cert,write);
 }
 
@@ -416,9 +363,28 @@ BaseSecurity::addCertPEM (PEMType type,
 void
 BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write) const
 {
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
-
-   certs.insert(std::make_pair(key, cert));
+   switch (type)
+   {
+      case DomainCert:
+      {
+         mDomainCerts.insert(std::make_pair(key, cert));
+      }
+      break;
+      case UserCert:
+      { 
+         mUserCerts.insert(std::make_pair(key, cert));
+      }
+      break;
+      case RootCert:
+      {
+         X509_STORE_add_cert(mRootCerts,cert);
+      }
+      break;
+      default:
+      {
+         assert(0);
+      }
+   }
    
    if (write)
    {
@@ -520,10 +486,11 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       assert(0);
    }
 
-   assert(0); // the code following this has no hope of working 
+   //assert(0); // the code following this has no hope of working 
    
    X509* x = where->second;
-   int len = i2d_X509(x, NULL);
+   unsigned char* buffer=0;
+   int len = i2d_X509(x, &buffer);
 
    // !kh!
    // Although len == 0 is not an error, I am not sure what quite to do.
@@ -534,8 +501,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   char*    out = new char[len];
-  return   Data(Data::Take, out, len);
+   return   Data(Data::Take, (char*)buffer, len);
 }
 
 
@@ -548,25 +514,33 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
 
-   privateKeys.insert(std::make_pair(name, pKey));
+   // make a copy of the the key 
+   assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   assert( rsa );
+   EVP_PKEY* nKey = EVP_PKEY_new();
+   assert( nKey );
+   EVP_PKEY_set1_RSA(nKey, rsa);
    
-   // figure out a passPhrase to encrypt with 
-   char* kstr=NULL;
-   int klen=0;
-   if (type != DomainPrivateKey)
-   {
-      PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
-      if(iter != mUserPassPhrases.end())
-      {
-         Data passPhrase = iter->second;
-         
-         kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
-         klen = passPhrase.size();
-      }
-   }
-
+   privateKeys.insert(std::make_pair(name, nKey));
+      
    if (write)
    {
+      // figure out a passPhrase to encrypt with 
+      char* kstr=NULL;
+      int klen=0;
+      if (type != DomainPrivateKey)
+      {
+         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+         if(iter != mUserPassPhrases.end())
+         {
+            Data passPhrase = iter->second;
+            
+            kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
+            klen = passPhrase.size();
+         }
+      }
+
       BIO *bio = BIO_new(BIO_s_mem());
       assert(bio);
       try
@@ -639,7 +613,7 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
       EVP_PKEY* privateKey;
       if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
       {
-         ErrLog(<< "Could not read private key from '" << privateKeyDER << "' using pass phrase '" << passPhrase << "'" );
+         ErrLog(<< "Could not read private key from <" << privateKeyDER << ">" );
          throw Exception("Could not read private key ", __FILE__,__LINE__);
       }
       
@@ -682,7 +656,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
    char* passPhrase = 0;
    try
    {
-      if (type != DomainPrivateKey)
+      if (type == UserPrivateKey)
       {
          PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
          if(iter != mUserPassPhrases.end())
@@ -692,11 +666,10 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       }
       BIO_set_close(in, BIO_NOCLOSE);
       
-      EVP_PKEY* privateKey;
-      if (PEM_read_bio_PrivateKey(in, &privateKey, 0, passPhrase) == 0)
+      EVP_PKEY* privateKey=0;
+      if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, 0, passPhrase)) == NULL)
       {
-         ErrLog(<< "Could not read private key from '" << endl 
-                << privateKeyPEM << "using pass phrase '" << passPhrase <<endl );
+         ErrLog(<< "Could not read private key from <" << privateKeyPEM << ">" );
          throw Exception("Could not read private key ", __FILE__,__LINE__);
       }
       
@@ -891,58 +864,52 @@ BaseSecurity::BaseSecurity () :
    mRootCerts = X509_STORE_new();
    assert(mRootCerts);
 
-   static char* cipher="RSA+SHA+AES+3DES";
-
+   // static char* cipher="RSA+SHA+AES+3DES";
+   // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
+   //static char* cipher="ALL";
+   //static char* cipher="RSA+DSS+AES+3DES+DES+RC4+SHA1+MD5";
+   static char* cipher="TLSv1";
+     
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
+   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+      verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
    SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
+    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
+       verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
    assert(ret);
 }
 
 
+template<class T, class Func> 
+void clearMap(T& m, Func& clearFunc)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      clearFunc(it->second);
+   }
+   m.clear();
+}
+         
 BaseSecurity::~BaseSecurity ()
 {
-   {
       // cleanup certificates
-      X509Map::iterator iter = mDomainCerts.begin();
-      for (; iter != mDomainCerts.end(); ++iter)
-      {
-         X509_free(iter->second);
-         mDomainCerts.erase(iter);
-      }
-      iter = mUserCerts.begin();
-      for (; iter != mUserCerts.end(); ++iter)
-      {
-         X509_free(iter->second);
-         mUserCerts.erase(iter);
-      }
-   }
-   {
+      clearMap(mDomainCerts, X509_free);
+	  clearMap(mUserCerts, X509_free);
+
       // cleanup private keys
-      PrivateKeyMap::iterator iter = mDomainPrivateKeys.begin();
-      for (; iter != mDomainPrivateKeys.end(); ++iter)
-      {
-         EVP_PKEY_free(iter->second);
-         mDomainPrivateKeys.erase(iter);
-      }
-      iter = mUserPrivateKeys.begin();
-      for (; iter != mUserPrivateKeys.end(); ++iter)
-      {
-         EVP_PKEY_free(iter->second);
-         mUserPrivateKeys.erase(iter);
-      }
-   }
-   {
+      clearMap(mDomainPrivateKeys, EVP_PKEY_free);
+      clearMap(mUserPrivateKeys, EVP_PKEY_free);
+
       // cleanup root certs
       X509_STORE_free(mRootCerts);
-   }
 #if 0 // TODO - mem leak but seg faults
    {
       // cleanup SSL_CTXes
@@ -984,22 +951,23 @@ BaseSecurity::initialize ()
 }
 
 
-std::vector<BaseSecurity::CertificateInfo>
+Security::CertificateInfoContainer
 BaseSecurity::getRootCertDescriptions() const
 {
    // !kh!
    // need to be implemented.
    assert(0); // TODO 
-   return   std::vector<CertificateInfo>();
+   return   CertificateInfoContainer();
 }
 
 
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
-{
-    return;
-   assert(0);
-#if 0
+{ 
+   assert( mRootCerts );
+#if 1
+   addCertPEM(RootCert,Data::Empty,x509PEMEncodedRootCerts,false);
+#else
    assert( !x509PEMEncodedRootCerts.empty() );
 
    static X509_LOOKUP_METHOD x509_pemstring_lookup =
@@ -1017,8 +985,10 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 	};
 
    if (mRootCerts == 0)
-       mRootCerts = X509_STORE_new();
-
+   {
+      mRootCerts = X509_STORE_new();
+   }
+   
    assert( mRootCerts );
 
    X509_LOOKUP* lookup = X509_STORE_add_lookup(mRootCerts, &x509_pemstring_lookup);
@@ -1546,6 +1516,13 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    EVP_PKEY* pKey = mDomainPrivateKeys[signerDomain];
    assert( pKey );
+ 
+   if ( pKey->type !=  EVP_PKEY_RSA )
+   {
+      ErrLog( << "Private key (type=" << pKey->type <<"for " 
+              << signerDomain << " is not of type RSA" );
+      throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
+   }
 
    assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
@@ -1554,19 +1531,13 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    int resultSize = sizeof(result);
    assert( resultSize >= RSA_size(rsa) );
 
-   assert(SHA_DIGEST_LENGTH == 20);
-   unsigned char hashRes[SHA_DIGEST_LENGTH];
-   unsigned int hashResLen=SHA_DIGEST_LENGTH;
-
-   SHA_CTX sha;
-   SHA1_Init( &sha );
-   SHA1_Update(&sha, in.data() , in.size() );
-   SHA1_Final( hashRes, &sha );
-
-   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
+   SHA1Stream sha;
+   sha << in;
+   Data hashRes =  sha.getBin();
+   DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, hashRes, hashResLen,
+   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    assert( r == 1 );
@@ -1603,7 +1574,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    Data enc = res.base64encode();
 
    Security::dumpAsn("identity-in", in );
-   Security::dumpAsn("identity-in-hash", Data(hashRes, hashResLen) );
+   Security::dumpAsn("identity-in-hash", hashRes );
    Security::dumpAsn("identity-in-rsa",res);
    Security::dumpAsn("identity-in-base64",enc);
 
@@ -1612,32 +1583,29 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
 
 bool
-BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64 ) const
+BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64, X509* pCert ) const
 {
-   if (mDomainCerts.count(signerDomain) == 0)
+   X509* cert =  pCert;
+   if (!cert)
    {
-      ErrLog( << "No public key for " << signerDomain );
-      throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
+      if (mDomainCerts.count(signerDomain) == 0)
+      {
+         ErrLog( << "No public key for " << signerDomain );
+         throw Exception("Missing public key when verifying identity",__FILE__,__LINE__);
+      }
+      cert = mDomainCerts[signerDomain];
    }
-   X509* cert = mDomainCerts[signerDomain];
-
+   
    DebugLog( << "Check identity for " << in );
    DebugLog( << " base64 data is " << sigBase64 );
 
    Data sig = sigBase64.base64decode();
    DebugLog( << "decoded sig is 0x"<< sig.hex() );
 
-   assert(SHA_DIGEST_LENGTH == 20);
-   unsigned char hashRes[SHA_DIGEST_LENGTH];
-   unsigned int hashResLen=SHA_DIGEST_LENGTH;
-
-   SHA_CTX sha;
-   SHA1_Init( &sha );
-   SHA1_Update(&sha, in.data() , in.size() );
-   SHA1_Final( hashRes, &sha );
-   Data computedHash(hashRes, hashResLen);
-
-   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
+   SHA1Stream sha;
+   sha << in;
+   Data hashRes =  sha.getBin();
+   DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
    EVP_PKEY* pKey = X509_get_pubkey( cert );
    assert( pKey );
@@ -1646,8 +1614,8 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
-   int ret = RSA_verify(NID_sha1, hashRes, hashResLen,
-                        (unsigned char*)sig.data(), sig.size(),
+   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
+                        hashRes.size(), (unsigned char*)sig.data(), sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
@@ -1669,25 +1637,44 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    dumpAsn("identity-out-msg", in );
    dumpAsn("identity-out-base64", sigBase64 );
    dumpAsn("identity-out-sig", sig );
-   dumpAsn("identity-out-hash", computedHash );
+   dumpAsn("identity-out-hash", hashRes );
 
-   return ret;
+   return (ret != 0);
 }
 
 
 void
-BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
+BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) const
 {
    auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
-
+   X509* cert=NULL;
+   
    try
    {
-      if (checkIdentity(msg.header(h_From).uri().host(),
-                        msg.getCanonicalIdentityString(),
-                        msg.header(h_Identity).value()))
+      if ( !certDer.empty() )
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
-         sec->setIdentityStrength(SecurityAttributes::Identity);
+         unsigned char* in = (unsigned char*)certDer.data();
+         if (d2i_X509(&cert,&in,certDer.size()) == 0)
+         {
+            DebugLog(<< "Could not read DER certificate from " << certDer );
+            cert = NULL;
+         }
+      }
+      if ( certDer.empty() || cert )
+      {
+         if ( checkIdentity(msg.header(h_From).uri().host(),
+                            msg.getCanonicalIdentityString(),
+                            msg.header(h_Identity).value(),
+                            cert ) )
+         {
+            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentityStrength(SecurityAttributes::Identity);
+         }
+         else
+         {
+            sec->setIdentity(msg.header(h_From).uri().getAor());
+            sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+         }
       }
       else
       {
@@ -1910,18 +1897,24 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       throw Exception("Invalid contents passed to checkSignature", __FILE__, __LINE__);
    }
 
-   vector<Contents*>::const_iterator i = multi->parts().begin();
+   MultipartSignedContents::Parts::const_iterator i = multi->parts().begin();
+
    Contents* first = *i;
    ++i;
    assert( i != multi->parts().end() );
    Contents* second = *i;
+
+#if 1
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
 
    if ( !sig )
    {
       ErrLog( << "Don't know how to deal with signature type " );
-      throw Exception("Invalid contents passed to checkSignature", __FILE__, __LINE__);
+      //throw Exception("Invalid contents passed to checkSignature", __FILE__,
+      //__LINE__);
+      return first;
    }
+#endif
 
    int flags=0;
    flags |= PKCS7_BINARY;
@@ -1929,14 +1922,14 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert( second );
    assert( first );
 
-   //CerrLog( << "message to sign is " << *first );
+   InfoLog( << "message to sign is " << *first );
 
    Data bodyData;
    DataStream strm( bodyData );
    first->encodeHeaders( strm );
    first->encode( strm );
    strm.flush();
-   //CerrLog( << "encoded version to sign is " << bodyData );
+   InfoLog( << "encoded version to sign is " << bodyData );
 
    // Data textData = first->getBodyData();
    Data textData = bodyData;
@@ -1953,8 +1946,8 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    assert(out);
    InfoLog( << "created out BIO" );
 
-   DebugLog( << "verify <"    << textData.escaped() << ">" );
-   DebugLog( << "signature <" << sigData.escaped() << ">" );
+   InfoLog( << "verify <"    << textData.escaped() << ">" );
+   InfoLog( << "signature <" << sigData.escaped() << ">" );
 
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
    assert(pkcs7Bio);
@@ -2019,13 +2012,29 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    if ( *signedBy == Data::Empty )
    {
-      assert(0);
-      // need to add back in code that adds all certs when sender unkonwn
+#if 0 // CJ TODO FIX 
+      // THIS IS ALL WRONG 
+      *signedBy == Data("kumiko@example.net");
+      
+      if (mUserCerts.count( *signedBy))
+      {
+         X509* cert = mUserCerts[ *signedBy ];
+         assert(cert);
+         sk_X509_push(certs, cert);
+      }
+#else
+      //assert(0);
+       InfoLog( <<"Adding cert from root list to check sig" );  
+
+       sk_X509_push(certs, mRootCerts );
+        // need to add back in code that adds all certs when sender unkonwn
+#endif
    }
    else
    {
-      if (mUserCerts.count( *signedBy))
+      if (mUserCerts.count( *signedBy ))
       {
+         InfoLog( <<"Adding cert from" <<  *signedBy << " to check sig" );
          X509* cert = mUserCerts[ *signedBy ];
          assert(cert);
          sk_X509_push(certs, cert);
@@ -2199,11 +2208,116 @@ BaseSecurity::getSslCtx ()
    return   mSslCtx;
 }
 
+Data 
+BaseSecurity::getCetName(X509 *cert)
+{
+    X509_NAME *subj;
+    int       extcount;
+
+    assert(cert);
+
+    if ((extcount = X509_get_ext_count(cert)) > 0)
+    {
+        for (int i = 0;  i < extcount;  i++)
+        {
+            char              *extstr;
+            X509_EXTENSION    *ext;
+ 
+            ext = X509_get_ext(cert, i);
+            extstr = (char*) OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
+ 
+            if (!strcmp(extstr, "subjectAltName"))
+            {
+                int                  j;
+                unsigned char        *data;
+                STACK_OF(CONF_VALUE) *val;
+                CONF_VALUE           *nval;
+                X509V3_EXT_METHOD    *meth;
+                void                 *ext_str = NULL;
+ 
+                if (!(meth = X509V3_EXT_get(ext)))
+                    break;
+                data = ext->value->data;
+
+#if (OPENSSL_VERSION_NUMBER > 0x00907000L)
+                if (meth->it)
+                  ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
+                                          ASN1_ITEM_ptr(meth->it));
+                else
+                  ext_str = meth->d2i(NULL, &data, ext->value->length);
+#else
+                ext_str = meth->d2i(NULL, &data, ext->value->length);
+#endif
+                val = meth->i2v(meth, ext_str, NULL);
+                for (j = 0;  j < sk_CONF_VALUE_num(val);  j++)
+                {
+                    nval = sk_CONF_VALUE_value(val, j);
+                    if (!strcmp(nval->name, "DNS"))
+                    {
+                        //retrieve name, from nval->value                        
+                        return Data(nval->value);
+                    }
+                }
+            }
+        }
+    }
+ 
+    char cname[256];
+    memset(cname, 0, sizeof cname);
+
+    if ((subj = X509_get_subject_name(cert)) &&
+        X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
+    {        
+        return Data(cname);
+    }
+
+    ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
+    return Data::Empty;
+}
+
+static int 
+matchHostName(char *certName, const char *domainName)
+{
+   const char *dot;
+   dot = strchr(domainName, '.');
+   if (dot == NULL)
+   {
+      char *pnt = strchr(certName, '.');
+      /* hostname is not fully-qualified; unqualify the certName. */
+      if (pnt != NULL) 
+      {
+	 *pnt = '\0';
+      }
+   }
+   else 
+   {
+      if (strncmp(certName, "*.", 2) == 0) 
+      {
+	 domainName = dot + 1;
+	 certName += 2;
+      }
+   }
+   return !strcasecmp(certName, domainName);
+}
+
+bool 
+BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
+{
+   assert(cert);
+
+   Data certName = getCetName(cert);
+   if(Data::Empty == certName)
+      return false;
+
+   bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
+
+   return isMatching;
+}
 
 void
 BaseSecurity::dumpAsn( char* name, Data data)
 {
-#if 0 // !CJ! TODO turn off
+#if 1 // !CJ! TODO turn off
    assert(name);
 
    if (true) // dump asn.1 stuff to debug file
@@ -2235,13 +2349,15 @@ BaseSecurity::getDomainKey(  const Data& domain )
    
 }
 
-
 #endif
+
+
+
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0
 *
-* Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+* Copyright (c) 2002-2005 Vovida Networks, Inc.  All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions

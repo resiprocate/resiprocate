@@ -796,11 +796,6 @@ void
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
-   if (mShutdownState == Shutdown)
-   {
-      return;
-   }
-
    bool authorized = false;
    if (mServerAuthManager.get())
    {
@@ -1028,11 +1023,28 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 bool 
 DialogUsageManager::process()
 {
+   if (mShutdownState == Shutdown)
+   {
+      return false;
+   }
+#if defined(DUM_PROCESS_STACK_FIFO)
+   // process stack's fifo directly
+   if(mStack.hasMessage())
+   {
+      internalProcess(std::auto_ptr<Message>(mStack.receiveAny()));
+   } 
+   if (mFifo.messageAvailable())
+   {
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   return mStack.hasMessage() || mFifo.messageAvailable() ;
+#else
    if (mFifo.messageAvailable())
    {
       internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
    return mFifo.messageAvailable();
+#endif
 }
 
 bool

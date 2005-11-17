@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os
+CODE_SUBDIRS = os external
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -44,6 +44,7 @@ SRC = \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
 	os/WinCompat.cxx \
+	os/SHA1Stream.cxx \
 	\
 	\
 	AresDns.cxx \
@@ -152,7 +153,14 @@ SRC = \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
 	ApiCheck.cxx \
-	MethodHash.cxx
+	MethodHash.cxx \
+	TuSelector.cxx \
+	KeepAliveMessage.cxx \
+	TransactionUser.cxx \
+	TransactionUserMessage.cxx \
+	MessageFilterRule.cxx \
+	external/HttpGetMessage.cxx \
+	external/HttpProvider.cxx
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

@@ -1,102 +1,53 @@
-#if !defined(RESIP_TIMERQUEUE_HXX)
-#define RESIP_TIMERQUEUE_HXX 
+#if !defined(RESIP_TU_HXX)
+#define RESIP_TU_HXX 
 
-#include <set>
 #include <iosfwd>
-#include "resiprocate/TransactionMessage.hxx"
-#include "resiprocate/DtlsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
+#include <set>
 #include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
 
-// .dlb. 
-// to do: timer wheel for transaction-bound timers and a heap for
-// everything longer.
 
 namespace resip
 {
+class SipMessage;
 
-class Message;
-class TransactionMessage;
-class TuSelector;
-
-class BaseTimerQueue
+class TransactionUser
 {
    public:
-      virtual ~BaseTimerQueue()=0;
-      virtual void process()=0;
-      int size() const;
-      bool empty() const;
+      void post(Message *);
+      bool isMyDomain(const Data& domain) const;
+      void addDomain(const Data& domain);
+
+      virtual const Data& name() const=0;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      void setMessageFilterRuleList(MessageFilterRuleList &rules);
+
+   protected:
+      TransactionUser();
+      TransactionUser(MessageFilterRuleList &rules);
+
+      virtual ~TransactionUser()=0;
+      virtual bool isForMe(const SipMessage& msg) const;
       
-      // returns ms until the next timer will fire, returns 0 if timers occur in
-      // the past and returs INT_MAX if there are no timers 
-      unsigned int msTillNextTimer();
+      TimeLimitFifo<Message> mFifo;
+
+   private:
+      typedef std::set<Data> DomainList;
+      DomainList mDomainList;
       
-   protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
-      std::multiset<Timer> mTimers;
+      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      unsigned int size() const;
+      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+
+      friend class TuSelector;      
+
+      MessageFilterRuleList mRuleList;
 };
 
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
-{
-   public:
-      void add(const Timer& timer);
-      virtual void process();
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
-};
-
-
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TimeLimitFifo<Message>& mFifo;
-};
-
-
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
-{
-   public:
-      TuSelectorTimerQueue(TuSelector& sel);
-   protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
-   private:
-      TuSelector& mFifoSelector;
-};
-
-
-class TimerQueue : public BaseTimerQueue
-{
-   public:
-      TimerQueue(Fifo<TransactionMessage>& fifo);
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      virtual void process();
-   private:
-      Fifo<TransactionMessage>& mFifo;
-};
-
-#ifdef USE_DTLS
-
-#include <openssl/ssl.h>
-
-class DtlsTimerQueue : public BaseTimerQueue
-{
-   public:
-      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
-      void add( SSL *, unsigned long msOffset ) ;
-      virtual void process() ;
-      
-   private:
-      Fifo<DtlsMessage>& mFifo ;
-};
-
-#endif
-
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+std::ostream& 
+operator<<(std::ostream& strm, const TransactionUser& tu);
 
 }
 
@@ -105,7 +56,7 @@ std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
