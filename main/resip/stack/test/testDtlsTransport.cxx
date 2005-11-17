@@ -32,7 +32,7 @@ main(int argc, char* argv[])
    SipStack clientStack(serverSecurity);
    clientStack.addTransport(DTLS, 25060, V4);
    
-   NameAddr target("sip:bob@127.0.0.1:15060");
+   NameAddr target("sip:bob@127.0.0.1:15060;transport=dtls");
    NameAddr from("sip:alice@127.0.0.1");
    NameAddr contact;
    contact.uri().user() = "alice";
