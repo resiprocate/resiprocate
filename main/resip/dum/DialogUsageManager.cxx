@@ -1192,19 +1192,15 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
    }
 }
 
-// return false if there is nothing to do at the moment
+// return true if there is more to do
 bool 
 DialogUsageManager::process()
 {
-   // !kh!
-   // Fifo::getNext(0) is blocking when empty, is this behavior the right sematic?
-   std::auto_ptr<Message> msg(mFifo.getNext(1));
-   if(msg.get())
+   if (mFifo.messageAvailable())
    {
-      internalProcess(msg);
-      return true;
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
-   return false;
+   return mFifo.messageAvailable();
 }
 
 bool
