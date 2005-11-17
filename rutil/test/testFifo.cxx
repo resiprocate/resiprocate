@@ -157,6 +157,19 @@ int
 main()
 {
    Log::initialize(Log::Cout, Log::Debug, Data::Empty);
+   
+   {
+      cerr << "!! test getNext(ms) empty fifo timing" << endl;
+      Fifo<Foo> fifo;
+      UInt64 begin(Timer::getTimeMs());
+      fifo.getNext(2000);
+      UInt64 end(Timer::getTimeMs());
+      cerr << begin << " " << end << " " << end-begin << endl;      
+      
+      int offMark = 2000 - (end - begin);
+      
+      assert(abs(offMark) < 200);
+   }
 
    Fifo<Foo> f;
    FiniteFifo<Foo> ff(5);

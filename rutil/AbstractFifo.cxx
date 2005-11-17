@@ -51,7 +51,7 @@ AbstractFifo::getNext(int ms)
    while (mFifo.empty())
    {
       const UInt64 now(Timer::getTimeMs());
-      if(end >= now)
+      if(now >= end)
       {
           return 0;
       }
