@@ -47,7 +47,11 @@ threadWrapper( void* threadParm )
 #endif
    t->thread();
 #if defined(WIN32)
+#ifdef _WIN32_WCE
    ExitThread( 0 );
+#else
+   _endthreadex(0);
+#endif
 #endif
    return 0;
 }
