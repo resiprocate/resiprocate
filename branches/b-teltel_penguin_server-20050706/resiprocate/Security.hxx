@@ -49,7 +49,7 @@ class BaseSecurity
 
       typedef enum
       {
-         RootCert,
+         RootCert=1,
          DomainCert,
          DomainPrivateKey,
          UserCert,
@@ -71,7 +71,9 @@ class BaseSecurity
             Data validFrom;
             Data validTo;
       };
-      std::vector<CertificateInfo> getRootCertDescriptions() const;
+
+        typedef std::vector<CertificateInfo> CertificateInfoContainer;
+        CertificateInfoContainer getRootCertDescriptions() const;
 
       // All of these guys can throw SecurityException
 
@@ -114,9 +116,9 @@ class BaseSecurity
       Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
 
       Data computeIdentity( const Data& signerDomain, const Data& in ) const;
-      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig ) const;
+      bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig, X509* cert=NULL ) const;
 
-      void checkAndSetIdentity( const SipMessage& msg ) const;
+      void checkAndSetIdentity( const SipMessage& msg, const Data& derCert=Data::Empty ) const;
 
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
@@ -124,6 +126,13 @@ class BaseSecurity
       // returns NULL if fails. returns the data that was originally signed
       Contents* checkSignature( MultipartSignedContents*, 
                                 Data* signedBy, SignatureStatus* sigStat );
+
+      //returns SubjectAltName or commonName, if subjectAltName does not exist
+      Data getCetName(X509 *cert);
+
+      //compares (with wildcards) the hostname with the
+      //subjectAltName/commonName from the 'cert' certificate
+      bool compareCertName(X509 *cert, const Data& hostname);
 
       // allow particular classes to acces the fucntions below 
       // friend class TlsConnection;
@@ -171,7 +180,6 @@ class BaseSecurity
       
 };
 
-
 class Security : public BaseSecurity
 {
    public:
@@ -186,6 +194,7 @@ class Security : public BaseSecurity
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
       virtual void onRemovePEM(const Data& name, PEMType type) const;
+
    private:
       Data mPath;
 };

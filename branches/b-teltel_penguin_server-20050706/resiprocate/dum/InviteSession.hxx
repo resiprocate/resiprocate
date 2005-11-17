@@ -6,6 +6,7 @@
 #include "resiprocate/dum/DialogUsage.hxx"
 
 #include <map>
+#include <set>
 
 namespace resip
 {
@@ -55,8 +56,8 @@ class InviteSession : public DialogUsage
       virtual void rejectInfo(int statusCode = 488);
 
       // !polo!: Set reINVITE headers for multi-party call (2005/09/13).
-      void setReInviteHeader(const ExtensionHeader&        extensionHeader,
-                             const std::set<resip::Data >& data);
+      void setReInviteHeader(const ExtensionHeader& extensionHeader,
+                             const std::set<resip::Data>& data);
       SipMessage&  getReInviteMessage() { return mLastSessionModification; } 
 
       // Convenience methods for accessing attributes of a dialog. 

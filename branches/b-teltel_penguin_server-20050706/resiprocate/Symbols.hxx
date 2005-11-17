@@ -63,6 +63,7 @@ class Symbols
       static const char* Postd;
 
       static const char* auth;
+      static const char* authInt;
       static const char* Digest;
       static const char* Basic;
       
@@ -84,6 +85,7 @@ class Symbols
 
       static const char* audio;
       static const char* RTP_AVP;
+      static const char* data; // Spt. 6th, 2005: For Multi-Party Call/IM.
 
       static const char* Presence;
       static const char* Required;

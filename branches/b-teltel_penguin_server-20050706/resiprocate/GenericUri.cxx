@@ -16,16 +16,16 @@ using namespace std;
 //====================
 // GenericUri
 //====================
-GenericURI::GenericURI(const GenericURI& rhs)
+GenericUri::GenericUri(const GenericUri& rhs)
    : ParserCategory(rhs)
 {}
 
-GenericURI::GenericURI(HeaderFieldValue* hfv, Headers::Type type) 
+GenericUri::GenericUri(HeaderFieldValue* hfv, Headers::Type type) 
    : ParserCategory(hfv, type) 
 {}
 
-GenericURI&
-GenericURI::operator=(const GenericURI& rhs)
+GenericUri&
+GenericUri::operator=(const GenericUri& rhs)
 {
    if (this != &rhs)
    {
@@ -36,21 +36,21 @@ GenericURI::operator=(const GenericURI& rhs)
 }
 
 Data& 
-GenericURI::uri()
+GenericUri::uri()
 {
    checkParsed();
    return mUri;
 }
 
 const Data& 
-GenericURI::uri() const
+GenericUri::uri() const
 {
    checkParsed();
    return mUri;
 }
 
 void
-GenericURI::parse(ParseBuffer& pb)
+GenericUri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* anchor = pb.skipChar(Symbols::LA_QUOTE[0]);
@@ -65,13 +65,13 @@ GenericURI::parse(ParseBuffer& pb)
 }
 
 ParserCategory* 
-GenericURI::clone() const
+GenericUri::clone() const
 {
-   return new GenericURI(*this);
+   return new GenericUri(*this);
 }
 
 std::ostream& 
-GenericURI::encodeParsed(std::ostream& str) const
+GenericUri::encodeParsed(std::ostream& str) const
 {
    str << Symbols::LA_QUOTE[0]
        << mUri

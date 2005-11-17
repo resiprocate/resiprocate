@@ -1,42 +1,35 @@
-#if !defined(RESIP_GENERIC_URI_HXX)
-#define RESIP_GENERIC_URI_HXX
+#include "HttpProvider.hxx"
+#include "resiprocate/os/Lock.hxx"
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
+using namespace resip;
 
-namespace resip
+HttpProvider* HttpProvider::mInstance = 0;
+HttpProviderFactory* HttpProvider::mFactory = 0;
+Mutex HttpProvider::mMutex;      
+
+void 
+HttpProvider::setFactory(std::auto_ptr<HttpProviderFactory> fact)
 {
-
-//====================
-// GenericUri:
-//====================
-class GenericUri : public ParserCategory
-{
-   public:
-      enum {commaHandling = NoCommaTokenizing};
-
-      GenericUri() : ParserCategory() {}
-      GenericUri(HeaderFieldValue* hfv, Headers::Type type);
-      GenericUri(const GenericUri&);
-      GenericUri& operator=(const GenericUri&);
-
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-
-      Data& uri();
-      const Data& uri() const;
-
-   private:
-      mutable Data mUri;
-};
-typedef ParserContainer<GenericUri> GenericUris;
- 
+   mFactory = fact.release();
 }
 
-#endif
+HttpProvider* 
+HttpProvider::instance()
+{
+   if (mFactory && mInstance == 0)
+   {
+      Lock lock(mMutex);
+      if (mInstance == 0)
+      {
+         mInstance = mFactory->createHttpProvider();
+      }
+   }
+   return mInstance;   
+}
+
+
+      
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
