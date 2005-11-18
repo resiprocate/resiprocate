@@ -27,8 +27,6 @@ class DialogUsage : public BaseUsage
             virtual const char* name() const;
       };
 
-      virtual void send(SipMessage& request);
-
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();     
 
@@ -39,9 +37,18 @@ class DialogUsage : public BaseUsage
    protected:
       friend class DialogSet;
       friend class DialogUsageManager;
-      
+
+      virtual void send(SipMessage& msg);
+      virtual void send(SharedPtr<SipMessage> msg);      
+
+      // any usage that wants to give app a chance to adorn the message
+      // should override this method.
+      virtual void onReadyToSend(SipMessage&) {}
+
       DialogUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~DialogUsage();
+
+      virtual void sendToDialog(SharedPtr<SipMessage> msg);
 
       virtual void dialogDestroyed(const SipMessage& msg) = 0;
       

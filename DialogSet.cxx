@@ -311,13 +311,13 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  SipMessage ack;
-                  dialog.makeRequest(ack, ACK);
-                  ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+                  SharedPtr<SipMessage> ack(new SipMessage);
+                  dialog.makeRequest(*ack, ACK);
+                  ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
                   dialog.send(ack);
                   
-                  SipMessage bye;
-                  dialog.makeRequest(bye, BYE);
+                  SharedPtr<SipMessage> bye;
+                  dialog.makeRequest(*bye, BYE);
                   dialog.send(bye);
 
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
