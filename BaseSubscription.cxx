@@ -8,7 +8,7 @@ using namespace resip;
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
    mState(Initial),
-   mLastRequest(request),
+   mLastRequest(new SipMessage(request)),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
@@ -22,7 +22,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    else if (request.header(h_RequestLine).method() == NOTIFY)  // ClientSubscriptions for Refer are created with the first Notify
    {
       mEventType = "refer";
-	  mLastRequest.releaseContents();  // Remove the SipFrag - so that reSubscribes do not contain SipFrag
+	  mLastRequest->releaseContents();  // Remove the SipFrag - so that reSubscribes do not contain SipFrag
    }
    else
    {
@@ -39,7 +39,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
 bool
 BaseSubscription::matches(const SipMessage& msg)
 {
-   if (msg.isResponse() && msg.header(h_CSeq) == mLastRequest.header(h_CSeq))
+   if (msg.isResponse() && msg.header(h_CSeq) == mLastRequest->header(h_CSeq))
    {
       return true;
    }

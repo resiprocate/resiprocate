@@ -60,7 +60,7 @@ class ServerSubscription : public BaseSubscription
       Data mSubscriber;
 
 //      const Contents* mCurrentEventDocument;
-      SipMessage mLastNotify;
+      SipMessage mLastSubscribe;
 
       int mExpires;
 

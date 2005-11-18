@@ -43,6 +43,7 @@ class Dialog
       
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
+      void send(SharedPtr<SipMessage> msg);
       void send(SipMessage& msg);
       
       void makeRequest(SipMessage& request, MethodTypes method);
@@ -140,7 +141,8 @@ class Dialog
       
       // store until we get a response (non-401/407)
       // !jf! this shouldn't be necessary
-      typedef std::map<int,SipMessage> RequestMap;
+      // !dcm! -- no longer used for subscriptions, INVITE will take more thought/work
+      typedef std::map<int, SharedPtr<SipMessage> > RequestMap;
       RequestMap mRequests;
 
       AppDialog* mAppDialog;

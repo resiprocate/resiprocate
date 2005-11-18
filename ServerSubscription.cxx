@@ -68,7 +68,7 @@ ServerSubscription::getTimeLeft()
 SipMessage& 
 ServerSubscription::accept(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mDialog.makeResponse(mLastResponse, mLastSubscribe, statusCode);
    mLastResponse.header(h_Expires).value() = mExpires;
    return mLastResponse;
 }
@@ -80,7 +80,7 @@ ServerSubscription::reject(int statusCode)
    {
       throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mDialog.makeResponse(mLastResponse, mLastSubscribe, statusCode);
    return mLastResponse;
 }
 
@@ -92,18 +92,19 @@ ServerSubscription::send(SipMessage& msg)
    assert(handler);   
    if (msg.isResponse())
    {
-      int code = msg.header(h_StatusLine).statusCode();
+      assert(&mLastResponse == &msg);
+      int code = mLastResponse.header(h_StatusLine).statusCode();
       if (code < 200)
       {
-         DialogUsage::send(msg);
+         DialogUsage::send(mLastResponse);
       }
       else if (code < 300)
       {
-         if(msg.exists(h_Expires))
+         if(mLastResponse.exists(h_Expires))
          {
-            mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
-            DialogUsage::send(msg);
-            mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
+            mDum.addTimer(DumTimeout::Subscription, mLastResponse.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+            DialogUsage::send(mLastResponse);
+            mAbsoluteExpiry = time(0) + mLastResponse.header(h_Expires).value();            
             mState = Established;            
          }
          else
@@ -113,7 +114,7 @@ ServerSubscription::send(SipMessage& msg)
       }
       else if (code < 400)
       {
-         DialogUsage::send(msg);
+         DialogUsage::send(mLastResponse);
          handler->onTerminated(getHandle());
          delete this;
          return;
@@ -122,20 +123,21 @@ ServerSubscription::send(SipMessage& msg)
       {
          if (shouldDestroyAfterSendingFailure(msg))
          {
-            DialogUsage::send(msg);
+            DialogUsage::send(mLastResponse);
             handler->onTerminated(getHandle());
             delete this;
             return;
          }
          else
          {
-            DialogUsage::send(msg);
+            DialogUsage::send(mLastResponse);
          }
       }
    }
    else
    {
-      DialogUsage::send(msg);
+      assert(mLastRequest.get() == &msg);      
+      DialogUsage::send(mLastRequest);
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -202,7 +204,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
       //added to handler for now.
-      mLastRequest = msg;      
+      mLastSubscribe = msg;      
       if (msg.exists(h_Expires))
       {         
          mExpires = msg.header(h_Expires).value();
@@ -220,9 +222,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
       if (mExpires == 0)
       {
          makeNotifyExpires();
-         handler->onExpiredByClient(getHandle(), msg, mLastNotify);
+         handler->onExpiredByClient(getHandle(), msg, *mLastRequest);
          
-         mDialog.makeResponse(mLastResponse, mLastRequest, 200);
+         mDialog.makeResponse(mLastResponse, mLastSubscribe, 200);
          mLastResponse.header(h_Expires).value() = mExpires;
          send(mLastResponse);            
          end(Timeout);
@@ -245,7 +247,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
    else
    {     
       //.dcm. - will need to change if retry-afters are reaching here
-      mLastNotify.releaseContents();
+      mLastRequest->releaseContents();
       int code = msg.header(h_StatusLine).statusCode();
       if (code < 300)
       { 
@@ -286,27 +288,27 @@ ServerSubscription::makeNotifyExpires()
 {
    mSubscriptionState = Terminated;
    makeNotify();
-   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(Timeout);   
+   mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(Timeout);   
 }
 
 void
 ServerSubscription::makeNotify()
 {
-   mDialog.makeRequest(mLastNotify, NOTIFY);
-   mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
+   mDialog.makeRequest(*mLastRequest, NOTIFY);
+   mLastRequest->header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
    if (mSubscriptionState == Terminated)
    {
-      mLastNotify.header(h_SubscriptionState).remove(p_expires);      
+      mLastRequest->header(h_SubscriptionState).remove(p_expires);      
    }
    else
    {
-      mLastNotify.header(h_SubscriptionState).param(p_expires) = getTimeLeft();
+      mLastRequest->header(h_SubscriptionState).param(p_expires) = getTimeLeft();
    }
    
-   mLastNotify.header(h_Event).value() = mEventType;   
+   mLastRequest->header(h_Event).value() = mEventType;   
    if (!mSubscriptionId.empty())
    {
-      mLastNotify.header(h_Event).param(p_id) = mSubscriptionId;
+      mLastRequest->header(h_Event).param(p_id) = mSubscriptionId;
    }
 }
 
@@ -316,12 +318,12 @@ ServerSubscription::end(TerminateReason reason, const Contents* document)
 {
    mSubscriptionState = Terminated;
    makeNotify();
-   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
+   mLastRequest->header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
    if (document)
    {
-      mLastNotify.setContents(document);
+      mLastRequest->setContents(document);
    }
-   send(mLastNotify);
+   send(*mLastRequest);
 }
 
 void
@@ -339,8 +341,8 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
       ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
       assert(handler);
       makeNotifyExpires();
-      handler->onExpired(getHandle(), mLastNotify);
-      send(mLastNotify);
+      handler->onExpired(getHandle(), *mLastRequest);
+      send(*mLastRequest);
    }
 }
 
@@ -348,16 +350,16 @@ SipMessage&
 ServerSubscription::update(const Contents* document)
 {
    makeNotify();
-   mLastNotify.setContents(document);
-   return mLastNotify;
+   mLastRequest->setContents(document);
+   return *mLastRequest;
 }
 
 SipMessage& 
 ServerSubscription::neutralNotify()
 {
    makeNotify();
-   mLastNotify.releaseContents();   
-   return mLastNotify;
+   mLastRequest->releaseContents();   
+   return *mLastRequest;
 }
 
 void 
