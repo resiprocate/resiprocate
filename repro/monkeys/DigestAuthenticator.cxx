@@ -233,13 +233,10 @@ void
 DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
                                       bool stale)
 {
-   Message *message = rc.getCurrentEvent();
-   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
-
+   SipMessage &sipMessage = rc.getOriginalRequest();
    Data realm = getRealm(rc);
 
-   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, 
+   SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, 
                                                       true /*auth-int*/, stale);
    rc.sendResponse(*challenge);
 
