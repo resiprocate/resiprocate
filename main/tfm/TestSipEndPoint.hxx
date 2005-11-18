@@ -112,7 +112,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       InviteReferReplaces* inviteReferredBy();
 
       typedef boost::function<boost::shared_ptr<resip::SipMessage> 
-                              ( boost::shared_ptr<resip::SipMessage> msg) > 
+      ( boost::shared_ptr<resip::SipMessage> msg) > 
       MessageConditionerFn;
 
       class IdentityMessageConditioner
@@ -334,20 +334,47 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* respond(int code);
 
-      /// Send a NOTIFY that matches the SUBSCRIBE (the triggering message)
+      /*
+     /// Send a NOTIFY that matches the SUBSCRIBE (the triggering message)
+     class Notify : public MessageExpectAction
+     {
+     public:
+     Notify(TestSipEndPoint& endPoint, const resip::Uri& presentity);
+
+     virtual boost::shared_ptr<resip::SipMessage>
+     go(boost::shared_ptr<resip::SipMessage> msg);
+
+     private:
+     TestSipEndPoint& mEndPoint;
+     resip::Uri mPresentity;
+     };
+     Notify* notify(const resip::Uri& presentity);
+      */
+
+      // 202 to SUBSCRIBE
+      class Send202ToSubscribe : public MessageExpectAction
+      {
+         public:
+            Send202ToSubscribe(TestSipEndPoint& endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send202ToSubscribe();
+
       class Notify : public MessageExpectAction
       {
          public:
-            Notify(TestSipEndPoint& endPoint, const resip::Uri& presentity);
-
+            Notify(TestSipEndPoint& endPoint, boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState);
             virtual boost::shared_ptr<resip::SipMessage>
             go(boost::shared_ptr<resip::SipMessage> msg);
 
-         private:
             TestSipEndPoint& mEndPoint;
-            resip::Uri mPresentity;
+            boost::shared_ptr<resip::Contents> mContents;
+            resip::Data mEventPackage;
+            resip::Data mSubscriptionState;
       };
-      Notify* notify(const resip::Uri& presentity);
+      MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState);
 
       class Answer : public MessageExpectAction                                         
       {                                                                                 
@@ -703,55 +730,55 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
 #endif // TestSipEndPoint_hxx
 
 #ifdef RTP_ON
-      class CreateRtpSession : public ExpectAction
+class CreateRtpSession : public ExpectAction
+{
+   public:
+      CreateRtpSession(TestSipEndPoint* endPoint, const boost::shared_ptr<resip::SdpContents>& localSdp)
+         : mEndPoint(endPoint), mLocalSdp(localSdp) {}
+
+      virtual void operator()(boost::shared_ptr<Event> event);
+      virtual resip::Data toString() const;
+   private:
+      TestSipEndPoint* mEndPoint;
+      boost::shared_ptr<resip::SdpContents> mLocalSdp;
+};
+friend class CreateRtpSession;     
+
+CreateRtpSession* createRtpSession(const boost::shared_ptr<resip::SdpContents>& localSdp) 
+{ 
+   return new CreateRtpSession(this, localSdp);
+}
+
+class SendDtmf : public ExpectAction
+{
+   public:
+      typedef vector< pair<char,int> > DtmfSequence;
+
+      SendDtmf(TestSipEndPoint* endPoint, const DtmfSequence& dtmfString);
+
+
+      virtual void operator()(boost::shared_ptr<Event> event);
+   private:
+      TestSipEndPoint* mEndPoint;
+      DtmfSequence mDtmfString;
+
+      class SendDtmfChar : public SipEndPointAction
       {
          public:
-            CreateRtpSession(TestSipEndPoint* endPoint, const boost::shared_ptr<resip::SdpContents>& localSdp)
-               : mEndPoint(endPoint), mLocalSdp(localSdp) {}
-
-            virtual void operator()(boost::shared_ptr<Event> event);
-            virtual resip::Data toString() const;
-         private:
-            TestSipEndPoint* mEndPoint;
-            boost::shared_ptr<resip::SdpContents> mLocalSdp;
-      };
-      friend class CreateRtpSession;     
-
-      CreateRtpSession* createRtpSession(const boost::shared_ptr<resip::SdpContents>& localSdp) 
-      { 
-         return new CreateRtpSession(this, localSdp);
-      }
-
-      class SendDtmf : public ExpectAction
-      {
-         public:
-            typedef vector< pair<char,int> > DtmfSequence;
-
-            SendDtmf(TestSipEndPoint* endPoint, const DtmfSequence& dtmfString);
-
-
-            virtual void operator()(boost::shared_ptr<Event> event);
-         private:
-            TestSipEndPoint* mEndPoint;
-            DtmfSequence mDtmfString;
-
-            class SendDtmfChar : public SipEndPointAction
-            {
-               public:
-                  SendDtmfChar(TestSipEndPoint* endpoint, int dtmf) 
-                     : SipEndPointAction(endpoint), mDtmf(dtmf) {}
+            SendDtmfChar(TestSipEndPoint* endpoint, int dtmf) 
+               : SipEndPointAction(endpoint), mDtmf(dtmf) {}
                   
-                  virtual void operator()(TestSipEndPoint& endPoint);
+            virtual void operator()(TestSipEndPoint& endPoint);
                   
-                  int mDtmf;
-            };
+            int mDtmf;
       };
-      friend class SendDtmf;     
+};
+friend class SendDtmf;     
 
-      SendDtmf* sendDtmf(const SendDtmf::DtmfSequence& dSeq)
-      { 
-         return new SendDtmf(this, dSeq);
-      }
+SendDtmf* sendDtmf(const SendDtmf::DtmfSequence& dSeq)
+{ 
+   return new SendDtmf(this, dSeq);
+}
 #endif
 
 // Copyright 2005 Purplecomm, Inc.
@@ -763,13 +790,13 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
   are permitted provided that the following conditions are met:
 
   * Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
+  list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
   * Neither the name of PurpleComm, Inc. nor the names of its contributors may
-    be used to endorse or promote products derived from this software without
-    specific prior written permission.
+  be used to endorse or promote products derived from this software without
+  specific prior written permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
