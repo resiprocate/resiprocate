@@ -1236,6 +1236,62 @@ TestSipEndPoint::send302()
    return new Send302(*this);
 }
 
+TestSipEndPoint::Send202ToSubscribe::Send202ToSubscribe(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>                                
+TestSipEndPoint::Send202ToSubscribe::go(boost::shared_ptr<resip::SipMessage> msg)                      
+{
+   boost::shared_ptr<resip::SipMessage> subscribe;
+   subscribe = mEndPoint.getReceivedSubscribe(msg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*subscribe, 202);
+
+   if (subscribe->exists(h_Expires))
+   {
+      response->header(h_Expires).value() = subscribe->header(h_Expires).value();
+   }
+
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send202ToSubscribe()
+{
+   return new Send202ToSubscribe(*this);
+}
+
+TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<resip::Contents> contents, 
+                                const resip::Data& eventPackage, const resip::Data& subscriptionState)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mContents(contents),
+     mEventPackage(eventPackage),
+     mSubscriptionState(subscriptionState)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>                                
+TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
+   assert(dialog);
+   shared_ptr<SipMessage> notify(dialog->makeNotify());
+   notify->setContents(mContents.get());
+   notify->header(h_Event).value() = mEventPackage;
+   notify->header(h_SubscriptionState).value() = mSubscriptionState;
+
+   return notify;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState)
+{
+   return new Notify(*this, contents, eventPackage, subscriptionState);
+}
+
 TestSipEndPoint::Respond::Respond(TestSipEndPoint& endPoint,
                                   int responseCode)
    : MessageExpectAction(endPoint),
@@ -1267,6 +1323,7 @@ TestSipEndPoint::respond(int code)
    return new Respond(*this, code);
 }
 
+/*
 TestSipEndPoint::Notify::Notify(TestSipEndPoint& endPoint,
                                 const resip::Uri& presentity)
    : MessageExpectAction(endPoint),
@@ -1317,6 +1374,7 @@ TestSipEndPoint::notify(const resip::Uri& presentity)
 {
    return new Notify(*this, presentity);
 }
+*/
 
 TestSipEndPoint::Answer::Answer(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
