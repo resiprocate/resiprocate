@@ -37,7 +37,7 @@ class ServerAuthManager : public DumFeature
       virtual SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
 
       // can return Challenged, RequestedCredentials, Rejected, Skipped
-      virtual Result handle(const SipMessage& msg);
+      virtual Result handle(SipMessage* sipMsg);
       
    protected:
       // this call back should async cause a post of UserAuthInfo

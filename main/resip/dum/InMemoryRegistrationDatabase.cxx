@@ -12,6 +12,12 @@ InMemoryRegistrationDatabase::InMemoryRegistrationDatabase()
 
 InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 {
+   for( database_map_t::const_iterator it = mDatabase.begin();
+        it != mDatabase.end(); it++)
+   {
+      delete it->second;
+   }
+   mDatabase.clear();
 }
 
 void 
