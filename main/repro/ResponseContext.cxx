@@ -249,9 +249,9 @@ ResponseContext::processResponse(SipMessage& response)
             if (i->second.status == WaitingToCancel)
             {
                cancelClientTransaction(i->second);
-               mClientTransactions.erase(i);
+               i->second.status = Terminated;
             }
-            else
+            else if(i->second.status != Terminated)
             {
                i->second.status = Proceeding;
             }
