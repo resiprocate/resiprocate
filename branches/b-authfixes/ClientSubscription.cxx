@@ -23,7 +23,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mExpires(0)
 {
    DebugLog (<< "ClientSubscription::ClientSubscription from " << request.brief());   
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+   mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
 }
 
 ClientSubscription::~ClientSubscription()
@@ -55,7 +55,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
       if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
       {
-         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
+         InfoLog (<< "[ClientSubscription] " << mLastRequest->header(h_To));
          mDialog.mRemoteTarget = msg.header(h_Contacts).front();
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
@@ -71,9 +71,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
          expires = 3600;
       }
 
-      if (!mLastRequest.exists(h_Expires))
+      if (!mLastRequest->exists(h_Expires))
       {
-         mLastRequest.header(h_Expires).value() = expires;
+         mLastRequest->header(h_Expires).value() = expires;
       }
 
       //if no subscription state header, treat as an extension. Only allow for
@@ -151,7 +151,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          acceptUpdate();
          handler->onTerminated(getHandle(), msg);
-         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");                   
+         DebugLog (<< "[ClientSubscription] " << mLastRequest->header(h_To) << "[ClientSubscription] Terminated");                   
          delete this;
          return;
       }
@@ -171,7 +171,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   << mDialog.mRemoteTarget);
 
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-         send(sub);
+         mDum.send(sub);
 
          delete this;
          return;
@@ -191,13 +191,13 @@ ClientSubscription::dispatch(const SipMessage& msg)
          if (msg.header(h_StatusLine).statusCode() == 408)
          {
             InfoLog (<< "Received 408 to SUBSCRIBE "
-                     << mLastRequest.header(h_To));
+                     << mLastRequest->header(h_To));
             retry = handler->onRequestRetry(getHandle(), 0, msg);
          }
          else
          {
             InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
-                     << mLastRequest.header(h_To));
+                     << mLastRequest->header(h_To));
             retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
          }
 
@@ -214,16 +214,16 @@ ClientSubscription::dispatch(const SipMessage& msg)
                    
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
-               SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               send(sub);
+               SipMessage& sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+               mDum.send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               send(sub);
+               mDum.send(sub);
             }
-            
-            return;
+            //!dcm! -- new sub created above, when does this usage get destroyed?
+            //return;
          }
          else 
          {
@@ -276,13 +276,13 @@ ClientSubscription::dispatch(const DumTimeout& timer)
   
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
-               SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               send(sub);
+               SipMessage& sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+               mDum.send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               send(sub);
+               mDum.send(sub);
             }
             
             delete this;
@@ -300,15 +300,15 @@ ClientSubscription::requestRefresh(int expires)
 {
    if (!mEnded)
    {
-      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+      mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
       //!dcm! -- need a mechanism to retrieve this for the event package...part of
       //the map that stores the handlers, or part of the handler API
       if(expires > 0)
       {
-         mLastRequest.header(h_Expires).value() = expires;
+         mLastRequest->header(h_Expires).value() = expires;
       }
       mExpires = 0;
-      InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
+      InfoLog (<< "Refresh subscription: " << mLastRequest->header(h_Contacts).front());
       send(mLastRequest);
    }
 }
@@ -316,12 +316,12 @@ ClientSubscription::requestRefresh(int expires)
 void
 ClientSubscription::end()
 {
-   InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
+   InfoLog (<< "End subscription: " << mLastRequest->header(h_RequestLine).uri());
 
    if (!mEnded)
    {
-      mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-      mLastRequest.header(h_Expires).value() = 0;
+      mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+      mLastRequest->header(h_Expires).value() = 0;
       mEnded = true;
       send(mLastRequest);
    }
@@ -375,7 +375,7 @@ void ClientSubscription::dialogDestroyed(const SipMessage& msg)
 std::ostream&
 ClientSubscription::dump(std::ostream& strm) const
 {
-   strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
+   strm << "ClientSubscription " << mLastRequest->header(h_From).uri();
    return strm;
 }
 

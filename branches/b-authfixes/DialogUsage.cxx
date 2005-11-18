@@ -63,16 +63,22 @@ DialogUsage::getUserProfile()
 }
 
 void 
-DialogUsage::send(SipMessage& msg)
+DialogUsage::send(SharedPtr<SipMessage> msg)
 {
-   if (msg.isRequest())
+   if (msg->isRequest())
    {
       // give app an chance to adorn the message.
-      onReadyToSend(msg);
+      onReadyToSend(*msg);
    }
    mDialog.send(msg);
 }
 
+void 
+DialogUsage::send(SipMessage& msg)
+{
+   assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
+   mDialog.send(msg);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
