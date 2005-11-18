@@ -67,15 +67,15 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
          transition(UAC_SentUpdateEarly);
 
          //  Creates an UPDATE request with application supplied offer.
-         mDialog.makeRequest(mLastSessionModification, UPDATE);
-         InviteSession::setSdp(mLastSessionModification, offer);
+         mDialog.makeRequest(*mLastSessionModification, UPDATE);
+         InviteSession::setSdp(*mLastSessionModification, offer);
 
          //  Remember proposed local SDP.
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
+         DumHelper::setOutgoingEncryptionLevel(*mLastSessionModification, mProposedEncryptionLevel);
          send(mLastSessionModification);
          break;
       }
@@ -221,12 +221,12 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
       {
          //  Creates an PRACK request with application supplied status code.
          //  !kh! hopefully 488....
-         SipMessage req;
-         mDialog.makeRequest(req, PRACK);
-         req.header(h_StatusLine).statusCode() = statusCode;
+         SharedPtr<SipMessage> req(new SipMessage());
+         mDialog.makeRequest(*req, PRACK);
+         req->header(h_StatusLine).statusCode() = statusCode;
          if(warning)
          {
-            req.header(h_Warnings).push_back(*warning);
+            req->header(h_Warnings).push_back(*warning);
          }
 
          //  Send the req and do state transition.
@@ -975,10 +975,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On200Prack:
          transition(UAC_SentUpdateEarly);
          {
-            mDialog.makeRequest(mLastSessionModification, UPDATE);
-            InviteSession::setSdp(mLastSessionModification, mProposedLocalSdp.get());
+            mDialog.makeRequest(*mLastSessionModification, UPDATE);
+            InviteSession::setSdp(*mLastSessionModification, mProposedLocalSdp.get());
 
-            DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
+            DumHelper::setOutgoingEncryptionLevel(*mLastSessionModification, mProposedEncryptionLevel);
             send(mLastSessionModification);
          }
          break;

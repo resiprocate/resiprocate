@@ -42,6 +42,12 @@ NonDialogUsage::getUserProfile()
    return mDialogSet.getUserProfile();
 }
 
+void 
+NonDialogUsage::send(SipMessage& msg)
+{
+   mDum.send(msg);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

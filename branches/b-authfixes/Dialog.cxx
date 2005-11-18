@@ -485,8 +485,8 @@ Dialog::dispatch(const SipMessage& msg)
 				   }
 				   else
 				   {
-                      SipMessage response;
-                      makeResponse(response, msg, 406);
+                      SharedPtr<SipMessage> response(new SipMessage);
+                      makeResponse(*response, msg, 406);
                       send(response);
 				   }
 			   }
@@ -509,22 +509,15 @@ Dialog::dispatch(const SipMessage& msg)
       {
 	     bool handledByAuth = false;
          if (mDum.mClientAuthManager.get() && 
-             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
+             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
          {
-            InfoLog( << "about to re-send request with digest credentials" << r->second.brief());
+            InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
 
-            assert (r->second.isRequest());
+            assert (r->second->isRequest());
 
             mLocalCSeq++;
             send(r->second);
 			handledByAuth = true;
-
-            if((r->second.header(h_RequestLine).method() == INVITE || r->second.header(h_RequestLine).method() == UPDATE) &&
-               mInviteSession != 0)
-            {
-                // Copy INVITE or UPDATE with Authorization headers back to InviteSession - needed to populate ACKs with Authoriziation headers
-                mInviteSession->mLastSessionModification = r->second;
-            }
          }
          mRequests.erase(r);
 		 if (handledByAuth) return;
@@ -967,12 +960,19 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
+Dialog::send(SharedPtr<SipMessage> msg)
+{
+   if (msg->isRequest() && msg->header(h_CSeq).method() != ACK)
+   {
+      mRequests[msg->header(h_CSeq).sequence()] = msg;
+   }
+   mDum.send(*msg);
+}
+
+void 
 Dialog::send(SipMessage& msg)
 {
-   if (msg.isRequest() && msg.header(h_CSeq).method() != ACK)
-   {
-      mRequests[msg.header(h_CSeq).sequence()] = msg;
-   }
+   assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
    mDum.send(msg);
 }
 
