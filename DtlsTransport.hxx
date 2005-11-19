@@ -11,6 +11,10 @@
 #include "resip/stack/TimerQueue.hxx"
 #endif
 
+#ifndef RESIP_SENDDATA_HXX
+#include "resip/stack/SendData.hxx"
+#endif
+
 #ifndef RESIP_HEAPINSTANCECOUNTER_HXX
 #include "rutil/HeapInstanceCounter.hxx"
 #endif
@@ -149,6 +153,11 @@ class DtlsTransport : public UdpTransport
       unsigned char       mDummyBuf[ 4 ] ;
       BIO*                mDummyBio ;
       const Data          mDomain;
+
+      SendData            *mSendData ;/* Data that was unqueued from mTxFifo, 
+                                       * but unable to send because a handshake
+                                       * was in progress 
+                                       */
       
       void _read( FdSet& fdset ) ;
       void _write( FdSet& fdset ) ;
