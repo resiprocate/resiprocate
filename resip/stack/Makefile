@@ -42,6 +42,7 @@ SRC = \
 	DeprecatedDialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
+	DtlsMessage.cxx \
 	DtlsTransport.cxx \
 	Embedded.cxx \
 	ExtensionParameter.cxx \
