@@ -69,10 +69,11 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& interfaceObj,
                              Security& security,
                              const Data& sipDomain)
-                             : UdpTransport( fifo, portNum, version, StunDisabled, interfaceObj ),
-     mTimer( mHandshakePending ),
-     mSecurity( &security ),
-     mDomain(sipDomain)
+                             : UdpTransport( fifo, portNum, version, 
+                                 StunDisabled, interfaceObj ),
+                               mTimer( mHandshakePending ),
+                               mSecurity( &security ),
+                               mDomain(sipDomain)
 {
    setTlsDomain(sipDomain);   
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
@@ -88,6 +89,8 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 
    mDummyBio = BIO_new( BIO_s_mem() ) ;
    assert( mDummyBio ) ;
+
+   mSendData = NULL ;
 
    /* trying to read from this BIO always returns retry */
    BIO_set_mem_eof_return( mDummyBio, -1 ) ;
@@ -173,13 +176,15 @@ DtlsTransport::_read( FdSet& fdset )
 
       if( !cert )
       {
-         Data error = Data("Could not load certifiacte for domain: ") + mDomain;
+         Data error = Data("Could not load certifiacte for domain: ") 
+             + mDomain;
          throw Security::Exception( error,__FILE__, __LINE__ ) ;
       }
 
       if( !pkey )
       {
-         Data error = Data("Could not load private key for domain: ") + mDomain;
+         Data error = Data("Could not load private key for domain: ") 
+             + mDomain;
          throw Security::Exception( error,__FILE__, __LINE__ ) ;
       }
 
@@ -322,7 +327,12 @@ void DtlsTransport::_write( FdSet& fdset )
    BIO *wBio ;
    int retry = 0 ;
 
-   std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+   SendData *sendData ;
+   if ( mSendData != NULL )
+       sendData = mSendData ;
+   else
+       sendData = mTxFifo.getNext() ;
+
    //DebugLog (<< "Sent: " <<  sendData->data);
    //DebugLog (<< "Sending message on udp.");
    
@@ -364,6 +374,9 @@ void DtlsTransport::_write( FdSet& fdset )
 
    if ( count <= 0 )
    {
+      /* cache unqueued data */
+      mSendData = sendData ; 
+
       int err = SSL_get_error( ssl, count ) ;
       switch( err )
       {
@@ -398,6 +411,15 @@ void DtlsTransport::_write( FdSet& fdset )
             break ;
       }
    }
+   else
+   {
+      mSendData = NULL ;
+   }
+
+   /* 
+    * ngm: is sendData deleted by a higher layer?  Seems to be the case after 
+    * checking with UdpTransport
+    */
    
    if ( ! retry && count != int(sendData->data.size()) )
    {
@@ -451,12 +473,13 @@ DtlsTransport::process(FdSet& fdset)
    while ( mHandshakePending.messageAvailable() )
       _doHandshake() ;
 
-   if ( mTxFifo.messageAvailable() && fdset.readyToWrite( mFd ) )
+   if ( ( mSendData != NULL || mTxFifo.messageAvailable() )
+       && fdset.readyToWrite( mFd ) )
       _write( fdset ) ;
    
    // !jf! this may have to change - when we read a message that is too big
    if ( fdset.readyToRead(mFd) )
-      _read( fdset) ;
+      _read( fdset ) ;
 }
 
 
@@ -465,7 +488,7 @@ DtlsTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
     
-   if (mTxFifo.messageAvailable())
+   if ( mSendData != NULL || mTxFifo.messageAvailable() )
    {
      fdset.setWrite(mFd);
    }
