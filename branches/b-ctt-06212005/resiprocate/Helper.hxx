@@ -229,6 +229,16 @@ class Helper
                                  int nMethods = -1);
         
       /**
+          Returns the default reason string for a particular response code.
+
+          @param responseCode  Response code to get reason for
+
+          @param reason Data where the reason string associated with the 
+                   responseCode will be set.
+      */
+      static void getResponseCodeReason(int responseCode, Data& reason);
+
+      /**
           Make a new request with a overridden Contact.  To, maxforward=70, requestline 
           created, cseq method set, cseq sequence is 1, from and from tag set, contact 
           set, CallId created.  Caller owns the returned pointer and is responsible for 

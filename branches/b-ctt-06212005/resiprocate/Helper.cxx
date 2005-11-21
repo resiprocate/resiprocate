@@ -350,7 +350,45 @@ Helper::makeResponse(SipMessage& response,
    }
    else
    {
-      Data &reason(response.header(h_StatusLine).reason());
+      getResponseCodeReason(responseCode, response.header(h_StatusLine).reason());
+   }
+}
+
+SipMessage*
+Helper::makeResponse(const SipMessage& request, 
+                     int responseCode, 
+                     const NameAddr& myContact, 
+                     const Data& reason, 
+                     const Data& hostname, 
+                     const Data& warning)
+{
+   SipMessage* response = new SipMessage;
+   makeResponse(*response, request, responseCode, reason, hostname, warning);
+
+   // in general, this should not create a Contact header since only requests
+   // that create a dialog (or REGISTER requests) should produce a response with
+   // a contact(s). 
+   response->header(h_Contacts).clear();
+   response->header(h_Contacts).push_back(myContact);
+   return response;
+}
+
+
+SipMessage*
+Helper::makeResponse(const SipMessage& request, 
+                     int responseCode, 
+                     const Data& reason, 
+                     const Data& hostname, 
+                     const Data& warning)
+{
+   SipMessage* response = new SipMessage;
+   makeResponse(*response, request, responseCode, reason, hostname, warning);
+   return response;
+}
+
+void   
+Helper::getResponseCodeReason(int responseCode, Data& reason)
+{
       switch (responseCode)
       {
          case 100: reason = "Trying"; break;
@@ -408,39 +446,6 @@ Helper::makeResponse(SipMessage& response,
          case 604: reason = "Does Not Exist Anywhere"; break;
          case 606: reason = "Not Acceptable"; break;
       }
-   }
-}
-
-SipMessage*
-Helper::makeResponse(const SipMessage& request, 
-                     int responseCode, 
-                     const NameAddr& myContact, 
-                     const Data& reason, 
-                     const Data& hostname, 
-                     const Data& warning)
-{
-   SipMessage* response = new SipMessage;
-   makeResponse(*response, request, responseCode, reason, hostname, warning);
-
-   // in general, this should not create a Contact header since only requests
-   // that create a dialog (or REGISTER requests) should produce a response with
-   // a contact(s). 
-   response->header(h_Contacts).clear();
-   response->header(h_Contacts).push_back(myContact);
-   return response;
-}
-
-
-SipMessage*
-Helper::makeResponse(const SipMessage& request, 
-                     int responseCode, 
-                     const Data& reason, 
-                     const Data& hostname, 
-                     const Data& warning)
-{
-   SipMessage* response = new SipMessage;
-   makeResponse(*response, request, responseCode, reason, hostname, warning);
-   return response;
 }
 
 SipMessage*
@@ -614,7 +619,7 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << realm
       << Symbols::COLON
       << password;
-   a1.flush();
+   //a1.flush();  // .slg. Not needed getHex now calls flush()
  
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
@@ -668,7 +673,10 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             }
             if (i->param(p_nonce) != makeNonce(request, then))
             {
-               InfoLog(<< "Not my nonce.");
+               InfoLog(<< "Not my nonce. expected=" << makeNonce(request, then) 
+                       << " received=" << i->param(p_nonce)
+                       << " then=" << then);
+               
                return make_pair(Failed,username);
             }
          
@@ -676,6 +684,8 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop)  == Symbols::authInt)
                {
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
+                  {
                   if (i->param(p_response) == makeResponseMD5WithA1(a1,
                                                               getMethodName(request.header(h_RequestLine).getMethod()),
                                                               i->param(p_uri),
@@ -696,13 +706,16 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                      return make_pair(Failed,username);
                   }
                }
+               }
                else
                {
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                   return make_pair(Failed,username);
                }
             }
-            else if (i->param(p_response) == makeResponseMD5WithA1(a1,
+            else if(i->exists(p_uri))
+            {
+               if (i->param(p_response) == makeResponseMD5WithA1(a1,
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                              i->param(p_uri),
                                                              i->param(p_nonce)))
@@ -717,6 +730,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             {
                return make_pair(Failed,username);
             }
+         }
          }
          else
          {
@@ -793,6 +807,8 @@ Helper::authenticateRequest(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
                {
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
+                  {
                   if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
                                                               password,
                                                               realm, 
@@ -811,13 +827,17 @@ Helper::authenticateRequest(const SipMessage& request,
                      return Failed;
                   }
                }
+               }
                else
                {
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                   return Failed;
                }
             }
-            else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+            else if(i->exists(p_uri))
+            {
+            
+               if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
                                                              password,
                                                              realm, 
                                                              getMethodName(request.header(h_RequestLine).getMethod()),
@@ -830,6 +850,7 @@ Helper::authenticateRequest(const SipMessage& request,
             {
                return Failed;
             }
+         }
          }
          else
          {
@@ -904,6 +925,8 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
                {
+                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
+                  {
                   if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
                                                                     getMethodName(request.header(h_RequestLine).getMethod()),
                                                                     i->param(p_uri),
@@ -920,13 +943,16 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                      return Failed;
                   }
                }
+               }
                else
                {
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                   return Failed;
                }
             }
-            else if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+            else if(i->exists(p_uri))
+            {
+               if (i->param(p_response) == makeResponseMD5WithA1(hA1,
                                                                    getMethodName(request.header(h_RequestLine).getMethod()),
                                                                    i->param(p_uri),
                                                                    i->param(p_nonce)))
@@ -937,6 +963,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
             {
                return Failed;
             }
+         }
          }
          else
          {

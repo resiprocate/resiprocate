@@ -10,6 +10,7 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
@@ -62,18 +63,14 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
          transition(UAC_SentUpdateEarly);
 
          //  Creates an UPDATE request with application supplied offer.
-         SipMessage req;
-         mDialog.makeRequest(req, UPDATE);
-         InviteSession::setSdp(req, offer);
-
-         //  Remember last session modification.
-         mLastSessionModification = req;
+         mDialog.makeRequest(mLastSessionModification, UPDATE);
+         InviteSession::setSdp(mLastSessionModification, offer);
 
          //  Remember proposed local SDP.
          mProposedLocalSdp = InviteSession::makeSdp(offer);
 
          //  Send the req and do state transition.
-         mDialog.send(req);
+         send(mLastSessionModification);
          break;
       }
 
@@ -125,7 +122,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Answered:
       {
          transition(Connected);
-         sendAck(&answer);
+         sendAck(mInvite, &answer);
 
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
@@ -155,7 +152,17 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 void
 ClientInviteSession::end()
 {
+   end(NotSpecified);
+}
+
+void
+ClientInviteSession::end(EndReason reason)
+{
    InfoLog (<< toData(mState) << ": end");
+   if (mEndReason == NotSpecified)
+   {
+      mEndReason = reason;   
+   }
 
    switch(mState)
    {
@@ -185,7 +192,7 @@ ClientInviteSession::end()
          break;
 
       default:
-         InviteSession::end();
+         InviteSession::end(reason);
          break;
    }
 }
@@ -210,7 +217,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          }
 
          //  Send the req and do state transition.
-         mDialog.send(req);
+         send(req);
          transition(UAC_EarlyWithAnswer);
          break;
       }
@@ -294,7 +301,13 @@ void
 ClientInviteSession::startStaleCallTimer()
 {
    InfoLog (<< toData(mState) << ": startStaleCallTimer");
-   mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
+   unsigned long when = mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime();
+   when += Random::getRandom() % 120;
+   
+   mDum.addTimer(DumTimeout::StaleCall, 
+                 when, 
+                 getBaseHandle(), 
+                 ++mStaleCallTimerSeq);
 }
 
 void
@@ -399,7 +412,7 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
       if(timer.seq() == mStaleCallTimerSeq)
       {
          mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
-         end();
+         mDum.mInviteSessionHandler->terminate(getHandle());
       }
    }
    else if (timer.type() == DumTimeout::WaitingForForked2xx)
@@ -516,7 +529,7 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
       SipMessage prack;
       mDialog.makeRequest(prack, PRACK);
       prack.header(h_RSeq) = msg.header(h_RSeq);
-      mDialog.send(prack);
+      send(prack);
    }
 }
 
@@ -534,7 +547,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   mDialog.send(prack);
+   send(prack);
 }
 
 
@@ -633,7 +646,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck();
+         sendAck(mInvite);
          handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -650,7 +663,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -731,7 +744,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck();
+         sendAck(mInvite);
          handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -744,7 +757,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -838,7 +851,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
       case On2xx:
       case On2xxAnswer:
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  no answer sent: " << msg.brief());
          transition(Terminated);
@@ -883,7 +896,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck();
+         sendAck(mInvite);
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
@@ -892,7 +905,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -939,26 +952,22 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On200Prack:
          transition(UAC_SentUpdateEarly);
          {
-            SipMessage update;
-            mDialog.makeRequest(update, UPDATE);
-            InviteSession::setSdp(update, *mProposedLocalSdp);
+            mDialog.makeRequest(mLastSessionModification, UPDATE);
+            InviteSession::setSdp(mLastSessionModification, *mProposedLocalSdp);
 
-            //  Remember last seesion modification.
-            mLastSessionModification = update;
-
-            mDialog.send(update);
+            send(mLastSessionModification);
          }
          break;
 
       case On2xx:
          transition(SentUpdate);
          {
-            sendAck();
+            sendAck(mInvite);
 
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
             InviteSession::setSdp(update, *mProposedLocalSdp);
-            mDialog.send(update);
+            send(update);
          }
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
@@ -968,7 +977,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1021,14 +1030,14 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck();
+         sendAck(mInvite);
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
       case On2xxAnswer:
       case On2xxOffer:
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1038,6 +1047,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case OnUpdateOffer:
          transition(UAC_ReceivedUpdateEarly);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
@@ -1105,7 +1115,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xxAnswer:
       {
          // this is the 2xx crossing the CANCEL case
-         sendAck();
+         sendAck(mInvite);
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);

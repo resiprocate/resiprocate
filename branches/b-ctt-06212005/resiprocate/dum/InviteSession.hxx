@@ -30,7 +30,23 @@ class InviteSession : public DialogUsage
           the state. */
       virtual void provideAnswer(const SdpContents& answer);
 
+      /** Called to request that the far end provide an offer.  This will cause a 
+          reinvite with no sdp to be sent.  */
+      virtual void requestOffer();
+
+      enum EndReason
+      {
+         NotSpecified=0,
+         UserHangup,
+         AppRejectedSdp,
+         IllegalNegotiation,
+         AckNotReceived,
+         SessionExpired,
+         ENDREASON_MAX
+      };
+
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      virtual void end(EndReason reason);
       virtual void end();
 
       /** Rejects an offer at the SIP level.  Can also be used to 
@@ -51,11 +67,23 @@ class InviteSession : public DialogUsage
       /** sends an info request */
       virtual void info(const Contents& contents);
 
-      /** accepts an info request with a 2xx */
-      virtual void acceptInfo(int statusCode = 200);
+      /** sends a message request 
 
-      /** rejects an info request with an error status code */
-      virtual void rejectInfo(int statusCode = 488);
+          @warning From RFC3428 - The authors recognize that there may be valid reasons to 
+                                  send MESSAGE requests in the context of a dialog.  For 
+                                  example, one participant in a voice session may wish to 
+                                  send an IM to another participant, and associate that IM 
+                                  with the session.  But implementations SHOULD NOT create 
+                                  dialogs for the primary purpose of associating MESSAGE 
+                                  requests with one another. 
+      */
+      virtual void message(const Contents& contents);
+
+      /** accepts an INFO or MESSAGE request with a 2xx and an optional contents */
+      virtual void acceptNIT(int statusCode = 200, const Contents * contents = 0);
+
+      /** rejects an INFO or MESSAGE request with an error status code */
+      virtual void rejectNIT(int statusCode = 488);
 
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
@@ -66,7 +94,8 @@ class InviteSession : public DialogUsage
       
       bool isConnected() const;
       bool isTerminated() const;
-      bool isEarly() const;
+      bool isEarly() const;     // UAC Early states
+      bool isAccepted() const;  // UAS States before accept is called
       
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
@@ -88,12 +117,16 @@ class InviteSession : public DialogUsage
          SentUpdateGlare,           // got a 491
          SentReinvite,              // Sent a reINVITE
          SentReinviteGlare,         // Got a 491
+         SentReinviteNoOffer,       // Sent a reINVITE with no offer (requestOffer)
+         SentReinviteAnswered,      // Sent a reINVITE no offer and received a 200-offer
+         SentReinviteNoOfferGlare,  // Got a 491
          ReceivedUpdate,            // Received an UPDATE
          ReceivedReinvite,          // Received a reINVITE
          ReceivedReinviteNoOffer,   // Received a reINVITE with no offer
          ReceivedReinviteSentOffer, // Sent a 200 to a reINVITE with no offer
          Answered,
          WaitingToOffer,
+         WaitingToRequestOffer,
          WaitingToTerminate,        // Waiting for 2xx response before sending BYE
          WaitingToHangup,           // Waiting for ACK before sending BYE
          Terminated,                // Ended. waiting to delete
@@ -193,11 +226,15 @@ class InviteSession : public DialogUsage
       void dispatchConnected(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
       void dispatchSentReinvite(const SipMessage& msg);
+      void dispatchSentReinviteNoOffer(const SipMessage& msg);
+      void dispatchSentReinviteAnswered(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
+      void dispatchReinviteNoOfferGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
       void dispatchReceivedReinviteSentOffer(const SipMessage& msg);
       void dispatchAnswered(const SipMessage& msg);
       void dispatchWaitingToOffer(const SipMessage& msg);
+      void dispatchWaitingToRequestOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
@@ -223,7 +260,7 @@ class InviteSession : public DialogUsage
       void storePeerCapabilities(const SipMessage& msg);
       bool updateMethodSupported() const;
 
-      void sendAck(const SdpContents *sdp=0);
+      void sendAck(SipMessage& originalInvite, const SdpContents *sdp=0);
       void sendBye();
 
       Tokens mPeerSupportedMethods;
@@ -243,7 +280,7 @@ class InviteSession : public DialogUsage
       std::auto_ptr<SdpContents> mCurrentRemoteSdp;
       std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
-      SipMessage mLastSessionModification; // UPDATE or reINVITE
+      SipMessage mLastSessionModification; // last UPDATE or reINVITE sent or received
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
       SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
       
@@ -257,6 +294,9 @@ class InviteSession : public DialogUsage
 
       bool mSentRefer;
       
+      EndReason mEndReason; 
+      typedef std::map<int,SipMessage> AckMap;  // Used to respond to 2xx retransmissions
+      AckMap mAcks;
    private:
       friend class Dialog;
       friend class DialogUsageManager;
@@ -272,6 +312,9 @@ class InviteSession : public DialogUsage
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
+      void dispatchMessage(const SipMessage& msg);
+
+ 
 };
 
 }
@@ -327,3 +370,4 @@ class InviteSession : public DialogUsage
  * <http://www.vovida.org/>.
  *
  */
+

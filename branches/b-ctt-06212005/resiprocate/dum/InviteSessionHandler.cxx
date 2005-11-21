@@ -1,4 +1,6 @@
 #include "InviteSessionHandler.hxx"
+#include "AppDialogSet.hxx"
+#include "ClientInviteSession.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -6,16 +8,22 @@
 using namespace resip;
 
 void 
-InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
+InviteSessionHandler::onStaleCallTimeout(ClientInviteSessionHandle handle)
 {
-   handle->send(msg);
+    InfoLog(<< "InviteSessionHandler::onStaleCallTimeout");
+}
+
+void 
+InviteSessionHandler::terminate(ClientInviteSessionHandle h)
+{
+   h->getAppDialogSet()->end();
 }
 
 void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
    InfoLog(<< "InviteSessionHandler::onAckNotReceived");
-   handle->end();
+   handle->end(InviteSession::AckNotReceived);
 }
 
 void 
@@ -28,7 +36,24 @@ void
 InviteSessionHandler::onSessionExpired(InviteSessionHandle handle)
 {
    InfoLog(<< "InviteSessionHandler::onSessionExpired");
-   handle->end();
+   handle->end(InviteSession::SessionExpired);
+}
+
+
+void 
+InviteSessionHandler::onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
+{
+}
+
+void 
+InviteSessionHandler::onReadyToSend(InviteSessionHandle, SipMessage& msg)
+{
+   // default is to do nothing. this is for adornment   
+}
+
+void 
+InviteSessionHandler::onOfferRequestRejected(InviteSessionHandle, const SipMessage& msg)
+{
 }
 
 
