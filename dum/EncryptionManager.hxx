@@ -12,6 +12,7 @@
 #include "resip/dum/CertMessage.hxx"
 #include "resip/dum/RemoteCertStore.hxx"
 #include "resip/dum/DumFeature.hxx"
+#include "resip/stack/InvalidContents.hxx"
 
 namespace resip
 {
@@ -53,7 +54,8 @@ class EncryptionManager : public DumFeature
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
             Data getId() const { return mMsg->getTransactionId(); }            
             void setTaken() { mTaken = true; }
-
+            //void handleInvalidContents(SipMessage*, const Data& originalBody, const Mime& originalType);
+            
          protected:
             DialogUsageManager& mDum;
             RemoteCertStore* mStore;
@@ -112,16 +114,24 @@ class EncryptionManager : public DumFeature
             virtual ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);
+            const Mime& getOriginalContentsType() const { return mOriginalMsgContentsType; }
+            const Data& getOriginalContents() const { return mOriginalMsgContents; }
+            void handleInvalidContents();
 
          private:
             bool isEncrypted();
             bool isSigned(bool noDecryptionKey);
-            bool isEncryptedRecurse(Contents*);
-            bool isSignedRecurse(Contents*, const Data& decryptorAor, bool noDecryptionKey);
-            Helper::ContentsSecAttrs getContents(SipMessage* msg, Security& security, bool noDecryptionKey);
-            Contents* getContentsRecurse(Contents*, Security&, bool, SecurityAttributes* attr);
+            bool isEncryptedRecurse(Contents**);
+            bool isSignedRecurse(Contents**, const Data& decryptorAor, bool noDecryptionKey);
+            Helper::ContentsSecAttrs getContents(SipMessage* msg, Security& security, bool noDecryption);
+            Contents* getContentsRecurse(Contents**, Security&, bool, SecurityAttributes* attr);
+            InvalidContents* createInvalidContents(Contents*);
+            bool isMultipart(Contents*);
             Data mDecryptor;
             Data mSigner;
+            Data mOriginalMsgContents;
+            Mime mOriginalMsgContentsType;
+            bool mIsEncrypted; // the whole body is encrypted in original message.
       };
 
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
