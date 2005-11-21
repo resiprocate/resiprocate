@@ -44,7 +44,6 @@ class InviteSession : public DialogUsage
          IllegalNegotiation,
          AckNotReceived,
          SessionExpired,
-         StaleCall,
          ENDREASON_MAX
       };
 
