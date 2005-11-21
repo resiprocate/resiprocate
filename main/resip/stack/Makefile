@@ -131,6 +131,7 @@ SRC = \
 	\
 	stun/stun.cxx \
 	stun/udp.cxx \
+	InvalidContents.cxx
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
