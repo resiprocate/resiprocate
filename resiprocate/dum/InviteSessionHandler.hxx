@@ -34,8 +34,16 @@ class InviteSessionHandler
       /// called when a dialog initiated as a UAS enters the connected state
       virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
 
-      /// UAC gets no final response within the stale call timeout (default is 3 minutes)
-      virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
+      /** UAC gets no final response within the stale call timeout (default is 3
+       * minutes). This is just a notification. After the notification is
+       * called, the InviteSession will then call
+       * InviteSessionHandler::terminate() */
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle h);
+
+      /** called when an early dialog decides it wants to terminate the
+       * dialog. Default behavior is to CANCEL all related early dialogs as
+       * well.  */
+      virtual void terminate(ClientInviteSessionHandle h);
 
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
@@ -71,6 +79,14 @@ class InviteSessionHandler
       /// called when an SDP offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
 
+      /// called when a modified SDP is received in a 2xx response to a
+      /// session-timer reINVITE. Under normal circumstances where the response
+      /// SDP is unchanged from current remote SDP no handler is called
+      virtual void onRemoteSdpChanged(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
+
+      /// Called when an error response is received for a reinvite-nosdp request (via requestOffer)
+      virtual void onOfferRequestRejected(InviteSessionHandle, const SipMessage& msg);
+
       /// called when an Invite w/out SDP is sent, or any other context which
       /// requires an SDP offer from the user
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)=0;      
@@ -89,6 +105,13 @@ class InviteSessionHandler
       /// called when response to INFO message is received 
       virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg)=0;
       virtual void onInfoFailure(InviteSessionHandle, const SipMessage& msg)=0;
+
+      /// called when MESSAGE message is received 
+      virtual void onMessage(InviteSessionHandle, const SipMessage& msg)=0;
+
+      /// called when response to MESSAGE message is received 
+      virtual void onMessageSuccess(InviteSessionHandle, const SipMessage& msg)=0;
+      virtual void onMessageFailure(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// called when an REFER message is received.  The refer is accepted or
       /// rejected using the server subscription. If the offer is accepted,

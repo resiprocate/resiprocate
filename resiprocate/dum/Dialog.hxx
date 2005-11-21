@@ -46,7 +46,6 @@ class Dialog
       
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
-      void makeCancel(SipMessage& request);
 
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
@@ -133,7 +132,6 @@ class Dialog
       NameAddr mLocalContact;
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
-      unsigned long mAckId;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
@@ -147,6 +145,7 @@ class Dialog
       AppDialog* mAppDialog;
       
       bool mDestroying;
+      bool mReUseDialogSet;
 
       friend std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
 };

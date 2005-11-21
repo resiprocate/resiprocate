@@ -129,7 +129,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // ...but the chunk is completely processed.
                //.jacob. I've discarded the "assigned" concept.
                //DebugLog(<< "Data assigned, not fragmented, not complete");
-               mBuffer = new char[ChunkSize + MsgHeaderScanner::MaxNumCharsChunkOverflow];
+               mBuffer = MsgHeaderScanner::allocateBuffer(ChunkSize);               
                mBufferPos = 0;
                mBufferSize = ChunkSize;
             }
@@ -141,7 +141,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                {
                   size = ConnectionBase::ChunkSize;
                }
-               char* newBuffer = new char[size + MsgHeaderScanner::MaxNumCharsChunkOverflow];
+               char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBuffer = newBuffer;
                mBufferPos = numUnprocessedChars;
@@ -157,7 +157,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             if (numUnprocessedChars < contentLength)
             {
                // The message body is incomplete.
-               char* newBuffer = new char[contentLength + MsgHeaderScanner::MaxNumCharsChunkOverflow];
+               char* newBuffer = MsgHeaderScanner::allocateBuffer(contentLength);               
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
                mBufferSize = contentLength;
@@ -194,7 +194,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                   {
                      size = ConnectionBase::ChunkSize;
                   }
-                  char* newBuffer = new char[size + MsgHeaderScanner::MaxNumCharsChunkOverflow];
+                  char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
                   memcpy(newBuffer,
                          unprocessedCharPtr + contentLength,
                          overHang);
@@ -248,7 +248,7 @@ ConnectionBase::getWriteBuffer()
    {
       DebugLog (<< "Creating buffer for " << *this);
 
-      mBuffer = new char [ConnectionBase::ChunkSize + MsgHeaderScanner::MaxNumCharsChunkOverflow];
+      mBuffer = MsgHeaderScanner::allocateBuffer(ConnectionBase::ChunkSize);
       mBufferSize = ConnectionBase::ChunkSize;
       mBufferPos = 0;
    }

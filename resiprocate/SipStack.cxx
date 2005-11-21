@@ -432,7 +432,7 @@ SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
    return resipMin(mTransactionController.getTimeTillNextProcessMS(),
-                   mAppTimers.msTillNextTimer());
+                   resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()));
 } 
 
 void

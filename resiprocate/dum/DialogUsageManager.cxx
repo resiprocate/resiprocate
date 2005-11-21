@@ -60,6 +60,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mRedirectHandler(0),
    mDialogSetHandler(0),
    mRegistrationPersistenceManager(0),
+   mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
@@ -104,6 +105,10 @@ DialogUsageManager::~DialogUsageManager()
    {
       DialogSet*  ds = mDialogSetMap.begin()->second;
       delete ds;
+   }
+   if(mIsDefaultServerReferHandler)
+   {
+       delete mServerSubscriptionHandlers["refer"];
    }
    //InfoLog ( << "~DialogUsageManager done" );
 }
@@ -322,14 +327,13 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
 {
    assert(handler);
    //default do-nothing server side refer handler can be replaced
-   if (eventType == "refer")
+   if (eventType == "refer" && mServerSubscriptionHandlers.count(eventType))
    {
       delete mServerSubscriptionHandlers[eventType];
+      mIsDefaultServerReferHandler = false;
+      //mServerSubscriptionHandlers.erase(eventType);
    }
-   else
-   {
-      assert(mServerSubscriptionHandlers.count(eventType) == 0);
-   }
+
    mServerSubscriptionHandlers[eventType] = handler;
 }
 
@@ -1390,8 +1394,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   DebugLog ( << "DialogUsageManager::processResponse: " << response);
-
    if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
@@ -1478,6 +1480,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
             {
                failureCode = 489;
             }
+            break;
          default:
             assert(0);
       }

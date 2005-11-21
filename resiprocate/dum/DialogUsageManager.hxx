@@ -335,6 +335,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
       std::auto_ptr<KeepAliveManager> mKeepAliveManager;
+      bool mIsDefaultServerReferHandler;
 
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
