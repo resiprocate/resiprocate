@@ -33,6 +33,12 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
+static bool isAckOrCancelOrBye(const SipMessage& msg)
+{
+   MethodTypes method = msg.header(h_RequestLine).getMethod();
+   return (method == ACK || method == CANCEL || method == BYE);
+}
+
 EncryptionManager::Exception::Exception(const Data& msg, const Data& file, const int line)
    : BaseException(msg,file,line)
 {
@@ -60,15 +66,24 @@ void EncryptionManager::setRemoteCertStore(std::auto_ptr<RemoteCertStore> store)
 DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
 {
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+
    if (sipMsg)
    {
-      if (decrypt(sipMsg))
+      if (sipMsg->getContents())
       {
-         return DumFeature::FeatureDone;
+         if (decrypt(sipMsg))
+         {
+            DebugLog(<< "Decrypted message:" << sipMsg << endl);
+            return DumFeature::FeatureDone;
+         }
+         else
+         {
+            return DumFeature::EventTaken;
+         }
       }
       else
       {
-         return DumFeature::EventTaken;
+         return DumFeature::FeatureDone;
       }
    }
 
@@ -87,7 +102,6 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
          return DumFeature::FeatureDone;
       }
       
-
       Data senderAor;
       Data recipAor;
       if (event->message()->isRequest())
@@ -144,12 +158,14 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
    }
 
+   // Todo: change CertMessage to DumFeatureMessage.
    CertMessage* certMsg = dynamic_cast<CertMessage*>(msg);
    if (certMsg)
    {
-      if (processCertMessage(certMsg) == Complete)
+      EncryptionManager::Result result = processCertMessage(certMsg);
+      if (result == Complete)
       {
-         return DumFeature::ChainDoneAndEventDone;
+         return DumFeature::ChainDoneAndEventTaken;
       }
       else
       {
@@ -254,20 +270,15 @@ bool EncryptionManager::decrypt(SipMessage* msg)
    Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
    bool ret = true;
    
-   try
-   {
-      Helper::ContentsSecAttrs csa;
-      ret = request->decrypt(csa);
+   Helper::ContentsSecAttrs csa;
+   ret = request->decrypt(csa);
 
-      if (ret)
+   if (ret)
+   {
+      if (csa.mContents.get())
       {
-         if (csa.mContents.get())
-         {
-            // trigger the parsing, prevent the original message from being
-            // altered in case parser throws.
-            csa.mContents->checkParsed();
-            msg->setContents(csa.mContents);
-         }
+         msg->setContents(csa.mContents);
+         
          if (csa.mAttributes.get()) 
          {
             // Security Attributes might already exist on the message if the Identity Handler is enabled
@@ -279,23 +290,26 @@ bool EncryptionManager::decrypt(SipMessage* msg)
             }
             msg->setSecurityAttributes(csa.mAttributes);
          }
-         delete request;
-      }   
+      }
       else
       {
-         InfoLog(<< "Async decrypt" << endl);
-         request->setTaken();
-         mRequests.push_back(request);
-      }
-   }
-   catch (ParseBuffer::Exception&)
-   {
-      DebugLog(<< "Invalid message received");
-   }
-   catch (...)
-   {
-   }
+         // no valid contents.
+         request->handleInvalidContents();
 
+         if (msg->isRequest() && !isAckOrCancelOrBye(*msg))
+         {
+            ret = false;
+         }
+      }
+      delete request;
+   }   
+   else
+   {
+      InfoLog(<< "Async decrypt" << endl);
+      request->setTaken();
+      mRequests.push_back(request);
+   }
+   
    return ret;
 }
 
@@ -413,8 +427,7 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
       {
          InfoLog(<< "Signing message" << endl);
          MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsg->getContents());
-         auto_ptr<Contents> contents(msc);
-         mMsg->setContents(contents);
+         mMsg->setContents(auto_ptr<Contents>(msc));
          DumHelper::setEncryptionPerformed(*mMsg);
          OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(mMsg));
          mTaken = false;
@@ -668,7 +681,8 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
                                     SipMessage* msg,
                                     DumFeature& feature)
-   : Request(dum, store, msg, feature)
+   : Request(dum, store, msg, feature),
+     mIsEncrypted(false)
 {
    if (msg->isResponse())
    {
@@ -689,6 +703,16 @@ EncryptionManager::Decrypt::~Decrypt()
 bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
 {
    bool noDecryptionKey = false;
+
+   if (!dynamic_cast<Pkcs7Contents*>(mMsg->getContents()))
+   {
+      mOriginalMsgContents = Data(mMsg->getContents()->getHeaderField().mField, mMsg->getContents()->getHeaderField().mFieldLength);
+      mOriginalMsgContentsType = mMsg->getContents()->getType();
+   }
+   else
+   {
+      mIsEncrypted = true;
+   }
 
    if (isEncrypted())
    {
@@ -743,7 +767,6 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
    }
 
    csa = getContents(mMsg, *mDum.getSecurity(), noDecryptionKey);
-
    return true;
 }
 
@@ -805,29 +828,38 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
 
    if (Complete == result)
    {
-      try
+      
+      
+      Helper::ContentsSecAttrs csa;
+      csa = getContents(mMsg, *mDum.getSecurity(), 
+                        (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
+
+
+      if (csa.mContents.get())
       {
-         Helper::ContentsSecAttrs csa;
-         csa = getContents(mMsg, *mDum.getSecurity(), 
-                           (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
-         if (csa.mContents.get())
-         {
-            csa.mContents->checkParsed();
-            mMsg->setContents(csa.mContents);
-         }
+         csa.mContents->checkParsed();
+         mMsg->setContents(csa.mContents);
+         
          if (csa.mAttributes.get()) 
          {
             mMsg->setSecurityAttributes(csa.mAttributes);
-         }
+         }         
       }
-      catch (ParseBuffer::Exception&)
+      else
       {
-         DebugLog(<< "Invalid message received");
-      }
-      catch (...)
-      {
-      }
+         // no valid contents.
+         ErrLog(<< "No valid contents in message received" << endl);
+         handleInvalidContents();
 
+         if (mMsg->isRequest() && !isAckOrCancelOrBye(*mMsg))
+         {
+            return result;
+         }
+      }      
+
+      // Todo: make CertMessage DumFeatureMessage and get rid of DumDecrypted.
+      // Currently the message will not be processed by 
+      // any features in the chain after EncryptionManager.
       DumDecrypted* decrypted = new DumDecrypted(*mMsg);
       mDum.post(decrypted);
    }
@@ -837,101 +869,222 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
 
 bool EncryptionManager::Decrypt::isEncrypted()
 {
-   return isEncryptedRecurse(mMsg->getContents());
+   Contents* contents = mMsg->getContents();
+   return isEncryptedRecurse(&contents);
 }
 
 bool EncryptionManager::Decrypt::isSigned(bool noDecryptionKey)
 {
-   return isSignedRecurse(mMsg->getContents(), mDecryptor, noDecryptionKey);
+   Contents* contents = mMsg->getContents();
+   return isSignedRecurse(&contents, mDecryptor, noDecryptionKey);
 }
 
-bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents* contents)
+bool EncryptionManager::Decrypt::isEncryptedRecurse(Contents** contents)
 {
+   InvalidContents* ic;
+   if ((ic = dynamic_cast<InvalidContents*>(*contents)))
+   {
+      return false;
+   }
+
    Pkcs7Contents* pk;
-   if ((pk = dynamic_cast<Pkcs7Contents*>(contents)))
+   if ((pk = dynamic_cast<Pkcs7Contents*>(*contents)))
    {
       return true;
    }
 
    MultipartSignedContents* mps;
-   if ((mps = dynamic_cast<MultipartSignedContents*>(contents)))
+   if ((mps = dynamic_cast<MultipartSignedContents*>(*contents)))
    {
-      return isEncryptedRecurse(*(mps->parts().begin()));
+      try
+      {
+         mps->parts();
+      }
+      catch (BaseException& e)
+      {
+         // structure of multipart is bad. this is unrecoverable error,
+         // replace the whole multipart contents with an InvalidContents.
+         ErrLog(<< e.name() << endl << e.getMessage());
+
+         if (*contents == mMsg->getContents())
+         {
+            mMsg->setContents(auto_ptr<Contents>(createInvalidContents(mps)));
+         }
+         else
+         {
+            *contents = createInvalidContents(mps);
+            delete mps;
+         }
+         return false;
+      }
+
+      return isEncryptedRecurse(&(*(mps->parts().begin())));
    }
 
-   MultipartAlternativeContents* alt;
-   if ((alt = dynamic_cast<MultipartAlternativeContents*>(contents)))
+   MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(*contents);
+   if (alt)
    {
+      try
+      {
+         alt->parts();
+      }
+      catch (BaseException& e)
+      {
+         ErrLog(<< e.name() << endl << e.getMessage());
+         if (*contents == mMsg->getContents())
+         {
+            mMsg->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+         }
+         else
+         {
+            *contents = createInvalidContents(alt);
+            delete alt;
+         }
+         return false;
+      }
+
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
-         if (isEncryptedRecurse(*i))
+         if (isEncryptedRecurse(&(*i)))
          {
             return true;
          }
       }
+
+      return false;
    }
 
-   MultipartMixedContents* mult;
-   if ((mult = dynamic_cast<MultipartMixedContents*>(contents)))
+   if (dynamic_cast<MultipartMixedContents*>(*contents))
    {
-      for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
-           i != mult->parts().end(); ++i)
-      {
-         if (isEncryptedRecurse(*i))
-         {
-            return true;
-         }
-      }
+      return false;
    }
 
    return false;
 }
 
-bool EncryptionManager::Decrypt::isSignedRecurse(Contents* contents,
+bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
                                                  const Data& decryptorAor,
                                                  bool noDecryptionKey)
 {
-   Pkcs7Contents* pk;
-   if ((pk = dynamic_cast<Pkcs7Contents*>(contents)))
+   InvalidContents* ic;
+   if ((ic = dynamic_cast<InvalidContents*>(*contents)))
    {
-      if (noDecryptionKey) return false;
+      return false;
+   }
+
+   Pkcs7Contents* pk;
+   if ((pk = dynamic_cast<Pkcs7Contents*>(*contents)))
+   {
+      if (noDecryptionKey) 
+      {
+         return false;
+      }
+
       Contents* decrypted = mDum.getSecurity()->decrypt(decryptorAor, pk);
-      bool ret = isSignedRecurse(decrypted, decryptorAor, noDecryptionKey);
-      delete decrypted;
+      bool ret = false;
+      
+      if (decrypted)
+      {
+         if (*contents == mMsg->getContents())
+         {
+            mOriginalMsgContents = Data(decrypted->getHeaderField().mField, decrypted->getHeaderField().mFieldLength);
+            mOriginalMsgContentsType = decrypted->getType();
+         }
+         
+         try
+         {
+            decrypted->checkParsed();
+            if (isMultipart(decrypted))
+            {
+               if (dynamic_cast<MultipartSignedContents*>(decrypted))
+               {
+                  ret = true;
+               }
+               else
+               {
+                  if (*contents == mMsg->getContents())
+                  {
+                     mMsg->setContents(auto_ptr<Contents>(decrypted));
+                     *contents = mMsg->getContents();
+                  }
+                  else
+                  {
+                     *contents = decrypted;
+                     delete pk;
+                  }
+                  return isSignedRecurse(contents, decryptorAor, noDecryptionKey);
+               }
+            }
+         }
+         catch (BaseException& e)
+         {
+            ErrLog(<< e.name() << endl << e.getMessage());
+
+            if (*contents == mMsg->getContents())
+            {
+               mMsg->setContents(auto_ptr<Contents>(createInvalidContents(decrypted)));
+            }
+            else
+            {
+               *contents = createInvalidContents(decrypted);
+               delete pk;
+            }
+         }
+
+         delete decrypted;
+      }
+
       return ret;
    }
 
    MultipartSignedContents* mps;
-   if ((mps = dynamic_cast<MultipartSignedContents*>(contents)))
+   if ((mps = dynamic_cast<MultipartSignedContents*>(*contents)))
    {
       return true;
    }
 
-   MultipartAlternativeContents* alt;
-   if ((alt = dynamic_cast<MultipartAlternativeContents*>(contents)))
+   MultipartAlternativeContents* alt = dynamic_cast<MultipartAlternativeContents*>(*contents);
+   if (alt)
    {
+      try
+      {
+         alt->parts();
+      }
+      catch (BaseException& e)
+      {
+         // structure of multipart is bad. this is unrecoverable error,
+         // replace the whole multipart contents with an InvalidContents.
+         ErrLog(<< e.name() << endl << e.getMessage());
+
+         if (*contents == mMsg->getContents())
+         {
+            mMsg->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+         }
+         else
+         {
+            *contents = createInvalidContents(alt);
+            delete alt;
+         }
+
+         return false;
+      }
+
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
-         if (isSignedRecurse(*i, decryptorAor, noDecryptionKey))
+         if (isSignedRecurse(&(*i), decryptorAor, noDecryptionKey))
          {
             return true;
          }
       }
+
+      return false;
    }
 
-   MultipartMixedContents* mult;
-   if ((mult = dynamic_cast<MultipartMixedContents*>(contents)))
+   if (dynamic_cast<MultipartMixedContents*>(*contents))
    {
-      for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
-           i != mult->parts().end(); ++i)
-      {
-         if (isSignedRecurse(*i, decryptorAor, noDecryptionKey))
-         {
-            return true;
-         }
-      }
+      return false;
    }
 
    return false;
@@ -946,7 +1099,15 @@ Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* mes
    Contents* contents = message->getContents();
    if (contents)
    {
-      contents = getContentsRecurse(contents, security, noDecryptionKey, attr);
+      contents = getContentsRecurse(&contents, security, noDecryptionKey, attr);
+   }
+
+   if (contents)
+   {
+      if (mIsEncrypted)
+      {
+         attr->setEncrypted();
+      }
    }
 
    std::auto_ptr<Contents> c(contents);
@@ -954,29 +1115,86 @@ Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* mes
    return Helper::ContentsSecAttrs(c, a);
 }
 
-Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents* tree,
+Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
                                                          Security& security,
                                                          bool noDecryptionKey,
                                                          SecurityAttributes* attributes)
 {
-   Pkcs7Contents* pk;
-   if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
+   InvalidContents* ic;
+   if ((ic = dynamic_cast<InvalidContents*>(*tree)))
    {
-      if (noDecryptionKey) return 0;
+      return 0;
+   }
+
+   Pkcs7Contents* pk;
+   if ((pk = dynamic_cast<Pkcs7Contents*>(*tree)))
+   {
+      if (noDecryptionKey) 
+      {
+         return 0;
+      }
+
       Contents* contents = security.decrypt(mDecryptor, pk);
       if (contents)
       {
-         attributes->setEncrypted();
+         if (*tree == mMsg->getContents())
+         {
+            mOriginalMsgContents = Data(contents->getHeaderField().mField, contents->getHeaderField().mFieldLength);
+            mOriginalMsgContentsType = contents->getType();
+         }
+
+         try
+         {
+            contents->checkParsed();
+            if (isMultipart(contents))
+            {
+               if (*tree == mMsg->getContents())
+               {
+                  mMsg->setContents(auto_ptr<Contents>(contents));
+                  *tree = mMsg->getContents();
+               }
+               else
+               {
+                  *tree = contents;
+                  delete pk;
+               }
+
+               return getContentsRecurse(tree, security, noDecryptionKey, attributes);
+            }
+            else
+            {
+               attributes->setEncrypted();
+            }
+         }
+         catch (BaseException& e)
+         {
+            ErrLog(<< e.name() << endl << e.getMessage());
+
+            if (*tree == mMsg->getContents())
+            {
+               mMsg->setContents(auto_ptr<Contents>(createInvalidContents(contents)));
+            }
+            else
+            {
+               *tree = createInvalidContents(contents);
+               delete pk;
+            }
+
+            delete contents;
+            return 0;
+         }
       }
+
       return contents;
    }
 
    MultipartSignedContents* mps;
-   if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
+   if ((mps = dynamic_cast<MultipartSignedContents*>(*tree)))
    {
       Data signer;
       SignatureStatus sigStatus = SignatureIsBad;
-      Contents* contents = getContentsRecurse(security.checkSignature(mps, &signer, &sigStatus),
+      Contents* tmp = security.checkSignature(mps, &signer, &sigStatus);
+      Contents* contents = getContentsRecurse(&tmp,
                                               security, noDecryptionKey, attributes);
       attributes->setSigner(signer);
       attributes->setSignatureStatus(sigStatus);
@@ -984,35 +1202,144 @@ Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents* tree,
    }
 
    MultipartAlternativeContents* alt;
-   if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
+   if ((alt = dynamic_cast<MultipartAlternativeContents*>(*tree)))
    {
+      try
+      {
+         alt->parts();
+      }
+      catch (BaseException& e)
+      {
+         // structure of multipart is bad. this is an unrecoverable error,
+         // replace the whole multipart contents with an InvalidContents.
+         ErrLog(<< e.name() << endl << e.getMessage());
+
+         if (*tree == mMsg->getContents())
+         {
+            mMsg->setContents(auto_ptr<Contents>(createInvalidContents(alt)));
+         }
+         else
+         {
+            *tree = createInvalidContents(alt);
+            delete alt;
+         }
+
+         return 0;
+      }
+
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
-         Contents* contents = getContentsRecurse(*i, security, noDecryptionKey, attributes);
+         Contents* contents = getContentsRecurse(&(*i), security, noDecryptionKey, attributes);
          if (contents)
          {
             return contents;
          }
       }
+
+      return 0;
    }
 
    MultipartMixedContents* mult;
-   if ((mult = dynamic_cast<MultipartMixedContents*>(tree)))
+   if ((mult = dynamic_cast<MultipartMixedContents*>(*tree)))
    {
-      for (MultipartMixedContents::Parts::iterator i = mult->parts().begin();
-           i != mult->parts().end(); ++i)
+      try
       {
-         Contents* contents = getContentsRecurse(*i, security, noDecryptionKey, attributes);
-         if (contents)
+         mult->parts();
+      }
+      catch (BaseException& e)
+      {
+         // structure of multipart is bad. this is unrecoverable error,
+         // replace the whole multipart contents with an InvalidContents.
+         ErrLog(<< e.name() << endl << e.getMessage());
+
+         if (*tree == mMsg->getContents())
          {
-            return contents;
+            mMsg->setContents(auto_ptr<Contents>(createInvalidContents(mult)));
          }
+         else
+         {
+            *tree = createInvalidContents(mult);
+            delete mult;
+         }
+
+         return 0;
+      }
+
+      // for now, the multipart/mixed is returned untouched.
+      return mult->clone();
+   }
+
+   Contents* ret = 0;
+
+   try
+   {
+      (*tree)->checkParsed();
+      ret = (*tree)->clone();
+   }
+   catch (BaseException& e)
+   {
+      ErrLog(<< e.name() << endl << e.getMessage());
+
+      if (*tree == mMsg->getContents())
+      {
+         mMsg->setContents(auto_ptr<Contents>(createInvalidContents(*tree)));
+      }
+      else
+      {
+         Contents* tmp = *tree;
+         *tree = createInvalidContents(*tree);
+         delete tmp;
       }
    }
 
-   return tree->clone();
+   return ret;
 
+}
+
+// Todo: move to DumHelper.
+InvalidContents*
+EncryptionManager::Decrypt::createInvalidContents(Contents* orig)
+{
+   Data original(orig->getHeaderField().mField, orig->getHeaderField().mFieldLength);
+   return new InvalidContents(original, orig->getType());
+}
+
+bool
+EncryptionManager::Decrypt::isMultipart(Contents* contents)
+{
+   return (
+      dynamic_cast<MultipartSignedContents*>(contents) ||
+      dynamic_cast<MultipartAlternativeContents*>(contents) ||
+      dynamic_cast<MultipartMixedContents*>(contents)
+      );
+}
+
+void
+EncryptionManager::Decrypt::handleInvalidContents()
+{
+   if (mMsg->isRequest())
+   {
+      if (isAckOrCancelOrBye(*mMsg))
+      {
+         DebugLog(<< "No valid contents in the request" << endl);
+         InvalidContents* invalid = new InvalidContents(mOriginalMsgContents, mOriginalMsgContentsType);
+         mMsg->setContents(auto_ptr<Contents>(invalid));
+      }
+      else
+      {
+         DebugLog(<< "No valid contents in the request -- reject with 400" << endl);
+         SipMessage response;
+         Helper::makeResponse(response, *mMsg, 400, Data::Empty, mMsg->header(h_RequestLine).uri().host() , "Invalid message body");
+         mDum.getSipStack().send(response);
+      }
+   }
+   else
+   {
+      DebugLog(<< "No valid contents in the response" << endl);
+      InvalidContents* invalid = new InvalidContents(mOriginalMsgContents, mOriginalMsgContentsType);
+      mMsg->setContents(auto_ptr<Contents>(invalid));
+   }
 }
 
 #endif
