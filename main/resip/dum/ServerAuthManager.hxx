@@ -47,7 +47,6 @@ class ServerAuthManager : public DumFeature
       
       virtual bool useAuthInt() const;
       
-   private:
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
       bool authorizedForThisIdentity(const resip::Data &user, 
