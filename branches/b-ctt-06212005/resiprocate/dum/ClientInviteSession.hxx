@@ -32,7 +32,8 @@ class ClientInviteSession : public InviteSession
       virtual void provideAnswer (const SdpContents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end ();
+      virtual void end(EndReason reason);
+      virtual void end();
 
       /** Rejects an offer at the SIP level.  For a UAC in an early dialog 
           this typically only makes sense, when rejecting an UPDATE request
@@ -68,6 +69,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
 
+      // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
    private:

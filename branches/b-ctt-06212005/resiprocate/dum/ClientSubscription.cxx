@@ -126,7 +126,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          mExpires = now + refreshInterval;
       }
 
-      if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
+      if (!mEnded && isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Active))
       {
          if (refreshInterval)
          {
@@ -136,7 +136,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          
          handler->onUpdateActive(getHandle(), msg);
       }
-      else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
+      else if (!mEnded && isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Pending))
       {
          if (refreshInterval)
          {
@@ -146,7 +146,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
          handler->onUpdatePending(getHandle(), msg);
       }
-      else if (msg.header(h_SubscriptionState).value() == "terminated")
+      else if (isEqualNoCase(msg.header(h_SubscriptionState).value(), Symbols::Terminated))
       {
          acceptUpdate();
          handler->onTerminated(getHandle(), msg);
@@ -170,7 +170,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   << mDialog.mRemoteTarget);
 
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-         mDialog.send(sub);
+         send(sub);
 
          delete this;
          return;
@@ -214,12 +214,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDialog.send(sub);
+               send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDialog.send(sub);
+               send(sub);
             }
             
             return;
@@ -241,10 +241,18 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_StatusLine).statusCode() >= 300)
       {
+         if (msg.header(h_StatusLine).statusCode() == 423 
+             && msg.exists(h_MinExpires))
+         {
+            requestRefresh(msg.header(h_MinExpires).value());            
+         }
+         else
+         {
          handler->onTerminated(getHandle(), msg);
          delete this;
          return;
       }
+   }
    }
 }
 
@@ -268,12 +276,12 @@ ClientSubscription::dispatch(const DumTimeout& timer)
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDialog.send(sub);
+               send(sub);
             }
             else
             {
                SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDialog.send(sub);
+               send(sub);
             }
             
             delete this;

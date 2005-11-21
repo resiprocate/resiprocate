@@ -59,7 +59,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
          response.header(h_Contacts) = contacts;
-         mDialog.send(response);
+         send(response);
 
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
@@ -93,6 +93,7 @@ ServerInviteSession::provisional(int code)
          break;
 
       case UAS_OfferProvidedAnswer:
+      case UAS_EarlyProvidedAnswer:
          transition(UAS_EarlyProvidedAnswer);
          sendProvisional(code);
          break;
@@ -121,7 +122,6 @@ ServerInviteSession::provisional(int code)
          assert(0);
          break;
          
-      case UAS_EarlyProvidedAnswer:
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_FirstEarlyReliable:
@@ -174,6 +174,10 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
 
+      case UAS_WaitingToOffer:
+         InviteSession::provideOffer(offer);
+         break;
+
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
@@ -193,8 +197,6 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
       case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
-
-      case UAS_WaitingToOffer:
       default:
          InviteSession::provideOffer(offer);
          break;
@@ -266,7 +268,18 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 void 
 ServerInviteSession::end()
 {
+   end(NotSpecified);
+}
+
+void 
+ServerInviteSession::end(EndReason reason)
+{
    InfoLog (<< toData(mState) << ": end");
+   if (mEndReason == NotSpecified)
+   {
+      mEndReason = reason;   
+   }
+   
    switch (mState)
    {
       case UAS_EarlyNoOffer:
@@ -317,7 +330,7 @@ ServerInviteSession::end()
           break;
          
       default:
-         InviteSession::end();
+         InviteSession::end(reason);
          break;
    }
 }
@@ -356,7 +369,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          {
             response.header(h_Warnings).push_back(*warning);
          }
-         mDialog.send(response);
+         send(response);
 
          transition(Terminated);
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
@@ -527,7 +540,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit1xx && m1xx.header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
-         mDialog.send(m1xx);
+         send(m1xx);
 		 startRetransmit1xxTimer();
       }
    }
@@ -644,7 +657,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -652,7 +665,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
-         mDialog.send(b200);
+         send(b200);
 
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -681,6 +694,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    {
       case OnAck:
       {
+         assert(mProposedLocalSdp.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          InviteSession::provideOffer(*mProposedLocalSdp);
          break;
@@ -700,7 +714,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -708,7 +722,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       {
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
-         mDialog.send(b200);
+         send(b200);
 
          transition(Terminated);
     	 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -747,11 +761,12 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          
       case OnAck:
       {
-          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-          sendBye();
-          transition(Terminated);
-          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-          break;
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         mEndReason = IllegalNegotiation;
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         break;
       }
 
       case OnCancel:
@@ -760,7 +775,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDialog.send(c200);
+         send(c200);
          break;
       }
 
@@ -770,7 +785,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage p200;
          mDialog.makeResponse(p200, msg, 200);
-         mDialog.send(p200);
+         send(p200);
          
          sendAccept(200, 0);         
          break;
@@ -864,11 +879,11 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
    SipMessage c200;
    mDialog.makeResponse(c200, msg, 200);
-   mDialog.send(c200);
+   send(c200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, mFirstRequest, 487);
-   mDialog.send(i487);
+   send(i487);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -880,11 +895,11 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
    SipMessage b200;
    mDialog.makeResponse(b200, msg, 200);
-   mDialog.send(b200);
+   send(b200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, mFirstRequest, 487);
-   mDialog.send(i487);
+   send(i487);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
@@ -896,11 +911,11 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
    SipMessage r481; // !jf! what should we send here? 
    mDialog.makeResponse(r481, msg, 481);
-   mDialog.send(r481);
+   send(r481);
    
    SipMessage i400;
    mDialog.makeResponse(i400, mFirstRequest, 400);
-   mDialog.send(i400);
+   send(i400);
 
    transition(Terminated);
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -937,7 +952,7 @@ ServerInviteSession::sendProvisional(int code)
          break;
    }
    startRetransmit1xxTimer();
-   mDialog.send(m1xx);
+   send(m1xx);
 }
 
 void
@@ -952,7 +967,7 @@ ServerInviteSession::sendAccept(int code, SdpContents* sdp)
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
-   mDialog.send(mInvite200);
+   send(mInvite200);
 }
 
 void
@@ -960,11 +975,9 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
    if (updateMethodSupported())
    {
-      SipMessage update;
-      mDialog.makeRequest(update, UPDATE);
-      InviteSession::setSdp(update, sdp);
-      mDialog.send(update);
-      mLastSessionModification = update;
+      mDialog.makeRequest(mLastSessionModification, UPDATE);
+      InviteSession::setSdp(mLastSessionModification, sdp);
+      send(mLastSessionModification);
    }
    else
    {

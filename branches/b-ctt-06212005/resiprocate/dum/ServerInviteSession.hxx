@@ -33,6 +33,7 @@ class ServerInviteSession: public InviteSession
       virtual void provideAnswer(const SdpContents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      virtual void end(EndReason reason);
       virtual void end();
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a

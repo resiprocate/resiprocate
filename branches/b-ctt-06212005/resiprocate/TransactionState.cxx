@@ -90,7 +90,7 @@ TransactionState::process(TransactionController& controller)
       KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
       if (keepAlive)
       {
-         InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
+         StackLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
          controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
          delete keepAlive;
          return;      

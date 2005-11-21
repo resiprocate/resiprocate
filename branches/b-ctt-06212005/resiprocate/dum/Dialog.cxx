@@ -36,13 +36,13 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
-     mAckId(0),
      mRemoteTarget(),
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
      mAppDialog(0),
-     mDestroying(false)
+     mDestroying(false),
+     mReUseDialogSet(false)
 {
    assert(msg.isExternal());
 
@@ -225,7 +225,10 @@ Dialog::~Dialog()
    delete mInviteSession;
    mDialogSet.mDialogs.erase(this->getId());
    delete mAppDialog;
+   if(!mReUseDialogSet)
+   {
    mDialogSet.possiblyDie();
+   }
 }
 
 const DialogId&
@@ -333,6 +336,17 @@ Dialog::dispatch(const SipMessage& msg)
             if (mInviteSession == 0)
             {
                InfoLog ( << "Spurious INFO" );
+               return;
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
+         case MESSAGE:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious MESSAGE" );
                return;
             }
             else
@@ -481,22 +495,27 @@ Dialog::dispatch(const SipMessage& msg)
          if (mDum.mClientAuthManager.get() && 
              mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
          {
-            InfoLog( << "about to re-send request with digest credentials" );
-            InfoLog( << r->second );
+            InfoLog( << "about to re-send request with digest credentials" << r->second.brief());
 
             assert (r->second.isRequest());
-            if (r->second.header(h_RequestLine).method() == ACK)
-            {
-               // store the CSeq for ACK
-               mAckId = mLocalCSeq;
-            }
 
             mLocalCSeq++;
             send(r->second);
 			handledByAuth = true;
+
+            if((r->second.header(h_RequestLine).method() == INVITE || r->second.header(h_RequestLine).method() == UPDATE) &&
+               mInviteSession != 0)
+            {
+                // Copy INVITE or UPDATE with Authorization headers back to InviteSession - needed to populate ACKs with Authoriziation headers
+                mInviteSession->mLastSessionModification = r->second;
+            }
          }
          mRequests.erase(r);
 		 if (handledByAuth) return;
+      }
+      else
+      {
+         InfoLog( << "Dialog::dispatch, ignoring stray response: " << msg.brief() );
       }
 
       const SipMessage& response = msg;
@@ -514,15 +533,8 @@ Dialog::dispatch(const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
-            // store the CSeq for ACK
-            mAckId = msg.header(h_CSeq).sequence();
             if (mInviteSession == 0)
             {
-               // #if!jf! don't think creator needs a dispatch
-               //BaseCreator* creator = mDum.findCreator(mId);
-               //assert (creator); // stray responses have been rejected already
-               //creator->dispatch(response);
-               // #endif!jf!
                DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
 
                mInviteSession = makeClientInviteSession(response);
@@ -537,6 +549,7 @@ Dialog::dispatch(const SipMessage& msg)
          case ACK:
          case CANCEL:
          case INFO:
+         case MESSAGE:
          case UPDATE:
             if (mInviteSession)
             {
@@ -779,6 +792,7 @@ Dialog::redirected(const SipMessage& msg)
       if (cInv)
       {
          cInv->handleRedirect(msg);
+         mReUseDialogSet = true;  // Set flag so that DialogSet will not be destroyed and new Request can use it
       }
    }
 }
@@ -835,7 +849,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Requires);
       request.remove(h_ProxyRequires);
       request.remove(h_Supporteds);
-      request.header(h_CSeq).sequence() = mAckId;
+      // request.header(h_CSeq).sequence() = ?;  // Caller should provide original request, or modify CSeq to proper value after calling this method
    }
 
    // If method is INVITE then advertise required headers
@@ -850,28 +864,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
-void
-Dialog::makeCancel(SipMessage& request)
-{
-   //minimal for cancel
-   request.header(h_RequestLine).method() = CANCEL;
-   request.header(h_CSeq).method() = CANCEL;
-   request.remove(h_Accepts);
-   request.remove(h_AcceptEncodings);
-   request.remove(h_AcceptLanguages);
-   request.remove(h_Allows);
-   request.remove(h_Requires);
-   request.remove(h_ProxyRequires);
-   request.remove(h_Supporteds);
-   assert(request.exists(h_Vias));
-
-   //not sure of these
-   request.header(h_To).remove(p_tag);
-   request.remove(h_RecordRoutes);
-   request.remove(h_Contacts);
-   request.header(h_Contacts).push_front(mLocalContact);
-   request.header(h_MaxForwards).value() = 70;
-}
 
 void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
@@ -978,6 +970,7 @@ Dialog::onForkAccepted()
 
 void Dialog::possiblyDie()
 {
+   // !slg! Note:  dialogs should really stick around for 32s, in order to ensure that all 2xx retransmissions get 481 correctly
    if (!mDestroying)
    {
       if (mClientSubscriptions.empty() &&
@@ -1053,4 +1046,5 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
  * <http://www.vovida.org/>.
  *
  */
+
 
