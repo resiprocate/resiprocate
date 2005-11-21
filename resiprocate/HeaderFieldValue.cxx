@@ -7,6 +7,7 @@
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/ExistsParameter.hxx"
 #include "resiprocate/HeaderFieldValue.hxx"
+#include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
@@ -32,6 +33,15 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
 {
    //InfoLog (<< "Making a copy of a HFV" << hex << this);
    mField = new char[mFieldLength];
+   memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
+}
+
+HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv, CopyPaddingEnum e)
+   : mField(0),
+     mFieldLength(hfv.mFieldLength),
+     mMine(true)
+{
+   mField = MsgHeaderScanner::allocateBuffer(mFieldLength);
    memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
 }
 

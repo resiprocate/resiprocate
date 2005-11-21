@@ -28,6 +28,8 @@ class TuSelector
       void requestTransactionUserShutdown(TransactionUser&);
       void unregisterTransactionUser(TransactionUser&);
       void process();
+      unsigned int getTimeTillNextProcessMS();
+
       
    private:
       void remove(TransactionUser* tu);

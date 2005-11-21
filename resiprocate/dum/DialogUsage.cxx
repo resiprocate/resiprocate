@@ -43,6 +43,11 @@ DialogUsage::getAppDialog()
 {
    return mDialog.mAppDialog->getHandle();
 }
+void 
+DialogUsage::send(SipMessage& msg)
+{
+   mDialog.send(msg);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

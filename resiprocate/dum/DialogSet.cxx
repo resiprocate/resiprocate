@@ -126,8 +126,7 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   if(mState != Initial &&  // !jf! may not be correct
-      mState != Destroying &&
+   if(mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -313,14 +312,18 @@ DialogSet::dispatch(const SipMessage& msg)
 
                   SipMessage ack;
                   dialog.makeRequest(ack, ACK);
+                  ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
                   dialog.send(ack);
                   
                   SipMessage bye;
                   dialog.makeRequest(bye, BYE);
                   dialog.send(bye);
+
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
                else
                {
+                  mState = Destroying;
                   mDum.destroy(this);
                }
                break;
@@ -345,12 +348,36 @@ DialogSet::dispatch(const SipMessage& msg)
       return;
    }
 
-   Dialog* dialog = findDialog(msg);
-   assert(!dialog || msg.header(h_CSeq).method() != MESSAGE);
-
+   Dialog* dialog = 0;
+   if (!(msg.isResponse() && msg.header(h_StatusLine).statusCode() == 100))  // Don't look for dialog if msg is a 100 response
+   {
+      DialogMap::iterator i = mDialogs.find(DialogId(msg));
+      if (i != mDialogs.end())
+      {
+         dialog = i->second;
+      }
+   }
    if (dialog)
    {
+      if(dialog->isDestroying())
+      {
+		 if( msg.isRequest() )
+		 {
+            StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
+            SipMessage response;         
+            mDum.makeResponse(response, msg, 481);
+            mDum.send(response);
+		 }
+		 else
+		 {
+		    StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+		 }
+  		 return;
+      }
+      else
+      {
       DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+   }
    }
    else
    {
@@ -415,9 +442,13 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case MESSAGE:
             // !jf! move this to DialogUsageManager
+            if(!dialog)
+            {
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
             return;
+            }
+            break;
 
          default:
             // !jf! move this to DialogUsageManager
@@ -434,6 +465,19 @@ DialogSet::dispatch(const SipMessage& msg)
       const SipMessage& response = msg;
 
       int code = msg.header(h_StatusLine).statusCode();
+      if (code == 423
+          && msg.header(h_CSeq).method() == SUBSCRIBE
+          && msg.exists(h_MinExpires)
+          && getCreator()
+          && msg.header(h_CSeq) == getCreator()->getLastRequest().header(h_CSeq))
+      {
+         getCreator()->getLastRequest().header(h_CSeq).sequence()++;
+         getCreator()->getLastRequest().header(h_Expires).value() = msg.header(h_MinExpires).value();
+         DebugLog( << "Re sending inital(dialog forming) SUBSCRIBE due to 423, MinExpires is: " << msg.header(h_MinExpires).value());
+         mDum.send(getCreator()->getLastRequest());
+         return;
+      }
+      
       switch(mState)
       {
          case Initial:
@@ -447,6 +491,7 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             else
             {
+
                if (mDialogs.empty())
                {
                   mState = Established;
@@ -529,7 +574,11 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
 
          case MESSAGE:
-            if (mClientPagerMessage)
+             if (dialog)
+            {
+                break;
+            }
+            else if (mClientPagerMessage)
             {
                mClientPagerMessage->dispatch(response);
             }
@@ -611,6 +660,7 @@ DialogSet::dispatch(const SipMessage& msg)
             if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -623,6 +673,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -704,6 +755,7 @@ DialogSet::end()
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
+            mState = Destroying;
             mDum.destroy(this);
          }
          else
@@ -742,7 +794,8 @@ DialogSet::end()
       }
       case Terminating:
       case Destroying:
-         assert(0);
+         DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
+         //assert(0);
    }
 }
 
