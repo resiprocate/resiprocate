@@ -56,7 +56,6 @@ class DnsUtil
       // returns pair of interface name, ip address
       /** @returns a list of interface name, IP addresses pairs of all available 
        *           interfaces (note that some of these may be v4 and others v6.
-       *  @todo Provide a windows implementation (will currently assert(0) on windows)
        */
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
 

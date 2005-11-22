@@ -115,7 +115,12 @@ WinCompat::instance()
 
 
 WinCompat::WinCompat() :
-   loadLibraryAlreadyFailed(false), getBestInterfaceEx(0), getAdaptersAddresses(0)
+   getBestInterfaceEx(0), 
+   getAdaptersAddresses(0),
+   getAdaptersInfo(0),
+   loadLibraryWithIPv4Failed(false), 
+   loadLibraryWithIPv6Failed(false),
+   hLib(0)
 {
 
    // Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's.
@@ -124,23 +129,37 @@ WinCompat::WinCompat() :
    //        library. (SLG)
 #if !defined (NO_IPHLPAPI)
    // check to see if the GetAdaptersAddresses() is in the IPHLPAPI library
-   HINSTANCE hLib = LoadLibraryA("iphlpapi.dll");
+   hLib = LoadLibraryA("iphlpapi.dll");
    if (hLib == NULL)
    {
-      loadLibraryAlreadyFailed = true;
+      loadLibraryWithIPv6Failed = true;
+      loadLibraryWithIPv4Failed = true;
       return;
    }
 
    getBestInterfaceEx = (GetBestInterfaceExProc) GetProcAddress(hLib, "GetBestInterfaceEx");
    getAdaptersAddresses = (GetAdaptersAddressesProc) GetProcAddress(hLib, "GetAdaptersAddresses");
+   getAdaptersInfo = (GetAdaptersInfoProc) GetProcAddress(hLib, "GetAdaptersInfo");
    if (getAdaptersAddresses == NULL || getBestInterfaceEx == NULL)
    {   
-      loadLibraryAlreadyFailed = true;
-      return;
+      loadLibraryWithIPv6Failed = true;
+   }
+   if (getAdaptersInfo == NULL)
+   {
+      loadLibraryWithIPv4Failed = true;
    }
 #else
-   loadLibraryAlreadyFailed = true;
+   loadLibraryWithIPv6Failed = true;
+   loadLibraryWithIPv4Failed = true;
 #endif
+}
+
+WinCompat::~WinCompat()
+{
+   if(hLib != NULL)
+   {
+      FreeLibrary(hLib);
+   }
 }
 
 
@@ -150,7 +169,7 @@ WinCompat::WinCompat() :
 GenericIPAddress
 WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
 {
-   if (instance()->loadLibraryAlreadyFailed || (getVersion() < WinCompat::WindowsXP))
+   if (instance()->loadLibraryWithIPv6Failed)
    {
       throw Exception("Library iphlpapi.dll with IPv6 support not available", __FILE__,__LINE__);
    }
@@ -216,6 +235,10 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
 GenericIPAddress
 WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination)
 {
+   if (instance()->loadLibraryWithIPv4Failed)
+   {
+      throw Exception("Library iphlpapi.dll not available", __FILE__,__LINE__);
+   }
 
    // try to figure the best route to the destination
    MIB_IPFORWARDROW bestRoute;
@@ -296,15 +319,58 @@ WinCompat::determineSourceInterface(const GenericIPAddress& destination)
 std::list<std::pair<Data,Data> >
 WinCompat::getInterfaces(const Data& matching)
 {
-   if (instance()->loadLibraryAlreadyFailed || (getVersion() < WinCompat::WindowsXP))
+   if (instance()->loadLibraryWithIPv6Failed)
    {
-      throw Exception("Library iphlpapi.dll with IPv6 support not available", __FILE__,__LINE__);
+      if (instance()->loadLibraryWithIPv4Failed)
+      {
+         throw Exception("Library iphlpapi.dll not available", __FILE__,__LINE__);
+      }
+
+      // Do IPV4 only lookup - useful for Windows versions less than W2k3 and WinXp
+      // Note:  This query does not include the Loopback Adapter
+      PIP_ADAPTER_INFO pAdaptersInfo=NULL;
+      std::list<std::pair<Data,Data> > results;
+      DWORD dwRet, dwSize=0;
+      dwRet = (instance()->getAdaptersInfo)(pAdaptersInfo, &dwSize);
+      if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
+      {
+         // Allocate memory
+         pAdaptersInfo = (PIP_ADAPTER_INFO) LocalAlloc(LMEM_ZEROINIT,dwSize);
+         if (pAdaptersInfo == NULL) 
+         {
+            throw Exception("Can't query for adapters info - LocalAlloc error", __FILE__,__LINE__);
+         }
+         dwRet = (instance()->getAdaptersInfo)(pAdaptersInfo, &dwSize);
+         if (dwRet != ERROR_SUCCESS) 
+         {
+            LocalFree(pAdaptersInfo);
+            throw Exception("Can't query for adapters info - GetAdaptersInfo", __FILE__,__LINE__);
+         } 
+         else 
+         {
+            IP_ADAPTER_INFO *AI;
+            int i;
+            for (i = 0, AI = pAdaptersInfo; AI != NULL; AI = AI->Next, i++) 
+            {
+               //Data name(AI->AdapterName);
+               Data name(AI->Description);
+               if(matching == Data::Empty || name == matching)
+               {
+                  results.push_back(std::make_pair(name, Data(AI->IpAddressList.IpAddress.String)));
+               }
+            }
+            LocalFree(pAdaptersInfo);
+         }
+      }
+      return results;
    }
 
+   // Use IPV6 compatible query
+   // Note:  This query includes the Loopback Adapter
    // Obtain the size of the structure
    IP_ADAPTER_ADDRESSES *pAdapterAddresses;
    std::list<std::pair<Data,Data> > results;
-   DWORD dwRet, dwSize;
+   DWORD dwRet, dwSize=0;
    DWORD flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    dwRet = (instance()->getAdaptersAddresses)(AF_UNSPEC, flags, NULL, NULL, &dwSize);
    if (dwRet == ERROR_BUFFER_OVERFLOW)  // expected error
