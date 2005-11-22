@@ -35,6 +35,11 @@ class Fifo : public AbstractFifo
        */
       Msg* getNext(int ms);
 
+      /** Returns the next message available and the queue status.
+       *  Will not wait if no information is available.
+       */
+      void* getNext(bool& hasNext);
+
       /// delete all elements in the queue
       virtual void clear();
 
