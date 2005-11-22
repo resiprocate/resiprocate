@@ -1028,15 +1028,13 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 bool 
 DialogUsageManager::process()
 {
-   // !kh!
-   // Fifo::getNext(0) is blocking when empty on trunk, but not on this branch, which is the right sematics?
-   std::auto_ptr<Message> msg(mFifo.getNext(1));
-   if(msg.get())
+   bool hasNext = false;
+   std::auto_ptr<Message> msg(mFifo.getNext(hasNext));
+   if (msg.get())
    {
       internalProcess(msg);
-      return true;
    }
-   return false;
+   return hasNext;
 }
 
 bool
