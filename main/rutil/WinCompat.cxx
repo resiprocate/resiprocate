@@ -13,6 +13,12 @@
 
 using namespace resip;
 
+class WinCompatInstanceCleaner
+{
+public:
+    ~WinCompatInstanceCleaner() { WinCompat::destroyInstance(); }
+} winCompatInstanceCleaner;
+
 WinCompat::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
 {
@@ -152,6 +158,12 @@ WinCompat::WinCompat() :
    loadLibraryWithIPv6Failed = true;
    loadLibraryWithIPv4Failed = true;
 #endif
+}
+
+void WinCompat::destroyInstance()
+{
+    delete mInstance;
+    mInstance = 0;
 }
 
 WinCompat::~WinCompat()
