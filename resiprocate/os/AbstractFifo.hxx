@@ -66,6 +66,11 @@ class AbstractFifo : public FifoStatsInterface
        */
       void* getNext(int ms);
 
+      /** Returns the next message available and the queue status.
+       *  Will not wait if no information is available.
+       */
+      void* getNext(bool& hasNext);
+
       enum {NoSize = 0UL -1};
 
       std::deque<void*> mFifo;
