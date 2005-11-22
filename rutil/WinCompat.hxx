@@ -50,12 +50,17 @@ class WinCompat
       static GenericIPAddress WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);
       typedef DWORD (WINAPI * GetBestInterfaceExProc)(const sockaddr *, DWORD *);
       typedef DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
+      typedef DWORD (WINAPI * GetAdaptersInfoProc)(PIP_ADAPTER_INFO, PULONG);
 
       WinCompat();
+      ~WinCompat();
 
       GetBestInterfaceExProc getBestInterfaceEx;
       GetAdaptersAddressesProc getAdaptersAddresses;
-      bool loadLibraryAlreadyFailed;
+      GetAdaptersInfoProc getAdaptersInfo;
+      bool loadLibraryWithIPv4Failed;
+      bool loadLibraryWithIPv6Failed;
+      HMODULE hLib;
 };
 
 }
