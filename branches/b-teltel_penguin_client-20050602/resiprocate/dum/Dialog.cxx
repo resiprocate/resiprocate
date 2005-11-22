@@ -210,7 +210,6 @@ Dialog::~Dialog()
 {
    DebugLog ( <<"Dialog::~Dialog() ");
 
-   mDestroying = true;
 
    while (!mClientSubscriptions.empty())
    {
@@ -980,6 +979,7 @@ void Dialog::possiblyDie()
           mServerSubscriptions.empty() &&
           !mInviteSession)
       {
+         mDestroying = true;
          mDum.destroy(this);
       }
    }
