@@ -70,6 +70,27 @@ AbstractFifo::getNext(int ms)
    return firstMessage;
 }
 
+void*
+AbstractFifo::getNext(bool& hasNext)
+{
+   Lock lock(mMutex); (void)lock;
+
+   // Wait util there are messages available.
+   if (mFifo.empty())
+   {
+      hasNext = false;
+      return 0;
+   }
+
+   // Return the first message on the fifo.
+   void* firstMessage = mFifo.front();
+   mFifo.pop_front();
+   assert(mSize != 0);
+   mSize--;
+   hasNext = !mFifo.empty();
+   return firstMessage;
+}
+
 bool
 AbstractFifo::empty() const
 {
