@@ -41,10 +41,11 @@ class WinCompat
 
       static GenericIPAddress determineSourceInterface(const GenericIPAddress& destination);
       static std::list<std::pair<Data,Data> > getInterfaces(const Data& matching);
+      static void destroyInstance();
 
    private:
-      static WinCompat* mInstance;
       static WinCompat* instance();
+      static WinCompat* mInstance;
 
       static GenericIPAddress WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination);
       static GenericIPAddress WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destination);
