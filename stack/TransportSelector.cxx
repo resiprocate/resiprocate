@@ -869,11 +869,6 @@ void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::Blackli
    mDns.unregisterBlacklistListener(rrType, listener);
 }
 
-void
-TransportSelector::setEnumSuffixes(const std::vector<Data>& suffixes)
-{
-   mDns.setEnumSuffixes(suffixes);
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
