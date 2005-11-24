@@ -91,8 +91,6 @@ class DnsInterface
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
 
-      void setEnumSuffixes(const std::vector<Data>& suffixes);
-
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
@@ -102,7 +100,6 @@ class DnsInterface
       typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
       TransportMap mSupportedTransports;
       //std::set<TransportType> mSupportedTransportTypes;
-      std::vector<Data> mEnumSuffixes; // where to do enum lookups
 
       //ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
