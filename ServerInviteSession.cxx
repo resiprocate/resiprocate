@@ -657,7 +657,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         // handler->onConnected(getSessionHandle(), msg);  // not needed since onConnected is called when 200 is sent
+         handler->onConnectedConfirmed(getSessionHandle(), msg);  
          break;
       }
 
