@@ -34,6 +34,9 @@ class InviteSessionHandler
       /// called when a dialog initiated as a UAS enters the connected state
       virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
 
+      /// called when ACK (with out an answer) is received for initial invite (UAS)
+      virtual void onConnectedConfirmed(InviteSessionHandle, const SipMessage &msg);
+
       /** UAC gets no final response within the stale call timeout (default is 3
        * minutes). This is just a notification. After the notification is
        * called, the InviteSession will then call
@@ -57,8 +60,8 @@ class InviteSessionHandler
       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
-      // called when a fork that was created through a 1xx never receives a 2xx
-      // because another fork answered and this fork was canceled by a proxy. 
+      /// called when a fork that was created through a 1xx never receives a 2xx
+      /// because another fork answered and this fork was canceled by a proxy. 
       virtual void onForkDestroyed(ClientInviteSessionHandle)=0;
 
       /// called when a 3xx with valid targets is encountered in an early dialog     
