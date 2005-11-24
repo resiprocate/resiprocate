@@ -178,7 +178,7 @@ void DnsResult::success()
 }
 
 void
-DnsResult::lookup(const Uri& uri, const std::vector<Data> enumSuffixes)
+DnsResult::lookup(const Uri& uri, const std::vector<Data> &enumSuffixes)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
    //int type = this->mType;

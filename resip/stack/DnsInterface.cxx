@@ -144,9 +144,9 @@ DnsInterface::createDnsResult(DnsHandler* handler)
 }
 
 void 
-DnsInterface::lookup(DnsResult* res, const Uri& uri, std::vector<Data> enumSuffixes)
+DnsInterface::lookup(DnsResult* res, const Uri& uri)
 {
-   res->lookup(uri, enumSuffixes);   
+   res->lookup(uri, mEnumSuffixes);   
 }
 
 // DnsResult* 
@@ -184,9 +184,16 @@ DnsInterface::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* 
    mDnsStub.registerBlacklistListener(rrType, listener);
 }
 
-void DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+void 
+DnsInterface::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
 {
    mDnsStub.unregisterBlacklistListener(rrType, listener);
+}
+
+void
+DnsInterface::setEnumSuffixes(const std::vector<Data>& suffixes)
+{
+   mEnumSuffixes = suffixes;
 }
 
 //  Copyright (c) 2003, Jason Fischl 
