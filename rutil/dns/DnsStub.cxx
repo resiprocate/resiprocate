@@ -552,3 +552,22 @@ DnsStub::handleDnsRaw(ExternalDnsRawResult res)
    reinterpret_cast<DnsRawSink*>(res.userData)->onDnsRaw(res.errorCode(), res.abuf, res.alen);
    mDnsProvider->freeResult(res);
 }
+
+void
+DnsStub::setEnumSuffixes(const std::vector<Data>& suffixes)
+{
+   SetEnumSuffixesCommand* command = new SetEnumSuffixesCommand(*this, suffixes);
+   mCommandFifo.add(command);
+}
+
+const std::vector<Data>& 
+DnsStub::getEnumSuffixes() const
+{
+   return mEnumSuffixes;
+}
+
+void
+DnsStub::doSetEnumSuffixes(const std::vector<Data>& suffixes)
+{
+   mEnumSuffixes = suffixes;
+}
