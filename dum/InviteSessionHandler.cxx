@@ -56,6 +56,11 @@ InviteSessionHandler::onOfferRequestRejected(InviteSessionHandle, const SipMessa
 {
 }
 
+void 
+InviteSessionHandler::onConnectedConfirmed(InviteSessionHandle handle, const SipMessage& msg)
+{
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

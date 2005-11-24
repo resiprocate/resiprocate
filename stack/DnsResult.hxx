@@ -46,7 +46,7 @@ class DnsResult : public DnsResultSink
       // Starts a lookup.  Has the rules for determining the transport
       // from a uri as per rfc3263 and then does a NAPTR lookup or an A
       // lookup depending on the uri
-      void lookup(const Uri& uri, const std::vector<Data> enumSuffixes);
+      void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes);
 
       // Check if there are tuples available now. Will load new tuples in if
       // necessary at a lower priority. 

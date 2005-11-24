@@ -81,7 +81,7 @@ class DnsInterface
       // transport (if there is one)
 
       DnsResult* createDnsResult(DnsHandler* handler=0);
-      void lookup(DnsResult* res, const Uri& uri, std::vector<Data> enumSuffixes);
+      void lookup(DnsResult* res, const Uri& uri);
 
       //DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
       //DnsResult* lookup(const Via& via, DnsHandler* handler=0);
@@ -90,6 +90,8 @@ class DnsInterface
       //virtual void handleDnsRaw(ExternalDnsRawResult);
       void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
       void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+
+      void setEnumSuffixes(const std::vector<Data>& suffixes);
 
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
@@ -100,6 +102,7 @@ class DnsInterface
       typedef std::vector<std::pair<TransportType, IpVersion> > TransportMap;
       TransportMap mSupportedTransports;
       //std::set<TransportType> mSupportedTransportTypes;
+      std::vector<Data> mEnumSuffixes; // where to do enum lookups
 
       //ExternalDns* mDnsProvider;
       int mActiveQueryCount;      
