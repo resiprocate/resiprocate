@@ -97,6 +97,8 @@ class DnsStub : public ExternalDnsHandler
       void removeResultTransform();
       void registerBlacklistListener(int rrType, BlacklistListener*);
       void unregisterBlacklistListener(int rrType, BlacklistListener*);
+      void setEnumSuffixes(const std::vector<Data>& suffixes);
+      const std::vector<Data>& getEnumSuffixes() const;
 
       template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
@@ -287,6 +289,27 @@ class DnsStub : public ExternalDnsHandler
             DataArr mTargetsToBlacklist;
       };
 
+      void doSetEnumSuffixes(const std::vector<Data>& suffixes);
+
+      class SetEnumSuffixesCommand : public Command
+      {
+         public:
+            SetEnumSuffixesCommand(DnsStub& stub, 
+                                   const std::vector<Data>& suffixes)
+               : mStub(stub),
+                 mEnumSuffixes(suffixes)
+            {}             
+            ~SetEnumSuffixesCommand() {}
+            void execute()
+            {
+               mStub.doSetEnumSuffixes(mEnumSuffixes);
+            }
+
+         private:
+            DnsStub& mStub;
+            std::vector<Data> mEnumSuffixes;
+      };
+
       resip::Fifo<Command> mCommandFifo;
 
       const unsigned char* skipDNSQuestion(const unsigned char *aptr,
@@ -309,6 +332,8 @@ class DnsStub : public ExternalDnsHandler
       typedef std::list<BlacklistListener*> Listeners;
       typedef std::map<int, Listeners> ListenerMap;
       ListenerMap mListenerMap;
+
+      std::vector<Data> mEnumSuffixes; // where to do enum lookups
 };
 
 typedef DnsStub::Protocol Protocol;
