@@ -231,7 +231,7 @@ TransportSelector::dnsResolve(DnsResult* result,
       if (msg->hasForceTarget())
       {
          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
-         mDns.lookup(result, msg->getForceTarget(), mEnumSuffixes);
+         mDns.lookup(result, msg->getForceTarget());
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
@@ -239,12 +239,12 @@ TransportSelector::dnsResolve(DnsResult* result,
          // lose the target
          msg->setForceTarget(msg->header(h_Routes).front().uri());
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-         mDns.lookup(result, msg->getForceTarget(), mEnumSuffixes);
+         mDns.lookup(result, msg->getForceTarget());
       }
       else
       {
          DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
-         mDns.lookup(result, msg->header(h_RequestLine).uri(), mEnumSuffixes);
+         mDns.lookup(result, msg->header(h_RequestLine).uri());
       }
    }
    else if (msg->isResponse())
@@ -872,7 +872,7 @@ void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::Blackli
 void
 TransportSelector::setEnumSuffixes(const std::vector<Data>& suffixes)
 {
-   mEnumSuffixes = suffixes;
+   mDns.setEnumSuffixes(suffixes);
 }
 
 /* ====================================================================
