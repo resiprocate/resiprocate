@@ -163,12 +163,6 @@ void TransactionController::unregisterBlacklistListener(int rrType, DnsStub::Bla
    mTransportSelector.unregisterBlacklistListener(rrType, l);
 }
 
-void
-TransactionController::setEnumSuffixes(const std::vector<Data>& suffixes)
-{
-   mTransportSelector.setEnumSuffixes(suffixes);
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

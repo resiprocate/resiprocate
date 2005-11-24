@@ -507,7 +507,7 @@ SipStack::getDnsStub() const
 void
 SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
 {
-   mTransactionController.setEnumSuffixes(suffixes);
+   mDnsStub->setEnumSuffixes(suffixes);
 }
 
 volatile bool& 
