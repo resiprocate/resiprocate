@@ -82,8 +82,6 @@ SRC = \
 	Pkcs8Contents.cxx \
 	PlainContents.cxx \
 	QopParameter.cxx \
-	QopParameter.cxx \
-	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
 	RAckCategory.cxx \
 	Rlmi.cxx \
