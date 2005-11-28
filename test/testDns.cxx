@@ -144,11 +144,13 @@ main(int argc, const char** argv)
 {
    char* logType = "cout";
    char* logLevel = "STACK";
+   char* enumSuffix = "e164.arpa";
    
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"enum-suffix",   'e', POPT_ARG_STRING, &enumSuffix,  0, "specify what enum domain to search in", "e164.arpa"},      
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -171,11 +173,16 @@ main(int argc, const char** argv)
    const char** args = argv;
 #endif
 
+   std::vector<Data> enumSuffixes;
+   enumSuffixes.push_back(enumSuffix);
+   stub->setEnumSuffixes(enumSuffixes);
+
    // default query: sip:yahoo.com
    if (argc == 1)
    {
       Query query;
       query.handler = new TestDnsHandler;
+      
       //query.listener = new VipListener;
       cerr << "Creating Uri" << endl;       
       uri = Uri("sip:yahoo.com");
@@ -209,7 +216,7 @@ main(int argc, const char** argv)
       }
       catch (ParseBuffer::Exception& e)
       {
-         cerr << "Couldn't parse arg " << *(args-1) << endl;
+         cerr << "Couldn't parse arg " << *(args-1) << ": " << e.getMessage() << endl;
       }
       
       argc--;
