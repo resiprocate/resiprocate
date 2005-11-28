@@ -353,19 +353,6 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
-      // Ensure CSeq on initial 200 response to invite is valid
-     if (mState >= UAC_Start && mState <= UAC_Cancelled &&
-         msg.header(h_CSeq).method() == INVITE && 
-         msg.isResponse() && 
-         msg.header(h_StatusLine).statusCode() / 200 == 1)
-     {
-        // Make sure CSeq matches last request
-        if(msg.header(h_CSeq).sequence() != mInvite.header(h_CSeq).sequence())
-        {
-           InfoLog (<< "Throwing out 200 with mismatched CSeq=" << msg.header(h_CSeq).sequence() << " expected=" << mLastSessionModification.header(h_CSeq).sequence() << ".");
-           return;  // just throw away 200 with bad CSeq
-        }
-     }
      sendSipFrag(msg);
      switch(mState)
      {
