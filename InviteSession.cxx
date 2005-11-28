@@ -668,12 +668,6 @@ InviteSession::dispatch(const SipMessage& msg)
          send(i->second);  // resend ACK
          return;
       }
-      // If not in Map, make sure CSeq matches last request
-      if(mLastSessionModification.isRequest() && msg.header(h_CSeq).sequence() != mLastSessionModification.header(h_CSeq).sequence())
-      {
-          InfoLog (<< "Throwing out 200 with mismatched CSeq=" << msg.header(h_CSeq).sequence() << " expected=" << mLastSessionModification.header(h_CSeq).sequence() << ".");
-          return;  // just throw away 200 with bad CSeq
-      }
    }
 
    // !jf! do we need to handle 3xx here or is it handled elsewhere?
