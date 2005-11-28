@@ -23,6 +23,11 @@
 using namespace resip;
 using namespace std;
 
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x*1000)
+#endif
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -171,7 +176,7 @@ class Server : public ThreadIf
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Err, argv[0]);
+   Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Debug, argv[0]);
    Log::toLevel( Data("DEBUG") );
 
    SipStack stack1;

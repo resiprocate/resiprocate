@@ -2,7 +2,11 @@
 #include "resip/stack/Helper.hxx"
 #include "rutil/Timer.hxx"
 
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 using namespace resip;
 using namespace std;
