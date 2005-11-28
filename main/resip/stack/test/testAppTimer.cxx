@@ -4,7 +4,16 @@
 #include "resip/stack/TuSelector.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Logger.hxx"
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x*1000)
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 

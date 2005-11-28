@@ -36,7 +36,34 @@ main(int argc, char* argv[])
     
     Log::initialize(Log::Cout, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-    
+
+    {
+       Data txt("v=0\r\n"  
+		"o=- 333525334858460 333525334858460 IN IP4 192.168.0.156\r\n"
+		"s=test123\r\n"
+		"c=IN IP4 192.168.0.156\r\n"
+		"t=4058038202 0\r\n"
+		"m=audio 41466 RTP/AVP 0 101\r\n"
+		"a=ptime:20\r\n"
+		"a=rtpmap:0 PCMU/8000\r\n"
+		"a=rtpmap:101 telephone-event/8000\r\n"
+		"a=fmtp:101 0-11\r\n");
+
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+      
+       assert(sdp.session().media().size() == 1);
+       for (std::list<resip::SdpContents::Session::Medium>::const_iterator i = sdp.session().media().begin(); i != sdp.session().media().end(); i++)
+       {
+          const std::list<resip::SdpContents::Session::Codec> &codecs = i->codecs();
+       }
+
+       //assert(sdp.session.getAttributes().count == 2);
+       CritLog(<< "ftmp test: " << sdp);
+    }
+
+    exit(0);
     {
        Data txt("v=0\r\n"  
 		"o=- 333525334858460 333525334858460 IN IP4 192.168.0.156\r\n"
@@ -115,7 +142,7 @@ main(int argc, char* argv[])
        CritLog(<< "Ok");
     }
 
-    exit(0);
+    //exit(0);
     
     {
        Data txt("v=0\r\n"
@@ -182,7 +209,7 @@ main(int argc, char* argv[])
       assert(sdpO == sdpO2);
     }
     
-    tassert_init(5);
+    tassert_init(4);
     {
       Data txt("v=0\r\n"
                "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
