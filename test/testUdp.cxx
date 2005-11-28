@@ -50,7 +50,12 @@ main(int argc, char* argv[])
    poptGetNextOpt(context);
 #endif
 
+#ifdef WIN32
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   initNetwork();
+#else
    Log::initialize(logType, logLevel, argv[0]);
+#endif
 
    cout << "Performing " << runs << " runs." << endl;
    

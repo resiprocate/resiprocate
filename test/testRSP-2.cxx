@@ -4,7 +4,9 @@
 #include "rutil/Subsystem.hxx"
 #include "resip/stack/Helper.hxx"
 
+#ifndef WIN32
 #include <pthread.h>
+#endif
 
 class TestSS : public resip::Subsystem
 {
