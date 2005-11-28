@@ -39,7 +39,7 @@ const char ub[] = "\033[01;00m";
 
 #ifdef WIN32
 #define usleep(x) Sleep(x/1000)
-#define sleep(x) Sleep(x)
+#define sleep(x) Sleep(x*1000)
 #endif
 
 namespace resip
@@ -232,11 +232,7 @@ main(int argc, const char** argv)
             --count;
          }
       }
-#ifdef WIN32
-      sleep(100);
-#else
       sleep(1);
-#endif
    }
 
    for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)

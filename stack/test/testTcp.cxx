@@ -56,7 +56,7 @@ main(int argc, char* argv[])
 #endif
 
 #ifdef WIN32
-   Log::initialize(Log::Cout, Log::VSDebugWindow, "testTcp");   
+   Log::initialize(Log::Cout, Log::Info, "testTcp");   
 #else
    Log::initialize(logType, logLevel, argv[0]);
 #endif

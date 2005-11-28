@@ -6,6 +6,11 @@
 using namespace resip;
 using namespace std;
 
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x*1000)
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
@@ -19,7 +24,9 @@ class LogThread : public ThreadIf
 
       void thread()
       {
+#ifdef LOG_ENABLE_THREAD_SETTING
          Log::setThreadSetting(mSetting);
+#endif
          while(!waitForShutdown(100))
          {
             DebugLog(<< mDescription << "  DEBUG");
@@ -88,6 +95,7 @@ main(int argc, char* argv[])
    service2a.run();
    service2b.run();
 
+#if !defined(WIN32) && !defined(TARGET_OS_MAC)
    sleep(2);
 
    InfoLog(<<"Setting service 1 to INFO\n");
@@ -105,6 +113,7 @@ main(int argc, char* argv[])
    InfoLog(<<"Setting service 1 to DEBUG\n");
    Log::setServiceLevel(1, Log::Debug);
    sleep(2);
+#endif 
 
    DebugLog(<<"This should still not appear.");
    InfoLog(<<"This should still appear.");

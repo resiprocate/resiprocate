@@ -32,11 +32,11 @@ leakCheck(bool verbose)
         }
     }
 
+#ifndef WIN32
     ofstream devnull("/dev/null");
-
     ostream& os(verbose?cout:devnull);
-
     assert(os.good());
+#endif
 
     for(int i = 0 ; i < 100 ; ++i)
     {
@@ -50,6 +50,7 @@ leakCheck(bool verbose)
           PlainContents alternateContents(&ahfv, type);
           setContentsHeaders(alternateContents);
 
+#ifndef WIN32
           if (verbose && i == 0)
           {
               originalContents.encodeHeaders(os);
@@ -59,6 +60,7 @@ leakCheck(bool verbose)
               alternateContents.encode(os);
               os << endl;
           }
+#endif
 
           // clobber the content-disposition mDisposition variable
           alternateContents = originalContents;
