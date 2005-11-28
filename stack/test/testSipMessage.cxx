@@ -26,6 +26,7 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Warning, argv[0]);
+   initNetwork();
 
    {
       Data txt(

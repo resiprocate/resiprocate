@@ -1,8 +1,17 @@
 #include <assert.h>
 #include <iostream>
 #include <string.h>
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <memory>
+
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x*1000)
+#endif
 
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "resip/stack/HeaderTypes.hxx"
