@@ -328,7 +328,8 @@ main(int argc, char** argv)
                requestProcessors, 
                responseProcessors, 
                targetProcessors, 
-               store.mUserStore );
+               store.mUserStore,
+               args.mTimerC );
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL

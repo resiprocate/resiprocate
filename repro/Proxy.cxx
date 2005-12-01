@@ -26,7 +26,8 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
-             UserStore& userStore) 
+             UserStore& userStore,
+             int timerC) 
    : mStack(stack), 
      mRecordRoute(recordRoute),
      mRequestProcessorChain(requestP), 
@@ -34,6 +35,7 @@ Proxy::Proxy(SipStack& stack,
      mTargetProcessorChain(targetP),
      mUserStore(userStore)
 {
+   mTimerC=timerC;
    if (!mRecordRoute.uri().host().empty())
    {
       mRecordRoute.uri().param(p_lr);
@@ -245,6 +247,16 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
    assert(mClientRequestContexts.count(transactionId) == 0);
    InfoLog (<< "add client transaction tid=" << transactionId << " " << rc);
    mClientRequestContexts[transactionId] = rc;
+}
+
+void
+Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
+{
+   if(mTimerC > 0)
+   {
+      InfoLog(<<"Posting timer C");
+      mStack.post(*tc,mTimerC,this);
+   }
 }
 
 const Data& 

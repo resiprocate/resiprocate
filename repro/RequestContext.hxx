@@ -8,6 +8,7 @@
 #include "repro/ResponseContext.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "repro/ResponseContext.hxx"
+#include "repro/TimerCMessage.hxx"
 
 namespace resip
 {
@@ -54,7 +55,10 @@ class RequestContext
       
       void addTarget(const resip::NameAddr& target);
       std::vector<resip::NameAddr>& getCandidates();
-      
+            
+      void updateTimerC();
+      bool mInitialTimerCSet;
+
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
@@ -69,6 +73,8 @@ class RequestContext
       bool mHaveSentFinalResponse;
       resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
+      int mTCSerial;
+
 
       typedef std::vector<ProcessorChain::Chain::iterator>
 
