@@ -45,6 +45,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int recursiveRedirect = 0;
    char* enumSuffix = 0;
    int allowBadReg = 0;
+   int timerC=180;
    
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -90,6 +91,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
+      {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -141,6 +143,15 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    if (mySqlServer) 
    {
       mMySqlServer = Data(mySqlServer);
+   }
+   
+   if(timerC >0)
+   {
+      mTimerC=timerC;
+   }
+   else
+   {
+      mTimerC=0;
    }
 }
 

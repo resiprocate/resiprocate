@@ -94,7 +94,8 @@ TestRepro::TestRepro(const resip::Data& name,
           makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore, mRegData),
           makeResponseProcessorChain(mResponseProcessors),
           makeTargetProcessorChain(mTargetProcessors),
-          mStore.mUserStore),
+          mStore.mUserStore,
+          180),
    mDum(mStack),
    mDumThread(mDum)
 {

@@ -61,6 +61,8 @@ class ResponseContext
       // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
 
+      void processTimerC();
+
    private:
       // These methods are really private
       void processPendingTargets();
