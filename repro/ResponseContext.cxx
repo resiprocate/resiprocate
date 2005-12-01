@@ -27,6 +27,7 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mBestPriority(50),
    mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
+
 }
 
 void 
@@ -178,7 +179,11 @@ ResponseContext::processPendingTargets()
       }
 
       
-      // add a Timer C if one hasn't already been added
+      if(!mRequestContext.mInitialTimerCSet)
+      {
+         mRequestContext.mInitialTimerCSet=true;
+         mRequestContext.updateTimerC();
+      }
       
       // the rest of 16.6 is implemented by the transaction layer of resip
       // - determining the next hop (tuple)
@@ -201,6 +206,16 @@ ResponseContext::processCancel(const SipMessage& request)
 
    if (!mForwardedFinalResponse)
    {
+      cancelProceedingClientTransactions();
+   }
+}
+
+void
+ResponseContext::processTimerC()
+{
+   if (!mForwardedFinalResponse)
+   {
+      InfoLog(<<"Canceling client transactions due to timer C.");
       cancelProceedingClientTransactions();
    }
 }
@@ -235,7 +250,7 @@ ResponseContext::processResponse(SipMessage& response)
    switch (code / 100)
    {
       case 1:
-         // update Timer C
+         mRequestContext.updateTimerC();
          if  (code > 100 && !mForwardedFinalResponse)
          {
             mRequestContext.sendResponse(response);
@@ -374,6 +389,7 @@ ResponseContext::cancelClientTransaction(const Branch& branch)
    
    SipMessage request(mRequestContext.getOriginalRequest());
    request.header(h_Vias).push_front(branch.via);
+   request.header(h_RequestLine).uri() = branch.uri;
    
    std::auto_ptr<SipMessage> cancel(Helper::makeCancel(request));
    sendRequest(*cancel);

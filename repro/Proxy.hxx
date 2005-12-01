@@ -6,6 +6,7 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/TimerCMessage.hxx"
 
 namespace resip
 {
@@ -26,7 +27,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
-            UserStore& );
+            UserStore& ,
+            int timerC);
       virtual ~Proxy();
 
       virtual bool isShutDown() const ;
@@ -38,6 +40,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       UserStore& getUserStore();
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
+
+  void postTimerC(std::auto_ptr<TimerCMessage> tc);
+      
+      int mTimerC;
 
    protected:
       virtual const resip::Data& name() const;

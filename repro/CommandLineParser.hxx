@@ -40,6 +40,7 @@ class CommandLineParser
       int mHttpPort;
       bool mRecursiveRedirect;
       bool mAllowBadReg;
+      int mTimerC;
 };
  
 }
