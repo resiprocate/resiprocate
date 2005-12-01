@@ -38,8 +38,10 @@ RequestContext::RequestContext(Proxy& proxy,
    mProxy(proxy),
    mHaveSentFinalResponse(false),
    mTargetConnectionId(0),
-   mResponseContext(*this)
+   mResponseContext(*this),
+   mTCSerial(0)
 {
+   mInitialTimerCSet=false;
 }
 
 RequestContext::~RequestContext()
@@ -92,6 +94,22 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
      delete this;
      return;
    }
+
+   TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
+
+   if(tc)
+   {
+      DebugLog(<<"Got a Timer C message with serial " << tc->mSerial 
+               << " Current serial number is " << mTCSerial );
+      if(tc->mSerial == mTCSerial)
+      {
+	InfoLog(<<"Timer C fired");
+         mResponseContext.processTimerC();
+      }
+      return;
+   }
+
+
 
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
@@ -195,6 +213,19 @@ RequestContext::addTarget(const NameAddr& target)
    InfoLog (<< "Adding candidate " << target);
    mCandidateTargets.push_back(target);
 }
+
+void
+RequestContext::updateTimerC()
+{
+   InfoLog(<<"Updating timer C.");
+   mTCSerial++;
+   DebugLog(<<"Current serial is " << mTCSerial);
+   TimerCMessage* tc = new TimerCMessage(this->getTransactionId());
+   tc->mSerial=mTCSerial;
+   std::auto_ptr<TimerCMessage> atc(tc);
+   mProxy.postTimerC(atc);
+}
+
 
 std::vector<resip::NameAddr>& 
 RequestContext::getCandidates()
