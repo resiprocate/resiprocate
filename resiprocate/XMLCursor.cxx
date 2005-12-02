@@ -429,6 +429,7 @@ XMLCursor::encodeXMLCompatible(const Data& strData)
          break;
       case '>':
          encodedStr.append("&gt;", strlen("&gt;"));
+         break;
       default:
          encodedStr.append(strData.c_str() + i, 1);
          break;
