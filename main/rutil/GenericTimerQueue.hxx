@@ -3,6 +3,7 @@
 
 #include "rutil/Timer.hxx"
 #include <set>
+#include <vector>
 
 namespace resip {
 
@@ -50,13 +51,33 @@ class GenericTimerQueue
          if (!mTimers.empty() && msTillNextTimer() == 0)
          {
             TimerEntry<T> now(0, 0);
-            typename std::multiset<TimerEntry<T> >::iterator end = mTimers.upper_bound(now);
-            for (typename std::multiset<TimerEntry<T> >::iterator i = mTimers.begin(); i != end; ++i)
+
+            // hacky solution, needs work, insertion from processTimer
+            // caused bizarre infinite loop issues in previous revision;
+            // this code is in desperate need of help
+            typedef typename std::multiset<TimerEntry<T> > TimerSet;
+            typedef std::vector<typename TimerSet::iterator> ItVector;
+            ItVector iterators;
+
+            typename TimerSet::iterator end = mTimers.upper_bound(now);
+            typename TimerSet::iterator begin = mTimers.begin();
+
+            for (typename TimerSet::iterator i = begin; i != end; ++i)
             {
-               assert(i->getEvent());
-               processTimer(i->getEvent());               
+               iterators.push_back(i);
             }
-            mTimers.erase(mTimers.begin(), end);
+
+            for (typename ItVector::iterator i = iterators.begin(); i != iterators.end(); ++i)
+            {
+               assert((*i)->getEvent());
+               processTimer((*i)->getEvent());               
+            }
+
+            //!dcm! -- erasing the range didn't work...upper bound was prob. end()
+            for (typename ItVector::iterator i = iterators.begin(); i != iterators.end(); ++i)
+            {
+               mTimers.erase(*i);
+            }
          }
       }
 
