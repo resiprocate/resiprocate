@@ -31,7 +31,7 @@ RecursiveRedirect::process(RequestContext& context)
    const SipMessage* response = dynamic_cast<const SipMessage*>(context.getCurrentEvent());
    if (response && 
        response->isResponse() && 
-       response->header(h_StatusLine).statusCode() / 300 == 3)
+       response->header(h_StatusLine).statusCode() / 100 == 3)
    {
       for (NameAddrs::const_iterator i=response->header(h_Contacts).begin(); 
            i != response->header(h_Contacts).end(); ++i)
