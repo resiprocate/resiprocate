@@ -19,21 +19,43 @@ class ClientRegistration: public NonDialogUsage
       ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SipMessage& req);
       ClientRegistrationHandle getHandle();
 
+      /** Adds a registration binding, using the registration from the UserProfile */
       void addBinding(const NameAddr& contact);
+
+      /** Adds a registration binding, using the specified registration time */
       void addBinding(const NameAddr& contact, int registrationTime);
+
+      /** Removes one particular binding */
       void removeBinding(const NameAddr& contact);
+
+      /** Removes all bindings associated with the AOR - even those that may have been
+          by a another UA.  Note:  Set's contact header to '*'.  Set flag to true
+          to end the usage when complete.  */
       void removeAll(bool stopRegisteringWhenDone=false);
+
+      /** Removes all bindings added by addBinding.  Set flag to true to end the usage 
+          when complete */
       void removeMyBindings(bool stopRegisteringWhenDone=false);
-      void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
+
+      /** Request a manual refresh of the registration.  Default to using original expires 
+          value (0 is not allowed - call removeXXX() instead) */
+      void requestRefresh(int expires = -1);  
       
-      //kills the usgage, call removeMyBindings to deregister
+      /** kills the usgage, does not unregister, call removeMyBindings to unregister */
       void stopRegistering(); 
       
+      /** returns a list of contacts added by addBinding */
       const NameAddrs& myContacts();
+
+      /** returns a list of all contacts for this AOR - may include those added by other UA's */
       const NameAddrs& allContacts();
-      int whenExpires() const; // relative in seconds
+
+      /** returns the number of seconds until the registration expires - relative */
+      int whenExpires() const; 
       
+      /** Calls removeMyBindings and ends usage when complete */
       virtual void end();
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
    
