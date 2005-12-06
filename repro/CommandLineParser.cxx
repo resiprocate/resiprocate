@@ -24,7 +24,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* recordRoute = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
+#if defined(USE_SSL)
    int tlsPort = 5061;
+#else
+   int tlsPort = 0;
+#endif
    int dtlsPort = 0;
    int disableV4 = false;
    int enableV6 = false;
