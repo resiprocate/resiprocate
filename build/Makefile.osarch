@@ -63,11 +63,11 @@ endif
 	CFLAGS   += -D_REENTRANT 
 
 ifeq ($(USE_GOOGLE_MALLOC),yes)
-LDLIBS_LAST += -lprofiler
+LDLIBS_LAST += -ltcmalloc
 endif
 
 ifeq ($(USE_GOOGLE_CPUPERF),yes)
-LDLIBS_LAST += -ltcmalloc
+LDLIBS_LAST += -lprofiler
 endif
 
 endif
