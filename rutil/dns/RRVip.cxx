@@ -28,6 +28,8 @@
 #endif
 #endif
 
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/DnsAAAARecord.hxx"
@@ -36,6 +38,8 @@
 #include "rutil/dns/DnsSrvRecord.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 using namespace resip;
 using namespace std;
@@ -90,6 +94,7 @@ void RRVip::removeVip(const Data& target,
       Data vip = it->second->vip();
       delete (*it).second;
       mTransforms.erase(it);
+      DebugLog(<< "removed vip " << target << "(" << rrType << "): " << vip);
    }
 }
 
@@ -97,6 +102,7 @@ void RRVip::transform(const Data& target,
                       int rrType,
                       std::vector<DnsResourceRecord*>& src)
 {
+   DebugLog(<< "Transform...");
    RRVip::MapKey key(target, rrType);
    TransformMap::iterator it = mTransforms.find(key);
    if (it != mTransforms.end())
@@ -121,6 +127,7 @@ RRVip::Transform::~Transform()
 
 void RRVip::Transform::updateVip(const Data& vip)
 {
+   DebugLog(<< "updating an existing vip: " << mVip << " with " << vip);
    mVip = vip;
 }
 
@@ -139,6 +146,7 @@ void RRVip::Transform::transform(RRVector& src,
    }
    if(!invalidVip)
    {
+      DebugLog( << "tranforming records");
       if (src.begin() != it)
       {
          DnsResourceRecord* vip = *it;
@@ -151,6 +159,7 @@ void RRVip::Transform::transform(RRVector& src,
 RRVip::NaptrTransform::NaptrTransform(const Data& vip)
    : Transform(vip)
 {
+   DebugLog(<< "Creating a new Napter transform for " << vip);
 }
 
 void RRVip::NaptrTransform::transform(RRVector& src,
@@ -162,6 +171,7 @@ void RRVip::NaptrTransform::transform(RRVector& src,
    {
       if ((*it)->isSameValue(mVip))
       {
+         DebugLog(<< "naptr vip record " << mVip << "found");
          invalidVip = false;
          vip = it;
          break;
@@ -169,6 +179,7 @@ void RRVip::NaptrTransform::transform(RRVector& src,
    }
    if(!invalidVip)
    {
+      DebugLog(<< "Transforming Naptr records");
       int min = dynamic_cast<DnsNaptrRecord*>(*(src.begin()))->order();
       for (RRVector::iterator it = src.begin(); it != src.end(); ++it)
       {
@@ -182,6 +193,7 @@ void RRVip::NaptrTransform::transform(RRVector& src,
 RRVip::SrvTransform::SrvTransform(const Data& vip)
    : Transform(vip)
 {
+   DebugLog(<< "Creating a new SRV transform for" << vip);
 }
 
 void RRVip::SrvTransform::transform(RRVector& src,
@@ -200,6 +212,7 @@ void RRVip::SrvTransform::transform(RRVector& src,
    }
    if(!invalidVip)
    {
+      DebugLog(<< "Transforming SRV records");
       int min = dynamic_cast<DnsSrvRecord*>(*(src.begin()))->priority();
       for (RRVector::iterator it = src.begin(); it != src.end(); ++it)
       {

@@ -171,8 +171,8 @@ void DnsResult::success()
    while (!mCurrSuccessPath.empty())
    {
       Item top = mCurrSuccessPath.top();
+      DebugLog( << "Whitelisting " << top.domain << "(" << top.rrType << "): " << top.value);
       mVip.vip(top.domain, top.rrType, top.value);
-      InfoLog( << "Whitelisting " << top.domain << "(" << top.rrType << "): " << top.value);
       mCurrSuccessPath.pop();
    }
 }
@@ -1119,7 +1119,9 @@ void DnsResult::blacklistLastReturnedResult()
    assert(top.value==Tuple::inet_ntop(mLastReturnedResult));
    vector<Data> records;
    records.push_back(top.value);
+   DebugLog( << "Blacklisting " << top.domain << "(" << top.rrType << "): " << top.value);
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+   DebugLog( << "Remove vip" << top.domain << "(" << top.rrType << ")");
    mVip.removeVip(top.domain, top.rrType);
    mCurrResultPath.pop();
 }
