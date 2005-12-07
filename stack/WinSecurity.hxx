@@ -25,9 +25,9 @@ class WinSecurity : public Security
       WinSecurity(const CipherList& cipherList = ExportableSuite) : Security(cipherList){}
 
       virtual void preload();
-      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer);
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer);
-      virtual void onRemovePEM(const Data& name, PEMType type);
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
+      virtual void onRemovePEM(const Data& name, PEMType type) const;
 
 
    protected:
