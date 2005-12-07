@@ -39,21 +39,21 @@ WinSecurity::preload()
 }
 
 void
-WinSecurity::onReadPEM(const Data& name, PEMType type, Data& buffer)
+WinSecurity::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
-   throw;
+   return;
 }
 
 void
-WinSecurity::onWritePEM(const Data& name, PEMType type, const Data& buffer)
+WinSecurity::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
-   throw;
+   return;
 }
 
 void
-WinSecurity::onRemovePEM(const Data& name, PEMType type)
+WinSecurity::onRemovePEM(const Data& name, PEMType type) const
 {
-   throw;
+   return;
 }
 
 #ifdef USE_SSL
