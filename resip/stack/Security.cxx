@@ -140,10 +140,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 
    sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
    if(!iInCode)
-   {
-      memset(cBuf2, 0, sizeof(cBuf2) ); 
-      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
-   }
+      ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
    return iInCode;
 }
