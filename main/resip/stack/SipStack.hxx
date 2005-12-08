@@ -174,6 +174,8 @@ class SipStack
           @param tu  TransactionUser to send from.
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
+
+      void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
       
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
