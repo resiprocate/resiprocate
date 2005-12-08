@@ -19,8 +19,9 @@ using namespace repro;
 using namespace std;
 
 
-StaticRoute::StaticRoute(RouteStore& store) :
-   mRouteStore(store)
+StaticRoute::StaticRoute(RouteStore& store, bool noChallenge) :
+   mRouteStore(store),
+   mNoChallenge(noChallenge)
 {}
 
 
@@ -57,7 +58,7 @@ StaticRoute::process(RequestContext& context)
       
       // !rwm! TODO would be useful to check if these targets require authentication
       // but for know we will just fail safe and assume that all routes require auth
-      requireAuth |= true;
+      requireAuth |= !mNoChallenge;
    }
    if (requireAuth && context.getDigestIdentity().empty())
    {
