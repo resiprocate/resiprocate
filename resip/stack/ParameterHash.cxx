@@ -37,7 +37,7 @@ namespace resip {
 using namespace std;
 #line 8 "ParameterHash.gperf"
 struct params { char *name; ParameterTypes::Type type; };
-/* maximum key range = 216, duplicates = 1 */
+/* maximum key range = 292, duplicates = 1 */
 
 class ParameterHash
 {
@@ -50,34 +50,34 @@ public:
 inline unsigned int
 ParameterHash::hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
+  static unsigned short asso_values[] =
     {
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218,   5, 218,  20,   0, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218,   0,  30,   0,
-       10,   0,  20,  30,  65,   5, 218,   0,   0,  25,
-        5,   5,   5,  25,   0,   0,   0,  45,  65,  35,
-       75,  45,  10, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218, 218, 218, 218, 218,
-      218, 218, 218, 218, 218, 218
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293,   0, 293,  55,   0, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293,   0,  35,   0,
+       15,   0,  20,   5,  40,  10, 293,   0,   0,  25,
+        5,   5,   5,   0,   0,   0,   0,  40,  70,  30,
+       55,  70,  40, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293, 293, 293
     };
   register int hval = len;
 
@@ -131,202 +131,212 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 82,
+      TOTAL_KEYWORDS = 83,
       MIN_WORD_LENGTH = 1,
       MAX_WORD_LENGTH = 13,
-      MIN_HASH_VALUE = 2,
-      MAX_HASH_VALUE = 217
+      MIN_HASH_VALUE = 1,
+      MAX_HASH_VALUE = 292
     };
 
   static struct params wordlist[] =
     {
+#line 36 "ParameterHash.gperf"
+      {"q", ParameterTypes::q},
 #line 35 "ParameterHash.gperf"
       {"lr", ParameterTypes::lr},
 #line 33 "ParameterHash.gperf"
       {"ttl", ParameterTypes::ttl},
-#line 57 "ParameterHash.gperf"
+#line 58 "ParameterHash.gperf"
       {"stale", ParameterTypes::stale},
-#line 53 "ParameterHash.gperf"
+#line 54 "ParameterHash.gperf"
       {"nc", ParameterTypes::nc},
-#line 77 "ParameterHash.gperf"
-      {"site", ParameterTypes::site},
+#line 43 "ParameterHash.gperf"
+      {"tag", ParameterTypes::tag},
 #line 23 "ParameterHash.gperf"
       {"actor", ParameterTypes::actor},
+#line 62 "ParameterHash.gperf"
+      {"qop", ParameterTypes::qopFactory},
+#line 78 "ParameterHash.gperf"
+      {"site", ParameterTypes::site},
+#line 48 "ParameterHash.gperf"
+      {"rport", ParameterTypes::rport},
+#line 65 "ParameterHash.gperf"
+      {"reason", ParameterTypes::reason},
 #line 10 "ParameterHash.gperf"
       {"data", ParameterTypes::data},
-#line 47 "ParameterHash.gperf"
-      {"rport", ParameterTypes::rport},
-#line 64 "ParameterHash.gperf"
-      {"reason", ParameterTypes::reason},
-#line 51 "ParameterHash.gperf"
-      {"id", ParameterTypes::id},
-#line 75 "ParameterHash.gperf"
-      {"size", ParameterTypes::size},
-#line 52 "ParameterHash.gperf"
+#line 53 "ParameterHash.gperf"
       {"nonce", ParameterTypes::nonce},
-#line 49 "ParameterHash.gperf"
+#line 50 "ParameterHash.gperf"
       {"cnonce", ParameterTypes::cnonce},
 #line 11 "ParameterHash.gperf"
       {"control", ParameterTypes::control},
-#line 56 "ParameterHash.gperf"
+#line 57 "ParameterHash.gperf"
       {"response", ParameterTypes::response},
 #line 30 "ParameterHash.gperf"
       {"transport", ParameterTypes::transport},
-#line 36 "ParameterHash.gperf"
-      {"q", ParameterTypes::q},
-#line 70 "ParameterHash.gperf"
+#line 52 "ParameterHash.gperf"
+      {"id", ParameterTypes::id},
+#line 71 "ParameterHash.gperf"
       {"protocol", ParameterTypes::protocol},
-#line 55 "ParameterHash.gperf"
+#line 46 "ParameterHash.gperf"
+      {"rinstance", ParameterTypes::rinstance},
+#line 56 "ParameterHash.gperf"
       {"realm", ParameterTypes::realm},
-#line 43 "ParameterHash.gperf"
-      {"tag", ParameterTypes::tag},
 #line 29 "ParameterHash.gperf"
       {"name", ParameterTypes::name},
-#line 73 "ParameterHash.gperf"
+#line 74 "ParameterHash.gperf"
       {"name", ParameterTypes::name},
-#line 61 "ParameterHash.gperf"
-      {"qop", ParameterTypes::qopFactory},
-#line 46 "ParameterHash.gperf"
+#line 47 "ParameterHash.gperf"
       {"comp", ParameterTypes::comp},
-#line 18 "ParameterHash.gperf"
-      {"application", ParameterTypes::application},
-#line 26 "ParameterHash.gperf"
-      {"+sip.instance", ParameterTypes::Instance},
-#line 79 "ParameterHash.gperf"
-      {"mode", ParameterTypes::mode},
-#line 85 "ParameterHash.gperf"
-      {"model", ParameterTypes::model},
-#line 13 "ParameterHash.gperf"
-      {"description", ParameterTypes::description},
-#line 91 "ParameterHash.gperf"
+#line 92 "ParameterHash.gperf"
       {"url", ParameterTypes::url},
 #line 31 "ParameterHash.gperf"
       {"user", ParameterTypes::user},
+#line 72 "ParameterHash.gperf"
+      {"micalg", ParameterTypes::micalg},
+#line 82 "ParameterHash.gperf"
+      {"charset", ParameterTypes::charset},
+#line 26 "ParameterHash.gperf"
+      {"+sip.instance", ParameterTypes::Instance},
+#line 80 "ParameterHash.gperf"
+      {"mode", ParameterTypes::mode},
+#line 86 "ParameterHash.gperf"
+      {"model", ParameterTypes::model},
+#line 18 "ParameterHash.gperf"
+      {"application", ParameterTypes::application},
+#line 63 "ParameterHash.gperf"
+      {"uri", ParameterTypes::uri},
+#line 76 "ParameterHash.gperf"
+      {"size", ParameterTypes::size},
+#line 55 "ParameterHash.gperf"
+      {"opaque", ParameterTypes::opaque},
+#line 24 "ParameterHash.gperf"
+      {"text", ParameterTypes::text},
 #line 34 "ParameterHash.gperf"
       {"maddr", ParameterTypes::maddr},
-#line 89 "ParameterHash.gperf"
-      {"app-id", ParameterTypes::appId},
-#line 62 "ParameterHash.gperf"
-      {"uri", ParameterTypes::uri},
-#line 21 "ParameterHash.gperf"
-      {"type", ParameterTypes::type},
-#line 50 "ParameterHash.gperf"
+#line 13 "ParameterHash.gperf"
+      {"description", ParameterTypes::description},
+#line 37 "ParameterHash.gperf"
+      {"purpose", ParameterTypes::purpose},
+#line 20 "ParameterHash.gperf"
+      {"language", ParameterTypes::language},
+#line 51 "ParameterHash.gperf"
       {"domain", ParameterTypes::domain},
-#line 76 "ParameterHash.gperf"
+#line 70 "ParameterHash.gperf"
+      {"filename", ParameterTypes::filename},
+#line 61 "ParameterHash.gperf"
+      {"refresher", ParameterTypes::refresher},
+#line 77 "ParameterHash.gperf"
       {"permission", ParameterTypes::permission},
 #line 38 "ParameterHash.gperf"
       {"to-tag", ParameterTypes::toTag},
-#line 69 "ParameterHash.gperf"
-      {"filename", ParameterTypes::filename},
-#line 65 "ParameterHash.gperf"
-      {"d-alg", ParameterTypes::dAlg},
-#line 71 "ParameterHash.gperf"
-      {"micalg", ParameterTypes::micalg},
-#line 37 "ParameterHash.gperf"
-      {"purpose", ParameterTypes::purpose},
-#line 66 "ParameterHash.gperf"
-      {"d-qop", ParameterTypes::dQop},
-#line 80 "ParameterHash.gperf"
-      {"server", ParameterTypes::server},
-#line 81 "ParameterHash.gperf"
-      {"charset", ParameterTypes::charset},
-#line 15 "ParameterHash.gperf"
-      {"priority", ParameterTypes::priority},
-#line 78 "ParameterHash.gperf"
-      {"directory", ParameterTypes::directory},
-#line 14 "ParameterHash.gperf"
-      {"events", ParameterTypes::events},
-#line 40 "ParameterHash.gperf"
-      {"duration", ParameterTypes::duration},
-#line 24 "ParameterHash.gperf"
-      {"text", ParameterTypes::text},
-#line 82 "ParameterHash.gperf"
-      {"access-type", ParameterTypes::accessType},
-#line 22 "ParameterHash.gperf"
-      {"isfocus", ParameterTypes::isFocus},
-#line 58 "ParameterHash.gperf"
-      {"username", ParameterTypes::username},
-#line 54 "ParameterHash.gperf"
-      {"opaque", ParameterTypes::opaque},
-#line 86 "ParameterHash.gperf"
-      {"version", ParameterTypes::version},
-#line 45 "ParameterHash.gperf"
-      {"received", ParameterTypes::received},
-#line 19 "ParameterHash.gperf"
-      {"video", ParameterTypes::video},
-#line 84 "ParameterHash.gperf"
-      {"vendor", ParameterTypes::vendor},
-#line 41 "ParameterHash.gperf"
-      {"expires", ParameterTypes::expires},
-#line 60 "ParameterHash.gperf"
-      {"refresher", ParameterTypes::refresher},
-#line 63 "ParameterHash.gperf"
-      {"retry-after", ParameterTypes::retryAfter},
 #line 17 "ParameterHash.gperf"
       {"schemes", ParameterTypes::schemes},
-#line 88 "ParameterHash.gperf"
-      {"document", ParameterTypes::document},
+#line 81 "ParameterHash.gperf"
+      {"server", ParameterTypes::server},
+#line 41 "ParameterHash.gperf"
+      {"expires", ParameterTypes::expires},
+#line 59 "ParameterHash.gperf"
+      {"username", ParameterTypes::username},
+#line 21 "ParameterHash.gperf"
+      {"type", ParameterTypes::type},
+#line 66 "ParameterHash.gperf"
+      {"d-alg", ParameterTypes::dAlg},
+#line 14 "ParameterHash.gperf"
+      {"events", ParameterTypes::events},
+#line 22 "ParameterHash.gperf"
+      {"isfocus", ParameterTypes::isFocus},
+#line 40 "ParameterHash.gperf"
+      {"duration", ParameterTypes::duration},
 #line 67 "ParameterHash.gperf"
-      {"d-ver", ParameterTypes::dVer},
-#line 27 "ParameterHash.gperf"
-      {"+sip.flowid", ParameterTypes::FlowId},
-#line 25 "ParameterHash.gperf"
-      {"extensions", ParameterTypes::extensions},
+      {"d-qop", ParameterTypes::dQop},
 #line 44 "ParameterHash.gperf"
       {"branch", ParameterTypes::branch},
-#line 39 "ParameterHash.gperf"
-      {"from-tag", ParameterTypes::fromTag},
-#line 74 "ParameterHash.gperf"
-      {"expiration", ParameterTypes::expiration},
+#line 42 "ParameterHash.gperf"
+      {"handling", ParameterTypes::handling},
+#line 28 "ParameterHash.gperf"
+      {"gruu", ParameterTypes::gruu},
+#line 25 "ParameterHash.gperf"
+      {"extensions", ParameterTypes::extensions},
 #line 32 "ParameterHash.gperf"
       {"method", ParameterTypes::method},
 #line 16 "ParameterHash.gperf"
       {"methods", ParameterTypes::methods},
-#line 83 "ParameterHash.gperf"
-      {"profile-type", ParameterTypes::profileType},
-#line 20 "ParameterHash.gperf"
-      {"language", ParameterTypes::language},
+#line 49 "ParameterHash.gperf"
+      {"algorithm", ParameterTypes::algorithm},
 #line 90 "ParameterHash.gperf"
+      {"app-id", ParameterTypes::appId},
+#line 87 "ParameterHash.gperf"
+      {"version", ParameterTypes::version},
+#line 89 "ParameterHash.gperf"
+      {"document", ParameterTypes::document},
+#line 75 "ParameterHash.gperf"
+      {"expiration", ParameterTypes::expiration},
+#line 85 "ParameterHash.gperf"
+      {"vendor", ParameterTypes::vendor},
+#line 45 "ParameterHash.gperf"
+      {"received", ParameterTypes::received},
+#line 19 "ParameterHash.gperf"
+      {"video", ParameterTypes::video},
+#line 27 "ParameterHash.gperf"
+      {"+sip.flowid", ParameterTypes::FlowId},
+#line 15 "ParameterHash.gperf"
+      {"priority", ParameterTypes::priority},
+#line 79 "ParameterHash.gperf"
+      {"directory", ParameterTypes::directory},
+#line 39 "ParameterHash.gperf"
+      {"from-tag", ParameterTypes::fromTag},
+#line 83 "ParameterHash.gperf"
+      {"access-type", ParameterTypes::accessType},
+#line 68 "ParameterHash.gperf"
+      {"d-ver", ParameterTypes::dVer},
+#line 91 "ParameterHash.gperf"
       {"network-user", ParameterTypes::networkUser},
+#line 64 "ParameterHash.gperf"
+      {"retry-after", ParameterTypes::retryAfter},
 #line 12 "ParameterHash.gperf"
       {"mobility", ParameterTypes::mobility},
-#line 28 "ParameterHash.gperf"
-      {"gruu", ParameterTypes::gruu},
-#line 42 "ParameterHash.gperf"
-      {"handling", ParameterTypes::handling},
-#line 59 "ParameterHash.gperf"
-      {"early-only", ParameterTypes::earlyOnly},
-#line 68 "ParameterHash.gperf"
-      {"smime-type", ParameterTypes::smimeType},
-#line 48 "ParameterHash.gperf"
-      {"algorithm", ParameterTypes::algorithm},
-#line 72 "ParameterHash.gperf"
+#line 73 "ParameterHash.gperf"
       {"boundary", ParameterTypes::boundary},
-#line 87 "ParameterHash.gperf"
+#line 84 "ParameterHash.gperf"
+      {"profile-type", ParameterTypes::profileType},
+#line 69 "ParameterHash.gperf"
+      {"smime-type", ParameterTypes::smimeType},
+#line 60 "ParameterHash.gperf"
+      {"early-only", ParameterTypes::earlyOnly},
+#line 88 "ParameterHash.gperf"
       {"effective-by", ParameterTypes::effectiveBy}
     };
 
   static signed char lookup[] =
     {
-        -1,   -1,    0,    1,   -1,    2,   -1,    3,
-        -1,    4,    5,   -1,   -1,   -1,    6,    7,
-         8,    9,   -1,   10,   11,   12,   13,   14,
-        15,   -1,   16,   -1,   17,   -1,   18,   -1,
-        -1,   19, -118,  -62,   -2,   -1,   22,   23,
-        -1,   24,   -1,   25,   26,   27,   28,   -1,
-        29,   30,   31,   32,   -1,   33,   34,   -1,
-        35,   -1,   -1,   -1,   36,   37,   -1,   38,
-        -1,   39,   40,   41,   -1,   -1,   42,   43,
-        44,   45,   46,   -1,   47,   -1,   48,   49,
-        -1,   50,   51,   52,   -1,   -1,   53,   54,
-        55,   -1,   56,   57,   58,   -1,   59,   -1,
-        60,   61,   62,   -1,   63,   64,   -1,   -1,
-        -1,   65,   66,   -1,   67,   -1,   68,   69,
-        70,   -1,   -1,   -1,   -1,   71,   72,   -1,
-        -1,   -1,   73,   74,   75,   -1,   -1,   -1,
-        76,   -1,   77,   -1,   -1,   -1,   -1,   78,
-        -1,   -1,   -1,   79,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   80,   -1,   -1,   -1,
+        -1,    0,    1,    2,   -1,    3,   -1,    4,
+         5,   -1,    6,   -1,   -1,    7,    8,    9,
+        10,   -1,   -1,   11,   12,   13,   14,   15,
+        16,   -1,   -1,   17,   18,   19,   20,   -1,
+        -1,   -1, -119,  -62,   -2,   -1,   -1,   23,
+        -1,   -1,   -1,   24,   25,   -1,   26,   27,
+        28,   29,   30,   31,   -1,   32,   33,   -1,
+        34,   -1,   -1,   35,   36,   37,   38,   39,
+        -1,   -1,   40,   -1,   41,   42,   43,   44,
+        45,   -1,   -1,   -1,   46,   47,   48,   49,
+        50,   51,   52,   53,   -1,   54,   55,   -1,
+        56,   57,   58,   59,   60,   -1,   61,   -1,
+        62,   63,   64,   -1,   65,   66,   -1,   67,
+        -1,   68,   69,   -1,   70,   71,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   72,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   73,   -1,   -1,
+        -1,   74,   -1,   75,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   76,   -1,   -1,   -1,
+        -1,   -1,   -1,   77,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   78,   -1,   -1,   -1,   79,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        80,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   81,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
@@ -335,7 +345,8 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   81
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   82
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -372,6 +383,6 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
-#line 92 "ParameterHash.gperf"
+#line 93 "ParameterHash.gperf"
 
 }
