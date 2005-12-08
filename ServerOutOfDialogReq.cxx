@@ -58,8 +58,7 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
            DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
 			// If no handler exists for OPTIONS then handle internally
 			mRequest = msg; 
-            answerOptions();
-			mDum.send(mResponse);
+			mDum.send(answerOptions());
 			delete this;
 		}
 		else
@@ -78,7 +77,7 @@ ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 {
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerOutOfDialogReq::answerOptions()
 {
 	mDum.makeResponse(*mResponse, mRequest, 200);
@@ -91,7 +90,7 @@ ServerOutOfDialogReq::answerOptions()
 	mResponse->header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
 	mResponse->header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
-	return *mResponse;
+	return mResponse;
 }
 
 void 
