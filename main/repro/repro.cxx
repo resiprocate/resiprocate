@@ -293,7 +293,7 @@ main(int argc, char** argv)
      
       if (args.mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore);
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge);
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       else
