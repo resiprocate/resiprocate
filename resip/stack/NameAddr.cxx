@@ -77,6 +77,12 @@ NameAddr::operator=(const NameAddr& rhs)
    return *this;
 }
 
+bool 
+NameAddr::operator==(const NameAddr& other) const
+{
+    return uri() == other.uri() && displayName() == other.displayName();
+}
+
 bool
 NameAddr::operator<(const NameAddr& rhs) const
 {
