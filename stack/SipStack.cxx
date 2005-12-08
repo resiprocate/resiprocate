@@ -284,6 +284,45 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    checkAsyncProcessHandler();
 }
 
+void
+SipStack::send(std::auto_ptr<SipMessage> msg, TransactionUser* tu)
+{
+   DebugLog (<< "SEND: " << msg->brief());
+   
+   if (tu) 
+   {
+      msg->setTransactionUser(tu);
+   }         
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+   checkAsyncProcessHandler();
+}
+
+void
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Uri& uri, TransactionUser* tu)
+{
+   if (tu) msg->setTransactionUser(tu);
+   msg->setForceTarget(uri);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+   checkAsyncProcessHandler();
+}
+
+void 
+SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   assert(destination.transport);
+   
+   if (tu) msg->setTransactionUser(tu);
+   msg->setDestination(destination);
+   msg->setFromTU();
+
+   mTransactionController.send(msg.release());
+   checkAsyncProcessHandler();
+}
 
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
