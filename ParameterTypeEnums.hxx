@@ -83,6 +83,7 @@ class ParameterTypes
          defineParam(received, "received", DataParameter, "RFC ????"),
          defineParam(response, "response", QuotedDataParameter, "RFC ????"),
          defineParam(retryAfter, "retry-after", IntegerParameter, "RFC ????"),
+         defineParam(rinstance, "rinstance", DataParameter, ""),
          defineParam(rport, "rport", RportParameter, "RFC ????"),
          defineParam(server, "server", DataParameter, "RFC 2046"),
          defineParam(site, "site", DataParameter, "RFC 2046"),
