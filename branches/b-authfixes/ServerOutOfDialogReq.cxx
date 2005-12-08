@@ -21,7 +21,8 @@ ServerOutOfDialogReq::getHandle()
 ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
                                            DialogSet& dialogSet,
                                            const SipMessage& req)
-   : NonDialogUsage(dum, dialogSet)
+   : NonDialogUsage(dum, dialogSet),
+     mResponse(new SipMessage)
 {
 
 }
@@ -57,14 +58,15 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
            DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
 			// If no handler exists for OPTIONS then handle internally
 			mRequest = msg; 
-			mDum.send(answerOptions());
+            answerOptions();
+			mDum.send(mResponse);
 			delete this;
 		}
 		else
 		{
            DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method - sending 405.");   
 			// No handler found for out of dialog request - return a 405
-			mDum.makeResponse(mResponse, msg, 405);
+			mDum.makeResponse(*mResponse, msg, 405);
 			mDum.send(mResponse);
 			delete this;
 		}
@@ -76,44 +78,45 @@ ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 {
 }
 
-SipMessage& 
+SipMessage&
 ServerOutOfDialogReq::answerOptions()
 {
-	mDum.makeResponse(mResponse, mRequest, 200);
+	mDum.makeResponse(*mResponse, mRequest, 200);
 
 	// Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
-	mResponse.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-	mResponse.header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes(INVITE);
-	mResponse.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-	mResponse.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-	mResponse.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-	mResponse.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+	mResponse->header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+	mResponse->header(h_Accepts) = mDum.getMasterProfile()->getSupportedMimeTypes(INVITE);
+	mResponse->header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+	mResponse->header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+	mResponse->header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
+	mResponse->header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
-	return mResponse;
+	return *mResponse;
 }
 
 void 
 ServerOutOfDialogReq::send(SipMessage& response)
 {
    assert(response.isResponse());
-   mDum.send(response);
+   assert(mResponse.get() == &response);
+   mDum.send(mResponse);
    delete this;
 }
 
-SipMessage& 
+SipMessage&
 ServerOutOfDialogReq::accept(int statusCode)
 {   
    //!dcm! -- should any responses should include a contact?
-   mDum.makeResponse(mResponse, mRequest, statusCode);
-   return mResponse;
+   mDum.makeResponse(*mResponse, mRequest, statusCode);
+   return *mResponse;
 }
 
-SipMessage& 
+SipMessage&
 ServerOutOfDialogReq::reject(int statusCode)
 {
    //!dcm! -- should any responses should include a contact?
-   mDum.makeResponse(mResponse, mRequest, statusCode);
-   return mResponse;
+   mDum.makeResponse(*mResponse, mRequest, statusCode);
+   return *mResponse;
 }
 
 

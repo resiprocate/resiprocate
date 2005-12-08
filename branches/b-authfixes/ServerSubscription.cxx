@@ -65,23 +65,23 @@ ServerSubscription::getTimeLeft()
    }
 }
 
-SipMessage& 
+SipMessage&
 ServerSubscription::accept(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastSubscribe, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;
-   return mLastResponse;
+   mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
+   mLastResponse->header(h_Expires).value() = mExpires;
+   return *mLastResponse;
 }
 
-SipMessage& 
+SipMessage&
 ServerSubscription::reject(int statusCode)
 {
    if (statusCode < 400)
    {
       throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
-   mDialog.makeResponse(mLastResponse, mLastSubscribe, statusCode);
-   return mLastResponse;
+   mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
+   return *mLastResponse;
 }
 
 
@@ -92,19 +92,19 @@ ServerSubscription::send(SipMessage& msg)
    assert(handler);   
    if (msg.isResponse())
    {
-      assert(&mLastResponse == &msg);
-      int code = mLastResponse.header(h_StatusLine).statusCode();
+      assert(mLastResponse.get() == &msg);
+      int code = mLastResponse->header(h_StatusLine).statusCode();
       if (code < 200)
       {
          DialogUsage::send(mLastResponse);
       }
       else if (code < 300)
       {
-         if(mLastResponse.exists(h_Expires))
+         if(mLastResponse->exists(h_Expires))
          {
-            mDum.addTimer(DumTimeout::Subscription, mLastResponse.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+            mDum.addTimer(DumTimeout::Subscription, mLastResponse->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             DialogUsage::send(mLastResponse);
-            mAbsoluteExpiry = time(0) + mLastResponse.header(h_Expires).value();            
+            mAbsoluteExpiry = time(0) + mLastResponse->header(h_Expires).value();            
             mState = Established;            
          }
          else
@@ -121,7 +121,7 @@ ServerSubscription::send(SipMessage& msg)
       }
       else
       {
-         if (shouldDestroyAfterSendingFailure(msg))
+         if (shouldDestroyAfterSendingFailure(*mLastResponse))
          {
             DialogUsage::send(mLastResponse);
             handler->onTerminated(getHandle());
@@ -163,7 +163,7 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
          {
             return true;
          }
-         switch (Helper::determineFailureMessageEffect(mLastResponse))
+         switch (Helper::determineFailureMessageEffect(*mLastResponse))
          {
             case Helper::TransactionTermination:
             case Helper::RetryAfter:
@@ -224,9 +224,9 @@ ServerSubscription::dispatch(const SipMessage& msg)
          makeNotifyExpires();
          handler->onExpiredByClient(getHandle(), msg, *mLastRequest);
          
-         mDialog.makeResponse(mLastResponse, mLastSubscribe, 200);
-         mLastResponse.header(h_Expires).value() = mExpires;
-         send(mLastResponse);            
+         mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
+         mLastResponse->header(h_Expires).value() = mExpires;
+         send(*mLastResponse);            
          end(Timeout);
          return;
       }
@@ -346,7 +346,7 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
    }
 }
 
-SipMessage& 
+SipMessage&
 ServerSubscription::update(const Contents* document)
 {
    makeNotify();

@@ -73,12 +73,14 @@ DialogUsage::send(SharedPtr<SipMessage> msg)
    mDialog.send(msg);
 }
 
+/*
 void 
 DialogUsage::send(SipMessage& msg)
 {
    assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
    mDialog.send(msg);
 }
+*/
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

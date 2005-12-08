@@ -38,7 +38,7 @@ class DialogUsage : public BaseUsage
       friend class DialogSet;
       friend class DialogUsageManager;
 
-      virtual void send(SipMessage& msg);
+      //virtual void send(SipMessage& msg);
       virtual void send(SharedPtr<SipMessage> msg);      
 
       // any usage that wants to give app a chance to adorn the message
@@ -48,7 +48,7 @@ class DialogUsage : public BaseUsage
       DialogUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~DialogUsage();
 
-      virtual void sendToDialog(SharedPtr<SipMessage> msg);
+      //virtual void sendToDialog(SharedPtr<SipMessage> msg);
 
       virtual void dialogDestroyed(const SipMessage& msg) = 0;
       

@@ -22,14 +22,14 @@ ClientPublication::getHandle()
 
 ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      DialogSet& dialogSet,
-                                     SipMessage& req)
+                                     SharedPtr<SipMessage> req)
    : NonDialogUsage(dum, dialogSet),
      mWaitingForResponse(false),
      mPendingPublish(false),
      mPublish(req),
-     mEventType(req.header(h_Event).value()),
+     mEventType(req->header(h_Event).value()),
      mTimerSeq(0),
-     mDocument(mPublish.releaseContents().release())
+     mDocument(mPublish->releaseContents().release())
 {
    DebugLog( << "ClientPublication::ClientPublication: " << mId);   
 }
@@ -44,9 +44,9 @@ ClientPublication::~ClientPublication()
 void
 ClientPublication::end()
 {
-   InfoLog (<< "End client publication to " << mPublish.header(h_RequestLine).uri());
-   mPublish.header(h_CSeq).sequence()++;
-   mPublish.header(h_Expires).value() = 0;
+   InfoLog (<< "End client publication to " << mPublish->header(h_RequestLine).uri());
+   mPublish->header(h_CSeq).sequence()++;
+   mPublish->header(h_Expires).value() = 0;
    send(mPublish);
 }
 
@@ -73,7 +73,7 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (code < 300)
       {
-         if (mPublish.header(h_Expires).value() == 0)
+         if (mPublish->header(h_Expires).value() == 0)
          {
             handler->onRemove(getHandle(), msg);
             delete this;
@@ -81,7 +81,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          }
          else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
          {
-            mPublish.header(h_SIPIfMatch) = msg.header(h_SIPETag);
+            mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
                           getBaseHandle(),
@@ -92,7 +92,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             // Any PUBLISH/200 must have an ETag. This should not happen. Not
             // sure what the app can do in this case. 
-            WarningLog (<< "PUBLISH/200 received with no ETag " << mPublish.header(h_From).uri());
+            WarningLog (<< "PUBLISH/200 received with no ETag " << mPublish->header(h_From).uri());
             handler->onFailure(getHandle(), msg);
             delete this;
             return;
@@ -103,7 +103,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          if (code == 412)
          {
             InfoLog(<< "SIPIfMatch failed -- republish");
-            mPublish.remove(h_SIPIfMatch);
+            mPublish->remove(h_SIPIfMatch);
             update(mDocument);
             return;
          }         
@@ -111,7 +111,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             if (msg.exists(h_MinExpires))
             {
-               mPublish.header(h_Expires).value() = msg.header(h_MinExpires).value();
+               mPublish->header(h_Expires).value() = msg.header(h_MinExpires).value();
                update(mDocument);
             }
             else
@@ -176,7 +176,7 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (mPendingPublish)
       {
-         InfoLog (<< "Sending pending PUBLISH: " << mPublish.brief());
+         InfoLog (<< "Sending pending PUBLISH: " << mPublish->brief());
          send(mPublish);
       }
    }
@@ -196,16 +196,16 @@ ClientPublication::refresh(unsigned int expiration)
 {
    if (expiration == 0)
    {
-      expiration = mPublish.header(h_Expires).value();
+      expiration = mPublish->header(h_Expires).value();
    }
-   mPublish.header(h_CSeq).sequence()++;
+   mPublish->header(h_CSeq).sequence()++;
    send(mPublish);
 }
 
 void
 ClientPublication::update(const Contents* body)
 {
-   InfoLog (<< "Updating presence document: " << mPublish.header(h_To).uri());
+   InfoLog (<< "Updating presence document: " << mPublish->header(h_To).uri());
 
    if (mDocument != body)
    {
@@ -220,13 +220,13 @@ ClientPublication::update(const Contents* body)
       }
    }
 
-   mPublish.header(h_CSeq).sequence()++;
-   mPublish.setContents(mDocument);
+   mPublish->header(h_CSeq).sequence()++;
+   mPublish->setContents(mDocument);
    send(mPublish);
 }
 
 void 
-ClientPublication::send(SipMessage& request)
+ClientPublication::send(SharedPtr<SipMessage> request)
 {
    if (mWaitingForResponse)
    {
@@ -237,14 +237,14 @@ ClientPublication::send(SipMessage& request)
       mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
-      mPublish.releaseContents();
+      mPublish->releaseContents();
    }
 }
 
 std::ostream& 
 ClientPublication::dump(std::ostream& strm) const
 {
-   strm << "ClientPublication " << mId << " " << mPublish.header(h_From).uri();
+   strm << "ClientPublication " << mId << " " << mPublish->header(h_From).uri();
    return strm;
 }
 

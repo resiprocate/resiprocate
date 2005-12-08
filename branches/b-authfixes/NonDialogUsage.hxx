@@ -28,7 +28,8 @@ class NonDialogUsage : public BaseUsage
 
       AppDialogSetHandle getAppDialogSet();
       SharedPtr<UserProfile> getUserProfile();
-      virtual void send(SipMessage& msg);
+      //virtual void send(SipMessage& msg);
+      virtual void send(SharedPtr<SipMessage> msg);
 
    protected:
       NonDialogUsage(DialogUsageManager& dum, DialogSet& dialogSet);
