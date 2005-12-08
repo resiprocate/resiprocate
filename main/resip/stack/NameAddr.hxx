@@ -25,6 +25,7 @@ class NameAddr : public ParserCategory
 
       NameAddr(const NameAddr&);
       NameAddr& operator=(const NameAddr&);
+      bool operator==(const NameAddr& other) const;
 
       virtual ~NameAddr();
       
