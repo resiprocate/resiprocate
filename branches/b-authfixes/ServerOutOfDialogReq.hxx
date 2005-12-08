@@ -22,7 +22,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
 
 	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
 	  // sending
-      virtual SipMessage& answerOptions();
+      virtual SharedPtr<SipMessage> answerOptions();
 	  virtual void send(SharedPtr<SipMessage> msg);
 
    protected:
