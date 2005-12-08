@@ -109,8 +109,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
          else
          {            
-            mDialog.makeResponse(mLastResponse, msg, 400);
-            mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
+            mDialog.makeResponse(*mLastResponse, msg, 400);
+            mLastResponse->header(h_StatusLine).reason() = "Missing Subscription-State header";
             send(mLastResponse);
             handler->onTerminated(getHandle(), msg);
             delete this;
@@ -170,7 +170,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                   << mDialog.mRemoteTarget);
 
-         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+         SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
          mDum.send(sub);
 
          delete this;
@@ -214,12 +214,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
                    
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
-               SipMessage& sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+               SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
                mDum.send(sub);
             }
             else
             {
-               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+               SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
                mDum.send(sub);
             }
             //!dcm! -- new sub created above, when does this usage get destroyed?
@@ -276,12 +276,12 @@ ClientSubscription::dispatch(const DumTimeout& timer)
   
             if (mDialog.mRemoteTarget.uri().host().empty())
             {
-               SipMessage& sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+               SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
                mDum.send(sub);
             }
             else
             {
-               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+               SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
                mDum.send(sub);
             }
             
@@ -330,7 +330,7 @@ ClientSubscription::end()
 void 
 ClientSubscription::acceptUpdate(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
+   mDialog.makeResponse(*mLastResponse, mLastNotify, statusCode);
    send(mLastResponse);
 }
 
@@ -339,14 +339,14 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);   
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
+   mDialog.makeResponse(*mLastResponse, mLastNotify, statusCode);
    if (!reasonPhrase.empty())
    {
-      mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
+      mLastResponse->header(h_StatusLine).reason() = reasonPhrase;
    }
    
    send(mLastResponse);
-   switch (Helper::determineFailureMessageEffect(mLastResponse))
+   switch (Helper::determineFailureMessageEffect(*mLastResponse))
    {
       case Helper::TransactionTermination:
       case Helper::RetryAfter:
@@ -358,7 +358,7 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
          break;            
       case Helper::DialogTermination: //?dcm? -- throw or destroy this?
       case Helper::UsageTermination:
-         handler->onTerminated(getHandle(), mLastResponse);
+         handler->onTerminated(getHandle(), *mLastResponse);
          delete this;
          break;
    }

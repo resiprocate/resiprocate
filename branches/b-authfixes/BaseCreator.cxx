@@ -11,23 +11,27 @@ using namespace resip;
 
 BaseCreator::BaseCreator(DialogUsageManager& dum, 
                          const SharedPtr<UserProfile>& userProfile)
-   : mDum(dum), mUserProfile(userProfile)
+   : mLastRequest(new SipMessage),
+     mDum(dum),
+     mUserProfile(userProfile)
 {}
 
 BaseCreator::~BaseCreator()
 {}
 
-SipMessage& 
+SharedPtr<SipMessage>
 BaseCreator::getLastRequest()
 {
    return mLastRequest;
 }
 
+/*
 const SipMessage& 
 BaseCreator::getLastRequest() const
 {
    return mLastRequest;
 }
+*/
 
 SharedPtr<UserProfile>
 BaseCreator::getUserProfile()
@@ -48,22 +52,22 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 {
    RequestLine rLine(method);
    rLine.uri() = target.uri();   
-   mLastRequest.header(h_RequestLine) = rLine;
+   mLastRequest->header(h_RequestLine) = rLine;
 
-   mLastRequest.header(h_To) = target;
-   mLastRequest.header(h_MaxForwards).value() = 70;
-   mLastRequest.header(h_CSeq).method() = method;
-   mLastRequest.header(h_CSeq).sequence() = 1;
-   mLastRequest.header(h_From) = from;
-   mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   mLastRequest.header(h_CallId).value() = Helper::computeCallId();
+   mLastRequest->header(h_To) = target;
+   mLastRequest->header(h_MaxForwards).value() = 70;
+   mLastRequest->header(h_CSeq).method() = method;
+   mLastRequest->header(h_CSeq).sequence() = 1;
+   mLastRequest->header(h_From) = from;
+   mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   mLastRequest->header(h_CallId).value() = Helper::computeCallId();
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
    assert(mUserProfile.get());
    if (mUserProfile->hasGruu(target.uri().getAor()))
    {
       contact = mUserProfile->getGruu(target.uri().getAor());
-      mLastRequest.header(h_Contacts).push_front(contact);
+      mLastRequest->header(h_Contacts).push_front(contact);
    }
    else
    {
@@ -77,20 +81,20 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       {
          contact.param(p_Instance) = instanceId;
       }
-      mLastRequest.header(h_Contacts).push_front(contact);
+      mLastRequest->header(h_Contacts).push_front(contact);
    }
       
    Via via;
-   mLastRequest.header(h_Vias).push_front(via);
+   mLastRequest->header(h_Vias).push_front(via);
 
-   if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-   if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-   if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-   if(mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) mLastRequest.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-   if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+   if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mLastRequest->header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest->header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest->header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) mLastRequest->header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
+   if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mLastRequest->header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    // Merge Embedded parameters
-   mLastRequest.mergeUri(target.uri());
+   mLastRequest->mergeUri(target.uri());
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 

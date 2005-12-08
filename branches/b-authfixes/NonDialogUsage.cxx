@@ -43,7 +43,7 @@ NonDialogUsage::getUserProfile()
 }
 
 void 
-NonDialogUsage::send(SipMessage& msg)
+NonDialogUsage::send(SharedPtr<SipMessage> msg)
 {
    mDum.send(msg);
 }

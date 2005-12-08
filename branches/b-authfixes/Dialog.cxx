@@ -168,9 +168,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   {
                      BaseCreator* creator = mDialogSet.getCreator();
                      assert(creator);// !jf! throw or something here
-                     assert(creator->getLastRequest().exists(h_Contacts));
-                     assert(!creator->getLastRequest().header(h_Contacts).empty());
-                     mLocalContact = creator->getLastRequest().header(h_Contacts).front();
+                     assert(creator->getLastRequest()->exists(h_Contacts));
+                     assert(!creator->getLastRequest()->header(h_Contacts).empty());
+                     mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
                   else
@@ -456,11 +456,11 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
+               if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
                {
-                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                  DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
+                  ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
@@ -600,17 +600,17 @@ Dialog::dispatch(const SipMessage& msg)
                   //!dcm! -- can't subscribe in an existing Dialog, this is all
                   //a bit of a hack; currently, spurious failure messages may cause callbacks
                   BaseCreator* creator = mDialogSet.getCreator();
-                  if (!creator || !creator->getLastRequest().exists(h_Event))
+                  if (!creator || !creator->getLastRequest()->exists(h_Event))
                   {
                      return;
                   }
                   else
                   {
                      ClientSubscriptionHandler* handler =
-                        mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
+                        mDum.getClientSubscriptionHandler(creator->getLastRequest()->header(h_Event).value());
                      if (handler)
                      {
-                        ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                        ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
                         mClientSubscriptions.push_back(sub);
                         sub->dispatch(response);
                      }
@@ -966,15 +966,17 @@ Dialog::send(SharedPtr<SipMessage> msg)
    {
       mRequests[msg->header(h_CSeq).sequence()] = msg;
    }
-   mDum.send(*msg);
+   mDum.send(msg);
 }
 
+/*
 void 
 Dialog::send(SipMessage& msg)
 {
    assert(msg.isResponse() || msg.header(h_RequestLine).method() == ACK);
    mDum.send(msg);
 }
+*/
 
 void
 Dialog::onForkAccepted()

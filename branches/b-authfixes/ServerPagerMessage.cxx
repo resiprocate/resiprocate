@@ -21,7 +21,8 @@ ServerPagerMessage::ServerPagerMessage(DialogUsageManager& dum,
                                        DialogSet& dialogSet,
                                        const SipMessage& req) : 
    NonDialogUsage(dum, dialogSet),
-   mRequest(req)
+   mRequest(req),
+   mResponse(new SipMessage)
 {
 }
 
@@ -45,7 +46,7 @@ ServerPagerMessage::dispatch(const SipMessage& msg)
     //?dcm? check in DialogUsageManager
     if (!handler)
     {
-       mDum.makeResponse(mResponse, msg, 405);
+       mDum.makeResponse(*mResponse, msg, 405);
        mDum.send(mResponse);
        delete this;
        return;
@@ -59,27 +60,27 @@ ServerPagerMessage::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPagerMessage::send(SipMessage& response)
+ServerPagerMessage::send(SharedPtr<SipMessage> response)
 {
-   assert(response.isResponse());
+   assert(response->isResponse());
    mDum.send(response);
    delete this;
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 ServerPagerMessage::accept(int statusCode)
 {   
    //!dcm! -- should any responses include a contact?
-   mDum.makeResponse(mResponse, mRequest, statusCode);
-   mResponse.remove(h_Contacts);   
+   mDum.makeResponse(*mResponse, mRequest, statusCode);
+   mResponse->remove(h_Contacts);   
    return mResponse;
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 ServerPagerMessage::reject(int statusCode)
 {
    //!dcm! -- should any responses include a contact?
-   mDum.makeResponse(mResponse, mRequest, statusCode);
+   mDum.makeResponse(*mResponse, mRequest, statusCode);
    return mResponse;
 }
 

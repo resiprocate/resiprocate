@@ -1,6 +1,7 @@
 #if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
 #define RESIP_SERVEROUTOFDIALOGREQ_HXX
 
+#include "rutil/SharedPtr.hxx"
 #include "resip/dum/NonDialogUsage.hxx"
 
 namespace resip
@@ -32,7 +33,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
       ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
       
       SipMessage mRequest;
-	  SipMessage mResponse;
+	  SharedPtr<SipMessage> mResponse;
 
       // disabled
       ServerOutOfDialogReq(const ServerOutOfDialogReq&);

@@ -55,6 +55,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mState(Undefined),
      mNitState(NitComplete),
      mLastSessionModification(new SipMessage()),
+     mInvite200(new SipMessage),
+     mLastNitResponse(new SipMessage),
      mCurrentRetransmit200(0),
      mSessionInterval(0),
      mMinSE(90), 
@@ -341,13 +343,13 @@ InviteSession::provideOffer(const SdpContents& offer,
       case ReceivedReinviteNoOffer:
          assert(!mProposedRemoteSdp.get());
          transition(ReceivedReinviteSentOffer);
-         mDialog.makeResponse(mInvite200, *mLastSessionModification, 200);
-         handleSessionTimerRequest(mInvite200, *mLastSessionModification);
-         InviteSession::setSdp(mInvite200, offer, 0);
+         mDialog.makeResponse(*mInvite200, *mLastSessionModification, 200);
+         handleSessionTimerRequest(*mInvite200, *mLastSessionModification);
+         InviteSession::setSdp(*mInvite200, offer, 0);
          mProposedLocalSdp  = InviteSession::makeSdp(offer);
 
-         InfoLog (<< "Sending " << mInvite200.brief());
-         DumHelper::setOutgoingEncryptionLevel(mInvite200, mCurrentEncryptionLevel);
+         InfoLog (<< "Sending " << mInvite200->brief());
+         DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          startRetransmit200Timer();
          break;
@@ -373,13 +375,13 @@ InviteSession::provideAnswer(const SdpContents& answer)
    {
       case ReceivedReinvite:
          transition(Connected);
-         mDialog.makeResponse(mInvite200, *mLastSessionModification, 200);
-         handleSessionTimerRequest(mInvite200, *mLastSessionModification);
-         InviteSession::setSdp(mInvite200, answer, 0);
+         mDialog.makeResponse(*mInvite200, *mLastSessionModification, 200);
+         handleSessionTimerRequest(*mInvite200, *mLastSessionModification);
+         InviteSession::setSdp(*mInvite200, answer, 0);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
-         InfoLog (<< "Sending " << mInvite200.brief());
-         DumHelper::setOutgoingEncryptionLevel(mInvite200, mCurrentEncryptionLevel);
+         InfoLog (<< "Sending " << mInvite200->brief());
+         DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          startRetransmit200Timer();
          break;
@@ -388,14 +390,14 @@ InviteSession::provideAnswer(const SdpContents& answer)
       {
          transition(Connected);
 
-         SipMessage response;
-         mDialog.makeResponse(response, *mLastSessionModification, 200);
-         handleSessionTimerRequest(response, *mLastSessionModification);
-         InviteSession::setSdp(response, answer, 0);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastSessionModification, 200);
+         handleSessionTimerRequest(*response, *mLastSessionModification);
+         InviteSession::setSdp(*response, answer, 0);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
-         InfoLog (<< "Sending " << response.brief());
-         DumHelper::setOutgoingEncryptionLevel(response, mCurrentEncryptionLevel);
+         InfoLog (<< "Sending " << response->brief());
+         DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
          send(response);
          break;
       }
@@ -461,9 +463,9 @@ InviteSession::end(EndReason reason)
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
-         SipMessage response;
-         mDialog.makeResponse(response, *mLastSessionModification, 488);
-         InfoLog (<< "Sending " << response.brief());
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastSessionModification, 488);
+         InfoLog (<< "Sending " << response->brief());
          send(response);
 
          sendBye();
@@ -501,13 +503,13 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
       {
          transition(Connected);
 
-         SipMessage response;
-         mDialog.makeResponse(response, *mLastSessionModification, statusCode);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastSessionModification, statusCode);
          if(warning)
          {
-            response.header(h_Warnings).push_back(*warning);
+            response->header(h_Warnings).push_back(*warning);
          }
-         InfoLog (<< "Sending " << response.brief());
+         InfoLog (<< "Sending " << response->brief());
          send(response);
          break;
       }
@@ -737,8 +739,8 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit200)
       {
-         InfoLog (<< "Retransmitting: " << endl << mInvite200);
-         DumHelper::setOutgoingEncryptionLevel(mInvite200, mCurrentEncryptionLevel);
+         InfoLog (<< "Retransmitting: " << endl << *mInvite200);
+         //DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
@@ -890,10 +892,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnUpdate:
       {
          // ?slg? no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
-         SipMessage response;
+         SharedPtr<SipMessage> response(new SipMessage);
          *mLastSessionModification = msg;
-         mDialog.makeResponse(response, *mLastSessionModification, 200);
-         handleSessionTimerRequest(response, *mLastSessionModification);
+         mDialog.makeResponse(*response, *mLastSessionModification, 200);
+         handleSessionTimerRequest(*response, *mLastSessionModification);
          send(response);
          break;
       }
@@ -930,8 +932,8 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case OnUpdateOffer:
       {
          // glare
-         SipMessage response;
-         mDialog.makeResponse(response, msg, 491);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
          send(response);
          break;
       }
@@ -1012,8 +1014,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SipMessage response;
-         mDialog.makeResponse(response, msg, 491);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
          send(response);
          break;
       }
@@ -1127,8 +1129,8 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SipMessage response;
-         mDialog.makeResponse(response, msg, 491);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
          send(response);
          break;
       }
@@ -1222,8 +1224,8 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnUpdate:
       case OnUpdateOffer:
       {
-         SipMessage response;
-         mDialog.makeResponse(response, msg, 491);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
          send(response);
          break;
       }
@@ -1292,9 +1294,9 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
    {
       // Means that the UAC has sent us a second reINVITE or UPDATE before we
       // responded to the first one. Bastard!
-      SipMessage response;
-      mDialog.makeResponse(response, msg, 500);
-      response.header(h_RetryAfter).value() = Random::getRandom() % 10;
+      SharedPtr<SipMessage> response(new SipMessage);
+      mDialog.makeResponse(*response, msg, 500);
+      response->header(h_RetryAfter).value() = Random::getRandom() % 10;
       send(response);
    }
    else
@@ -1401,8 +1403,8 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      SipMessage response;
-      mDialog.makeResponse(response, msg, 481);
+      SharedPtr<SipMessage> response(new SipMessage);
+      mDialog.makeResponse(*response, msg, 481);
       send(response);
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
@@ -1460,9 +1462,9 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
 
    // If we get an INVITE request from the wire and we are not in
    // Connected state, reject the request and send a BYE
-   SipMessage response;
-   mDialog.makeResponse(response, msg, 400); // !jf! what code to use?
-   InfoLog (<< "Sending " << response.brief());
+   SharedPtr<SipMessage> response(new SipMessage);
+   mDialog.makeResponse(*response, msg, 400); // !jf! what code to use?
+   InfoLog (<< "Sending " << response->brief());
    send(response);
 
    sendBye();
@@ -1476,8 +1478,8 @@ InviteSession::dispatchPrack(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == PRACK);
    if(msg.isRequest())
    {
-      SipMessage rsp;
-      mDialog.makeResponse(rsp, msg, 481);
+      SharedPtr<SipMessage> rsp(new SipMessage);
+      mDialog.makeResponse(*rsp, msg, 481);
       send(rsp);
 
       sendBye();
@@ -1498,8 +1500,8 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == CANCEL);
    if(msg.isRequest())
    {
-      SipMessage rsp;
-      mDialog.makeResponse(rsp, msg, 200);
+      SharedPtr<SipMessage> rsp(new SipMessage);
+      mDialog.makeResponse(*rsp, msg, 200);
       send(rsp);
 
       sendBye();
@@ -1522,9 +1524,9 @@ InviteSession::dispatchBye(const SipMessage& msg)
    if (msg.isRequest())
    {
 
-      SipMessage rsp;
+      SharedPtr<SipMessage> rsp(new SipMessage);
       InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(rsp, msg, 200);
+      mDialog.makeResponse(*rsp, msg, 200);
       send(rsp);
 
       // !jf! should we make some other callback here
@@ -1546,7 +1548,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    if (msg.isRequest())
    {
       InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(mLastNitResponse, msg, 200);
+      mDialog.makeResponse(*mLastNitResponse, msg, 200);
       handler->onInfo(getSessionHandle(), msg);
    }
    else
@@ -1573,9 +1575,9 @@ InviteSession::acceptNIT(int statusCode, const Contents * contents)
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
 
-   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
-   mLastNitResponse.setContents(contents);
-   Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
+   mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;   
+   mLastNitResponse->setContents(contents);
+   Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);   
 } 
 
@@ -1586,9 +1588,9 @@ InviteSession::rejectNIT(int statusCode)
    {
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
-   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;  
-   mLastNitResponse.releaseContents();
-   Helper::getResponseCodeReason(statusCode, mLastNitResponse.header(h_StatusLine).reason());
+   mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;  
+   mLastNitResponse->releaseContents();
+   Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);
 }
 
@@ -1599,8 +1601,8 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    if (msg.isRequest())
    {
       InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(mLastNitResponse, msg, 200);
-      mLastNitResponse.header(h_Contacts).clear();
+      mDialog.makeResponse(*mLastNitResponse, msg, 200);
+      mLastNitResponse->header(h_Contacts).clear();
       handler->onMessage(getSessionHandle(), msg);
    }
    else
@@ -2249,31 +2251,31 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
 
 void InviteSession::sendAck(SipMessage& originalInvite, const SdpContents *sdp)
 {
-   SipMessage ack;
+   SharedPtr<SipMessage> ack(new SipMessage);
 
    assert(mAcks.count(originalInvite.header(h_CSeq).sequence()) == 0);
 
-   mDialog.makeRequest(ack, ACK);
+   mDialog.makeRequest(*ack, ACK);
 
    // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
    if(originalInvite.exists(h_Authorizations))
    {
-      ack.header(h_Authorizations) = originalInvite.header(h_Authorizations);
+      ack->header(h_Authorizations) = originalInvite.header(h_Authorizations);
    }
    if(originalInvite.exists(h_ProxyAuthorizations))
    {
-      ack.header(h_ProxyAuthorizations) = originalInvite.header(h_ProxyAuthorizations);
+      ack->header(h_ProxyAuthorizations) = originalInvite.header(h_ProxyAuthorizations);
    }
-   ack.header(h_CSeq).sequence() = originalInvite.header(h_CSeq).sequence();
+   ack->header(h_CSeq).sequence() = originalInvite.header(h_CSeq).sequence();
 
    if(sdp != 0)
    {
-      setSdp(ack, *sdp);
+      setSdp(*ack, *sdp);
    }
-   mAcks[ack.header(h_CSeq).sequence()] = ack;
-   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack.header(h_CSeq).sequence());
+   mAcks[ack->header(h_CSeq).sequence()] = ack;
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence());
 
-   InfoLog (<< "Sending " << ack.brief());
+   InfoLog (<< "Sending " << ack->brief());
    send(ack);
 }
 

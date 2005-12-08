@@ -438,7 +438,7 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
    return ds;
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
 {
    makeUacDialogSet(creator, appDs);
@@ -462,19 +462,19 @@ DialogUsageManager::sendResponse(const SipMessage& response)
    mStack.send(response, this);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
    return makeInviteSession(target, userProfile, initialOffer, None, 0, appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, None, 0, appDs);
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, 
                                       const SharedPtr<UserProfile>& userProfile, 
                                       const SdpContents* initialOffer, 
@@ -482,20 +482,13 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       const SdpContents* alternative, 
                                       AppDialogSet* appDs)
 {
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
-   DumHelper::setOutgoingEncryptionLevel(inv, level);
-
-   /*
-   if (None != level)
-   {
-      mEncryptionLevels.insert(InviteSessionEncryptionLevelMap::value_type((UInt32)&inv, level));
-   }
-   */
+   SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
+   DumHelper::setOutgoingEncryptionLevel(*inv, level);
 
    return inv;
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSession(const NameAddr& target, 
                                       const SdpContents* initialOffer, 
                                       EncryptionLevel level, 
@@ -505,7 +498,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
    return makeInviteSession(target, getMasterUserProfile(), initialOffer, level, alternative, appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
                                                const SdpContents* initialOffer,
@@ -514,7 +507,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    return makeInviteSessionFromRefer(refer, serverSub, initialOffer, None, 0, appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                ServerSubscriptionHandle serverSub,
                                                const SdpContents* initialOffer,
@@ -538,96 +531,96 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    target.uri().remove(p_method);
 
    // !jf! this code assumes you have a UserProfile
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this,
-                                                             target,
-                                                             serverSub->mDialog.mDialogSet.getUserProfile(),
-                                                             initialOffer, level, alternative, serverSub), appDs);
-   DumHelper::setOutgoingEncryptionLevel(inv, level);
+   SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this,
+                                                                       target,
+                                                                       serverSub->mDialog.mDialogSet.getUserProfile(),
+                                                                       initialOffer, level, alternative, serverSub), appDs);
+   DumHelper::setOutgoingEncryptionLevel(*inv, level);
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
    if (refer.exists(h_ReferredBy))
    {
-      inv.header(h_ReferredBy) = refer.header(h_ReferredBy);
+      inv->header(h_ReferredBy) = refer.header(h_ReferredBy);
    }
 
    const Uri& referTo = refer.header(h_ReferTo).uri();
    //19.1.5
    if (referTo.hasEmbedded() && referTo.embedded().exists(h_Replaces))
    {
-      inv.header(h_Replaces) = referTo.embedded().header(h_Replaces);
+      inv->header(h_Replaces) = referTo.embedded().header(h_Replaces);
    }
    return inv;
 }
 
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* appDs)
 {
    assert(userProfile.get());
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, userProfile->getDefaultSubscriptionTime()), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
                                      int subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
                                      int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, getMasterProfile()->getDefaultSubscriptionTime()), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
                                      int subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
                                      int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime, refreshInterval), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* appDs)
 {
    assert(userProfile.get());
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, userProfile->getDefaultRegistrationTime()), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), getMasterProfile()->getDefaultRegistrationTime()), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), registrationTime), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const SharedPtr<UserProfile>& userProfile,
                                     const Contents& body,
@@ -638,7 +631,7 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
    return makeNewSession(new PublicationCreator(*this, targetDocument, userProfile, body, eventType, expiresSeconds), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const Contents& body,
                                     const Data& eventType,
@@ -648,13 +641,13 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
    return makeNewSession(new PublicationCreator(*this, targetDocument, getMasterUserProfile(), body, eventType, expiresSeconds), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* appDs)
 {
    return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, userProfile), appDs);
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* appDs)
 {
    return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, getMasterUserProfile()), appDs);
@@ -679,28 +672,11 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, AppDialogSet* appDs
    return makePagerMessage(target, getMasterUserProfile(), appDs);
 }
 
-/*
 void
-DialogUsageManager::send(SipMessage& msg)
-{
-   InviteSessionEncryptionLevelMap::iterator it = mEncryptionLevels.find((UInt32)&msg);
-   if (it != mEncryptionLevels.end())
-   {
-      send(msg, it->second);
-      mEncryptionLevels.erase(it);
-   }
-   else
-   {
-      send(msg, None);
-   }
-}
-*/
-
-void
-DialogUsageManager::send(SipMessage& msg)
+DialogUsageManager::send(SharedPtr<SipMessage> msg)
 {
    // !slg! There is probably a more efficient way to get the userProfile here (pass it in?)
-   DialogSet* ds = findDialogSet(DialogSetId(msg));
+   DialogSet* ds = findDialogSet(DialogSetId(*msg));
    UserProfile* userProfile;
    if (ds == 0)
    {
@@ -714,56 +690,55 @@ DialogUsageManager::send(SipMessage& msg)
    assert(userProfile);
    if (userProfile->hasUserAgent())
    {
-      msg.header(h_UserAgent).value() = userProfile->getUserAgent();
+      msg->header(h_UserAgent).value() = userProfile->getUserAgent();
    }
 
    assert(userProfile);
-   if (msg.isRequest() 
+   if (msg->isRequest() 
        && userProfile->hasProxyRequires() 
-       && msg.header(h_RequestLine).method() != ACK 
-       && msg.header(h_RequestLine).method() != CANCEL)
+       && msg->header(h_RequestLine).method() != ACK 
+       && msg->header(h_RequestLine).method() != CANCEL)
    {
-      msg.header(h_ProxyRequires) = userProfile->getProxyRequires();
+      msg->header(h_ProxyRequires) = userProfile->getProxyRequires();
    }
    
-   if (msg.isRequest())
+   if (msg->isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
-      if (msg.header(h_RequestLine).method() != CANCEL &&
-          msg.header(h_RequestLine).method() != ACK &&
-          msg.exists(h_Vias))
+      if (msg->header(h_RequestLine).method() != CANCEL &&
+          msg->header(h_RequestLine).method() != ACK &&
+          msg->exists(h_Vias))
       {
-         msg.header(h_Vias).front().param(p_branch).reset();
+         msg->header(h_Vias).front().param(p_branch).reset();
       }
 
-      if (msg.exists(h_Vias))
+      if (msg->exists(h_Vias))
       {
          if(!userProfile->getRportEnabled())
          {
-            msg.header(h_Vias).front().remove(p_rport);
+            msg->header(h_Vias).front().remove(p_rport);
          }
          int fixedTransportPort = userProfile->getFixedTransportPort();
          if(fixedTransportPort != 0)
          {
-            msg.header(h_Vias).front().sentPort() = fixedTransportPort;
+            msg->header(h_Vias).front().sentPort() = fixedTransportPort;
          }
          const Data& fixedTransportInterface = userProfile->getFixedTransportInterface();
          if(!fixedTransportInterface.empty())
          {
-            msg.header(h_Vias).front().sentHost() = fixedTransportInterface;
+            msg->header(h_Vias).front().sentHost() = fixedTransportInterface;
          }
       }
 
-      if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
+      if (mClientAuthManager.get() && msg->header(h_RequestLine).method() != ACK)
       {
-         mClientAuthManager->addAuthentication(msg);
+         mClientAuthManager->addAuthentication(*msg);
       }
    }
 
-   DebugLog (<< "SEND: " << msg);
+   DebugLog (<< "SEND: " << *msg);
 
-   // Todo: get rid of the OutgoingEvent, no more needed.
-   OutgoingEvent* event = new OutgoingEvent(auto_ptr<SipMessage>(dynamic_cast<SipMessage*>(msg.clone())));
+   OutgoingEvent* event = new OutgoingEvent(msg);
    outgoingProcess(auto_ptr<Message>(event));
 }
 
@@ -840,16 +815,21 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 
          assert(userProfile);
 
+         //!dcm! -- unique SharedPtr to auto_ptr conversion prob. a worthwhile
+         //optimzation here. SharedPtr would ahve to be changed; would
+         //throw/assert if not unique.
+         std::auto_ptr<SipMessage> toSend(static_cast<SipMessage*>(event->message()->clone()));
+
          if (event->message()->exists(h_Routes) &&
              !event->message()->header(h_Routes).empty() &&
              !event->message()->header(h_Routes).front().uri().exists(p_lr))
          {
-            Helper::processStrictRoute(*event->message());
-            sendUsingOutboundIfAppropriate(*userProfile, *event->message());
+            Helper::processStrictRoute(*toSend);
+            sendUsingOutboundIfAppropriate(*userProfile, toSend);
          }
          else
          {
-            sendUsingOutboundIfAppropriate(*userProfile, *event->message());
+            sendUsingOutboundIfAppropriate(*userProfile, toSend);
          }
       }
       else
@@ -860,20 +840,20 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 }
 
 void
-DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, const SipMessage& msg)
+DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, auto_ptr<SipMessage> msg)
 {
    //a little inefficient, branch parameter might be better
-   DialogId id(msg);
+   DialogId id(*msg);
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
       DebugLog ( << "Using outbound proxy: " 
                  << userProfile.getOutboundProxy().uri() 
-                 << " -> " << msg.brief());
+                 << " -> " << msg->brief());
       mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
    }
    else
    {
-      DebugLog (<< "Send: " << msg.brief());
+      DebugLog (<< "Send: " << msg->brief());
       mStack.send(msg, this);
    }
 }
@@ -1581,8 +1561,8 @@ DialogUsageManager::processPublish(const SipMessage& request)
       }
       else
       {
-         SipMessage response;
-         makeResponse(response, request, 412);
+         SharedPtr<SipMessage> response(new SipMessage);
+         makeResponse(*response, request, 412);
          send(response);
       }
    }
@@ -1641,8 +1621,8 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 
    if (failureCode > 0)
    {
-      SipMessage response;
-      makeResponse(response, request, failureCode);
+      SharedPtr<SipMessage> response(new SipMessage);
+      makeResponse(*response, request, failureCode);
       send(response);
       return false;
    }
