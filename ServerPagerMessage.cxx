@@ -60,28 +60,29 @@ ServerPagerMessage::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPagerMessage::send(SharedPtr<SipMessage> response)
+ServerPagerMessage::send(SipMessage& response)
 {
-   assert(response->isResponse());
-   mDum.send(response);
+   assert(response.isResponse());
+   assert(mResponse.get() == &response);
+   mDum.send(mResponse);
    delete this;
 }
 
-SharedPtr<SipMessage>
+SipMessage&
 ServerPagerMessage::accept(int statusCode)
 {   
    //!dcm! -- should any responses include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
    mResponse->remove(h_Contacts);   
-   return mResponse;
+   return *mResponse;
 }
 
-SharedPtr<SipMessage>
+SipMessage&
 ServerPagerMessage::reject(int statusCode)
 {
    //!dcm! -- should any responses include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
-   return mResponse;
+   return *mResponse;
 }
 
 
