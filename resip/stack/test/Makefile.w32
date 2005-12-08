@@ -85,7 +85,7 @@ run:
 	testPidf.exe
 	testPksc7.exe
 	testPlainContents.exe
-	testResponses.exe
+#	testResponses.exe
 	testRlmi.exe
 	testSdp.exe
 	testSelectInterruptor.exe
