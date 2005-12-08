@@ -13,8 +13,8 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);
-   mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
-   mLastRequest.header(h_Expires).value() = RegistrationTime;
+   mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
+   mLastRequest->header(h_Expires).value() = RegistrationTime;
 
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
    // add instance parameter to the contact for gruu !cj! TODO 

@@ -14,7 +14,8 @@ class ClientInviteSession : public InviteSession
    public:
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
-                          const SipMessage& request,
+                          //const SipMessage& request,
+                          SharedPtr<SipMessage> request,
                           const Contents* initialOffer,
                           DialogUsageManager::EncryptionLevel level,
                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());
@@ -80,7 +81,7 @@ class ClientInviteSession : public InviteSession
       void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
 
-      SipMessage mInvite; // the original INVITE sent
+      SharedPtr<SipMessage> mInvite; // the original INVITE sent
       int mLastReceivedRSeq;
       int mStaleCallTimerSeq;
       int mCancelledTimerSeq;      

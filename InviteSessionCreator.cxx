@@ -22,15 +22,15 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
      mEncryptionLevel(level)
 {
    makeInitialRequest(target, INVITE);
-   DumHelper::setOutgoingEncryptionLevel(mLastRequest, level);
+   DumHelper::setOutgoingEncryptionLevel(*mLastRequest, level);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
-       assert(userProfile.get());
-       if(userProfile->getDefaultSessionTime() >= 90)
-       {
-           getLastRequest().header(h_SessionExpires).value() = userProfile->getDefaultSessionTime();
-           getLastRequest().header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
-       }
+      assert(userProfile.get());
+      if(userProfile->getDefaultSessionTime() >= 90)
+      {
+         getLastRequest()->header(h_SessionExpires).value() = userProfile->getDefaultSessionTime();
+         getLastRequest()->header(h_MinSE).value() = 90;  // Absolute minimum specified by RFC4028
+      }
    }
    if (initial)
    {
@@ -45,7 +45,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
       {
          mInitialOffer = initial->clone();
       }
-      getLastRequest().setContents(mInitialOffer);
+      getLastRequest()->setContents(mInitialOffer);
    }
 }
 

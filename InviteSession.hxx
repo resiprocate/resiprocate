@@ -291,8 +291,8 @@ class InviteSession : public DialogUsage
       std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
       SharedPtr<SipMessage> mLastSessionModification; // last UPDATE or reINVITE sent or received
-      SipMessage mInvite200;               // 200 OK for reINVITE for retransmissions
-      SipMessage mLastNitResponse;         //?dcm? -- ptr, delete when not needed?
+      SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
+      SharedPtr<SipMessage> mLastNitResponse;         //?dcm? -- ptr, delete when not needed?
       
       unsigned long mCurrentRetransmit200;
 
@@ -310,7 +310,9 @@ class InviteSession : public DialogUsage
 
       EndReason mEndReason;   
 
-      typedef std::map<int,SipMessage> AckMap;  // Used to respond to 2xx retransmissions
+      //typedef std::map<int,SipMessage> AckMap;  // Used to respond to 2xx
+      //retransmissions
+      typedef std::map<int, SharedPtr<SipMessage> > AckMap;
       AckMap mAcks;
       
    private:

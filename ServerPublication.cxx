@@ -12,6 +12,7 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
                                      const Data& etag,
                                      const SipMessage& msg)
    : BaseUsage(dum),
+     mLastResponse(new SipMessage), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
      mTimerSeq(0)
@@ -67,23 +68,23 @@ ServerPublication::updateMatchingSubscriptions()
 }
 
 
-SipMessage& 
+SipMessage&
 ServerPublication::accept(int statusCode)
 {
-   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;
+   Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
+   mLastResponse->header(h_Expires).value() = mExpires;
 
    updateMatchingSubscriptions();
 
-   return mLastResponse;   
+   return *mLastResponse;   
 }
 
-SipMessage& 
+SipMessage&
 ServerPublication::reject(int statusCode)
 {
-   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;
-   return mLastResponse;  
+   Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
+   mLastResponse->header(h_Expires).value() = mExpires;
+   return *mLastResponse;  
 }
 
 void 
@@ -108,8 +109,8 @@ ServerPublication::dispatch(const SipMessage& msg)
       if (mExpires == 0)
       {
          handler->onRemoved(getHandle(), mEtag, msg, mExpires);
-         Helper::makeResponse(mLastResponse, mLastRequest, 200);
-         mLastResponse.header(h_Expires).value() = mExpires;
+         Helper::makeResponse(*mLastResponse, mLastRequest, 200);
+         mLastResponse->header(h_Expires).value() = mExpires;
          mDum.send(mLastResponse);
          delete this;
          return;
@@ -155,15 +156,16 @@ void
 ServerPublication::send(SipMessage& response)
 {
    assert(response.isResponse());
-   response.header(h_SIPETag).value() = mEtag;
-   mDum.send(response);
-   if (response.header(h_StatusLine).statusCode() >= 300)
+   assert(mLastResponse.get() == &response);
+   mLastResponse->header(h_SIPETag).value() = mEtag;
+   mDum.send(mLastResponse);
+   if (mLastResponse->header(h_StatusLine).statusCode() >= 300)
    {
       delete this;
    }
    else
    {
-      mDum.addTimer(DumTimeout::Publication, response.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+      mDum.addTimer(DumTimeout::Publication, mLastResponse->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
    }
 }
 

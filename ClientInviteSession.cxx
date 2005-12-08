@@ -22,7 +22,8 @@ using namespace std;
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          Dialog& dialog,
-                                         const SipMessage& request,
+                                         //const SipMessage& request,
+                                         SharedPtr<SipMessage> request,
                                          const Contents* initialOffer,
                                          DialogUsageManager::EncryptionLevel level,
                                          ServerSubscriptionHandle serverSub) :
@@ -32,7 +33,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mCancelledTimerSeq(1),
    mServerSub(serverSub)
 {
-   assert(request.isRequest());
+   assert(request->isRequest());
    if(initialOffer)  
    {
       mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
@@ -135,7 +136,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Answered:
       {
          transition(Connected);
-         sendAck(mInvite, &answer);
+         sendAck(*mInvite, &answer);
 
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
@@ -412,7 +413,7 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
          if (mServerSub.isValid())
          {
             SipMessage response;
-            mDialog.makeResponse(response, mInvite, 487);
+            mDialog.makeResponse(response, *mInvite, 487);
             sendSipFrag(response);
          }
          transition(Terminated);
@@ -459,7 +460,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    // must match
-   if (msg.header(h_CSeq).sequence() != mInvite.header(h_CSeq).sequence())
+   if (msg.header(h_CSeq).sequence() != mInvite->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
@@ -542,9 +543,9 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    if ( isReliable(msg) &&
         (mLastReceivedRSeq == -1 || msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
    {
-      SipMessage prack;
-      mDialog.makeRequest(prack, PRACK);
-      prack.header(h_RSeq) = msg.header(h_RSeq);
+      SharedPtr<SipMessage> prack(new SipMessage);
+      mDialog.makeRequest(*prack, PRACK);
+      prack->header(h_RSeq) = msg.header(h_RSeq);
       send(prack);
    }
 }
@@ -555,15 +556,15 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 void
 ClientInviteSession::sendPrack(const SdpContents& sdp)
 {
-   SipMessage prack;
-   mDialog.makeRequest(prack, PRACK);
-   prack.header(h_RSeq).value() = mLastReceivedRSeq;
-   InviteSession::setSdp(prack, sdp);
+   SharedPtr<SipMessage> prack(new SipMessage);
+   mDialog.makeRequest(*prack, PRACK);
+   prack->header(h_RSeq).value() = mLastReceivedRSeq;
+   InviteSession::setSdp(*prack, sdp);
 
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   DumHelper::setOutgoingEncryptionLevel(prack, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*prack, mCurrentEncryptionLevel);
    send(prack);
 }
 
@@ -664,7 +665,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck(*mInvite);
          handleFinalResponse(msg);
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
@@ -683,7 +684,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -765,7 +766,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck(*mInvite);
          handleFinalResponse(msg);
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
@@ -780,7 +781,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -874,7 +875,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
       case On2xx:
       case On2xxAnswer:
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  no answer sent: " << msg.brief());
          transition(Terminated);
@@ -919,7 +920,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck(*mInvite);
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
@@ -928,7 +929,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -986,12 +987,12 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xx:
          transition(SentUpdate);
          {
-            sendAck(mInvite);
+            sendAck(*mInvite);
 
-            SipMessage update;
-            mDialog.makeRequest(update, UPDATE);
-            InviteSession::setSdp(update, mProposedLocalSdp.get());
-            DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
+            SharedPtr<SipMessage> update(new SipMessage);
+            mDialog.makeRequest(*update, UPDATE);
+            InviteSession::setSdp(*update, mProposedLocalSdp.get());
+            DumHelper::setOutgoingEncryptionLevel(*update, mProposedEncryptionLevel);
             send(update);
          }
          handleFinalResponse(msg);
@@ -1002,7 +1003,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1055,14 +1056,14 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck(*mInvite);
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
       case On2xxAnswer:
       case On2xxOffer:
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1141,7 +1142,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xxAnswer:
       {
          // this is the 2xx crossing the CANCEL case
-         sendAck(mInvite);
+         sendAck(*mInvite);
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);

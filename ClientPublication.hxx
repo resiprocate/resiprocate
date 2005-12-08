@@ -9,7 +9,7 @@ namespace resip
 class ClientPublication : public NonDialogUsage
 {
    public:
-      ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SipMessage& pub);
+      ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SharedPtr<SipMessage> pub);
 
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
@@ -28,7 +28,7 @@ class ClientPublication : public NonDialogUsage
 
    protected:
       virtual ~ClientPublication();
-      virtual void send(SipMessage& request);
+      virtual void send(SharedPtr<SipMessage> request);
       
    private:
       friend class DialogSet;
@@ -36,7 +36,7 @@ class ClientPublication : public NonDialogUsage
       bool mWaitingForResponse;
       bool mPendingPublish;
       
-      SipMessage& mPublish;
+      SharedPtr<SipMessage> mPublish;
       Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
       const Contents* mDocument;

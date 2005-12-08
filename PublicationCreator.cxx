@@ -13,9 +13,9 @@ PublicationCreator::PublicationCreator(DialogUsageManager& dum,
 {
    makeInitialRequest(target, PUBLISH);
 
-   mLastRequest.header(h_Event).value() = eventType;
-   mLastRequest.setContents(&body);
-   mLastRequest.header(h_Expires).value() = expireSeconds;
+   mLastRequest->header(h_Event).value() = eventType;
+   mLastRequest->setContents(&body);
+   mLastRequest->header(h_Expires).value() = expireSeconds;
 }
 
 

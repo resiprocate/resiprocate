@@ -19,6 +19,7 @@ using namespace resip;
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : InviteSession(dum, dialog),
      mFirstRequest(request),
+     m1xx(new SipMessage),
      mCurrentRetransmit1xx(0)
 {
    assert(request.isRequest());
@@ -59,9 +60,9 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         SipMessage response;
-         mDialog.makeResponse(response, mFirstRequest, code);
-         response.header(h_Contacts) = contacts;
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, mFirstRequest, code);
+         response->header(h_Contacts) = contacts;
          send(response);
 
          transition(Terminated);
@@ -251,7 +252,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_ReceivedUpdateWaitingAnswer:
          // send::2XXU-answer
          // send::2XXI
-         handler->onConnected(getSessionHandle(), mInvite200);
+         handler->onConnected(getSessionHandle(), *mInvite200);
          transition(Connected);
          break;
 
@@ -379,11 +380,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         SipMessage response;
-         mDialog.makeResponse(response, mFirstRequest, code);
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, mFirstRequest, code);
          if(warning)
          {
-            response.header(h_Warnings).push_back(*warning);
+            response->header(h_Warnings).push_back(*warning);
          }
          send(response);
 
@@ -425,7 +426,7 @@ ServerInviteSession::accept(int code)
       case UAS_EarlyProvidedAnswer:
          transition(UAS_Accepted);
          sendAccept(code, mCurrentLocalSdp.get());
-         handler->onConnected(getSessionHandle(), mInvite200);
+         handler->onConnected(getSessionHandle(), *mInvite200);
          break;
          
       case UAS_NoOffer:
@@ -447,14 +448,14 @@ ServerInviteSession::accept(int code)
          // queue 2xx
          // waiting for PRACK
          transition(UAS_Accepted);
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);
-         handleSessionTimerRequest(mInvite200, mFirstRequest);
+         mDialog.makeResponse(*mInvite200, mFirstRequest, code);
+         handleSessionTimerRequest(*mInvite200, mFirstRequest);
          break;
          
       case UAS_EarlyReliable:
          transition(Connected);
          sendAccept(code, 0);
-         handler->onConnected(getSessionHandle(), mInvite200);
+         handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
       case UAS_SentUpdate:
@@ -464,8 +465,8 @@ ServerInviteSession::accept(int code)
 
       case UAS_ReceivedUpdate:
          transition(UAS_ReceivedUpdateWaitingAnswer);
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
-         handleSessionTimerRequest(mInvite200, mFirstRequest);
+         mDialog.makeResponse(*mInvite200, mFirstRequest, code);// queue 2xx
+         handleSessionTimerRequest(*mInvite200, mFirstRequest);
          break;
          
       case UAS_FirstSentOfferReliable:
@@ -554,7 +555,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit1xx)
    {
-      if (mCurrentRetransmit1xx && m1xx.header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
+      if (mCurrentRetransmit1xx && m1xx->header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
          send(m1xx);
 		 startRetransmit1xxTimer();
@@ -673,16 +674,16 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       case OnCancel:
       {
          // Cancel and 200 crossed
-         SipMessage c200;
-         mDialog.makeResponse(c200, msg, 200);
+         SharedPtr<SipMessage> c200(new SipMessage);
+         mDialog.makeResponse(*c200, msg, 200);
          send(c200);
          break;
       }
 
       case OnBye:
       {
-         SipMessage b200;
-         mDialog.makeResponse(b200, msg, 200);
+         SharedPtr<SipMessage> b200(new SipMessage);
+         mDialog.makeResponse(*b200, msg, 200);
          send(b200);
 
          transition(Terminated);
@@ -730,16 +731,16 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       case OnCancel:
       {
          // Cancel and 200 crossed
-         SipMessage c200;
-         mDialog.makeResponse(c200, msg, 200);
+         SharedPtr<SipMessage> c200(new SipMessage);
+         mDialog.makeResponse(*c200, msg, 200);
          send(c200);
          break;
       }
 
       case OnBye:
       {
-         SipMessage b200;
-         mDialog.makeResponse(b200, msg, 200);
+         SharedPtr<SipMessage> b200(new SipMessage);
+         mDialog.makeResponse(*b200, msg, 200);
          send(b200);
 
          transition(Terminated);
@@ -794,8 +795,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       {
          // no transition
 
-         SipMessage c200;
-         mDialog.makeResponse(c200, msg, 200);
+         SharedPtr<SipMessage> c200(new SipMessage);
+         mDialog.makeResponse(*c200, msg, 200);
          send(c200);
          break;
       }
@@ -804,8 +805,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
       {
          // no transition
 
-         SipMessage p200;
-         mDialog.makeResponse(p200, msg, 200);
+         SharedPtr<SipMessage> p200(new SipMessage);
+         mDialog.makeResponse(*p200, msg, 200);
          send(p200);
          
          sendAccept(200, 0);         
@@ -898,12 +899,12 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 void
 ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
-   SipMessage c200;
-   mDialog.makeResponse(c200, msg, 200);
+   SharedPtr<SipMessage> c200(new SipMessage);
+   mDialog.makeResponse(*c200, msg, 200);
    send(c200);
 
-   SipMessage i487;
-   mDialog.makeResponse(i487, mFirstRequest, 487);
+   SharedPtr<SipMessage> i487(new SipMessage);
+   mDialog.makeResponse(*i487, mFirstRequest, 487);
    send(i487);
 
    transition(Terminated);
@@ -914,12 +915,12 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 void
 ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
-   SipMessage b200;
-   mDialog.makeResponse(b200, msg, 200);
+   SharedPtr<SipMessage> b200(new SipMessage);
+   mDialog.makeResponse(*b200, msg, 200);
    send(b200);
 
-   SipMessage i487;
-   mDialog.makeResponse(i487, mFirstRequest, 487);
+   SharedPtr<SipMessage> i487(new SipMessage);
+   mDialog.makeResponse(*i487, mFirstRequest, 487);
    send(i487);
 
    transition(Terminated);
@@ -930,12 +931,12 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 void
 ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
-   SipMessage r481; // !jf! what should we send here? 
-   mDialog.makeResponse(r481, msg, 481);
+   SharedPtr<SipMessage> r481(new SipMessage); // !jf! what should we send here? 
+   mDialog.makeResponse(*r481, msg, 481);
    send(r481);
    
-   SipMessage i400;
-   mDialog.makeResponse(i400, mFirstRequest, 400);
+   SharedPtr<SipMessage> i400(new SipMessage);
+   mDialog.makeResponse(*i400, mFirstRequest, 400);
    send(i400);
 
    transition(Terminated);
@@ -950,7 +951,7 @@ ServerInviteSession::startRetransmit1xxTimer()
    mCurrentRetransmit1xx = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();  
    if(mCurrentRetransmit1xx > 0)
    {	
-      int seq = m1xx.header(h_CSeq).sequence();
+      int seq = m1xx->header(h_CSeq).sequence();
       mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
    }
 }
@@ -958,14 +959,14 @@ ServerInviteSession::startRetransmit1xxTimer()
 void
 ServerInviteSession::sendProvisional(int code)
 {
-   mDialog.makeResponse(m1xx, mFirstRequest, code);
+   mDialog.makeResponse(*m1xx, mFirstRequest, code);
    switch (mState)
    {
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
          if (mCurrentLocalSdp.get()) // early media
          {
-            setSdp(m1xx, mCurrentLocalSdp.get());
+            setSdp(*m1xx, mCurrentLocalSdp.get());
          }
          break;
 
@@ -973,22 +974,22 @@ ServerInviteSession::sendProvisional(int code)
          break;
    }
    startRetransmit1xxTimer();
-   DumHelper::setOutgoingEncryptionLevel(m1xx, mProposedEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
    send(m1xx);
 }
 
 void
 ServerInviteSession::sendAccept(int code, Contents* sdp)
 {
-   mDialog.makeResponse(mInvite200, mFirstRequest, code);
-   handleSessionTimerRequest(mInvite200, mFirstRequest);
+   mDialog.makeResponse(*mInvite200, mFirstRequest, code);
+   handleSessionTimerRequest(*mInvite200, mFirstRequest);
    if (sdp)
    {
-      setSdp(mInvite200, sdp);
+      setSdp(*mInvite200, sdp);
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
-   DumHelper::setOutgoingEncryptionLevel(mInvite200, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
    send(mInvite200);
 }
 
