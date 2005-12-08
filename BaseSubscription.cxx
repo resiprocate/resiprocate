@@ -9,6 +9,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    DialogUsage(dum, dialog),
    mState(Initial),
    mLastRequest(new SipMessage(request)),
+   mLastResponse(new SipMessage),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),

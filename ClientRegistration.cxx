@@ -25,20 +25,20 @@ ClientRegistration::getHandle()
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        DialogSet& dialogSet,
-                                       SipMessage& request)
+                                       SharedPtr<SipMessage> request)
    : NonDialogUsage(dum, dialogSet),
      mLastRequest(request),
      mTimerSeq(0),
-     mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
+     mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
      mUserRefresh(false),
      mExpires(0),
      mQueuedState(None)
 {
    // If no Contacts header, this is a query
-   if (mLastRequest.exists(h_Contacts))
+   if (mLastRequest->exists(h_Contacts))
    {
-      mMyContacts = mLastRequest.header(h_Contacts);
+      mMyContacts = mLastRequest->header(h_Contacts);
    }
    mNetworkAssociation.setDum(&dum);
 }
@@ -55,7 +55,7 @@ ClientRegistration::addBinding(const NameAddr& contact)
    addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ClientRegistration::tryModification(ClientRegistration::State state)
 {
    if (mState != Registered)
@@ -68,10 +68,11 @@ ClientRegistration::tryModification(ClientRegistration::State state)
             throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
          }
 
-         mQueuedRequest = mLastRequest;
+         mQueuedRequest = *mLastRequest;
          mQueuedState = state;
 
-         return mQueuedRequest;
+         //return mQueuedRequest;
+         return mLastRequest;
       }
       else
       {
@@ -88,12 +89,12 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 void
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
-   SipMessage& next = tryModification(Adding);
+   SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
 
-   next.header(h_Contacts) = mMyContacts;
-   next.header(h_Expires).value() = registrationTime;
-   next.header(h_CSeq).sequence()++;
+   next->header(h_Contacts) = mMyContacts;
+   next->header(h_Expires).value() = registrationTime;
+   next->header(h_CSeq).sequence()++;
    // caller prefs
 
    if (mQueuedState == None)
@@ -111,16 +112,16 @@ ClientRegistration::removeBinding(const NameAddr& contact)
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
-   SipMessage& next = tryModification(Removing);
+   SharedPtr<SipMessage> next = tryModification(Removing);
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
       {
          mMyContacts.erase(i);
 
-         next.header(h_Contacts) = mMyContacts;
-         next.header(h_Expires).value() = 0;
-         next.header(h_CSeq).sequence()++;
+         next->header(h_Contacts) = mMyContacts;
+         next->header(h_Expires).value() = 0;
+         next->header(h_CSeq).sequence()++;
 
          if (mQueuedState == None)
          {
@@ -143,17 +144,18 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
       WarningLog (<< "Already removing a binding");
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
-   SipMessage& next = tryModification(Removing);
+
+   SharedPtr<SipMessage> next = tryModification(Removing);
 
    mAllContacts.clear();
    mMyContacts.clear();
 
    NameAddr all;
    all.setAllContacts();
-   next.header(h_Contacts).clear();
-   next.header(h_Contacts).push_back(all);
-   next.header(h_Expires).value() = 0;
-   next.header(h_CSeq).sequence()++;
+   next->header(h_Contacts).clear();
+   next->header(h_Contacts).push_back(all);
+   next->header(h_Expires).value() = 0;
+   next->header(h_CSeq).sequence()++;
    mEndWhenDone = stopRegisteringWhenDone;
 
    if (mQueuedState == None)
@@ -172,16 +174,17 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
       WarningLog (<< "Already removing a binding");
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
-   SipMessage& next = tryModification(Removing);
+
+   SharedPtr<SipMessage> next = tryModification(Removing);
 
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       i->param(p_expires) = 0;
    }
 
-   next.header(h_Contacts) = mMyContacts;
-   next.remove(h_Expires);
-   next.header(h_CSeq).sequence()++;
+   next->header(h_Contacts) = mMyContacts;
+   next->remove(h_Expires);
+   next->header(h_CSeq).sequence()++;
 
    // !jf! is this ok if queued
    mEndWhenDone = stopRegisteringWhenDone;
@@ -213,10 +216,10 @@ ClientRegistration::internalRequestRefresh(int expires)
    
    assert (mState == Registered);
    mState = Refreshing;
-   mLastRequest.header(h_CSeq).sequence()++;
+   mLastRequest->header(h_CSeq).sequence()++;
    if(expires > 0)
    {
-      mLastRequest.header(h_Expires).value() = expires;
+      mLastRequest->header(h_Expires).value() = expires;
    }
    mDum.send(mLastRequest);
 }
@@ -251,7 +254,7 @@ ClientRegistration::end()
 std::ostream& 
 ClientRegistration::dump(std::ostream& strm) const
 {
-   strm << "ClientRegistration " << mLastRequest.header(h_From).uri();
+   strm << "ClientRegistration " << mLastRequest->header(h_From).uri();
    return strm;
 }
 
@@ -380,7 +383,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             InfoLog (<< "Sending queued request: " << mQueuedRequest);
             mState = mQueuedState;
             mQueuedState = None;
-            mLastRequest = mQueuedRequest;
+            *mLastRequest = mQueuedRequest;
             mDum.send(mLastRequest);
          }
       }
@@ -394,8 +397,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
-                  mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
-                  mLastRequest.header(h_CSeq).sequence()++;
+                  mLastRequest->header(h_Expires).value() = msg.header(h_MinExpires).value();
+                  mLastRequest->header(h_CSeq).sequence()++;
                   mDum.send(mLastRequest);
                   return;
                }
@@ -412,7 +415,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                {
                   DebugLog(<< "Application requested immediate retry on 408");
                
-                  mLastRequest.header(h_CSeq).sequence()++;
+                  mLastRequest->header(h_CSeq).sequence()++;
                   mDum.send(mLastRequest);
                   return;
                }
@@ -526,7 +529,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
             }
 
             // Resend last request
-            mLastRequest.header(h_CSeq).sequence()++;
+            mLastRequest->header(h_CSeq).sequence()++;
             mDum.send(mLastRequest);
          }
          break;

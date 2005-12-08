@@ -13,8 +13,8 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 {
    makeInitialRequest(target, SUBSCRIBE);
 
-   mLastRequest.header(h_Event).value() = event; 
-   mLastRequest.header(h_Expires).value() = subscriptionTime;
+   mLastRequest->header(h_Event).value() = event; 
+   mLastRequest->header(h_Expires).value() = subscriptionTime;
 }
 
 SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, 
@@ -28,8 +28,8 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 {
    makeInitialRequest(target, SUBSCRIBE);
 
-   mLastRequest.header(h_Event).value() = event; 
-   mLastRequest.header(h_Expires).value() = subscriptionTime;
+   mLastRequest->header(h_Event).value() = event; 
+   mLastRequest->header(h_Expires).value() = subscriptionTime;
 }
 
 bool 

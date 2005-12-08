@@ -1,6 +1,7 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
+#include "rutil/SharedPtr.hxx"
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
@@ -38,7 +39,7 @@ class ServerPublication : public BaseUsage
       ServerPublication(DialogUsageManager& dum, const Data& etag, const SipMessage& request);
 
       SipMessage mLastRequest;
-      SipMessage mLastResponse;
+      SharedPtr<SipMessage> mLastResponse;
       const Data mEtag;
       const Data mEventType;
       const Data mDocumentKey;

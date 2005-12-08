@@ -42,7 +42,8 @@ class ClientPagerMessage : public NonDialogUsage
       friend class DialogSet;
 
       //uses memory from creator
-	  SipMessage& mRequest;
+	  //SipMessage& mRequest;
+      SharedPtr<SipMessage> mRequest;
 
       typedef struct
       {
