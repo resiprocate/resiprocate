@@ -521,7 +521,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    contents.message().header(h_StatusLine).reason() = "Trying";
    //will be cloned...ServerSub may not have the most efficient API possible
    serverSub->setSubscriptionState(Active);
-   SipMessage& notify = serverSub->update(&contents);
+   SharedPtr<SipMessage> notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
    serverSub->send(notify);
 

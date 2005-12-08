@@ -18,15 +18,15 @@ class ServerPublication : public BaseUsage
       const Data& getEtag() const;
       const Data& getDocumentKey() const;
       
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int responseCode);
+      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> reject(int responseCode);
 
       virtual void end();
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      void send(SipMessage& response);      
+      void send(SharedPtr<SipMessage> response);      
 
       const Data& getPublisher() const; // aor of From
       
