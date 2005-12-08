@@ -65,15 +65,15 @@ ServerSubscription::getTimeLeft()
    }
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerSubscription::accept(int statusCode)
 {
    mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
    mLastResponse->header(h_Expires).value() = mExpires;
-   return *mLastResponse;
+   return mLastResponse;
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerSubscription::reject(int statusCode)
 {
    if (statusCode < 400)
@@ -81,30 +81,29 @@ ServerSubscription::reject(int statusCode)
       throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
    mDialog.makeResponse(*mLastResponse, mLastSubscribe, statusCode);
-   return *mLastResponse;
+   return mLastResponse;
 }
 
 
 void 
-ServerSubscription::send(SipMessage& msg)
+ServerSubscription::send(SharedPtr<SipMessage> msg)
 {
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);   
-   if (msg.isResponse())
+   if (msg->isResponse())
    {
-      assert(mLastResponse.get() == &msg);
-      int code = mLastResponse->header(h_StatusLine).statusCode();
+      int code = msg->header(h_StatusLine).statusCode();
       if (code < 200)
       {
-         DialogUsage::send(mLastResponse);
+         DialogUsage::send(msg);
       }
       else if (code < 300)
       {
-         if(mLastResponse->exists(h_Expires))
+         if(msg->exists(h_Expires))
          {
-            mDum.addTimer(DumTimeout::Subscription, mLastResponse->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
-            DialogUsage::send(mLastResponse);
-            mAbsoluteExpiry = time(0) + mLastResponse->header(h_Expires).value();            
+            mDum.addTimer(DumTimeout::Subscription, msg->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+            DialogUsage::send(msg);
+            mAbsoluteExpiry = time(0) + msg->header(h_Expires).value();            
             mState = Established;            
          }
          else
@@ -114,30 +113,29 @@ ServerSubscription::send(SipMessage& msg)
       }
       else if (code < 400)
       {
-         DialogUsage::send(mLastResponse);
+         DialogUsage::send(msg);
          handler->onTerminated(getHandle());
          delete this;
          return;
       }
       else
       {
-         if (shouldDestroyAfterSendingFailure(*mLastResponse))
+         if (shouldDestroyAfterSendingFailure(*msg))
          {
-            DialogUsage::send(mLastResponse);
+            DialogUsage::send(msg);
             handler->onTerminated(getHandle());
             delete this;
             return;
          }
          else
          {
-            DialogUsage::send(mLastResponse);
+            DialogUsage::send(msg);
          }
       }
    }
    else
    {
-      assert(mLastRequest.get() == &msg);      
-      DialogUsage::send(mLastRequest);
+      DialogUsage::send(msg);
       if (mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
@@ -226,7 +224,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
          
          mDialog.makeResponse(*mLastResponse, mLastSubscribe, 200);
          mLastResponse->header(h_Expires).value() = mExpires;
-         send(*mLastResponse);            
+         send(mLastResponse);
          end(Timeout);
          return;
       }
@@ -323,7 +321,7 @@ ServerSubscription::end(TerminateReason reason, const Contents* document)
    {
       mLastRequest->setContents(document);
    }
-   send(*mLastRequest);
+   send(mLastRequest);
 }
 
 void
@@ -342,24 +340,24 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
       assert(handler);
       makeNotifyExpires();
       handler->onExpired(getHandle(), *mLastRequest);
-      send(*mLastRequest);
+      send(mLastRequest);
    }
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerSubscription::update(const Contents* document)
 {
    makeNotify();
    mLastRequest->setContents(document);
-   return *mLastRequest;
+   return mLastRequest;
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 ServerSubscription::neutralNotify()
 {
    makeNotify();
    mLastRequest->releaseContents();   
-   return *mLastRequest;
+   return mLastRequest;
 }
 
 void 
