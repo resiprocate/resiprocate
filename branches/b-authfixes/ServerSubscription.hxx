@@ -19,20 +19,20 @@ class ServerSubscription : public BaseSubscription
      
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int responseCode);
+      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> reject(int responseCode);
 
       //used to accept a reresh when there is no useful state to convey to the
       //client     
-      SipMessage& neutralNotify();
+      SharedPtr<SipMessage> neutralNotify();
       
       void setSubscriptionState(SubscriptionState state);
 
-      SipMessage& update(const Contents* document);
+      SharedPtr<SipMessage> update(const Contents* document);
       void end(TerminateReason reason, const Contents* document = 0);
 
       virtual void end();
-      virtual void send(SipMessage& msg);
+      virtual void send(SharedPtr<SipMessage> msg);
 
 //      void setTerminationState(TerminateReason reason);
 //      void setCurrentEventDocument(const Contents* document);

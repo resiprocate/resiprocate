@@ -13,8 +13,8 @@ class ServerOutOfDialogReq : public NonDialogUsage
       typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
       ServerOutOfDialogReqHandle getHandle();
 
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
+      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> reject(int statusCode);
 
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
@@ -23,7 +23,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
 	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
 	  // sending
       virtual SipMessage& answerOptions();
-	  virtual void send(SipMessage& msg);
+	  virtual void send(SharedPtr<SipMessage> msg);
 
    protected:
       virtual ~ServerOutOfDialogReq();

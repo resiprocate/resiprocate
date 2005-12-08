@@ -95,28 +95,27 @@ ServerOutOfDialogReq::answerOptions()
 }
 
 void 
-ServerOutOfDialogReq::send(SipMessage& response)
+ServerOutOfDialogReq::send(SharedPtr<SipMessage> response)
 {
-   assert(response.isResponse());
-   assert(mResponse.get() == &response);
-   mDum.send(mResponse);
+   assert(response->isResponse());
+   mDum.send(response);
    delete this;
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerOutOfDialogReq::accept(int statusCode)
 {   
    //!dcm! -- should any responses should include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
-   return *mResponse;
+   return mResponse;
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerOutOfDialogReq::reject(int statusCode)
 {
    //!dcm! -- should any responses should include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
-   return *mResponse;
+   return mResponse;
 }
 
 

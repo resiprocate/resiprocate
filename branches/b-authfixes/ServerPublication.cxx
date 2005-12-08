@@ -68,7 +68,7 @@ ServerPublication::updateMatchingSubscriptions()
 }
 
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerPublication::accept(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
@@ -76,15 +76,15 @@ ServerPublication::accept(int statusCode)
 
    updateMatchingSubscriptions();
 
-   return *mLastResponse;   
+   return mLastResponse;   
 }
 
-SipMessage&
+SharedPtr<SipMessage>
 ServerPublication::reject(int statusCode)
 {
    Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
    mLastResponse->header(h_Expires).value() = mExpires;
-   return *mLastResponse;  
+   return mLastResponse;  
 }
 
 void 
@@ -153,19 +153,18 @@ ServerPublication::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPublication::send(SipMessage& response)
+ServerPublication::send(SharedPtr<SipMessage> response)
 {
-   assert(response.isResponse());
-   assert(mLastResponse.get() == &response);
-   mLastResponse->header(h_SIPETag).value() = mEtag;
-   mDum.send(mLastResponse);
-   if (mLastResponse->header(h_StatusLine).statusCode() >= 300)
+   assert(response->isResponse());
+   response->header(h_SIPETag).value() = mEtag;
+   mDum.send(response);
+   if (response->header(h_StatusLine).statusCode() >= 300)
    {
       delete this;
    }
    else
    {
-      mDum.addTimer(DumTimeout::Publication, mLastResponse->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+      mDum.addTimer(DumTimeout::Publication, response->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
    }
 }
 
