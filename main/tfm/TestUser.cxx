@@ -158,7 +158,11 @@ TestUser::Register::go()
    {
       reg->header(h_Contacts).push_back(*i);
    }
-   return reg;
+
+   //Copy is made to prevent conditions from corrupting mRegistration
+   shared_ptr<SipMessage> copy(dynamic_cast<SipMessage*>(reg->clone()));
+   
+   return copy;
 }
 
 resip::Data
