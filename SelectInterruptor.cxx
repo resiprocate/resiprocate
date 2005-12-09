@@ -66,16 +66,16 @@ SelectInterruptor::process(FdSet& fdset)
 #ifdef WIN32
    if ( fdset.readyToRead(mSocket))
    {
-      char rdBuf[16];
+      char rdBuf[2];
       size_t res = recv(mSocket, rdBuf, sizeof(rdBuf), 0);
-      assert(res >= 1);
+      assert(res == sizeof(rdBuf));
    }
 #else
    if ( fdset.readyToRead(mPipe[0]))
    {
-      char rdBuf[16];
+      char rdBuf[2];
       size_t res = read(mPipe[0], rdBuf, sizeof(rdBuf));
-      assert(res >= 1);
+      assert(res == sizeof(rdBuf));
    }
 #endif
 }
@@ -83,10 +83,10 @@ SelectInterruptor::process(FdSet& fdset)
 void 
 SelectInterruptor::interrupt()
 {
-   static char* wakeUp = "w";
+   static char wakeUp[] = "w";
 #ifdef WIN32
    int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
-   //assert(count == 1);
+   assert(count == sizeof(wakeUp));
 #else
    size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
    assert(res == sizeof(wakeUp));   
