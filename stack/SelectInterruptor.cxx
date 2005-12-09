@@ -21,7 +21,7 @@ SelectInterruptor::SelectInterruptor()
    loopback.sin_family = AF_INET;
    loopback.sin_port = 0;
    loopback.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-   
+   makeSocketNonBlocking(mSocket); //win32 woes    
    ::bind( mSocket, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
    memset(&mWakeupAddr, 0, sizeof(mWakeupAddr));   
    int len = sizeof(mWakeupAddr);
@@ -66,16 +66,14 @@ SelectInterruptor::process(FdSet& fdset)
 #ifdef WIN32
    if ( fdset.readyToRead(mSocket))
    {
-      char rdBuf[2];
-      size_t res = recv(mSocket, rdBuf, sizeof(rdBuf), 0);
-      assert(res == sizeof(rdBuf));
+      char rdBuf[16];
+      recv(mSocket, rdBuf, sizeof(rdBuf), 0);
    }
 #else
    if ( fdset.readyToRead(mPipe[0]))
    {
-      char rdBuf[2];
-      size_t res = read(mPipe[0], rdBuf, sizeof(rdBuf));
-      assert(res == sizeof(rdBuf));
+      char rdBuf[16];
+      read(mPipe[0], rdBuf, sizeof(rdBuf));
    }
 #endif
 }
