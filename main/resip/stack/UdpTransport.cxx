@@ -14,7 +14,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/compat.hxx"
-#include "resip/stack/stun/stun.h"
+#include "rutil/stun/Stun.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
