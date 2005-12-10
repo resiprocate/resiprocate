@@ -28,20 +28,14 @@
 
 #endif
 
-
-#if defined(__sparc__) || defined(WIN32)
-#define NOSSL
-#endif
-#define NOSSL
-
-#include "udp.h"
-#include "stun.h"
+#include "Udp.hxx"
+#include "Stun.hxx"
 
 
 using namespace std;
 
 
-static void
+void
 computeHmac(char* hmac, const char* input, int length, const char* key, int keySize);
 
 static bool 
@@ -75,6 +69,22 @@ stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
    }
 	
    return false;
+}
+
+static bool 
+stunParseUInt32( char* body, unsigned int hdrLen,  UInt32& result )
+{
+   if ( hdrLen != 4 )
+   {
+      return false;
+   }
+   else
+   {
+      UInt32 tmp;
+      memcpy(&tmp, body, 4);
+      result = ntohl(tmp);
+      return true;
+   }
 }
 
 static bool 
@@ -178,6 +188,7 @@ stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& resul
 }
 
 
+
 bool
 stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose)
 {
@@ -186,7 +197,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
-      //clog << "Bad message" << endl;
+      clog << "Bad message" << endl;
       return false;
    }
 	
@@ -196,14 +207,14 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
 	
    if (msg.msgHdr.msgLength + sizeof(StunMsgHdr) != bufLen)
    {
-      //clog << "Message header length doesn't match message size: " << msg.msgHdr.msgLength << " - " << bufLen << endl;
+      clog << "Message header length doesn't match message size: " << msg.msgHdr.msgLength << " - " << bufLen << endl;
       return false;
    }
 	
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = msg.msgHdr.msgLength;
 	
-   //clog << "bytes after header = " << size << endl;
+   clog << "bytes after header = " << size << endl;
 	
    while ( size > 0 )
    {
@@ -214,10 +225,10 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
       unsigned int attrLen = ntohs(attr->length);
       int atrType = ntohs(attr->type);
 		
-      //if (verbose) clog << "Found attribute type=" << AttrNames[atrType] << " length=" << attrLen << endl;
+      if (verbose) clog << "Found attribute type=" << atrType << " length=" << attrLen << endl;
       if ( attrLen+4 > size ) 
       {
-         //clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
+         clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
          return false;
       }
 		
@@ -230,7 +241,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             msg.hasMappedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  msg.mappedAddress )== false )
             {
-               //clog << "problem parsing MappedAddress" << endl;
+               clog << "problem parsing MappedAddress" << endl;
                return false;
             }
             else
@@ -328,7 +339,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
             }
             else
             {
-               //if (verbose) clog << "MessageIntegrity = " << msg.messageIntegrity.hash << endl;
+               if (verbose) clog << "MessageIntegrity = " << msg.messageIntegrity.hash << endl;
             }
 					
             // read the current HMAC
@@ -417,6 +428,67 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
                if (verbose) clog << "SecondaryAddress = " << msg.secondaryAddress.ipv4 << endl;
             }
             break;  
+
+            // TURN attributes
+            
+         case TurnLifetime:
+            msg.hasTurnLifetime = true;
+            if (stunParseUInt32( body, attrLen, msg.turnLifetime) == false)
+            {
+               return false;
+            }
+            break;
+
+         case TurnAlternateServer:
+            msg.hasTurnAlternateServer = true;
+            if ( stunParseAtrAddress(  body,  attrLen,  msg.turnAlternateServer ) == false )
+            {
+               return false;
+            }
+            break;
+
+         case TurnMagicCookie:
+            msg.hasTurnMagicCookie = true;
+            if (stunParseUInt32( body, attrLen, msg.turnMagicCookie) == false)
+            {
+               return false;
+            }
+            break;
+
+         case TurnBandwidth:
+            msg.hasTurnBandwidth = true;
+            if (stunParseUInt32( body, attrLen, msg.turnBandwidth) == false)
+            {
+               return false;
+            }
+            break;
+
+         case TurnDestinationAddress:
+            msg.hasTurnDestinationAddress = true;
+            if ( stunParseAtrAddress(  body,  attrLen,  msg.turnDestinationAddress ) == false )
+            {
+               return false;
+            }
+            break;
+
+         case TurnRemoteAddress:
+            msg.hasTurnRemoteAddress = true;
+            if ( stunParseAtrAddress(  body,  attrLen,  msg.turnRemoteAddress ) == false )
+            {
+               return false;
+            }
+            break;
+
+            //overlay on parse, ownership is buffer parsed from
+         case TurnData:
+            msg.hasTurnData = true;
+            msg.turnData = new resip::Data(resip::Data::Share, body, attrLen);
+            break;
+
+            //case TurnNonce:
+            //break;
+            //case TurnRealm:
+            //break;
 					
          default:
             if (verbose) clog << "Unknown attribute: " << atrType << endl;
@@ -432,7 +504,6 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
     
    return true;
 }
-
 
 static char* 
 encode16(char* buf, UInt16 data)
@@ -458,6 +529,16 @@ encode(char* buf, const char* data, unsigned int length)
    return buf + length;
 }
 
+static char* 
+encodeTurnData(char *ptr, const resip::Data* td)
+{
+   ptr = encode16(ptr, TurnData);
+   ptr = encode16(ptr, td->size());
+   memcpy(ptr, td->data(), td->size());
+   ptr += td->size();
+   
+   return ptr;
+}
 
 static char* 
 encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
@@ -480,6 +561,16 @@ encodeAtrChangeRequest(char* ptr, const StunAtrChangeRequest& atr)
    ptr = encode32(ptr, atr.value);
    return ptr;
 }
+
+static char* 
+encodeMagicCookie(char* ptr, const UInt32& cookie)
+{
+   ptr = encode16(ptr, TurnMagicCookie);
+   ptr = encode16(ptr, 4);
+   ptr = encode32(ptr, cookie);
+   return ptr;
+}
+
 
 static char* 
 encodeAtrError(char* ptr, const StunAtrError& atr)
@@ -547,12 +638,23 @@ stunEncodeMessage( const StunMessage& msg,
    assert(bufLen >= sizeof(StunMsgHdr));
    char* ptr = buf;
 	
+   if (verbose) clog << "Encoding stun message: " << endl;
+
    ptr = encode16(ptr, msg.msgHdr.msgType);
    char* lengthp = ptr;
    ptr = encode16(ptr, 0);
    ptr = encode(ptr, reinterpret_cast<const char*>(msg.msgHdr.id.octet), sizeof(msg.msgHdr.id));
-	
-   if (verbose) clog << "Encoding stun message: " << endl;
+
+   if (msg.hasTurnMagicCookie)
+   {
+      if (verbose) clog << "Encoding TurnMagicCookie: " << msg.turnMagicCookie << endl;
+      ptr = encodeMagicCookie(ptr, msg.turnMagicCookie);
+   }
+   if (msg.hasTurnDestinationAddress)
+   {
+      if (verbose) clog << "Encoding TurnDestinationAddress: " << msg.turnDestinationAddress.ipv4 << endl;
+      ptr = encodeAtrAddress4 (ptr, TurnDestinationAddress, msg.turnDestinationAddress);
+   }
    if (msg.hasMappedAddress)
    {
       if (verbose) clog << "Encoding MappedAddress: " << msg.mappedAddress.ipv4 << endl;
@@ -629,6 +731,13 @@ stunEncodeMessage( const StunMessage& msg,
       if (verbose) clog << "Encoding SecondaryAddress: " << msg.secondaryAddress.ipv4 << endl;
       ptr = encodeAtrAddress4 (ptr, SecondaryAddress, msg.secondaryAddress);
    }
+
+   if (msg.hasTurnData)
+   {
+      if (verbose) clog << "Encoding TurnData (not shown)" << endl;
+      ptr = encodeTurnData (ptr, msg.turnData);
+   }
+
 
    if (password.sizeValue > 0)
    {
@@ -715,8 +824,8 @@ stunRandomPort()
 }
 
 
-#ifdef NOSSL
-static void
+#ifndef USE_SSL
+void
 computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
    strncpy(hmac,"hmac-not-implemented",20);
@@ -724,7 +833,7 @@ computeHmac(char* hmac, const char* input, int length, const char* key, int size
 #else
 #include <openssl/hmac.h>
 
-static void
+void
 computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey)
 {
    unsigned int resultSize=0;
@@ -852,6 +961,54 @@ operator<<( ostream& strm, const StunAddress4& addr)
    strm << ":" << addr.port;
 	
    return strm;
+}
+
+ostream&
+operator<<(ostream& os, const StunMsgHdr& h)
+{
+    os << "STUN: ";
+    switch (h.msgType) {
+		case TurnAllocateRequest:
+            os << "TurnAllocateRequest";
+			break;
+		case TurnAllocateResponse:
+            os << "TurnAllocateResponse";
+			break;
+		case TurnAllocateErrorResponse:
+            os << "TurnAllocateErrorResponse";
+			break;
+		case TurnSendRequest:
+            os << "TurnSendRequest";
+			break;
+		case TurnSendResponse:
+            os << "TurnSendResponse";
+			break;
+		case TurnSendErrorResponse:
+            os << "TurnSendErrorResponse";
+			break;
+		case TurnDataIndication:
+            os << "TurnDataIndication";
+			break;
+		case TurnSetActiveDestinationRequest:
+            os << "TurnSetActiveDestinationRequest";
+			break;
+		case TurnSetActiveDestinationResponse:
+            os << "TurnSetActiveDestinationResponse";
+			break;
+		case TurnSetActiveDestinationErrorResponse:
+            os << "TurnSetActiveDestinationErrorResponse";
+			break;
+    }
+
+    os << ", id ";
+
+    os << std::hex;
+    for (unsigned int i = 0; i < sizeof(UInt128); i++) {
+        os << static_cast<int>(h.id.octet[i]);
+    }
+    os << std::dec;
+
+    return os;
 }
 
 
@@ -1094,7 +1251,7 @@ stunServerProcessMsg( char* buf,
                      // need access to shared secret
 							
                      unsigned char hmac[20];
-#ifndef NOSSL
+#ifdef USE_SSL
                      unsigned int hmacSize=20;
 
                      HMAC(EVP_sha1(), 
@@ -1686,7 +1843,6 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
    return count;
 #endif
 }
-
 
 void
 stunBuildReqSimple( StunMessage* msg,
@@ -2434,6 +2590,25 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
 	
    return false;
 }
+
+bool
+operator<(const UInt128& lhs, const UInt128& rhs)
+{
+    return memcmp(&lhs, &rhs, sizeof(lhs)) < 0;
+}
+
+bool operator==(const UInt128& lhs, const UInt128& rhs)
+{
+    return memcmp(&lhs, &rhs, sizeof(lhs)) == 0;
+}
+
+bool
+operator<(const StunMsgHdr& lhs, const StunMsgHdr& rhs)
+{
+    return lhs.id < rhs.id;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

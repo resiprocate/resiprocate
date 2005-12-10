@@ -6,7 +6,7 @@ include $(BUILD)/Makefile.pre
 PACKAGES += ARES PTHREAD OPENSSL
 
 CXXFLAGS += -I../../
-CODE_SUBDIRS = external stun
+CODE_SUBDIRS = external
 TARGET_LIBRARY = libresip
 TESTPROGRAMS =
 
@@ -89,7 +89,6 @@ SRC = \
 	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \
-	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
@@ -125,10 +124,6 @@ SRC = \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
-	\
-	\
-	stun/stun.cxx \
-	stun/udp.cxx \
 	InvalidContents.cxx
 
 SUFFIXES += .gperf .cxx
