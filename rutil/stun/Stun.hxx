@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <time.h>
+#include "rutil/Data.hxx"
 
 // if you change this version, change in makefile too 
 #define STUN_VERSION "0.96"
@@ -31,6 +32,11 @@ typedef unsigned long long UInt64;
 
 typedef struct { unsigned char octet[16]; }  UInt128;
 
+#ifdef __cplusplus
+bool operator<(const UInt128&, const UInt128&);
+bool operator==(const UInt128&, const UInt128&);
+#endif
+
 /// define a structure to hold a stun address 
 const UInt8  IPv4Family = 0x01;
 const UInt8  IPv6Family = 0x02;
@@ -56,6 +62,18 @@ const UInt16 XorOnly          = 0x0021;
 const UInt16 ServerName       = 0x8022;
 const UInt16 SecondaryAddress = 0x8050; // Non standard extention
 
+// !jf! TURN specific message attributes - from turn-08
+const UInt16 TurnLifetime     = 0x000d;
+const UInt16 TurnAlternateServer = 0x000e;
+const UInt16 TurnMagicCookie = 0x000f;
+const UInt16 TurnBandwidth = 0x0010;
+const UInt16 TurnDestinationAddress = 0x0011;
+const UInt16 TurnRemoteAddress = 0x0012;
+const UInt16 TurnData = 0x0013;
+const UInt16 TurnNonce = 0x0014;
+const UInt16 TurnRealm = 0x0015;
+
+
 // define types for a stun message 
 const UInt16 BindRequestMsg               = 0x0001;
 const UInt16 BindResponseMsg              = 0x0101;
@@ -64,6 +82,18 @@ const UInt16 SharedSecretRequestMsg       = 0x0002;
 const UInt16 SharedSecretResponseMsg      = 0x0102;
 const UInt16 SharedSecretErrorResponseMsg = 0x0112;
 
+// define types for a turn message - per turn-08
+const UInt16 TurnAllocateRequest = 0x0003;
+const UInt16 TurnAllocateResponse = 0x0103;
+const UInt16 TurnAllocateErrorResponse = 0x0113;
+const UInt16 TurnSendRequest = 0x0004;
+const UInt16 TurnSendResponse = 0x0104;
+const UInt16 TurnSendErrorResponse = 0x0114;
+const UInt16 TurnDataIndication = 0x0115;
+const UInt16 TurnSetActiveDestinationRequest = 0x0006;
+const UInt16 TurnSetActiveDestinationResponse = 0x0106;
+const UInt16 TurnSetActiveDestinationErrorResponse = 0x0116;
+
 typedef struct 
 {
       UInt16 msgType;
@@ -71,6 +101,9 @@ typedef struct
       UInt128 id;
 } StunMsgHdr;
 
+#ifdef __cplusplus
+bool operator<(const StunMsgHdr&, const StunMsgHdr&);
+#endif
 
 typedef struct
 {
@@ -121,6 +154,7 @@ typedef struct
 {
       char hash[20];
 } StunAtrIntegrity;
+
 
 typedef enum 
 {
@@ -178,6 +212,33 @@ typedef struct
       
       bool hasSecondaryAddress;
       StunAtrAddress4 secondaryAddress;
+
+      bool hasTurnLifetime;
+      UInt32 turnLifetime;
+      
+      bool hasTurnAlternateServer;
+      StunAtrAddress4 turnAlternateServer;
+      
+      bool hasTurnMagicCookie;
+      UInt32 turnMagicCookie;
+      
+      bool hasTurnBandwidth;
+      UInt32 turnBandwidth;
+      
+      bool hasTurnDestinationAddress;
+      StunAtrAddress4 turnDestinationAddress;
+      
+      bool hasTurnRemoteAddress;
+      StunAtrAddress4 turnRemoteAddress;
+      
+      bool hasTurnData;
+      resip::Data* turnData;
+      
+      //bool hasTurnNonce;
+      // turnNonce;
+      
+      //bool hasTurnRealm;
+      // turnRealm;
 } StunMessage; 
 
 
@@ -315,6 +376,8 @@ operator<<( std::ostream& strm, const StunAddress4& addr);
 std::ostream& 
 operator<< ( std::ostream& strm, const UInt128& );
 
+std::ostream& 
+operator<< ( std::ostream& strm, const StunMsgHdr& );
 
 bool
 stunServerProcessMsg( char* buf,
@@ -345,6 +408,8 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mappedAddr,
 
 int
 stunRandomPort();
+
+void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
 
 #endif
 

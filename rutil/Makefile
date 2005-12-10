@@ -6,7 +6,7 @@ include $(BUILD)/Makefile.pre
 PACKAGES += ARES PTHREAD OPENSSL
 
 CXXFLAGS += -I../
-CODE_SUBDIRS = dns 
+CODE_SUBDIRS = dns stun
 TARGET_LIBRARY = librutil
 TESTPROGRAMS =
 
@@ -31,6 +31,7 @@ SRC = \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
+	SelectInterruptor.cxx \
 	SHA1Stream.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
@@ -53,5 +54,9 @@ SRC = \
 	dns/RRVip.cxx \
 	dns/QueryTypes.cxx \
 	dns/RROverlay.cxx \
+	\
+	stun/Stun.cxx \
+	stun/Udp.cxx
+
 
 include $(BUILD)/Makefile.post

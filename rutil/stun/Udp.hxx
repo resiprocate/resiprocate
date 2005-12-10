@@ -16,7 +16,7 @@
 #include <errno.h>
 
 // for UInt32 used below
-#include "stun.h"
+#include "Stun.hxx"
 
 #ifdef WIN32
 
