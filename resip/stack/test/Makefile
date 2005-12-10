@@ -22,7 +22,6 @@ testClient.cxx \
 testConnectionBase.cxx \
 testCorruption.cxx \
 testDigestAuthentication.cxx \
-testDns.cxx \
 testDtlsTransport.cxx \
 testEmbedded.cxx \
 testEmptyHeader.cxx \
@@ -44,7 +43,6 @@ testResponses.cxx \
 testRlmi.cxx \
 testSdp.cxx \
 testSelect.cxx \
-testSelectInterruptor.cxx \
 testServer.cxx \
 testSipFrag.cxx \
 testSipMessage.cxx \
