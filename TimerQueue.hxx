@@ -26,6 +26,8 @@ class TuSelector;
   * During Transaction processing, TimerMessages and SIP messages get generated.
   **/
 
+
+//!dcm! - refactor, templatize
 class BaseTimerQueue
 {
    public:
