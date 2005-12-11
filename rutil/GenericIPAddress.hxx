@@ -71,6 +71,28 @@ struct GenericIPAddress
             char pad[28]; // this make union same size if v6 is in or out
       };
 
+      bool operator==(const GenericIPAddress& addr) const
+      {
+         if (address.sa_family == addr.address.sa_family)
+         {
+            if (address.sa_family == AF_INET) // v4
+            {
+               return (v4Address.sin_port == addr.v4Address.sin_port &&
+                     memcmp(&v4Address.sin_addr, &addr.v4Address.sin_addr, sizeof(in_addr)) == 0);
+            }
+            else // v6
+            {
+      #ifdef USE_IPV6
+               return (v6Address.sin6_port == addr.v6Address.sin6_port &&
+                     memcmp(&v6Address.sin6_addr, &addr.v6Address.sin6_addr, sizeof(in6_addr)) == 0);
+      #else
+               assert(0);
+		         return false;
+      #endif
+            }
+         }
+         return false;
+      }
 };
 
 }
