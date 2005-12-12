@@ -432,9 +432,6 @@
 				RelativePath=".\SecurityAttributes.cxx">
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.cxx">
-			</File>
-			<File
 				RelativePath=".\SipFrag.cxx">
 			</File>
 			<File
@@ -457,9 +454,6 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
-			</File>
-			<File
-				RelativePath=".\stun\stun.cxx">
 			</File>
 			<File
 				RelativePath=".\Symbols.cxx">
@@ -523,9 +517,6 @@
 			</File>
 			<File
 				RelativePath=".\TuSelector.cxx">
-			</File>
-			<File
-				RelativePath=".\stun\udp.cxx">
 			</File>
 			<File
 				RelativePath=".\UdpTransport.cxx">
@@ -808,9 +799,6 @@
 				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.hxx">
-			</File>
-			<File
 				RelativePath=".\SendData.hxx">
 			</File>
 			<File
@@ -839,9 +827,6 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.hxx">
-			</File>
-			<File
-				RelativePath=".\stun\stun.h">
 			</File>
 			<File
 				RelativePath=".\Symbols.hxx">
@@ -911,9 +896,6 @@
 			</File>
 			<File
 				RelativePath=".\TuSelector.hxx">
-			</File>
-			<File
-				RelativePath=".\stun\udp.h">
 			</File>
 			<File
 				RelativePath=".\UdpTransport.hxx">
