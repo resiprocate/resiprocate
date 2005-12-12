@@ -101,12 +101,8 @@ Proxy::thread()
                      // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
                      std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
                      mStack.send(*response, this);
-                     break;
-                  }
-
-                  // [TODO] !rwm! Need to check Proxy-Require header field values
-               
-                  if (sip->header(h_RequestLine).method() == CANCEL)
+                  }// [TODO] !rwm! Need to check Proxy-Require header field values
+                  else if(sip->header(h_RequestLine).method() == CANCEL)
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
