@@ -19,6 +19,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #include <sstream>
 #include <time.h>
@@ -320,6 +321,8 @@ class TestUac : public TestInviteSessionHandler
       virtual ~TestUac()
       {
          delete sdp;
+         delete txt;
+         delete hfv;
       }
 
       virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
@@ -383,6 +386,8 @@ class TestUas : public TestInviteSessionHandler
       ~TestUas()
       {
          delete sdp;
+         delete txt;
+         delete hfv;
       }
 
       virtual void 
@@ -463,6 +468,11 @@ main (int argc, char** argv)
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
+
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   FindMemoryLeaks fml;
+   {
+#endif
 
 #if !defined(NO_REGISTRATION)
    if ( argc < 5 ) {
@@ -631,6 +641,10 @@ main (int argc, char** argv)
    delete dumUas;
 
    cout << "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! " << endl;
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   }
+#endif
+
 }
 
 /* ====================================================================

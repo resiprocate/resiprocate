@@ -287,10 +287,16 @@
 				RelativePath=".\RWMutex.cxx">
 			</File>
 			<File
+				RelativePath=".\SelectInterruptor.cxx">
+			</File>
+			<File
 				RelativePath=".\SHA1Stream.cxx">
 			</File>
 			<File
 				RelativePath=".\Socket.cxx">
+			</File>
+			<File
+				RelativePath=".\stun\Stun.cxx">
 			</File>
 			<File
 				RelativePath=".\Subsystem.cxx">
@@ -306,6 +312,9 @@
 			</File>
 			<File
 				RelativePath=".\Timer.cxx">
+			</File>
+			<File
+				RelativePath=".\stun\Udp.cxx">
 			</File>
 			<File
 				RelativePath=".\vmd5.cxx">
@@ -463,6 +472,9 @@
 				RelativePath=".\RWMutex.hxx">
 			</File>
 			<File
+				RelativePath=".\SelectInterruptor.hxx">
+			</File>
+			<File
 				RelativePath=".\SHA1Stream.hxx">
 			</File>
 			<File
@@ -473,6 +485,9 @@
 			</File>
 			<File
 				RelativePath=".\Socket.hxx">
+			</File>
+			<File
+				RelativePath=".\stun\Stun.hxx">
 			</File>
 			<File
 				RelativePath=".\Subsystem.hxx">
@@ -494,6 +509,9 @@
 			</File>
 			<File
 				RelativePath=".\TransportType.hxx">
+			</File>
+			<File
+				RelativePath=".\stun\Udp.hxx">
 			</File>
 			<File
 				RelativePath=".\vmd5.hxx">
