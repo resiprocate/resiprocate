@@ -82,17 +82,86 @@ struct GenericIPAddress
             }
             else // v6
             {
-      #ifdef USE_IPV6
+#ifdef USE_IPV6
                return (v6Address.sin6_port == addr.v6Address.sin6_port &&
                      memcmp(&v6Address.sin6_addr, &addr.v6Address.sin6_addr, sizeof(in6_addr)) == 0);
-      #else
+#else
                assert(0);
 		         return false;
-      #endif
+#endif
             }
          }
          return false;
       }
+
+      bool operator<(const GenericIPAddress& addr) const
+      {
+    
+         if (address.sa_family == AF_INET && addr.address.sa_family == AF_INET)
+         {
+            int c=memcmp(&v4Address.sin_addr,
+                        &addr.v4Address.sin_addr,
+                        sizeof(in_addr));
+
+            if (c < 0)
+            {
+               return true;
+            }
+            else if (c > 0)
+            {
+               return false;
+            }
+            else if (v4Address.sin_port < addr.v4Address.sin_port)
+            {
+               return true;
+            }
+            else
+            {
+               return false;
+            }
+         }
+#ifdef USE_IPV6
+         else if (address.sa_family == AF_INET6 &&
+                  addr.address.sa_family == AF_INET6)
+         {
+            int c = memcmp(&v6Address.sin6_addr,
+                           &addr.v6Address.sin6_addr,
+                           sizeof(in6_addr));
+            if (c < 0)
+            {
+               return true;
+            }
+            else if (c > 0)
+            {
+               return false;
+            }
+            else if (v6Address.sin6_port < addr.v6Address.sin6_port)
+            {
+               return true;
+            }
+            else
+            {
+               return false;
+            }
+         }
+         else if (address.sa_family == AF_INET6 &&
+                  addr.address.sa_family == AF_INET)
+         {
+            return true;
+         }
+         else if (address.sa_family == AF_INET &&
+                  addr.address.sa_family == AF_INET6)
+         {
+            return false;
+         }
+#endif
+         else
+         {
+            //assert(0);
+            return false;
+         }
+      }
+
 };
 
 }
