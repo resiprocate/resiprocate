@@ -32,12 +32,12 @@
 #include "rutil/stun/Udp.hxx"
 
 using namespace std;
+using namespace resip;
 
-
-Socket
+resip::Socket
 openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 {
-   Socket fd;
+   resip::Socket fd;
     
    fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
    if ( fd == INVALID_SOCKET )
@@ -111,7 +111,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
 
 
 bool 
-getMessage( Socket fd, char* buf, int* len,
+getMessage( resip::Socket fd, char* buf, int* len,
             UInt32* srcIp, unsigned short* srcPort,
             bool verbose)
 {
@@ -180,7 +180,7 @@ getMessage( Socket fd, char* buf, int* len,
 
 
 bool 
-sendMessage( Socket fd, char* buf, int l, 
+sendMessage( resip::Socket fd, char* buf, int l, 
              unsigned int dstIp, unsigned short dstPort,
              bool verbose)
 {
@@ -252,44 +252,6 @@ sendMessage( Socket fd, char* buf, int l,
     
    return true;
 }
-
-
-void
-initNetwork()
-{
-#ifdef WIN32 
-   WORD wVersionRequested = MAKEWORD( 2, 2 );
-   WSADATA wsaData;
-   int err;
-	
-   err = WSAStartup( wVersionRequested, &wsaData );
-   if ( err != 0 ) 
-   {
-      // could not find a usable WinSock DLL
-      cerr << "Could not load winsock" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
-      exit(1);
-   }
-    
-   /* Confirm that the WinSock DLL supports 2.2.*/
-   /* Note that if the DLL supports versions greater    */
-   /* than 2.2 in addition to 2.2, it will still return */
-   /* 2.2 in wVersion since that is the version we      */
-   /* requested.                                        */
-    
-   if ( LOBYTE( wsaData.wVersion ) != 2 ||
-        HIBYTE( wsaData.wVersion ) != 2 ) 
-   {
-      /* Tell the user that we could not find a usable */
-      /* WinSock DLL.                                  */
-      WSACleanup( );
-      cerr << "Bad winsock verion" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
-      exit(1);
-   }    
-#endif
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
