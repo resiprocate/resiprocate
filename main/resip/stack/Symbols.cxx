@@ -18,6 +18,7 @@ const char* Symbols::TAB = "\t";
 const char* Symbols::AT_SIGN = "@";
 const char* Symbols::SPACE = " ";
 const char* Symbols::DASH = "-";
+const char* Symbols::BAR = "|";
 const char* Symbols::DASHDASH = "--";
 const char* Symbols::DOT = ".";
 const char* Symbols::COLON = ":";
