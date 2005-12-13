@@ -401,9 +401,12 @@ Dialog::dispatch(const SipMessage& msg)
                }
                else
                {
-                  server = makeServerSubscription(request);
-                  mServerSubscriptions.push_back(server);
-                  server->dispatch(request);
+                  if (mDum.checkEventPackage(request))
+                  {
+                     server = makeServerSubscription(request);
+                     mServerSubscriptions.push_back(server);
+                     server->dispatch(request);
+                  }
                }
             }
          }
