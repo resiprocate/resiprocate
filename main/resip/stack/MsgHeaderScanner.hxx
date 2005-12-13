@@ -58,10 +58,10 @@ class MsgHeaderScanner
       enum TextPropBitMaskEnum 
       {
          tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired
-         tpbmContainsWhiteSpace = 1 << 1,     // ' ' or '\t'
-         tpbmContainsBackSlash  = 1 << 2,     // '\\'
+         tpbmContainsWhitespace = 1 << 1,     // ' ' or '\t'
+         tpbmContainsBackslash  = 1 << 2,     // '\\'
          tpbmContainsPercent    = 1 << 3,     // '%'
-         tpbmContainsSemiColon  = 1 << 4,     // ';'
+         tpbmContainsSemicolon  = 1 << 4,     // ';'
          tpbmContainsParen      = 1 << 5      // '(' or ')', possibly mismatched
       };
       typedef unsigned char TextPropBitMask;
