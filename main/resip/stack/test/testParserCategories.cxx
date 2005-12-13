@@ -145,6 +145,25 @@ main(int arc, char** argv)
       }   
       assert(res2 == "sip:a@b;maddr=local;maddr=remote;maddr=other");
    }
+   
+   {
+         {
+            TR _tr("Test remove parameters that appear multiple times");
+            Uri uri1("sips:bob@foo.com;transport=udp");
+            Uri aor = uri1.getAorAsUri();
+
+            Data res;
+            {
+               DataStream str(res);
+               str << aor;
+            }   
+            cerr << res << endl;
+            
+            assert(res == "sips:bob@foo.com");
+         }
+         
+   }
+
 
    {
       TR _tr("Test remove parameters that appear multiple times; mixed predefined and extensions");
