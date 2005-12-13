@@ -30,13 +30,10 @@
 
 #include "Udp.hxx"
 #include "Stun.hxx"
-
+#include "rutil/Socket.hxx"
 
 using namespace std;
-
-
-void
-computeHmac(char* hmac, const char* input, int length, const char* key, int keySize);
+using namespace resip;
 
 static bool 
 stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress4& result )
@@ -1480,10 +1477,10 @@ stunInitServer(StunServerInfo& info, const StunAddress4& myAddr,
 void
 stunStopServer(StunServerInfo& info)
 {
-   if (info.myFd > 0) closesocket(info.myFd);
-   if (info.altPortFd > 0) closesocket(info.altPortFd);
-   if (info.altIpFd > 0) closesocket(info.altIpFd);
-   if (info.altIpPortFd > 0) closesocket(info.altIpPortFd);
+   if (info.myFd > 0) closeSocket(info.myFd);
+   if (info.altPortFd > 0) closeSocket(info.altPortFd);
+   if (info.altIpFd > 0) closeSocket(info.altIpFd);
+   if (info.altIpPortFd > 0) closeSocket(info.altIpPortFd);
    
    if (info.relay)
    {
@@ -1492,7 +1489,7 @@ stunStopServer(StunServerInfo& info)
          StunMediaRelay* relay = &info.relays[i];
          if (relay->fd)
          {
-            closesocket(relay->fd);
+            closeSocket(relay->fd);
             relay->fd = 0;
          }
       }
@@ -1510,7 +1507,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
    bool recvAltPort = false;
 	
    fd_set fdSet; 
-   Socket maxFd=0;
+   resip::Socket maxFd=0;
 
    FD_ZERO(&fdSet); 
    FD_SET(info.myFd,&fdSet); 
@@ -1537,7 +1534,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          if (relay->fd)
          {
             FD_SET(relay->fd, &fdSet);
-            if ((Socket)relay->fd >= maxFd) 
+            if ((resip::Socket)relay->fd >= maxFd) 
 			{
 				maxFd=relay->fd+1;
 			}
@@ -1599,7 +1596,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
                }
                else if (now > relay->expireTime)
                {
-                  closesocket(relay->fd);
+                  closeSocket(relay->fd);
                   relay->fd = 0;
                }
             }
@@ -1737,7 +1734,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
          assert( dest.addr != 0 );
          assert( dest.port != 0 );
 			
-         Socket sendFd;
+         resip::Socket sendFd;
 			
          bool sendAltIp   = recvAltIp;   // send on the received IP address 
          bool sendAltPort = recvAltPort; // send on the received port
@@ -1838,7 +1835,7 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
 #endif
    }
 	
-   closesocket(s);
+   closeSocket(s);
 	
    return count;
 #endif
@@ -1882,7 +1879,7 @@ stunBuildReqSimple( StunMessage* msg,
 
 
 static void 
-stunSendTest( Socket myFd, StunAddress4& dest, 
+stunSendTest( resip::Socket myFd, StunAddress4& dest, 
               const StunAtrString& username, const StunAtrString& password, 
               int testNum, bool verbose )
 { 
@@ -1976,7 +1973,7 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
         port = sAddr->port;
       }
    }
-   Socket myFd = openPort(port,interfaceIp,verbose);
+   resip::Socket myFd = openPort(port,interfaceIp,verbose);
 	
    StunAtrString username;
    StunAtrString password;
@@ -2049,8 +2046,8 @@ stunNatType( StunAddress4& dest,
    {
       interfaceIp = sAddr->addr;
    }
-   Socket myFd1 = openPort(port,interfaceIp,verbose);
-   Socket myFd2 = openPort(port+1,interfaceIp,verbose);
+   resip::Socket myFd1 = openPort(port,interfaceIp,verbose);
+   resip::Socket myFd2 = openPort(port+1,interfaceIp,verbose);
 
    if ( ( myFd1 == INVALID_SOCKET) || ( myFd2 == INVALID_SOCKET) )
    {
@@ -2159,7 +2156,7 @@ stunNatType( StunAddress4& dest,
 			
          for ( int i=0; i<2; i++)
          {
-            Socket myFd;
+            resip::Socket myFd;
             if ( i==0 ) 
             {
                myFd=myFd1;
@@ -2272,15 +2269,15 @@ stunNatType( StunAddress4& dest,
       }
    }
 
-   closesocket(myFd1);
-   closesocket(myFd2);
+   closeSocket(myFd1);
+   closeSocket(myFd2);
 
    // see if we can bind to this address 
    //cerr << "try binding to " << testImappedAddr << endl;
-   Socket s = openPort( 0/*use ephemeral*/, testImappedAddr.addr, false );
+   resip::Socket s = openPort( 0/*use ephemeral*/, testImappedAddr.addr, false );
    if ( s != INVALID_SOCKET )
    {
-      closesocket(s);
+      closeSocket(s);
       isNat = false;
       //cerr << "binding worked" << endl;
    }
@@ -2416,7 +2413,7 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
       interfaceIp = srcAddr->addr;
    }
    
-   Socket myFd = openPort(port,interfaceIp,verbose);
+   resip::Socket myFd = openPort(port,interfaceIp,verbose);
    if (myFd == INVALID_SOCKET)
    {
       return myFd;
@@ -2505,7 +2502,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
       {
          while (i > 0)
          {
-            closesocket(fd[--i]);
+            closeSocket(fd[--i]);
          }
          return false;
       }
@@ -2565,7 +2562,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
          *mapAddr = mappedAddr[0];
          *fd1 = fd[0];
          *fd2 = fd[1];
-         closesocket( fd[2] );
+         closeSocket( fd[2] );
          return true;
       }
    }
@@ -2577,7 +2574,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
          *mapAddr = mappedAddr[1];
          *fd1 = fd[1];
          *fd2 = fd[2];
-         closesocket( fd[0] );
+         closeSocket( fd[0] );
          return true;
       }
    }
@@ -2585,7 +2582,7 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
    // something failed, close all and return error
    for( i=0; i<NUM; i++)
    {
-      closesocket( fd[i] );
+      closeSocket( fd[i] );
    }
 	
    return false;
@@ -2607,8 +2604,6 @@ operator<(const StunMsgHdr& lhs, const StunMsgHdr& rhs)
 {
     return lhs.id < rhs.id;
 }
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

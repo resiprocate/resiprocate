@@ -1,5 +1,5 @@
-#ifndef STUN_H
-#define STUN_H
+#ifndef STUN_HXX
+#define STUN_HXX
 
 #include <iostream>
 #include <time.h>
