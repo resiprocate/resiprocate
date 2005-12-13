@@ -718,6 +718,20 @@ Uri::getAor() const
    return mAor;
 }
 
+Uri 
+Uri::getAorAsUri() const
+{   
+   //.dcm. -- tel conversion?
+   checkParsed();
+   Uri ret;
+   ret.scheme() = mScheme;   
+   ret.user() = mUser;
+   ret.host() = mHost;
+   ret.port() = mPort;
+   
+   return ret;
+}
+
 void
 Uri::parse(ParseBuffer& pb)
 {
