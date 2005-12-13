@@ -25,12 +25,12 @@ enum CharCategoryEnum
    ccChunkTermSentinel,
    ccOther,
    ccFieldName,
-   ccWhiteSpace,
+   ccWhitespace,
    ccColon,
    ccDoubleQuotationMark,
    ccLeftAngleBracket,
    ccRightAngleBracket,
-   ccBackSlash,
+   ccBackslash,
    ccComma,
    ccCarriageReturn,
    ccLineFeed,
@@ -73,13 +73,13 @@ static void initCharInfoArray()
       charInfoArray[c2i(*charPtr)].category = ccFieldName;
    }
 
-   charInfoArray[c2i(' ')].category  = ccWhiteSpace;
-   charInfoArray[c2i('\t')].category = ccWhiteSpace;
+   charInfoArray[c2i(' ')].category  = ccWhitespace;
+   charInfoArray[c2i('\t')].category = ccWhitespace;
    charInfoArray[c2i(':')].category  = ccColon;
    charInfoArray[c2i('"')].category  = ccDoubleQuotationMark;
    charInfoArray[c2i('<')].category  = ccLeftAngleBracket;
    charInfoArray[c2i('>')].category  = ccRightAngleBracket;
-   charInfoArray[c2i('\\')].category  = ccBackSlash;
+   charInfoArray[c2i('\\')].category  = ccBackslash;
    charInfoArray[c2i(',')].category  = ccComma;
    charInfoArray[c2i('\r')].category = ccCarriageReturn;
    charInfoArray[c2i('\n')].category = ccLineFeed;
@@ -91,15 +91,15 @@ static void initCharInfoArray()
    charInfoArray[c2i('\n')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsLineBreak;
    charInfoArray[c2i(' ')].textPropBitMask =
-      MsgHeaderScanner::tpbmContainsWhiteSpace;
+      MsgHeaderScanner::tpbmContainsWhitespace;
    charInfoArray[c2i('\t')].textPropBitMask =
-      MsgHeaderScanner::tpbmContainsWhiteSpace;
+      MsgHeaderScanner::tpbmContainsWhitespace;
    charInfoArray[c2i('\\')].textPropBitMask =
-      MsgHeaderScanner::tpbmContainsBackSlash;
+      MsgHeaderScanner::tpbmContainsBackslash;
    charInfoArray[c2i('%')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsPercent;
    charInfoArray[c2i(';')].textPropBitMask =
-      MsgHeaderScanner::tpbmContainsSemiColon;
+      MsgHeaderScanner::tpbmContainsSemicolon;
    charInfoArray[c2i('(')].textPropBitMask =
       MsgHeaderScanner::tpbmContainsParen;
    charInfoArray[c2i(')')].textPropBitMask =
@@ -117,14 +117,14 @@ enum StateEnum
    sHalfLineBreakAfterStatusLine,
    sAfterLineBreakAfterStatusLine,
    sScanFieldName,
-   sScanWhiteSpaceAfter1FieldName,
-   sScanWhiteSpaceAfterNFieldName,
-   sScanWhiteSpaceOr1Value,
-   sScanWhiteSpaceOrNValue,
-   sHalfLineBreakInWhiteSpaceBefore1Value,
-   sHalfLineBreakInWhiteSpaceBeforeNValue,
-   sAfterLineBreakInWhiteSpaceBefore1Value,
-   sAfterLineBreakInWhiteSpaceBeforeNValue,
+   sScanWhitespaceAfter1FieldName,
+   sScanWhitespaceAfterNFieldName,
+   sScanWhitespaceOr1Value,
+   sScanWhitespaceOrNValue,
+   sHalfLineBreakInWhitespaceBefore1Value,
+   sHalfLineBreakInWhitespaceBeforeNValue,
+   sAfterLineBreakInWhitespaceBefore1Value,
+   sAfterLineBreakInWhitespaceBeforeNValue,
    sScan1Value,
    sScanNValue,
    sHalfLineBreakIn1Value,
@@ -218,57 +218,57 @@ static void specHalfLineBreakState(State halfLineBreakState,
 
 static void specXValueStates(int  stateDelta)
 {
-   specDefaultTransition(sScanWhiteSpaceAfter1FieldName + stateDelta,
+   specDefaultTransition(sScanWhitespaceAfter1FieldName + stateDelta,
                          taError,
-                         sScanWhiteSpaceAfter1FieldName + stateDelta);
-   specTransition(sScanWhiteSpaceAfter1FieldName + stateDelta,
-                  ccWhiteSpace,
+                         sScanWhitespaceAfter1FieldName + stateDelta);
+   specTransition(sScanWhitespaceAfter1FieldName + stateDelta,
+                  ccWhitespace,
                   taNone,
-                  sScanWhiteSpaceAfter1FieldName + stateDelta);
-   specTransition(sScanWhiteSpaceAfter1FieldName + stateDelta,
+                  sScanWhitespaceAfter1FieldName + stateDelta);
+   specTransition(sScanWhitespaceAfter1FieldName + stateDelta,
                   ccColon,
                   taNone,
-                  sScanWhiteSpaceOr1Value + stateDelta);
-   specDefaultTransition(sScanWhiteSpaceOr1Value + stateDelta,
+                  sScanWhitespaceOr1Value + stateDelta);
+   specDefaultTransition(sScanWhitespaceOr1Value + stateDelta,
                          taStartText,
                          sScan1Value + stateDelta);
-   specTransition(sScanWhiteSpaceOr1Value + stateDelta,
-                  ccWhiteSpace,
+   specTransition(sScanWhitespaceOr1Value + stateDelta,
+                  ccWhitespace,
                   taNone,
-                  sScanWhiteSpaceOr1Value + stateDelta);
+                  sScanWhitespaceOr1Value + stateDelta);
    if (stateDelta == deltaOfNStateFrom1State)
    {
-      specTransition(sScanWhiteSpaceOr1Value + stateDelta,
+      specTransition(sScanWhitespaceOr1Value + stateDelta,
                      ccComma,
                      taError,
-                     sScanWhiteSpaceOr1Value + stateDelta);
-      specTransition(sScanWhiteSpaceOr1Value + stateDelta,
+                     sScanWhitespaceOr1Value + stateDelta);
+      specTransition(sScanWhitespaceOr1Value + stateDelta,
                      ccLeftAngleBracket,
                      taStartText,
                      sScanNValueInAngles);
-      specTransition(sScanWhiteSpaceOr1Value + stateDelta,
+      specTransition(sScanWhitespaceOr1Value + stateDelta,
                      ccDoubleQuotationMark,
                      taStartText,
                      sScanNValueInQuotes);
    }
-   specTransition(sScanWhiteSpaceOr1Value + stateDelta,
+   specTransition(sScanWhitespaceOr1Value + stateDelta,
                   ccCarriageReturn,
                   taNone,
-                  sHalfLineBreakInWhiteSpaceBefore1Value + stateDelta);
-   specHalfLineBreakState(sHalfLineBreakInWhiteSpaceBefore1Value + stateDelta,
-                          sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta);
-   specDefaultTransition(sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta,
+                  sHalfLineBreakInWhitespaceBefore1Value + stateDelta);
+   specHalfLineBreakState(sHalfLineBreakInWhitespaceBefore1Value + stateDelta,
+                          sAfterLineBreakInWhitespaceBefore1Value + stateDelta);
+   specDefaultTransition(sAfterLineBreakInWhitespaceBefore1Value + stateDelta,
                          taError,
-                         sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta);
-   specTransition(sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta,
+                         sAfterLineBreakInWhitespaceBefore1Value + stateDelta);
+   specTransition(sAfterLineBreakInWhitespaceBefore1Value + stateDelta,
                   ccFieldName,
                   taBeyondEmptyValue,
                   sScanFieldName);
-   specTransition(sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta,
-                  ccWhiteSpace,
+   specTransition(sAfterLineBreakInWhitespaceBefore1Value + stateDelta,
+                  ccWhitespace,
                   taNone,
-                  sScanWhiteSpaceOr1Value + stateDelta);
-   specTransition(sAfterLineBreakInWhiteSpaceBefore1Value + stateDelta,
+                  sScanWhitespaceOr1Value + stateDelta);
+   specTransition(sAfterLineBreakInWhitespaceBefore1Value + stateDelta,
                   ccCarriageReturn,
                   taBeyondEmptyValue,
                   sHalfLineBreakAfterLineBreak);
@@ -280,7 +280,7 @@ static void specXValueStates(int  stateDelta)
       specTransition(sScan1Value + stateDelta,
                      ccComma,
                      taTermValue,
-                     sScanWhiteSpaceOr1Value + stateDelta);
+                     sScanWhitespaceOr1Value + stateDelta);
       specTransition(sScan1Value + stateDelta,
                      ccLeftAngleBracket,
                      taNone,
@@ -304,7 +304,7 @@ static void specXValueStates(int  stateDelta)
                   taTermValueAfterLineBreak,
                   sScanFieldName);
    specTransition(sAfterLineBreakIn1Value + stateDelta,
-                  ccWhiteSpace,
+                  ccWhitespace,
                   taNone,
                   sScan1Value + stateDelta);
    specTransition(sAfterLineBreakIn1Value + stateDelta,
@@ -338,7 +338,7 @@ static void initStateMachine()
                   taStartText,
                   sScanFieldName);
    specTransition(sAfterLineBreakAfterStatusLine,
-                  ccWhiteSpace,
+                  ccWhitespace,
                   taError,
                   sAfterLineBreakAfterStatusLine);
    specTransition(sAfterLineBreakAfterStatusLine,
@@ -348,13 +348,13 @@ static void initStateMachine()
    specDefaultTransition(sScanFieldName, taError, sScanFieldName);
    specTransition(sScanFieldName, ccFieldName, taNone, sScanFieldName);
    specTransition(sScanFieldName,
-                  ccWhiteSpace,
+                  ccWhitespace,
                   taTermFieldName,
-                  sScanWhiteSpaceAfter1FieldName);
+                  sScanWhitespaceAfter1FieldName);
    specTransition(sScanFieldName,
                   ccColon,
                   taTermFieldName,
-                  sScanWhiteSpaceOr1Value);
+                  sScanWhitespaceOr1Value);
    specXValueStates(0);
    specXValueStates(deltaOfNStateFrom1State);
    specDefaultTransition(sScanNValueInQuotes, taNone, sScanNValueInQuotes);
@@ -363,7 +363,7 @@ static void initStateMachine()
                   taNone,
                   sScanNValue);
    specTransition(sScanNValueInQuotes,
-                  ccBackSlash,
+                  ccBackslash,
                   taNone,
                   sAfterEscCharInQuotesInNValue);
    specTransition(sScanNValueInQuotes,
@@ -379,7 +379,7 @@ static void initStateMachine()
                          taError,
                          sAfterLineBreakInQuotesInNValue);
    specTransition(sAfterLineBreakInQuotesInNValue,
-                  ccWhiteSpace,
+                  ccWhitespace,
                   taNone,
                   sScanNValueInQuotes);
    specDefaultTransition(sScanNValueInAngles, taNone, sScanNValueInAngles);
@@ -397,7 +397,7 @@ static void initStateMachine()
                          taError,
                          sAfterLineBreakInAnglesInNValue);
    specTransition(sAfterLineBreakInAnglesInNValue,
-                  ccWhiteSpace,
+                  ccWhitespace,
                   taNone,
                   sScanNValueInAngles);
    specHalfLineBreakState(sHalfLineBreakAfterLineBreak, sMsgStart);
@@ -446,12 +446,12 @@ categorySymbol(CharCategory c)
       case ccChunkTermSentinel: return "TERM";
       case ccOther: return "*";
       case ccFieldName: return "FName";
-      case ccWhiteSpace: return "WS";
+      case ccWhitespace: return "WS";
       case ccColon: return "\\\":\\\"";
       case ccDoubleQuotationMark: return "\\\"";
       case ccLeftAngleBracket: return "\\\"<\\\"";
       case ccRightAngleBracket: return "\\\">\\\"";
-      case ccBackSlash: return "\\\"\\\\\\\"";
+      case ccBackslash: return "\\\"\\\\\\\"";
       case ccComma: return "\\\",\\\"";
       case ccCarriageReturn: return "CR";
       case ccLineFeed: return "LF";
@@ -467,12 +467,12 @@ categoryName(CharCategory c)
       case ccChunkTermSentinel: return "ccChunkTermSentinel";
       case ccOther: return "ccOther";
       case ccFieldName: return "ccFieldName";
-      case ccWhiteSpace: return "ccWhiteSpace";
+      case ccWhitespace: return "ccWhitespace";
       case ccColon: return "ccColon";
       case ccDoubleQuotationMark: return "ccDoubleQuotationMark";
       case ccLeftAngleBracket: return "ccLeftAngleBracket";
       case ccRightAngleBracket: return "ccRightAngleBracket";
-      case ccBackSlash: return "ccBackSlash";
+      case ccBackslash: return "ccBackslash";
       case ccComma: return "ccComma";
       case ccCarriageReturn: return "ccCarriageReturn";
       case ccLineFeed: return "ccLineFeed";
@@ -530,29 +530,29 @@ stateName(State state)
       case sScanFieldName:
          stateName = "sScanFieldName";
          break;
-      case sScanWhiteSpaceAfter1FieldName:
-         stateName = "sScanWhiteSpaceAfter1FieldName";
+      case sScanWhitespaceAfter1FieldName:
+         stateName = "sScanWhitespaceAfter1FieldName";
          break;
-      case sScanWhiteSpaceAfterNFieldName:
-         stateName = "sScanWhiteSpaceAfterNFieldName";
+      case sScanWhitespaceAfterNFieldName:
+         stateName = "sScanWhitespaceAfterNFieldName";
          break;
-      case sScanWhiteSpaceOr1Value:
-         stateName = "sScanWhiteSpaceOr1Value";
+      case sScanWhitespaceOr1Value:
+         stateName = "sScanWhitespaceOr1Value";
          break;
-      case sScanWhiteSpaceOrNValue:
-         stateName = "sScanWhiteSpaceOrNValue";
+      case sScanWhitespaceOrNValue:
+         stateName = "sScanWhitespaceOrNValue";
          break;
-      case sHalfLineBreakInWhiteSpaceBefore1Value:
-         stateName = "sHalfLineBreakInWhiteSpaceBefore1Value";
+      case sHalfLineBreakInWhitespaceBefore1Value:
+         stateName = "sHalfLineBreakInWhitespaceBefore1Value";
          break;
-      case sHalfLineBreakInWhiteSpaceBeforeNValue:
-         stateName = "sHalfLineBreakInWhiteSpaceBeforeNValue";
+      case sHalfLineBreakInWhitespaceBeforeNValue:
+         stateName = "sHalfLineBreakInWhitespaceBeforeNValue";
          break;
-      case sAfterLineBreakInWhiteSpaceBefore1Value:
-         stateName = "sAfterLineBreakInWhiteSpaceBefore1Value";
+      case sAfterLineBreakInWhitespaceBefore1Value:
+         stateName = "sAfterLineBreakInWhitespaceBefore1Value";
          break;
-      case sAfterLineBreakInWhiteSpaceBeforeNValue:
-         stateName = "sAfterLineBreakInWhiteSpaceBeforeNValue";
+      case sAfterLineBreakInWhitespaceBeforeNValue:
+         stateName = "sAfterLineBreakInWhitespaceBeforeNValue";
          break;
       case sScan1Value:
          stateName = "sScan1Value";
