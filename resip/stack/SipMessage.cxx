@@ -389,26 +389,27 @@ SipMessage::getCanonicalIdentityString() const
    //             SIP-Date ":" [ addr-spec ] ":" message-body
   
    strm << header(h_From).uri();
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
    strm << header(h_To).uri();
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
    strm << header(h_CallId).value();
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
-   strm << header(h_CSeq).sequence(); // force parsed
+   int junk =  header(h_CSeq).sequence(); // force parsed
    header(h_CSeq).encodeParsed( strm );
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
    // if there is no date, it will throw 
    if ( !exists(h_Date) )
    {
       WarningLog( << "Computing Identity on message with no Date header" );
+      // TODO FIX - should it have a throw here ???? Help ???
    }
    header(h_Date).dayOfMonth(); // force it to be parsed 
    header(h_Date).encodeParsed( strm );
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
    if ( exists(h_Contacts) )
    { 
@@ -421,7 +422,7 @@ SipMessage::getCanonicalIdentityString() const
          strm << header(h_Contacts).front().uri();
       }
    }
-   strm << Symbols::COLON;
+   strm << Symbols::BAR;
    
    // bodies 
    if (mContents != 0)
