@@ -35,6 +35,9 @@ class Uri : public ParserCategory
 
       const Data& getAor() const;
       const Data getAorNoPort() const;
+      //strips all paramters
+      Uri getAorAsUri() const;
+      
       Data& scheme() {checkParsed(); return mScheme;}
       const Data& scheme() const {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
