@@ -4,6 +4,7 @@
 #include <iostream>
 #include <time.h>
 #include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
 
 // if you change this version, change in makefile too 
 #define STUN_VERSION "0.96"
@@ -263,12 +264,6 @@ typedef enum
    StunTypeFirewall,
 } NatType;
 
-#ifdef WIN32
-typedef SOCKET Socket;
-#else
-typedef int Socket;
-#endif
-
 #define MAX_MEDIA_RELAYS 500
 #define MAX_RTP_MSG_SIZE 1500
 #define MEDIA_RELAY_TIMEOUT 3*60
@@ -285,10 +280,10 @@ typedef struct
 {
       StunAddress4 myAddr;
       StunAddress4 altAddr;
-      Socket myFd;
-      Socket altPortFd;
-      Socket altIpFd;
-      Socket altIpPortFd;
+      resip::Socket myFd;
+      resip::Socket altPortFd;
+      resip::Socket altIpFd;
+      resip::Socket altIpPortFd;
       bool relay; // true if media relaying is to be done
       StunMediaRelay relays[MAX_MEDIA_RELAYS];
 } StunServerInfo;
