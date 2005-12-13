@@ -397,7 +397,7 @@ SipMessage::getCanonicalIdentityString() const
    strm << header(h_CallId).value();
    strm << Symbols::BAR;
    
-   int junk =  header(h_CSeq).sequence(); // force parsed
+   header(h_CSeq).sequence(); // force parsed
    header(h_CSeq).encodeParsed( strm );
    strm << Symbols::BAR;
    
