@@ -33,7 +33,8 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mEndWhenDone(false),
      mUserRefresh(false),
      mExpires(0),
-     mQueuedState(None)
+     mQueuedState(None),
+     mQueuedRequest(new SipMessage)
 {
    // If no Contacts header, this is a query
    if (mLastRequest->exists(h_Contacts))
@@ -68,11 +69,10 @@ ClientRegistration::tryModification(ClientRegistration::State state)
             throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
          }
 
-         mQueuedRequest = *mLastRequest;
+         *mQueuedRequest = *mLastRequest;
          mQueuedState = state;
 
-         //return mQueuedRequest;
-         return mLastRequest;
+         return mQueuedRequest;
       }
       else
       {
@@ -175,14 +175,23 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
       throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
+   if (mMyContacts.empty())
+   {
+      WarningLog (<< "No bindings to remove");
+      throw UsageUseException("No bindings to remove", __FILE__,__LINE__);
+   }
+
    SharedPtr<SipMessage> next = tryModification(Removing);
 
-   for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
+   NameAddrs myContacts = mMyContacts;
+   mMyContacts.clear();
+
+   for (NameAddrs::iterator i=myContacts.begin(); i != myContacts.end(); i++)
    {
       i->param(p_expires) = 0;
    }
 
-   next->header(h_Contacts) = mMyContacts;
+   next->header(h_Contacts) = myContacts;
    next->remove(h_Expires);
    next->header(h_CSeq).sequence()++;
 
@@ -351,7 +360,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
             case Removing:
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
-               mDum.mClientRegistrationHandler->onRemoved(getHandle());
+               mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
                InfoLog (<< "Finished removing registration " << *this << " mEndWhenDone=" << mEndWhenDone);
                if (mEndWhenDone)
                {
@@ -380,10 +389,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
          if (mQueuedState != None)
          {
-            InfoLog (<< "Sending queued request: " << mQueuedRequest);
+            InfoLog (<< "Sending queued request: " << *mQueuedRequest);
             mState = mQueuedState;
             mQueuedState = None;
-            *mLastRequest = mQueuedRequest;
+            *mLastRequest = *mQueuedRequest;
             mDum.send(mLastRequest);
          }
       }
@@ -482,7 +491,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // assume that if a failure occurred, the bindings are gone
          if (mEndWhenDone)
          {
-            mDum.mClientRegistrationHandler->onRemoved(getHandle());
+            mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
          }
          delete this;
       }
