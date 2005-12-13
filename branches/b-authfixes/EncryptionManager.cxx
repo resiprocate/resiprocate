@@ -167,12 +167,12 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       EncryptionManager::Result result = processCertMessage(certMsg);
       if (result == Complete)
       {
-         return DumFeature::ChainDoneAndEventTaken;
+         return DumFeature::FeatureDone;
       }
       else
       {
          delete msg;
-         return DumFeature::ChainDoneAndEventTaken;
+         return DumFeature::EventTaken;
       }
    }
 
