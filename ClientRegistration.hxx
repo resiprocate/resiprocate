@@ -95,7 +95,7 @@ class ClientRegistration: public NonDialogUsage
       bool mUserRefresh;
       UInt64 mExpires;
       State mQueuedState;
-      SipMessage mQueuedRequest;
+      SharedPtr<SipMessage> mQueuedRequest;
 
       NetworkAssociation mNetworkAssociation;
       
