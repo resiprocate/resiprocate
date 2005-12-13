@@ -11,7 +11,6 @@ TARGET_LIBRARY = libresip
 TESTPROGRAMS =
 
 SRC = \
-	\
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \
