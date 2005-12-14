@@ -526,7 +526,7 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession != 0)
             {
                 // Copy INVITE or UPDATE with Authorization headers back to InviteSession - needed to populate ACKs with Authoriziation headers
-                mInviteSession->mLastSessionModification = r->second;
+                mInviteSession->mLastLocalSessionModification = r->second;
             }
          }
          mRequests.erase(r);

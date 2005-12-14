@@ -579,7 +579,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
@@ -590,7 +590,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInvite:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_NoOffer);
          handler->onNewSession(getHandle(), None, msg);
          if(!isTerminated())  
@@ -599,7 +599,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInviteReliableOffer:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
@@ -610,7 +610,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInviteReliable:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_NoOfferReliable);
          handler->onNewSession(getHandle(), None, msg);
          if(!isTerminated())  
@@ -997,10 +997,10 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
    if (updateMethodSupported())
    {
-      mDialog.makeRequest(mLastSessionModification, UPDATE);
-      InviteSession::setSdp(mLastSessionModification, sdp);
-      DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
-      send(mLastSessionModification);
+      mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
+      InviteSession::setSdp(mLastLocalSessionModification, sdp);
+      DumHelper::setOutgoingEncryptionLevel(mLastLocalSessionModification, mProposedEncryptionLevel);
+      send(mLastLocalSessionModification);
    }
    else
    {
