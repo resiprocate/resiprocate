@@ -66,6 +66,10 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          expires = msg.header(h_SubscriptionState).param(p_expires);
       }
+      else if (mLastRequest.exists(h_Expires))
+      {
+         expires = mLastRequest.header(h_Expires).value();
+      }
       else
       {
          expires = 3600;
