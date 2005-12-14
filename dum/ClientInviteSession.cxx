@@ -38,7 +38,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
       mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
       mProposedEncryptionLevel = level;
    }
-   mInvite = request;
+   mLastLocalSessionModification = request;
 
    mState=UAC_Start;
 }
@@ -67,16 +67,16 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
          transition(UAC_SentUpdateEarly);
 
          //  Creates an UPDATE request with application supplied offer.
-         mDialog.makeRequest(mLastSessionModification, UPDATE);
-         InviteSession::setSdp(mLastSessionModification, offer);
+         mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
+         InviteSession::setSdp(mLastLocalSessionModification, offer);
 
          //  Remember proposed local SDP.
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
-         send(mLastSessionModification);
+         DumHelper::setOutgoingEncryptionLevel(mLastLocalSessionModification, mProposedEncryptionLevel);
+         send(mLastLocalSessionModification);
          break;
       }
 
@@ -135,7 +135,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Answered:
       {
          transition(Connected);
-         sendAck(mInvite, &answer);
+         sendAck(&answer);
 
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
@@ -412,7 +412,7 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
          if (mServerSub.isValid())
          {
             SipMessage response;
-            mDialog.makeResponse(response, mInvite, 487);
+            mDialog.makeResponse(response, mLastLocalSessionModification, 487);
             sendSipFrag(response);
          }
          transition(Terminated);
@@ -459,7 +459,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    // must match
-   if (msg.header(h_CSeq).sequence() != mInvite.header(h_CSeq).sequence())
+   if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification.header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
@@ -664,7 +664,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck();
          handleFinalResponse(msg);
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
@@ -683,7 +683,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -765,7 +765,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck();
          handleFinalResponse(msg);
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
@@ -780,7 +780,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xx:
       {
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
@@ -874,7 +874,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
       case On2xx:
       case On2xxAnswer:
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  no answer sent: " << msg.brief());
          transition(Terminated);
@@ -919,7 +919,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck();
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
@@ -928,7 +928,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -975,18 +975,18 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On200Prack:
          transition(UAC_SentUpdateEarly);
          {
-            mDialog.makeRequest(mLastSessionModification, UPDATE);
-            InviteSession::setSdp(mLastSessionModification, mProposedLocalSdp.get());
+            mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
+            InviteSession::setSdp(mLastLocalSessionModification, mProposedLocalSdp.get());
 
-            DumHelper::setOutgoingEncryptionLevel(mLastSessionModification, mProposedEncryptionLevel);
-            send(mLastSessionModification);
+            DumHelper::setOutgoingEncryptionLevel(mLastLocalSessionModification, mProposedEncryptionLevel);
+            send(mLastLocalSessionModification);
          }
          break;
 
       case On2xx:
          transition(SentUpdate);
          {
-            sendAck(mInvite);
+            sendAck();
 
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
@@ -1002,7 +1002,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1055,14 +1055,14 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         sendAck(mInvite);
+         sendAck();
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
       case On2xxAnswer:
       case On2xxOffer:
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
@@ -1141,7 +1141,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xxAnswer:
       {
          // this is the 2xx crossing the CANCEL case
-         sendAck(mInvite);
+         sendAck();
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
