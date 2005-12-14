@@ -80,7 +80,6 @@ class ClientInviteSession : public InviteSession
       void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
 
-      SipMessage mInvite; // the original INVITE sent
       int mLastReceivedRSeq;
       int mStaleCallTimerSeq;
       int mCancelledTimerSeq;      
