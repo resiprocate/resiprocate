@@ -728,7 +728,12 @@ stunEncodeMessage( const StunMessage& msg,
       if (verbose) clog << "Encoding SecondaryAddress: " << msg.secondaryAddress.ipv4 << endl;
       ptr = encodeAtrAddress4 (ptr, SecondaryAddress, msg.secondaryAddress);
    }
-
+   if (msg.hasTurnLifetime)
+   {
+      if (verbose) clog << "Encoding Turn Lifetime: " << msg.turnLifetime << endl;
+      ptr = encode32(ptr, msg.turnLifetime);
+   }
+   
    if (msg.hasTurnData)
    {
       if (verbose) clog << "Encoding TurnData (not shown)" << endl;
