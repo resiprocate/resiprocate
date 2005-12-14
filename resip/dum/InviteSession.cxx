@@ -938,7 +938,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case On200Update:
          transition(Connected);
          handleSessionTimerResponse(msg);
-         if (sdp.get())
+         if (sdp.get() && mProposedLocalSdp.get())
          {
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
