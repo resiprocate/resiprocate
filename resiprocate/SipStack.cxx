@@ -407,6 +407,12 @@ SipStack::receiveAny()
    }
 }
 
+Message*
+SipStack::receiveAny(int ms)
+{
+   return mTUFifo.getNext(ms);
+}
+
 void 
 SipStack::process(FdSet& fdset)
 {
