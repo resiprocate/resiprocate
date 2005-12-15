@@ -13,6 +13,7 @@
 #include "rutil/Logger.hxx"
 
 #include "repro/Ack200DoneMessage.hxx"
+#include "repro/ForkControlMessage.hxx"
 
 // Remove warning about 'this' use in initiator list
 #if defined(WIN32)
@@ -109,8 +110,41 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       return;
    }
 
+   
+   ForkControlMessage* fc = dynamic_cast<ForkControlMessage*>(mCurrentEvent);
+   
+   if(fc)
+   {
+      DebugLog(<<"Got a ForkControlMessage.");
 
+      if(mHaveSentFinalResponse)
+      {
+         DebugLog(<<"Have already sent final response. Ignoring...");
+         return;
+      }
 
+      if(fc->cancelAll())
+      {
+         mResponseContext.cancelProceedingClientTransactions();
+      }
+      else
+      {
+         while(fc->tidsRemain())
+         {
+            mResponseContext.cancelClientTransaction(fc->popTid());
+         }
+      }
+      
+      while(fc->targetsRemain())
+      {
+         DebugLog(<<"Adding a target.");
+         addTarget(fc->popTarget());
+      }
+      
+      mResponseContext.processCandidates();
+      return;
+   }
+   
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
    { 
@@ -219,11 +253,31 @@ RequestContext::updateTimerC()
 {
    InfoLog(<<"Updating timer C.");
    mTCSerial++;
-   DebugLog(<<"Current serial is " << mTCSerial);
-   TimerCMessage* tc = new TimerCMessage(this->getTransactionId());
-   tc->mSerial=mTCSerial;
-   std::auto_ptr<TimerCMessage> atc(tc);
-   mProxy.postTimerC(atc);
+   TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
+   mProxy.postTimerC(std::auto_ptr<TimerCMessage>(tc));
+}
+
+void
+RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
+{
+   mProxy.postTimedMessage(msg,seconds);
+}
+
+void
+RequestContext::addTargetsInSeconds(std::set<NameAddr> targets,int seconds)
+{
+   ForkControlMessage* msg = new ForkControlMessage(this->getTransactionId());
+   std::set<resip::NameAddr>::iterator i;
+   
+   for(i=targets.begin();i!=targets.end();++i)
+   {
+      msg->pushTarget(*i);
+   }
+   
+   std::auto_ptr<ApplicationMessage> automsg(dynamic_cast<ApplicationMessage*>(msg));
+   
+   DebugLog(<<"Posting a ForkControlMessage with " << targets.size() << " targets.");
+   mProxy.postTimedMessage(automsg,seconds);
 }
 
 

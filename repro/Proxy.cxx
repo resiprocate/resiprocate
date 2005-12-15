@@ -255,6 +255,14 @@ Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
    }
 }
 
+
+void
+Proxy::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg, int seconds)
+{
+   mStack.post(*msg,seconds,this);
+}
+
+
 const Data& 
 Proxy::name() const
 {
