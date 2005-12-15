@@ -2066,9 +2066,10 @@ class MyTestCase
       {
          CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "Suite1" );
 #if 1
-         TEST(testTimerC);
-         TEST(testTimerCForked);
-         TEST(testTimerCInterference);
+         //TEST(testTimerC); //These three are long tests. 
+         //TEST(testTimerCForked);
+         //TEST(testTimerCInterference);
+         
          TEST(testRegisterBasic);
          TEST(testRegisterClientRetransmits);
          TEST(testInviteBasic);
