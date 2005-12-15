@@ -537,6 +537,15 @@ encodeTurnData(char *ptr, const resip::Data* td)
    return ptr;
 }
 
+static char*
+encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
+{
+   ptr = encode16(ptr, type);
+   ptr = encode16(ptr, 4);
+   ptr = encode32(ptr, value);
+   return ptr;
+}
+
 static char* 
 encodeAtrAddress4(char* ptr, UInt16 type, const StunAtrAddress4& atr)
 {
@@ -731,15 +740,18 @@ stunEncodeMessage( const StunMessage& msg,
    if (msg.hasTurnLifetime)
    {
       if (verbose) clog << "Encoding Turn Lifetime: " << msg.turnLifetime << endl;
-      ptr = encode32(ptr, msg.turnLifetime);
+      ptr = encodeAtrUInt32(ptr, TurnLifetime, msg.turnLifetime);
    }
-   
+   if (msg.hasTurnBandwidth)
+   {
+      if (verbose) clog << "Encoding Turn Bandwidth: " << msg.turnBandwidth << endl;
+      ptr = encodeAtrUInt32(ptr, TurnBandwidth, msg.turnBandwidth);
+   }   
    if (msg.hasTurnData)
    {
       if (verbose) clog << "Encoding TurnData (not shown)" << endl;
       ptr = encodeTurnData (ptr, msg.turnData);
    }
-
 
    if (password.sizeValue > 0)
    {
