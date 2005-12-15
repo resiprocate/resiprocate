@@ -41,10 +41,12 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
-  void postTimerC(std::auto_ptr<TimerCMessage> tc);
-      
-      int mTimerC;
+      void postTimerC(std::auto_ptr<TimerCMessage> tc);
 
+      void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg, int seconds);
+
+      int mTimerC;
+      
    protected:
       virtual const resip::Data& name() const;
 

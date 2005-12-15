@@ -59,6 +59,10 @@ class RequestContext
       void updateTimerC();
       bool mInitialTimerCSet;
 
+      void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
+      
+      void addTargetsInSeconds(std::set<resip::NameAddr> targets,int seconds);
+
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
