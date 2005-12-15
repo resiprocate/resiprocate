@@ -39,7 +39,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<Processor>(isme));
       
-   StaticRoute* sr = new StaticRoute(store);
+   StaticRoute* sr = new StaticRoute(store,true);
    locators->addProcessor(std::auto_ptr<Processor>(sr));
  
    LocationServer* ls = new LocationServer(regData);
