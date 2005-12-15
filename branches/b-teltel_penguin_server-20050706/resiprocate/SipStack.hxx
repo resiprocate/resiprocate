@@ -141,8 +141,13 @@ class SipStack
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
 
-      // May return TransactionTerminated* or SipMessage* or derived ApplicationMessage*
+       // May return TransactionTerminated* or SipMessage* or derived ApplicationMessage*
       Message* receiveAny(); 
+      
+      // May return TransactionTerminated*,  SipMessage* or derived
+      // ApplicationMessage*. Will wait up to ms milliseconds if no
+      // message is available.
+      Message* receiveAny(int ms);
       
       // build the FD set to use in a select to find out when process bust be
       // called again. This must be called prior to calling process. 
