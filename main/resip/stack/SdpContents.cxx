@@ -634,6 +634,7 @@ SdpContents::Session::Time::operator=(const Time& rhs)
    {
       mStart = rhs.mStart;
       mStop = rhs.mStop;
+      mRepeats = rhs.mRepeats;
    }
    return *this;
 }
