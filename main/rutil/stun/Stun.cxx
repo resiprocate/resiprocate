@@ -794,6 +794,10 @@ stunRand()
       asm("rdtsc" : "=A" (tick));
 #elif defined (__SUNPRO_CC) || defined( __sparc__ )	
       tick = gethrtime();
+#elif defined(__APPLE__)
+      int fd=open("/dev/random",O_RDONLY);
+      read(fd,&tick,sizeof(tick));
+      close(fd);
 #elif defined(__MACH__) 
       int fd=open("/dev/random",O_RDONLY);
       read(fd,&tick,sizeof(tick));
