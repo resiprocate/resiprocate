@@ -67,9 +67,10 @@ class ResponseContext
       // These methods are really private
       void processPendingTargets();
       void sendRequest(const resip::SipMessage& request);
-      void cancelClientTransaction(const Branch& branch);
+      void cancelClientTransaction(Branch& branch);
       void terminateClientTransaction(const resip::Data& transactionId);
       void cancelProceedingClientTransactions();
+      void cancelClientTransaction(const resip::Data& tid);
       bool areAllTransactionsTerminated();
       // return true if the transaction was found
       bool removeClientTransaction(const resip::Data& transactionId); 
@@ -80,7 +81,7 @@ class ResponseContext
       typedef std::multiset<resip::NameAddr, CompareQ> PendingTargetSet;
       PendingTargetSet mPendingTargetSet;
 
-      HashSet<resip::Uri> mTargetSet;
+      std::list<resip::Uri> mTargetList;
       
       typedef HashMap<resip::Data, Branch> TransactionMap;
       TransactionMap mClientTransactions;
