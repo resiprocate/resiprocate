@@ -61,7 +61,8 @@ ServerRegistration::accept(SipMessage& ok)
     ok.header(h_Contacts).push_back(contact);
   }
 
-  mDum.send(ok);
+  SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+  mDum.send(msg);
   delete(this);
 }
 
@@ -85,9 +86,9 @@ ServerRegistration::reject(int statusCode)
   database->addAor(mAor, mOriginalContacts);
   database->unlockRecord(mAor);
 
-  SipMessage failure;
-  mDum.makeResponse(failure, mRequest, statusCode);
-  failure.remove(h_Contacts);
+  SharedPtr<SipMessage> failure(new SipMessage);
+  mDum.makeResponse(*failure, mRequest, statusCode);
+  failure->remove(h_Contacts);
   mDum.send(failure);
   delete(this);
 }
@@ -107,8 +108,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
     {
        DebugLog( << "No handler or DB - sending 405" );
        
-       SipMessage failure;
-       mDum.makeResponse(failure, msg, 405);
+       SharedPtr<SipMessage> failure(new SipMessage);
+       mDum.makeResponse(*failure, msg, 405);
        mDum.send(failure);
        delete(this);
        return;
@@ -160,12 +161,12 @@ ServerRegistration::dispatch(const SipMessage& msg)
       {
         if (contactList.size() > 1 || expires != 0)
         {
-          SipMessage failure;
-          mDum.makeResponse(failure, msg, 400, "Invalid use of 'Contact: *'");
-          mDum.send(failure);
-          database->unlockRecord(mAor);
-          delete(this);
-          return;
+           SharedPtr<SipMessage> failure(new SipMessage);
+           mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
+           mDum.send(failure);
+           database->unlockRecord(mAor);
+           delete(this);
+           return;
         }
 
         database->removeAor(mAor);

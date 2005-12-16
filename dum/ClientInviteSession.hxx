@@ -14,7 +14,7 @@ class ClientInviteSession : public InviteSession
    public:
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
-                          const SipMessage& request,
+                          SharedPtr<SipMessage> request,
                           const Contents* initialOffer,
                           DialogUsageManager::EncryptionLevel level,
                           ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());

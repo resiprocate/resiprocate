@@ -18,7 +18,7 @@ class ClientRegistrationHandler
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
 
       // Called when all of my bindings have been removed
-      virtual void onRemoved(ClientRegistrationHandle) = 0;
+      virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response) = 0;
       
       /// call on Retry-After failure. 
       /// return values: -1 = fail, 0 = retry immediately, N = retry in N seconds

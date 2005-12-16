@@ -34,7 +34,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mMergeKey(),
    mDialogs(),
    mCreator(creator),
-   mId(creator->getLastRequest()),
+   mId(*creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
    mState(Initial),
@@ -47,7 +47,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mServerPagerMessage(0)
 {
    setUserProfile(creator->getUserProfile());
-   assert(!creator->getLastRequest().isExternal());
+   assert(!creator->getLastRequest()->isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
@@ -231,11 +231,11 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
-          msg.header(h_CSeq) == getCreator()->getLastRequest().header(h_CSeq))
+          msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq))
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle(*getUserProfile().get(), getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle(*getUserProfile().get(), *getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
@@ -249,7 +249,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
          //by sending 401/407 at the wrong time.
          if (mDum.mRedirectManager.get() && mState != Established)  // !slg! for now don't handle redirect in established dialogs - alternatively we could treat as a target referesh (using 1st Contact) and reissue request
          {
-            if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
+            if (mDum.mRedirectManager->handle(*this, *getCreator()->getLastRequest(), msg))
             {
                //terminating existing dialogs(branches) as this is a final
                //response--?dcm?--merge w/ forking logic somehow?                              
@@ -272,8 +272,8 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
             if(msg.header(h_StatusLine).statusCode() == 422 && msg.exists(h_MinSE))
             {
                // Change interval to min from 422 response
-               getCreator()->getLastRequest().header(h_SessionExpires).value() = msg.header(h_MinSE).value();
-               getCreator()->getLastRequest().header(h_MinSE).value() = msg.header(h_MinSE).value();
+               getCreator()->getLastRequest()->header(h_SessionExpires).value() = msg.header(h_MinSE).value();
+               getCreator()->getLastRequest()->header(h_MinSE).value() = msg.header(h_MinSE).value();
 
                InfoLog( << "about to re-send request with new session expiration time" );
                DebugLog( << getCreator()->getLastRequest() );
@@ -299,7 +299,7 @@ DialogSet::dispatch(const SipMessage& msg)
       if (msg.isResponse())         
       {
          int code = msg.header(h_StatusLine).statusCode();
-         switch(mCreator->getLastRequest().header(h_CSeq).method())               
+         switch(mCreator->getLastRequest()->header(h_CSeq).method())
          {
             case INVITE:
                if (code / 100 == 1)
@@ -311,13 +311,13 @@ DialogSet::dispatch(const SipMessage& msg)
                {
                   Dialog dialog(mDum, msg, *this);
 
-                  SipMessage ack;
-                  dialog.makeRequest(ack, ACK);
-                  ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+                  SharedPtr<SipMessage> ack(new SipMessage);
+                  dialog.makeRequest(*ack, ACK);
+                  ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
                   dialog.send(ack);
                   
-                  SipMessage bye;
-                  dialog.makeRequest(bye, BYE);
+                  SharedPtr<SipMessage> bye;
+                  dialog.makeRequest(*bye, BYE);
                   dialog.send(bye);
 
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
@@ -337,8 +337,8 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         SipMessage response;         
-         mDum.makeResponse(response, msg, 481);
+         SharedPtr<SipMessage> response(new SipMessage);         
+         mDum.makeResponse(*response, msg, 481);
          mDum.send(response);
       }
       return;
@@ -365,8 +365,8 @@ DialogSet::dispatch(const SipMessage& msg)
 		 if( msg.isRequest() )
 		 {
             StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
-            SipMessage response;         
-            mDum.makeResponse(response, msg, 481);
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDum.makeResponse(*response, msg, 481);
             mDum.send(response);
 		 }
 		 else
@@ -402,8 +402,8 @@ DialogSet::dispatch(const SipMessage& msg)
          case UPDATE:
             if(!dialog)
             {
-               SipMessage response;         
-               mDum.makeResponse(response, msg, 481);
+               SharedPtr<SipMessage> response(new SipMessage);         
+               mDum.makeResponse(*response, msg, 481);
                mDum.send(response);
                return;
             }
@@ -470,10 +470,10 @@ DialogSet::dispatch(const SipMessage& msg)
           && msg.header(h_CSeq).method() == SUBSCRIBE
           && msg.exists(h_MinExpires)
           && getCreator()
-          && msg.header(h_CSeq) == getCreator()->getLastRequest().header(h_CSeq))
+          && msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq))
       {
-         getCreator()->getLastRequest().header(h_CSeq).sequence()++;
-         getCreator()->getLastRequest().header(h_Expires).value() = msg.header(h_MinExpires).value();
+         getCreator()->getLastRequest()->header(h_CSeq).sequence()++;
+         getCreator()->getLastRequest()->header(h_Expires).value() = msg.header(h_MinExpires).value();
          DebugLog( << "Re sending inital(dialog forming) SUBSCRIBE due to 423, MinExpires is: " << msg.header(h_MinExpires).value());
          mDum.send(getCreator()->getLastRequest());
          return;
@@ -669,8 +669,8 @@ DialogSet::dispatch(const SipMessage& msg)
          {
             // !jf! derek thinks we should destroy only on invalid CANCEL or
             // BYE, hmmphh. see draft-sparks-sipping-dialogusage-01.txt
-            SipMessage response;
-            mDum.makeResponse(response, msg, 400);
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDum.makeResponse(*response, msg, 400);
             mDum.send(response);
             if(mDialogs.empty())
             {
@@ -744,11 +744,11 @@ DialogSet::end()
          break;         
       case ReceivedProvisional:
       {
-         assert (mCreator->getLastRequest().header(h_CSeq).method() == INVITE);
+         assert (mCreator->getLastRequest()->header(h_CSeq).method() == INVITE);
          mState = Terminating;
          // !jf! this should be made exception safe
-         auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
-         mDum.send(*cancel);
+         SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
+         mDum.send(cancel);
 
          if (mDialogs.empty())
          {
@@ -861,7 +861,7 @@ DialogSet::makeClientOutOfDialogReq(const SipMessage& response)
 {
    BaseCreator* creator = getCreator();
    assert(creator);
-   return new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
+   return new ClientOutOfDialogReq(mDum, *this, *creator->getLastRequest());
 }
 
 ServerRegistration*

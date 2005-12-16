@@ -168,9 +168,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   {
                      BaseCreator* creator = mDialogSet.getCreator();
                      assert(creator);// !jf! throw or something here
-                     assert(creator->getLastRequest().exists(h_Contacts));
-                     assert(!creator->getLastRequest().header(h_Contacts).empty());
-                     mLocalContact = creator->getLastRequest().header(h_Contacts).front();
+                     assert(creator->getLastRequest()->exists(h_Contacts));
+                     assert(!creator->getLastRequest()->header(h_Contacts).empty());
+                     mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
                   else
@@ -459,11 +459,11 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
+               if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
                {
-                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                  DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
+                  ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
@@ -488,8 +488,8 @@ Dialog::dispatch(const SipMessage& msg)
 				   }
 				   else
 				   {
-                      SipMessage response;
-                      makeResponse(response, msg, 406);
+                      SharedPtr<SipMessage> response(new SipMessage);
+                      makeResponse(*response, msg, 406);
                       send(response);
 				   }
 			   }
@@ -512,22 +512,15 @@ Dialog::dispatch(const SipMessage& msg)
       {
 	     bool handledByAuth = false;
          if (mDum.mClientAuthManager.get() && 
-             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
+             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
          {
-            InfoLog( << "about to re-send request with digest credentials" << r->second.brief());
+            InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
 
-            assert (r->second.isRequest());
+            assert (r->second->isRequest());
 
             mLocalCSeq++;
             send(r->second);
 			handledByAuth = true;
-
-            if((r->second.header(h_RequestLine).method() == INVITE || r->second.header(h_RequestLine).method() == UPDATE) &&
-               mInviteSession != 0)
-            {
-                // Copy INVITE or UPDATE with Authorization headers back to InviteSession - needed to populate ACKs with Authoriziation headers
-                mInviteSession->mLastLocalSessionModification = r->second;
-            }
          }
          mRequests.erase(r);
 		 if (handledByAuth) return;
@@ -610,17 +603,17 @@ Dialog::dispatch(const SipMessage& msg)
                   //!dcm! -- can't subscribe in an existing Dialog, this is all
                   //a bit of a hack; currently, spurious failure messages may cause callbacks
                   BaseCreator* creator = mDialogSet.getCreator();
-                  if (!creator || !creator->getLastRequest().exists(h_Event))
+                  if (!creator || !creator->getLastRequest()->exists(h_Event))
                   {
                      return;
                   }
                   else
                   {
                      ClientSubscriptionHandler* handler =
-                        mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
+                        mDum.getClientSubscriptionHandler(creator->getLastRequest()->header(h_Event).value());
                      if (handler)
                      {
-                        ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                        ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
                         mClientSubscriptions.push_back(sub);
                         sub->dispatch(response);
                      }
@@ -970,11 +963,11 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
 
 
 void
-Dialog::send(SipMessage& msg)
+Dialog::send(SharedPtr<SipMessage> msg)
 {
-   if (msg.isRequest() && msg.header(h_CSeq).method() != ACK)
+   if (msg->isRequest() && msg->header(h_CSeq).method() != ACK)
    {
-      mRequests[msg.header(h_CSeq).sequence()] = msg;
+      mRequests[msg->header(h_CSeq).sequence()] = msg;
    }
    mDum.send(msg);
 }
