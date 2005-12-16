@@ -30,7 +30,7 @@ class TestClientRegistrationHandler : public ClientRegistrationHandler
          InfoLog( << "TestClientRegistrationHandler::onSuccess" );
       }
       
-      virtual void onRemoved(ClientRegistrationHandle)
+      virtual void onRemoved(ClientRegistrationHandle, const SipMessage&)
       {
          InfoLog( << "TestClientRegistrationHander::onRemoved" );
          exit(-1);
@@ -274,7 +274,7 @@ class TestServerPagerMessageHandler : public ServerPagerMessageHandler
       {
          InfoLog( << "TestServerPagerMessageHandler::onMessageArrived" );
 
-         SipMessage ok = handle->accept();
+         SharedPtr<SipMessage> ok = handle->accept();
          handle->send(ok);
 
          InfoLog( << "received type " << message.header(h_ContentType) );
