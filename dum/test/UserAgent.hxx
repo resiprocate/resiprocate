@@ -62,7 +62,7 @@ class UserAgent : public CommandLineParser,
       // Registration Handler ////////////////////////////////////////////////////////
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response);
       virtual void onFailure(ClientRegistrationHandle h, const SipMessage& response);
-      virtual void onRemoved(ClientRegistrationHandle h);
+      virtual void onRemoved(ClientRegistrationHandle h, const SipMessage& response);
       virtual int onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg);
 
       // ClientSubscriptionHandler ///////////////////////////////////////////////////
