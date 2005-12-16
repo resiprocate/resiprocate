@@ -12,6 +12,7 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
                                      const Data& etag,
                                      const SipMessage& msg)
    : BaseUsage(dum),
+     mLastResponse(new SipMessage), 
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
      mTimerSeq(0)
@@ -67,22 +68,22 @@ ServerPublication::updateMatchingSubscriptions()
 }
 
 
-SipMessage& 
+SharedPtr<SipMessage>
 ServerPublication::accept(int statusCode)
 {
-   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;
+   Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
+   mLastResponse->header(h_Expires).value() = mExpires;
 
    updateMatchingSubscriptions();
 
    return mLastResponse;   
 }
 
-SipMessage& 
+SharedPtr<SipMessage>
 ServerPublication::reject(int statusCode)
 {
-   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;
+   Helper::makeResponse(*mLastResponse, mLastRequest, statusCode);
+   mLastResponse->header(h_Expires).value() = mExpires;
    return mLastResponse;  
 }
 
@@ -108,8 +109,8 @@ ServerPublication::dispatch(const SipMessage& msg)
       if (mExpires == 0)
       {
          handler->onRemoved(getHandle(), mEtag, msg, mExpires);
-         Helper::makeResponse(mLastResponse, mLastRequest, 200);
-         mLastResponse.header(h_Expires).value() = mExpires;
+         Helper::makeResponse(*mLastResponse, mLastRequest, 200);
+         mLastResponse->header(h_Expires).value() = mExpires;
          mDum.send(mLastResponse);
          delete this;
          return;
@@ -152,18 +153,18 @@ ServerPublication::dispatch(const DumTimeout& msg)
 }
 
 void 
-ServerPublication::send(SipMessage& response)
+ServerPublication::send(SharedPtr<SipMessage> response)
 {
-   assert(response.isResponse());
-   response.header(h_SIPETag).value() = mEtag;
+   assert(response->isResponse());
+   response->header(h_SIPETag).value() = mEtag;
    mDum.send(response);
-   if (response.header(h_StatusLine).statusCode() >= 300)
+   if (response->header(h_StatusLine).statusCode() >= 300)
    {
       delete this;
    }
    else
    {
-      mDum.addTimer(DumTimeout::Publication, response.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+      mDum.addTimer(DumTimeout::Publication, response->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
    }
 }
 
