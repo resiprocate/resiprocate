@@ -32,18 +32,6 @@ BaseUsage::~BaseUsage()
 {
 }
 
-void
-BaseUsage::send(SipMessage& msg)
-{
-   if (msg.isRequest())
-   {
-      // give app a chance to adorn the message.
-      onReadyToSend(msg);
-   }
-   
-   mDum.send(msg);
-}
-
 BaseUsageHandle 
 BaseUsage::getBaseHandle()
 {

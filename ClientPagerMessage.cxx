@@ -101,7 +101,7 @@ ClientPagerMessage::~ClientPagerMessage()
 SipMessage&
 ClientPagerMessage::getMessageRequest()
 {
-   return mRequest;
+   return *mRequest;
 }
 
 void
@@ -159,7 +159,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
            {
                Contents* p = contents->contents;
                WarningLog ( << "Paging failed" << *p );
-               Helper::makeResponse(errResponse, mRequest, code);
+               Helper::makeResponse(errResponse, *mRequest, code);
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
                contents->contents = 0;
            }
@@ -193,10 +193,10 @@ void
 ClientPagerMessage::pageFirstMsgQueued ()
 {
    assert(mMsgQueue.empty() == false);
-   mRequest.header(h_CSeq).sequence()++;
-   mRequest.setContents(mMsgQueue.front().contents);
-   DumHelper::setOutgoingEncryptionLevel(mRequest, mMsgQueue.front().encryptionLevel);
-   DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
+   mRequest->header(h_CSeq).sequence()++;
+   mRequest->setContents(mMsgQueue.front().contents);
+   DumHelper::setOutgoingEncryptionLevel(*mRequest, mMsgQueue.front().encryptionLevel);
+   DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << *mRequest);
    mDum.send(mRequest);
 }
 

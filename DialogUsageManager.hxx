@@ -163,58 +163,58 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* ads = 0);
-      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* ads = 0);
-      SipMessage& makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
-      SipMessage& makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
 
       
       //will send a Notify(100)...currently can be decorated through the
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
-      SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
-                                             const SdpContents* initialOffer, AppDialogSet* = 0);
-      SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
-                                             const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                                       const SdpContents* initialOffer, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                                       const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
       
-      SipMessage& makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                   int subscriptionTime, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                   int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, 
-                                   int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
+                                             int subscriptionTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
+                                             int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, 
+                                             int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
 
       //unsolicited refer
-      SipMessage& makeRefer(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
-      SipMessage& makeRefer(const NameAddr& target, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRefer(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRefer(const NameAddr& target, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
-      SipMessage& makePublication(const NameAddr& target, 
-                                  const SharedPtr<UserProfile>& userProfile, 
-                                  const Contents& body, 
-                                  const Data& eventType, 
-                                  unsigned expiresSeconds, 
-                                  AppDialogSet* = 0);
-      SipMessage& makePublication(const NameAddr& target, 
-                                  const Contents& body, 
-                                  const Data& eventType, 
-                                  unsigned expiresSeconds, 
-                                  AppDialogSet* = 0);
+      SharedPtr<SipMessage> makePublication(const NameAddr& target, 
+                                            const SharedPtr<UserProfile>& userProfile, 
+                                            const Contents& body, 
+                                            const Data& eventType, 
+                                            unsigned expiresSeconds, 
+                                            AppDialogSet* = 0);
+      SharedPtr<SipMessage> makePublication(const NameAddr& target, 
+                                            const Contents& body, 
+                                            const Data& eventType, 
+                                            unsigned expiresSeconds, 
+                                            AppDialogSet* = 0);
 
-      SipMessage& makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
-      SipMessage& makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* = 0);
-      SipMessage& makeRegistration(const NameAddr& target, AppDialogSet* = 0);
-      SipMessage& makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* = 0);
 
-      SipMessage& makeOutOfDialogRequest(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* = 0);
-      SipMessage& makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* = 0);
 
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
       
       void end(DialogSetId invSessionId);
-      void send(SipMessage& request);
+      void send(SharedPtr<SipMessage> request);
       //void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
@@ -347,7 +347,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       };
 
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
-      SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
+      SharedPtr<SipMessage> makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
 
       // makes a proto response to a request
       void makeResponse(SipMessage& response, 
@@ -357,7 +357,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // May call a callback to let the app adorn
       void sendResponse(const SipMessage& response);
 
-      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, const SipMessage& msg);
+      void sendUsingOutboundIfAppropriate(UserProfile& userProfile, std::auto_ptr<SipMessage> msg);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
@@ -463,9 +463,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
       ServerSubscriptions mServerSubscriptions;
-
-      typedef std::map<UInt32, EncryptionLevel> InviteSessionEncryptionLevelMap;
-      //InviteSessionEncryptionLevelMap mEncryptionLevels;
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
