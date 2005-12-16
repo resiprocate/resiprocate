@@ -303,9 +303,9 @@ main (int argc, char** argv)
    time_t endTime;
 
    // register client and server
-   SipMessage& clientRegMessage = clientDum.makeRegistration(clientAor);
+   SharedPtr<SipMessage> clientRegMessage = clientDum.makeRegistration(clientAor);
    clientDum.send(clientRegMessage);
-   SipMessage& serverRegMessage = serverDum.makeRegistration(serverAor);
+   SharedPtr<SipMessage> serverRegMessage = serverDum.makeRegistration(serverAor);
    serverDum.send(serverRegMessage);
    state = Registering;
 
