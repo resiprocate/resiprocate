@@ -22,7 +22,7 @@ using namespace std;
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          Dialog& dialog,
-                                         const SipMessage& request,
+                                         SharedPtr<SipMessage> request,
                                          const Contents* initialOffer,
                                          DialogUsageManager::EncryptionLevel level,
                                          ServerSubscriptionHandle serverSub) :
@@ -32,7 +32,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mCancelledTimerSeq(1),
    mServerSub(serverSub)
 {
-   assert(request.isRequest());
+   assert(request->isRequest());
    if(initialOffer)  
    {
       mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
@@ -67,15 +67,15 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
          transition(UAC_SentUpdateEarly);
 
          //  Creates an UPDATE request with application supplied offer.
-         mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
-         InviteSession::setSdp(mLastLocalSessionModification, offer);
+         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
+         InviteSession::setSdp(*mLastLocalSessionModification, offer);
 
          //  Remember proposed local SDP.
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
 
          //  Send the req and do state transition.
-         DumHelper::setOutgoingEncryptionLevel(mLastLocalSessionModification, mProposedEncryptionLevel);
+         DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mProposedEncryptionLevel);
          send(mLastLocalSessionModification);
          break;
       }
@@ -221,12 +221,12 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
       {
          //  Creates an PRACK request with application supplied status code.
          //  !kh! hopefully 488....
-         SipMessage req;
-         mDialog.makeRequest(req, PRACK);
-         req.header(h_StatusLine).statusCode() = statusCode;
+         SharedPtr<SipMessage> req(new SipMessage());
+         mDialog.makeRequest(*req, PRACK);
+         req->header(h_StatusLine).statusCode() = statusCode;
          if(warning)
          {
-            req.header(h_Warnings).push_back(*warning);
+            req->header(h_Warnings).push_back(*warning);
          }
 
          //  Send the req and do state transition.
@@ -412,7 +412,7 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
          if (mServerSub.isValid())
          {
             SipMessage response;
-            mDialog.makeResponse(response, mLastLocalSessionModification, 487);
+            mDialog.makeResponse(response, *mLastLocalSessionModification, 487);
             sendSipFrag(response);
          }
          transition(Terminated);
@@ -459,7 +459,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    // must match
-   if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification.header(h_CSeq).sequence())
+   if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
@@ -542,9 +542,9 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    if ( isReliable(msg) &&
         (mLastReceivedRSeq == -1 || msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
    {
-      SipMessage prack;
-      mDialog.makeRequest(prack, PRACK);
-      prack.header(h_RSeq) = msg.header(h_RSeq);
+      SharedPtr<SipMessage> prack(new SipMessage);
+      mDialog.makeRequest(*prack, PRACK);
+      prack->header(h_RSeq) = msg.header(h_RSeq);
       send(prack);
    }
 }
@@ -555,15 +555,15 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 void
 ClientInviteSession::sendPrack(const SdpContents& sdp)
 {
-   SipMessage prack;
-   mDialog.makeRequest(prack, PRACK);
-   prack.header(h_RSeq).value() = mLastReceivedRSeq;
-   InviteSession::setSdp(prack, sdp);
+   SharedPtr<SipMessage> prack(new SipMessage);
+   mDialog.makeRequest(*prack, PRACK);
+   prack->header(h_RSeq).value() = mLastReceivedRSeq;
+   InviteSession::setSdp(*prack, sdp);
 
    //  Remember last session modification.
    // mLastSessionModification = prack; // ?slg? is this needed?
 
-   DumHelper::setOutgoingEncryptionLevel(prack, mCurrentEncryptionLevel);
+   DumHelper::setOutgoingEncryptionLevel(*prack, mCurrentEncryptionLevel);
    send(prack);
 }
 
@@ -975,10 +975,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On200Prack:
          transition(UAC_SentUpdateEarly);
          {
-            mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
-            InviteSession::setSdp(mLastLocalSessionModification, mProposedLocalSdp.get());
+            mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
+            InviteSession::setSdp(*mLastLocalSessionModification, mProposedLocalSdp.get());
 
-            DumHelper::setOutgoingEncryptionLevel(mLastLocalSessionModification, mProposedEncryptionLevel);
+            DumHelper::setOutgoingEncryptionLevel(*mLastLocalSessionModification, mProposedEncryptionLevel);
             send(mLastLocalSessionModification);
          }
          break;
@@ -988,10 +988,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          {
             sendAck();
 
-            SipMessage update;
-            mDialog.makeRequest(update, UPDATE);
-            InviteSession::setSdp(update, mProposedLocalSdp.get());
-            DumHelper::setOutgoingEncryptionLevel(update, mProposedEncryptionLevel);
+            SharedPtr<SipMessage> update(new SipMessage);
+            mDialog.makeRequest(*update, UPDATE);
+            InviteSession::setSdp(*update, mProposedLocalSdp.get());
+            DumHelper::setOutgoingEncryptionLevel(*update, mProposedEncryptionLevel);
             send(update);
          }
          handleFinalResponse(msg);

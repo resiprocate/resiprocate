@@ -14,9 +14,9 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);
-   mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
-   mLastRequest.header(h_Expires).value() = RegistrationTime;
-   mLastRequest.header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+   mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
+   mLastRequest->header(h_Expires).value() = RegistrationTime;
+   mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
 
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
    // add instance parameter to the contact for gruu !cj! TODO 
