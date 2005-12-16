@@ -2,6 +2,7 @@
 #define RESIP_ENCRYPTIONMANAGER_HXX
 
 #include <memory>
+#include "rutil/SharedPtr.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -41,28 +42,28 @@ class EncryptionManager : public DumFeature
       } Result;
 
       EncryptionManager::Result processCertMessage(CertMessage* cert);
-      Contents* sign(SipMessage* msg, const Data& senderAor, bool* noCerts);
-      Contents* encrypt(SipMessage* msg, const Data& recipientAor, bool* noCerts);
-      Contents* signAndEncrypt(SipMessage* msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
+      Contents* sign(SharedPtr<SipMessage> msg, const Data& senderAor, bool* noCerts);
+      Contents* encrypt(SharedPtr<SipMessage> msg, const Data& recipientAor, bool* noCerts);
+      Contents* signAndEncrypt(SharedPtr<SipMessage> msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
       bool decrypt(SipMessage* msg);
 
       class Request
       {
          public:
-            Request(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, DumFeature& feature);
+            Request(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, DumFeature& feature);
             virtual ~Request();
             virtual Result received(bool success, MessageId::Type type, const Data& aor, const Data& data) = 0;
-            Data getId() const { return mMsg->getTransactionId(); }            
-            void setTaken() { mTaken = true; }
+            Data getId() const { return mMsgToEncrypt->getTransactionId(); }            
+            //void setTaken() { mTaken = true; }
             //void handleInvalidContents(SipMessage*, const Data& originalBody, const Mime& originalType);
-            
+
          protected:
             DialogUsageManager& mDum;
             RemoteCertStore* mStore;
-            SipMessage* mMsg; // initial message.
+            SharedPtr<SipMessage> mMsgToEncrypt; // initial message.
             int mPendingRequests;
             DumFeature& mFeature;
-            bool mTaken;
+            //bool mTaken;
 
             void response415();
       };
@@ -70,7 +71,7 @@ class EncryptionManager : public DumFeature
       class Sign : public Request
       {
          public:
-            Sign(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, const Data& senderAor, DumFeature& feature);
+            Sign(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, const Data& senderAor, DumFeature& feature);
             virtual ~Sign();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool sign(Contents**, bool* noCerts);
@@ -82,7 +83,7 @@ class EncryptionManager : public DumFeature
       class Encrypt : public Request
       {
          public:
-            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, const Data& recipientAor, DumFeature& feature);
+            Encrypt(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, const Data& recipientAor, DumFeature& feature);
             virtual ~Encrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool encrypt(Contents**, bool* noCerts);
@@ -94,7 +95,7 @@ class EncryptionManager : public DumFeature
       class SignAndEncrypt : public Request
       {
          public:
-            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
+            SignAndEncrypt(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg,  const Data& senderAor, const Data& recipientAor, DumFeature& feature);
             ~SignAndEncrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool signAndEncrypt(Contents**, bool* noCerts);
@@ -117,6 +118,7 @@ class EncryptionManager : public DumFeature
             const Mime& getOriginalContentsType() const { return mOriginalMsgContentsType; }
             const Data& getOriginalContents() const { return mOriginalMsgContents; }
             void handleInvalidContents();
+            Data getId() const { return mMsgToDecrypt->getTransactionId(); }
 
          private:
             bool isEncrypted();
@@ -132,7 +134,9 @@ class EncryptionManager : public DumFeature
             Data mOriginalMsgContents;
             Mime mOriginalMsgContentsType;
             bool mIsEncrypted; // the whole body is encrypted in original message.
-      };
+            SipMessage* mMsgToDecrypt; // original messge.
+            bool mMessageTaken;
+ };
 
       std::auto_ptr<RemoteCertStore> mRemoteCertStore;
 

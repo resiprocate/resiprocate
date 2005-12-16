@@ -25,7 +25,6 @@ class BaseUsage : public Handled
       };
 
       virtual void end()=0;
-      virtual void send(SipMessage& request);
       virtual std::ostream& dump(std::ostream& strm) const;
       
    protected:
@@ -34,10 +33,6 @@ class BaseUsage : public Handled
 
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimeout& timer) = 0;
-
-      // any usage that wants to give app a chance to adorn the message
-      // should override this method.
-      virtual void onReadyToSend(SipMessage&) {}
             
       BaseUsageHandle getBaseHandle();
 
