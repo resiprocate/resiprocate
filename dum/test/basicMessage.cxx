@@ -40,7 +40,7 @@ public:
     	cout << "client registered\n";
 	    _registered = true;
     }
-	virtual void onRemoved(ClientRegistrationHandle)
+	virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response)
     {
     	cout << "client regListener::onRemoved\n";
 	    exit(-1);
@@ -88,7 +88,7 @@ public:
     {
     	//cout << "Message rcv: "  << message << "\n";
 	
-	    SipMessage ok = handle->accept();
+	    SharedPtr<SipMessage> ok = handle->accept();
 	    handle->send(ok);
 
 	    Contents *body = message.getContents();
@@ -153,9 +153,9 @@ int main(int argc, char *argv[]) {
 	profile->setDefaultFrom(naFrom);
 	profile->setDigestCredential(realm.c_str(), user.c_str(), passwd.c_str());
 	
-	SipMessage & regMessage = clientDum.makeRegistration(naFrom);
+	SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(naFrom);
 	
-	InfoLog( << regMessage << "Generated register: " << endl << regMessage );
+	InfoLog( << *regMessage << "Generated register: " << endl << *regMessage );
 	clientDum.send( regMessage );
 
 	while(true) // (!cmh->isEnded() || !smh->isRcvd() )

@@ -127,7 +127,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          throw;  // Ungracefully end
       }
 
-      virtual void onRemoved(ClientRegistrationHandle)
+      virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response)
       {
           cout << name << ": ClientRegistration-onRemoved" << endl;
       }
