@@ -4,7 +4,7 @@
 using namespace resip;
 using namespace std;
 
-OutgoingEvent::OutgoingEvent(auto_ptr<SipMessage> msg)
+OutgoingEvent::OutgoingEvent(SharedPtr<SipMessage> msg)
    : mMessage(msg)
 {
 }
@@ -24,17 +24,18 @@ OutgoingEvent::clone() const
    return new OutgoingEvent(*this);
 }
 
-SipMessage*
+SharedPtr<SipMessage>
 OutgoingEvent::message()
 {
-   return mMessage.get();
+   return mMessage;
 }
 
-void
+/*void
 OutgoingEvent::releaseMessage()
 {
    mMessage.release();
 }
+*/
      
 std::ostream&
 OutgoingEvent::encodeBrief(std::ostream& strm) const

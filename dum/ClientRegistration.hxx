@@ -16,7 +16,9 @@ class BaseCreator;
 class ClientRegistration: public NonDialogUsage
 {
    public:
-      ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SipMessage& req);
+      //ClientRegistration(DialogUsageManager& dum, DialogSet& dialog,
+      //SipMessage& req);
+      ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SharedPtr<SipMessage> req);
       ClientRegistrationHandle getHandle();
 
       /** Adds a registration binding, using the registration from the UserProfile */
@@ -77,12 +79,13 @@ class ClientRegistration: public NonDialogUsage
          None // for queued only
       } State;
 
-      SipMessage& tryModification(ClientRegistration::State state);
+      SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
       void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
 
       friend class DialogSet;
 
-      SipMessage& mLastRequest;
+      //SipMessage& mLastRequest;
+      SharedPtr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
       int mTimerSeq; // expected timer seq (all < are stale)
@@ -92,7 +95,7 @@ class ClientRegistration: public NonDialogUsage
       bool mUserRefresh;
       UInt64 mExpires;
       State mQueuedState;
-      SipMessage mQueuedRequest;
+      SharedPtr<SipMessage> mQueuedRequest;
 
       NetworkAssociation mNetworkAssociation;
       

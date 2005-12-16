@@ -13,11 +13,11 @@ class ServerPagerMessage : public NonDialogUsage
       typedef Handle<ServerPagerMessage> ServerPagerMessageHandle;
       ServerPagerMessageHandle getHandle();
 
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
+      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> reject(int statusCode);
 
       virtual void end();
-      virtual void send(SipMessage& msg);
+      virtual void send(SharedPtr<SipMessage> msg);
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
@@ -29,7 +29,7 @@ class ServerPagerMessage : public NonDialogUsage
       ServerPagerMessage(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
       
       SipMessage mRequest;
-      SipMessage mResponse;
+      SharedPtr<SipMessage> mResponse;
 
       // disabled
       ServerPagerMessage(const ServerPagerMessage&);

@@ -45,7 +45,7 @@ ServerAuthManager::process(Message* msg)
             return DumFeature::ChainDoneAndEventDone;            
          default:
             return DumFeature::FeatureDone;            
-            break;
+            //break;
       }
    }
 
@@ -88,8 +88,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    if (userAuth->getA1().empty())
    {
       InfoLog (<< "Account does not exist " << userAuth->getUser() << " in " << userAuth->getRealm());
-      SipMessage response;
-      Helper::makeResponse(response, *requestWithAuth, 404, "Account does not exist.");
+      SharedPtr<SipMessage> response(new SipMessage);
+      Helper::makeResponse(*response, *requestWithAuth, 404, "Account does not exist.");
       mDum.send(response);
       delete requestWithAuth;
       return 0;
@@ -104,8 +104,9 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
                                              userAuth->getA1(),
                                              3000);
 
-      SipMessage response;
-      SipMessage* challenge;
+      SharedPtr<SipMessage> response(new SipMessage);
+      //SipMessage* challenge;
+
       switch (resPair.first) 
       {
          case Helper::Authenticated :
@@ -121,7 +122,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
                InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() << 
                         " trying to forge request from: " << requestWithAuth->header(h_From).uri());
 
-               Helper::makeResponse(response, *requestWithAuth, 403, "Invalid user name provided");
+               Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
                mDum.send(response);
                delete requestWithAuth;
                return 0;
@@ -131,7 +132,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
             InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
 
-            Helper::makeResponse(response, *requestWithAuth, 403, "Invalid password provided");
+            Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
             mDum.send(response);
             delete requestWithAuth;
             return 0;
@@ -139,23 +140,27 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
          case Helper::BadlyFormed :
             InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
 
-            Helper::makeResponse(response, *requestWithAuth, 403, "Invalid nonce");
+            Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
             mDum.send(response);
             delete requestWithAuth;
             return 0;
             break;
          case Helper::Expired :
+         {
             InfoLog (<< "Nonce expired for " << userAuth->getUser());
+            
+            SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*requestWithAuth, 
+                                                                       requestWithAuth->header(h_RequestLine).uri().host(),
+                                                                       useAuthInt(),
+                                                                       true));
 
-            challenge = Helper::makeProxyChallenge(*requestWithAuth, 
-                                                    requestWithAuth->header(h_RequestLine).uri().host(),
-                                                    useAuthInt(),
-                                                    true /*stale*/);
             InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
-            mDum.send(*challenge);
-            delete challenge;
+            mDum.send(challenge);
+            //delete challenge;
             delete requestWithAuth;
             return 0;
+            break;
+         }
          default :
             break;
       }
@@ -194,13 +199,13 @@ ServerAuthManager::handle(SipMessage* sipMsg)
       if (!sipMsg->exists(h_ProxyAuthorizations))
       {
          //assume TransactionUser has matched/repaired a realm
-         SipMessage* challenge = Helper::makeProxyChallenge(*sipMsg, 
-                                                            sipMsg->header(h_RequestLine).uri().host(),
-                                                            useAuthInt(),
-                                                            false /*stale*/);
+         SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*sipMsg, 
+                                                                    sipMsg->header(h_RequestLine).uri().host(),
+                                                                    useAuthInt(),
+                                                                    false /*stale*/));
          InfoLog (<< "Sending challenge to " << sipMsg->brief());
-         mDum.send(*challenge);
-         delete challenge;
+         mDum.send(challenge);
+         //delete challenge;
          return Challenged;
       }
  
@@ -223,16 +228,16 @@ ServerAuthManager::handle(SipMessage* sipMsg)
          }
 
          InfoLog (<< "Didn't find matching realm ");
-         SipMessage response;
-         Helper::makeResponse(response, *sipMsg, 404, "Account does not exist");
+         SharedPtr<SipMessage> response(new SipMessage);
+         Helper::makeResponse(*response, *sipMsg, 404, "Account does not exist");
          mDum.send(response);
          return Rejected;
       }
       catch(BaseException& e)
       {
          InfoLog (<< "Invalid auth header provided " << e);
-         SipMessage response;
-         Helper::makeResponse(response, *sipMsg, 400, "Invalid auth header");
+         SharedPtr<SipMessage> response(new SipMessage);
+         Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
          mDum.send(response);
          return Rejected;
       }
