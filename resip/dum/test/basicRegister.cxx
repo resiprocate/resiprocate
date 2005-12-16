@@ -37,7 +37,7 @@ class ClientHandler : public ClientRegistrationHandler
          h->removeAll();
       }
 
-      virtual void onRemoved(ClientRegistrationHandle)
+      virtual void onRemoved(ClientRegistrationHandle, const SipMessage& response)
       {
          InfoLog ( << "ClientHandler::onRemoved ");
          done = true;
@@ -111,7 +111,7 @@ main (int argc, char** argv)
                                      userAor.uri().user(),
                                      passwd);
 
-   SipMessage & regMessage = clientDum.makeRegistration(userAor);
+   SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
    NameAddr contact;
 
    clientDum.send( regMessage );
