@@ -15,9 +15,9 @@ class BaseCreator
    public:
       BaseCreator(DialogUsageManager& dum, const SharedPtr<UserProfile>& userProfile);
       virtual ~BaseCreator();
-      SipMessage& getLastRequest();
+      SharedPtr<SipMessage> getLastRequest();
       SharedPtr<UserProfile> getUserProfile();
-      const SipMessage& getLastRequest() const;
+      //const SipMessage& getLastRequest() const;
 
    protected:
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
@@ -25,7 +25,7 @@ class BaseCreator
       
       // this will get updated when an initial request is challenged. where we
       // store the credentials and last cseq
-      SipMessage mLastRequest;
+      SharedPtr<SipMessage> mLastRequest;
       DialogUsageManager& mDum;
       SharedPtr<UserProfile> mUserProfile;
 };
