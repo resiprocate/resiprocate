@@ -320,7 +320,7 @@ UserAgent::onFailure(ClientRegistrationHandle h, const SipMessage& response)
 }
 
 void
-UserAgent::onRemoved(ClientRegistrationHandle h)
+UserAgent::onRemoved(ClientRegistrationHandle h, const SipMessage&)
 {
 }
 

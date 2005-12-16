@@ -71,7 +71,7 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
          
          InfoLog( << "ServerPagerMessageHandler::onMessageArrived: " );
 
-         SipMessage ok = handle->accept();
+         SharedPtr<SipMessage> ok = handle->accept();
          handle->send(ok);
 
          _rcvd = true;
@@ -110,7 +110,7 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
          _registered = true;
       }
 
-      virtual void onRemoved(ClientRegistrationHandle)
+      virtual void onRemoved(ClientRegistrationHandle, const SipMessage&)
       {
          InfoLog( << "ClientRegistrationHander::onRemoved\n" );
          exit(-1);
@@ -191,9 +191,9 @@ int main(int argc, char *argv[])
    clientProfile->addSupportedMimeType(MESSAGE, Mime("multipart", "signed"));
    clientDum.setMasterProfile(clientProfile);
 
-   SipMessage& regMessage = clientDum.makeRegistration(userAor);
+   SharedPtr<SipMessage> regMessage = clientDum.makeRegistration(userAor);
 	
-   InfoLog( << regMessage << "Generated register: " << endl << regMessage );
+   InfoLog( << *regMessage << "Generated register: " << endl << *regMessage );
    clientDum.send(regMessage);
 
    int iteration = 0;
