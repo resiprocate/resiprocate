@@ -11,7 +11,7 @@ MergedRequestKey::MergedRequestKey()
 }
 
 MergedRequestKey::MergedRequestKey(const SipMessage& req) : 
-   mRequestUri(Data::from(req.header(h_RequestLine).uri())),
+//   mRequestUri(Data::from(req.header(h_RequestLine).uri())),
    mCSeq(Data::from(req.header(h_CSeq))),
    mTag(req.header(h_From).exists(p_tag) ? req.header(h_From).param(p_tag) : Data::Empty),
    mCallId(req.header(h_CallID).value())
@@ -23,8 +23,9 @@ MergedRequestKey::operator==(const MergedRequestKey& other) const
 {
    return (mCallId == other.mCallId  &&
            mTag == other.mTag &&
-           mCSeq == other.mCSeq &&
-           mRequestUri == other.mRequestUri);
+           mCSeq == other.mCSeq
+//           && mRequestUri == other.mRequestUri
+      );
 }
 
 bool
@@ -54,6 +55,8 @@ MergedRequestKey::operator<(const MergedRequestKey& other) const
       return false;
    }
    
+   return (mCSeq < other.mCSeq);
+#if 0
    if (mCSeq < other.mCSeq)
    {
       return true;
@@ -64,6 +67,7 @@ MergedRequestKey::operator<(const MergedRequestKey& other) const
    }
    
    return (mRequestUri < other.mRequestUri);
+#endif
 }
 
 Data& MergedRequestKey::cseq()
