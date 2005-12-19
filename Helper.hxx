@@ -375,6 +375,9 @@ class Helper
                                             bool useAuth = true,
                                             bool stale = false);
 
+      static bool algorithmAndQopSupported(const Auth& challenge);
+      
+
       // adds authorization headers in reponse to the 401 or 407--currently
       // only supports md5.
       static SipMessage& addAuthorization(SipMessage& request,
@@ -391,6 +394,7 @@ class Helper
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
+
       static Auth makeChallengeResponseAuthWithA1(const SipMessage& request,
                                                   const Data& username,
                                                   const Data& passwordHashA1,
