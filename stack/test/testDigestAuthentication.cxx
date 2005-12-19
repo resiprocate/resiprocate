@@ -31,6 +31,33 @@ int
 main(int arc, char** argv)
 {
    {
+      Auth auth;
+      auth.scheme() = "Digest";
+      Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
+      auth.param(p_nonce) = "askdfjhaslkjhf498hw98hw98hfsf";      
+      auth.param(p_algorithm) = "MD5";
+      auth.param(p_realm) = "example.com";
+      
+      assert(Helper::algorithmAndQopSupported(auth));
+      auth.param(p_algorithm) = "MD5-sess";
+      assert(!Helper::algorithmAndQopSupported(auth));
+      auth.param(p_algorithm) = "monkey";
+      assert(!Helper::algorithmAndQopSupported(auth));
+
+      auth.param(p_algorithm) = "MD5";
+      auth.param(p_qop) = Symbols::auth;
+      assert(Helper::algorithmAndQopSupported(auth));
+
+      auth.param(p_qop) = Symbols::authInt;
+      assert(Helper::algorithmAndQopSupported(auth));
+      
+      auth.param(p_qop) = "monkey";
+      assert(!Helper::algorithmAndQopSupported(auth));
+
+      cerr << "algorithmAndQopSupported passed" << endl;            
+   }
+   
+   {
       assert(Data("").md5() == "d41d8cd98f00b204e9800998ecf8427e");
       assert(Data("a").md5() == "0cc175b9c0f1b6a831c399e269772661");
       assert(Data("abc").md5() == "900150983cd24fb0d6963f7d28e17f72");

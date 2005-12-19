@@ -1235,6 +1235,21 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
    return auth;
 }
    
+//.dcm. all the auth stuff should be yanked out of helper and
+//architected for algorithm independance
+bool 
+Helper::algorithmAndQopSupported(const Auth& challenge)
+{
+   if ( !(challenge.exists(p_nonce) && challenge.exists(p_realm)))
+   {
+      return false;
+   }
+   return (!challenge.exists(p_algorithm) 
+           || isEqualNoCase(challenge.param(p_algorithm), "MD5")
+           && (!challenge.exists(p_qop) 
+               || isEqualNoCase(challenge.param(p_qop), Symbols::auth)
+               || isEqualNoCase(challenge.param(p_qop), Symbols::authInt)));
+}
 
 SipMessage& 
 Helper::addAuthorization(SipMessage& request,
@@ -1348,6 +1363,18 @@ Helper::validateMessage(const SipMessage& message)
    }
    else
    {
+      if (message.isRequest())
+      {
+         try
+         {
+            message.header(h_RequestLine).checkParsed();            
+         }
+         catch(ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Illegal request lineL " << e);
+            return false;            
+         }
+      }
       return true;
    }
 }
