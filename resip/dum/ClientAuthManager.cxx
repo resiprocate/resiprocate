@@ -119,7 +119,8 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
            i != response.header(h_WWWAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(userProfile, *i, it, origRequest, response, false))
+         if (!(Helper::algorithmAndQopSupported(*i)
+               && handleAuthHeader(userProfile, *i, it, origRequest, response, false)))
          {
             it->second.state = Failed;   
             InfoLog (<< "Failed client auth for " << userProfile << endl << response);
@@ -132,7 +133,8 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       for (Auths::const_iterator i = response.header(h_ProxyAuthenticates).begin();  
            i != response.header(h_ProxyAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(userProfile, *i, it, origRequest, response, true))
+         if (!(Helper::algorithmAndQopSupported(*i)
+               &&handleAuthHeader(userProfile, *i, it, origRequest, response, true)))
          {
             it->second.state = Failed;   
             InfoLog (<< "Failed client auth for " << userProfile << endl << response);
@@ -201,24 +203,24 @@ ClientAuthManager::addAuthentication(SipMessage& request)
       {
          authState.cnonceCountString.clear();         
          request.header(h_Authorizations).push_back( Helper::makeChallengeResponseAuth(request,
-                                                                                             it->second.user,
-                                                                                             it->second.password,
-                                                                                             it->first,
-                                                                                             authState.cnonce, 
-                                                                                             authState.cnonceCount,
-                                                                                             authState.cnonceCountString) );
+                                                                                       it->second.user,
+                                                                                       it->second.password,
+                                                                                       it->first,
+                                                                                       authState.cnonce, 
+                                                                                       authState.cnonceCount,
+                                                                                       authState.cnonceCountString) );
       }
       for (AuthState::CredentialMap::iterator it = authState.proxyCredentials.begin(); 
            it != authState.proxyCredentials.end(); it++)
       {
          authState.cnonceCountString.clear();         
          request.header(h_ProxyAuthorizations).push_back(Helper::makeChallengeResponseAuth(request,
-                                                                                                 it->second.user,
-                                                                                                 it->second.password,
-                                                                                                 it->first,
-                                                                                                 authState.cnonce, 
-                                                                                                 authState.cnonceCount,
-                                                                                                 authState.cnonceCountString));
+                                                                                           it->second.user,
+                                                                                           it->second.password,
+                                                                                           it->first,
+                                                                                           authState.cnonce, 
+                                                                                           authState.cnonceCount,
+                                                                                           authState.cnonceCountString));
       }
 
    }
