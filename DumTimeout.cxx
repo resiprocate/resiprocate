@@ -122,7 +122,9 @@ DumTimeout::encode(std::ostream& strm) const
       case WaitingForForked2xx:
          strm <<"WaitingForForked2xx";
          break;
-
+      case SendNextNotify:
+         strm <<"SendNextNotify";
+         break;
    }
    if (mUsageHandle.isValid()) 
    {

@@ -15,13 +15,11 @@ class ClientSubscriptionHandler
   public:
       virtual ~ClientSubscriptionHandler() { }
 
-      virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
-
       //Client must call acceptUpdate or rejectUpdate for any onUpdateFoo
-      virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify)=0;
-      virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;
+      virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder)=0;
+      virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder)=0;
       //unknown Subscription-State value
-      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify)=0;      
+      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder)=0;
 
       virtual int onRequestRetry(ClientSubscriptionHandle, int retrySeconds, const SipMessage& notify)=0;
       
