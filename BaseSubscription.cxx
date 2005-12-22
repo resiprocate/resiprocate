@@ -16,26 +16,21 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    mSubscriptionState(Invalid)
    
 {
-   if (request.header(h_RequestLine).method() == REFER) 
+   if (request.exists(h_Event))
    {
-      mEventType = "refer";
-   }
-   else if (request.header(h_RequestLine).method() == NOTIFY)  // ClientSubscriptions for Refer are created with the first Notify
-   {
-      mEventType = "refer";
-	  mLastRequest->releaseContents();  // Remove the SipFrag - so that reSubscribes do not contain SipFrag
-   }
-   else
-   {
-      //!dcm! should this also include any paramters?
       mEventType = request.header(h_Event).value();
+      if (request.header(h_Event).exists(p_id))
+      {
+         mSubscriptionId = request.header(h_Event).param(p_id);
+      }
+      mLastRequest->header(h_Event) = request.header(h_Event);      
    }
-   
-   if (request.exists(h_Event) && request.header(h_Event).exists(p_id))
+   else if (request.header(h_RequestLine).method() == REFER
+            || request.header(h_RequestLine).method() == NOTIFY) 
    {
-      mSubscriptionId = request.header(h_Event).param(p_id);
+      mEventType = "refer";
+      mLastRequest->header(h_Event).value() = mEventType;      
    }
-
 }
 
 bool
