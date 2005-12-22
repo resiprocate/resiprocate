@@ -52,6 +52,13 @@ GenericLogImpl::Instance()
    }
 }
 
+void 
+GenericLogImpl::reset()
+{
+   delete mLogger;
+   mLogger = 0;
+}
+
 bool
 GenericLogImpl::isLogging(Log::Level level)
 {
