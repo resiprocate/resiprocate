@@ -21,7 +21,7 @@ class LogThread : public ThreadIf
       void thread()
       {
          Log::setThreadSetting(mSetting);
-         while(!waitForShutdown(100))
+         while(!waitForShutdown(1000))
          {
             StackLog(<< mDescription << "  STACK");
             DebugLog(<< mDescription << "  DEBUG");
@@ -90,6 +90,16 @@ main(int argc, char* argv[])
    DebugLog(<<"This should still not appear.");
    InfoLog(<<"This should still appear.");
 
+   InfoLog(<<"Log will now be written to testLoggerOut.txt.");
+
+   Log::initialize(Log::File, Log::Info, argv[0], "testLoggerOut.txt");  
+   InfoLog(<<"This should be in the file");
+   sleep(2);
+   
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
+   InfoLog(<<"This should appear-back to Cout");
+   sleep(2);   
+   
    service1a.shutdown();
    service1b.shutdown();
    service1c.shutdown();

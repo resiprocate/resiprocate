@@ -96,6 +96,8 @@ Log::initialize(Type type, Level level, const Data& appName,
                 const char * logFileName,
                 ExternalLogger* externalLogger)
 {
+   Lock lock(_mutex);
+   GenericLogImpl::reset();   
    string copy(appName.c_str());
    
    _type = type;
