@@ -1769,6 +1769,40 @@ DialogUsageManager::setOutgoingMessageInterceptor(SharedPtr<DumFeature> feat)
    mOutgoingMessageInterceptor = feat;
 }
 
+void
+DialogUsageManager::applyToAllServerSubscriptions(ServerSubscriptionFunctor* functor)
+{
+   assert(functor);
+   for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); ++it)
+   {
+      for (DialogSet::DialogMap::iterator i = it->second->mDialogs.begin(); i != it->second->mDialogs.end(); ++i)
+      {
+         std::vector<ServerSubscriptionHandle> serverSubs = i->second->getServerSubscriptions();
+         for (std::vector<ServerSubscriptionHandle>::iterator iss = serverSubs.begin(); iss != serverSubs.end(); ++iss)
+         {
+            functor->apply(*iss);
+         }
+      }
+   }
+}
+
+void
+DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* functor)
+{
+   assert(functor);
+   for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); ++it)
+   {
+      for (DialogSet::DialogMap::iterator i = it->second->mDialogs.begin(); i != it->second->mDialogs.end(); ++i)
+      {
+         std::vector<ClientSubscriptionHandle> clientSubs = i->second->getClientSubscriptions();
+         for (std::vector<ClientSubscriptionHandle>::iterator ics = clientSubs.begin(); ics != clientSubs.end(); ++ics)
+         {
+            functor->apply(*ics);
+         }
+      }
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
