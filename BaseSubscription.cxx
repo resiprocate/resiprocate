@@ -8,7 +8,7 @@ using namespace resip;
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
    mState(Initial),
-   mLastRequest(new SipMessage(request)),
+   mLastRequest(new SipMessage),
    mLastResponse(new SipMessage),
    mDocumentKey(request.header(h_RequestLine).uri().getAor()),
    mSubscriptionId(Data::Empty),
@@ -27,6 +27,7 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
    }
    else
    {
+      //!dcm! should this also include any paramters?
       mEventType = request.header(h_Event).value();
    }
    
