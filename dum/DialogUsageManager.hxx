@@ -22,6 +22,8 @@
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/dum/DumFeatureMessage.hxx"
 #include "resip/dum/TargetCommand.hxx"
+#include "resip/dum/ClientSubscriptionFunctor.hxx"
+#include "resip/dum/ServerSubscriptionFunctor.hxx"
 
 namespace resip 
 {
@@ -283,6 +285,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
       void internalProcess(std::auto_ptr<Message> msg);
+
+      void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
+      void applyToAllServerSubscriptions(ServerSubscriptionFunctor*);
 
    protected:
       virtual void onAllHandlesDestroyed();      
