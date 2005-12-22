@@ -23,6 +23,7 @@ class LogThread : public ThreadIf
          Log::setThreadSetting(mSetting);
          while(!waitForShutdown(100))
          {
+            StackLog(<< mDescription << "  STACK");
             DebugLog(<< mDescription << "  DEBUG");
             InfoLog(<< mDescription << "  INFO");
          }
@@ -50,7 +51,7 @@ main(int argc, char* argv[])
 {
    CritLog(<< "logging before initializing is ok");
    
-   Log::initialize(Log::Syslog, Log::Info, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");
