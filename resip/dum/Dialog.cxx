@@ -586,40 +586,37 @@ Dialog::dispatch(const SipMessage& msg)
          case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
-            if (code < 300)
+            ClientSubscription* client = findMatchingClientSub(response);
+            if (client)
             {
-               // throw it away
+               client->dispatch(response);
+            }
+            else if (code < 300)
+            {
                return;
             }
             else
             {
-               ClientSubscription* client = findMatchingClientSub(response);
-               if (client)
+               //!dcm! -- can't subscribe in an existing Dialog, this is all
+               //a bit of a hack; currently, spurious failure messages may cause callbacks
+               BaseCreator* creator = mDialogSet.getCreator();
+               if (!creator || !creator->getLastRequest()->exists(h_Event))
                {
-                  client->dispatch(response);
+                  return;
                }
                else
                {
-                  //!dcm! -- can't subscribe in an existing Dialog, this is all
-                  //a bit of a hack; currently, spurious failure messages may cause callbacks
-                  BaseCreator* creator = mDialogSet.getCreator();
-                  if (!creator || !creator->getLastRequest()->exists(h_Event))
+                  ClientSubscriptionHandler* handler =
+                     mDum.getClientSubscriptionHandler(creator->getLastRequest()->header(h_Event).value());
+                  if (handler)
                   {
-                     return;
-                  }
-                  else
-                  {
-                     ClientSubscriptionHandler* handler =
-                        mDum.getClientSubscriptionHandler(creator->getLastRequest()->header(h_Event).value());
-                     if (handler)
-                     {
-                        ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
-                        mClientSubscriptions.push_back(sub);
-                        sub->dispatch(response);
-                     }
+                     ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
+                     mClientSubscriptions.push_back(sub);
+                     sub->dispatch(response);
                   }
                }
             }
+
          }
          break;
          case NOTIFY:

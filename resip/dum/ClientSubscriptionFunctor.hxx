@@ -1,64 +1,18 @@
-#if !defined(RESIP_DUMTIMER_HXX)
-#define RESIP_DUMTIMER_HXX 
+#if !defined(RESIP_CLIENTSUBSCRIPTIONFUNCTOR_HXX)
+#define RESIP_CLIENTSUBSCRIPTIONFUNCTOR_HXX
 
-#include <iosfwd>
-#include "resip/stack/ApplicationMessage.hxx"
-#include "resip/dum/Handles.hxx"
 
-namespace resip
+namespace resip 
 {
 
-class DumTimeout : public ApplicationMessage
+class ClientSubscriptionFunctor
 {
    public:
-      typedef enum
+      virtual ~ClientSubscriptionFunctor() 
       {
-         SessionExpiration,
-         SessionRefresh,
-         Registration,
-         RegistrationRetry,
-         Provisional1,  // ?slg? not used - remove?
-         Provisional2,  // ?slg? not used - remove?
-         Publication,
-         Retransmit200,
-         Retransmit1xx,
-         WaitForAck,    // UAS gets no ACK
-         CanDiscardAck, 
-         StaleCall,     // UAC gets no final response
-         Subscription,
-         SubscriptionRetry,
-         StaleReInvite, // ?slg? not used - remove?  probably should be used
-         Glare,
-         Cancelled,
-         WaitingForForked2xx,
-         SendNextNotify
-      } Type;
-      static const unsigned long StaleCallTimeout;
-
-      DumTimeout(Type type, unsigned long duration, BaseUsageHandle target,  int seq, int aseq = -1);
-      DumTimeout(const DumTimeout&);      
-      ~DumTimeout();
-
-      Message* clone() const;
+      }
       
-      Type type() const;
-      int seq() const;
-      int secondarySeq() const;
-
-      BaseUsageHandle getBaseUsage() const;
-
-      virtual bool isClientTransaction() const;
-      
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
-      
-   private:
-      Type mType;
-      unsigned long mDuration;
-      BaseUsageHandle mUsageHandle;
-      int mSeq;
-      int mSecondarySeq;
-
+      virtual void apply(ClientSubscriptionHandle) = 0;
 };
 
 }
