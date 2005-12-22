@@ -1,6 +1,7 @@
 #if !defined(RESIP_CLIENTSUBSCRIPTION_HXX)
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
+#include <deque>
 #include "resip/dum/BaseSubscription.hxx"
 
 namespace resip
@@ -31,18 +32,46 @@ class ClientSubscription: public BaseSubscription
       virtual ~ClientSubscription();
       virtual void dialogDestroyed(const SipMessage& msg);
       virtual void onReadyToSend(SipMessage& msg);
+      virtual void send(SharedPtr<SipMessage> msg);
 
    private:
       friend class Dialog;
       friend class InviteSession;      
 
+      class QueuedNotify
+      {
+         public:
+            QueuedNotify(const SipMessage& notify, bool outOfOrder)
+               : mNotify(notify), mOutOfOrder(outOfOrder) {}
+
+            SipMessage& notify() { return mNotify; }
+            bool outOfOrder() { return mOutOfOrder; }
+
+         private:
+            SipMessage mNotify;
+            bool mOutOfOrder;
+      };
+
+      typedef std::deque<QueuedNotify*> NotifyQueue;
+      NotifyQueue mQueuedNotifies;
+
       bool mOnNewSubscriptionCalled;
-      SipMessage mLastNotify;      
+      //SipMessage mLastNotify;      
       bool mEnded;
       UInt64 mExpires;
 
+      bool mRefreshing;
+      bool mHaveQueuedRefresh;
+      int mQueuedRefreshInterval;
+
+      int mLargestNotifyCSeq;
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
+      void sendQueuedRefreshRequest();
+      void processNextNotify();
+      void processResponse(const SipMessage& response);
       
       // disabled
       ClientSubscription(const ClientSubscription&);
