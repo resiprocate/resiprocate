@@ -80,8 +80,8 @@ class GenericLogImpl :  public Log
       static std::ostream& Instance();
       static bool isLogging(Log::Level level) ;
       static unsigned int MaxLineCount;
-      static void OutputToWin32DebugWindow(const Data& result);
-
+      static void OutputToWin32DebugWindow(const Data& result);      
+      static void reset(); //removes mLogger
    private:
       static std::ostream* mLogger;
       static unsigned int mLineCount;
