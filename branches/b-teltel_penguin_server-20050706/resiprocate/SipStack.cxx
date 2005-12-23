@@ -311,7 +311,7 @@ SipStack::post(std::auto_ptr<ApplicationMessage> message,
 void
 SipStack::postMS(std::auto_ptr<ApplicationMessage> message, 
                  unsigned int ms, 
-               TransactionUser* tu)
+		 TransactionUser* tu)
 {
    assert(!mShuttingDown);
    if (tu) 
@@ -335,16 +335,19 @@ SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater,
                TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   postMS(message, secondsLater*1000,tu);
+   postMS(message, secondsLater*1000, tu);
 }
 
 void
 SipStack::postMS(const ApplicationMessage& message, unsigned int ms, 
-               TransactionUser* tu)
+		 TransactionUser* tu)
 {
    assert(!mShuttingDown);
    Message* toPost = message.clone();
-   if (tu) toPost->setTransactionUser(tu);
+   if (tu)
+   {
+      toPost->setTransactionUser(tu);
+   }
    Lock lock(mAppTimerMutex);
    mAppTimers.add(Timer(ms, toPost));
 }
