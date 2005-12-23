@@ -10,6 +10,7 @@ class TransactionUser;
 class Message 
 {
    public:
+      Message() : tu(0) {}
       virtual ~Message() {}
       virtual Message* clone() const=0;
 
