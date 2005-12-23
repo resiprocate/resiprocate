@@ -55,6 +55,9 @@ class ClientSubscription: public BaseSubscription
       typedef std::deque<QueuedNotify*> NotifyQueue;
       NotifyQueue mQueuedNotifies;
 
+      typedef std::vector<QueuedNotify*> Dustbin;
+      Dustbin mDustbin;
+
       bool mOnNewSubscriptionCalled;
       //SipMessage mLastNotify;      
       bool mEnded;
@@ -72,6 +75,7 @@ class ClientSubscription: public BaseSubscription
       void sendQueuedRefreshRequest();
       void processNextNotify();
       void processResponse(const SipMessage& response);
+      void clearDustbin();
       
       // disabled
       ClientSubscription(const ClientSubscription&);
