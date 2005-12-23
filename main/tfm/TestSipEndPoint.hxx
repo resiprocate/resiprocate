@@ -362,6 +362,22 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* send202ToSubscribe();
 
+      // 200 to REGISTER
+      class Send200ToRegister : public MessageExpectAction
+      {
+         public:
+            Send200ToRegister(TestSipEndPoint& endPoint, const resip::NameAddr& contact);
+            Send200ToRegister(TestSipEndPoint& endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+
+            TestSipEndPoint& mEndPoint;
+            bool mUseContact;
+            resip::NameAddr mContact;
+      };
+      MessageExpectAction* send200ToRegister(const resip::NameAddr& contact);
+      MessageExpectAction* send200ToRegister();
+
       class Notify : public MessageExpectAction
       {
          public:

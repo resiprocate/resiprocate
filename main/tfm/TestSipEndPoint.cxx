@@ -1263,6 +1263,66 @@ TestSipEndPoint::send202ToSubscribe()
    return new Send202ToSubscribe(*this);
 }
 
+TestSipEndPoint::Send200ToRegister::Send200ToRegister(TestSipEndPoint& endPoint, const NameAddr& contact) :
+   MessageExpectAction(endPoint),
+   mEndPoint(endPoint),
+   mUseContact(true),
+   mContact(contact)
+{}
+
+TestSipEndPoint::Send200ToRegister::Send200ToRegister(TestSipEndPoint& endPoint) :
+   MessageExpectAction(endPoint),
+   mEndPoint(endPoint),
+   mUseContact(false),
+   mContact()
+{}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 200);
+
+   // Contacts has been created, but it is not good, we need to fix it
+   response->remove(h_Contacts);
+
+   // check whether we need to remove bindings
+   bool bExpires = false;
+   if( msg->header(h_Contacts).front().param(p_expires) == 0 )
+      bExpires = true;
+   if( msg->header(h_Expires).value() == 0 )
+      bExpires = true;
+
+   if( !bExpires )
+   {
+      response->header(h_Contacts).push_back(msg->header(h_Contacts).front());
+      response->header(h_Contacts).front().param(p_expires) = 3600;
+   }
+
+   // rport already in Via header, add received
+   response->header(h_Vias).front().param(p_received) = msg->header(h_Contacts).front().uri().host();
+
+   // add rport and received to via
+   if( mUseContact )
+   {
+      response->header(h_Vias).front().param(p_received) = mContact.uri().host();
+      response->header(h_Vias).front().param(p_rport).port() = mContact.uri().port();
+   }
+
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send200ToRegister(const NameAddr& contact)
+{
+   return new Send200ToRegister(*this, contact);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send200ToRegister()
+{
+   return new Send200ToRegister(*this);
+}
+
 TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<resip::Contents> contents, 
                                 const resip::Data& eventPackage, const resip::Data& subscriptionState)
    : MessageExpectAction(endPoint),
