@@ -41,6 +41,8 @@ ClientSubscription::~ClientSubscription()
       delete mQueuedNotifies.front();
       mQueuedNotifies.pop_front();
    }
+
+   clearDustbin();
 }
 
 ClientSubscriptionHandle 
@@ -54,6 +56,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);
+
+   clearDustbin();
 
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
@@ -422,8 +426,10 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    assert(!mQueuedNotifies.empty());
-   std::auto_ptr<QueuedNotify> qn(mQueuedNotifies.front());
+   //std::auto_ptr<QueuedNotify> qn(mQueuedNotifies.front());
+   QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
+   mDustbin.push_back(qn);
    mDialog.makeResponse(*mLastResponse, qn->notify(), statusCode);
    send(mLastResponse);
 }
@@ -451,8 +457,9 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);   
    assert(!mQueuedNotifies.empty());
-   std::auto_ptr<QueuedNotify> qn(mQueuedNotifies.front());
+   QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
+   mDustbin.push_back(qn);
 
    mDialog.makeResponse(*mLastResponse, qn->notify(), statusCode);
    if (!reasonPhrase.empty())
@@ -514,6 +521,18 @@ ClientSubscription::sendQueuedRefreshRequest()
       mHaveQueuedRefresh = false;
       requestRefresh(mQueuedRefreshInterval);
    }
+}
+
+void
+ClientSubscription::clearDustbin()
+{
+   for (Dustbin::iterator it = mDustbin.begin(); it != mDustbin.end(); ++it)
+   {
+      delete *it;
+   }
+
+   mDustbin.clear();
+
 }
 
 /* ====================================================================
