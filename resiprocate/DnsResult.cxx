@@ -776,7 +776,11 @@ DnsResult::retrieveSRV()
       }
    }
    
-   int selected = Random::getRandom() % (mCumulativeWeight+1);
+   int selected;
+   if (mCumulativeWeight > 0)
+      selected = (Random::getRandom() % mCumulativeWeight) + 1 ;
+   else
+      selected = 0;
 
    StackLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
 
