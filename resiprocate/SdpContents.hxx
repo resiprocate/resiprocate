@@ -72,9 +72,17 @@ class SdpContents : public Contents
 
                   static const Codec ULaw_8000;
                   static const Codec ALaw_8000;
+                  static const Codec G722_8000;
+                  static const Codec G723_8000;
+                  static const Codec G728_8000;
                   static const Codec G729_8000;
+                  static const Codec GSM_8000;
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
+                  static const Codec CN;
+
+                  static const Codec H261_90000;
+                  static const Codec H263_90000;
 
                   typedef HashMap<int, Codec> CodecMap;
                   // "static" payload types as defined in RFC 3551.
@@ -356,7 +364,7 @@ class SdpContents : public Contents
                   void addAttribute(const Data& key, const Data& value = Data::Empty);
 
                   const Data& name() const {return mName;}
-                  Data name() {return mName;}
+                  Data& name() {return mName;}
 
                   int port() const {return mPort;}
                   unsigned long& port() {return mPort;}
