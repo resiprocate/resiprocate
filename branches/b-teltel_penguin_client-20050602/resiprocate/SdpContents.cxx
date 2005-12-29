@@ -1773,10 +1773,18 @@ resip::operator<<(ostream& str, const Codec& codec)
 
 const Codec Codec::ULaw_8000("PCMU", 0, 8000);
 const Codec Codec::ALaw_8000("PCMA", 8, 8000);
+const Codec Codec::G722_8000("G722", 9, 8000);
+const Codec Codec::G723_8000("G723", 4, 8000);
+const Codec Codec::G728_8000("G728", 15, 8000);
 const Codec Codec::G729_8000("G729", 18, 8000);
+const Codec Codec::GSM_8000("G729", 3, 8000);
 // !kk! payloadType (2nd arg) should not be clock rate for these two:
 const Codec Codec::TelephoneEvent("telephone-event", 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event", 8000);
+const Codec Codec::CN("CN", 13, 8000);
+
+const Codec Codec::H261_90000("H261", 31, 90000);
+const Codec Codec::H263_90000("H263", 34, 90000);
 
 bool Codec::sStaticCodecsCreated = false;
 Codec::CodecMap* Codec::sStaticCodecs;
