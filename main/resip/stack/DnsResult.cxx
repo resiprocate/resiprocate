@@ -840,7 +840,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
    }
    else
    {
-      StackLog (<< "SRV lookup failed: " << result.status);
+      StackLog (<< "SRV lookup failed: " << result.domain << " " << result.status);
    }
 
    // no outstanding queries 
@@ -1012,11 +1012,11 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
    {
       if (result.status > 6)
       {
-         DebugLog (<< "NAPTR lookup failed: " << result.msg);
+         DebugLog (<< "NAPTR lookup failed: " << result.domain << " " << result.msg);
       }
       else
       {
-         StackLog (<< "NAPTR lookup failed: " << result.msg);
+         StackLog (<< "NAPTR lookup failed: " << result.domain << " " << result.msg);
       }
       bFail = true;
    }

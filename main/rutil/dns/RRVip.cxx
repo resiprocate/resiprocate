@@ -102,7 +102,6 @@ void RRVip::transform(const Data& target,
                       int rrType,
                       std::vector<DnsResourceRecord*>& src)
 {
-   DebugLog(<< "Transform...");
    RRVip::MapKey key(target, rrType);
    TransformMap::iterator it = mTransforms.find(key);
    if (it != mTransforms.end())
