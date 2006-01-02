@@ -347,6 +347,7 @@ DnsStub::Query::~Query()
 void 
 DnsStub::Query::go()
 {
+   StackLog(<< "DnsStub::Query::go: " << mTarget << " type(enum): " << mRRType << " proto: " << mProto);   
    DnsResourceRecordsByPtr records;
    int status = 0;
    bool cached = false;
