@@ -334,40 +334,41 @@ NameAddr::mustQuoteDisplayName() const
    }
    else
    {
-      while (!pb.eof())
-      {
-         const char* start;
-         start = pb.skipWhitespace();
-         pb.skipNonWhitespace();
-		 const char* end = pb.position();
-         for (const char* c = start; c < end; c++)
-         {
-            if ( (*c >= 'a' && *c <= 'z') ||
-                 (*c >= 'A' && *c <= 'Z') ||
-                 (*c >= '0' && *c <= '9'))
-            {
-               continue;
-            }
-            switch(*c)
-            {
-               case '-':
-               case '.':
-               case '!':
-               case '%':
-               case '*':
-               case '_':
-               case '+':
-               case '`':
-               case '\'':
-               case '~':
-                  break;
-               default:
-                  return true;
-            }
-         }
-      }
+      return true; // !NASH! always quote
+      //while (!pb.eof())
+      //{
+      //   const char* start;
+      //   start = pb.skipWhitespace();
+      //   pb.skipNonWhitespace();
+      //   const char* end = pb.position();
+      //   for (const char* c = start; c < end; c++)
+      //   {
+      //      if ( (*c >= 'a' && *c <= 'z') ||
+      //           (*c >= 'A' && *c <= 'Z') ||
+      //           (*c >= '0' && *c <= '9'))
+      //      {
+      //         continue;
+      //      }
+      //      switch(*c)
+      //      {
+      //         case '-':
+      //         case '.':
+      //         case '!':
+      //         case '%':
+      //         case '*':
+      //         case '_':
+      //         case '+':
+      //         case '`':
+      //         case '\'':
+      //         case '~':
+      //            break;
+      //         default:
+      //            return true;
+      //      }
+      //   }
+      //}
    }
-   return false;
+   //return false;
 }
 
 /* ====================================================================
