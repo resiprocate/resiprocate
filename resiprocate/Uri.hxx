@@ -56,6 +56,8 @@ class Uri : public ParserCategory
       void parseEmbeddedHeaders(ParseBuffer& pb);
       std::ostream& encodeEmbeddedHeaders(std::ostream& str) const;
 
+      Data toString() const;
+
       Uri& operator=(const Uri& rhs);
       bool operator==(const Uri& other) const;
       bool operator!=(const Uri& other) const;
