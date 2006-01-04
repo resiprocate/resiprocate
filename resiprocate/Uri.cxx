@@ -1008,6 +1008,63 @@ size_t std::hash_value(const resip::Uri& v)
 }
 #endif
 
+Data 
+Uri::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encodeParsed(dataStream);
+   }
+   return out;
+//   Data out;
+//   checkParsed();
+//   out += mScheme;
+//   if (!mUser.empty())
+//   {
+//#ifdef HANDLE_CHARACTER_ESCAPING
+//      mUser.escapeToStream(str, shoudEscapeUserChar); 
+//#else
+//      out += mUser;
+//#endif
+//      if (!mUserParameters.empty())
+//      {
+//         out +=  Symbols::SEMI_COLON[0];
+//         out +=  mUserParameters;
+//      }
+//      if (!mPassword.empty())
+//      {
+//         out += Symbols::COLON;
+//#ifdef HANDLE_CHARACTER_ESCAPING
+//         mPassword.escapeToStream(str, shouldEscapePasswordChar);
+//#else
+//         out += mPassword;
+//#endif
+//      }
+//   }
+//   if (!mHost.empty())
+//   {
+//     if (!mUser.empty())
+//     {
+//       out += Symbols::AT_SIGN;
+//     }
+//     if (DnsUtil::isIpV6Address(mHost))
+//     {
+//        out += '[' << mHost << ']';
+//     }
+//     else
+//     {
+//        out +=  mHost;
+//     }
+//   }
+//   if (mPort != 0)
+//   {
+//      out += Symbols::COLON;
+//      out += mPort;
+//   }
+//   return out;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
