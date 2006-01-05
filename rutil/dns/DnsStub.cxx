@@ -2,14 +2,18 @@
 #include "rutil/config.hxx"
 #endif
 
+//	WINCE -- stl headers have to be defined before standard c headers because of 
+//	MS non-consistent declaration of time_t. we defined _USE_32BIT_TIME_T
+//	in all projects and that solved the issue with beta compiler, however 
+//	release version messes time_t definition again
+#include <set>
+#include <vector>
+#include <cassert>
+
 #if defined(USE_ARES)
 #include "ares.h"
 #include "ares_dns.h"
 #endif
-
-#include <set>
-#include <vector>
-#include <cassert>
 
 #ifndef WIN32
 #ifndef __CYGWIN__

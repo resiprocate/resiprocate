@@ -97,13 +97,17 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 	{
 		HKEY hKey;  
 		char hostpath[256];
-		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
 		{
 			DWORD dwSize = sizeof(hostpath);
-			if(RegQueryValueEx(hKey, "DatabasePath", 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
+      if(RegQueryValueEx(hKey, TEXT("DatabasePath"), 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
 			{
 				hostpath[dwSize] = '\0';
+#if defined(UNDER_CE)
+			ZeroMemory(hostpath,strlen(hostpath)*sizeof(TCHAR));
+#else
 				ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
+#endif
 				if(strlen(w32hostspath) < sizeof(w32hostspath) - 6) 
 				{
 					strcat(w32hostspath, "\\hosts");
@@ -273,7 +277,11 @@ static int init_by_environment(ares_channel channel)
   const char *localdomain, *res_options;
   int status;
 
+#if defined(UNDER_CE)
+  localdomain = NULL;
+#else
   localdomain = getenv("LOCALDOMAIN");
+#endif
   if (localdomain && channel->ndomains == -1)
     {
       status = set_search(channel, localdomain);
@@ -281,7 +289,11 @@ static int init_by_environment(ares_channel channel)
 	return status;
     }
 
+#if defined(UNDER_CE)
+  res_options = NULL;
+#else
   res_options = getenv("RES_OPTIONS");
+#endif
   if (res_options)
     {
       status = set_options(channel, res_options);
@@ -301,6 +313,9 @@ static int init_by_resolv_conf(ares_channel channel)
   struct apattern *sortlist = NULL;
 
   fp = fopen(PATH_RESOLV_CONF, "r");
+#if defined(UNDER_CE)
+  errno = ENOENT;
+#endif
   if (!fp)
     return (errno == ENOENT) ? ARES_SUCCESS : ARES_EFILE;
   while ((status = ares__read_line(fp, &line, &linesize)) == ARES_SUCCESS)
@@ -381,13 +396,13 @@ static int init_by_defaults(ares_channel channel)
 	  int num;
 	  DWORD (WINAPI *GetNetworkParams)(FIXED_INFO*, DWORD*); 
 
-	  hLib = LoadLibraryA("iphlpapi.dll");
+	  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
 	  if(!hLib)
 	  {
 		  return ARES_ENOTIMP;
 	  }
 
-	  (void*)GetNetworkParams = GetProcAddress(hLib, "GetNetworkParams");
+	  (void*)GetNetworkParams = GetProcAddress(hLib, TEXT("GetNetworkParams"));
 	  if(!GetNetworkParams)
 	  {
 		  FreeLibrary(hLib);
