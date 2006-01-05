@@ -58,11 +58,6 @@ extern "C" char* __cdecl strerror(int errnum)
 	return "Unknown error";
 }
 
-time_t time(time_t* t)
-{
-	return resip::time(t);
-}
-
 //.dcm. wincece lacks this function(actually no time.h)--could port from BSD
 // size_t __cdecl strftime (
 //         char *string,

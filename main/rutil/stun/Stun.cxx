@@ -780,6 +780,7 @@ stunRand()
       UInt64 tick;
 		
 #if defined(WIN32) 
+#ifndef UNDER_CE
       volatile unsigned int lowtick=0,hightick=0;
       __asm
          {
@@ -790,6 +791,9 @@ stunRand()
       tick = hightick;
       tick <<= 32;
       tick |= lowtick;
+#else
+	  tick = GetTickCount();
+#endif
 #elif defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) || defined(__x86_64__) )
       asm("rdtsc" : "=A" (tick));
 #elif defined (__SUNPRO_CC) || defined( __sparc__ )	
