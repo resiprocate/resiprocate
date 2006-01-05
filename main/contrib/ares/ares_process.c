@@ -167,7 +167,11 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 	{
 	  /* Can't allocate iovecs; just send the first request. */
 	  sendreq = server->qhead;
+#ifndef UNDER_CE
 	  count = write(server->tcp_socket, sendreq->data, sendreq->len);
+#else
+          count = send(server->tcp_socket, sendreq->data, sendreq->len,0);
+#endif
 	  if (count < 0)
 	    {
 	      handle_error(channel, i, now);
@@ -212,9 +216,15 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
 	  /* We haven't yet read a length word, so read that (or
 	   * what's left to read of it).
 	   */
+#ifndef UNDER_CE
 	  count = read(server->tcp_socket,
 		       server->tcp_lenbuf + server->tcp_lenbuf_pos,
 		       2 - server->tcp_lenbuf_pos);
+#else
+	  count = recv(server->tcp_socket,
+                       server->tcp_lenbuf + server->tcp_lenbuf_pos,
+                       2 - server->tcp_lenbuf_pos,0);
+#endif
 	  if (count <= 0)
 	    {
 	      handle_error(channel, i, now);
@@ -238,9 +248,16 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
       else
 	{
 	  /* Read data into the allocated buffer. */
+#ifndef UNDER_CE
 	  count = read(server->tcp_socket,
 		       server->tcp_buffer + server->tcp_buffer_pos,
 		       server->tcp_length - server->tcp_buffer_pos);
+#else
+	  count = recv(server->tcp_socket,
+		       server->tcp_buffer + server->tcp_buffer_pos,
+		       server->tcp_length - server->tcp_buffer_pos,0);
+#endif
+
 	  if (count <= 0)
 	    {
 	      handle_error(channel, i, now);
@@ -423,7 +440,7 @@ static void next_server(ares_channel channel, struct query *query, time_t now)
 {
   /* Advance to the next server or try. */
   query->server++;
-  for (; query->try < channel->tries; query->try++)
+  for (; query->itry < channel->tries; query->itry++)
     {
       for (; query->server < channel->nservers; query->server++)
 	{
@@ -493,8 +510,8 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  return;
 	}
       query->timeout = now
-	  + ((query->try == 0) ? channel->timeout
-	     : channel->timeout << query->try / channel->nservers);
+	  + ((query->itry == 0) ? channel->timeout
+	     : channel->timeout << query->itry / channel->nservers);
     }
 }
 

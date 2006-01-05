@@ -216,7 +216,11 @@ static int single_domain(ares_channel channel, const char *name, char **s)
   if (!(channel->flags & ARES_FLAG_NOALIASES) && !strchr(name, '.'))
     {
       /* The name might be a host alias. */
+#ifdef UNDER_CE
+		hostaliases = NULL;
+#else
       hostaliases = getenv("HOSTALIASES");
+#endif
       if (hostaliases)
 	{
 	  fp = fopen(hostaliases, "r");

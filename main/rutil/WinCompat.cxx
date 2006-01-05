@@ -10,7 +10,6 @@
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-
 using namespace resip;
 
 class WinCompatInstanceCleaner
@@ -28,6 +27,9 @@ WinCompat::Exception::Exception(const Data& msg, const Data& file, const int lin
 WinCompat::Version
 WinCompat::getVersion()
 {
+#ifdef UNDER_CE
+#define OSVERSIONINFOEX OSVERSIONINFO
+#endif
    OSVERSIONINFOEX osvi;
    BOOL bOsVersionInfoEx;
 
@@ -135,7 +137,7 @@ WinCompat::WinCompat() :
    //        library. (SLG)
 #if !defined (NO_IPHLPAPI)
    // check to see if the GetAdaptersAddresses() is in the IPHLPAPI library
-   hLib = LoadLibraryA("iphlpapi.dll");
+   HINSTANCE hLib = LoadLibrary(TEXT("iphlpapi.dll"));
    if (hLib == NULL)
    {
       loadLibraryWithIPv6Failed = true;
@@ -143,9 +145,9 @@ WinCompat::WinCompat() :
       return;
    }
 
-   getBestInterfaceEx = (GetBestInterfaceExProc) GetProcAddress(hLib, "GetBestInterfaceEx");
-   getAdaptersAddresses = (GetAdaptersAddressesProc) GetProcAddress(hLib, "GetAdaptersAddresses");
-   getAdaptersInfo = (GetAdaptersInfoProc) GetProcAddress(hLib, "GetAdaptersInfo");
+   getBestInterfaceEx = (GetBestInterfaceExProc) GetProcAddress(hLib, TEXT("GetBestInterfaceEx"));
+   getAdaptersAddresses = (GetAdaptersAddressesProc) GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
+   getAdaptersInfo = (GetAdaptersInfoProc) GetProcAddress(hLib, TEXT("GetAdaptersInfo"));
    if (getAdaptersAddresses == NULL || getBestInterfaceEx == NULL)
    {   
       loadLibraryWithIPv6Failed = true;
