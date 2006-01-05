@@ -39,10 +39,9 @@ StrictRouteFixup::process(RequestContext& context)
    if (request.exists(h_Routes) &&
        !request.header(h_Routes).empty())
    {
-      // remove all the candidate targets we may have and 
-      // just use the Request URI in the message as the only
-      // candidate
-      assert(context.getCandidates().empty());
+      //Will cancel any active transactions (ideally there should be none)
+      //and terminate any pending transactions.
+      context.getResponseContext().cancelAllClientTransactions();
       context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
       return Processor::SkipThisChain;
    }

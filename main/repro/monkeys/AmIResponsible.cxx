@@ -37,7 +37,6 @@ AmIResponsible::process(RequestContext& context)
    if (!request.exists(h_Routes) || 
        request.header(h_Routes).empty())
    {
-      assert(context.getCandidates().empty());
       // !RjS! - Jason - check the RURI to see if the domain is
       // something this request is responsible for. If yes, then
       // just return Continue. If no make this call below.

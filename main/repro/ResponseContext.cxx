@@ -30,95 +30,286 @@ ResponseContext::ResponseContext(RequestContext& context) :
 
 }
 
-void 
-ResponseContext::sendRequest(const resip::SipMessage& request)
+
+bool
+ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 {
-   assert (request.isRequest());
-   mRequestContext.mProxy.send(request);
-   if (request.header(h_RequestLine).method() != CANCEL && 
-       request.header(h_RequestLine).method() != ACK)
+   //Disallow sip: if secure
+   if(mSecure && target.uri().scheme() != Symbols::Sips)
    {
-      mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
-      mRequestContext.mTransactionCount++;
+      return false;
+   }
+   
+   
+   //Make sure we don't have Targets with an invalid initial state.
+   if(target.status() != Target::Pending)
+   {
+      return false;
+   }
+   
+   std::list<resip::Uri>::const_iterator i;
+   // make sure each target is only inserted once
+
+   // !bwc! We can not optimize this by using stl, because operator
+   // == does not conform to the partial-ordering established by operator
+   // <  (We can very easily have a < b and a==b simultaneously).
+   // [TODO] Once we have a canonicalized form, we can improve this.
+
+   for(i=mTargetList.begin();i!=mTargetList.end();i++)
+   {
+      if(*i==target.uri())
+      {
+         return false;
+      }
    }
 
-   if (request.header(h_RequestLine).method() == ACK)
+   mTargetList.push_back(target.uri());
+   
+   
+   if(beginImmediately)
    {
-     DebugLog(<<"Posting Ack200DoneMessage");
-     static Data ack("ack");
-     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()+ack));
+      beginClientTransaction(target);
+      target.status()=Target::Trying;
+      mActiveTransactionMap[target.tid()]=target;
    }
+   else
+   {
+      mPendingTransactionMap[target.tid()]=target;
+   }
+   
+   return true;
+   
 }
 
-void
-ResponseContext::processCandidates()
+
+bool 
+ResponseContext::beginClientTransactions()
 {
-   bool added=false;
-   while (!mRequestContext.getCandidates().empty())
+   if(mPendingTransactionMap.empty())
    {
-      // purpose of this code is to copy the Uri from the candidate and to only
-      // take the q value parameter from the candidate. 
-      
-      NameAddr& candidate = mRequestContext.getCandidates().back();
-      InfoLog (<< "Considering " << candidate);
-      Uri target(candidate.uri());
-      bool present=false;
-      
-      std::list<resip::Uri>::const_iterator i;
-      // make sure each target is only inserted once
-
-      // !bwc! We can not optimize this by using stl, because operator
-      // == does not conform to the partial-ordering established by operator
-      // <  (We can very easily have a < b and a==b simultaneously).
-      // We are not allowed to use another operator to test for equality
-      // either, since we should be adhering to spec.
-      for(i=mTargetList.begin();i!=mTargetList.end();++i)
-      {
-         if(target==*i)
-         {
-            present=true;
-            break;
-         }
-      }
-
-      if (mSecure && target.scheme() == Symbols::Sips || !mSecure)
-      {
-         // !jf!
-         // This is where we need to run the target ProcessorChain - it needs a
-         // different interface from request and response processors
-         if (!present)
-         {
-            added = true;
-            NameAddr pending(target);
-            pending.param(p_q) = candidate.param(p_q);
-               
-            mPendingTargetSet.insert(pending);
-            InfoLog (<< "Added " << pending);
-         }
-      }
-      mRequestContext.getCandidates().pop_back();
+      return false;
    }
-
-   if (added)
+   
+   for (TransactionMap::iterator i=mPendingTransactionMap.begin(); i != mPendingTransactionMap.end(); )
    {
-      //InfoLog (<< *this);
-      processPendingTargets();
-   }
-}
-
-void
-ResponseContext::processPendingTargets()
-{
-   for (PendingTargetSet::iterator i=mPendingTargetSet.begin(); i != mPendingTargetSet.end(); )
-   {
+      beginClientTransaction(i->second);
       // see rfc 3261 section 16.6
+      //This code moves the Target from mPendingTransactionMap to mActiveTransactionMap,
+      //and begins the transaction.
+      mActiveTransactionMap[i->second.tid()] = i->second;
+      InfoLog (<< "Creating new client transaction " << i->second.tid() << " -> " << i->second.uri());
+      
+      TransactionMap::iterator temp=i;
+      i++;
+      mPendingTransactionMap.erase(temp);
+   }
+   
+   return true;
+
+}
+
+
+bool 
+ResponseContext::beginClientTransaction(const resip::Data& tid)
+{
+   TransactionMap::iterator i = mPendingTransactionMap.find(tid);
+   if(i==mPendingTransactionMap.end())
+   {
+      return false;
+   }
+   
+   beginClientTransaction(i->second);
+   mActiveTransactionMap[i->second.tid()] = i->second;
+   InfoLog(<< "Creating new client transaction " << i->second.tid() << " -> " << i->second.uri());
+   mPendingTransactionMap.erase(i);
+   
+   return true;
+}
+
+
+bool 
+ResponseContext::cancelActiveClientTransactions()
+{
+   InfoLog (<< "Cancel all proceeding client transactions: " << (mPendingTransactionMap.size() + 
+            mActiveTransactionMap.size()));
+
+   if(mActiveTransactionMap.empty())
+   {
+      return false;
+   }
+
+   // CANCEL INVITE branches
+   for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
+        i != mActiveTransactionMap.end(); ++i)
+   {
+      cancelClientTransaction(i->second);
+   }
+      
+   return true;
+
+}
+
+bool
+ResponseContext::cancelAllClientTransactions()
+{
+   InfoLog (<< "Cancel ALL client transactions: " << (mPendingTransactionMap.size() + 
+            mActiveTransactionMap.size()));
+
+   if(mActiveTransactionMap.empty())
+   {
+      return false;
+   }
+
+   // CANCEL INVITE branches
+   for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
+        i != mActiveTransactionMap.end(); ++i)
+   {
+      cancelClientTransaction(i->second);
+   }
+
+   for (TransactionMap::iterator j = mPendingTransactionMap.begin(); 
+        j != mPendingTransactionMap.end(); ++j)
+   {
+      cancelClientTransaction(j->second);
+      mTerminatedTransactionMap[j->second.tid()] = j->second;
+      TransactionMap::iterator temp = j;
+      j++;
+      mPendingTransactionMap.erase(temp);
+   }
+   
+   return true;
+
+}
+
+
+bool 
+ResponseContext::cancelClientTransaction(const resip::Data& tid)
+{
+   TransactionMap::iterator i = mActiveTransactionMap.find(tid);
+   if(i!=mActiveTransactionMap.end())
+   {
+      cancelClientTransaction(i->second);      
+      return true;
+   }
+   
+   TransactionMap::iterator j = mPendingTransactionMap.find(tid);
+   if(j != mPendingTransactionMap.end())
+   {
+      cancelClientTransaction(j->second);
+      mTerminatedTransactionMap[tid] = j->second;
+      mPendingTransactionMap.erase(j);
+      return true;
+   }
+   
+   return false;
+}
+
+
+Target::Status 
+ResponseContext::getStatus(const resip::Data& tid)
+{
+
+   TransactionMap::iterator act = mActiveTransactionMap.find(tid);
+   if(act != mActiveTransactionMap.end())
+   {
+      assert(!(act->second.status()==Target::Pending || act->second.status()==Target::Terminated));
+      return act->second.status();
+   }
+
+   TransactionMap::iterator term = mTerminatedTransactionMap.find(tid);
+   if(term != mTerminatedTransactionMap.end())
+   {
+      assert(term->second.status()==Target::Terminated);
+      return Target::Terminated;
+   }
+
+   TransactionMap::iterator pend = mPendingTransactionMap.find(tid);
+   if(pend != mPendingTransactionMap.end())
+   {
+      assert(pend->second.status()==Target::Pending);
+      return Target::Pending;
+   }
+   
+
+   return Target::NonExistent;
+}
+
+
+const ResponseContext::TransactionMap& 
+ResponseContext::getPendingTransactionMap() const
+{
+   return mPendingTransactionMap;
+}
+
+
+
+bool 
+ResponseContext::hasPendingTransactions()
+{
+   return !mPendingTransactionMap.empty();
+}
+
+
+bool 
+ResponseContext::hasActiveTransactions()
+{
+   return !mActiveTransactionMap.empty();
+}
+
+
+bool 
+ResponseContext::hasTerminatedTransactions()
+{
+   return !mTerminatedTransactionMap.empty();
+}
+
+
+bool 
+ResponseContext::areAllTransactionsTerminated()
+{
+   return (mPendingTransactionMap.empty() && mActiveTransactionMap.empty());
+}
+
+
+const std::list<resip::Uri>&
+ResponseContext::getTargetList() const
+{
+   return mTargetList;
+}
+
+void 
+ResponseContext::removeClientTransaction(const resip::Data& transactionId)
+{
+   //This tid will most likely be found in the map of terminated transactions,
+   //under normal circumstances.
+   if(mTerminatedTransactionMap.erase(transactionId))
+   {
+      return;
+   }
+
+   if(mPendingTransactionMap.erase(transactionId))
+   {
+      return;
+   }
+   
+   if(mActiveTransactionMap.erase(transactionId))
+   {
+      WarningLog(<< "Something removed an active transaction, " << transactionId
+               << ". It is very likely that something is broken here. ");
+      return;
+   }
+      
+}
+ 
+
+void
+ResponseContext::beginClientTransaction(repro::Target& target)
+{
+
       SipMessage request(mRequestContext.getOriginalRequest());
 
-      Branch branch;
-      branch.status = Trying;
-      branch.uri = i->uri();
       
-      request.header(h_RequestLine).uri() = branch.uri; 
+      request.header(h_RequestLine).uri() = target.uri(); 
 
       if (request.exists(h_MaxForwards))
       {
@@ -188,7 +379,10 @@ ResponseContext::processPendingTargets()
       // insert loose routes on the way to the next hop
       
       Helper::processStrictRoute(request);
-      request.header(h_Vias).push_front(branch.via);
+      
+      //This is where the request acquires the tid of the Target. The tids 
+      //should be the same from here on out.
+      request.header(h_Vias).push_front(target.via());
 
       if (mRequestContext.mTargetConnectionId != 0)
       {
@@ -207,15 +401,33 @@ ResponseContext::processPendingTargets()
       // - determining the next hop (tuple)
       // - adding a content-length if needed
       // - sending the request
-      mClientTransactions[request.getTransactionId()] = branch;
-      InfoLog (<< "Creating new client transaction " << request.getTransactionId() << " -> " << branch.uri);
-      sendRequest(request);
-      
-      PendingTargetSet::iterator temp=i;
-      i++;
-      mPendingTargetSet.erase(temp);
+      sendRequest(request); 
+
+      target.status() = Target::Trying;
+
+}
+
+
+void 
+ResponseContext::sendRequest(const resip::SipMessage& request)
+{
+   assert (request.isRequest());
+   mRequestContext.mProxy.send(request);
+   if (request.header(h_RequestLine).method() != CANCEL && 
+       request.header(h_RequestLine).method() != ACK)
+   {
+      mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
+      mRequestContext.mTransactionCount++;
+   }
+
+   if (request.header(h_RequestLine).method() == ACK)
+   {
+     DebugLog(<<"Posting Ack200DoneMessage");
+     static Data ack("ack");
+     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()+ack));
    }
 }
+
 
 void
 ResponseContext::processCancel(const SipMessage& request)
@@ -228,7 +440,7 @@ ResponseContext::processCancel(const SipMessage& request)
 
    if (!mForwardedFinalResponse)
    {
-      cancelProceedingClientTransactions();
+      cancelAllClientTransactions();
    }
 }
 
@@ -238,7 +450,7 @@ ResponseContext::processTimerC()
    if (!mForwardedFinalResponse)
    {
       InfoLog(<<"Canceling client transactions due to timer C.");
-      cancelProceedingClientTransactions();
+      cancelAllClientTransactions();
    }
 }
 
@@ -273,24 +485,31 @@ ResponseContext::processResponse(SipMessage& response)
    {
       case 1:
          mRequestContext.updateTimerC();
+
          if  (code > 100 && !mForwardedFinalResponse)
          {
             mRequestContext.sendResponse(response);
          }
          
          {
-            InfoLog (<< "Search for " << transactionId << " in " << Inserter(mClientTransactions));
+            InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
             
-            TransactionMap::iterator i = mClientTransactions.find(transactionId);
-            assert (i != mClientTransactions.end());
-            if (i->second.status == WaitingToCancel)
+            TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
+            if (i == mActiveTransactionMap.end())
             {
-               cancelClientTransaction(i->second);
-               i->second.status = Terminated;
+               return;//Response isn't for an active transaction, drop on floor
             }
-            else if(i->second.status != Terminated)
+            if (i->second.status() == Target::WaitingToCancel)
             {
-               i->second.status = Proceeding;
+               DebugLog(<< "Canceling a transaction with uri: " 
+                        << resip::Data::from(i->second.uri()) << " , to host: " 
+                        << i->second.via().sentHost());
+               cancelClientTransaction(i->second);
+               i->second.status() = Target::Terminated;
+            }
+            else if(i->second.status() != Target::Terminated)
+            {
+               i->second.status() =  Target::Proceeding ;
             }
          }
          break;
@@ -299,7 +518,7 @@ ResponseContext::processResponse(SipMessage& response)
          terminateClientTransaction(transactionId);
          if (response.header(h_CSeq).method() == INVITE)
          {
-            cancelProceedingClientTransactions();
+            cancelAllClientTransactions();
             mForwardedFinalResponse = true;
             mRequestContext.sendResponse(response);
          }
@@ -314,7 +533,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 4:
       case 5:
          DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
-                   << " outstanding client transactions: " << Inserter(mClientTransactions));
+                   << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
          terminateClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
@@ -387,7 +606,7 @@ ResponseContext::processResponse(SipMessage& response)
                if (response.header(h_CSeq).method() == INVITE)
                {
                   // CANCEL INVITE branches
-                  cancelProceedingClientTransactions();
+                  cancelAllClientTransactions();
                }
             }
             
@@ -406,89 +625,68 @@ ResponseContext::processResponse(SipMessage& response)
 }
 
 void
-ResponseContext::cancelClientTransaction(Branch& branch)
+ResponseContext::cancelClientTransaction(repro::Target& target)
 {
-   if (branch.status == Proceeding)
+   if (target.status() == Target::Proceeding)
    {
-      InfoLog (<< "Cancel client transaction: " << branch);
+      InfoLog (<< "Cancel client transaction: " << target);
       
       SipMessage request(mRequestContext.getOriginalRequest());
-      request.header(h_Vias).push_front(branch.via);
-      request.header(h_RequestLine).uri() = branch.uri;
+      request.header(h_Vias).push_front(target.via());
+      request.header(h_RequestLine).uri() = target.uri();
       
       std::auto_ptr<SipMessage> cancel(Helper::makeCancel(request));
       sendRequest(*cancel);
 
-      branch.status = Terminated;
+      DebugLog(<< "Canceling a transaction with uri: " 
+               << resip::Data::from(target.uri()) << " , to host: " 
+               << target.via().sentHost());
+      target.status() = Target::Terminated;
    }
-   else if (branch.status == Trying)
+   else if (target.status() == Target::Trying)
    {
-      branch.status = WaitingToCancel;
+      target.status() = Target::WaitingToCancel;
+      DebugLog(<< "Setting transaction status to "
+               << "WaitingToCancel with uri: " 
+               << resip::Data::from(target.uri()) << " , to host: " 
+               << target.via().sentHost());
+
+   }
+   else if (target.status() == Target::Pending)
+   {
+      target.status() = Target::Terminated;
    }
 
 }
 
-void
-ResponseContext::cancelProceedingClientTransactions()
+void 
+ResponseContext::terminateClientTransaction(const resip::Data& tid)
 {
-   InfoLog (<< "Cancel all proceeding client transactions: " << mClientTransactions.size());
 
-   // CANCEL INVITE branches
-   for (TransactionMap::iterator i = mClientTransactions.begin(); 
-        i != mClientTransactions.end(); ++i)
+   InfoLog (<< "Terminating client transaction: " << tid << " all = " << areAllTransactionsTerminated());
+
+   TransactionMap::iterator i = mActiveTransactionMap.find(tid);
+   if(i != mActiveTransactionMap.end())
    {
-      cancelClientTransaction(i->second);
+      InfoLog (<< "client transactions: " << Inserter(mActiveTransactionMap));
+      i->second.status() = Target::Terminated;
+      mTerminatedTransactionMap[tid] = i->second;
+      mActiveTransactionMap.erase(i);
+      return;
    }
+   
+   TransactionMap::iterator j = mPendingTransactionMap.find(tid);
+   if(j != mPendingTransactionMap.end())
+   {
+      InfoLog (<< "client transactions: " << Inserter(mPendingTransactionMap));
+      j->second.status() = Target::Terminated;
+      mTerminatedTransactionMap[tid] = j->second;
+      mPendingTransactionMap.erase(j);
+      return;   
+   }
+      
 }
 
-void
-ResponseContext::cancelClientTransaction(const resip::Data& tid)
-{
-   TransactionMap::iterator i = mClientTransactions.find(tid);
-   if(i!=mClientTransactions.end())
-   {
-      cancelClientTransaction(i->second);
-   }
-}
-
-void
-ResponseContext::terminateClientTransaction(const Data& transactionId)
-{
-   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
-   {
-      if (i->first == transactionId) 
-      {
-         i->second.status = Terminated;
-      }
-   }
-   InfoLog (<< "Terminating client transaction: " << transactionId << " all = " << areAllTransactionsTerminated());
-   InfoLog (<< "client transactions: " << Inserter(mClientTransactions));
-}
-
-bool
-ResponseContext::areAllTransactionsTerminated()
-{
-   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
-   {
-      if (i->second.status != Terminated) return false;
-   }
-   return true;
-}
-
-bool
-ResponseContext::removeClientTransaction(const Data& transactionId)
-{
-   TransactionMap::iterator i = mClientTransactions.find(transactionId);
-   if (i != mClientTransactions.end())
-   {
-      mClientTransactions.erase(i);
-      return true;
-   }
-   else
-   {
-      return false;
-   }
-}
 
 int
 ResponseContext::getPriority(const resip::SipMessage& msg)
@@ -642,11 +840,13 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
 
 
 std::ostream& 
-repro::operator<<(std::ostream& strm, const ResponseContext::Branch& b)
+repro::operator<<(std::ostream& strm, const repro::Target& t)
 {
-   strm << "Branch: " << b.uri << " " <<" status=" << b.status;
+   strm << "Target: " << t.uri() << " " <<" status=" << t.status();
    return strm;
 }
+
+
 
 std::ostream&
 repro::operator<<(std::ostream& strm, const ResponseContext& rc)
@@ -655,7 +855,9 @@ repro::operator<<(std::ostream& strm, const ResponseContext& rc)
         << " identity=" << rc.mRequestContext.getDigestIdentity()
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mForwardedFinalResponse
-        << " pending=" << Inserter(rc.mPendingTargetSet);
+        << " pending=" << Inserter(rc.mPendingTransactionMap)
+        << " active=" << Inserter(rc.mActiveTransactionMap)
+        << " terminated=" << Inserter(rc.mTerminatedTransactionMap);
       //<< " targets=" << Inserter(rc.mTargetSet)
       //<< " clients=" << Inserter(rc.mClientTransactions);
 
