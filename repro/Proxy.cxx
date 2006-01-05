@@ -107,8 +107,15 @@ Proxy::thread()
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
                      // [TODO] !rwm! this should not be an assert.  log and ignore instead.
-                     assert (i != mServerRequestContexts.end());
-                     i->second->process(std::auto_ptr<resip::Message>(msg));
+                     
+                     if(i == mServerRequestContexts.end())
+                     {
+                        WarningLog(<< "Could not find Request Context for a CANCEL. Doing nothing.");
+                     }
+                     else
+                     {
+                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
                   }
                   else if (sip->header(h_RequestLine).method() == ACK)
                   {
@@ -134,22 +141,29 @@ Proxy::thread()
                      // The stack will send TransactionTerminated messages for
                      // client and server transaction which will clean up this
                      // RequestContext 
-                     context->process(std::auto_ptr<resip::Message>(msg));
+                     context->process(std::auto_ptr<resip::SipMessage>(sip));
                   }
                   else
                   {
                      // This is a new request, so create a Request Context for it
                      InfoLog (<< "New RequestContext tid=" << sip->getTransactionId() << " : " << sip->brief());
                      
-                     assert(mServerRequestContexts.count(sip->getTransactionId()) == 0);                  
-                     RequestContext* context = new RequestContext(*this,
-                                                                  mRequestProcessorChain, 
-                                                                  mResponseProcessorChain, 
-                                                                  mTargetProcessorChain);
-                     InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
-                     mServerRequestContexts[sip->getTransactionId()] = context;
-                     DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
-                     context->process(std::auto_ptr<resip::Message>(msg));
+
+                     if(mServerRequestContexts.count(sip->getTransactionId()) == 0)
+                     {
+                        RequestContext* context = new RequestContext(*this,
+                                                                     mRequestProcessorChain, 
+                                                                     mResponseProcessorChain, 
+                                                                     mTargetProcessorChain);
+                        InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
+                        mServerRequestContexts[sip->getTransactionId()] = context;
+                        DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
+                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
+                     else
+                     {
+                        ErrLog(<<"Got a new request with an already existing transaction ID. Ignoring. (Is this the stack's fault maybe?)");
+                     }
                   }
                }
                else if (sip->isResponse())
@@ -160,7 +174,7 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
-                     i->second->process(std::auto_ptr<resip::Message>(msg));
+                     i->second->process(std::auto_ptr<resip::SipMessage>(sip));
                   }
                   else
                   {
@@ -183,7 +197,7 @@ Proxy::thread()
                   // (the intent is that Monkeys may eventually handle non-SIP
                   //  application messages).
                   bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
-                  i->second->process(std::auto_ptr<resip::Message>(msg));
+                  i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
                   if (eraseThisTid)
                   {
                      mServerRequestContexts.erase(i);
@@ -240,9 +254,15 @@ Proxy::send(const SipMessage& msg)
 void
 Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 {
-   assert(mClientRequestContexts.count(transactionId) == 0);
-   InfoLog (<< "add client transaction tid=" << transactionId << " " << rc);
-   mClientRequestContexts[transactionId] = rc;
+   if(mClientRequestContexts.count(transactionId) == 0)
+   {
+      InfoLog (<< "add client transaction tid=" << transactionId << " " << rc);
+      mClientRequestContexts[transactionId] = rc;
+   }
+   else
+   {
+      ErrLog(<< "Received a client request context whose transaction id matches that of an existing request context. Ignoring.");
+   }
 }
 
 void

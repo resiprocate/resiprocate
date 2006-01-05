@@ -31,7 +31,8 @@ class RequestContext
       virtual ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
-      void process(std::auto_ptr<resip::Message> msg);
+      void process(std::auto_ptr<resip::SipMessage> sip);
+      void process(std::auto_ptr<resip::ApplicationMessage> app);
       
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
@@ -51,10 +52,13 @@ class RequestContext
       bool chainIteratorStackIsEmpty();
 
       Proxy& getProxy();
-      void sendResponse(const resip::SipMessage& response);
+      ResponseContext& getResponseContext();
       
-      void addTarget(const resip::NameAddr& target);
-      std::vector<resip::NameAddr>& getCandidates();
+      //Will return the tid of the new target, since this creates the instance 
+      //of class Target for the user. (see ResponseContext::addTarget())
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=true);
+      
+      void sendResponse(const resip::SipMessage& response);
             
       void updateTimerC();
       bool mInitialTimerCSet;
@@ -71,7 +75,6 @@ class RequestContext
       ProcessorChain& mTargetProcessorChain; // baboons
 
       resip::Data mDigestIdentity;
-      std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
       Proxy& mProxy;
       bool mHaveSentFinalResponse;
