@@ -52,14 +52,12 @@ StaticRoute::process(RequestContext& context)
    
    for ( RouteStore::UriList::const_iterator i = targets.begin();
          i != targets.end(); i++ )
-   {
-      InfoLog(<< "Adding target " << *i );
-      context.addTarget(NameAddr(*i));
-      
+   {      
       // !rwm! TODO would be useful to check if these targets require authentication
       // but for know we will just fail safe and assume that all routes require auth
       requireAuth |= !mNoChallenge;
    }
+
    if (requireAuth && context.getDigestIdentity().empty())
    {
       // !rwm! TODO do we need anything more sophisticated to figure out the realm?
@@ -67,6 +65,17 @@ StaticRoute::process(RequestContext& context)
       
       challengeRequest(context, realm);
       return Processor::SkipAllChains;
+   }
+   else
+   {
+      for ( RouteStore::UriList::const_iterator i = targets.begin();
+            i != targets.end(); i++ )
+      {
+         InfoLog(<< "Adding target " << *i );
+         //Targets are only added after authentication
+         context.addTarget(NameAddr(*i));
+      }
+
    }
    
    return Processor::Continue;
