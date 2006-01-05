@@ -22,8 +22,7 @@ for i in \
 	testRandomHex \
 	testSelectInterruptor \
 	testSHA1Stream \
-	testThreadIf \
-	testXmlCursor;
+	testThreadIf;
 do
     if test ! -x $i; then
         echo "$i: test does not exist" >&2;
