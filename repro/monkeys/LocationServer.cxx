@@ -48,7 +48,7 @@ LocationServer::process(RequestContext& context)
         }
      }
 	 // if target list is empty return a 480
-	 if (context.getCandidates().empty())
+	 if (context.getResponseContext().getTargetList().empty())
 	 {
 	    // make 480, send, dispose of memory
 		resip::SipMessage response;
@@ -59,7 +59,9 @@ LocationServer::process(RequestContext& context)
 	 }
 	 else
 	 {
-        InfoLog (<< *this << " there are " << context.getCandidates().size() << " candidates -> continue");
+        InfoLog (<< *this << " there are " 
+        << context.getResponseContext().getTargetList().size() 
+        << " candidates -> continue");
 	    return Processor::Continue;
 	 }
    }
@@ -73,6 +75,8 @@ LocationServer::process(RequestContext& context)
 	  context.sendResponse(response);
 	  return Processor::SkipThisChain;
    }
+   
+   return Processor::Continue;
 }
 
 void

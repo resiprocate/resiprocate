@@ -46,6 +46,7 @@ SRC 	+=   \
 	ResponseContext.cxx \
         Processor.cxx \
         ProcessorChain.cxx \
+		  Target.cxx \
 	\
         monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \

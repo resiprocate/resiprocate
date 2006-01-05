@@ -8,6 +8,8 @@
 #include "resip/stack/Via.hxx"
 #include "resip/stack/Uri.hxx"
 
+#include "repro/Target.hxx"
+
 namespace resip
 {
 class SipMessage;
@@ -32,28 +34,60 @@ class ResponseContext
          public:
             bool operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const;
       };      
-      typedef enum
-      {
-         Trying,
-         Proceeding,
-         WaitingToCancel,
-         Terminated
-      } Status;
 
-      struct Branch
-      {
-            Status status;
-            resip::Uri uri;
-            resip::Via via; // top via
-      };
 
+      //Returns true iff this target was successfully added.
+      bool addTarget( repro::Target& target, bool beginImmediately=true);
+
+      //Begins all Candidate client transactions. Returns true iff any transactions
+      //were started as a result of this call
+      bool beginClientTransactions();
+      
+      // Returns true iff the transaction was in the Candidate state before this call
+      bool beginClientTransaction(const resip::Data& serial);
+      
+      //Returns true iff any transaction was placed in the WaitingToCancel state
+      bool cancelActiveClientTransactions();
+      
+      bool cancelAllClientTransactions();
+      
+      //Returns true iff this transaction was placed in the WaitingToCancel state
+      bool cancelClientTransaction(const resip::Data& serial);
+            
+      //Self-explanatory, except that NonExistent will be returned if the
+      //transaction does not exist.
+      Target::Status getStatus(const resip::Data& serial);
+
+      //Keyed by transaction id
+      typedef std::map<resip::Data,repro::Target> TransactionMap;
+
+
+      //Used to decide which targets should be processed next,
+      //usually by a response Processor.
+      const TransactionMap& getPendingTransactionMap() const;
+      
+      
+      bool hasPendingTransactions();
+      bool hasActiveTransactions();
+      bool hasTerminatedTransactions();
+      
+      const std::list<resip::Uri>& getTargetList() const;
+      
+      bool areAllTransactionsTerminated();
+      // return true if the transaction was found
+      int getPriority(const resip::SipMessage& msg);
+
+      //!bwc! This should probably not be private, since these two classes are
+      //tightly coupled.
+      RequestContext& mRequestContext;
+      
 
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
-      // call this after the monkey chain runs on an event
-      void processCandidates();
+      // These methods are really private. These are not intended to be used
+      // by anything other than member functions of ResponseContext.
 
       // call this from RequestContext when a CANCEL comes in 
       void processCancel(const resip::SipMessage& request);
@@ -63,29 +97,26 @@ class ResponseContext
 
       void processTimerC();
 
-   private:
-      // These methods are really private
-      void processPendingTargets();
-      void sendRequest(const resip::SipMessage& request);
-      void cancelClientTransaction(Branch& branch);
-      void terminateClientTransaction(const resip::Data& transactionId);
-      void cancelProceedingClientTransactions();
-      void cancelClientTransaction(const resip::Data& tid);
-      bool areAllTransactionsTerminated();
-      // return true if the transaction was found
-      bool removeClientTransaction(const resip::Data& transactionId); 
-      int getPriority(const resip::SipMessage& msg);
+      void beginClientTransaction(repro::Target& target);
+      void cancelClientTransaction(repro::Target& target);
 
-      RequestContext& mRequestContext;
+
+      void terminateClientTransaction(const resip::Data& tid);
+      void removeClientTransaction(const resip::Data& transactionId); 
       
-      typedef std::multiset<resip::NameAddr, CompareQ> PendingTargetSet;
-      PendingTargetSet mPendingTargetSet;
+      //There is no terminateClientTransaction(Target target) since terminating
+      //a branch is very simple. The guts can be found in the API functions.
+      
+      void sendRequest(const resip::SipMessage& request);
+      
+      TransactionMap mPendingTransactionMap; //Targets with status Pending.
+      TransactionMap mActiveTransactionMap; //Targets with status Trying, Proceeding, or WaitingToCancel.
+      TransactionMap mTerminatedTransactionMap; //Targets with status Terminated.
 
+      //Maybe someday canonicalized Uris will go here, and checking for duplicates
+      //will be much faster
       std::list<resip::Uri> mTargetList;
       
-      typedef HashMap<resip::Data, Branch> TransactionMap;
-      TransactionMap mClientTransactions;
-
       resip::SipMessage mBestResponse;
       bool mForwardedFinalResponse;
       int mBestPriority;
@@ -99,7 +130,7 @@ std::ostream&
 operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 
 std::ostream& 
-operator<<(std::ostream& strm, const repro::ResponseContext::Branch& b);
+operator<<(std::ostream& strm, const repro::Target& t);
 
 }
 #endif

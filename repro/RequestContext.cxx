@@ -76,74 +76,16 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(std::auto_ptr<resip::Message> msg)
+RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
-   DebugLog (<< "process(Message) " << *this);
+   DebugLog (<< "process(SipMessage) " << *this);
 
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
    }
-   mCurrentEvent = msg.release();
+   mCurrentEvent = sipMessage.release();
 
-   // !RjS! Wedging this in here for now. I think we should pull
-   // this function apart into separate handling for sip messages
-   // and Application messages in the long run.
-   Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
-   if (ackDone)
-   {
-     delete this;
-     return;
-   }
-
-   TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
-
-   if(tc)
-   {
-      DebugLog(<<"Got a Timer C message with serial " << tc->mSerial 
-               << " Current serial number is " << mTCSerial );
-      if(tc->mSerial == mTCSerial)
-      {
-	InfoLog(<<"Timer C fired");
-         mResponseContext.processTimerC();
-      }
-      return;
-   }
-
-   
-   ForkControlMessage* fc = dynamic_cast<ForkControlMessage*>(mCurrentEvent);
-   
-   if(fc)
-   {
-      DebugLog(<<"Got a ForkControlMessage.");
-
-      if(mHaveSentFinalResponse)
-      {
-         DebugLog(<<"Have already sent final response. Ignoring...");
-         return;
-      }
-
-      if(fc->cancelAll())
-      {
-         mResponseContext.cancelProceedingClientTransactions();
-      }
-      else
-      {
-         while(fc->tidsRemain())
-         {
-            mResponseContext.cancelClientTransaction(fc->popTid());
-         }
-      }
-      
-      while(fc->targetsRemain())
-      {
-         DebugLog(<<"Adding a target.");
-         addTarget(fc->popTarget());
-      }
-      
-      mResponseContext.processCandidates();
-      return;
-   }
    
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
@@ -159,7 +101,7 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 
-   if (sip && sip->isRequest())
+   if (sip->isRequest())
    {
       if (sip->header(h_RequestLine).method() == CANCEL)
       {
@@ -169,14 +111,37 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       {
          ret = mRequestProcessorChain.process(*this);
       }
+      
+      if(ret != Processor::WaitingForEvent &&
+         !mHaveSentFinalResponse && 
+         !mResponseContext.hasActiveTransactions())
+      {
+         if(mResponseContext.hasPendingTransactions())
+         {
+            //Someone forgot to start _any_ of the targets they just added.
+            ErrLog(<<"In RequestContext, request processor "
+            << "chain appears to have added targets, but not processed any of them."
+            << " (Bad monkey?)");
+         }
+         else
+         {
+            ErrLog(<< "In RequestContext, request processor "
+            << "chain appears to have added no targets. Further, there are no active"
+            << " transactions. There is no guarantee that any targets will ever "
+            << " be added. (Bad monkey?)");
+            // TODO make sure to do the right thing here.
+         }
+      }
+      
    }
-   else if (sip && sip->isResponse())
+   else if (sip->isResponse())
    {
       // Do the lemurs if its a response (response processor chain)
       // Call handle Response if its a response
       
       Processor::processor_action_t ret = Processor::Continue;
       ret = mResponseProcessorChain.process(*this);
+            
       // this is temporarily not allowed since to allow async requests in the
       // response chain we will need to maintain a collection of all of the
       // outstanding responses that are still processing. 
@@ -184,18 +149,90 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       if (ret == Processor::Continue) 
       {
          mResponseContext.processResponse(*sip);
+
+         if(!mHaveSentFinalResponse && 
+            !mResponseContext.hasActiveTransactions())
+         {
+            if(mResponseContext.hasPendingTransactions())
+            {
+               //The last active transaction has ended, and the response processors
+               //did not start any of the pending transactions.
+               ErrLog(<<"In RequestContext, after processing "
+               << "a sip response: The last active transaction has ended, we have "
+               << "no final response, and the response processors did not start "
+               << "any of the pending transactions. (Bad lemur?)");
+            }
+            else
+            {
+               ErrLog(<<"In RequestContext, after processing "
+               << "a sip response: The last active transaction has ended, but we"
+               << " have not sent a final response. (What happened here?) ");
+               // TODO make sure to do the right thing.
+            }
+         }
+
+         
          return;
       }
    }
-   else
+   
+
+}
+
+
+void
+RequestContext::process(std::auto_ptr<ApplicationMessage> app)
+{
+   DebugLog (<< "process(ApplicationMessage) " << *this);
+
+   if (mCurrentEvent != mOriginalRequest)
    {
-      ret = mRequestProcessorChain.process(*this);
+      delete mCurrentEvent;
+   }
+   mCurrentEvent = app.release();
+
+
+   Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
+   if (ackDone)
+     {
+       delete this;
+       return;
+     }
+
+   TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
+
+   if(tc)
+   {
+      if(tc->mSerial == mTCSerial)
+      {
+         mResponseContext.processTimerC();
+      }
+
+      return;
    }
 
-   if (!mHaveSentFinalResponse && ret != Processor::WaitingForEvent)
+   Processor::processor_action_t ret=Processor::Continue;
+   ret = mRequestProcessorChain.process(*this);
+
+   if(ret != Processor::WaitingForEvent &&
+      !mHaveSentFinalResponse && 
+      !mResponseContext.hasActiveTransactions())
    {
-      InfoLog (<< "process candidates for " << *this);
-      mResponseContext.processCandidates();
+      if(mResponseContext.hasPendingTransactions())
+      {
+         //Someone forgot to start _any_ of the targets they just added.
+         ErrLog(<<"In RequestContext, request processor "
+         << "chain appears to have added targets, but not processed any of them."
+         << " (Bad monkey?)");
+      }
+      else
+      {
+         ErrLog(<< "In RequestContext, request processor "
+         << "chain appears to have added no targets. Further, there are no active"
+         << " transactions. There is no guarantee that any targets will ever "
+         << " be added. (Bad monkey?)");
+         // TODO make sure to do the right thing here.
+      }
    }
 }
 
@@ -241,12 +278,15 @@ RequestContext::getDigestIdentity() const
    return mDigestIdentity;
 }
 
-void
-RequestContext::addTarget(const NameAddr& target)
+resip::Data
+RequestContext::addTarget(const NameAddr& addr, bool beginImmediately)
 {
-   InfoLog (<< "Adding candidate " << target);
-   mCandidateTargets.push_back(target);
+   InfoLog (<< "Adding candidate " << addr);
+   repro::Target target(addr);
+   mResponseContext.addTarget(target,beginImmediately);
+   return target.tid();
 }
+
 
 void
 RequestContext::updateTimerC()
@@ -263,29 +303,6 @@ RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,in
    mProxy.postTimedMessage(msg,seconds);
 }
 
-void
-RequestContext::addTargetsInSeconds(std::set<NameAddr> targets,int seconds)
-{
-   ForkControlMessage* msg = new ForkControlMessage(this->getTransactionId());
-   std::set<resip::NameAddr>::iterator i;
-   
-   for(i=targets.begin();i!=targets.end();++i)
-   {
-      msg->pushTarget(*i);
-   }
-   
-   std::auto_ptr<ApplicationMessage> automsg(dynamic_cast<ApplicationMessage*>(msg));
-   
-   DebugLog(<<"Posting a ForkControlMessage with " << targets.size() << " targets.");
-   mProxy.postTimedMessage(automsg,seconds);
-}
-
-
-std::vector<resip::NameAddr>& 
-RequestContext::getCandidates()
-{
-   return mCandidateTargets;
-}
 
 void
 RequestContext::sendResponse(const SipMessage& msg)
@@ -385,12 +402,17 @@ RequestContext::getProxy()
    return mProxy;
 }
 
+ResponseContext&
+RequestContext::getResponseContext()
+{
+   return mResponseContext;
+}
+
 std::ostream&
 repro::operator<<(std::ostream& strm, const RequestContext& rc)
 {
    strm << "RequestContext: "
         << " identity=" << rc.mDigestIdentity
-        << " candidates=" << Inserter(rc.mCandidateTargets)
         << " count=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
 
