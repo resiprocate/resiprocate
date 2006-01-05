@@ -34,6 +34,9 @@
 #  include <errno.h>
 #  include <winsock2.h>
 #  include <io.h>
+#ifdef UNDER_CE
+#include "wince/WceCompat.hxx"
+#endif // UNDER_CE
 #endif
 
 #if defined(__APPLE__) 

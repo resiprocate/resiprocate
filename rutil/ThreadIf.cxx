@@ -1,3 +1,4 @@
+#include "rutil/ThreadIf.hxx"
 
 #if defined(WIN32)
 #include <stdio.h>

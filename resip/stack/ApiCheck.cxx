@@ -72,7 +72,9 @@ ApiCheck::ApiCheck( ApiEntry * list, int len)
     if (bad)
     {
         std::cerr <<"SERIOUS COMPILATION / CONFIGURATION ERRORS -- ABORTING" << std::endl;
+#ifndef UNDER_CE
         abort();
+#endif
         exit(bad);
     }
     std::cerr << std::endl;

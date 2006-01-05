@@ -23,6 +23,10 @@ repro: dum
 
 tests: resiprocate 
 	cd resip/stack/test; $(MAKE)
+	cd rutil/test; $(MAKE)	
+check: tests
+	cd resip/stack/test && ./runtests.sh
+	cd rutil/test && ./runtests.sh	
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
