@@ -88,7 +88,7 @@ struct query {
   void *arg;
 
   /* Query status */
-  int try;
+  int itry;
   int server;
   int *skip_server;
   int using_tcp;

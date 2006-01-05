@@ -13,6 +13,7 @@
 #include "resip/stack/UnknownParameterType.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/Inserter.hxx"
 
 using namespace resip;
 using namespace std;
@@ -25,9 +26,32 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::Cout, Log::Warning, argv[0]);
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+#
+   Data txt(
+      "SIP/2.0 401 Unauthorized\r\n"
+      "To: <sip:6309790007@ahenc1.ascc.lucent.com>;tag=43822895-1132606320408559\r\n"
+      "From: \"Kit LDAP\"<sip:6309790007@ahenc1.ascc.lucent.com>;tag=64505823\r\n"
+      "Call-ID: 7574556ad424b15c@aW5zcDc1MDAudW5pY29uLWludGwuY29t\r\n"
+      "CSeq: 1 PUBLISH\r\n"
+      "Via: SIP/2.0/UDP 67.184.22.204:33001;received=67.184.22.204;branch=z9hG4bK-d87543-861ee62db418b378-1--d87543-\r\n"
+      "Server: Lucent SIPTRANS 1.2\r\n"
+      "WWW-Authenticate: Digest realm=\"aP3nFt10ziWg41Su4s8\", \r\n"
+      "   nonce=\"d6cb083cced5583c140c5f99eb81feda\", algorithm=MD5, qop=\"auth\", \r\n"
+      "   opaque=\"f2a62109ee6526c8760e4e7497861aac\"\r\n"
+      "Content-Length: 0\r\n"
+      "\r\n"
+      );
    initNetwork();
 
+   auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+   assert(msg.get());   
+   cerr << Inserter(msg->header(h_WWWAuthenticates)) << endl;
+   
+   cerr << "[" << msg->header(h_WWWAuthenticates).back().param(p_opaque) << "]" << endl;
+
+   assert(msg->header(h_WWWAuthenticates).back().param(p_opaque) == "f2a62109ee6526c8760e4e7497861aac");
+   
    {
       Data txt(
          "To: sip:fluffy@h1.cs.sipit.net\r\n"

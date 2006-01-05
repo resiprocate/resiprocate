@@ -94,7 +94,7 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
   query->arg = arg;
 
   /* Initialize query status. */
-  query->try = 0;
+  query->itry = 0;
   query->server = 0;
   for (i = 0; i < channel->nservers; i++)
     query->skip_server[i] = 0;

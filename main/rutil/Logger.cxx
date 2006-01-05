@@ -70,7 +70,13 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
 {
 #ifdef WIN32
    const char *text = result.c_str();
-   OutputDebugStringA(text);
+#ifdef UNDER_CE
+   LPWSTR lpwstrText = resip::ToWString(text);
+	OutputDebugStringW(lpwstrText);
+	FreeWString(lpwstrText);
+#else
+	OutputDebugStringA(text);
+#endif
 #endif
 }
 

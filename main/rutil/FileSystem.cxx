@@ -121,8 +121,8 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    {
       searchPath = dir.getPath() + Data("/*");
    }
-   WIN32_FIND_DATA fileData;
-   mWinSearch = FindFirstFile( searchPath.c_str(), &fileData);
+   WIN32_FIND_DATAA fileData;
+   mWinSearch = FindFirstFileA( searchPath.c_str(), &fileData);
    
    if (mWinSearch == INVALID_HANDLE_VALUE)
    {
@@ -147,9 +147,9 @@ FileSystem::Directory::iterator::~iterator()
 FileSystem::Directory::iterator&
 FileSystem::Directory::iterator::operator++()
 {
-   WIN32_FIND_DATA fileData;
+   WIN32_FIND_DATAA fileData;
 
-   if (!FindNextFile(mWinSearch, &fileData))
+   if (!FindNextFileA(mWinSearch, &fileData))
    {
       if (GetLastError() == ERROR_NO_MORE_FILES)
       {
