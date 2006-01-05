@@ -229,7 +229,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                   InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
                   error(e);
                   fdset.clear(sock);
-                  close(sock);
+                  closeSocket(sock);
                   fail(data->transactionId);
                   delete data;
                   return;
