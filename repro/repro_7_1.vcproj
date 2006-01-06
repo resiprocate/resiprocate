@@ -313,6 +313,9 @@
 				RelativePath=".\monkeys\StrictRouteFixup.cxx">
 			</File>
 			<File
+				RelativePath=".\Target.cxx">
+			</File>
+			<File
 				RelativePath=".\UserStore.cxx">
 			</File>
 			<File
@@ -418,6 +421,9 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\StrictRouteFixup.hxx">
+			</File>
+			<File
+				RelativePath=".\Target.hxx">
 			</File>
 			<File
 				RelativePath=".\TimerCMessage.hxx">
