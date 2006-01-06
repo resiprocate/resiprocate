@@ -2,6 +2,7 @@
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
 #include <iosfwd>
+#include <map>
 #include "rutil/HashMap.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/SipMessage.hxx"
