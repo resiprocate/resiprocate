@@ -548,7 +548,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), Offer, msg, *sdp);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -567,7 +567,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), Offer, msg, *sdp);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
