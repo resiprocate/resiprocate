@@ -416,7 +416,8 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       case RootCert:
       {
-         X509_STORE_add_cert(mRootCerts,cert);
+         X509_STORE_add_cert(mRootTlsCerts,cert);
+         X509_STORE_add_cert(mRootSslCerts,cert);
       }
       break;
       default:
@@ -882,17 +883,19 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mTlsCtx(0),
    mSslCtx(0),
-   mRootCerts(0)
+   mRootTlsCerts(0),
+   mRootSslCerts(0)
 { 
    int ret;
    initialize(); 
    
-   mRootCerts = X509_STORE_new();
-   assert(mRootCerts);
+   mRootTlsCerts = X509_STORE_new();
+   mRootSslCerts = X509_STORE_new();
+   assert(mRootTlsCerts && mRootSslCerts);
 
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
-   SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
+   SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
@@ -900,7 +903,7 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
-   SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
+   SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
                       verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
@@ -920,29 +923,29 @@ void clearMap(T& m, Func& clearFunc)
          
 BaseSecurity::~BaseSecurity ()
 {
-      // cleanup certificates
-      clearMap(mDomainCerts, X509_free);
-	  clearMap(mUserCerts, X509_free);
+   // cleanup certificates
+   clearMap(mDomainCerts, X509_free);
+   clearMap(mUserCerts, X509_free);
 
-      // cleanup private keys
-      clearMap(mDomainPrivateKeys, EVP_PKEY_free);
-      clearMap(mUserPrivateKeys, EVP_PKEY_free);
+   // cleanup private keys
+   clearMap(mDomainPrivateKeys, EVP_PKEY_free);
+   clearMap(mUserPrivateKeys, EVP_PKEY_free);
 
-      // cleanup root certs
-      X509_STORE_free(mRootCerts);
-#if 0 // TODO - mem leak but seg faults
+   // cleanup SSL_CTXes
+   if (mTlsCtx)
    {
-      // cleanup SSL_CTXes
-      if (mTlsCtx)
-      {
-         SSL_CTX_free(mTlsCtx);mTlsCtx=0;
-      }
-      if (mSslCtx)
-      {
-         SSL_CTX_free(mSslCtx);mSslCtx=0;
-      }
+      SSL_CTX_free(mTlsCtx);mTlsCtx=0;  // This free's X509_STORE (mRootTlsCerts)
    }
-#endif
+   if (mSslCtx)
+   {
+      SSL_CTX_free(mSslCtx);mSslCtx=0;  // This free's X509_STORE (mRootSslCerts)
+   }
+
+   // Clean up data allocated during OpenSSL_add_all_algorithms
+   EVP_cleanup();       
+
+   // Clean up data allocated during SSL_load_error_strings
+   ERR_free_strings();  
 }
 
 
@@ -984,7 +987,7 @@ BaseSecurity::getRootCertDescriptions() const
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 { 
-   assert( mRootCerts );
+   assert( mRootTlsCerts && mRootSslCerts );
 #if 1
    addCertPEM(RootCert,Data::Empty,x509PEMEncodedRootCerts,false);
 #else
@@ -1794,7 +1797,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
 
    //   flags |= PKCS7_NOVERIFY;
 
-   assert( mRootCerts );
+   assert( mRootTlsCerts );
 
    switch (type)
    {
@@ -2126,7 +2129,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
 #endif
 
-   assert( mRootCerts );
+   assert( mRootTlsCerts );
 
    switch (type)
    {
@@ -2139,7 +2142,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             flags |= PKCS7_NOVERIFY;
          }
 
-         if ( PKCS7_verify(pkcs7, certs, mRootCerts, pkcs7Bio, out, flags ) != 1 )
+         if ( PKCS7_verify(pkcs7, certs, mRootTlsCerts, pkcs7Bio, out, flags ) != 1 )
          {
             ErrLog( << "Problems doing PKCS7_verify" );
 
