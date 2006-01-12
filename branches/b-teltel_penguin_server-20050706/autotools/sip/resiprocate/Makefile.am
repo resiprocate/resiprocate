@@ -16,6 +16,7 @@ libresiprocate_la_SOURCES = \
 	os/Data.cxx \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
+	os/FileSystem.cxx \
 	os/Id.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
@@ -26,6 +27,7 @@ libresiprocate_la_SOURCES = \
 	os/RWMutex.cxx \
 	os/Random.cxx \
 	os/RecursiveMutex.cxx \
+	os/SHA1Stream.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
 	os/SysLogBuf.cxx \
@@ -46,6 +48,7 @@ libresiprocate_la_SOURCES = \
 	DnsResult.cxx \
 	Embedded.cxx \
 	ExistsParameter.cxx \
+	ExtensionHeader.cxx \
 	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
@@ -57,6 +60,7 @@ libresiprocate_la_SOURCES = \
 	IntegerParameter.cxx \
 	LazyParser.cxx \
 	Message.cxx \
+	MessageFilterRule.cxx \
 	MethodHash.cxx \
 	MethodTypes.cxx \
 	MsgHeaderScanner.cxx \
@@ -110,11 +114,13 @@ libresiprocate_la_SOURCES = \
 	TransactionController.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
+	TransactionUser.cxx \
+	TransactionUserMessage.cxx \
 	Transport.cxx \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
+	TuSelector.cxx \
 	UdpTransport.cxx \
-	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
 	UnknownParameterType.cxx \
 	Uri.cxx \
@@ -163,6 +169,7 @@ resiprocate_include_HEADERS = \
 	Embedded.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExtensionHeader.hxx \
 	ExternalDnsFactory.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
@@ -177,6 +184,7 @@ resiprocate_include_HEADERS = \
 	IntegerParameter.hxx \
 	LazyParser.hxx \
 	Message.hxx \
+	MessageFilterRule.hxx \
 	MessageWaitingContents.hxx \
 	MethodHash.hxx \
 	MethodTypes.hxx \
@@ -237,10 +245,13 @@ resiprocate_include_HEADERS = \
 	TransactionMessage.hxx \
 	TransactionState.hxx \
 	TransactionTerminated.hxx \
+	TransactionUser.hxx \
+	TransactionUserMessage.hxx \
 	Transport.hxx \
 	TransportMessage.hxx \
 	TransportSelector.hxx \
 	TuIM.hxx \
+	TuSelector.hxx \
 	UdpTransport.hxx \
 	UnknownHeaderType.hxx \
 	UnknownParameter.hxx \
@@ -263,6 +274,7 @@ resiprocate_os_include_HEADERS = \
 	os/DataStream.hxx \
 	os/DnsUtil.hxx \
 	os/Fifo.hxx \
+	os/FileSystem.hxx \
 	os/HashMap.hxx \
 	os/Id.hxx \
 	os/Inserter.hxx \
@@ -276,6 +288,7 @@ resiprocate_os_include_HEADERS = \
 	os/RWMutex.hxx \
 	os/Random.hxx \
 	os/RecursiveMutex.hxx \
+	os/SHA1Stream.hxx \
 	os/Socket.hxx \
 	os/Subsystem.hxx \
 	os/SysLogBuf.hxx \
