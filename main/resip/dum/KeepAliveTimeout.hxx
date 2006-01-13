@@ -13,16 +13,18 @@ class KeepAliveTimeout : public ApplicationMessage
 {
    public:
       
-      KeepAliveTimeout(const Tuple& target);
+      KeepAliveTimeout(const Tuple& target, int id);
       KeepAliveTimeout(const KeepAliveTimeout&);      
       virtual ~KeepAliveTimeout();
       
       const Tuple& target() const { return mTarget; }
+      int id() const { return mId; }
       virtual Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
    private:
       Tuple mTarget;
+      int mId;
 };
 
 }
