@@ -148,11 +148,13 @@ class Log
       static void initialize(const Data& type,
                              const Data& level,
                              const Data& appName,
-                             const char * logFileName = 0);
+                             const char * logFileName = 0,
+                             ExternalLogger* externalLogger = 0);
       static void initialize(const char* type,
                              const char* level,
                              const char* appName,
-                             const char * logFileName = 0);
+                             const char * logFileName = 0,
+                             ExternalLogger* externalLogger = 0);
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
