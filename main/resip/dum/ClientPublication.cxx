@@ -82,6 +82,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
          {
             mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
+            mPublish->releaseContents();
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
                           getBaseHandle(),
@@ -112,7 +113,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             if (msg.exists(h_MinExpires))
             {
                mPublish->header(h_Expires).value() = msg.header(h_MinExpires).value();
-               update(mDocument);
+               update(mDocument); // !dys! since contents not released until on success, no need to call update any more.
             }
             else
             {
@@ -237,7 +238,6 @@ ClientPublication::send(SharedPtr<SipMessage> request)
       mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
-      mPublish->releaseContents();
    }
 }
 
