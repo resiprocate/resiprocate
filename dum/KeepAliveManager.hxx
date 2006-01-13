@@ -15,12 +15,13 @@ class KeepAliveManager
    public:
       struct NetworkAssociationInfo
       {
-         int refCount;
-         int keepAliveInterval;  // In seconds
+            int refCount;
+            int keepAliveInterval;  // In seconds
+            int id;
       };
       typedef std::map<Tuple, NetworkAssociationInfo> NetworkAssociationMap;
 
-      KeepAliveManager() {}
+      KeepAliveManager() : mCurrentId(0) {}
       virtual ~KeepAliveManager() {}
       void setDialogUsageManager(DialogUsageManager* dum) { mDum = dum; }
       virtual void add(const Tuple& target, int keepAliveInterval);
@@ -30,6 +31,7 @@ class KeepAliveManager
    protected:
       DialogUsageManager* mDum;
       NetworkAssociationMap mNetworkAssociations;
+      unsigned int mCurrentId;
       
 };
 
