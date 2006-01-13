@@ -70,14 +70,14 @@ Log::init()
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName)
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName, ExternalLogger* externalLogger)
 {
-   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName);
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName, externalLogger);
 }
 
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, 
-                const char *logFileName)
+                const char *logFileName, ExternalLogger* externalLogger)
 {
    Type type = Log::Cout;
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
@@ -88,7 +88,7 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    Level level = Log::Info;
    level = toLevel(leveld);
 
-   Log::initialize(type, level, appName, logFileName);
+   Log::initialize(type, level, appName, logFileName, externalLogger);
 }
 
 void 
