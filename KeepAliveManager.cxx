@@ -16,14 +16,19 @@ void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it == mNetworkAssociations.end())
    {
-      InfoLog( << "First keep alive for: " << target );
+      DebugLog( << "First keep alive for: " << target );
+      DebugLog( << "Keepalive interval " << keepAliveInterval << " seconds" );
+      DebugLog( << "Keepalive id " << mCurrentId );
+
       NetworkAssociationInfo info;
       info.refCount = 1;
       info.keepAliveInterval = keepAliveInterval;
+      info.id = mCurrentId;
       mNetworkAssociations.insert(NetworkAssociationMap::value_type(target, info));
-      KeepAliveTimeout t(target);
+      KeepAliveTimeout t(target, mCurrentId);
       SipStack &stack = mDum->getSipStack();
       stack.post(t, keepAliveInterval, mDum);
+      ++mCurrentId;
    }
    else
    {
@@ -32,6 +37,7 @@ void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
       {
           (*it).second.keepAliveInterval = keepAliveInterval;  // !slg! only allow value to be shortened???  What if 2 different profiles with different keepAliveTime settings are sharing this network association?
       }
+      DebugLog(<< "Association added for " << target);
    }
 }
 
@@ -40,8 +46,12 @@ void KeepAliveManager::remove(const Tuple& target)
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(target);
    if (it != mNetworkAssociations.end())
    {
+      DebugLog(<< "Association removed for " << target);
+      
       if (0 == --(*it).second.refCount)
       {
+         DebugLog(<< "Keepalive " << it->second.id << " removed");
+         DebugLog(<< "No more association for " << target);
          mNetworkAssociations.erase(target);
       }
    }
@@ -52,13 +62,17 @@ void KeepAliveManager::process(KeepAliveTimeout& timeout)
    assert(mDum);
    static KeepAliveMessage msg;
    NetworkAssociationMap::iterator it = mNetworkAssociations.find(timeout.target());
-   if (it != mNetworkAssociations.end())
+   if (it != mNetworkAssociations.end() && timeout.id() == it->second.id)
    {
+      DebugLog( << "Refreshing keepalive for " << timeout.target() );
+      DebugLog( << "Keepalive interval " << it->second.keepAliveInterval << " seconds");
+      DebugLog( << "Keepalive id " << it->second.id << ")" );
+
       SipStack &stack = mDum->getSipStack();
       stack.sendTo(msg, timeout.target(), mDum);
-      KeepAliveTimeout t(it->first);
+      KeepAliveTimeout t(it->first, it->second.id);
       stack.post(t, it->second.keepAliveInterval, mDum);
-      DebugLog( << "Refreshing keep alive of " << it->second.keepAliveInterval << " seconds for: " << timeout.target());
+
    }
 }
 

@@ -7,13 +7,15 @@
 
 using namespace resip;
 
-KeepAliveTimeout::KeepAliveTimeout(const Tuple& target)
-   : mTarget(target)
+KeepAliveTimeout::KeepAliveTimeout(const Tuple& target,int id)
+   : mTarget(target),
+     mId(id)
 {}
 
 KeepAliveTimeout::KeepAliveTimeout(const KeepAliveTimeout& timeout)
+   : mTarget(timeout.mTarget),
+     mId(timeout.mId)
 {
-   mTarget = timeout.target();
 }
 
 KeepAliveTimeout::~KeepAliveTimeout()
@@ -34,7 +36,7 @@ KeepAliveTimeout::encodeBrief(std::ostream& strm) const
 std::ostream& 
 KeepAliveTimeout::encode(std::ostream& strm) const
 {
-   return strm << mTarget;
+   return strm << mTarget << "(" << mId << ")";
 }
 
 /* ====================================================================
