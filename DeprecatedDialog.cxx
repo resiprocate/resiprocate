@@ -46,7 +46,8 @@ DeprecatedDialog::makeResponse(const SipMessage& request, int code)
       assert (code < 300);      
       assert(request.isRequest());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
+             request.header(h_RequestLine).getMethod() == PUBLISH);
       
       assert (request.header(h_Contacts).size() == 1);
 
