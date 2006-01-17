@@ -14,6 +14,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 
 #include "tfm/DialogSet.hxx"
 #include "tfm/PortAllocator.hxx"
@@ -380,6 +381,20 @@ void TestSipEndPoint::storeReceivedSubscribe(const shared_ptr<SipMessage>& subsc
    mSubscribesReceived.push_back(subscribe);
 }
 
+void TestSipEndPoint::storeReceivedPublish(const shared_ptr<SipMessage>& publish)
+{
+   for (ReceivedPublishList::iterator it = mPublishReceived.begin();
+       it != mPublishReceived.end(); ++it)
+   {
+      if ( (*it)->header(h_CallId) == publish->header(h_CallId))
+      {
+         (*it) = publish;
+         return;
+      }
+   }
+   mPublishReceived.push_back(publish);
+}
+
 shared_ptr<SipMessage> 
 TestSipEndPoint::getSentSubscribe(shared_ptr<SipMessage> msg)
 {
@@ -402,6 +417,20 @@ TestSipEndPoint::getReceivedSubscribe(const CallId& callId)
 {
   for(ReceivedSubscribeList::iterator it = mSubscribesReceived.begin();
        it != mSubscribesReceived.end(); it++)
+   {
+      if ( (*it)->header(h_CallId) == callId)
+      {
+         return *it;
+      }
+   }
+   return shared_ptr<SipMessage>();
+}  
+
+shared_ptr<SipMessage> 
+TestSipEndPoint::getReceivedPublish(const CallId& callId)
+{
+  for(ReceivedSubscribeList::iterator it = mPublishReceived.begin();
+       it != mPublishReceived.end(); it++)
    {
       if ( (*it)->header(h_CallId) == callId)
       {
@@ -473,7 +502,8 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
    assert(request.isRequest());
    if ( responseCode < 300 && responseCode > 100 &&
         (request.header(h_RequestLine).getMethod() == INVITE ||
-         request.header(h_RequestLine).getMethod() == SUBSCRIBE))
+         request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
+         request.header(h_RequestLine).getMethod() == PUBLISH) )
    {
       DeprecatedDialog* dialog = getDialog(request.header(h_CallId));
       if (!dialog)
@@ -485,6 +515,7 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
       }
       DebugLog(<< "Creating response using dialog: " << dialog);
       shared_ptr<SipMessage> response(dialog->makeResponse(request, responseCode));
+
       return response;
    }
    else
@@ -1263,6 +1294,104 @@ TestSipEndPoint::send202ToSubscribe()
    return new Send202ToSubscribe(*this);
 }
 
+TestSipEndPoint::Send200ToPublish::Send200ToPublish(TestSipEndPoint& endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send200ToPublish::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   boost::shared_ptr<resip::SipMessage> publish;
+   publish = mEndPoint.getReceivedPublish(msg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*publish, 200);
+
+   if (publish->exists(h_Expires))
+   {
+      response->header(h_Expires).value() = publish->header(h_Expires).value();
+   }
+
+   response->header(h_SIPETag).value() = Data(Random::getRandom());
+
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send200ToPublish()
+{
+   return new Send200ToPublish(*this);
+}
+
+TestSipEndPoint::Send423Or200ToPublish::Send423Or200ToPublish(TestSipEndPoint& endPoint, int minExpires)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mMinExpires(minExpires)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send423Or200ToPublish::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   boost::shared_ptr<resip::SipMessage> publish;
+   publish = mEndPoint.getReceivedPublish(msg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response;
+
+   assert(publish->exists(h_Expires));
+   
+   if (publish->header(h_Expires).value() < mMinExpires)
+   {
+      response = mEndPoint.makeResponse(*publish, 423);
+      response->header(h_MinExpires).value() = mMinExpires;
+   }
+   else
+   {
+      response = mEndPoint.makeResponse(*publish, 200);
+      response->header(h_SIPETag).value() = Data(Random::getRandom());
+      response->header(h_Expires).value() = publish->header(h_Expires).value();
+   }
+
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send423Or200ToPublish(int minExpires)
+{
+   return new Send423Or200ToPublish(*this, minExpires);
+}
+
+TestSipEndPoint::Send401ToPublish::Send401ToPublish(TestSipEndPoint& endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send401ToPublish::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   boost::shared_ptr<resip::SipMessage> publish;
+   publish = mEndPoint.getReceivedPublish(msg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*publish, 401);
+
+   if (publish->exists(h_Expires))
+   {
+      response->header(h_Expires).value() = publish->header(h_Expires).value();
+   }
+
+   Auth auth;
+   auth.scheme() = "Digest";
+   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
+   auth.param(p_nonce) = Helper::makeNonce(*publish, timestamp);
+   auth.param(p_algorithm) = "MD5";
+   auth.param(p_realm) = "PublishDiagest";
+   auth.param(p_qopOptions) = "auth";
+   auth.param(p_opaque) = "0000000000000000";
+
+   response->header(h_WWWAuthenticates).push_back(auth);
+
+   return response;
+}
+
 TestSipEndPoint::Send200ToRegister::Send200ToRegister(TestSipEndPoint& endPoint, const NameAddr& contact) :
    MessageExpectAction(endPoint),
    mEndPoint(endPoint),
@@ -1476,6 +1605,12 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ok()
 {
    return new Ok(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send401ToPublish()
+{
+   return new Send401ToPublish(*this);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -1828,6 +1963,28 @@ TestSipEndPoint::Contact*
 contact(const NameAddr& contact)
 {
    return new TestSipEndPoint::Contact(contact.uri());
+}
+
+resip::Data
+TestSipEndPoint::HasMessageBodyMatch::toString() const
+{
+   return "HasMessageBodyMatch";
+}
+
+bool
+TestSipEndPoint::HasMessageBodyMatch::isMatch(shared_ptr<SipMessage>& message) const
+{
+   if (message->exists(h_ContentLength) && message->header(h_ContentLength).value())
+   {
+      return true;
+   }
+   DebugLog(<< "HasMessageBodyMatch::isMatch failed: no body in the message");
+   return false;
+}
+
+TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch()
+{
+   return new TestSipEndPoint::HasMessageBodyMatch();
 }
 
 // JF
@@ -2238,6 +2395,18 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       else if (msg->header(h_RequestLine).getMethod() == SUBSCRIBE)
       {
          storeReceivedSubscribe(msg);
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         if (dialog != 0)
+         {
+            if (dialog->targetRefreshRequest(*msg) != 0)
+            {
+               throw GlobalFailure("Target refresh failed", __FILE__, __LINE__);
+            }
+         }
+      }
+      else if (msg->header(h_RequestLine).getMethod() == PUBLISH)
+      {
+         storeReceivedPublish(msg);
          DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
          if (dialog != 0)
          {
