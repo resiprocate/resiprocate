@@ -362,6 +362,27 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* send202ToSubscribe();
 
+      // 200 to PUBLISH
+      class Send200ToPublish : public MessageExpectAction
+      {
+         public:
+            Send200ToPublish(TestSipEndPoint& endPoint);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send200ToPublish();
+
+      // 
+      class Send423Or200ToPublish : public MessageExpectAction
+      {
+         public:
+            Send423Or200ToPublish(TestSipEndPoint& endPoint, int minExpres);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+            int mMinExpires;
+      };
+      MessageExpectAction* send423Or200ToPublish(int minExpires);
+
       // 200 to REGISTER
       class Send200ToRegister : public MessageExpectAction
       {
@@ -377,6 +398,16 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* send200ToRegister(const resip::NameAddr& contact);
       MessageExpectAction* send200ToRegister();
+
+      class Send401ToPublish : public MessageExpectAction
+      {
+         public:
+            Send401ToPublish(TestSipEndPoint& endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send401ToPublish();
 
       class Notify : public MessageExpectAction
       {
@@ -508,6 +539,15 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             // value semantics
       };
 
+      class HasMessageBodyMatch : public Matcher
+      {
+         public:
+            HasMessageBodyMatch() {}
+
+            virtual bool isMatch(boost::shared_ptr<resip::SipMessage>& message) const;
+            virtual resip::Data toString() const;
+      };
+
       class ToMatch : public TestEndPoint::ExpectPreCon
       {
          public:
@@ -615,8 +655,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       //void storeSentSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
       void storeReceivedSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
 
+      void storeReceivedPublish(const boost::shared_ptr<resip::SipMessage>& publish);
+
       boost::shared_ptr<resip::SipMessage> getSentSubscribe(boost::shared_ptr<resip::SipMessage> msg);
       boost::shared_ptr<resip::SipMessage> getReceivedSubscribe(const resip::CallId& callId);
+      boost::shared_ptr<resip::SipMessage> getReceivedPublish(const resip::CallId& callId);
       boost::shared_ptr<resip::SipMessage> makeResponse(resip::SipMessage& request, int code);
       
       resip::DeprecatedDialog* getDialog(); // get the first dialog
@@ -636,6 +679,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       
       typedef std::list< boost::shared_ptr<resip::SipMessage> > InviteList;
       typedef std::list< boost::shared_ptr<resip::SipMessage> > ReceivedSubscribeList;
+      typedef std::list< boost::shared_ptr<resip::SipMessage> > ReceivedPublishList;
       typedef std::list<DialogSet> SentSubscribeList;
       typedef std::list<resip::DeprecatedDialog*> DialogList;
       typedef HashMap<resip::Data, boost::shared_ptr<resip::SipMessage> > RequestMap;
@@ -650,6 +694,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
    protected:
       
       ReceivedSubscribeList mSubscribesReceived;
+      ReceivedPublishList mPublishReceived;
       RequestMap mRequests;
       
       static boost::shared_ptr<resip::SipMessage> nil;
@@ -696,6 +741,8 @@ TestSipEndPoint::Contact* contact(const resip::NameAddr& contact);
 TestSipEndPoint::Contact* contact(const TestSipEndPoint* testEndPoint);
 TestSipEndPoint::Contact* contact(TestProxy* testProxy);
 TestSipEndPoint::Contact* contact(const resip::NameAddr* contact);
+
+TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch();
 
 TestSipEndPoint::MessageAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, 
