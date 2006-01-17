@@ -25,9 +25,6 @@ int verifyCallback(int iInCode, X509_STORE_CTX *pInStore);
 void
 MacSecurity::preload()
 {
-   // TODO: this needs to be refactored with WinSecurity.cxx
-   X509_STORE_set_verify_cb_func(mRootCerts, verifyCallback);
-   
    // load the root certificates
    getCerts();
 }
