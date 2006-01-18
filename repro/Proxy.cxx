@@ -277,9 +277,9 @@ Proxy::postTimerC(std::auto_ptr<TimerCMessage> tc)
 
 
 void
-Proxy::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg, int seconds)
+Proxy::postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec)
 {
-   mStack.post(*msg,seconds,this);
+   mStack.postMS(*msg,msec,this);
 }
 
 

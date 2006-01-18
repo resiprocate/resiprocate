@@ -65,7 +65,6 @@ class RequestContext
 
       void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
       
-      void addTargetsInSeconds(std::set<resip::NameAddr> targets,int seconds);
 
    private:
       resip::SipMessage*  mOriginalRequest;
@@ -81,6 +80,7 @@ class RequestContext
       resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
       int mTCSerial;
+      resip::Data mTid;
 
 
       typedef std::vector<ProcessorChain::Chain::iterator>
