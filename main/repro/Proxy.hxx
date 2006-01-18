@@ -43,9 +43,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       void postTimerC(std::auto_ptr<TimerCMessage> tc);
 
-      void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg, int seconds);
+      void postMS(std::auto_ptr<resip::ApplicationMessage> msg, int msec);
 
       int mTimerC;
+      
       
    protected:
       virtual const resip::Data& name() const;
