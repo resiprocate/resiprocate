@@ -931,13 +931,13 @@ BaseSecurity::~BaseSecurity ()
    clearMap(mDomainPrivateKeys, EVP_PKEY_free);
    clearMap(mUserPrivateKeys, EVP_PKEY_free);
 
-#if defined(__APPLE__)
    // sailesh@counterpath.com : this code leaks memory but it's necessary on
-   // the mac. if we don't have this code then SSL_CTX_new( TLSv1_method() )
+   // mac and windows. if we don't have this code then SSL_CTX_new( TLSv1_method() )
    // returns NULL when BaseSecurity::BaseSecurity() is called the second time.
    X509_STORE_free(mRootTlsCerts);
    X509_STORE_free(mRootSslCerts);
-#else
+
+/*
    // cleanup SSL_CTXes
    if (mTlsCtx)
    {
@@ -953,7 +953,7 @@ BaseSecurity::~BaseSecurity ()
 
    // Clean up data allocated during SSL_load_error_strings
    ERR_free_strings();
-#endif // __APPLE__
+*/
 }
 
 
