@@ -162,11 +162,11 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                << "no final response, and the response processors did not start "
                << "any of the pending transactions. (Bad lemur?)");
             }
-            else
+            else if(sip->header(h_StatusLine).statusCode()!=408)
             {
                ErrLog(<<"In RequestContext, after processing "
-               << "a sip response: The last active transaction has ended, but we"
-               << " have not sent a final response. (What happened here?) ");
+               << "a non-408 sip response: The last active transaction has "
+               << "ended, but we have not sent a final response. (Bug?)");
                // TODO make sure to do the right thing.
             }
          }
@@ -183,7 +183,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 void
 RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 {
-   DebugLog (<< "process(ApplicationMessage) " << *this);
+   DebugLog (<< "process(ApplicationMessage) " << *app);
+
 
    if (mCurrentEvent != mOriginalRequest)
    {
@@ -300,7 +301,7 @@ RequestContext::updateTimerC()
 void
 RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds)
 {
-   mProxy.postTimedMessage(msg,seconds);
+   mProxy.postMS(msg,seconds);
 }
 
 

@@ -36,6 +36,7 @@ class ResponseContext
             bool operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const;
       };      
 
+      ~ResponseContext();
 
       //Returns true iff this target was successfully added.
       bool addTarget( repro::Target& target, bool beginImmediately=true);
@@ -55,12 +56,11 @@ class ResponseContext
       //Returns true iff this transaction was placed in the WaitingToCancel state
       bool cancelClientTransaction(const resip::Data& serial);
             
-      //Self-explanatory, except that NonExistent will be returned if the
-      //transaction does not exist.
-      Target::Status getStatus(const resip::Data& serial);
+      //Self-explanatory
+      Target* getTarget(const resip::Data& serial);
 
       //Keyed by transaction id
-      typedef std::map<resip::Data,repro::Target> TransactionMap;
+      typedef std::map<resip::Data,repro::Target*> TransactionMap;
 
 
       //Used to decide which targets should be processed next,
@@ -98,8 +98,8 @@ class ResponseContext
 
       void processTimerC();
 
-      void beginClientTransaction(repro::Target& target);
-      void cancelClientTransaction(repro::Target& target);
+      void beginClientTransaction(repro::Target* target);
+      void cancelClientTransaction(repro::Target* target);
 
 
       void terminateClientTransaction(const resip::Data& tid);
@@ -131,7 +131,7 @@ std::ostream&
 operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 
 std::ostream& 
-operator<<(std::ostream& strm, const repro::Target& t);
+operator<<(std::ostream& strm, const repro::Target* t);
 
 }
 #endif
