@@ -100,7 +100,11 @@ Fixture::tearDown()
          InfoLog(<<"===================================================");
          WarningLog(<<"FAILED: Sleeping until retransmissions finish.");
          InfoLog(<<"===================================================");
+#ifndef WIN32
          sleep(35); // could sleep longer here
+#else
+         Sleep(35000); // could sleep longer here
+#endif
       }
       else
       {
