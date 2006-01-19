@@ -19,7 +19,7 @@ class TestReproUser : public TestUser
                     const resip::Data& password, 
                     resip::TransportType transport = resip::UDP,
                     const resip::Uri& outboundProxy = TestSipEndPoint::NoOutboundProxy,
-                    const resip::Data& interface = resip::Data::Empty,
+                    const resip::Data& nwInterface = resip::Data::Empty,
                     resip::Security* security=0);
       virtual ~TestReproUser();
       virtual void clean();

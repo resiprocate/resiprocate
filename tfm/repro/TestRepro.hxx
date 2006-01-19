@@ -21,7 +21,7 @@ class TestRepro : public TestProxy
       TestRepro(const resip::Data& name,
                 const resip::Data& host, 
                 int port, 
-                const resip::Data& interface = resip::Data::Empty,
+                const resip::Data& nwInterface = resip::Data::Empty,
                 resip::Security* security=0);
       ~TestRepro();
 
