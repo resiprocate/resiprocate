@@ -78,9 +78,9 @@ makeUri(const resip::Data& domain, int port)
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
-                     const resip::Data& interface,
+                     const resip::Data& nwInterface,
                      Security* security) : 
-   TestProxy(name, host, port, interface),
+   TestProxy(name, host, port, nwInterface),
    mStack(security),
    mStackThread(mStack),
    mRegistrar(),
