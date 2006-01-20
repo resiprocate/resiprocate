@@ -219,6 +219,16 @@ ServerSubscription::dispatch(const SipMessage& msg)
       }
       if (mExpires == 0)
       {
+         /* This is to handle the case where mExpires is zero because the client
+            is attempting to poll.  In order for polling to work, the subscription
+            handler needs to get the onNewSubscription call. .mjf.
+          */
+         if (mSubscriptionState == Invalid && mEventType != "refer")
+         {
+             mSubscriptionState = Terminated;
+             handler->onNewSubscription(getHandle(), msg);
+         }
+
          makeNotifyExpires();
          handler->onExpiredByClient(getHandle(), msg, *mLastRequest);
          
