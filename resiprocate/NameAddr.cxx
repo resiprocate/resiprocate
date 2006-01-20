@@ -241,7 +241,8 @@ NameAddr::encodeParsed(ostream& str) const
         str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE;
 #else
         // does nothing if display name is properly quoted
-        if (mustQuoteDisplayName())
+        //if (mustQuoteDisplayName())
+        if (true) // !NASH! always escape quote(")
         {
            str << Symbols::DOUBLE_QUOTE;
            for (unsigned int i=0; i < mDisplayName.size(); i++)
@@ -249,6 +250,9 @@ NameAddr::encodeParsed(ostream& str) const
               char c = mDisplayName[i];
               switch(c)
               {
+                 //case '"':
+                 //   str << "&quot;";
+                 //   break;
                  case '"':
                  case '\\':
                     str << '\\' << c;
@@ -259,10 +263,10 @@ NameAddr::encodeParsed(ostream& str) const
            }
            str << Symbols::DOUBLE_QUOTE;
         }
-        else
-        {
-           str << mDisplayName;           
-        }
+        //else
+        //{
+        //   str << mDisplayName;           
+        //}
 #endif
      }     
      str << Symbols::LA_QUOTE;
@@ -293,9 +297,9 @@ NameAddr::mustQuoteDisplayName() const
    if ((*pb.position() == '"'))
    {
       bool escaped = false;
+      pb.skipChar();
       while(!pb.eof())
       {
-         pb.skipChar();
          if (escaped)
          {
             escaped = false;
@@ -308,8 +312,9 @@ NameAddr::mustQuoteDisplayName() const
          {
             break;
          }
+         pb.skipChar();
       }
-      if (*pb.position() == '"')
+      if (!pb.eof() && *pb.position() == '"')
       {
          //should only have whitespace left, and really non of that
          pb.skipChar();
