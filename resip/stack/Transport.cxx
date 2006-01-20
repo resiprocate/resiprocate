@@ -219,29 +219,37 @@ Transport::basicCheck(const SipMessage& msg)
    {
       try
       {
-         if (!Helper::validateMessage(msg))
+         try
          {
-            InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-            if (msg.isRequest())
+            if (!Helper::validateMessage(msg))
             {
+               InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+               if (msg.isRequest())
+               {
+                  // this is VERY low-level b/c we don't have a transaction...
+                  // here we make a response to warn the offending party.
+                  makeFailedResponse(msg);
+               }
+               return false;
+            }
+            else if (mShuttingDown && msg.isRequest())
+            {
+               InfoLog (<< "Server has been shutdown, reject message with 503");
                // this is VERY low-level b/c we don't have a transaction...
                // here we make a response to warn the offending party.
-               makeFailedResponse(msg);
+               makeFailedResponse(msg, 503, "Server has been shutdown");
             }
-            return false;
          }
-         else if (mShuttingDown && msg.isRequest())
+         catch (ParseBuffer::Exception& e)
          {
-            InfoLog (<< "Server has been shutdown, reject message with 503");
-            // this is VERY low-level b/c we don't have a transaction...
-            // here we make a response to warn the offending party.
-            makeFailedResponse(msg, 503, "Server has been shutdown");
+            InfoLog (<< "Parse exception in basic check: " << e);
+            makeFailedResponse(msg);
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (BaseException& e)
       {
-         InfoLog (<< "Parse exception in basic check: " << e);
-         makeFailedResponse(msg);
+         InfoLog (<< "Cannot make failure response to badly constructed message: " << e);
+         return false;
       }
    }
    return true;
