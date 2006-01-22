@@ -1258,6 +1258,11 @@ SdpContents::Session::Medium::operator=(const Medium& rhs)
    return *this;
 }
 
+void
+SdpContents::Session::Medium::setPort(int port)
+{
+   mPort = port;
+}
 
 void
 SdpContents::Session::Medium::setSession(Session* session)

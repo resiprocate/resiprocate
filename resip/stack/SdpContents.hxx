@@ -360,6 +360,7 @@ class SdpContents : public Contents
 
                   int port() const {return mPort;}
                   unsigned long& port() {return mPort;}
+                 void setPort(int port);
                   int multicast() const {return mMulticast;}
                   unsigned long& multicast() {return mMulticast;}
                   const Data& protocol() const {return mProtocol;}
