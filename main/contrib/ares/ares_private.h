@@ -127,6 +127,10 @@ struct ares_channeldata {
 
   /* Active queries */
   struct query *queries;
+
+  /* post socket creation function pointer */
+  AfterSocketCreationFuncPtr socket_function;
+      
 };
 
 void ares__send_query(ares_channel channel, struct query *query, time_t now);

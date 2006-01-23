@@ -22,7 +22,8 @@
 using namespace resip;
 
 int 
-AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers)
+AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
+              AfterSocketCreationFuncPtr socketfunc)   
 {
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
@@ -39,7 +40,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers)
    int status;
    if (additionalNameservers.empty())
    {
-      status = ares_init(&mChannel);
+      status = ares_init_with_socket_function(&mChannel, socketfunc);
    }
    else
    {
@@ -70,7 +71,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers)
          opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
       }
 #endif
-      status = ares_init_options(&mChannel, &opt, optmask);
+      status = ares_init_options_with_socket_function(&mChannel, &opt, optmask, socketfunc);
       delete [] opt.servers;
    }
    

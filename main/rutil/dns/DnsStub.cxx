@@ -40,11 +40,12 @@ DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 
 DnsStub::NameserverList DnsStub::EmptyNameserverList;
 
-DnsStub::DnsStub(const NameserverList& additional) :
+DnsStub::DnsStub(const NameserverList& additional,
+                 AfterSocketCreationFuncPtr socketFunc) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
-   int retCode = mDnsProvider->init(additional);
+   int retCode = mDnsProvider->init(additional, socketFunc);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
