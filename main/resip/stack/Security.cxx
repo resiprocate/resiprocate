@@ -960,25 +960,18 @@ BaseSecurity::~BaseSecurity ()
 void
 BaseSecurity::initialize ()
 {
-   // TODO !cj! - this should only be called once - ues pthread_once
-   // It is not a huge bug if this runs twice because the calls cause no harm 
-   static bool done=false;
-   if (!done)
-   {
-      DebugLog( << "Setting up SSL library" );
+	DebugLog( << "Setting up SSL library" );
+
+	SSL_library_init();
+	SSL_load_error_strings();
+	OpenSSL_add_all_algorithms();
+
+	Random::initialize();
+	Timer::getTimeMs(); // initalize time offsets
+
+	// make sure that necessary algorithms exist:
+	assert(EVP_des_ede3_cbc());
       
-      SSL_library_init();
-      SSL_load_error_strings();
-      OpenSSL_add_all_algorithms();
-      
-      Random::initialize();
-      Timer::getTimeMs(); // initalize time offsets
-      
-      // make sure that necessary algorithms exist:
-      assert(EVP_des_ede3_cbc());
-      
-      done = true;
-   }
 }
 
 

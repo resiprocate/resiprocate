@@ -73,6 +73,8 @@ class SdpContents : public Contents
                   static const Codec ULaw_8000;
                   static const Codec ALaw_8000;
                   static const Codec G729_8000;
+                  static const Codec G723_8000;
+                  static const Codec GSM_8000;
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
 
