@@ -44,6 +44,7 @@ extern "C" {
 #include <netinet/in.h>
 #endif
 
+#include "ares_socketfunc.h"
 
 #define ARES_SUCCESS		0
 
@@ -131,13 +132,16 @@ typedef void (*ares_callback)(void *arg, int status, unsigned char *abuf,
 typedef void (*ares_host_callback)(void *arg, int status,
 				   struct hostent *hostent);
 
-
 extern int ares_init(ares_channel *channelptr);
+extern int ares_init_with_socket_function(ares_channel *channelptr, AfterSocketCreationFuncPtr);
 
 extern 	int ares_capabilities(int capmask);
 
 extern 	int ares_init_options(ares_channel *channelptr, struct ares_options *options,
-				int optmask);
+                              int optmask);
+
+extern 	int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
+                                                   int optmask, AfterSocketCreationFuncPtr);
 
 extern 	void ares_destroy(ares_channel channel);
 extern 	void ares_destroy_suppress_callbacks(ares_channel channel);

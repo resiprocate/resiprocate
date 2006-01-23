@@ -24,6 +24,7 @@ testConnectionBase.cxx \
 testCorruption.cxx \
 testDigestAuthentication.cxx \
 testDtlsTransport.cxx \
+testDns.cxx \
 testEmbedded.cxx \
 testEmptyHeader.cxx \
 testExternalLogger.cxx \
