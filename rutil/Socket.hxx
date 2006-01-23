@@ -2,6 +2,7 @@
 #define RESIP_SOCKET_HXX  
 
 #include "compat.hxx"
+#include "rutil/TransportType.hxx"
 
 #include <cassert>
 #include <errno.h>
@@ -78,6 +79,9 @@ inline int getErrno() { return errno; }
 #else
 typedef SOCKET Socket;
 #endif
+
+//c function pointer because of ares
+typedef void(*AfterSocketCreationFuncPtr)(Socket s, int transportType, const char* file, int line);
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
