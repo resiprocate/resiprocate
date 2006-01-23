@@ -1806,9 +1806,11 @@ resip::operator<<(ostream& str, const Codec& codec)
 const Codec Codec::ULaw_8000("PCMU", 0, 8000);
 const Codec Codec::ALaw_8000("PCMA", 8, 8000);
 const Codec Codec::G729_8000("G729", 18, 8000);
-// !kk! payloadType (2nd arg) should not be clock rate for these two:
-const Codec Codec::TelephoneEvent("telephone-event", 8000);
-const Codec Codec::FrfDialedDigit("frf-dialed-event", 8000);
+const Codec Codec::G723_8000("G723", 4, 8000);
+const Codec Codec::GSM_8000("GSM", 3, 8000);
+
+const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
+const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
 std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;
