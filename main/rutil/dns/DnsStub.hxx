@@ -90,7 +90,8 @@ class DnsStub : public ExternalDnsHandler
             const char* name() const { return "DnsStubException"; }
       };
 
-      DnsStub(const NameserverList& additional = EmptyNameserverList);      
+      DnsStub(const NameserverList& additional = EmptyNameserverList,
+              AfterSocketCreationFuncPtr socketFunc = 0);      
       ~DnsStub();
 
       void setResultTransform(ResultTransform*);

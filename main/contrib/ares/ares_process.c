@@ -696,7 +696,11 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
       return -1;
     }
 #endif
-
+  if(channel->socket_function)
+  {
+     channel->socket_function(s, 1, __FILE__, __LINE__);
+  }
+    
   server->udp_socket = s;
   return 0;
 }

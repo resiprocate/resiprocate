@@ -26,13 +26,17 @@ class Transport
       // portNum is the port to receive and/or send on
       Transport(Fifo<TransactionMessage>& rxFifo, 
                 const GenericIPAddress& address,
-                const Data& tlsDomain = Data::Empty);
+                const Data& tlsDomain = Data::Empty, //!dcm! where is this used?
+                AfterSocketCreationFuncPtr socketFunc = 0
+         );
 
       Transport(Fifo<TransactionMessage>& rxFifo, 
                 int portNum, 
                 IpVersion version, 
                 const Data& interfaceObj,
-                const Data& tlsDomain = Data::Empty);
+                const Data& tlsDomain = Data::Empty,
+                AfterSocketCreationFuncPtr socketFunc = 0
+         );
 
       virtual ~Transport();
 
@@ -126,6 +130,8 @@ class Transport
       friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
 
       Data mTlsDomain;      
+   protected:
+      AfterSocketCreationFuncPtr mSocketFunc;      
 };
 
 std::ostream& operator<<(std::ostream& strm, const Transport& rhs);

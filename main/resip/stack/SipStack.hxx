@@ -48,7 +48,8 @@ class SipStack
       SipStack(Security* security=0, 
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
-               bool stateless=false);
+               bool stateless=false,
+               AfterSocketCreationFuncPtr socketFunc = 0);      
 
       virtual ~SipStack();
 
@@ -486,6 +487,8 @@ class SipStack
 
       /// Responsible for routing messages to the correct TU based on installed rules
       TuSelector mTuSelector;
+
+      AfterSocketCreationFuncPtr mSocketFunc;
 
       friend class Executive;
       friend class StatelessHandler;

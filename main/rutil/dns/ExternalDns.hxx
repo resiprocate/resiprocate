@@ -26,7 +26,8 @@ class ExternalDns
          BuildMismatch = 4777
       };      
       
-      virtual int init(const std::vector<GenericIPAddress>& additionalNameservers) = 0; 
+      virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
+                       AfterSocketCreationFuncPtr) = 0; 
                           
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;

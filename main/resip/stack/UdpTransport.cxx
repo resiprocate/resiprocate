@@ -25,8 +25,9 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,  
                            IpVersion version,
                            StunSetting stun,
-                           const Data& pinterface) 
-   : InternalTransport(fifo, portNum, version, pinterface)
+                           const Data& pinterface,
+                           AfterSocketCreationFuncPtr socketFunc) 
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
             << " port=" << portNum

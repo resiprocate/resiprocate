@@ -27,7 +27,8 @@ class InternalTransport : public Transport
       InternalTransport(Fifo<TransactionMessage>& rxFifo, 
                         int portNum, 
                         IpVersion version,
-                        const Data& interfaceObj);
+                        const Data& interfaceObj,
+                        AfterSocketCreationFuncPtr socketFunc = 0);
 
       virtual ~InternalTransport();
 

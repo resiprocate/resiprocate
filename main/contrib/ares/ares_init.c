@@ -84,11 +84,22 @@ int ares_capabilities(int capmask)
 
 int ares_init(ares_channel *channelptr)
 {
-  return ares_init_options(channelptr, NULL, 0);
+   return ares_init_options_with_socket_function(channelptr, NULL, 0, NULL);
+}
+
+int ares_init_with_socket_function(ares_channel *channelptr, AfterSocketCreationFuncPtr socketFunc)
+{
+   return ares_init_options_with_socket_function(channelptr, NULL, 0, socketFunc);
 }
 
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
-		      int optmask)
+                      int optmask)
+{
+   return ares_init_options_with_socket_function(channelptr, options, optmask, NULL);
+}
+
+int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
+                      int optmask, AfterSocketCreationFuncPtr socketFunc)
 {
   ares_channel channel;
   int i, status;
@@ -125,6 +136,7 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
   /* Set everything to distinguished values so we know they haven't
    * been set yet.
    */
+  channel->socket_function = socketFunc;  
   channel->flags = -1;
   channel->timeout = -1;
   channel->tries = -1;
