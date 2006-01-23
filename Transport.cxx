@@ -32,11 +32,13 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 
 Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const GenericIPAddress& address,
-                     const Data& tlsDomain) :
+                     const Data& tlsDomain,
+                     AfterSocketCreationFuncPtr socketFunc) :
    mTuple(address),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
-   mTlsDomain(tlsDomain)
+   mTlsDomain(tlsDomain),
+   mSocketFunc(socketFunc)
 {
    mInterface = Tuple::inet_ntop(mTuple);
 }
@@ -45,12 +47,14 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      int portNum, 
                      IpVersion version,
                      const Data& intfc,
-                     const Data& tlsDomain) :
+                     const Data& tlsDomain,
+                     AfterSocketCreationFuncPtr socketFunc) :
    mInterface(intfc),
    mTuple(intfc, portNum, version),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
-   mTlsDomain(tlsDomain)
+   mTlsDomain(tlsDomain),
+   mSocketFunc(socketFunc)
 {
 }
 
