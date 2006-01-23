@@ -26,8 +26,9 @@ using namespace std;
 InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo, 
                                      int portNum, 
                                      IpVersion version,
-                                     const Data& interfaceObj) :
-   Transport(rxFifo, portNum, version, interfaceObj),
+                                     const Data& interfaceObj,
+                                     AfterSocketCreationFuncPtr socketFunc) :
+   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, socketFunc),
    mFd(-1)
 {
 }
@@ -114,6 +115,11 @@ InternalTransport::bind()
    {
       ErrLog (<< "Could not make socket non-blocking " << port());
       throw Transport::Exception("Failed making socket non-blocking", __FILE__,__LINE__);
+   }
+
+   if (mSocketFunc)
+   {
+      mSocketFunc(mFd, transport(), __FILE__, __LINE__);
    }
 }
 

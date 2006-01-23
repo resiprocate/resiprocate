@@ -44,13 +44,16 @@ using namespace resip;
 
 SipStack::SipStack(Security* pSecurity, 
                    const DnsStub::NameserverList& additional,
-                   AsyncProcessHandler* handler, bool stateless) : 
+                   AsyncProcessHandler* handler, 
+                   bool stateless,
+                   AfterSocketCreationFuncPtr socketFunc
+   ) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional)),
+   mDnsStub(new DnsStub(additional, socketFunc)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
@@ -59,7 +62,8 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionController(*this),
    mShuttingDown(false),
    mStatisticsManagerEnabled(true),
-   mTuSelector(mTUFifo)
+   mTuSelector(mTUFifo),
+   mSocketFunc(socketFunc)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -115,7 +119,7 @@ SipStack::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc);
             break;
          case TCP:
             transport = new TcpTransport(stateMacFifo, port, version, ipInterface);

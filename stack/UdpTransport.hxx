@@ -19,7 +19,8 @@ class UdpTransport : public InternalTransport
                    int portNum,
                    IpVersion version,
                    StunSetting stun,
-                   const Data& interfaceObj);
+                   const Data& interfaceObj,
+                   AfterSocketCreationFuncPtr socketFunc = 0);
       virtual  ~UdpTransport();
 
       void process(FdSet& fdset);
