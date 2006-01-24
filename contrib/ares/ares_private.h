@@ -129,7 +129,7 @@ struct ares_channeldata {
   struct query *queries;
 
   /* post socket creation function pointer */
-  AfterSocketCreationFuncPtr socket_function;
+  socket_function_ptr socket_function;
       
 };
 
