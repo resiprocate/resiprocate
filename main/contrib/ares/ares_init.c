@@ -87,7 +87,7 @@ int ares_init(ares_channel *channelptr)
    return ares_init_options_with_socket_function(channelptr, NULL, 0, NULL);
 }
 
-int ares_init_with_socket_function(ares_channel *channelptr, AfterSocketCreationFuncPtr socketFunc)
+int ares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr socketFunc)
 {
    return ares_init_options_with_socket_function(channelptr, NULL, 0, socketFunc);
 }
@@ -99,7 +99,7 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 }
 
 int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
-                      int optmask, AfterSocketCreationFuncPtr socketFunc)
+                      int optmask, socket_function_ptr socketFunc)
 {
   ares_channel channel;
   int i, status;
