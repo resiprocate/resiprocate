@@ -133,7 +133,7 @@ typedef void (*ares_host_callback)(void *arg, int status,
 				   struct hostent *hostent);
 
 extern int ares_init(ares_channel *channelptr);
-extern int ares_init_with_socket_function(ares_channel *channelptr, AfterSocketCreationFuncPtr);
+extern int ares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr);
 
 extern 	int ares_capabilities(int capmask);
 
@@ -141,7 +141,7 @@ extern 	int ares_init_options(ares_channel *channelptr, struct ares_options *opt
                               int optmask);
 
 extern 	int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
-                                                   int optmask, AfterSocketCreationFuncPtr);
+                                                   int optmask, socket_function_ptr);
 
 extern 	void ares_destroy(ares_channel channel);
 extern 	void ares_destroy_suppress_callbacks(ares_channel channel);

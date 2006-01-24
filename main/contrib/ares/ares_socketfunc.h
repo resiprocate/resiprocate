@@ -12,7 +12,7 @@ typedef int Socket;
 typedef SOCKET Socket;
 #endif
 
-typedef void(*AfterSocketCreationFuncPtr)(Socket s, int transportType, const char* file, int line);
+typedef void(*socket_function_ptr)(Socket s, int transportType, const char* file, int line);
 
 #endif
 
