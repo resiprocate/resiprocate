@@ -2361,7 +2361,7 @@ void InviteSession::referNoSub(const SipMessage& msg)
 }
 
 void
-InviteSession::acceptReferNoSub(int statusCode, bool referSub)
+InviteSession::acceptReferNoSub(int statusCode)
 {
    if (statusCode / 100  != 2)
    {
@@ -2370,11 +2370,9 @@ InviteSession::acceptReferNoSub(int statusCode, bool referSub)
 
    SharedPtr<SipMessage> response;
    mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
-   if (!referSub)
-   {
-      response->header(h_ReferSub).value() = "false";
-      //response->header(h_Supporteds).push_back(Token("norefersub"));
-   }
+   response->header(h_ReferSub).value() = "false";
+   //response->header(h_Supporteds).push_back(Token("norefersub"));
+   
    send(response);
 } 
 
