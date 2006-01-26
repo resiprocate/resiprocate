@@ -34,6 +34,8 @@
 #include "repro/monkeys/SimpleStaticRoute.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
+#include "repro/monkeys/QValueTargetHandler.hxx"
+#include "repro/monkeys/SimpleTargetHandler.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -323,6 +325,25 @@ main(int argc, char** argv)
       responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
    }
    
+   ProcessorChain* baboons = new ProcessorChain;
+
+   if( args.mDoQValue)
+   {
+      QValueTargetHandler* qval = 
+         new QValueTargetHandler(QValueTargetHandler::FULL_SEQUENTIAL,
+                                 true, //Cancel btw fork groups?
+                                 true, //Wait for termination btw fork groups?
+                                 2000, //ms between fork groups, moot in this case
+                                 2000 //ms before cancel
+                                 );
+      baboons->addProcessor(std::auto_ptr<Processor>(qval));
+   }
+   
+   SimpleTargetHandler* smpl = new SimpleTargetHandler;
+   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
+   
+   targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
+
    Proxy proxy(stack, 
                args.mRecordRoute, 
                requestProcessors, 

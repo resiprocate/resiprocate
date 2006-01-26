@@ -1,73 +1,60 @@
-#ifndef DISPATCHER_HXX
-#define DISPATCHER_HXX 1
+#ifndef Q_VALUE_TARGET_HANDLER_HXX
+#define Q_VALUE_TARGET_HANDLER_HXX 1
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
+#include "repro/Processor.hxx"
+#include "repro/ResponseContext.hxx"
+
+#include "rutil/Data.hxx"
 #include <vector>
 
-
-class resip::SipStack;
 
 namespace repro
 {
 
-class Dispatcher
+class RequestContext;
+
+class QValueTargetHandler : public Processor
 {
-
-
    public:
-      Dispatcher(std::auto_ptr<Worker> prototype, 
-                  resip::SipStack* stack,
-                  int workers=2, 
-                  bool startImmediately=true);
 
-      virtual ~Dispatcher();
+      typedef enum
+      {
+         FULL_SEQUENTIAL,
+         EQUAL_Q_PARALLEL,
+         FULL_PARALLEL
+      } ForkBehavior;
+
+
+      QValueTargetHandler(ForkBehavior behavior,
+                           bool cancelBetweenForkGroups=true,
+                           bool waitForTerminate=true,
+                           int delayBetweenForkGroupsMS=5000,
+                           int cancellationDelayMS=5000);
+      virtual ~QValueTargetHandler();
       
-      /**
-         Posts a message to this thread bank.
-         
-         @param work The message that conveys the work that needs to be done.
-            (Any information that must 
+      virtual processor_action_t process(RequestContext &);
+      virtual void dump(std::ostream &os) const;
 
-         @returns true iff this message was successfully posted. (This may not
-            be the case if this Dispatcher is in the process of shutting down)
-      */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
-
-      size_t fifoCountDepth() const;
-      time_t fifoTimeDepth() const;
-      int workPoolSize() const;
-      void shutdownAll();
-      void startAll();
-
-      resip::SipStack* mStack;
-
+      void fillNextTargetGroup(std::vector<resip::Data>& fillHere,
+                              const ResponseContext::TransactionQueue& queue,
+                              const ResponseContext& rsp) const;
+                           
+      virtual bool isMyType( Target* target) const;
       
+      virtual void removeTerminated(ResponseContext::TransactionQueue& queue,
+                                    const ResponseContext& rsp) const;
+      
+   
    protected:
+      ForkBehavior mForkBehavior;
+      bool mCancelBetweenForkGroups;
+      bool mWaitForTerminate;
+      int mDelayBetweenForkGroups;
+      int mCancellationDelay;
+      
 
 
-
-      resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
-      bool mAcceptingWork;
-      bool mShutdown;
-      bool mStarted;
-      Worker* mWorkerPrototype;
-
-      resip::Mutex mMutex;
-
-      std::vector<WorkerThread*> mWorkerThreads;
-
-
-   private:
-      //No copying!
-      Dispatcher(const Dispatcher& toCopy);
-      Dispatcher& operator=(const Dispatcher& toCopy);
 };
-
 }
 
 #endif
@@ -114,10 +101,4 @@ class Dispatcher
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

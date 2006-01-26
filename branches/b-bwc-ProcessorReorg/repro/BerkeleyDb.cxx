@@ -98,17 +98,10 @@ BerkeleyDb::dbWriteRecord( const Table table,
    int ret;
    
    assert( mDb );
-   try
-   {
       ret = mDb[table]->put(NULL,&key,&data,0);
       assert( ret == 0 );
 
       mDb[table]->sync(0);
-   }
-   catch(DbException& e)
-   {
-      ErrLog(<< "In dbWriteRecord, Berkeley Db backend threw a DbException: " << e.what());
-   }
    
 }
 
@@ -124,8 +117,6 @@ BerkeleyDb::dbReadRecord( const Table table,
    
    assert( mDb );
 
-   try
-   {
       ret = mDb[table]->get(NULL,&key,&data, 0);
 
       if ( ret == DB_NOTFOUND )
@@ -135,11 +126,6 @@ BerkeleyDb::dbReadRecord( const Table table,
       }
       assert( ret != DB_KEYEMPTY );
       assert( ret == 0 );
-   }
-   catch(DbException& e)
-   {
-      ErrLog(<< "In dbReadRecord, Berkeley Db backend threw a DbException: " << e.what());
-   }
    
    Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
    
@@ -163,16 +149,9 @@ BerkeleyDb::dbEraseRecord( const Table table,
    Dbt key( (void*) pKey.data(), (::u_int32_t)pKey.size() );
 
    assert( mDb );
-   try
-   {
       mDb[table]->del(NULL,&key, 0);
 
       mDb[table]->sync(0);
-   }
-   catch(DbException& e)
-   {
-      ErrLog(<< "In dbEraseRecord, Berkeley Db backend threw a DbException: " << e.what());
-   }  
 }
 
 
@@ -185,19 +164,12 @@ BerkeleyDb::dbNextKey( const Table table,
    
    assert( mDb );
    
-   try
-   {
       ret = mCursor[table]->get(&key,&data, first ? DB_FIRST : DB_NEXT);
       if ( ret == DB_NOTFOUND )
       {
          return Data::Empty;
       }
       assert ( ret == 0 );
-   }
-   catch(DbException& e)
-   {
-      ErrLog(<< "In dbNextKey, Berkeley Db backend threw a DbException: " << e.what());
-   }
    
    Data d( reinterpret_cast<const char*>(key.get_data()), key.get_size() );
    
