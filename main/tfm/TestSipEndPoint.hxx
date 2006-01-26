@@ -210,11 +210,12 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       friend class RawSend;
       RawSend* rawSend(const TestSipEndPoint* endPoint, const resip::Data& rawText);
       RawSend* rawSend(const TestUser& endPoint, const resip::Data& rawText);
+      RawSend* rawSend(const resip::Uri& target, const resip::Data& rawText);
 
       class Subscribe : public Action
       {
          public:
-            Subscribe(TestSipEndPoint* from, const resip::Uri& to);
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -223,12 +224,13 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             
             TestSipEndPoint & mEndPoint;
             resip::Uri mTo;
+            resip::Token mEventPackage;            
       };
       friend class Subscribe;
-      Subscribe* subscribe(const TestSipEndPoint* endPoint);
-      Subscribe* subscribe(const TestUser& endPoint);
-      Subscribe* subscribe(const resip::Uri& url);
-
+      Subscribe* subscribe(const TestSipEndPoint* endPoint, const resip::Token& event);
+      Subscribe* subscribe(const TestUser& endPoint, const resip::Token& event);
+      Subscribe* subscribe(const resip::Uri& url, const resip::Token& event);
+ 
       class Request : public MessageAction
       {
          public:
@@ -245,6 +247,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       friend class Request;
       Request* request(const TestUser& endPoint, 
+                       resip::MethodTypes method, 
+                       boost::shared_ptr<resip::Contents> c = 
+                       boost::shared_ptr<resip::Contents>());
+
+      Request* request(const resip::Uri& to, 
                        resip::MethodTypes method, 
                        boost::shared_ptr<resip::Contents> c = 
                        boost::shared_ptr<resip::Contents>());
