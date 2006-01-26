@@ -952,7 +952,9 @@ TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from,
                                   const resip::Data& rawText)
    : MessageAction(*from, to),
      mRawText(rawText)
-{}
+{
+   DebugLog(<<"RawSend::RawSend: to target: " << to);
+}
 
 shared_ptr<SipMessage>
 TestSipEndPoint::RawSend::go()
@@ -992,11 +994,20 @@ TestSipEndPoint::rawSend(const TestSipEndPoint* endPoint,
    return new RawSend(this, endPoint->mAor, rawText);
 }
 
+TestSipEndPoint::RawSend* 
+TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
+{
+   return new RawSend(this, target, rawText);
+}
+
+
 
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, 
-                                      const resip::Uri& to)
+                                      const resip::Uri& to,
+                                      const resip::Token& eventPackage)
    : mEndPoint(*from),
-     mTo(to)
+     mTo(to),
+     mEventPackage(eventPackage)
 {
 }
 
@@ -1026,6 +1037,7 @@ TestSipEndPoint::Subscribe::go()
                                                         mEndPoint.getContact(),
                                                         SUBSCRIBE));
    subscribe->header(h_Expires).value() = 3600;
+   subscribe->header(h_Event) = mEventPackage;   
    
    mEndPoint.storeSentSubscribe(subscribe);
    DebugLog(<< "sending SUBSCRIBE " << subscribe->brief());
@@ -1033,21 +1045,21 @@ TestSipEndPoint::Subscribe::go()
 }
 
 TestSipEndPoint::Subscribe* 
-TestSipEndPoint::subscribe(const TestSipEndPoint* endPoint) 
+TestSipEndPoint::subscribe(const TestSipEndPoint* endPoint, const resip::Token& eventPackage) 
 {
-   return new Subscribe(this, endPoint->mAor); 
+   return new Subscribe(this, endPoint->mAor, eventPackage); 
 }
 
 TestSipEndPoint::Subscribe* 
-TestSipEndPoint::subscribe(const TestUser& endPoint) 
+TestSipEndPoint::subscribe(const TestUser& endPoint, const resip::Token& eventPackage) 
 {
-   return new Subscribe(this, endPoint.getAddressOfRecord()); 
+   return new Subscribe(this, endPoint.getAddressOfRecord(), eventPackage); 
 }
 
 TestSipEndPoint::Subscribe* 
-TestSipEndPoint::subscribe(const resip::Uri& url) 
+TestSipEndPoint::subscribe(const resip::Uri& url, const resip::Token& eventPackage) 
 {
-   return new Subscribe(this, url); 
+   return new Subscribe(this, url, eventPackage); 
 }
 
 TestSipEndPoint::Request::Request(TestSipEndPoint* from, 
@@ -1078,7 +1090,7 @@ TestSipEndPoint::Request::go()
    if (dialog)
    {
       shared_ptr<SipMessage> request(dialog->makeRequest(mType));
-      if (mContents != 0) request->setContents(mContents.get());
+      if (mContents.get() != 0) request->setContents(mContents.get());
       request->header(h_Expires).value() = 3600;
       return request;   
    }
@@ -1101,6 +1113,12 @@ TestSipEndPoint::request(const TestUser& endPoint, resip::MethodTypes method,
    return new Request(this, endPoint.getAddressOfRecord(), method, contents);
 }
 
+TestSipEndPoint::Request* 
+TestSipEndPoint::request(const resip::Uri& to, resip::MethodTypes method, 
+                         boost::shared_ptr<resip::Contents> contents)
+{
+   return new Request(this, to, method, contents);
+}
 
 TestSipEndPoint::Request* 
 TestSipEndPoint::info(const TestSipEndPoint* endPoint) 
