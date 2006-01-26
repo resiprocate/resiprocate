@@ -75,9 +75,8 @@ class TestUser : public TestSipEndPoint
    protected:
       resip::Data mAuthName;
       resip::Data mPassword;
-      unsigned int mNonceCount;
       boost::shared_ptr<resip::SipMessage> mRegistration;
-
+      unsigned int mNonceCount;
    private:
       // disabled
       TestUser(const TestUser&);

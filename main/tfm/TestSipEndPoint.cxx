@@ -952,9 +952,7 @@ TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from,
                                   const resip::Data& rawText)
    : MessageAction(*from, to),
      mRawText(rawText)
-{
-   DebugLog(<<"RawSend::RawSend: to target: " << to);
-}
+{}
 
 shared_ptr<SipMessage>
 TestSipEndPoint::RawSend::go()
@@ -1032,10 +1030,20 @@ TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
 void
 TestSipEndPoint::Subscribe::go()
 {
-   shared_ptr<SipMessage> subscribe(Helper::makeRequest(NameAddr(mTo), 
-                                                        NameAddr(mEndPoint.getAddressOfRecord()), 
-                                                        mEndPoint.getContact(),
-                                                        SUBSCRIBE));
+   shared_ptr<SipMessage> subscribe;
+   
+   DeprecatedDialog* dialog = mEndPoint.getDialog();
+   if (dialog)
+   {
+      subscribe = shared_ptr<SipMessage>(dialog->makeRequest(SUBSCRIBE));
+   }
+   else
+   {
+      subscribe = shared_ptr<SipMessage>(Helper::makeRequest(NameAddr(mTo), 
+                                                             NameAddr(mEndPoint.getAddressOfRecord()), 
+                                                             mEndPoint.getContact(),
+                                                             SUBSCRIBE));
+   }
    subscribe->header(h_Expires).value() = 3600;
    subscribe->header(h_Event) = mEventPackage;   
    
