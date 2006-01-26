@@ -2368,7 +2368,7 @@ InviteSession::acceptReferNoSub(int statusCode)
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
 
-   SharedPtr<SipMessage> response;
+   SharedPtr<SipMessage> response(new SipMessage);
    mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
    response->header(h_ReferSub).value() = "false";
    //response->header(h_Supporteds).push_back(Token("norefersub"));
@@ -2384,7 +2384,7 @@ InviteSession::rejectReferNoSub(int responseCode)
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
 
-   SharedPtr<SipMessage> response;
+   SharedPtr<SipMessage> response(new SipMessage);
    mDialog.makeResponse(*response, mLastReferNoSubRequest, responseCode);
    send(response);
 }
