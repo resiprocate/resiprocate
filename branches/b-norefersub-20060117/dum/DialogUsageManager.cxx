@@ -515,15 +515,18 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                const SdpContents* alternative,
                                                AppDialogSet* appDs)
 {
-   //generate and send 100
-   SipFrag contents;
-   contents.message().header(h_StatusLine).statusCode() = 100;
-   contents.message().header(h_StatusLine).reason() = "Trying";
-   //will be cloned...ServerSub may not have the most efficient API possible
-   serverSub->setSubscriptionState(Active);
-   SharedPtr<SipMessage> notify = serverSub->update(&contents);
+   if (serverSub.isValid())
+   {
+      //generate and send 100
+      SipFrag contents;
+      contents.message().header(h_StatusLine).statusCode() = 100;
+      contents.message().header(h_StatusLine).reason() = "Trying";
+      //will be cloned...ServerSub may not have the most efficient API possible
+      serverSub->setSubscriptionState(Active);
+      SharedPtr<SipMessage> notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
-   serverSub->send(notify);
+      serverSub->send(notify);
+   }
 
    //19.1.5
    NameAddr target = refer.header(h_ReferTo);
@@ -533,7 +536,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    // !jf! this code assumes you have a UserProfile
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this,
                                                                        target,
-                                                                       serverSub->mDialog.mDialogSet.getUserProfile(),
+                                                                       serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(),
                                                                        initialOffer, level, alternative, serverSub), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
 
