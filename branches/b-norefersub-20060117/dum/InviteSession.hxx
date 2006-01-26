@@ -87,7 +87,7 @@ class InviteSession : public DialogUsage
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
 
-      virtual void acceptReferNoSub(int statusCode = 200, bool referSub = false);
+      virtual void acceptReferNoSub(int statusCode = 200);
       virtual void rejectReferNoSub(int responseCode);
 
       // Convenience methods for accessing attributes of a dialog. 
