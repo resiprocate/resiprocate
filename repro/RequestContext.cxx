@@ -9,6 +9,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 
@@ -113,26 +114,52 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          ret = mRequestProcessorChain.process(*this);
       }
       
-      if(ret != Processor::WaitingForEvent &&
-         !mHaveSentFinalResponse && 
-         !mResponseContext.hasActiveTransactions())
+      if(ret!=Processor::WaitingForEvent)
       {
-         if(mResponseContext.hasPendingTransactions())
+         // if target list is empty return a 480
+         if (!mResponseContext.hasTargets())
          {
-            //Someone forgot to start _any_ of the targets they just added.
-            ErrLog(<<"In RequestContext, request processor "
-            << "chain appears to have added targets, but not processed any of them."
-            << " (Bad monkey?)");
+            // make 480, send, dispose of memory
+            resip::SipMessage response;
+            InfoLog (<< *this << ": no targets for " 
+                     << mOriginalRequest->header(h_RequestLine).uri() 
+                     << " send 480");
+            Helper::makeResponse(response, *mOriginalRequest, 480); 
+            sendResponse(response);
+            mHaveSentFinalResponse=true;
          }
          else
          {
-            ErrLog(<< "In RequestContext, request processor "
-            << "chain appears to have added no targets. Further, there are no active"
-            << " transactions. There is no guarantee that any targets will ever "
-            << " be added. (Bad monkey?)");
-            // TODO make sure to do the right thing here.
+            InfoLog (<< *this << " there are " 
+            << mResponseContext.mCandidateTransactionMap.size() 
+            << " candidates -> continue");
+            
+            ret = mTargetProcessorChain.process(*this);
+
+            if(ret != Processor::WaitingForEvent &&
+               !mHaveSentFinalResponse && 
+               !mResponseContext.hasActiveTransactions())
+            {
+               if(mResponseContext.hasCandidateTransactions())
+               {
+                  //Someone forgot to start any of the targets they just added.
+                  ErrLog(<<"In RequestContext, target processor chain appears "
+                  << "to have failed to process any targets. (Bad baboon?)");
+               }
+               else
+               {
+                  ErrLog(<< "In RequestContext, request processor chain "
+                  << " appears to have added Targets, but all of these Targets"
+                  << " are already Terminated. Further, there are no candidate"
+                  << " Targets. (Bad monkey?)");
+                  // TODO make sure to do the right thing here.
+               }
+            }
+
          }
+
       }
+      
       
    }
    else if (sip->isResponse())
@@ -147,26 +174,30 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       // response chain we will need to maintain a collection of all of the
       // outstanding responses that are still processing. 
       assert(ret != Processor::WaitingForEvent);
+      
       if (ret == Processor::Continue) 
       {
          mResponseContext.processResponse(*sip);
 
+         //If everything we have tried so far has gone quiescent, we
+         //need to fire up some more Targets (if there are any left)
+         mTargetProcessorChain.process(*this);
+
          if(!mHaveSentFinalResponse && 
             !mResponseContext.hasActiveTransactions())
          {
-            if(mResponseContext.hasPendingTransactions())
+            if(mResponseContext.hasCandidateTransactions())
             {
                //The last active transaction has ended, and the response processors
                //did not start any of the pending transactions.
-               ErrLog(<<"In RequestContext, after processing "
-               << "a sip response: The last active transaction has ended, we have "
-               << "no final response, and the response processors did not start "
-               << "any of the pending transactions. (Bad lemur?)");
+               ErrLog(<<"In RequestContext, after processing a sip response:"
+               << " We have no active transactions, but there are candidates "
+               << " remaining. (Bad baboon?)");
             }
             else
             {
                ErrLog(<<"In RequestContext, after processing "
-               << "a sip response: The last active transaction has ended, but we"
+               << "a sip response: all transactions are terminated, but we"
                << " have not sent a final response. (What happened here?) ");
                // TODO make sure to do the right thing.
             }
@@ -226,32 +257,59 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
       {
          case Processor::REQUEST_CHAIN:
             ret = mRequestProcessorChain.process(*this);
-
-            if(ret != Processor::WaitingForEvent &&
-               !mHaveSentFinalResponse && 
-               !mResponseContext.hasActiveTransactions())
+            
+            if(ret != Processor::WaitingForEvent)
             {
-               if(mResponseContext.hasPendingTransactions())
+               if (!mResponseContext.hasTargets())
                {
-                  //Someone forgot to start _any_ of the targets they just added.
-                  ErrLog(<<"In RequestContext, request processor "
-                  << "chain appears to have added targets, but not processed any of them."
-                  << " (Bad monkey?)");
+                  // make 480, send, dispose of memory
+                  resip::SipMessage response;
+                  InfoLog (<< *this << ": no targets for " 
+                           << mOriginalRequest->header(h_RequestLine).uri() 
+                           << " send 480");
+                  Helper::makeResponse(response, *mOriginalRequest, 480); 
+                  sendResponse(response);
+                  mHaveSentFinalResponse=true;
                }
                else
                {
-                  ErrLog(<< "In RequestContext, request processor "
-                  << "chain appears to have added no targets. Further, there are no active"
-                  << " transactions. There is no guarantee that any targets will ever "
-                  << " be added. (Bad monkey?)");
-                  // TODO make sure to do the right thing here.
+                  InfoLog (<< *this << " there are " 
+                  << mResponseContext.mCandidateTransactionMap.size() 
+                  << " candidates -> continue");
+                  
+                  ret = mTargetProcessorChain.process(*this);
+
+                  if(ret != Processor::WaitingForEvent &&
+                     !mHaveSentFinalResponse && 
+                     !mResponseContext.hasActiveTransactions())
+                  {
+                     if(mResponseContext.hasCandidateTransactions())
+                     {
+                        //Someone forgot to start any of the targets they just added.
+                        ErrLog(<<"In RequestContext, request and target processor"
+                        << " chains have run, and we have some Candidate Targets,"
+                        << " but no active Targets. (Bad baboon?)");
+                     }
+                     else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
+                     {
+                        ErrLog(<< "In RequestContext, request and target processor "
+                        << "chains have run, and all Targets are now Terminated."
+                        << " However, we have not sent a final response, and our "
+                        << "best final response is not a 408.(What happened here?)");
+                        // TODO what do we do here?
+                     }
+                  }
+
                }
             }
+            
 
             break;
          
          case Processor::RESPONSE_CHAIN:
             ret = mResponseProcessorChain.process(*this);
+            
+            mTargetProcessorChain.process(*this);
             break;
             
          case Processor::TARGET_CHAIN:
@@ -265,6 +323,8 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
       }
    }
 }
+
+
 
 resip::SipMessage& 
 RequestContext::getOriginalRequest()

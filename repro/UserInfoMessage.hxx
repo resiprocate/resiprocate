@@ -9,7 +9,7 @@ namespace repro
 class UserInfoMessage : public ProcessorMessage
 {
    public:
-      UserInfoMessage(Processor& proc,
+      UserInfoMessage(const Processor& proc,
                      const resip::Data& tid,
                      resip::TransactionUser* passedtu):
          ProcessorMessage(proc,tid,passedtu)

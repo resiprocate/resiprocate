@@ -1,76 +1,97 @@
-#ifndef DISPATCHER_HXX
-#define DISPATCHER_HXX 1
+#include "repro/QValueTarget.hxx"
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
-#include <vector>
-
-
-class resip::SipStack;
 
 namespace repro
 {
 
-class Dispatcher
+
+QValueTarget::QValueTarget()
 {
-
-
-   public:
-      Dispatcher(std::auto_ptr<Worker> prototype, 
-                  resip::SipStack* stack,
-                  int workers=2, 
-                  bool startImmediately=true);
-
-      virtual ~Dispatcher();
-      
-      /**
-         Posts a message to this thread bank.
-         
-         @param work The message that conveys the work that needs to be done.
-            (Any information that must 
-
-         @returns true iff this message was successfully posted. (This may not
-            be the case if this Dispatcher is in the process of shutting down)
-      */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
-
-      size_t fifoCountDepth() const;
-      time_t fifoTimeDepth() const;
-      int workPoolSize() const;
-      void shutdownAll();
-      void startAll();
-
-      resip::SipStack* mStack;
-
-      
-   protected:
-
-
-
-      resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
-      bool mAcceptingWork;
-      bool mShutdown;
-      bool mStarted;
-      Worker* mWorkerPrototype;
-
-      resip::Mutex mMutex;
-
-      std::vector<WorkerThread*> mWorkerThreads;
-
-
-   private:
-      //No copying!
-      Dispatcher(const Dispatcher& toCopy);
-      Dispatcher& operator=(const Dispatcher& toCopy);
-};
-
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mStatus=Target::Candidate;
 }
 
-#endif
+QValueTarget::QValueTarget(const resip::Uri& uri):
+   Target(uri)
+{
+   if(uri.exists(resip::p_q))
+   {
+      mPriorityMetric=uri.param(resip::p_q);
+      mShouldAutoProcess=true;
+   }
+   
+}
+
+QValueTarget::QValueTarget(const resip::NameAddr& nameAddr):
+   Target(nameAddr)
+{
+   if(nameAddr.uri().exists(resip::p_q))
+   {
+      mPriorityMetric=nameAddr.uri().param(resip::p_q);
+      mShouldAutoProcess=true;
+   }
+   
+}
+
+QValueTarget::QValueTarget(const Target& orig):
+   Target(orig)
+{
+   if(mNameAddr.uri().exists(resip::p_q))
+   {
+      mPriorityMetric=mNameAddr.uri().param(resip::p_q);
+      mShouldAutoProcess=true;      
+   }
+}
+
+QValueTarget::QValueTarget(const QValueTarget& orig)
+{
+   mPriorityMetric=orig.mPriorityMetric;
+   mShouldAutoProcess=orig.mShouldAutoProcess;
+   mNameAddr=orig.mNameAddr;
+   mVia=orig.mVia;
+   mStatus=orig.mStatus;
+}
+   
+QValueTarget::~QValueTarget(){}
+
+const resip::Uri& 
+QValueTarget::setUri(const resip::Uri& uri)
+{
+   if(uri.exists(resip::p_q))
+   {
+      mPriorityMetric=uri.param(resip::p_q);
+   }
+   else
+   {
+      mPriorityMetric=1;
+   }
+
+   return mNameAddr.uri()=uri;
+}
+
+const resip::NameAddr& 
+QValueTarget::setNameAddr(const resip::NameAddr& nameAddr)
+{
+   if(mNameAddr.uri().exists(resip::p_q))
+   {
+      mPriorityMetric=nameAddr.uri().param(resip::p_q);
+   }
+   else
+   {
+      mPriorityMetric=1;
+   }
+
+   return mNameAddr=nameAddr;
+}
+
+QValueTarget* 
+QValueTarget::clone() const
+{
+   return new QValueTarget(*this);
+}
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -114,10 +135,4 @@ class Dispatcher
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

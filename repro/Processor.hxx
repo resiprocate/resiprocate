@@ -2,6 +2,7 @@
 #define RESIP_REQUEST_PROCESSOR_HXX 
 
 #include <iosfwd>
+#include <vector>
 
 namespace repro
 {

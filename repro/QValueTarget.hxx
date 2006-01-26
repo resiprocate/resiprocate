@@ -1,75 +1,32 @@
-#ifndef DISPATCHER_HXX
-#define DISPATCHER_HXX 1
+#ifndef Q_VALUE_TARGET_HXX
+#define Q_VALUE_TARGET_HXX 1
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
-#include <vector>
+#include "repro/Target.hxx"
 
-
-class resip::SipStack;
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
 
 namespace repro
 {
 
-class Dispatcher
+class QValueTarget : public Target
 {
-
-
    public:
-      Dispatcher(std::auto_ptr<Worker> prototype, 
-                  resip::SipStack* stack,
-                  int workers=2, 
-                  bool startImmediately=true);
-
-      virtual ~Dispatcher();
+      QValueTarget();
+      QValueTarget(const resip::Uri& uri);
+      QValueTarget(const resip::NameAddr& nameAddr);
+      explicit QValueTarget(const Target& orig);
+      explicit QValueTarget(const QValueTarget& orig);
       
-      /**
-         Posts a message to this thread bank.
-         
-         @param work The message that conveys the work that needs to be done.
-            (Any information that must 
-
-         @returns true iff this message was successfully posted. (This may not
-            be the case if this Dispatcher is in the process of shutting down)
-      */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
-
-      size_t fifoCountDepth() const;
-      time_t fifoTimeDepth() const;
-      int workPoolSize() const;
-      void shutdownAll();
-      void startAll();
-
-      resip::SipStack* mStack;
-
+      virtual ~QValueTarget();
       
-   protected:
+      //These are overridden so they can change the priority
+      virtual const resip::Uri& setUri(const resip::Uri& uri);
+      virtual const resip::NameAddr& setNameAddr(const resip::NameAddr& nameAddr);
 
-
-
-      resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
-      bool mAcceptingWork;
-      bool mShutdown;
-      bool mStarted;
-      Worker* mWorkerPrototype;
-
-      resip::Mutex mMutex;
-
-      std::vector<WorkerThread*> mWorkerThreads;
-
-
-   private:
-      //No copying!
-      Dispatcher(const Dispatcher& toCopy);
-      Dispatcher& operator=(const Dispatcher& toCopy);
+      virtual QValueTarget* clone() const;
 };
-
 }
-
 #endif
 
 /* ====================================================================
@@ -114,10 +71,4 @@ class Dispatcher
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

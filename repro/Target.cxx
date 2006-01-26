@@ -10,23 +10,31 @@ namespace repro
 
 Target::Target()
 {
-   mStatus=Pending;
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mStatus=Candidate;
 }
 
 Target::Target(const resip::Uri& uri)
-{
+{  
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
    mNameAddr=resip::NameAddr(uri);
-   mStatus=Pending;
+   mStatus=Candidate;
 }
 
 Target::Target(const resip::NameAddr& target)
 {
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
    mNameAddr=target;
-   mStatus=Pending;
+   mStatus=Candidate;
 }
 
 Target::Target(const repro::Target& target)
 {
+   mPriorityMetric=target.mPriorityMetric;
+   mShouldAutoProcess=target.mShouldAutoProcess;
    mNameAddr=target.mNameAddr;
    mStatus=target.mStatus;
    mVia=target.mVia;
@@ -60,10 +68,10 @@ Target::status() const
 }
 
 
-resip::Uri&
-Target::uri()
+const resip::Uri&
+Target::setUri(const resip::Uri& uri)
 {
-   return mNameAddr.uri();
+   return mNameAddr.uri()=uri;
 }
 
 const resip::Uri&
@@ -73,10 +81,10 @@ Target::uri() const
 }
 
 
-resip::Via&
-Target::via()
+const resip::Via&
+Target::setVia(const resip::Via& via)
 {
-   return mVia;
+   return mVia=via;
 }
 
 const resip::Via&
@@ -86,10 +94,10 @@ Target::via() const
 }
 
 
-resip::NameAddr&
-Target::nameAddr()
+const resip::NameAddr&
+Target::setNameAddr(const resip::NameAddr& nameAddr)
 {
-   return mNameAddr;
+   return mNameAddr=nameAddr;
 }
 
 const resip::NameAddr&
@@ -104,6 +112,17 @@ Target::clone() const
    return new Target(*this);
 }
 
+float
+Target::getPriority() const
+{
+   return mPriorityMetric;
+}
+
+bool
+Target::shouldAutoProcess() const
+{
+   return mShouldAutoProcess;
+}
 } // namespace repro
 
 /* ====================================================================
