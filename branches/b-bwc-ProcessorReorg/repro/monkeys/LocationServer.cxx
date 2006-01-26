@@ -6,6 +6,7 @@
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/QValueTarget.hxx"
 
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -32,6 +33,8 @@ LocationServer::process(RequestContext& context)
 
      mStore.unlockRecord(inputUri);
 
+      std::set<Target*,TargetComparator> qbatch;
+      std::set<Target*,TargetComparator> noqbatch;
      for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
@@ -39,7 +42,14 @@ LocationServer::process(RequestContext& context)
         if (contact.second>=time(NULL))
         {
            InfoLog (<< *this << " adding target " << contact.first);
-           context.addTarget(NameAddr(contact.first));
+           if(contact.first.exists(resip::p_q))
+           {
+               qbatch.insert(new QValueTarget(contact.first));
+           }
+           else
+           {
+               noqbatch.insert(new Target(contact.first));
+           }
         }
         else
         {
@@ -47,23 +57,25 @@ LocationServer::process(RequestContext& context)
             mStore.removeContact(inputUri, contact.first);
         }
      }
-	 // if target list is empty return a 480
-	 if (context.getResponseContext().getTargetList().empty())
-	 {
-	    // make 480, send, dispose of memory
-		resip::SipMessage response;
-        InfoLog (<< *this << ": no registered target for " << inputUri << " send 480");
-		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
-		context.sendResponse(response);
-	    return Processor::SkipThisChain;
-	 }
-	 else
-	 {
-        InfoLog (<< *this << " there are " 
-        << context.getResponseContext().getTargetList().size() 
-        << " candidates -> continue");
-	    return Processor::Continue;
-	 }
+
+     std::set<Target*>::iterator i;
+     if(!qbatch.empty())
+     {
+        context.getResponseContext().addTargetBatch(qbatch.begin(),qbatch.end());
+        for(i=qbatch.begin();i!=qbatch.end();i++)
+        {
+         delete *i;
+        }
+     }
+     
+     if(!noqbatch.empty())
+     {
+        context.getResponseContext().addTargetBatch(noqbatch.begin(),noqbatch.end());
+        for(i=noqbatch.begin();i!=noqbatch.end();i++)
+        {
+         delete *i;
+        }
+     }
    }
    else
    {

@@ -1,71 +1,21 @@
-#ifndef DISPATCHER_HXX
-#define DISPATCHER_HXX 1
+#ifndef SIMPLE_TARGET_HANDLER_HXX
+#define SIMPLE_TARGET_HANDLER_HXX 1
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
-#include <vector>
-
-
-class resip::SipStack;
+#include "repro/Processor.hxx"
 
 namespace repro
 {
+class RequestContext;
 
-class Dispatcher
+class SimpleTargetHandler : public Processor
 {
-
-
    public:
-      Dispatcher(std::auto_ptr<Worker> prototype, 
-                  resip::SipStack* stack,
-                  int workers=2, 
-                  bool startImmediately=true);
+      SimpleTargetHandler();
+      virtual ~SimpleTargetHandler();
 
-      virtual ~Dispatcher();
-      
-      /**
-         Posts a message to this thread bank.
-         
-         @param work The message that conveys the work that needs to be done.
-            (Any information that must 
+      virtual processor_action_t process(RequestContext &);
+      virtual void dump(std::ostream &os) const;
 
-         @returns true iff this message was successfully posted. (This may not
-            be the case if this Dispatcher is in the process of shutting down)
-      */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
-
-      size_t fifoCountDepth() const;
-      time_t fifoTimeDepth() const;
-      int workPoolSize() const;
-      void shutdownAll();
-      void startAll();
-
-      resip::SipStack* mStack;
-
-      
-   protected:
-
-
-
-      resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
-      bool mAcceptingWork;
-      bool mShutdown;
-      bool mStarted;
-      Worker* mWorkerPrototype;
-
-      resip::Mutex mMutex;
-
-      std::vector<WorkerThread*> mWorkerThreads;
-
-
-   private:
-      //No copying!
-      Dispatcher(const Dispatcher& toCopy);
-      Dispatcher& operator=(const Dispatcher& toCopy);
 };
 
 }
@@ -114,10 +64,4 @@ class Dispatcher
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

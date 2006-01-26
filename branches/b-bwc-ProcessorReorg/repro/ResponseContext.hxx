@@ -3,6 +3,10 @@
 
 #include <iosfwd>
 #include <map>
+#include <deque>
+#include <list>
+#include <iterator>
+
 #include "rutil/HashMap.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -38,57 +42,180 @@ class ResponseContext
 
       ~ResponseContext();
 
-      //Returns true iff this target was successfully added.
-      bool addTarget( repro::Target& target, bool beginImmediately=true);
+      /**
+         Adds this Target to the collection of Targets.
+         
+         @param target The Target to add.
 
-      //Begins all Candidate client transactions. Returns true iff any transactions
-      //were started as a result of this call
+         @param beginImmediately Whether to immediately start a transaction for this target.
+
+         @returns If beginImmediately=false, true iff the Target was
+         successfully added (could happen if a final response has already
+         been forwarded). If beginImmediately=true, true iff a transaction
+         was successfully started for the Target (could fail due to the 
+         presence of a duplicate contact, or when a final response has
+         already been forwarded.)
+         
+         @note Targets are not checked for duplicate uris until an attempt is made to begin them.
+      */
+      bool addTarget( repro::Target& target, bool beginImmediately=true);
+      
+      /**
+         Adds a batch of Targets. 
+         
+         @note RESPONSECONTEXT DOES NOT ASSUME OWNERSHIP OF THE TARGETS POINTED
+             TO IN THIS ITERATOR! The Targets must be passed as pointers
+             because stl containers cannot handle polymorphism, and we cannot
+             pass the containers themselves because a set<Target*,Predicate>
+             is not a set<Target*>, even when Predicate is a subclass of 
+             std::less (again, due to the polymorphism problem)
+         
+         @param targetsBegin An iterator pointing to the first Target*.
+         
+         @param targetsEnd An iterator denoting the position after the last
+            Target* to add.
+         
+         @param highPriority Whether or not the Target ProccessorChain should 
+            prioritize this batch above other batches of the same type.
+            (This is primarily intended to let multiple recursive redirection
+            work properly, but can be used for other purposes.)
+         
+         @returns true iff the batch was added successfully.
+         
+         @note It is assumed that all of these Targets are 
+         the same subclass of Target, and that they are already sorted in the
+         order of their priority. If these assumptions do not hold, things
+         will not break per se, but oddball target processing behavior might
+         result.
+      */
+      bool addTargetBatch(
+         std::set<Target*>::iterator targetsBegin,
+         const std::set<Target*>::iterator targetsEnd,
+         bool highPriority=false);
+      
+      /**
+         Begins all Candidate client transactions.
+         
+         @returns true iff any transactions were started
+      */
       bool beginClientTransactions();
       
-      // Returns true iff the transaction was in the Candidate state before this call
+      /** 
+         Begins a client transaction.
+      
+         @param serial The transaction id to start.
+         
+         @returns true iff the transaction was started (could fail if there was
+         a duplicate contact)
+      
+      */
       bool beginClientTransaction(const resip::Data& serial);
       
-      //Returns true iff any transaction was placed in the WaitingToCancel state
+      /**
+         Cancels all active client transactions. Does not clear Candidate
+         transactions.
+         
+         @returns true iff any transaction was placed in either the
+         WaitingToCancel or Cancelled state.
+      */ 
       bool cancelActiveClientTransactions();
       
+      /**
+         Cancels all active client transactions. Also clears Candidate
+         transactions (they are transitioned directly to Terminated)
+         
+         @returns true iff any transaction was placed in either the
+         WaitingToCancel, Cancelled, or Terminated state.
+      */ 
       bool cancelAllClientTransactions();
       
-      //Returns true iff this transaction was placed in the WaitingToCancel state
+      /**
+         Cancels this client transaction if active, or Terminates it if
+         Candidate.
+         
+         @returns true iff this transaction was placed in either the 
+         WaitingToCancel, Cancelled, or Terminated state.
+      */
       bool cancelClientTransaction(const resip::Data& serial);
             
-      //Self-explanatory
-      Target* getTarget(const resip::Data& serial);
+      /**
+         Self-explanatory
+      */
+      Target* getTarget(const resip::Data& serial) const;
 
       //Keyed by transaction id
       typedef std::map<resip::Data,repro::Target*> TransactionMap;
 
+      /**
+         Self-explanatory.
 
-      //Used to decide which targets should be processed next,
-      //usually by a response Processor.
-      const TransactionMap& getPendingTransactionMap() const;
+         @note Can be used to decide which targets should be processed next,
+         although this assumes a great deal of interdependency btw
+         the various processor chains and homogeneity in how the Targets are
+         prioritized, and can be inefficient if there
+         are large numbers of Candidate Targets. A more structured approach
+         exists in the functions dealing with TransactionBatch.
+      */
+      const TransactionMap& getCandidateTransactionMap() const;
       
+      /**
+         @returns true iff there are Candidate targets
+      */
+      bool hasCandidateTransactions() const;
       
-      bool hasPendingTransactions();
-      bool hasActiveTransactions();
-      bool hasTerminatedTransactions();
+      /**
+         @returns true iff there are active targets (in state Trying,
+         Proceeding, WaitingForCancel or Cancelled)
+      */
+      bool hasActiveTransactions() const;
       
-      const std::list<resip::Uri>& getTargetList() const;
+      /**
+         @returns true iff there are Terminated targets.
+      */
+      bool hasTerminatedTransactions() const;
+
+      bool hasTargets() const;
       
-      bool areAllTransactionsTerminated();
-      // return true if the transaction was found
+      int targetCount() const;
+      
+      /**
+         @returns true iff this target is in state Candidate
+      */
+      bool isCandidate(const resip::Data& tid) const;
+      
+      /**
+         @returns true iff this target is active (Trying, Proceeding,
+         WaitingForCancel, or Cancelled)
+      */
+      bool isActive(const resip::Data& tid) const;
+      
+      /**
+         @returns true iff this target is in state Terminated
+      */
+      bool isTerminated(const resip::Data& tid) const;
+      
+      /**
+         @returns true iff all targets are in state Terminated
+      */
+      bool areAllTransactionsTerminated() const;
+
+      
       int getPriority(const resip::SipMessage& msg);
 
       //!bwc! This should probably not be private, since these two classes are
       //tightly coupled.
       RequestContext& mRequestContext;
       
+      typedef std::list<resip::Data> TransactionQueue;
+
+      std::deque<TransactionQueue> mTransactionQueueCollection;
 
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
       // These methods are really private. These are not intended to be used
-      // by anything other than member functions of ResponseContext.
+      // by anything other than RequestContext or ResponseContext.
 
       // call this from RequestContext when a CANCEL comes in 
       void processCancel(const resip::SipMessage& request);
@@ -110,13 +237,16 @@ class ResponseContext
       
       void sendRequest(const resip::SipMessage& request);
       
-      TransactionMap mPendingTransactionMap; //Targets with status Pending.
+      TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
       TransactionMap mActiveTransactionMap; //Targets with status Trying, Proceeding, or WaitingToCancel.
       TransactionMap mTerminatedTransactionMap; //Targets with status Terminated.
 
+      
       //Maybe someday canonicalized Uris will go here, and checking for duplicates
       //will be much faster
       std::list<resip::Uri> mTargetList;
+      
+      bool isDuplicate(const repro::Target* target) const;
       
       resip::SipMessage mBestResponse;
       bool mForwardedFinalResponse;

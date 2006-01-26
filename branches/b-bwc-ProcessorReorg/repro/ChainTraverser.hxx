@@ -12,7 +12,7 @@ class ChainTraverser
 {
    public:
    
-      ChainTraverser(Processor& proc)
+      ChainTraverser(const Processor& proc)
       {
          mReturnAddress=proc.getAddress();
          mType=proc.getChainType();
@@ -36,7 +36,7 @@ class ChainTraverser
       {
          if(mReturnAddress.empty())
          {
-            return -1;
+            return 0;
          }
          
          int addr = mReturnAddress.back();

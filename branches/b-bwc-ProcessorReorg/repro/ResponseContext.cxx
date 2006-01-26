@@ -49,12 +49,12 @@ ResponseContext::~ResponseContext()
    
    mActiveTransactionMap.clear();
    
-   for(i=mPendingTransactionMap.begin(); i!=mPendingTransactionMap.end();++i)
+   for(i=mCandidateTransactionMap.begin(); i!=mCandidateTransactionMap.end();++i)
    {
       delete i->second;
    }
    
-   mPendingTransactionMap.clear();
+   mCandidateTransactionMap.clear();
    
 }
 
@@ -72,47 +72,88 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
       return false;
    }
    
-   
    //Make sure we don't have Targets with an invalid initial state.
-   if(target.status() != Target::Pending)
+   if(target.status() != Target::Candidate)
    {
       return false;
    }
    
-   std::list<resip::Uri>::const_iterator i;
-   // make sure each target is only inserted once
 
-   // !bwc! We can not optimize this by using stl, because operator
-   // == does not conform to the partial-ordering established by operator
-   // <  (We can very easily have a < b and a==b simultaneously).
-   // [TODO] Once we have a canonicalized form, we can improve this.
-
-   for(i=mTargetList.begin();i!=mTargetList.end();i++)
-   {
-      if(*i==target.uri())
-      {
-         return false;
-      }
-   }
-
-   mTargetList.push_back(target.uri());
-   
    
    if(beginImmediately)
    {
+      if(isDuplicate(&target))
+      {
+         return false;
+      }
+   
+   
+      mTargetList.push_back(target.uri());
+      
       beginClientTransaction(&target);
       target.status()=Target::Trying;
       mActiveTransactionMap[target.tid()]=target.clone();
    }
    else
    {
-      mPendingTransactionMap[target.tid()]=target.clone();
+      if(target.mShouldAutoProcess)
+      {
+         std::list<resip::Data> queue;
+         queue.push_back(target.tid());
+         mTransactionQueueCollection.push_back(queue);
+      }
+
+      mCandidateTransactionMap[target.tid()]=target.clone();
    }
    
    return true;
    
 }
 
+bool
+ResponseContext::addTargetBatch(std::set<Target*>::iterator targetsBegin,
+                                 const std::set<Target*>::iterator targetsEnd,
+                                 bool highPriority)
+{
+   if(mForwardedFinalResponse || (targetsBegin==targetsEnd))
+   {
+      return false;
+   }
+
+
+     
+   TransactionQueue queue;
+   Target* target=0;
+   
+   for(;targetsBegin!=targetsEnd;targetsBegin++)
+   {
+      target=*targetsBegin;
+      if((!mSecure || target->uri().scheme() == Symbols::Sips) &&
+         target->status() == Target::Candidate)
+      {
+
+         if(target->mShouldAutoProcess)
+         {
+            queue.push_back(target->tid());
+         }
+         
+         mCandidateTransactionMap[target->tid()]=target->clone();
+
+      }
+   }
+
+
+   if(highPriority)
+   {
+      mTransactionQueueCollection.push_front(queue);
+   }
+   else
+   {
+      mTransactionQueueCollection.push_back(queue);
+   }
+   
+   return true;
+}
 
 bool 
 ResponseContext::beginClientTransactions()
@@ -122,23 +163,27 @@ ResponseContext::beginClientTransactions()
       return false;
    }
    
-   if(mPendingTransactionMap.empty())
+   if(mCandidateTransactionMap.empty())
    {
       return false;
    }
    
-   for (TransactionMap::iterator i=mPendingTransactionMap.begin(); i != mPendingTransactionMap.end(); )
+   for (TransactionMap::iterator i=mCandidateTransactionMap.begin(); i != mCandidateTransactionMap.end(); )
    {
-      beginClientTransaction(i->second);
-      // see rfc 3261 section 16.6
-      //This code moves the Target from mPendingTransactionMap to mActiveTransactionMap,
-      //and begins the transaction.
-      mActiveTransactionMap[i->second->tid()] = i->second;
-      InfoLog (<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
+      if(!isDuplicate(i->second))
+      {
+         mTargetList.push_back(i->second->uri());
+         beginClientTransaction(i->second);
+         // see rfc 3261 section 16.6
+         //This code moves the Target from mCandidateTransactionMap to mActiveTransactionMap,
+         //and begins the transaction.
+         mActiveTransactionMap[i->second->tid()] = i->second;
+         InfoLog (<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
+      }
       
       TransactionMap::iterator temp=i;
       i++;
-      mPendingTransactionMap.erase(temp);
+      mCandidateTransactionMap.erase(temp);
    }
    
    return true;
@@ -154,16 +199,23 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
 
-   TransactionMap::iterator i = mPendingTransactionMap.find(tid);
-   if(i==mPendingTransactionMap.end())
+   TransactionMap::iterator i = mCandidateTransactionMap.find(tid);
+   if(i==mCandidateTransactionMap.end())
    {
       return false;
    }
    
+   if(isDuplicate(i->second))
+   {
+      return false;
+   }
+   
+   mTargetList.push_back(i->second->uri());
+   
    beginClientTransaction(i->second);
    mActiveTransactionMap[i->second->tid()] = i->second;
    InfoLog(<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
-   mPendingTransactionMap.erase(i);
+   mCandidateTransactionMap.erase(i);
    
    return true;
 }
@@ -177,7 +229,7 @@ ResponseContext::cancelActiveClientTransactions()
       return false;
    }
 
-   InfoLog (<< "Cancel all proceeding client transactions: " << (mPendingTransactionMap.size() + 
+   InfoLog (<< "Cancel all proceeding client transactions: " << (mCandidateTransactionMap.size() + 
             mActiveTransactionMap.size()));
 
    if(mActiveTransactionMap.empty())
@@ -204,7 +256,7 @@ ResponseContext::cancelAllClientTransactions()
       return false;
    }
 
-   InfoLog (<< "Cancel ALL client transactions: " << mPendingTransactionMap.size()
+   InfoLog (<< "Cancel ALL client transactions: " << mCandidateTransactionMap.size()
             << " pending, " << mActiveTransactionMap.size() << " active.");
 
    if(mActiveTransactionMap.empty())
@@ -219,14 +271,14 @@ ResponseContext::cancelAllClientTransactions()
       cancelClientTransaction(i->second);
    }
 
-   for (TransactionMap::iterator j = mPendingTransactionMap.begin(); 
-        j != mPendingTransactionMap.end(); ++j)
+   for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
+        j != mCandidateTransactionMap.end(); ++j)
    {
       cancelClientTransaction(j->second);
       mTerminatedTransactionMap[j->second->tid()] = j->second;
       TransactionMap::iterator temp = j;
       j++;
-      mPendingTransactionMap.erase(temp);
+      mCandidateTransactionMap.erase(temp);
    }
    
    return true;
@@ -249,12 +301,12 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
       return true;
    }
    
-   TransactionMap::iterator j = mPendingTransactionMap.find(tid);
-   if(j != mPendingTransactionMap.end())
+   TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
+   if(j != mCandidateTransactionMap.end())
    {
       cancelClientTransaction(j->second);
       mTerminatedTransactionMap[tid] = j->second;
-      mPendingTransactionMap.erase(j);
+      mCandidateTransactionMap.erase(j);
       return true;
    }
    
@@ -263,27 +315,27 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
 
 
 Target* 
-ResponseContext::getTarget(const resip::Data& tid)
+ResponseContext::getTarget(const resip::Data& tid) const
 {
 
 
-   // !bwc! This tid is most likely to be found in either the Pending targets,
+   // !bwc! This tid is most likely to be found in either the Candidate targets,
    // or the Active targets.
-   TransactionMap::iterator pend = mPendingTransactionMap.find(tid);
-   if(pend != mPendingTransactionMap.end())
+   TransactionMap::const_iterator pend = mCandidateTransactionMap.find(tid);
+   if(pend != mCandidateTransactionMap.end())
    {
-      assert(pend->second->status()==Target::Pending);
+      assert(pend->second->status()==Target::Candidate);
       return pend->second;
    }
    
-   TransactionMap::iterator act = mActiveTransactionMap.find(tid);
+   TransactionMap::const_iterator act = mActiveTransactionMap.find(tid);
    if(act != mActiveTransactionMap.end())
    {
-      assert(!(act->second->status()==Target::Pending || act->second->status()==Target::Terminated));
+      assert(!(act->second->status()==Target::Candidate || act->second->status()==Target::Terminated));
       return act->second;
    }
 
-   TransactionMap::iterator term = mTerminatedTransactionMap.find(tid);
+   TransactionMap::const_iterator term = mTerminatedTransactionMap.find(tid);
    if(term != mTerminatedTransactionMap.end())
    {
       assert(term->second->status()==Target::Terminated);
@@ -296,45 +348,67 @@ ResponseContext::getTarget(const resip::Data& tid)
 
 
 const ResponseContext::TransactionMap& 
-ResponseContext::getPendingTransactionMap() const
+ResponseContext::getCandidateTransactionMap() const
 {
-   return mPendingTransactionMap;
+   return mCandidateTransactionMap;
 }
 
 
 
 bool 
-ResponseContext::hasPendingTransactions()
+ResponseContext::hasCandidateTransactions() const
 {
-   return !mPendingTransactionMap.empty();
+   return !mCandidateTransactionMap.empty();
 }
 
 
 bool 
-ResponseContext::hasActiveTransactions()
+ResponseContext::hasActiveTransactions() const
 {
    return !mActiveTransactionMap.empty();
 }
 
 
 bool 
-ResponseContext::hasTerminatedTransactions()
+ResponseContext::hasTerminatedTransactions() const
 {
    return !mTerminatedTransactionMap.empty();
 }
 
 
-bool 
-ResponseContext::areAllTransactionsTerminated()
+bool
+ResponseContext::hasTargets() const
 {
-   return (mPendingTransactionMap.empty() && mActiveTransactionMap.empty());
+   return (hasCandidateTransactions() ||
+            hasActiveTransactions() ||
+            hasTerminatedTransactions());
 }
 
-
-const std::list<resip::Uri>&
-ResponseContext::getTargetList() const
+bool 
+ResponseContext::areAllTransactionsTerminated() const
 {
-   return mTargetList;
+   return (mCandidateTransactionMap.empty() && mActiveTransactionMap.empty());
+}
+
+bool
+ResponseContext::isCandidate(const resip::Data& tid) const
+{
+   TransactionMap::const_iterator i=mCandidateTransactionMap.find(tid);
+   return i!=mCandidateTransactionMap.end();
+}
+
+bool
+ResponseContext::isActive(const resip::Data& tid) const
+{
+   TransactionMap::const_iterator i=mActiveTransactionMap.find(tid);
+   return i!=mActiveTransactionMap.end();
+}
+
+bool
+ResponseContext::isTerminated(const resip::Data& tid) const
+{
+   TransactionMap::const_iterator i=mTerminatedTransactionMap.find(tid);
+   return i!=mTerminatedTransactionMap.end();
 }
 
 void 
@@ -355,11 +429,11 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
    }
 
 
-   i=mPendingTransactionMap.find(transactionId);
-   if(i!=mPendingTransactionMap.end())
+   i=mCandidateTransactionMap.find(transactionId);
+   if(i!=mCandidateTransactionMap.end())
    {
       delete i->second;
-      mPendingTransactionMap.erase(i);
+      mCandidateTransactionMap.erase(i);
       return;
    }
    
@@ -375,13 +449,35 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
          
 }
  
+ 
+bool
+ResponseContext::isDuplicate(const repro::Target* target) const
+{
+   std::list<resip::Uri>::const_iterator i;
+   // make sure each target is only inserted once
+
+   // !bwc! We can not optimize this by using stl, because operator
+   // == does not conform to the partial-ordering established by operator
+   // <  (We can very easily have a < b and a==b simultaneously).
+   // [TODO] Once we have a canonicalized form, we can improve this.
+
+   for(i=mTargetList.begin();i!=mTargetList.end();i++)
+   {
+      if(*i==target->uri())
+      {
+         return true;
+      }
+   }
+
+   return false;
+}
 
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
       // !bwc! This is a private function, and if anything calls this with a
       // target in an invalid state, it is a bug.
-      assert(target->status() == Target::Pending);
+      assert(target->status() == Target::Candidate);
 
       SipMessage request(mRequestContext.getOriginalRequest());
 
@@ -743,7 +839,7 @@ ResponseContext::cancelClientTransaction(repro::Target* target)
                << target->via().sentHost());
 
    }
-   else if (target->status() == Target::Pending)
+   else if (target->status() == Target::Candidate)
    {
       target->status() = Target::Terminated;
    }
@@ -766,13 +862,13 @@ ResponseContext::terminateClientTransaction(const resip::Data& tid)
       return;
    }
    
-   TransactionMap::iterator j = mPendingTransactionMap.find(tid);
-   if(j != mPendingTransactionMap.end())
+   TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
+   if(j != mCandidateTransactionMap.end())
    {
-      InfoLog (<< "client transactions: " << Inserter(mPendingTransactionMap));
+      InfoLog (<< "client transactions: " << Inserter(mCandidateTransactionMap));
       j->second->status() = Target::Terminated;
       mTerminatedTransactionMap[tid] = j->second;
-      mPendingTransactionMap.erase(j);
+      mCandidateTransactionMap.erase(j);
       return;   
    }
       
@@ -946,7 +1042,7 @@ repro::operator<<(std::ostream& strm, const ResponseContext& rc)
         << " identity=" << rc.mRequestContext.getDigestIdentity()
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mForwardedFinalResponse
-        << " pending=" << Inserter(rc.mPendingTransactionMap)
+        << " pending=" << Inserter(rc.mCandidateTransactionMap)
         << " active=" << Inserter(rc.mActiveTransactionMap)
         << " terminated=" << Inserter(rc.mTerminatedTransactionMap);
       //<< " targets=" << Inserter(rc.mTargetSet)
