@@ -12,7 +12,7 @@ class ProcessorMessage : public resip::ApplicationMessage, public ChainTraverser
 {
    public:
    
-      ProcessorMessage(Processor& proc,
+      ProcessorMessage(const Processor& proc,
                         const resip::Data& tid,
                         resip::TransactionUser* tupassed):
          ChainTraverser(proc)

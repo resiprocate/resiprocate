@@ -1,76 +1,43 @@
-#ifndef DISPATCHER_HXX
-#define DISPATCHER_HXX 1
+#include "repro/monkeys/SimpleTargetHandler.hxx"
 
-#include "repro/WorkerThread.hxx"
-#include "repro/Worker.hxx"
-#include "resip/stack/ApplicationMessage.hxx"
-#include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
-#include "rutil/Lock.hxx"
-#include <vector>
-
-
-class resip::SipStack;
+#include "repro/RequestContext.hxx"
+#include "repro/ResponseContext.hxx"
 
 namespace repro
 {
 
-class Dispatcher
+SimpleTargetHandler::SimpleTargetHandler()
 {
-
-
-   public:
-      Dispatcher(std::auto_ptr<Worker> prototype, 
-                  resip::SipStack* stack,
-                  int workers=2, 
-                  bool startImmediately=true);
-
-      virtual ~Dispatcher();
-      
-      /**
-         Posts a message to this thread bank.
-         
-         @param work The message that conveys the work that needs to be done.
-            (Any information that must 
-
-         @returns true iff this message was successfully posted. (This may not
-            be the case if this Dispatcher is in the process of shutting down)
-      */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
-
-      size_t fifoCountDepth() const;
-      time_t fifoTimeDepth() const;
-      int workPoolSize() const;
-      void shutdownAll();
-      void startAll();
-
-      resip::SipStack* mStack;
-
-      
-   protected:
-
-
-
-      resip::TimeLimitFifo<resip::ApplicationMessage> mFifo;
-      bool mAcceptingWork;
-      bool mShutdown;
-      bool mStarted;
-      Worker* mWorkerPrototype;
-
-      resip::Mutex mMutex;
-
-      std::vector<WorkerThread*> mWorkerThreads;
-
-
-   private:
-      //No copying!
-      Dispatcher(const Dispatcher& toCopy);
-      Dispatcher& operator=(const Dispatcher& toCopy);
-};
-
 }
 
-#endif
+SimpleTargetHandler::~SimpleTargetHandler()
+{
+}
+
+Processor::processor_action_t
+SimpleTargetHandler::process(RequestContext &rc)
+{
+   ResponseContext& rsp=rc.getResponseContext();
+
+   //The idea is that this goes at the end of the target ProcessorChain.
+   //If control gets here, it means that every other processor has finished
+   //everything it was intended to do, so we just fire up any stragglers.
+   rsp.beginClientTransactions();
+   
+   return Processor::Continue;
+}
+
+void 
+SimpleTargetHandler::dump(std::ostream &os) const
+{
+  os << "SimpleTargetHandler baboon" << std::endl;
+}
+
+
+
+
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -114,10 +81,4 @@ class Dispatcher
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */
