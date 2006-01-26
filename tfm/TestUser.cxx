@@ -50,7 +50,8 @@ TestUser::TestUser(const resip::Uri& aor,
      mPassword(authName),
      mRegistration(Helper::makeRegister(NameAddr(getAddressOfRecord()), 
                                         NameAddr(getAddressOfRecord()),
-                                        mContact))
+                                        mContact)),
+     mNonceCount(0)
 {
    DebugLog (<< "Creating user " << getContact());
 }
