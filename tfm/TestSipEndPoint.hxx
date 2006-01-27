@@ -511,6 +511,15 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             virtual resip::Data toString() const = 0;
       };
 
+      class AlwaysMatches : public Matcher
+      {
+         public:
+            AlwaysMatches(){}
+
+            virtual bool isMatch(boost::shared_ptr<resip::SipMessage>& message) const { return true; }
+            virtual resip::Data toString() const { return "AlwayMatches";}
+      };
+         
       class From : public Matcher
       {
          public:
@@ -741,6 +750,8 @@ TestSipEndPoint::From* from(const TestSipEndPoint* testEndPoint);
 TestSipEndPoint::From* from(TestProxy* testProxy);
 TestSipEndPoint::From* from(const resip::NameAddr* contact);
 TestSipEndPoint::From* from(const resip::Uri& clientUri);
+
+TestSipEndPoint::AlwaysMatches* alwaysMatches();
 
 TestSipEndPoint::Contact* contact(const TestSipEndPoint& testEndPoint);
 TestSipEndPoint::Contact* contact(TestProxy& testProxy);
