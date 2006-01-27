@@ -63,24 +63,19 @@ class ResponseContext
       /**
          Adds a batch of Targets. 
          
-         @note RESPONSECONTEXT DOES NOT ASSUME OWNERSHIP OF THE TARGETS POINTED
-             TO IN THIS ITERATOR! The Targets must be passed as pointers
-             because stl containers cannot handle polymorphism, and we cannot
-             pass the containers themselves because a set<Target*,Predicate>
-             is not a set<Target*>, even when Predicate is a subclass of 
-             std::less (again, due to the polymorphism problem)
+         @note RESPONSECONTEXT ASSUMES OWNERSHIP OF THE TARGETS POINTED
+             TO IN THIS VECTOR!
          
-         @param targetsBegin An iterator pointing to the first Target*.
-         
-         @param targetsEnd An iterator denoting the position after the last
-            Target* to add.
-         
+         @param targets A vector of (sorted) Target*. This vector is consumed.
+            vector was chosen because stl sort algorithm needs a random-access
+            container to work properly, and I am trying to be nice.
+            
          @param highPriority Whether or not the Target ProccessorChain should 
             prioritize this batch above other batches of the same type.
             (This is primarily intended to let multiple recursive redirection
             work properly, but can be used for other purposes.)
          
-         @returns true iff the batch was added successfully.
+         @returns true iff any Targets were added.
          
          @note It is assumed that all of these Targets are 
          the same subclass of Target, and that they are already sorted in the
@@ -88,10 +83,8 @@ class ResponseContext
          will not break per se, but oddball target processing behavior might
          result.
       */
-      bool addTargetBatch(
-         std::set<Target*>::iterator targetsBegin,
-         const std::set<Target*>::iterator targetsEnd,
-         bool highPriority=false);
+      bool addTargetBatch(std::vector<Target*>& targets,
+                           bool highPriority=false);
       
       /**
          Begins all Candidate client transactions.

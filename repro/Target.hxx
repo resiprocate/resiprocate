@@ -58,6 +58,11 @@ class Target
       virtual float getPriority() const;
       virtual bool shouldAutoProcess() const;
       
+      static bool targetPtrCompare(const Target* lhs, const Target* rhs)
+      {
+         return lhs->mPriorityMetric < rhs->mPriorityMetric;
+      }
+
       float mPriorityMetric;
       bool mShouldAutoProcess;
       
@@ -67,23 +72,6 @@ class Target
       resip::NameAddr mNameAddr;
       
 };// class Target
-
-class TargetComparator
-{
-   public:
-      virtual ~TargetComparator(){}
-      
-      virtual bool operator()(const Target& lhs, const Target& rhs) const
-      {
-         return lhs.mPriorityMetric < rhs.mPriorityMetric;
-      }
-      
-      virtual bool operator()(const Target* lhs, const Target* rhs) const
-      {
-         return lhs->mPriorityMetric < rhs->mPriorityMetric;
-      }
-}; //class TargetComparator
-
 
 }// namespace repro
 
