@@ -2542,6 +2542,12 @@ from(TestProxy* testProxy)
    return new TestSipEndPoint::From(*testProxy);
 }
 
+TestSipEndPoint::AlwaysMatches* 
+alwaysMatches()
+{
+   return new TestSipEndPoint::AlwaysMatches;
+}
+
 TestSipEndPoint::MessageAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageAction* action)
 {
