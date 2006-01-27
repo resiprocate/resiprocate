@@ -26,7 +26,7 @@ struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
 {
   struct query *query;
   time_t now;
-  int offset, min_offset;
+  time_t offset, min_offset;
 
   /* No queries, no timeout (and no fetch of the current time). */
   if (!channel->queries)
@@ -52,7 +52,7 @@ struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
    */
   if (min_offset != -1 && (!maxtv || min_offset <= maxtv->tv_sec))
     {
-      tvbuf->tv_sec = min_offset;
+      tvbuf->tv_sec = (long)min_offset;
       tvbuf->tv_usec = 0;
       return tvbuf;
     }

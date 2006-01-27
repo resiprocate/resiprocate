@@ -54,7 +54,7 @@ ServerSubscription::~ServerSubscription()
 int
 ServerSubscription::getTimeLeft()
 {
-   int timeleft =  mAbsoluteExpiry - time(0);
+   int timeleft =  int(mAbsoluteExpiry - time(0));
    if (timeleft < 0)
    {
       return 0;
