@@ -35,8 +35,8 @@ LocationServer::process(RequestContext& context)
 
      mStore.unlockRecord(inputUri);
 
-      std::vector<Target*> qbatch;
-      std::vector<Target*> noqbatch;
+      std::list<Target*> qbatch;
+      std::list<Target*> noqbatch;
      for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
@@ -63,7 +63,7 @@ LocationServer::process(RequestContext& context)
       
      if(!qbatch.empty())
      {
-         sort(qbatch.begin(),qbatch.end(),Target::targetPtrCompare);
+         qbatch.sort(Target::targetPtrCompare);
         context.getResponseContext().addTargetBatch(qbatch);
          //ResponseContext should be consuming the vector
         assert(qbatch.empty());

@@ -64,11 +64,9 @@ class ResponseContext
          Adds a batch of Targets. 
          
          @note RESPONSECONTEXT ASSUMES OWNERSHIP OF THE TARGETS POINTED
-             TO IN THIS VECTOR!
+             TO IN THIS LIST!
          
-         @param targets A vector of (sorted) Target*. This vector is consumed.
-            vector was chosen because stl sort algorithm needs a random-access
-            container to work properly, and I am trying to be nice.
+         @param targets A list of (sorted) Target*. This list is consumed.
             
          @param highPriority Whether or not the Target ProccessorChain should 
             prioritize this batch above other batches of the same type.
@@ -83,7 +81,7 @@ class ResponseContext
          will not break per se, but oddball target processing behavior might
          result.
       */
-      bool addTargetBatch(std::vector<Target*>& targets,
+      bool addTargetBatch(std::list<Target*>& targets,
                            bool highPriority=false);
       
       /**
@@ -199,9 +197,9 @@ class ResponseContext
       //tightly coupled.
       RequestContext& mRequestContext;
       
-      typedef std::list<resip::Data> TransactionQueue;
+//      typedef std::list<resip::Data> TransactionQueue;
 
-      std::deque<TransactionQueue> mTransactionQueueCollection;
+      std::list<std::list<resip::Data> > mTransactionQueueCollection;
 
    private:
       // only constructed by RequestContext
