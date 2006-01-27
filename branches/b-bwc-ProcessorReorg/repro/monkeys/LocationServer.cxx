@@ -8,6 +8,8 @@
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
 
+#include <algorithm>
+
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -33,8 +35,8 @@ LocationServer::process(RequestContext& context)
 
      mStore.unlockRecord(inputUri);
 
-      std::set<Target*,TargetComparator> qbatch;
-      std::set<Target*,TargetComparator> noqbatch;
+      std::vector<Target*> qbatch;
+      std::vector<Target*> noqbatch;
      for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
@@ -44,11 +46,11 @@ LocationServer::process(RequestContext& context)
            InfoLog (<< *this << " adding target " << contact.first);
            if(contact.first.exists(resip::p_q))
            {
-               qbatch.insert(new QValueTarget(contact.first));
+               qbatch.push_back(new QValueTarget(contact.first));
            }
            else
            {
-               noqbatch.insert(new Target(contact.first));
+               noqbatch.push_back(new Target(contact.first));
            }
         }
         else
@@ -58,24 +60,22 @@ LocationServer::process(RequestContext& context)
         }
      }
 
-     std::set<Target*>::iterator i;
+      
      if(!qbatch.empty())
      {
-        context.getResponseContext().addTargetBatch(qbatch.begin(),qbatch.end());
-        for(i=qbatch.begin();i!=qbatch.end();i++)
-        {
-         delete *i;
-        }
+         sort(qbatch.begin(),qbatch.end(),Target::targetPtrCompare);
+        context.getResponseContext().addTargetBatch(qbatch);
+         //ResponseContext should be consuming the vector
+        assert(qbatch.empty());
      }
      
      if(!noqbatch.empty())
      {
-        context.getResponseContext().addTargetBatch(noqbatch.begin(),noqbatch.end());
-        for(i=noqbatch.begin();i!=noqbatch.end();i++)
-        {
-         delete *i;
-        }
+        context.getResponseContext().addTargetBatch(noqbatch);
+        //ResponseContext should be consuming the vector
+        assert(noqbatch.empty());
      }
+     
    }
    else
    {

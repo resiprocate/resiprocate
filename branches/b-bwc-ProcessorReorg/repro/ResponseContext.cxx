@@ -111,11 +111,10 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 }
 
 bool
-ResponseContext::addTargetBatch(std::set<Target*>::iterator targetsBegin,
-                                 const std::set<Target*>::iterator targetsEnd,
+ResponseContext::addTargetBatch(std::vector<Target*>& targets,
                                  bool highPriority)
 {
-   if(mForwardedFinalResponse || (targetsBegin==targetsEnd))
+   if(mForwardedFinalResponse || targets.empty())
    {
       return false;
    }
@@ -124,10 +123,12 @@ ResponseContext::addTargetBatch(std::set<Target*>::iterator targetsBegin,
      
    TransactionQueue queue;
    Target* target=0;
+   std::vector<Target*>::iterator it;
    
-   for(;targetsBegin!=targetsEnd;targetsBegin++)
+   for(it=targets.begin();it!=targets.end();it++)
    {
-      target=*targetsBegin;
+      target=*it;
+      
       if((!mSecure || target->uri().scheme() == Symbols::Sips) &&
          target->status() == Target::Candidate)
       {
@@ -136,13 +137,19 @@ ResponseContext::addTargetBatch(std::set<Target*>::iterator targetsBegin,
          {
             queue.push_back(target->tid());
          }
-         
-         mCandidateTransactionMap[target->tid()]=target->clone();
+         DebugLog(<<"Adding Target to Candidates: " << target->uri());
+         mCandidateTransactionMap[target->tid()]=target;
 
+      }
+      else
+      {
+         DebugLog(<<"Bad Target: " << target->uri());
+         delete target;
       }
    }
 
-
+   targets.clear();
+   
    if(highPriority)
    {
       mTransactionQueueCollection.push_front(queue);
@@ -179,6 +186,10 @@ ResponseContext::beginClientTransactions()
          //and begins the transaction.
          mActiveTransactionMap[i->second->tid()] = i->second;
          InfoLog (<< "Creating new client transaction " << i->second->tid() << " -> " << i->second->uri());
+      }
+      else
+      {
+         DebugLog(<<"Found a repeated target.");
       }
       
       TransactionMap::iterator temp=i;
