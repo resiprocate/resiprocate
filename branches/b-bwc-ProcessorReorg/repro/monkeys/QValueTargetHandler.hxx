@@ -36,12 +36,12 @@ class QValueTargetHandler : public Processor
       virtual void dump(std::ostream &os) const;
 
       void fillNextTargetGroup(std::vector<resip::Data>& fillHere,
-                              const ResponseContext::TransactionQueue& queue,
+                              const std::list<resip::Data>& queue,
                               const ResponseContext& rsp) const;
                            
       virtual bool isMyType( Target* target) const;
       
-      virtual void removeTerminated(ResponseContext::TransactionQueue& queue,
+      virtual void removeTerminated(std::list<resip::Data>& queue,
                                     const ResponseContext& rsp) const;
       
    

@@ -35,10 +35,9 @@ Dispatcher::~Dispatcher()
    std::vector<WorkerThread*>::iterator i;
    for(i=mWorkerThreads.begin(); i!=mWorkerThreads.end(); ++i)
    {
-      delete *i;//Destructor will shutdown and join.
+      delete *i;
    }
-   
-   
+
    mWorkerThreads.clear();
 
    while(!mFifo.empty())
@@ -86,12 +85,38 @@ Dispatcher::workPoolSize() const
 }
 
 void
+Dispatcher::stop()
+{
+   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   mAcceptingWork=false;
+}
+
+void
+Dispatcher::resume()
+{
+   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   mAcceptingWork = !mShutdown;
+}
+
+void
 Dispatcher::shutdownAll()
 {
    resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
-   mShutdown=true;
-}
+   if(!mShutdown)
+   {
+      mAcceptingWork=false;
+      mShutdown=true;
+      
+      std::vector<WorkerThread*>::iterator i;
+      for(i=mWorkerThreads.begin(); i!=mWorkerThreads.end(); ++i)
+      {
+         (*i)->shutdown();
+         (*i)->join();
+      }
+   }
 
+   
+}
 
 void 
 Dispatcher::startAll()
