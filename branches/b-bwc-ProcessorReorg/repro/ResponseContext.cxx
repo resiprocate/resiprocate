@@ -111,7 +111,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 }
 
 bool
-ResponseContext::addTargetBatch(std::vector<Target*>& targets,
+ResponseContext::addTargetBatch(std::list<Target*>& targets,
                                  bool highPriority)
 {
    if(mForwardedFinalResponse || targets.empty())
@@ -121,9 +121,9 @@ ResponseContext::addTargetBatch(std::vector<Target*>& targets,
 
 
      
-   TransactionQueue queue;
+   std::list<resip::Data> queue;
    Target* target=0;
-   std::vector<Target*>::iterator it;
+   std::list<Target*>::iterator it;
    
    for(it=targets.begin();it!=targets.end();it++)
    {

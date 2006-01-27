@@ -10,16 +10,51 @@
 #include <vector>
 
 
+
 class resip::SipStack;
 
 namespace repro
 {
+
+/**
+   @class Dispatcher
+   
+   @brief A generic thread-bank class.
+   
+   This is intended to be a generic thread-bank class that operates under
+   the paradigm of accepting messages, modifying those messages, and posting
+   the messages back to the originator through the SipStack. (Since this uses
+   ApplicationMessages, the message will automatically get back to the correct
+   TransactionUser; what happens from there is the coder's business.)
+   
+   This class gets
+   generality by using prototyping of a very simple class, Worker. All the
+   user must do is subclass Worker to do the work needed, and pass an instance
+   of this class when constructing the Dispatcher. Dispatcher will clone this
+   Worker as many times as needed to fill the thread bank. 
+   
+   @note The functions in this class are intended to be thread-safe.
+
+
+
+*/
 
 class Dispatcher
 {
 
 
    public:
+   
+      /**
+         @param prototype The prototypical instance of Worker.
+         
+         @param stack The stack to post messages to.
+         
+         @param workers The number of threads in this bank.
+         
+         @param startImmediately Whether to start this thread bank on 
+            construction.
+      */
       Dispatcher(std::auto_ptr<Worker> prototype, 
                   resip::SipStack* stack,
                   int workers=2, 
@@ -31,17 +66,53 @@ class Dispatcher
          Posts a message to this thread bank.
          
          @param work The message that conveys the work that needs to be done.
-            (Any information that must 
-
+            It is understood that any information that needs to be conveyed
+            back to the originator will be placed in the message by the Workers
+            in the thread bank.
+            
          @returns true iff this message was successfully posted. (This may not
             be the case if this Dispatcher is in the process of shutting down)
+            
       */
       virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
 
+      /**
+         @returns The number of messages in this Dispatcher's queue
+      */
       size_t fifoCountDepth() const;
+      
+      /**
+         @returns The time between which the front of the queue was posted and
+            the back of the queue was posted.
+      */ 
       time_t fifoTimeDepth() const;
+      
+      /**
+         @returns The number of workers in this thread bank.
+      */
       int workPoolSize() const;
+      
+      /**
+         This Dispatcher will stop accepting new
+         work, but processing will continue normally on the messages already
+         in the queue.
+      */
+      void stop();
+      
+      /**
+         Resumes accepting work.
+      */
+      void resume();
+      
+      /**
+         Shuts down the thread-bank.
+      */
       void shutdownAll();
+      
+      
+      /**
+         Starts the thread bank.
+      */
       void startAll();
 
       resip::SipStack* mStack;

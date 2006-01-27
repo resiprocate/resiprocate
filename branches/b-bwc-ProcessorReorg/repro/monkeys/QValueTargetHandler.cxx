@@ -94,94 +94,94 @@ QValueTargetHandler::process(RequestContext &rc)
    }
 
 
-   std::deque<ResponseContext::TransactionQueue>::iterator outer;
-   ResponseContext::TransactionQueue::iterator inner;
+   std::list<std::list<resip::Data> >& targetCollection = 
+         rsp.mTransactionQueueCollection;
+   std::list<std::list<resip::Data> >::iterator outer;
+   std::list<std::list<resip::Data> >::iterator temp;
+   std::list<resip::Data>::iterator inner;
    bool activeTargets=false;
    bool startedTargets=false;
 
-   while(!activeTargets)
+   for(outer=targetCollection.begin(); 
+      outer!=targetCollection.end() && !activeTargets;)
    {
+      inner=outer->begin();
       
-      bail=false;
-      for(outer=rsp.mTransactionQueueCollection.begin();
-            outer!=rsp.mTransactionQueueCollection.end() && !bail;
-            outer++)
+      if(inner!=outer->end() && isMyType(rsp.getTarget(*inner)))
       {
-         inner=outer->begin();
-         
-         if(inner!=outer->end() && isMyType(rsp.getTarget(*inner)))
-         {
-            bail=true;
-         }
-      
-      }
 
-      //Did we fail to find any targets we could handle?
-      if(!bail)
-      {
-         break;
-      }
-      
-      ResponseContext::TransactionQueue& queue=*outer;
-
-      //Are there active targets in this queue already?
-      bail=false;
-      for(inner=queue.begin();inner!=queue.end() && !bail;inner++)
-      {
-         if(rsp.isActive(*inner))
+         //Are there active targets in this queue already?
+         bail=false;
+         for(;inner!=outer->end() && !bail;inner++)
          {
-            activeTargets=true;
-            bail=true;
-         }
-      }
-
-
-      //If no active targets, we need to start some new ones.
-      //(and schedule their cancellation if configured to)
-      //However, calling beginClientTransaction does not guarantee that a
-      //target will start, since that target may be a duplicate.
-      //So, we keep firing up target groups until something sticks, or we hit
-      //the end of this queue.
-      bail=false;
-      while(!activeTargets && !bail)
-      {
-         std::vector<resip::Data> beginTargets;
-         
-         fillNextTargetGroup(beginTargets,queue,rsp);
-         
-         if(beginTargets.empty())
-         {
-            bail=true;
-         }
-         else
-         {
-            std::vector<resip::Data>::iterator i;
-            for(i=beginTargets.begin();i!=beginTargets.end();i++)
+            if(rsp.isActive(*inner))
             {
-               bool success = rsp.beginClientTransaction(*i);
-               if(success && mCancelBetweenForkGroups)
-               {
-                  nextCancelTids.push_back(*i);
-               }
-               
-               activeTargets |= success;
-               startedTargets |= success;
+               activeTargets=true;
+               bail=true;
             }
          }
-      }
+
+
+         //If no active targets, we need to start some new ones.
+         //(and schedule their cancellation if configured to)
+         //However, calling beginClientTransaction does not guarantee that a
+         //target will start, since that target may be a duplicate.
+         //So, we keep firing up target groups until something sticks, or we hit
+         //the end of this queue.
+         bail=false;
+         while(!activeTargets && !bail)
+         {
+            std::vector<resip::Data> beginTargets;
+            
+            fillNextTargetGroup(beginTargets,*outer,rsp);
+            
+            if(beginTargets.empty())
+            {
+               bail=true;
+            }
+            else
+            {
+               std::vector<resip::Data>::iterator i;
+               for(i=beginTargets.begin();i!=beginTargets.end();i++)
+               {
+                  bool success = rsp.beginClientTransaction(*i);
+                  if(success && mCancelBetweenForkGroups)
+                  {
+                     nextCancelTids.push_back(*i);
+                  }
+                  
+                  activeTargets |= success;
+                  startedTargets |= success;
+               }
+            }
+         }
+            
+         //If we just started some targets, and we are not supposed to wait
+         //for these targets to terminate before beginning the next group
+         //in this queue, we should schedule the next group now.
+         //If there is no next group, nextBeginTids will be empty.
+         if(startedTargets && !mWaitForTerminate)
+         {
+            fillNextTargetGroup(nextBeginTids,*outer,rsp);
+         }
          
-      //If we just started some targets, and we are not supposed to wait
-      //for these targets to terminate before beginning the next group
-      //in this queue, we should schedule the next group now.
-      //If there is no next group, nextBeginTids will be empty.
-      if(startedTargets && !mWaitForTerminate)
-      {
-         fillNextTargetGroup(nextBeginTids,queue,rsp);
+         
+         //Clean up the queue we just tried
+         removeTerminated(*outer,rsp);
+
       }
       
-      
-      //Clean up the queue we just tried
-      removeTerminated(queue,rsp);
+      if(outer->empty())
+      {
+         temp=outer;
+         outer++;
+         targetCollection.erase(temp);
+      }
+      else
+      {
+         outer++;
+      }
+   
 
       assert(activeTargets || !startedTargets);
    }
@@ -250,10 +250,10 @@ QValueTargetHandler::process(RequestContext &rc)
 
 void
 QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
-                        const ResponseContext::TransactionQueue& queue,
+                        const std::list<resip::Data> & queue,
                         const ResponseContext& rsp) const
 {
-   ResponseContext::TransactionQueue::const_iterator i = queue.begin();
+   std::list<resip::Data>::const_iterator i = queue.begin();
    float currentQ=0;
    
 
@@ -275,7 +275,10 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
    switch(mForkBehavior)
    {
       case FULL_SEQUENTIAL:
-         fillHere.push_back(*i);
+         if(i!=queue.end())
+         {
+            fillHere.push_back(*i);
+         }
          break;
          
       case EQUAL_Q_PARALLEL:   
@@ -311,16 +314,16 @@ QValueTargetHandler::isMyType( Target* target) const
 }
 
 void
-QValueTargetHandler::removeTerminated(ResponseContext::TransactionQueue& queue,
+QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
                                        const ResponseContext& rsp) const
 {
-   ResponseContext::TransactionQueue::iterator i = queue.begin();
+   std::list<resip::Data>::iterator i = queue.begin();
 
    while(i!=queue.end())
    {
       if(rsp.isTerminated(*i))
       {
-         ResponseContext::TransactionQueue::iterator temp=i;
+         std::list<resip::Data>::iterator temp=i;
          i++;
          queue.erase(temp);
       }
