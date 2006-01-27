@@ -26,7 +26,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mRefreshing(false),
      mHaveQueuedRefresh(false),
      mQueuedRefreshInterval(-1),
-     mLargestNotifyCSeq(request.header(h_CSeq).sequence())
+     mLargestNotifyCSeq(0)
 {
    DebugLog (<< "ClientSubscription::ClientSubscription from " << request.brief());   
    mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
@@ -245,6 +245,7 @@ ClientSubscription::processNextNotify()
       
       if (!mLastRequest->exists(h_Expires))
       {
+         DebugLog(<< "No expires header in last request, set to " << expires);
          mLastRequest->header(h_Expires).value() = expires;
       }
       UInt64 now = Timer::getTimeMs() / 1000;
@@ -449,6 +450,7 @@ ClientSubscription::send(SharedPtr<SipMessage> msg)
                        0);
       }
    }
+
 }
 
 void 
