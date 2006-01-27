@@ -262,8 +262,8 @@ Log::timestamp(Data& res)
 #ifdef WIN32 
    int result = 1; 
    SYSTEMTIME systemTime;
-   struct { int tv_sec; int tv_usec; } tv = {0,0};
-   time((time_t *)(&tv.tv_sec));
+   struct { time_t tv_sec; int tv_usec; } tv = {0,0};
+   time(&tv.tv_sec);
    GetLocalTime(&systemTime);
    tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
