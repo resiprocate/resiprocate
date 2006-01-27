@@ -2548,6 +2548,42 @@ alwaysMatches()
    return new TestSipEndPoint::AlwaysMatches;
 }
 
+bool 
+TestSipEndPoint::MatchNonceCount::isMatch(boost::shared_ptr<resip::SipMessage>& message) const
+{
+   if (message->isRequest())
+   {
+      Auth* checkAgainst = 0;      
+      if (message->exists(h_Authorizations))
+      {
+         checkAgainst = &message->header(h_Authorizations).front();
+      }
+      else if (message->exists(h_ProxyAuthorizations))
+      {
+         checkAgainst = &message->header(h_ProxyAuthorizations).front();
+      }
+      if (checkAgainst && checkAgainst->exists(p_nc))
+      {
+         bool ret = checkAgainst->param(p_nc).convertInt() == mCount;
+         InfoLog(<< "TestSipEndPoint::MatchNonceCount expected: " << mCount << " " 
+                 << "got: " << checkAgainst->param(p_nc) << " returning " << ret);
+         return ret;
+      }
+   }
+   return false;
+}
+
+Data 
+TestSipEndPoint::MatchNonceCount::toString() const
+{
+   Data ret;
+   DataStream ds(ret);
+   {
+      ds << "MatchNonceCount " << mCount;
+   }
+   return ret;
+}
+
 TestSipEndPoint::MessageAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageAction* action)
 {
