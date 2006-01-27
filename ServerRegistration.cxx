@@ -57,7 +57,7 @@ ServerRegistration::accept(SipMessage& ok)
       continue;
     }
     contact.uri() = i->first;
-    contact.param(p_expires) = i->second - now;
+    contact.param(p_expires) = int(i->second - now);
     ok.header(h_Contacts).push_back(contact);
   }
 
