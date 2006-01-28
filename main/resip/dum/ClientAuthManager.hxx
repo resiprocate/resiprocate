@@ -27,49 +27,72 @@ class ClientAuthManager
       friend class DialogSet;
       virtual void dialogSetDestroyed(const DialogSetId& dsId);      
 
-      class CompareAuth  : public std::binary_function<const Auth&, const Auth&, bool>
-      {
-         public:
-            bool operator()(const Auth& lhs, const Auth& rhs) const;
-      };      
+//       class CompareAuth  : public std::binary_function<const Auth&, const Auth&, bool>
+//       {
+//          public:
+//             bool operator()(const Auth& lhs, const Auth& rhs) const;
+//       };      
          
-      typedef enum
-      {
-         Invalid,
-         Cached,
-         Current,
-         Failed
-      } State;      
 
-      class AuthState
+      class RealmState
       {
          public:     
-            AuthState();
+            RealmState();
             
             void clear();
 
-            //could work to iterator pointing to digest credential
-            typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
-            CredentialMap proxyCredentials;
-            CredentialMap wwwCredentials;            
+            bool handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential);
+            void transitionToCached();
 
-            State state;            
-            unsigned int cnonceCount;
-            Data cnonce;
-            Data cnonceCountString;            
+            void addAuthentication(SipMessage& origRequest);            
+         private:
+            typedef enum
+            {
+               Invalid,
+               Cached,
+               Current,
+               Failed
+            } State;      
+
+            void transition(State s);
+            static const Data& getStateString(State s);
+            bool findCredential(UserProfile& userProfile, const Auth& auth);  
+            UserProfile::DigestCredential mCredential;
+            bool mIsProxyCredential;
+            
+            State mState;            
+            unsigned int mNonceCount;
+            Auth mAuth;            
+//             .dcm. only one credential per realm per challenge supported
+//             typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
+//             CredentialMap proxyCredentials;
+//             CredentialMap wwwCredentials;  
       };      
-         
+
+      class AuthState
+      {
+         public:
+            AuthState();
+            bool handleChallenge(UserProfile& userProfile, const SipMessage& challenge);
+            void addAuthentication(SipMessage& origRequest);
+            void transitionToCached();
+            
+         private:
+            typedef std::map<Data, RealmState> RealmStates;
+            RealmStates mRealms;
+            bool mFailed;
+      };
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
-
-      bool handleAuthHeader(UserProfile& userProfile,
-                            const Auth& auth, 
-                            AttemptedAuthMap::iterator authState, 
-                            SipMessage& origRequest, 
-                            const SipMessage& response, 
-                            bool proxy);      
-
       AttemptedAuthMap mAttemptedAuths;      
+//       bool handleAuthHeader(UserProfile& userProfile,
+//                             const Auth& auth, 
+//                             AttemptedAuthMap::iterator authState, 
+//                             SipMessage& origRequest, 
+//                             const SipMessage& response, 
+//                             bool proxy);      
+      
+
 };
  
 }
