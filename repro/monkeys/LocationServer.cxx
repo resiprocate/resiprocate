@@ -31,32 +31,32 @@ LocationServer::process(RequestContext& context)
   
   if (true) // TODO fix mStore.aorExists(inputUri))
   {  
-	 RegistrationPersistenceManager::ContactPairList contacts = mStore.getContacts(inputUri);
+	 RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
 
      mStore.unlockRecord(inputUri);
 
       std::list<Target*> qbatch;
       std::list<Target*> noqbatch;
-     for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
+     for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
-	    RegistrationPersistenceManager::ContactPair contact = *i;
-        if (contact.second>=time(NULL))
+	    RegistrationPersistenceManager::ContactRecord contact = *i;
+        if (contact.expires>=time(NULL))
         {
-           InfoLog (<< *this << " adding target " << contact.first);
-           if(contact.first.exists(resip::p_q))
+           InfoLog (<< *this << " adding target " << contact.uri);
+           if(contact.useQ)
            {
-               qbatch.push_back(new QValueTarget(contact.first));
+               qbatch.push_back(new QValueTarget(contact.uri,contact.q));
            }
            else
            {
-               noqbatch.push_back(new Target(contact.first));
+               noqbatch.push_back(new Target(contact.uri));
            }
         }
         else
         {
             // remove expired contact 
-            mStore.removeContact(inputUri, contact.first);
+            mStore.removeContact(inputUri, contact.uri);
         }
      }
 
