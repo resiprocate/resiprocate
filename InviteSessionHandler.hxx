@@ -122,6 +122,8 @@ class InviteSessionHandler
       /// InviteSession that will send notify messages using the ServerSubscription
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)=0;
 
+      virtual void onReferNoSub(InviteSessionHandle, const SipMessage& msg)=0;
+
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
 

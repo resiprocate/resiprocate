@@ -431,21 +431,28 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               ServerSubscription* server = findMatchingServerSub(request);
-               ServerSubscriptionHandle serverHandle;
-               if (server)
+               if (request.exists(h_ReferSub) && request.header(h_ReferSub).value()=="false")
                {
-                  serverHandle = server->getHandle();
-                  server->dispatch(request);
+                  mInviteSession->referNoSub(msg);
                }
                else
                {
-                  server = makeServerSubscription(request);
-                  mServerSubscriptions.push_back(server);
-                  serverHandle = server->getHandle();
-                  server->dispatch(request);
+                  ServerSubscription* server = findMatchingServerSub(request);
+                  ServerSubscriptionHandle serverHandle;
+                  if (server)
+                  {
+                     serverHandle = server->getHandle();
+                     server->dispatch(request);
+                  }
+                  else
+                  {
+                     server = makeServerSubscription(request);
+                     mServerSubscriptions.push_back(server);
+                     serverHandle = server->getHandle();
+                     server->dispatch(request);
+                  }
+                  mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);
                }
-               mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);
             }
          }
          break;
@@ -460,7 +467,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                BaseCreator* creator = mDialogSet.getCreator();
                if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  // ?slg? OOD Refer?  Click-to-Call?
+                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  
                {
                   DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
@@ -579,7 +586,14 @@ Dialog::dispatch(const SipMessage& msg)
                {
                   mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
                }
-               // else no need for action - first Notify will cause onReferAccepted to be called
+               else
+               {
+                  if (!mInviteSession->mReferSub && (msg.exists(h_ReferSub) && msg.header(h_ReferSub).value()=="false"))
+                  {
+                     mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), ClientSubscriptionHandle::NotValid(), msg);
+                  }
+                  // else no need for action - first Notify will cause onReferAccepted to be called
+               }
             }
             break;
 

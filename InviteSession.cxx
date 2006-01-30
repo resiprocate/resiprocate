@@ -65,6 +65,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionTimerSeq(0),
      mSessionRefreshReInvite(false),
      mSentRefer(false),
+     mReferSub(true),
      mCurrentEncryptionLevel(DialogUsageManager::None),
      mProposedEncryptionLevel(DialogUsageManager::None),
      mEndReason(NotSpecified)
@@ -539,7 +540,7 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 }
 
 void
-InviteSession::refer(const NameAddr& referTo)
+InviteSession::refer(const NameAddr& referTo, bool referSub)
 {
    if (mSentRefer)
    {
@@ -549,10 +550,18 @@ InviteSession::refer(const NameAddr& referTo)
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       mSentRefer = true;
+      mReferSub = referSub;
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = mDialog.mLocalContact; // !slg! is it ok to do this - should it be an option?
+      refer->header(h_ReferredBy) = mDialog.mLocalContact; // 
+                                                           // !slg! is it ok to do this - should it be an option?
+      if (!referSub)
+      {
+         refer->header(h_ReferSub).value() = "false";
+         refer->header(h_Supporteds).push_back(Token("norefersub"));
+      }
+
       send(refer);
    }
    else
@@ -564,7 +573,7 @@ InviteSession::refer(const NameAddr& referTo)
 }
 
 void
-InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
    if (!sessionToReplace.isValid())
    {
@@ -579,6 +588,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
       mSentRefer = true;
+      mReferSub = referSub;
       SharedPtr<SipMessage> refer(new SipMessage());      
       mDialog.makeRequest(*refer, REFER);
 
@@ -591,6 +601,13 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       replaces.param(p_fromTag) = id.getLocalTag();
 
       refer->header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
+      
+      if (!referSub)
+      {
+         refer->header(h_ReferSub).value() = "false";
+         refer->header(h_Supporteds).push_back(Token("norefersub"));
+      }
+
       send(refer);
    }
    else
@@ -2334,6 +2351,42 @@ void InviteSession::setCurrentLocalSdp(const SipMessage& msg)
 void InviteSession::onReadyToSend(SipMessage& msg)
 {
    mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), msg);
+}
+
+void InviteSession::referNoSub(const SipMessage& msg)
+{
+   assert(msg.isRequest() && msg.header(h_CSeq).method()==REFER);
+   mLastReferNoSubRequest = msg;
+   mDum.mInviteSessionHandler->onReferNoSub(getSessionHandle(), mLastReferNoSubRequest);
+}
+
+void
+InviteSession::acceptReferNoSub(int statusCode)
+{
+   if (statusCode / 100  != 2)
+   {
+      throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
+   }
+
+   SharedPtr<SipMessage> response(new SipMessage);
+   mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
+   response->header(h_ReferSub).value() = "false";
+   //response->header(h_Supporteds).push_back(Token("norefersub"));
+   
+   send(response);
+} 
+
+void
+InviteSession::rejectReferNoSub(int responseCode)
+{
+   if (responseCode < 400)
+   {
+      throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
+   }
+
+   SharedPtr<SipMessage> response(new SipMessage);
+   mDialog.makeResponse(*response, mLastReferNoSubRequest, responseCode);
+   send(response);
 }
 
 /* ====================================================================
