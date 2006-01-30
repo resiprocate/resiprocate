@@ -3,9 +3,7 @@
 
 #include <iosfwd>
 #include <map>
-#include <deque>
 #include <list>
-#include <iterator>
 
 #include "rutil/HashMap.hxx"
 #include "resip/stack/NameAddr.hxx"
