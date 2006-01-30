@@ -12,18 +12,14 @@ namespace repro
 class QValueTarget : public Target
 {
    public:
-      QValueTarget();
-      QValueTarget(const resip::Uri& uri);
-      QValueTarget(const resip::NameAddr& nameAddr);
-      explicit QValueTarget(const Target& orig);
+      QValueTarget(float q);
+      QValueTarget(const resip::Uri& uri, float q);
+      QValueTarget(const resip::NameAddr& nameAddr, float q);
+      explicit QValueTarget(const Target& orig, float q);
       explicit QValueTarget(const QValueTarget& orig);
       
       virtual ~QValueTarget();
       
-      //These are overridden so they can change the priority
-      virtual const resip::Uri& setUri(const resip::Uri& uri);
-      virtual const resip::NameAddr& setNameAddr(const resip::NameAddr& nameAddr);
-
       virtual QValueTarget* clone() const;
 };
 }

@@ -5,43 +5,32 @@ namespace repro
 {
 
 
-QValueTarget::QValueTarget()
+QValueTarget::QValueTarget(float q):
+   Target()
 {
-   mPriorityMetric=0;
+   mPriorityMetric=q;
    mShouldAutoProcess=true;
-   mStatus=Target::Candidate;
 }
 
-QValueTarget::QValueTarget(const resip::Uri& uri):
+QValueTarget::QValueTarget(const resip::Uri& uri,float q):
    Target(uri)
 {
-   if(uri.exists(resip::p_q))
-   {
-      mPriorityMetric=uri.param(resip::p_q);
-      mShouldAutoProcess=true;
-   }
-   
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
 }
 
-QValueTarget::QValueTarget(const resip::NameAddr& nameAddr):
+QValueTarget::QValueTarget(const resip::NameAddr& nameAddr,float q):
    Target(nameAddr)
 {
-   if(nameAddr.uri().exists(resip::p_q))
-   {
-      mPriorityMetric=nameAddr.uri().param(resip::p_q);
-      mShouldAutoProcess=true;
-   }
-   
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
 }
 
-QValueTarget::QValueTarget(const Target& orig):
+QValueTarget::QValueTarget(const Target& orig,float q):
    Target(orig)
 {
-   if(mNameAddr.uri().exists(resip::p_q))
-   {
-      mPriorityMetric=mNameAddr.uri().param(resip::p_q);
-      mShouldAutoProcess=true;      
-   }
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
 }
 
 QValueTarget::QValueTarget(const QValueTarget& orig)
@@ -54,36 +43,6 @@ QValueTarget::QValueTarget(const QValueTarget& orig)
 }
    
 QValueTarget::~QValueTarget(){}
-
-const resip::Uri& 
-QValueTarget::setUri(const resip::Uri& uri)
-{
-   if(uri.exists(resip::p_q))
-   {
-      mPriorityMetric=uri.param(resip::p_q);
-   }
-   else
-   {
-      mPriorityMetric=1;
-   }
-
-   return mNameAddr.uri()=uri;
-}
-
-const resip::NameAddr& 
-QValueTarget::setNameAddr(const resip::NameAddr& nameAddr)
-{
-   if(mNameAddr.uri().exists(resip::p_q))
-   {
-      mPriorityMetric=nameAddr.uri().param(resip::p_q);
-   }
-   else
-   {
-      mPriorityMetric=1;
-   }
-
-   return mNameAddr=nameAddr;
-}
 
 QValueTarget* 
 QValueTarget::clone() const
