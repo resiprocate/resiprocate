@@ -1,0 +1,94 @@
+<chapter id="getstarted"><title>Getting Started with Netxx</title>
+    <!-- ################################################################### -->
+    <section id="build"><title>Building Netxx</title>
+	<para>
+	    The following instructions will show you how to compile Netxx on most platforms.
+	</para>
+
+	<!-- ################################################################### -->
+	<section id="build-unix"><title>Building on Unix</title>
+	    <para>
+		To build Netxx from the command line of a Unix-like operating system you use the <filename>configure.pl</filename>
+		perl script. There are various command line options that can be given to <filename>configure.pl</filename> to change
+		various compile time settings. You should begin by reviewing the available options by running
+		<command>./configure.pl --help</command>.
+	    </para>
+
+	    <para>
+		Once you know which command line options you want to give to <filename>configure.pl</filename> you can run it.
+		First, it will check your build environment to verify that you have the proper tools to build Netxx. After that, it will
+		generate the make-files for your system. When <filename>configure.pl</filename> is done you can run the
+		<command>make</command> program to build Netxx.
+	    </para>
+
+	    <para>
+		After Netxx is built, you can install the library and header files. This is done with the <command>make</command>
+		program and the <constant>install</constant> target.
+	    </para>
+	</section>
+	<!-- ################################################################### -->
+	<section id="build-maxosx"><title>Building on MacOS X</title>
+	    <para>
+		Building Netxx on MacOS X is similar to building it on Unix. You can follow the instructions for building on Unix if
+		you wish. Either way, you need to install the Developer Tools from Apple.
+	    </para>
+
+	    <para>
+		There is a shell script in <filename>build/macosx</filename> called <filename>configure.sh</filename>. When you run
+		that script the <filename>configure.pl</filename> perl script will be run with some good default values. After it is
+		finished, you can build Netxx using the <command>make</command> program.
+	    </para>
+	</section>
+	<!-- ################################################################### -->
+	<section id="build-win"><title>Building on Windows</title>
+	    <para>
+		The following instructions apply to users of Microsoft Visual Studio. If you want to build Netxx under cygwin, follow
+		the directions for building on Unix.
+	    </para>
+
+	    <para>
+		There is a MSVC workspace file in <filename>build/msvc</filename> that can be used to build Netxx on Windows. Open the
+		<filename>Netxx.dsw</filename> workspace file. Once the workspace is loaded, pull down the <guimenu>Build</guimenu>
+		menu and choose the <guimenuitem>Batch Build...</guimenuitem> menu item. A dialog box will appear, click the
+		<guibutton>Rebuild All</guibutton> button.
+	    </para>
+	</section>
+	<!-- ################################################################### -->
+    </section>
+    <!-- ################################################################### -->
+    <section id="learn"><title>Learning the Netxx API</title>
+	<para>
+	    The fastest way to learn how to use Netxx is to review the included example programs. Netxx comes with many simple and
+	    easy to understand example programs such as an echo client/server and daytime client/server.
+	</para>
+
+	<para>
+	    For complete API reference, you should take a look at the class reference appendix of the Netxx manual or the doxygen
+	    generated web pages. Even with these resources, the best place to hang out is in the Netxx header files.
+	</para>
+    </section>
+    <!-- ################################################################### -->
+    <section id="link"><title>Linking with Netxx</title>
+	<para>
+	    At some point you are going to need to link with the Netxx library. If you are on a Unix-like operating system you can
+	    use the <filename>Netxx-config</filename> shell script. This script can be used to give command line options to your
+	    compiler and linker.
+	</para>
+
+	<para>
+	    It also provides a way to abstract yourself from the operating system. Some operating systems require you to link
+	    TCP/IP enabled applications with a socket library. The <filename>Netxx-config</filename> script will automatically supply
+	    the correct libraries to the linker, including the OpenSSL library if necessary.
+	</para>
+
+	<para>
+	    The <filename>Netxx-config</filename> script can also be helpful to figure out the version of the installed Netxx
+	    library. There is also a little hint in the version string, if it ends with <constant>-TLS</constant> you know it is
+	    safe to use the Netxx::TLS interface on this platform.
+	</para>
+    </section>
+    <!-- ################################################################### -->
+</chapter>
+<!--
+    vim:ft=docbk:tw=130
+-->

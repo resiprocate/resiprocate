@@ -631,14 +631,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
-         RegistrationPersistenceManager::ContactPairList 
+         RegistrationPersistenceManager::ContactRecordList 
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactPairList::iterator i = contacts.begin();
+         for (RegistrationPersistenceManager::ContactRecordList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            if (i->second >= time(NULL))
+            if (i->expires >= time(NULL))
             {
                s << "<tr>" << endl
                  << "  <td>" ;
@@ -650,12 +650,12 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td>" << endl
                  << "  <td>";
             
-               const RegistrationPersistenceManager::ContactPair& p = *i;
-               const Uri& contact = p.first; 
+               const RegistrationPersistenceManager::ContactRecord& r = *i;
+               const Uri& contact = r.uri; 
 
                s << contact;
                s <<"</td>" << endl 
-                 <<"<td>" << i->second - time(NULL) << "s</td>" << endl
+                 <<"<td>" << i->expires - time(NULL) << "s</td>" << endl
                  << "  <td>"
                  << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
                  << "\"/></td>" << endl
@@ -664,7 +664,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             else
             {
                // remove expired contact 
-               mRegDb.removeContact(uri, i->first);
+               mRegDb.removeContact(uri, i->uri);
             }
          }
       }
