@@ -2117,6 +2117,7 @@ class MyTestCase
 
 int main(int argc, char** argv)
 {
+   initNetwork();
    try
    {
       CommandLineParser args(argc, argv);
