@@ -107,5 +107,6 @@ security-verify, Headers::SecurityVerify
 service-route, Headers::ServiceRoute
 session-expires, Headers::SessionExpires
 min-se, Headers::MinSE
+refer-sub, Headers::ReferSub
 %%
 }
