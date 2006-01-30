@@ -61,10 +61,10 @@ class InviteSession : public DialogUsage
       // Following methods are for sending requests within a dialog
 
       /** sends a refer request */
-      virtual void refer(const NameAddr& referTo);
+      virtual void refer(const NameAddr& referTo, bool referSub = true);
 
       /** sends a refer request with a replaces header */
-      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
 
       /** sends an info request */
       virtual void info(const Contents& contents);
@@ -86,6 +86,9 @@ class InviteSession : public DialogUsage
 
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
+
+      virtual void acceptReferNoSub(int statusCode = 200);
+      virtual void rejectReferNoSub(int responseCode);
 
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
@@ -271,6 +274,7 @@ class InviteSession : public DialogUsage
 
       DialogUsageManager::EncryptionLevel getEncryptionLevel(const SipMessage& msg);
       void setCurrentLocalSdp(const SipMessage& msg);
+      void referNoSub(const SipMessage& msg);
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
@@ -293,7 +297,10 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mLastLocalSessionModification; // last UPDATE or reINVITE sent
       SharedPtr<SipMessage> mLastRemoteSessionModification; // last UPDATE or reINVITE received
       SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
-      SharedPtr<SipMessage> mLastNitResponse;         //?dcm? -- ptr, delete when not needed?
+      SharedPtr<SipMessage> mLastNitResponse;         // 
+                                                      //?dcm? -- ptr, delete when not needed?
+
+      SipMessage  mLastReferNoSubRequest;
       
       unsigned long mCurrentRetransmit200;
 
@@ -305,6 +312,7 @@ class InviteSession : public DialogUsage
       bool mSessionRefreshReInvite;      
 
       bool mSentRefer;
+      bool mReferSub;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
       DialogUsageManager::EncryptionLevel mProposedEncryptionLevel; // UPDATE or RE-INVITE
