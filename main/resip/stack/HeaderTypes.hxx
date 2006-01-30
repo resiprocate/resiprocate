@@ -122,6 +122,7 @@ class Headers
          defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
 
          defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261"),
+         defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
 
          MAX_HEADERS,
          NONE
