@@ -82,7 +82,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       class ReInvite : public Action
       {
          public:
-            ReInvite(TestSipEndPoint* from, const resip::Uri& to);
+            ReInvite(TestSipEndPoint* from, const resip::Uri& to, bool matchUserOnly = false, boost::shared_ptr<resip::SdpContents> sdp =
+                   boost::shared_ptr<resip::SdpContents>());
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -92,10 +93,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
             TestSipEndPoint & mEndPoint;
             resip::NameAddr mTo;
+            bool mMatchUserOnly;
+            boost::shared_ptr<resip::SdpContents> mSdp;
       };
       friend class ReInvite;
       ReInvite* reInvite(const TestSipEndPoint& endPoint);
-      ReInvite* reInvite(resip::Uri url);
+      ReInvite* reInvite(resip::Uri& url);
+      ReInvite* reInvite(const resip::Data& user);
+      ReInvite* reInvite(const resip::Data& user, const boost::shared_ptr<resip::SdpContents>& sdp);
                
       class InviteReferReplaces : public ExpectAction
       {
@@ -216,6 +221,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       {
          public:
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -224,13 +230,16 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             
             TestSipEndPoint & mEndPoint;
             resip::Uri mTo;
-            resip::Token mEventPackage;            
+            resip::Token mEventPackage;
+            resip::Mime mAccept;
+            boost::shared_ptr<resip::Contents> mContents;
       };
       friend class Subscribe;
-      Subscribe* subscribe(const TestSipEndPoint* endPoint, const resip::Token& event);
-      Subscribe* subscribe(const TestUser& endPoint, const resip::Token& event);
-      Subscribe* subscribe(const resip::Uri& url, const resip::Token& event);
- 
+      Subscribe* subscribe(const TestSipEndPoint* endPoint, const resip::Token& eventPackage);
+      Subscribe* subscribe(const TestUser& endPoint, const resip::Token& eventPackage);
+      Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage);
+      Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage, const resip::Mime& accept, const boost::shared_ptr<resip::Contents>& contents);
+
       class Request : public MessageAction
       {
          public:
@@ -258,9 +267,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       
       Request* info(const TestSipEndPoint* endPoint);
       Request* info(const TestUser& endPoint);
+      Request* info(const resip::Uri& url);
+      Request* info(const resip::Uri& url, const boost::shared_ptr<resip::Contents>& contents);
 
       Request* message(const TestSipEndPoint* endPoint, const resip::Data& text);
       Request* message(const TestUser& endPoint, const resip::Data& text);
+
+      //create message that do not require exsistance of other endpoint
+      Request* message(const resip::Uri& target, const resip::Data& text);
       
       class Retransmit : public ExpectAction
       {
@@ -430,21 +444,34 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState);
 
-      class Answer : public MessageExpectAction                                         
-      {                                                                                 
-         public:                                                                        
-            explicit Answer(TestSipEndPoint & endPoint);
+      class Answer : public MessageExpectAction 
+      { 
+         public:
+            explicit Answer(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
             virtual boost::shared_ptr<resip::SipMessage>                                
             go(boost::shared_ptr<resip::SipMessage> msg);
-            TestSipEndPoint& mEndPoint;                                                        
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
       };
       MessageExpectAction* answer();
+      MessageExpectAction* answer(const boost::shared_ptr<resip::SdpContents>& sdp);
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring, 180);
       MessageExpectAction* ring();
 
-      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring183, 183);
+//      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring183, 183);
+      class Ring183 : public MessageExpectAction
+      {
+         public:
+            explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
       MessageExpectAction* ring183();
+      MessageExpectAction* ring183(const boost::shared_ptr<resip::SdpContents>& sdp);
       
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ok, 200);
       MessageExpectAction* ok();
@@ -691,8 +718,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       
       resip::DeprecatedDialog* getDialog(); // get the first dialog
       resip::DeprecatedDialog* getDialog(const resip::CallId& callId);
-      resip::DeprecatedDialog* TestSipEndPoint::getDialog(const resip::Uri& target);      
-      resip::DeprecatedDialog* TestSipEndPoint::getDialog(const resip::NameAddr& target);      
+      resip::DeprecatedDialog* getDialog(const resip::Uri& target);      
+      resip::DeprecatedDialog* getDialog(const resip::NameAddr& target);      
+      resip::DeprecatedDialog* getDialog(const resip::Data& user);
 
       resip::Uri mAor;
       resip::NameAddr mContact;
