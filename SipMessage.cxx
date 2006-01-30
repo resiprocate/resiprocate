@@ -1190,6 +1190,7 @@ defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
 defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
 defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
+defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
 
 defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
 defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
