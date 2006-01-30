@@ -393,7 +393,6 @@ DialogSet::dispatch(const SipMessage& msg)
          case INVITE:
          case CANCEL:  //cancel needs work
          case SUBSCRIBE:
-         case REFER: //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
 
          case BYE:
@@ -409,11 +408,11 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             break;
             
+         case REFER:
          case NOTIFY:
-            // !jf! This should really not use to tag since 2543 endpoints won't
-            // have a to tag. 
+
             // !jf! there shouldn't be a dialogset for ServerOutOfDialogReq
-            if (request.header(h_To).exists(p_tag))
+            if (request.header(h_To).exists(p_tag) || findDialog(request))
             {
                break; //dialog creating/handled by dialog
             }
@@ -555,7 +554,6 @@ DialogSet::dispatch(const SipMessage& msg)
          case BYE:
          case ACK:
          case CANCEL:
-         case REFER:  
             break; 
 
          case PUBLISH:
@@ -595,7 +593,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }
-            
+         case REFER:  
          case NOTIFY:
             if (dialog)
             {
