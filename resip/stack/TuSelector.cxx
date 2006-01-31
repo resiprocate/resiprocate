@@ -205,6 +205,21 @@ TuSelector::getTimeTillNextProcessMS()
     }
 } 
 
+bool
+TuSelector::isTransactionUserStillRegistered(const TransactionUser* tu) const
+{
+   if (mTuSelectorMode)
+   {
+      for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+      {
+         if (!it->shuttingDown  && it->tu == tu)
+         {
+            return true;
+         }
+      }
+   }
+   return false;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
