@@ -433,7 +433,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       class Notify : public MessageExpectAction
       {
          public:
-            Notify(TestSipEndPoint& endPoint, boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState);
+            Notify(TestSipEndPoint& endPoint, boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify=false);
             virtual boost::shared_ptr<resip::SipMessage>
             go(boost::shared_ptr<resip::SipMessage> msg);
 
@@ -441,8 +441,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             boost::shared_ptr<resip::Contents> mContents;
             resip::Data mEventPackage;
             resip::Data mSubscriptionState;
+            int mExpires;
+            int mMinExpires;
+            bool mFirstNotify;
       };
-      MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState);
+      MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify=false);
 
       class Answer : public MessageExpectAction 
       { 
