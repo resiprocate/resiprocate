@@ -29,6 +29,7 @@ class TuSelector
       void unregisterTransactionUser(TransactionUser&);
       void process();
       unsigned int getTimeTillNextProcessMS();
+      bool isTransactionUserStillRegistered(const TransactionUser* ) const;
 
       
    private:
