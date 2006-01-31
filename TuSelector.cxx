@@ -82,11 +82,13 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 void
 TuSelector::add(ConnectionTerminated* term)
 {
+   InfoLog (<< "Sending " << *term << " to TUs");
+   
    for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
    {
       if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
       {
-         it->tu->post(term);
+         it->tu->post(term->clone());
       }
    }
 }
