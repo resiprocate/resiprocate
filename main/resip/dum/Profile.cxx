@@ -8,62 +8,7 @@ using namespace resip;
 
 Profile::Profile()
 {
-   // Default settings - since a fall through (base) profile was not provided
-   mHasDefaultRegistrationExpires = true;
-   mDefaultRegistrationExpires = 3600; // 1 hour
-
-   mHasDefaultMaxRegistrationExpires = true;
-   mDefaultMaxRegistrationExpires = 0; // No restriction
-
-   mHasDefaultRegistrationRetryInterval = true;
-   mDefaultRegistrationRetryInterval = 0; // Retries disabled
-
-   mHasDefaultSubscriptionExpires = true;
-   mDefaultSubscriptionExpires = 3600; // 1 hour
-
-   mHasDefaultPublicationExpires = true;
-   mDefaultPublicationExpires = 3600;  // 1 hour
-
-   mHasDefaultStaleCallTime = true;
-   mDefaultStaleCallTime = 180;        // 3 minutes
-
-   mHasDefaultSessionExpires = true;
-   mDefaultSessionExpires = 1800;      // 30 minutes
-
-   mHasDefaultSessionTimerMode = true;
-   mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
-
-   mHas1xxRetransmissionTime = true;
-   m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
-
-   mHasOutboundProxy = false;
-
-   mHasAdvertisedCapabilities = true;
-   addAdvertisedCapability(Headers::Allow);  
-   addAdvertisedCapability(Headers::Supported);  
-
-   mHasRportEnabled = true;
-   mRportEnabled = true;
-
-   mHasUserAgent = false;
-   mHasProxyRequires = false;   
-
-   mHasOverrideHostPort = false;
-
-   mHasKeepAliveTimeForDatagram = true;
-   mKeepAliveTimeForDatagram = 30; // 30 seconds.
-
-   mHasKeepAliveTimeForStream = true;
-   mKeepAliveTimeForStream = 180; // 3 minutes.
-
-   mHasFixedTransportPort = true;
-   mFixedTransportPort = 0;
-
-   mHasFixedTransportInterface = true;
-   mFixedTransportInterface = Data::Empty;
-
-   mHasRinstanceEnabled = true;
-   mRinstanceEnabled = true;
+   reset();  // set defaults
 }
 
 Profile::Profile(SharedPtr<Profile> baseProfile) : 
@@ -71,30 +16,36 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
 {
    assert(baseProfile.get());
 
-   mHasDefaultRegistrationExpires = false;
-   mHasDefaultMaxRegistrationExpires = false;
-   mHasDefaultRegistrationRetryInterval = false;
-   mHasDefaultSubscriptionExpires = false;
-   mHasDefaultPublicationExpires = false;
-   mHasDefaultStaleCallTime = false;
-   mHasDefaultSessionExpires = false;
-   mHasDefaultSessionTimerMode = false;
-   mHas1xxRetransmissionTime = false;
-   mHasOutboundProxy = false;
-   mHasAdvertisedCapabilities = false;
-   mHasRportEnabled = false;
-   mHasUserAgent = false;
-   mHasProxyRequires = false;
-   mHasOverrideHostPort = false;
-   mHasKeepAliveTimeForDatagram = false;
-   mHasKeepAliveTimeForStream = false;
-   mHasFixedTransportPort = false;
-   mHasFixedTransportInterface = false;
-   mHasRinstanceEnabled = false;
+   reset();  // default all settings to fallthrough to mBaseProfile
 }
 
 Profile::~Profile()
 {
+}
+
+void
+Profile::reset()
+{
+   unsetDefaultRegistrationTime();  
+   unsetDefaultMaxRegistrationTime();   
+   unsetDefaultRegistrationRetryTime();   
+   unsetDefaultSubscriptionTime();   
+   unsetDefaultPublicationTime();  
+   unsetDefaultStaleCallTime();  
+   unsetDefaultSessionTime(); 
+   unsetDefaultSessionTimerMode();   
+   unset1xxRetransmissionTime();   
+   unsetOverrideHostAndPort(); 
+   unsetAdvertisedCapabilities();
+   unsetOutboundProxy(); 
+   unsetRportEnabled(); 
+   unsetUserAgent(); 
+   unsetProxyRequires(); 
+   unsetKeepAliveTimeForDatagram();
+   unsetKeepAliveTimeForStream();
+   unsetFixedTransportPort(); 
+   unsetFixedTransportInterface(); 
+   unsetRinstanceEnabled();
 }
 
 void
@@ -121,6 +72,11 @@ Profile::unsetDefaultRegistrationTime()
    if(mBaseProfile.get()) 
    {
       mHasDefaultRegistrationExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultRegistrationExpires = true;
+      mDefaultRegistrationExpires = 3600; // 1 hour
    }
 }
 
@@ -149,6 +105,11 @@ Profile::unsetDefaultMaxRegistrationTime()
    {
       mHasDefaultMaxRegistrationExpires = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultMaxRegistrationExpires = true;
+      mDefaultMaxRegistrationExpires = 0; // No restriction
+   }
 }
 
 void
@@ -175,6 +136,11 @@ Profile::unsetDefaultRegistrationRetryTime()
    if(mBaseProfile.get()) 
    {
       mHasDefaultRegistrationRetryInterval = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultRegistrationRetryInterval = true;
+      mDefaultRegistrationRetryInterval = 0; // Retries disabled
    }
 }
 
@@ -203,6 +169,11 @@ Profile::unsetDefaultSubscriptionTime()
    {
       mHasDefaultSubscriptionExpires = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultSubscriptionExpires = true;
+      mDefaultSubscriptionExpires = 3600; // 1 hour
+   }
 }
 
 void
@@ -229,6 +200,11 @@ Profile::unsetDefaultPublicationTime()
    if(mBaseProfile.get()) 
    {
       mHasDefaultPublicationExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultPublicationExpires = true;
+      mDefaultPublicationExpires = 3600;  // 1 hour
    }
 }
 
@@ -257,6 +233,11 @@ Profile::unsetDefaultStaleCallTime()
    {
       mHasDefaultStaleCallTime = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultStaleCallTime = true;
+      mDefaultStaleCallTime = 180;        // 3 minutes
+   }
 }
 
 void
@@ -283,6 +264,11 @@ Profile::unsetDefaultSessionTime()
    if(mBaseProfile.get()) 
    {
       mHasDefaultSessionExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultSessionExpires = true;
+      mDefaultSessionExpires = 1800;      // 30 minutes
    }
 }
 
@@ -311,6 +297,11 @@ Profile::unsetDefaultSessionTimerMode()
    {
       mHasDefaultSessionTimerMode = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultSessionTimerMode = true;
+      mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
+   }
 }
 
 void
@@ -337,6 +328,11 @@ Profile::unset1xxRetransmissionTime()
    if(mBaseProfile.get()) 
    {
       mHas1xxRetransmissionTime = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHas1xxRetransmissionTime = true;
+      m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
    }
 }
 
@@ -373,6 +369,10 @@ void
 Profile::unsetOverrideHostAndPort()
 {
    if(mBaseProfile.get()) 
+   {
+      mHasOverrideHostPort = false;
+   }
+   else // No Base profile - so return to default setting
    {
       mHasOverrideHostPort = false;
    }
@@ -415,6 +415,12 @@ Profile::unsetAdvertisedCapabilities()
    {
       mHasAdvertisedCapabilities = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasAdvertisedCapabilities = true;
+      addAdvertisedCapability(Headers::Allow);  
+      addAdvertisedCapability(Headers::Supported);  
+   }
 }
 
 void 
@@ -454,6 +460,10 @@ Profile::unsetOutboundProxy()
    {
       mHasOutboundProxy = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasOutboundProxy = false;
+   }
 }
 
 void 
@@ -480,6 +490,11 @@ Profile::unsetRportEnabled()
    if(mBaseProfile.get()) 
    {
       mHasRportEnabled = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasRportEnabled = true;
+      mRportEnabled = true;
    }
 }
 
@@ -517,6 +532,10 @@ void
 Profile::unsetUserAgent()
 {
    if(mBaseProfile.get()) 
+   {
+      mHasUserAgent = false;
+   }
+   else // No Base profile - so return to default setting
    {
       mHasUserAgent = false;
    }
@@ -559,6 +578,10 @@ Profile::unsetProxyRequires()
    {
       mHasProxyRequires = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasProxyRequires = false;   
+   }
 }
 
 void 
@@ -585,6 +608,11 @@ Profile::unsetKeepAliveTimeForDatagram()
    if(mBaseProfile.get()) 
    {
       mHasKeepAliveTimeForDatagram = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasKeepAliveTimeForDatagram = true;
+      mKeepAliveTimeForDatagram = 30; // 30 seconds.
    }
 }
 
@@ -613,6 +641,11 @@ Profile::unsetKeepAliveTimeForStream()
    {
       mHasKeepAliveTimeForStream = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasKeepAliveTimeForStream = true;
+      mKeepAliveTimeForStream = 180; // 3 minutes.
+   }
 }
 
 void 
@@ -639,6 +672,11 @@ Profile::unsetFixedTransportPort()
    if(mBaseProfile.get()) 
    {
       mHasFixedTransportPort = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasFixedTransportPort = true;
+      mFixedTransportPort = 0;
    }
 }
 
@@ -667,6 +705,11 @@ Profile::unsetFixedTransportInterface()
    {
       mHasFixedTransportInterface = false;
    }
+   else // No Base profile - so return to default setting
+   {
+      mHasFixedTransportInterface = true;
+      mFixedTransportInterface = Data::Empty;
+   }
 }
 
 
@@ -694,6 +737,11 @@ Profile::unsetRinstanceEnabled()
    if(mBaseProfile.get()) 
    {
       mHasRinstanceEnabled = false;
+   }
+   else
+   {
+      mHasRinstanceEnabled = true;
+      mRinstanceEnabled = true;
    }
 }
 
