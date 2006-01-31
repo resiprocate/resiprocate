@@ -1568,32 +1568,51 @@ TestSipEndPoint::send200ToRegister()
 }
 
 TestSipEndPoint::Notify::Notify(TestSipEndPoint & endPoint, boost::shared_ptr<resip::Contents> contents, 
-                                const resip::Data& eventPackage, const resip::Data& subscriptionState)
+                                const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
      mContents(contents),
      mEventPackage(eventPackage),
-     mSubscriptionState(subscriptionState)
+     mSubscriptionState(subscriptionState),
+     mExpires(expires),
+     mMinExpires(minExpires),
+     mFirstNotify(firstNotify)
 {
 }
 
 boost::shared_ptr<resip::SipMessage>                                
 TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
 {
-   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
-   assert(dialog);
-   shared_ptr<SipMessage> notify(dialog->makeNotify());
-   notify->setContents(mContents.get());
-   notify->header(h_Event).value() = mEventPackage;
-   notify->header(h_SubscriptionState).value() = mSubscriptionState;
+   if (msg->header(h_Expires).value() < mMinExpires)
+   {
+      boost::shared_ptr<resip::SipMessage> response;
+      response = mEndPoint.makeResponse(*msg, 423);
+      response->header(h_MinExpires).value() = mMinExpires;
+      return response;
+   }
+   else
+   {
+      DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
+      assert(dialog);
+      shared_ptr<SipMessage> notify(dialog->makeNotify());
+      notify->setContents(mContents.get());
+      notify->header(h_Event).value() = mEventPackage;
+      notify->header(h_SubscriptionState).value() = mSubscriptionState;
+      notify->header(h_SubscriptionState).param(p_expires) = mExpires;
 
-   return notify;
+      if (mFirstNotify)
+      {
+         notify->header(h_CSeq).sequence() = 0;
+      }
+
+      return notify;
+   }
 }
 
 TestSipEndPoint::MessageExpectAction*
-TestSipEndPoint::notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState)
+TestSipEndPoint::notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify)
 {
-   return new Notify(*this, contents, eventPackage, subscriptionState);
+   return new Notify(*this, contents, eventPackage, subscriptionState, expires, minExpires, firstNotify);
 }
 
 TestSipEndPoint::Respond::Respond(TestSipEndPoint& endPoint,
