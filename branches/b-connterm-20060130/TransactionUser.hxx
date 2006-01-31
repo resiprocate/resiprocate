@@ -24,17 +24,26 @@ class TransactionUser
       virtual std::ostream& encode(std::ostream& strm) const;
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
       bool isRegisteredForTransactionTermination() const;
+      bool isRegisteredForConnectionTermination() const;
       
    protected:
-      typedef enum TransactionTermination 
+      enum TransactionTermination 
       {
          RegisterForTransactionTermination,
          DoNotRegisterForTransactionTermination
       };
+
+      enum ConnectionTermination 
+      {
+         RegisterForConnectionTermination,
+         DoNotRegisterForConnectionTermination
+      };
          
-      TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination);
+      TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination,
+                      ConnectionTermination c=DoNotRegisterForConnectionTermination);
       TransactionUser(MessageFilterRuleList &rules, 
-                      TransactionTermination t=DoNotRegisterForTransactionTermination);
+                      TransactionTermination t=DoNotRegisterForTransactionTermination,
+                      ConnectionTermination c=DoNotRegisterForConnectionTermination);
 
       virtual ~TransactionUser()=0;
       virtual bool isForMe(const SipMessage& msg) const;
@@ -51,7 +60,7 @@ class TransactionUser
       typedef std::set<Data> DomainList;
       DomainList mDomainList;
       bool mRegisteredForTransactionTermination;
-      
+      bool mRegisteredForConnectionTermination;
       friend class TuSelector;      
 };
 
