@@ -24,7 +24,6 @@ unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
 TransactionController::TransactionController(SipStack& stack) :
    mStack(stack),
-   mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
@@ -110,11 +109,6 @@ TransactionController::send(SipMessage* msg)
    mStateMacFifo.add(msg);
 }
 
-void
-TransactionController::registerForTransactionTermination()
-{
-   mRegisteredForTransactionTermination = true;
-}
 
 unsigned int 
 TransactionController::getTuFifoSize() const

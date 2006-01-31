@@ -369,16 +369,6 @@ class SipStack
       /// returns time in milliseconds when process next needs to be called 
       virtual unsigned int getTimeTillNextProcessMS(); 
 
-      /**
-          Used to enable notification of transaction termination to the TU's.  TU's
-          are send a TransactionTerminated message when enabled.
-
-          @todo This should likely be changed so that the TU for which this should 
-                apply can be specified.  ie.  In the repro case, the proxy TU needs to 
-                see these messages, but the DUM TU does not.
-      */
-      void registerForTransactionTermination();
-
       /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
 
