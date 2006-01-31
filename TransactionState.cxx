@@ -105,6 +105,7 @@ TransactionState::process(TransactionController& controller)
       {
          controller.mTuSelector.add(term);
          delete term;
+         return;
       }
    }
    

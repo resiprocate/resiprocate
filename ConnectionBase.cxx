@@ -44,11 +44,15 @@ ConnectionBase::ConnectionBase(const Tuple& who)
 
 ConnectionBase::~ConnectionBase()
 {
+   if (mWho.transport)
+   {
+      mWho.transport->connectionTerminated(getId());
+   }
+
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
       mWho.transport->fail(sendData->transactionId);
-      mWho.transport->connectionTerminated(getId());
       
       delete sendData;
       mOutstandingSends.pop_front();
