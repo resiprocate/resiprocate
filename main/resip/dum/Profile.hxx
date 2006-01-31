@@ -19,13 +19,21 @@ class Profile
       Profile(SharedPtr<Profile> baseProfile);
       virtual ~Profile();
 
+      /// Reset this profile to it's initial state - (same as calling unsetXXX for each setting)
+      /// If no fall through (base) profile was provided as creation time 
+      ///   - Reset all settings to Default settings  
+      /// else
+      ///   - Reset all setting to fall through to base profile      
+      virtual void reset();  
+
       /// Note:
       /// setXXXX methods will set this setting internally in this object.  If you do not call
       /// a particular setXXX method on this object then a corresponding getXXXX call will attempt
       /// to retrieve that value from the BaseProfile (provided in the constructor).  This allows
       /// you to setup a heirarchy of profiles and settings.
       /// unsetXXX methods are used to re-enable fallthrough after calling a setXXXX method.  If
-      /// you call an unsetXXXX method on an object with a NULL BaseProfile it will have no effect.
+      /// you call an unsetXXXX method on an object with a NULL BaseProfile the setting will return to
+      /// it's creation time default.  Note:  Defaults are described below.
 
       /// This default is used if no value is passed in when creating a registration
       virtual void setDefaultRegistrationTime(int secs);
@@ -163,7 +171,7 @@ class Profile
       virtual const Data& getFixedTransportInterface() const;
       virtual void unsetFixedTransportInterface(); 
 
-      ///if enabled then rinstance parameter is added to contacts. rinstance
+      ///If enabled then rinstance parameter is added to contacts.  The rinstance
       ///parameter is added by default.
       virtual void setRinstanceEnabled(bool enabled);
       virtual bool getRinstanceEnabled() const;
