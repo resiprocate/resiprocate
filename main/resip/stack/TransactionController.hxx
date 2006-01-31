@@ -39,9 +39,6 @@ class TransactionController
       
       void send(SipMessage* msg);
 
-      // Inform the TU that whenever a transaction has been terminated. 
-      void registerForTransactionTermination();
-
       unsigned int getTuFifoSize() const;
       unsigned int sumTransportFifoSizes() const;
       unsigned int getTransactionFifoSize() const;
@@ -59,7 +56,6 @@ class TransactionController
       SipStack& mStack;
       
       bool mMultiThreaded;
-      bool mRegisteredForTransactionTermination;
       
       // If true, indicate to the Transaction to ignore responses for which
       // there is no transaction. 
