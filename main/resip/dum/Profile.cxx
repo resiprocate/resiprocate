@@ -61,6 +61,9 @@ Profile::Profile()
 
    mHasFixedTransportInterface = true;
    mFixedTransportInterface = Data::Empty;
+
+   mHasRinstanceEnabled = true;
+   mRinstanceEnabled = true;
 }
 
 Profile::Profile(SharedPtr<Profile> baseProfile) : 
@@ -87,6 +90,7 @@ Profile::Profile(SharedPtr<Profile> baseProfile) :
    mHasKeepAliveTimeForStream = false;
    mHasFixedTransportPort = false;
    mHasFixedTransportInterface = false;
+   mHasRinstanceEnabled = false;
 }
 
 Profile::~Profile()
@@ -662,6 +666,34 @@ Profile::unsetFixedTransportInterface()
    if(mBaseProfile.get()) 
    {
       mHasFixedTransportInterface = false;
+   }
+}
+
+
+void 
+Profile::setRinstanceEnabled(bool enabled)
+{
+   mRinstanceEnabled = enabled;
+   mHasRinstanceEnabled = true;
+}
+
+bool 
+Profile::getRinstanceEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasRinstanceEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getRinstanceEnabled();
+   }
+   return mRinstanceEnabled;
+}
+
+void
+Profile::unsetRinstanceEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasRinstanceEnabled = false;
    }
 }
 
