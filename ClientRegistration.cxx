@@ -92,7 +92,11 @@ ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
-   mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+
+   if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+   {
+      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+   }
 
    next->header(h_Contacts) = mMyContacts;
    next->header(h_Expires).value() = registrationTime;
@@ -316,30 +320,51 @@ ClientRegistration::dispatch(const SipMessage& msg)
             int expiry = INT_MAX;
             //!dcm! -- should do set intersection with my bindings and walk that
             //small size, n^2, don't care
-            for (NameAddrs::iterator itMy = mMyContacts.begin();
-                 itMy != mMyContacts.end(); itMy++)
+            if (mDialogSet.getUserProfile()->getRinstanceEnabled())
             {
-               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-                   it != msg.header(h_Contacts).end(); it++)
+               for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
-                  try
+                  for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
                   {
-                     // rinstace parameter is added to contacts created by this client, so we can 
-                     // use it to determine which contacts in the 200 response are ours.  This
-                     // should eventually be replaced by gruu stuff.
-                     if (it->uri().exists(p_rinstance) && 
-                         it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
+                     try
                      {
-                        if(it->exists(p_expires))
+                        // rinstace parameter is added to contacts created by this client, so we can 
+                        // use it to determine which contacts in the 200 response are ours.  This
+                        // should eventually be replaced by gruu stuff.
+                        if (it->uri().exists(p_rinstance) && 
+                            it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
                         {
-                           expiry = resipMin(it->param(p_expires), expiry);
+                           if(it->exists(p_expires))
+                           {
+                              expiry = resipMin(it->param(p_expires), expiry);
+                           }
+                           break;
                         }
-                        break;
+                     }
+                     catch(ParseBuffer::Exception& e)
+                     {
+                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
                   }
-                  catch(ParseBuffer::Exception& e)
+               }
+            }
+            else
+            {
+               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
+                    it != msg.header(h_Contacts).end(); it++)
+               {
+                  //add to boolean exp. but needs testing
+                  //std::find(myContacts().begin(), myContacts().end(), *it) != myContacts().end()
+                  if (it->exists(p_expires))
                   {
-                     DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
+                     try
+                     {
+                        expiry = resipMin(it->param(p_expires), expiry);
+                     }
+                     catch(ParseBuffer::Exception& e)
+                     {
+                        DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
+                     }
                   }
                }
             }
