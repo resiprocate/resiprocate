@@ -23,27 +23,36 @@ class TransactionUser
       virtual const Data& name() const=0;
       virtual std::ostream& encode(std::ostream& strm) const;
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
-
+      bool isRegisteredForTransactionTermination() const;
+      
    protected:
-      TransactionUser();
-      TransactionUser(MessageFilterRuleList &rules);
+      typedef enum TransactionTermination 
+      {
+         RegisterForTransactionTermination,
+         DoNotRegisterForTransactionTermination
+      };
+         
+      TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination);
+      TransactionUser(MessageFilterRuleList &rules, 
+                      TransactionTermination t=DoNotRegisterForTransactionTermination);
 
       virtual ~TransactionUser()=0;
       virtual bool isForMe(const SipMessage& msg) const;
       
       TimeLimitFifo<Message> mFifo;
 
-   private:
-      typedef std::set<Data> DomainList;
-      DomainList mDomainList;
-      
+   private:      
       void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
 
-      friend class TuSelector;      
-
+   private:
       MessageFilterRuleList mRuleList;
+      typedef std::set<Data> DomainList;
+      DomainList mDomainList;
+      bool mRegisteredForTransactionTermination;
+      
+      friend class TuSelector;      
 };
 
 std::ostream& 
