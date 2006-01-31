@@ -567,6 +567,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             From(const TestSipEndPoint& testEndPoint);
             From(TestProxy& testProxy);
             From(const resip::Uri& contact);
+            From(const resip::Data& instanceId);
             
             virtual bool isMatch(boost::shared_ptr<resip::SipMessage>& message) const;
             virtual resip::Data toString() const;
@@ -575,6 +576,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             const TestSipEndPoint* mEndPoint;
             TestProxy* mProxy;
             const resip::Uri mContact;
+            const resip::Data mInstanceId;
+            
             // value semantics
       };
 
@@ -792,6 +795,7 @@ TestSipEndPoint::From* from(const TestSipEndPoint* testEndPoint);
 TestSipEndPoint::From* from(TestProxy* testProxy);
 TestSipEndPoint::From* from(const resip::NameAddr* contact);
 TestSipEndPoint::From* from(const resip::Uri& clientUri);
+TestSipEndPoint::From* from(const resip::Data& instanceId);
 
 TestSipEndPoint::AlwaysMatches* alwaysMatches();
 
