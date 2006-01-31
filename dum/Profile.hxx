@@ -163,6 +163,12 @@ class Profile
       virtual const Data& getFixedTransportInterface() const;
       virtual void unsetFixedTransportInterface(); 
 
+      ///if enabled then rinstance parameter is added to contacts. rinstance
+      ///parameter is added by default.
+      virtual void setRinstanceEnabled(bool enabled);
+      virtual bool getRinstanceEnabled() const;
+      virtual void unsetRinstanceEnabled();
+
    private:
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
@@ -220,6 +226,9 @@ class Profile
 
       bool mHasProxyRequires;
       Tokens mProxyRequires;
+
+      bool mHasRinstanceEnabled;
+      bool mRinstanceEnabled;
       
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
