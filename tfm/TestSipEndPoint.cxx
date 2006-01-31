@@ -1526,7 +1526,6 @@ TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
 {
    boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 200);
 
-   // Contacts has been created, but it is not good, we need to fix it
    response->remove(h_Contacts);
 
    // check whether we need to remove bindings
@@ -1928,6 +1927,16 @@ TestSipEndPoint::From::From(const resip::Uri& contact)
    assert(!mContact.host().empty());
 }
 
+TestSipEndPoint::From::From(const resip::Data& instanceId)
+   : mEndPoint(0),
+     mProxy(0),
+     mContact(),
+     mInstanceId(instanceId)
+{
+   assert(!instanceId.empty());
+}
+
+
 // check if the message is within a known transaction
 // check via
 // check max-forwards
@@ -1940,7 +1949,35 @@ TestSipEndPoint::From::isMatch(shared_ptr<SipMessage>& message) const
 {
    //DebugLog(<< "TestSipEndPoint::From::isMatch");
    // check that the from matches the stored agent
-   if (mEndPoint || !mContact.host().empty())
+   if (!mInstanceId.empty())
+   {
+      if (message->exists(h_Contacts) && message->header(h_Contacts).size() == 1)
+      {
+         if (message->header(h_Contacts).front().exists(p_Instance))
+         {
+            if (message->header(h_Contacts).front().param(p_Instance) == mInstanceId)
+            {
+               return true;
+            }
+            else
+            {
+               DebugLog (<< "instanceId doesn't match " 
+                         << message->header(h_Contacts).front().param(p_Instance) << " != " 
+                         << mInstanceId);
+            }
+         }
+         else
+         {
+            DebugLog (<< "no instanceId in contact " << message->header(h_Contacts).front());
+         }
+      }
+      else
+      {
+         DebugLog (<< "wrong number of contacts in msg ");
+      }
+      return false;
+   }
+   else if (mEndPoint || !mContact.host().empty())
    {
       const Uri& localContact = mEndPoint ? mEndPoint->getContact().uri() : mContact;
       if (message->isRequest())
@@ -2020,7 +2057,11 @@ TestSipEndPoint::From::toString() const
    {
       return "from(" + mProxy->toString() + ")";
    }
-
+   else if (!mInstanceId.empty())
+   {
+      return "from(" + mInstanceId + ")";
+   }
+   
    assert(false);
    return Data::Empty;   
 }
@@ -2683,6 +2724,12 @@ TestSipEndPoint::From*
 from(TestProxy* testProxy)
 {
    return new TestSipEndPoint::From(*testProxy);
+}
+
+TestSipEndPoint::From* 
+from(const resip::Data& instanceId)
+{
+   return new TestSipEndPoint::From(instanceId);
 }
 
 TestSipEndPoint::AlwaysMatches* 
