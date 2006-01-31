@@ -484,12 +484,6 @@ SipStack::getTimeTillNextProcessMS()
                    resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()));
 } 
 
-void
-SipStack::registerForTransactionTermination()
-{
-   mTransactionController.registerForTransactionTermination();
-}
-
 void 
 SipStack::buildFdSet(FdSet& fdset)
 {
