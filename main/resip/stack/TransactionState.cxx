@@ -18,6 +18,7 @@
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
+#include "resip/stack/TuSelector.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
@@ -1680,7 +1681,8 @@ void
 TransactionState::terminateClientTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mRegisteredForTransactionTermination)
+   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
+       mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate client transaction " << tid);
       sendToTU(new TransactionTerminated(tid, true, mTransactionUser));
@@ -1691,7 +1693,8 @@ void
 TransactionState::terminateServerTransaction(const Data& tid)
 {
    mState = Terminated;
-   if (mController.mRegisteredForTransactionTermination)
+   if (mController.mTuSelector.isTransactionUserStillRegistered(mTransactionUser) && 
+       mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate server transaction " << tid);
       sendToTU(new TransactionTerminated(tid, false, mTransactionUser));

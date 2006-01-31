@@ -28,7 +28,8 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& targetP, 
              UserStore& userStore,
              int timerC) 
-   : mStack(stack), 
+   : TransactionUser(TransactionUser::RegisterForTransactionTermination),
+     mStack(stack), 
      mRecordRoute(recordRoute),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
@@ -40,8 +41,6 @@ Proxy::Proxy(SipStack& stack,
    {
       mRecordRoute.uri().param(p_lr);
    }
-   
-   mStack.registerForTransactionTermination();
 }
 
 
