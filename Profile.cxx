@@ -45,7 +45,7 @@ Profile::reset()
    unsetKeepAliveTimeForStream();
    unsetFixedTransportPort(); 
    unsetFixedTransportInterface(); 
-   unsetRinstanceEnabled();
+   //unsetRinstanceEnabled();
 }
 
 void
@@ -712,7 +712,7 @@ Profile::unsetFixedTransportInterface()
    }
 }
 
-
+/*
 void 
 Profile::setRinstanceEnabled(bool enabled)
 {
@@ -744,6 +744,7 @@ Profile::unsetRinstanceEnabled()
       mRinstanceEnabled = true;
    }
 }
+*/
 
    
 /* ====================================================================
