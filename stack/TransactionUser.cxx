@@ -7,11 +7,13 @@
 
 using namespace resip;
 
-TransactionUser::TransactionUser(TransactionTermination t)
+TransactionUser::TransactionUser(TransactionTermination t,
+                                 ConnectionTermination c)
    : mFifo(0, 0),
      mRuleList(),
      mDomainList(),
-     mRegisteredForTransactionTermination(t == RegisterForTransactionTermination)
+     mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
+     mRegisteredForConnectionTermination(c == RegisterForConnectionTermination)
 {
   // This creates a default message filter rule, which
   // handles all sip: and sips: requests.
@@ -19,11 +21,13 @@ TransactionUser::TransactionUser(TransactionTermination t)
 }
 
 TransactionUser::TransactionUser(MessageFilterRuleList &mfrl, 
-                                 TransactionTermination t)
+                                 TransactionTermination t,
+                                 ConnectionTermination c)
   : mFifo(0, 0), 
     mRuleList(mfrl),
     mDomainList(),
-    mRegisteredForTransactionTermination(t == RegisterForTransactionTermination)
+    mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
+    mRegisteredForConnectionTermination(c == RegisterForConnectionTermination)    
 {
 }
 
@@ -103,6 +107,12 @@ bool
 TransactionUser::isRegisteredForTransactionTermination() const
 {
    return mRegisteredForTransactionTermination;
+}
+
+bool
+TransactionUser::isRegisteredForConnectionTermination() const
+{
+   return mRegisteredForConnectionTermination;
 }
 
 std::ostream& 
