@@ -21,6 +21,21 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
    {
       mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
+
+   if (!userProfile->getImsAuthUri().host().empty())
+   {
+      Auth auth;
+      Uri source = userProfile->getImsAuthUri();      
+      
+      auth.param(p_username) = source.getAorNoPort();
+      auth.param(p_realm) = source.host();
+      source.user() = Data::Empty;
+      auth.param(p_uri) = source.host();
+      auth.param(p_nonce) = Data::Empty;
+      auth.param(p_response) = Data::Empty;
+      mLastRequest->header(h_Authorizations).push_back(auth);
+      DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);   
+   }
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
    // add instance parameter to the contact for gruu !cj! TODO 
