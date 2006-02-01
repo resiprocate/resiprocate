@@ -1445,30 +1445,23 @@ TestSipEndPoint::send423Or200ToPublish(int minExpires)
    return new Send423Or200ToPublish(*this, minExpires);
 }
 
-TestSipEndPoint::Send401ToPublish::Send401ToPublish(TestSipEndPoint& endPoint)
+TestSipEndPoint::Send401::Send401(TestSipEndPoint& endPoint)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint)
 {
 }
 
 boost::shared_ptr<resip::SipMessage>
-TestSipEndPoint::Send401ToPublish::go(boost::shared_ptr<resip::SipMessage> msg)
+TestSipEndPoint::Send401::go(boost::shared_ptr<resip::SipMessage> msg)
 {
-   boost::shared_ptr<resip::SipMessage> publish;
-   publish = mEndPoint.getReceivedPublish(msg->header(resip::h_CallId));
-   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*publish, 401);
-
-   if (publish->exists(h_Expires))
-   {
-      response->header(h_Expires).value() = publish->header(h_Expires).value();
-   }
+   boost::shared_ptr<resip::SipMessage> response(mEndPoint.makeResponse(*msg, 401));
 
    Auth auth;
    auth.scheme() = "Digest";
    Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
-   auth.param(p_nonce) = Helper::makeNonce(*publish, timestamp);
+   auth.param(p_nonce) = Helper::makeNonce(*msg, timestamp);
    auth.param(p_algorithm) = "MD5";
-   auth.param(p_realm) = "PublishDiagest";
+   auth.param(p_realm) = "localhost";
    auth.param(p_qopOptions) = "auth";
    auth.param(p_opaque) = "0000000000000000";
 
@@ -1743,9 +1736,9 @@ TestSipEndPoint::ok()
 }
 
 TestSipEndPoint::MessageExpectAction*
-TestSipEndPoint::send401ToPublish()
+TestSipEndPoint::send401()
 {
-   return new Send401ToPublish(*this);
+   return new Send401(*this);
 }
 
 TestSipEndPoint::MessageExpectAction* 
