@@ -85,7 +85,7 @@ class TestConnection : public ConnectionBase
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    Data bytes("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
               "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
@@ -142,7 +142,7 @@ main(int argc, char** argv)
       if (maxChunk < minChunk) swap(maxChunk, minChunk);
       while(cBase.read(minChunk, maxChunk));      
    }
-   assert(testRxFifo.size() == runs * 2);
+   assert(testRxFifo.size() == runs * 3);
 
    cerr << "\nTEST OK" << endl;
    return 0;
