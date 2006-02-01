@@ -49,6 +49,9 @@ ClientRegistration::~ClientRegistration()
 {
    DebugLog ( << "ClientRegistration::~ClientRegistration" );
    mDialogSet.mClientRegistration = 0;
+
+   // !dcm! Will not interact well with multiple registrations from the same AOR
+   getUserProfile()->setServiceRoute(NameAddrs());
 }
 
 void
@@ -105,7 +108,7 @@ ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 
    if (mQueuedState == None)
    {
-      mDum.send(next);
+      send(next);
    }
 }
 
@@ -131,7 +134,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
 
          if (mQueuedState == None)
          {
-            mDum.send(next);
+            send(next);
          }
 
          return;
@@ -166,7 +169,7 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 
    if (mQueuedState == None)
    {
-      mDum.send(next);
+      send(next);
    }
 }
 
@@ -206,7 +209,7 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 
    if (mQueuedState == None)
    {
-      mDum.send(next);
+      send(next);
    }
 }
 
@@ -236,7 +239,8 @@ ClientRegistration::internalRequestRefresh(int expires)
    {
       mLastRequest->header(h_Expires).value() = expires;
    }
-   mDum.send(mLastRequest);
+
+   send(mLastRequest);
 }
 
 const NameAddrs&
@@ -309,6 +313,25 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else if (code < 300) // success
       {
+         try
+         {
+            if (msg.exists(h_ServiceRoutes))
+            {
+               InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));               
+               getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+            }
+            else
+            {
+               InfoLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
+               getUserProfile()->setServiceRoute(NameAddrs());
+            }
+         }
+         catch(BaseException &e)
+         {
+            InfoLog(<< "Error Parsing Service Route:" << e);
+         }
+         
+
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
@@ -430,7 +453,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             mState = mQueuedState;
             mQueuedState = None;
             *mLastRequest = *mQueuedRequest;
-            mDum.send(mLastRequest);
+            send(mLastRequest);
          }
       }
       else
@@ -445,7 +468,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                {
                   mLastRequest->header(h_Expires).value() = msg.header(h_MinExpires).value();
                   mLastRequest->header(h_CSeq).sequence()++;
-                  mDum.send(mLastRequest);
+                  send(mLastRequest);
                   return;
                }
             }
@@ -462,7 +485,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   DebugLog(<< "Application requested immediate retry on 408");
                
                   mLastRequest->header(h_CSeq).sequence()++;
-                  mDum.send(mLastRequest);
+                  send(mLastRequest);
                   return;
                }
                else
@@ -576,7 +599,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
 
             // Resend last request
             mLastRequest->header(h_CSeq).sequence()++;
-            mDum.send(mLastRequest);
+            send(mLastRequest);
          }
          break;
       default:
