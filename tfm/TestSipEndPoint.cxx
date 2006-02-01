@@ -563,32 +563,6 @@ TestSipEndPoint::Dump::go(shared_ptr<SipMessage> msg)
 }
      
 shared_ptr<SipMessage>
-TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
-{
-   assert(response->isResponse());
-   int code = response->header(h_StatusLine).responseCode();
-   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
-   assert (invite->header(h_RequestLine).getMethod() == INVITE);
-   
-   if (code == 200)
-   {
-      DebugLog(<< "Constructing ack against 200 using dialog.");
-      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
-      assert (dialog);
-      DebugLog(<< *dialog);
-      // !dlb! should use contact from 200?
-      shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
-      return ack;
-   }
-   else
-   {
-      DebugLog(<<"Constructing failure ack.");
-      shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
-      return ack;
-   }
-}
-
-shared_ptr<SipMessage>
 TestSipEndPoint::ByeTo::go(shared_ptr<SipMessage> msg, const Uri& target)
 {
    DeprecatedDialog* dialog = mEndPoint.getDialog(target);
@@ -732,10 +706,8 @@ TestSipEndPoint::ReInvite::go()
    }
       
    shared_ptr<SipMessage> invite(dialog->makeInvite());
-   if (mSdp.get() != 0)
-   {
+   if (mSdp.get())
       invite->setContents(mSdp.get());
-   }
    DebugLog(<< "TestSipEndPoint::ReInvite: " << *invite);
    mEndPoint.storeSentInvite(invite);
    mEndPoint.send(invite);
@@ -894,10 +866,8 @@ TestSipEndPoint::Invite::go()
    shared_ptr<SipMessage> invite(Helper::makeInvite(NameAddr(mTo),
                                                     NameAddr(mEndPoint.getAddressOfRecord()),
                                                     mEndPoint.getContact()));
-   if (mSdp.get() != 0)
-   {
+   if (mSdp.get())
       invite->setContents(mSdp.get());
-   }
 
    mEndPoint.storeSentInvite(invite);
    return invite;
@@ -1750,10 +1720,7 @@ TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)
 {
    boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 183);
    if( mSdp.get() )
-   {
-      const SdpContents* sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
-      response->setContents(sdp);
-   }
+      response->setContents(mSdp.get());
    return response;
 }
 
@@ -1841,10 +1808,51 @@ TestSipEndPoint::dump()
    return new Dump(*this);
 }
 
-TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::Ack::Ack(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
+{
+   assert(response->isResponse());
+   int code = response->header(h_StatusLine).responseCode();
+   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+
+   if (code == 200)
+   {
+      DebugLog(<< "Constructing ack against 200 using dialog.");
+      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      assert (dialog);
+      DebugLog(<< *dialog);
+      // !dlb! should use contact from 200?
+      shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
+      if( mSdp.get() )
+         ack->setContents(mSdp.get());
+      return ack;
+   }
+   else
+   {
+      DebugLog(<<"Constructing failure ack.");
+      shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
+      return ack;
+   }
+}
+
+TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ack()
 {
    return new Ack(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::ack(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new Ack(*this, sdp);
 }
 
 #if 0
