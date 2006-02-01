@@ -82,6 +82,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
          contact.param(p_Instance) = instanceId;
       }
       mLastRequest->header(h_Contacts).push_front(contact);
+
+      const NameAddrs& sRoute = mUserProfile->getServiceRoute();
+      if (!sRoute.empty())
+      {
+         mLastRequest->header(h_Routes) = sRoute;
+      }
    }
       
    Via via;
