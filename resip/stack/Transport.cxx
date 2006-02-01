@@ -14,6 +14,7 @@
 #include "rutil/Socket.hxx"
 #include "rutil/ParseBuffer.hxx"
 
+#include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportFailure.hxx"
@@ -148,6 +149,12 @@ Transport::error(int e)
    }
 }
 
+void
+Transport::connectionTerminated(ConnectionId id)
+{
+   mStateMachineFifo.add(new ConnectionTerminated(this, id));
+}
+   
 void
 Transport::fail(const Data& tid)
 {

@@ -46,6 +46,7 @@ class Transport
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 
+      void connectionTerminated(ConnectionId id);
       void fail(const Data& tid); // called when transport failed
       static void error(int e);
       
