@@ -420,15 +420,15 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageExpectAction* send200ToRegister(const resip::NameAddr& contact);
       MessageExpectAction* send200ToRegister();
 
-      class Send401ToPublish : public MessageExpectAction
+      class Send401 : public MessageExpectAction
       {
          public:
-            Send401ToPublish(TestSipEndPoint& endPoint);
+            Send401(TestSipEndPoint& endPoint);
             virtual boost::shared_ptr<resip::SipMessage>
             go(boost::shared_ptr<resip::SipMessage> msg);
             TestSipEndPoint& mEndPoint;
       };
-      MessageExpectAction* send401ToPublish();
+      MessageExpectAction* send401();
 
       class Notify : public MessageExpectAction
       {
