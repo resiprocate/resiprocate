@@ -509,8 +509,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR(TestSipEndPoint, Dump);
       MessageExpectAction* dump();
 
-      EXPECT_FUNCTOR(TestSipEndPoint, Ack);
+      class Ack : public MessageExpectAction
+      {
+         public:
+            explicit Ack(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
       MessageExpectAction* ack();
+      MessageExpectAction* ack(const boost::shared_ptr<resip::SdpContents>& sdp);
 
       EXPECT_FUNCTOR(TestSipEndPoint, AckReferred);
       MessageExpectAction* ackReferred();
