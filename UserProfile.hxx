@@ -22,6 +22,20 @@ class UserProfile : public Profile
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
 
+      virtual void setServiceRoute( const NameAddrs& sRoute);
+      virtual NameAddrs& getServiceRoute();
+      
+      virtual void setImsAuthUri( const Uri& imsAuthUri)
+      {
+         mImsAuthUri = imsAuthUri;
+      }
+      
+      virtual Uri& getImsAuthUri()
+      {
+         return mImsAuthUri;
+      }
+      
+      
       // !cj! - this GRUU stuff looks very suspect
       virtual void addGruu(const Data& aor, const NameAddr& contact);
       virtual bool hasGruu(const Data& aor) const;
@@ -59,7 +73,9 @@ class UserProfile : public Profile
    private:
       NameAddr mDefaultFrom;
       Data mInstanceId;
-      
+      NameAddrs mServiceRoute;
+      Uri mImsAuthUri;
+
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 
