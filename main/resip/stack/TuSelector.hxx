@@ -9,6 +9,8 @@
 
 namespace resip
 {
+
+class ConnectionTerminated;
 class Message;
 class TransactionUser;
 
@@ -19,6 +21,8 @@ class TuSelector
       ~TuSelector();
       
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      void add(ConnectionTerminated* term);
+      
       unsigned int size() const;      
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
   
