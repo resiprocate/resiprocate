@@ -2,6 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/Helper.hxx"
@@ -97,6 +98,14 @@ TransactionState::process(TransactionController& controller)
          controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
          delete keepAlive;
          return;      
+      }
+
+      ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
+      if (term)
+      {
+         controller.mTuSelector.add(term);
+         delete term;
+         return;
       }
    }
    
