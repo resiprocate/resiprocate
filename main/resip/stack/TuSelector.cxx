@@ -1,7 +1,9 @@
+#include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "resip/stack/SipStack.hxx"
+
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
@@ -73,6 +75,20 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
       else
       {
          mFallBackFifo.add(msg, usage);
+      }
+   }
+}
+
+void
+TuSelector::add(ConnectionTerminated* term)
+{
+   InfoLog (<< "Sending " << *term << " to TUs");
+   
+   for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   {
+      if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
+      {
+         it->tu->post(term->clone());
       }
    }
 }
@@ -171,7 +187,7 @@ TuSelector::remove(TransactionUser* tu)
       if (it->tu == tu)
       {
          TransactionUserMessage* done = new TransactionUserMessage(TransactionUserMessage::TransactionUserRemoved, tu);
-         tu->postToTransactionUser(done, TimeLimitFifo<resip::Message>::InternalElement);
+         tu->post(done);
          mTuList.erase(it);
          return;
       }
