@@ -93,9 +93,17 @@ ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
 
+   /*
    if(mDialogSet.getUserProfile()->getRinstanceEnabled())
    {
       mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+   }
+   */
+
+   const Data& instanceId = mDialogSet.getUserProfile()->getInstanceId();
+   if (!instanceId.empty())
+   {
+      mMyContacts.back().param(p_Instance) = instanceId;
    }
 
    next->header(h_Contacts) = mMyContacts;
@@ -320,7 +328,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             int expiry = INT_MAX;
             //!dcm! -- should do set intersection with my bindings and walk that
             //small size, n^2, don't care
-            if (mDialogSet.getUserProfile()->getRinstanceEnabled())
+            if (!mDialogSet.getUserProfile()->getInstanceId().empty())
             {
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
@@ -328,11 +336,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   {
                      try
                      {
-                        // rinstace parameter is added to contacts created by this client, so we can 
-                        // use it to determine which contacts in the 200 response are ours.  This
-                        // should eventually be replaced by gruu stuff.
-                        if (it->uri().exists(p_rinstance) && 
-                            it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
+                        // instace id is added to contacts created by this client, so we can 
+                        // use it to determine which contacts in the 200 response are ours.  
+                        if (it->exists(p_Instance) && 
+                            it->param(p_Instance) == itMy->param(p_Instance))
                         {
                            if(it->exists(p_expires))
                            {
