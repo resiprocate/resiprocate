@@ -37,6 +37,18 @@ UserProfile::getDefaultFrom()
 }
 
 void
+UserProfile::setServiceRoute(const NameAddrs& sRoute)
+{
+   mServiceRoute = sRoute;
+}
+
+NameAddrs& 
+UserProfile::getServiceRoute()
+{
+   return mServiceRoute;
+}
+
+void
 UserProfile::setInstanceId(const Data& id)
 {
    mInstanceId = id;
