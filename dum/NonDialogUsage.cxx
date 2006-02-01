@@ -3,6 +3,7 @@
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -45,6 +46,17 @@ NonDialogUsage::getUserProfile()
 void 
 NonDialogUsage::send(SharedPtr<SipMessage> msg)
 {
+   InfoLog(<< "Applying service route: " << Inserter(getUserProfile()->getServiceRoute()) << " to " << msg->brief());   
+   const NameAddrs& sRoute = getUserProfile()->getServiceRoute();
+   if (sRoute.empty())
+   {
+      msg->remove(h_Routes);
+   }
+   else
+   {
+      msg->header(h_Routes) = sRoute;
+   }
+   
    mDum.send(msg);
 }
 

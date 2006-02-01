@@ -119,16 +119,16 @@ DialogUsageManager::~DialogUsageManager()
 #endif
    if(!mDialogSetMap.empty())
    {
-      InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
+      DebugLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
       DialogSetMap::const_iterator ds = mDialogSetMap.begin();
       for(; ds != mDialogSetMap.end(); ++ds)
       {
-         InfoLog(<< "DialgSetId:" << ds->first);
+         DebugLog(<< "DialgSetId:" << ds->first);
          DialogSet::DialogMap::const_iterator   d = ds->second->mDialogs.begin();
          for(; d != ds->second->mDialogs.end(); ++d)
          {
             //const Dialog* p = &(d->second);
-            InfoLog(<<"DialogId:" << d->first << ", " << *d->second);
+            DebugLog(<<"DialogId:" << d->first << ", " << *d->second);
          }
       }
    }
