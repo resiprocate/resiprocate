@@ -8,7 +8,6 @@
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
 
-#include <algorithm>
 
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -51,7 +50,7 @@ LocationServer::process(RequestContext& context)
            else
            {
                noqbatch.push_back(new Target(contact.uri));
-           }
+               noqbatch.push_back(new QValueTarget(contact.uri,1.0));
         }
         else
         {
