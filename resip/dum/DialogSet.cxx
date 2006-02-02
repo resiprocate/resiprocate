@@ -316,7 +316,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
                   dialog.send(ack);
                   
-                  SharedPtr<SipMessage> bye;
+                  SharedPtr<SipMessage> bye(new SipMessage);
                   dialog.makeRequest(*bye, BYE);
                   dialog.send(bye);
 
