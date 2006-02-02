@@ -12,7 +12,7 @@ Dispatcher::Dispatcher(std::auto_ptr<Worker> prototype,
                         bool startImmediately):
    mStack(stack),
    mFifo(0,0),
-   mAcceptingWork(true),
+   mAcceptingWork(false),
    mShutdown(false),
    mStarted(false),
    mWorkerPrototype(prototype.release())
@@ -52,8 +52,8 @@ Dispatcher::~Dispatcher()
 bool
 Dispatcher::post(std::auto_ptr<resip::ApplicationMessage> work)
 {
-   resip::Lock(mMutex,resip::VOCAL_READLOCK);
-   if(!mShutdown)
+   resip::ReadLock r(mMutex);
+   if(mAcceptingWork)
    {
       mFifo.add(work.release(),
                   resip::TimeLimitFifo<resip::ApplicationMessage>::InternalElement);
@@ -87,21 +87,21 @@ Dispatcher::workPoolSize() const
 void
 Dispatcher::stop()
 {
-   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   resip::WriteLock w(mMutex);
    mAcceptingWork=false;
 }
 
 void
 Dispatcher::resume()
 {
-   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   resip::WriteLock w(mMutex);
    mAcceptingWork = !mShutdown;
 }
 
 void
 Dispatcher::shutdownAll()
 {
-   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   resip::WriteLock w(mMutex);
    if(!mShutdown)
    {
       mAcceptingWork=false;
@@ -121,7 +121,7 @@ Dispatcher::shutdownAll()
 void 
 Dispatcher::startAll()
 {
-   resip::Lock(mMutex,resip::VOCAL_WRITELOCK);
+   resip::WriteLock w(mMutex);
    if(!mShutdown && !mStarted)
    {
       std::vector<WorkerThread*>::iterator i;
@@ -130,6 +130,7 @@ Dispatcher::startAll()
          (*i)->run();
       }
       mStarted=true;
+      mAcceptingWork=true;
    }
 }
 

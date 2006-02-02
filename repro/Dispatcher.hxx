@@ -5,7 +5,7 @@
 #include "repro/Worker.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
-#include "rutil/Mutex.hxx"
+#include "rutil/RWMutex.hxx"
 #include "rutil/Lock.hxx"
 #include <vector>
 
@@ -128,7 +128,7 @@ class Dispatcher
       bool mStarted;
       Worker* mWorkerPrototype;
 
-      resip::Mutex mMutex;
+      resip::RWMutex mMutex;
 
       std::vector<WorkerThread*> mWorkerThreads;
 
