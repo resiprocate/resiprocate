@@ -55,7 +55,7 @@ digraph UAC {
   SentReinviteNoOffer -> SentReinviteNoOfferGlare     [ label = "on491I/timer::491" ]; 
   SentReinviteNoOffer -> WaitingToTerminate           [ label = "dum::end" ];
 
-  SentReinviteAnswered -> Connected                   [ label = "dum::provideAnswer/send::ACK-answer
+  SentReinviteAnswered -> Connected                   [ label = "dum::provideAnswer/send::ACK-answer" ];
   SentReinviteAnswered -> Terminated                  [ label = "dum::end/app::onTerminated(GeneralFailure),send::BYE" ];
 
   SentReinviteNoOfferGlare -> SentReinviteNoOffer     [ label = "onTimer491/resend::INVITE" ]; 
