@@ -1,7 +1,5 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 
-#include <vector>
-#include <deque>
 
 #include "repro/RequestContext.hxx"
 #include "repro/ResponseContext.hxx"
@@ -10,6 +8,8 @@
 #include "repro/QValueTarget.hxx"
 
 #include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 
 namespace repro
@@ -109,7 +109,8 @@ QValueTargetHandler::process(RequestContext &rc)
       
       if(inner!=outer->end() && isMyType(rsp.getTarget(*inner)))
       {
-
+         DebugLog(<<"QValueTargetHandler: "
+                  <<"Found a queue of QValueTargets. Are any of them active?");
          //Are there active targets in this queue already?
          bail=false;
          for(;inner!=outer->end() && !bail;inner++)
@@ -117,6 +118,8 @@ QValueTargetHandler::process(RequestContext &rc)
             if(rsp.isActive(*inner))
             {
                activeTargets=true;
+               DebugLog(<<"There are active targets. "
+                        <<"I don't need to do anything else yet.");
                bail=true;
             }
          }
@@ -131,16 +134,22 @@ QValueTargetHandler::process(RequestContext &rc)
          bail=false;
          while(!activeTargets && !bail)
          {
+            DebugLog(<<"There are no active targets here. "
+                     <<"Looking for a group to start.");
             std::vector<resip::Data> beginTargets;
             
             fillNextTargetGroup(beginTargets,*outer,rsp);
             
             if(beginTargets.empty())
             {
+               DebugLog(<<"There are no more targets to start in this queue."
+                        <<" Trying to find another queue to work on.");
                bail=true;
             }
             else
             {
+               DebugLog(<<"This queue has a group of targets in it. "
+                        <<"Trying to start this group.");
                std::vector<resip::Data>::iterator i;
                for(i=beginTargets.begin();i!=beginTargets.end();i++)
                {
@@ -153,15 +162,30 @@ QValueTargetHandler::process(RequestContext &rc)
                   activeTargets |= success;
                   startedTargets |= success;
                }
+               if(startedTargets)
+               {
+                  DebugLog(<<"Successfully started some targets.");
+               }
+               else
+               {
+                  DebugLog(<<"None of these Targets were valid!"
+                           << " Moving on to another group.");
+               }
+               
             }
          }
             
+         if(!startedTargets)
+         {
+            DebugLog(<< "There weren't any valid Targets in this queue!");
+         }
          //If we just started some targets, and we are not supposed to wait
          //for these targets to terminate before beginning the next group
          //in this queue, we should schedule the next group now.
          //If there is no next group, nextBeginTids will be empty.
          if(startedTargets && !mWaitForTerminate)
          {
+            DebugLog(<<"Now I need to schedule the next group of Targets.");
             fillNextTargetGroup(nextBeginTids,*outer,rsp);
          }
          
@@ -253,13 +277,17 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
                         const std::list<resip::Data> & queue,
                         const ResponseContext& rsp) const
 {
+   if(queue.empty())
+   {
+      return;
+   }
+
    std::list<resip::Data>::const_iterator i = queue.begin();
    float currentQ=0;
    
 
-   //Find the first Candidate target in the queue, noting
-   // whether there are any active targets.
-   while(i!=queue.end())
+   //Find the first Candidate target in the queue.
+   for(i=queue.begin();i!=queue.end();i++)
    {
 
       if(rsp.isCandidate(*i))
@@ -268,7 +296,6 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
          break;
       }
 
-      i++;
    }
 
 
@@ -285,6 +312,7 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
          while(i!=queue.end() && rsp.getTarget(*i)->getPriority()==currentQ)
          {
             fillHere.push_back(*i);
+            i++;
          }
          break;
          
@@ -292,7 +320,12 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
          while(i!=queue.end())
          {
             fillHere.push_back(*i);
-         }   
+            i++;
+         }
+         break;
+         
+      default:
+         ErrLog(<<"mForkBehavior is not defined! How did this happen?");
    }
 
 }
