@@ -36,7 +36,7 @@ class UserAuthGrabber : public Worker
          }
       }
       
-      virtual UserAuthGrabber* clone()
+      virtual UserAuthGrabber* clone() const
       {
          return new UserAuthGrabber(mUserStore);
       }
