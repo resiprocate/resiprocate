@@ -63,7 +63,23 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_CallId).value() = Helper::computeCallId();
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
+
    assert(mUserProfile.get());
+   if (!mUserProfile->getImsAuthUri().host().empty())
+   {
+      Auth auth;
+      Uri source = mUserProfile->getImsAuthUri();      
+      auth.scheme() = "Digest";
+      auth.param(p_username) = source.getAorNoPort();
+      auth.param(p_realm) = source.host();
+      source.user() = Data::Empty;
+      auth.param(p_uri) = "sip:" + source.host();
+      auth.param(p_nonce) = Data::Empty;
+      auth.param(p_response) = Data::Empty;
+      mLastRequest->header(h_Authorizations).push_back(auth);
+      DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);   
+   }
+
    if (mUserProfile->hasGruu(target.uri().getAor()))
    {
       contact = mUserProfile->getGruu(target.uri().getAor());
