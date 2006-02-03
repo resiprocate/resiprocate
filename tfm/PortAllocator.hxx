@@ -10,7 +10,15 @@ class PortAllocator
    public:
       enum 
       {
+/********************************************************************************
+* See http://support.microsoft.com/default.aspx?scid=kb;en-us;884020
+* On WinXP+SP2, only 127.0.0.1 is acceptable; the patch didn't work :-(
+*********************************************************************************/
+#ifndef WIN32
          StartAddress = 2,
+#else
+         StartAddress = 1,
+#endif
          StartPort = 5061,
          VoicemailPort = 60000,
          AttendantPort = 61000
@@ -23,8 +31,12 @@ class PortAllocator
             resip::DataStream strm(buffer);
             strm << "127.0.0.";
             static int addr = StartAddress;
+#ifndef WIN32
             assert(addr < 253);
             strm << resip::Data(++addr);
+#else
+            strm << resip::Data(addr);
+#endif
          }
          return buffer;
       }
