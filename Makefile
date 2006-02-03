@@ -76,7 +76,8 @@ SRC =   \
 	OutgoingEvent.cxx \
 	HttpProvider.cxx \
 	HttpGetMessage.cxx \
-	DumHelper.cxx
+	DumHelper.cxx \
+	MergedRequestRemovalCommand.cxx
 
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/dum
