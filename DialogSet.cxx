@@ -89,7 +89,7 @@ DialogSet::~DialogSet()
 
    if (mMergeKey != MergedRequestKey::Empty)
    {
-      mDum.mMergedRequests.erase(mMergeKey);
+      mDum.requestMergedRequestRemoval(mMergeKey);
    }
 
    if (!mCancelKey.empty())

@@ -325,6 +325,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       friend class KeepAliveAssociation;
       friend class NetworkAssociation;
 
+      friend class MergedRequestRemovalCommand;
+
       class IncomingTarget : public TargetCommand::Target
       {
          public:
@@ -408,6 +410,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void destroy(const BaseUsage* usage);
       void destroy(DialogSet*);
       void destroy(Dialog*);
+
+      void requestMergedRequestRemoval(const MergedRequestKey&);
+      void removeMergedRequest(const MergedRequestKey&);
 
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
