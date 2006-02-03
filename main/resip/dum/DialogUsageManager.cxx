@@ -48,10 +48,12 @@
 #include "resip/dum/CertMessage.hxx"
 #include "resip/dum/OutgoingEvent.hxx"
 #include "resip/dum/DumHelper.hxx"
+#include "resip/dum/MergedRequestRemovalCommand.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/Timer.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -515,8 +517,6 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
                                                const SdpContents* alternative,
                                                AppDialogSet* appDs)
 {
-   DebugLog(<< "makeInviteSessionFromRefer");
-   
    if (serverSub.isValid())
    {
       DebugLog(<< "implicit subscription");
@@ -1808,6 +1808,22 @@ DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* fun
       }
    }
 }
+
+void
+DialogUsageManager::requestMergedRequestRemoval(const MergedRequestKey& key)
+{
+   DebugLog(<< "Got merged request removal request");
+   MergedRequestRemovalCommand command(*this, key);
+   mStack.postMS(command, Timer::TF, this);
+}
+
+void
+DialogUsageManager::removeMergedRequest(const MergedRequestKey& key)
+{
+   DebugLog(<< "Merged request removed");
+   mMergedRequests.erase(key);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
