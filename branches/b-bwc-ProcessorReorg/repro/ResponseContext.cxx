@@ -270,7 +270,7 @@ ResponseContext::cancelAllClientTransactions()
    InfoLog (<< "Cancel ALL client transactions: " << mCandidateTransactionMap.size()
             << " pending, " << mActiveTransactionMap.size() << " active.");
 
-   if(mActiveTransactionMap.empty())
+   if(mActiveTransactionMap.empty() && mCandidateTransactionMap.empty())
    {
       return false;
    }
