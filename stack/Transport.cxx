@@ -138,9 +138,47 @@ Transport::error(int e)
          InfoLog (<<"Connection reset ");
          break;
 
-	  case WSAEWOULDBLOCK:
+	   case WSAEWOULDBLOCK:
          DebugLog (<<"Would Block ");
          break;
+
+      case WSAEHOSTUNREACH:
+         InfoLog (<<"A socket operation was attempted to an unreachable host ");
+         break;
+      case WSANOTINITIALISED:
+         InfoLog (<<"Either the application has not called WSAStartup or WSAStartup failed. "
+                  "The application may be accessing a socket that the current active task does not own (that is, trying to share a socket between tasks),"
+                  "or WSACleanup has been called too many times.  ");
+         break;
+      case WSAEACCES:
+         InfoLog (<<"An attempt was made to access a socket in a way forbidden by its access permissions ");
+         break;
+      case WSAENOBUFS:
+         InfoLog (<<"An operation on a socket could not be performed because the system lacked sufficient "
+                  "buffer space or because a queue was full");
+         break;
+      case WSAENOTCONN:
+         InfoLog (<<"A request to send or receive data was disallowed because the socket is not connected "
+                  "and (when sending on a datagram socket using sendto) no address was supplied");
+         break;
+      case WSAECONNABORTED:
+         InfoLog (<<"An established connection was aborted by the software in your host computer, possibly "
+                  "due to a data transmission time-out or protocol error");
+         break;
+      case WSAEADDRNOTAVAIL:
+         InfoLog (<<"The requested address is not valid in its context. This normally results from an attempt to "
+                  "bind to an address that is not valid for the local computer");
+         break;
+      case WSAEAFNOSUPPORT:
+         InfoLog (<<"An address incompatible with the requested protocol was used");
+         break;
+      case WSAEDESTADDRREQ:
+         InfoLog (<<"A required address was omitted from an operation on a socket");
+         break;
+      case WSAENETUNREACH:
+         InfoLog (<<"A socket operation was attempted to an unreachable network");
+         break;
+
 #endif
 
       default:
