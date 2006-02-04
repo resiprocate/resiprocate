@@ -271,7 +271,6 @@ ClientInviteSession::cancel()
 
       case UAC_Cancelled:
          // !jf!
-         // assert(0);
          break;
 
       default:
@@ -709,7 +708,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
@@ -806,7 +804,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
@@ -852,7 +849,6 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);         
          break;
    }
@@ -899,7 +895,6 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
@@ -958,7 +953,6 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
@@ -1032,7 +1026,6 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
@@ -1094,7 +1087,6 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
-         //assert(0);
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
