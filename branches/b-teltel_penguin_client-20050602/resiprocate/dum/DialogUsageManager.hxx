@@ -195,6 +195,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // there are more events to process. 
       bool process();
 
+      // hasEvents
+      bool hasEvents() const;
+
       //void buildFdSet(FdSet& fdset);
       // Call this version of process if you want to run the stack in the
       // application's thread
