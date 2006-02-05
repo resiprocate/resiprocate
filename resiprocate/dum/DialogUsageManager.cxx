@@ -1024,6 +1024,12 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
    return false;
 }
 
+bool
+DialogUsageManager::hasEvents() const
+{
+   return mFifo.messageAvailable();
+}
+
 // return false if there is nothing to do at the moment
 bool 
 DialogUsageManager::process()
