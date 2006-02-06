@@ -334,6 +334,9 @@
 				RelativePath=".\MergedRequestKey.cxx">
 			</File>
 			<File
+				RelativePath=".\MergedRequestRemovalCommand.cxx">
+			</File>
+			<File
 				RelativePath=".\NetworkAssociation.cxx">
 			</File>
 			<File
@@ -565,6 +568,9 @@
 			</File>
 			<File
 				RelativePath=".\MergedRequestKey.hxx">
+			</File>
+			<File
+				RelativePath=".\MergedRequestRemovalCommand.hxx">
 			</File>
 			<File
 				RelativePath=".\NetworkAssociation.hxx">
