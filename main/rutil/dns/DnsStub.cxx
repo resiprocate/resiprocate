@@ -210,12 +210,20 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
 bool
 DnsStub::supportedType(int type)
 {
+#ifdef USE_IPV6
    return (T_A == type ||
            T_AAAA == type ||
            T_NAPTR == type ||
            T_SRV == type ||
            T_CNAME == type ||
            T_SOA == type);
+#else
+   return (T_A == type ||
+           T_NAPTR == type ||
+           T_SRV == type ||
+           T_CNAME == type ||
+           T_SOA == type);
+#endif
 }
 
 const unsigned char*
