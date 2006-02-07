@@ -126,7 +126,7 @@ void
 Resolver::lookupARecords()
 {
    struct hostent hostbuf; 
-   struct hostent* result=0;
+   struct hostent* result;
 
    int herrno=0;
    char buffer[8192];
@@ -137,8 +137,8 @@ Resolver::lookupARecords()
 #else
 
 #ifdef WIN32
-	assert(0); // !cj! 
-	int ret = -1;
+	result = gethostbyname(mHost.c_str());
+    int ret = (result==0);
 #elif defined(__NetBSD__)
     //!dcm! -- not threadsafe
     result = gethostbyname(mHost.c_str());    
@@ -155,6 +155,10 @@ Resolver::lookupARecords()
    if (ret != 0)
    {
 #endif
+
+#ifdef WIN32
+      InfoLog(<< "gethostbyname error: " << WSAGetLastError());
+#else
       switch (herrno)
       {
          case HOST_NOT_FOUND:
@@ -170,6 +174,7 @@ Resolver::lookupARecords()
             InfoLog ( << "try again: " << mHost);
             break;
       }
+#endif
    }
    else
    {
