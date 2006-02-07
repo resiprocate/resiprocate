@@ -496,6 +496,26 @@ class Data
       std::ostream& urlDecode(std::ostream& s) const;
 
       /**
+        Performs in-place XML Character Data escaping of a Data.
+      */
+	  Data xmlCharDataEncode() const;
+
+      /**
+        Performs in-place XML Character Data un-escaping of a Data.
+      */
+	  Data xmlCharDataDecode() const;
+
+      /**
+        Escapes a Data to a stream according to XML Character Data encoding rules.
+      */
+	  std::ostream& xmlCharDataEncode(std::ostream& s) const;
+
+      /**
+        Un-escapes a Data to a stream according to XML Character Data encoding rules.
+      */
+	  std::ostream& xmlCharDataDecode(std::ostream& s) const;
+
+      /**
         Shortens the size of this Data. If the contents are truncated,
         this method appends two dot ('.') characters to the end.
         Presumably, this is used for output purposes.

@@ -1160,7 +1160,6 @@ Data::urlDecoded() const
 std::ostream&
 Data::urlDecode(std::ostream& s) const
 {
-
    unsigned int i = 0;
    for (const char* p = data(); p != data()+size(); ++p, ++i)
    {
@@ -1258,6 +1257,116 @@ Data::urlEncode(std::ostream& s) const
       }
    }
 
+   return s;
+}
+
+Data
+Data::xmlCharDataEncode() const
+{
+   Data buffer;
+   DataStream strm(buffer);
+   xmlCharDataEncode(strm);
+   strm.flush();
+   return buffer;
+}
+
+Data
+Data::xmlCharDataDecode() const
+{
+   Data buffer;
+   DataStream strm(buffer);
+   xmlCharDataDecode(strm);
+   strm.flush();
+   return buffer;
+}
+
+// http://www.w3.org/TR/REC-xml/#syntax
+std::ostream&
+Data::xmlCharDataEncode(std::ostream& s) const
+{
+   for (const char* p = data(); p != data() + size(); ++p)
+   {
+      unsigned char c = *p;
+
+	  switch(c)
+	  {
+	  case '&':
+		  s << "&amp;";
+		  break;
+	  case '<':
+		  s << "&lt;";
+		  break;
+	  case '>':
+		  s << "&gt;";
+		  break;
+	  case '\'':
+		  s << "&apos;";
+		  break;
+	  case '\"':
+		  s << "&quot;";
+		  break;
+	  default:
+         s << c;
+	  }
+   }
+
+   return s;
+}
+
+std::ostream&
+Data::xmlCharDataDecode(std::ostream& s) const
+{
+   unsigned int i = 0;
+   for (const char* p = data(); p != data()+size(); ++p, ++i)
+   {
+      unsigned char c = *p;
+      if (c == '&')
+      {
+		 // look for amp;
+		 if(i+4 < size() && 
+			*(p+1) == 'a' && *(p+2) == 'm' && *(p+3) == 'p' && *(p+4) == ';')
+	     {
+            s << '&';
+            p += 4;
+		 }
+         // look for lt;
+		 else if(i+3 < size() && 
+                 *(p+1) == 'l' && *(p+2) == 't' && *(p+3) == ';')
+		 {
+		    s << '<';
+			p += 3;
+         }
+         // look for gt;
+		 else if(i+3 < size() &&
+                 *(p+1) == 'g' && *(p+2) == 't' && *(p+3) == ';')
+         {
+		    s << '>';
+            p += 3;
+         }
+         // look for apos;
+         else if(i+5 < size() && 
+                 *(p+1) == 'a' && *(p+2) == 'p' && *(p+3) == 'o' && *(p+4) == 's' && *(p+5) == ';')
+         {
+            s << '\'';
+            p += 5;
+         }
+         // look for quot;
+         else if(i+5 < size() && 
+		         *(p+1) == 'q' && *(p+2) == 'u' && *(p+3) == 'o' && *(p+4) == 't' && *(p+5) == ';')
+         {
+            s << '\"';
+			p += 5;
+   		 }
+         else // if no conversion found - just leave characters in data
+		 {
+            s << c;
+		 }
+      }
+      else
+      {
+         s << c;
+      }
+   }
    return s;
 }
 
