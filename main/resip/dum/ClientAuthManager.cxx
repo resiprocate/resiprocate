@@ -39,7 +39,7 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
          if (it != mAttemptedAuths.end())
          {
             DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");         
-            it->second.transitionToCached();
+            it->second.authSucceeded();
          }      
          return false;
       }   
@@ -142,11 +142,11 @@ ClientAuthManager::AuthState::handleChallenge(UserProfile& userProfile, const Si
 }
 
 void 
-ClientAuthManager::AuthState::transitionToCached()
+ClientAuthManager::AuthState::authSucceeded()
 {
    for(RealmStates::iterator i = mRealms.begin(); i!=mRealms.end(); i++)
    {
-      i->second.transitionToCached();
+      i->second.authSucceeded();
    }
 }
 
@@ -177,6 +177,7 @@ Data RealmStates[] =
    "invalid",
    "cached",
    "current",
+   "tryonce",
    "failed",
 };
 
@@ -194,9 +195,22 @@ ClientAuthManager::RealmState::transition(State s)
 }
 
 void
-ClientAuthManager::RealmState::transitionToCached()
+ClientAuthManager::RealmState::authSucceeded()
 {
-   transition(Cached);
+   switch(mState)
+   {
+      case Invalid:
+         assert(0);
+         break;
+      case Current:
+      case Cached:
+      case TryOnce:
+         transition(Cached);
+         break;
+      case Failed:
+         assert(0);
+         break;         
+   };
 }
 
 bool 
@@ -210,37 +224,51 @@ ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& 
       case Invalid:
          mAuth = auth;
          transition(Current);
-         return findCredential(userProfile, auth);
+         break;         
       case Current:
          if (auth.exists(p_stale) && auth.param(p_stale) == "true")
          {
             DebugLog (<< "Stale nonce:" <<  auth);
             mAuth = auth;
             clear();
-            return findCredential(userProfile, auth);
          }
          else if(auth.exists(p_nonce) && auth.param(p_nonce) != mAuth.param(p_nonce))
          {
             DebugLog (<< "Different nonce, was: " << mAuth.param(p_nonce) << " now " << auth.param(p_nonce));
             mAuth = auth;
             clear();
-            return findCredential(userProfile, auth);
+            transition(TryOnce);            
          }
          else
          {
-            DebugLog( << "Challenge response already failed for: " << auth);            
+            DebugLog( << "Challenge response already failed for: " << auth);
+            transition(Failed);            
             return false;
          }
+         break;         
+      case TryOnce:
+         DebugLog( << "Extra chance still failed: " << auth);
+         transition(Failed);
+         return false;
       case Cached: //basically 1 free chance, here for interop, may not be
                    //required w/ nonce check in current
          mAuth = auth;
          clear();
-         return findCredential(userProfile, auth);
+         transition(Current);
+         break;         
       case Failed:
          return false;
    }
-   assert(0);   
-   return false;   
+
+   if (findCredential(userProfile, auth))
+   {
+      return true;
+   }
+   else
+   {
+      transition(Failed);
+      return false;
+   }
 }
 
 void
@@ -255,7 +283,6 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
    if (!Helper::algorithmAndQopSupported(auth))
    {
       DebugLog(<<"Unsupported algorithm or qop: " << auth);
-      transition(Failed);
       return false;
    }
 
@@ -267,10 +294,8 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
       DebugLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
 //      DebugLog (<< auth);
 //      DebugLog (<< response);
-      transition(Failed);
       return false;
    }                     
-   transition(Current);
    return true;   
 }
 
