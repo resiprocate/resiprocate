@@ -52,6 +52,16 @@ RouteStore::RouteStore(AbstractDb& db):
 
 RouteStore::~RouteStore()
 {
+   for(RouteOpList::iterator i = mRouteOperators.begin(); i != mRouteOperators.end(); i++)
+   {
+      if ( i->preq )
+      {
+         regfree ( i->preq );
+         delete i->preq;
+         i->preq = 0;
+      }
+   }
+   mRouteOperators.clear();
 }
 
       
