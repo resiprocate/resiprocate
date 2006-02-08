@@ -42,7 +42,7 @@ class ClientAuthManager
             void clear();
 
             bool handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential);
-            void transitionToCached();
+            void authSucceeded();
 
             void addAuthentication(SipMessage& origRequest);            
          private:
@@ -51,6 +51,7 @@ class ClientAuthManager
                Invalid,
                Cached,
                Current,
+               TryOnce, 
                Failed
             } State;      
 
@@ -75,7 +76,7 @@ class ClientAuthManager
             AuthState();
             bool handleChallenge(UserProfile& userProfile, const SipMessage& challenge);
             void addAuthentication(SipMessage& origRequest);
-            void transitionToCached();
+            void authSucceeded();
             
          private:
             typedef std::map<Data, RealmState> RealmStates;
