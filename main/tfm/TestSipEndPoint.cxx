@@ -636,8 +636,8 @@ TestSipEndPoint::Refer::Refer(TestSipEndPoint* endPoint,
 
 void
 TestSipEndPoint::Refer::operator()(TestSipEndPoint& endPoint)
-{   
-   DeprecatedDialog* dialog = endPoint.getDialog(mWho);
+{  
+   DeprecatedDialog* dialog = endPoint.getDialog(mWho.user());
    assert(dialog);
    shared_ptr<SipMessage> refer(dialog->makeRefer(NameAddr(mTo)));
    if (mReplaces)
@@ -1217,6 +1217,12 @@ TestSipEndPoint::message(const resip::Uri& target, const Data& text)
    return new Request(this, target, resip::MESSAGE, body);
 }
 
+TestSipEndPoint::Request*
+TestSipEndPoint::message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents)
+{
+   return new Request(this, target, resip::MESSAGE, contents);
+}
+
 TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint* endPoint, 
                                         boost::shared_ptr<resip::SipMessage>& msg)
    : mEndPoint(endPoint),
@@ -1775,6 +1781,12 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::send487()
 {
    return new Send487(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send488()
+{
+   return new Send488(*this);
 }
 
 TestSipEndPoint::MessageExpectAction* 
