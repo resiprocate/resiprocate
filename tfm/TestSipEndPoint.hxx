@@ -275,6 +275,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       //create message that do not require exsistance of other endpoint
       Request* message(const resip::Uri& target, const resip::Data& text);
+      Request* message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents);
       
       class Retransmit : public ExpectAction
       {
@@ -496,6 +497,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send487, 487);
       MessageExpectAction* send487();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send488, 488);
+      MessageExpectAction* send488();
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send202, 202);
       MessageExpectAction* send202();
