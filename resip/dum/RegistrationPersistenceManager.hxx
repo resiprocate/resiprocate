@@ -10,8 +10,15 @@ namespace resip
 class RegistrationPersistenceManager
 {
   public:
-    typedef std::pair<Uri,time_t> ContactPair;
-    typedef std::list<ContactPair> ContactPairList;
+   struct ContactRecord
+   {
+      resip::Uri uri;
+      time_t expires;
+      float q;
+      bool useQ;
+   };
+   
+    typedef std::list<ContactRecord> ContactRecordList;
     typedef std::list<Uri> UriList;
 
     typedef enum
@@ -23,7 +30,7 @@ class RegistrationPersistenceManager
     RegistrationPersistenceManager() {}
     virtual ~RegistrationPersistenceManager() {}
 
-    virtual void addAor(const Uri& aor, ContactPairList contacts = ContactPairList()) = 0;
+    virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList()) = 0;
     virtual void removeAor(const Uri& aor) = 0;
     virtual bool aorIsRegistered(const Uri& aor) = 0;
  
@@ -35,12 +42,16 @@ class RegistrationPersistenceManager
     /**
       @param expires Absolute time of expiration, measured in seconds
                      since midnight January 1st, 1970.
+                     
+      @param q The q-value of this contact. A negative value denotes that this
+         contact should not be prioritized according to q-value (default).
+         
      */
-    virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires) = 0;
+    virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires, float q=-1) = 0;
 
     virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
 
-    virtual ContactPairList getContacts(const Uri& aor) = 0;
+    virtual ContactRecordList getContacts(const Uri& aor) = 0;
   private:
 };
 

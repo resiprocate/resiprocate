@@ -1,35 +1,56 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#include "repro/QValueTarget.hxx"
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
 
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
-      
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+QValueTarget::QValueTarget(float q):
+   Target()
+{
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;
 }
-#endif
+
+QValueTarget::QValueTarget(const resip::Uri& uri,float q):
+   Target(uri)
+{
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
+}
+
+QValueTarget::QValueTarget(const resip::NameAddr& nameAddr,float q):
+   Target(nameAddr)
+{
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
+}
+
+QValueTarget::QValueTarget(const Target& orig,float q):
+   Target(orig)
+{
+   mPriorityMetric=q;
+   mShouldAutoProcess=true;   
+}
+
+QValueTarget::QValueTarget(const QValueTarget& orig)
+{
+   mPriorityMetric=orig.mPriorityMetric;
+   mShouldAutoProcess=orig.mShouldAutoProcess;
+   mNameAddr=orig.mNameAddr;
+   mVia=orig.mVia;
+   mStatus=orig.mStatus;
+}
+   
+QValueTarget::~QValueTarget(){}
+
+QValueTarget* 
+QValueTarget::clone() const
+{
+   return new QValueTarget(*this);
+}
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -73,10 +94,4 @@ namespace repro
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

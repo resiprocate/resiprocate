@@ -5,17 +5,54 @@
 #include <ostream>
 #include "resip/stack/SipMessage.hxx"
 #include "repro/Processor.hxx"
+#include "repro/ProcessorChain.hxx"
+#include "repro/ProcessorMessage.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-Processor::Processor()
+Processor::Processor(ChainType type)
 {
+   mType=type;
 }
 
 Processor::~Processor()
 {
+}
+
+void
+Processor::pushAddress(const std::vector<short>& address)
+{
+   for(std::vector<short>::const_reverse_iterator i=address.rbegin();i!=address.rend();++i)
+   {
+      mAddress.push_back(*i);
+   }
+
+}
+
+void
+Processor::pushAddress(const short address)
+{
+   mAddress.push_back(address);
+}
+
+void
+Processor::setChainType(ChainType type)
+{
+   mType=type;
+}
+
+Processor::ChainType
+Processor::getChainType() const
+{
+   return mType;
+}
+
+const std::vector<short>&
+Processor::getAddress() const
+{
+   return mAddress;
 }
 
 std::ostream &

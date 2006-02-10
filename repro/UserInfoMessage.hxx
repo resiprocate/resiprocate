@@ -1,33 +1,54 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef USER_INFO_MESSAGE_HXX
+#define USER_INFO_MESSAGE_HXX 1
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
+#include "repro/ProcessorMessage.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class UserInfoMessage : public ProcessorMessage
+{
+   public:
+      UserInfoMessage(const Processor& proc,
+                     const resip::Data& tid,
+                     resip::TransactionUser* passedtu):
+         ProcessorMessage(proc,tid,passedtu)
+      {}
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      
+      UserInfoMessage(const UserInfoMessage& orig):
+         ProcessorMessage(orig)
+      {
+         mUser=orig.user();
+         mRealm=orig.realm();
+         mA1=orig.A1();
+      }
+      
+      resip::Data& tid(){return mTid;}
+      
+      const resip::Data& user() const{return mUser;}
+      resip::Data& user(){return mUser;}
+      
+      const resip::Data& realm() const{return mRealm;}
+      resip::Data& realm(){return mRealm;}
+      
+      const resip::Data& A1() const{return mA1;}
+      resip::Data& A1(){return mA1;}
+      
+      
+      virtual UserInfoMessage* clone() const {return new UserInfoMessage(*this);};
+      virtual const resip::Data& getTransactionId() const {return mTid;};
+
+      virtual std::ostream& encode(std::ostream& ostr) const { ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
+      virtual std::ostream& encodeBrief(std::ostream& ostr) const{ ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
+      
+   protected:
+      resip::Data mUser;
+      resip::Data mRealm;
+      resip::Data mA1;
+      
+};
+
 }
 #endif
 

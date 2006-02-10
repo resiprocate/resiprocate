@@ -33,7 +33,7 @@ class ServerRegistration: public NonDialogUsage
 
       SipMessage mRequest;
       Uri mAor;
-      RegistrationPersistenceManager::ContactPairList mOriginalContacts;
+      RegistrationPersistenceManager::ContactRecordList mOriginalContacts;
 
       // disabled
       ServerRegistration(const ServerRegistration&);
