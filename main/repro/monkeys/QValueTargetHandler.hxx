@@ -1,34 +1,62 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef Q_VALUE_TARGET_HANDLER_HXX
+#define Q_VALUE_TARGET_HANDLER_HXX 1
+
+#include "repro/Processor.hxx"
+#include "repro/ResponseContext.hxx"
 
 #include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
+#include <vector>
 
-class resip::SipStack;
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
+class RequestContext;
+
+class QValueTargetHandler : public Processor
+{
+   public:
+
+      typedef enum
+      {
+         FULL_SEQUENTIAL,
+         EQUAL_Q_PARALLEL,
+         FULL_PARALLEL
+      } ForkBehavior;
+
+
+      QValueTargetHandler(ForkBehavior behavior,
+                           bool cancelBetweenForkGroups=true,
+                           bool waitForTerminate=true,
+                           int delayBetweenForkGroupsMS=5000,
+                           int cancellationDelayMS=5000);
+      virtual ~QValueTargetHandler();
+      
       virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
 
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+      void fillNextTargetGroup(std::vector<resip::Data>& fillHere,
+                              const std::list<resip::Data>& queue,
+                              const ResponseContext& rsp) const;
+                           
+      virtual bool isMyType( Target* target) const;
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      virtual void removeTerminated(std::list<resip::Data>& queue,
+                                    const ResponseContext& rsp) const;
+      
+   
+   protected:
+      ForkBehavior mForkBehavior;
+      bool mCancelBetweenForkGroups;
+      bool mWaitForTerminate;
+      int mDelayBetweenForkGroups;
+      int mCancellationDelay;
+      
+
+
+};
 }
+
 #endif
 
 /* ====================================================================
@@ -73,10 +101,4 @@ namespace repro
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

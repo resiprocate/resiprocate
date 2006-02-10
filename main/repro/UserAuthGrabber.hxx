@@ -1,33 +1,52 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef USER_AUTH_GRABBER
+#define USER_AUTH_GRABBER 1
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
+#include "repro/Worker.hxx"
 #include "repro/UserStore.hxx"
+#include "resip/stack/Message.hxx"
+#include "repro/UserInfoMessage.hxx"
 
-class resip::SipStack;
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class UserAuthGrabber : public Worker
+{
+   public:
+      UserAuthGrabber(repro::UserStore& userStore ):
+         mUserStore(userStore)
+      {}
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      virtual ~UserAuthGrabber(){}
+      
+      virtual void process(resip::ApplicationMessage* msg)
+      {
+         repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);
+         if(uinf)
+         {
+            uinf->A1()=mUserStore.getUserAuthInfo(uinf->user(),uinf->realm());
+            DebugLog(<<"Grabbed an A1 for " << uinf->user() <<"@"<<uinf->realm()
+                     << " : " << uinf->A1());
+         }
+         else
+         {
+            DebugLog(<<"Did not recognize message type...");
+         }
+      }
+      
+      virtual UserAuthGrabber* clone() const
+      {
+         return new UserAuthGrabber(mUserStore);
+      }
+      
+   protected:
+      UserStore& mUserStore;
+
+
+};
+
 }
 #endif
 

@@ -5,8 +5,10 @@
 #include <iostream>
 
 #include "resip/stack/SipMessage.hxx"
-#include "repro/ProcessorChain.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "repro/ChainTraverser.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
 
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
@@ -17,9 +19,11 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-repro::ProcessorChain::ProcessorChain()
+
+repro::ProcessorChain::ProcessorChain(Processor::ChainType type)
 {
    DebugLog(<< "Instantiating new monkey chain " << this );
+   mType=type;
 }
 
 repro::ProcessorChain::~ProcessorChain()
@@ -37,6 +41,9 @@ void
 repro::ProcessorChain::addProcessor(auto_ptr<Processor> rp)
 {
    DebugLog(<< "Adding new monkey to chain: " << *(rp.get()));
+   rp->pushAddress(mChain.size());
+   rp->pushAddress(mAddress);
+   rp->setChainType(mType);
    mChain.push_back(rp.release());
 }
 
@@ -45,46 +52,83 @@ repro::ProcessorChain::process(RequestContext &rc)
 {
    //DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << rc);
 
-   Chain::iterator i;
    processor_action_t action;
+   unsigned int position=0;
 
-   if (rc.chainIteratorStackIsEmpty())
+   resip::Message* msg = rc.getCurrentEvent();
+
+   if(!msg)
    {
-      i = mChain.begin();
+      return SkipAllChains;
    }
-   else
+
+   repro::ChainTraverser* proc = dynamic_cast<ChainTraverser*>(msg);
+   
+   if(proc)
    {
-      i = rc.popChainIterator();
+      position=proc->popAddr();      
    }
-
-   for (; i != mChain.end(); i++)
+   
+   
+   for (; (position >=0 && position < mChain.size()); ++position)
    {
-      DebugLog(<< "Chain invoking monkey: " << **i);
+      DebugLog(<< "Chain invoking monkey: " << *(mChain[position]));
 
-      action = (**i).process(rc);
+      action = mChain[position]->process(rc);
 
       if (action == SkipAllChains)
       {
-         DebugLog(<< "Monkey aborted all chains: " << **i);
+         DebugLog(<< "Monkey aborted all chains: " << *(mChain[position]));
          return SkipAllChains;
       }
 
       if (action == WaitingForEvent)
       {
-         DebugLog(<< "Monkey waiting for async response: " << **i);
-         rc.pushChainIterator(i);
+         DebugLog(<< "Monkey waiting for async response: " << *(mChain[position]));
          return WaitingForEvent;
       }
 
       if (action == SkipThisChain)
       {
-         DebugLog(<< "Monkey skipping current chain: " << **i);
+         DebugLog(<< "Monkey skipping current chain: " << *(mChain[position]));
          return Continue;
       }
 
    }
-   //DebugLog(<< "Monkey done processing: " << **i);
+   //DebugLog(<< "Monkey done processing: " << *(mChain[position]));
    return Continue;
+}
+
+void
+ProcessorChain::pushAddress(const std::vector<short>& address)
+{
+   Processor::pushAddress(address);
+   for(std::vector<Processor*>::iterator i=mChain.begin();i!=mChain.end();++i)
+   {
+      (**i).pushAddress(address);
+   }
+}
+
+void
+ProcessorChain::pushAddress(const short address)
+{
+   Processor::pushAddress(address);
+   for(std::vector<Processor*>::iterator i=mChain.begin();i!=mChain.end();++i)
+   {
+      (**i).pushAddress(address);
+   }   
+}
+
+
+void
+ProcessorChain::setChainType(ChainType type)
+{
+   mType=type;
+   std::vector<Processor*>::iterator i;
+   for(i=mChain.begin();i!=mChain.end();++i)
+   {
+      (*i)->setChainType(type);
+   }
 }
 
 void

@@ -4,13 +4,15 @@
 #include "resip/stack/Auth.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/dum/UserAuthInfo.hxx"
 
-#include "repro/UserStore.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
-
+#include "repro/UserInfoMessage.hxx"
+#include "repro/UserStore.hxx"
+#include "repro/Dispatcher.hxx"
+#include "repro/UserAuthGrabber.hxx"
+#include "resip/stack/SipStack.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -18,12 +20,15 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-DigestAuthenticator::DigestAuthenticator()
+DigestAuthenticator::DigestAuthenticator( UserStore& userStore,resip::SipStack* stack)
 {
+   std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
+   mAuthRequestDispatcher= new Dispatcher(grabber,stack);
 }
 
 DigestAuthenticator::~DigestAuthenticator()
 {
+   delete mAuthRequestDispatcher;
 }
 
 repro::Processor::processor_action_t
@@ -34,7 +39,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
    Message *message = rc.getCurrentEvent();
    
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
+   UserInfoMessage *userInfo = dynamic_cast<UserInfoMessage*>(message);
    Proxy &proxy = rc.getProxy();
    
    if (sipMessage)
@@ -75,14 +80,15 @@ DigestAuthenticator::process(repro::RequestContext &rc)
          // }
       }
    }
-   else if (userAuthInfo)
+   else if (userInfo)
    {
       // Handle response from user authentication database
       sipMessage = &rc.getOriginalRequest();
-      const Data& a1 = userAuthInfo->getA1();
-      const Data& realm = userAuthInfo->getRealm();
-      const Data& user = userAuthInfo->getUser();
-      InfoLog (<< "Received user auth info for " << user << " at realm " << realm);
+      const Data& a1 = userInfo->A1();
+      const Data& realm = userInfo->realm();
+      const Data& user = userInfo->user();
+      InfoLog (<< "Received user auth info for " << user << " at realm " << realm 
+               <<  "a1 is " << a1);
 
       pair<Helper::AuthResult,Data> result =
          Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
@@ -251,7 +257,6 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
-   UserStore& database = rc.getProxy().getUserStore();
 
    // Extract the user from the appropriate Proxy-Authorization header
    Auths &authorizationHeaders = sipMessage->header(h_ProxyAuthorizations); 
@@ -275,7 +280,11 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
 
    if (!user.empty())
    {
-      database.requestUserAuthInfo(user, realm, rc.getTransactionId(), rc.getProxy());
+      //database.requestUserAuthInfo(user, realm, rc.getTransactionId(), rc.getProxy());
+      UserInfoMessage* async = new UserInfoMessage(*this, rc.getTransactionId(), &(rc.getProxy()));
+      async->user()=user;
+      async->realm()=realm;
+      mAuthRequestDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
       return WaitingForEvent;
    }
    else

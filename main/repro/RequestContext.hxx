@@ -47,10 +47,6 @@ class RequestContext
       void setDigestIdentity (const resip::Data&);
       const resip::Data& getDigestIdentity() const;
 
-      void pushChainIterator(ProcessorChain::Chain::iterator&);
-      ProcessorChain::Chain::iterator popChainIterator();
-      bool chainIteratorStackIsEmpty();
-
       Proxy& getProxy();
       ResponseContext& getResponseContext();
       

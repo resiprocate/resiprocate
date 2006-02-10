@@ -1,33 +1,21 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef WORKER_HXX
+#define WORKER_HXX 1
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
+#include "resip/stack/ApplicationMessage.hxx"
+#include <cassert>
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class Worker
+{
+   public:
+      Worker(){};
+      virtual ~Worker(){};
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      virtual void process(resip::ApplicationMessage* msg)=0;
+      virtual Worker* clone() const=0;
+};
 }
 #endif
 
