@@ -582,7 +582,7 @@ static char*
 encodeAtrError(char* ptr, const StunAtrError& atr)
 {
    ptr = encode16(ptr, ErrorCode);
-   ptr = encode16(ptr, 6 + atr.sizeReason);
+   ptr = encode16(ptr, 4 + atr.sizeReason);
    ptr = encode16(ptr, atr.pad);
    *ptr++ = atr.errorClass;
    *ptr++ = atr.number;
@@ -670,6 +670,11 @@ stunEncodeMessage( const StunMessage& msg,
    {
       if (verbose) clog << "Encoding ResponseAddress: " << msg.responseAddress.ipv4 << endl;
       ptr = encodeAtrAddress4(ptr, ResponseAddress, msg.responseAddress);
+   }
+   if (msg.hasTurnAlternateServer )
+   {
+      if (verbose) clog << "Encoding AlternateServer: " << msg.turnAlternateServer.ipv4 << endl;
+      ptr = encodeAtrAddress4 (ptr, TurnAlternateServer, msg.turnAlternateServer);
    }
    if (msg.hasChangeRequest)
    {
@@ -988,8 +993,17 @@ operator<<( ostream& strm, const StunAddress4& addr)
 ostream&
 operator<<(ostream& os, const StunMsgHdr& h)
 {
-    os << "STUN: ";
-    switch (h.msgType) {
+   os << "STUN: ";
+   switch (h.msgType) {
+      case BindRequestMsg:
+            os << "BindingRequest";
+         break;
+      case BindResponseMsg:
+            os << "BindingResponse";
+         break;
+      case BindErrorResponseMsg:
+            os << "BindingErrorResponse";
+         break;
 		case TurnAllocateRequest:
             os << "TurnAllocateRequest";
 			break;
@@ -1019,8 +1033,8 @@ operator<<(ostream& os, const StunMsgHdr& h)
 			break;
 		case TurnSetActiveDestinationErrorResponse:
             os << "TurnSetActiveDestinationErrorResponse";
-			break;
-    }
+      break;
+   }
 
     os << ", id ";
 
@@ -1159,6 +1173,7 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
    response.errorCode.errorClass = cl;
    response.errorCode.number = number;
    strcpy(response.errorCode.reason, msg);
+   response.errorCode.sizeReason = strlen(msg);
 }
 
 #if 0
