@@ -6,6 +6,8 @@
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/QValueTarget.hxx"
+
 
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -28,42 +30,52 @@ LocationServer::process(RequestContext& context)
   
   if (true) // TODO fix mStore.aorExists(inputUri))
   {  
-	 RegistrationPersistenceManager::ContactPairList contacts = mStore.getContacts(inputUri);
+	 RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
 
      mStore.unlockRecord(inputUri);
 
-     for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
+      std::list<Target*> qbatch;
+      std::list<Target*> noqbatch;
+     for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
-	    RegistrationPersistenceManager::ContactPair contact = *i;
-        if (contact.second>=time(NULL))
+	    RegistrationPersistenceManager::ContactRecord contact = *i;
+        if (contact.expires>=time(NULL))
         {
-           InfoLog (<< *this << " adding target " << contact.first);
-           context.addTarget(NameAddr(contact.first));
+           InfoLog (<< *this << " adding target " << contact.uri);
+           if(contact.useQ)
+           {
+               qbatch.push_back(new QValueTarget(contact.uri,contact.q));
+           }
+           else
+           {
+               noqbatch.push_back(new Target(contact.uri));
+               noqbatch.push_back(new QValueTarget(contact.uri,1.0));
+           }
         }
         else
         {
             // remove expired contact 
-            mStore.removeContact(inputUri, contact.first);
+            mStore.removeContact(inputUri, contact.uri);
         }
      }
-	 // if target list is empty return a 480
-	 if (context.getResponseContext().getTargetList().empty())
-	 {
-	    // make 480, send, dispose of memory
-		resip::SipMessage response;
-        InfoLog (<< *this << ": no registered target for " << inputUri << " send 480");
-		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
-		context.sendResponse(response);
-	    return Processor::SkipThisChain;
-	 }
-	 else
-	 {
-        InfoLog (<< *this << " there are " 
-        << context.getResponseContext().getTargetList().size() 
-        << " candidates -> continue");
-	    return Processor::Continue;
-	 }
+
+      
+     if(!qbatch.empty())
+     {
+         qbatch.sort(Target::targetPtrCompare);
+        context.getResponseContext().addTargetBatch(qbatch);
+         //ResponseContext should be consuming the vector
+        assert(qbatch.empty());
+     }
+     
+     if(!noqbatch.empty())
+     {
+        context.getResponseContext().addTargetBatch(noqbatch);
+        //ResponseContext should be consuming the vector
+        assert(noqbatch.empty());
+     }
+     
    }
    else
    {

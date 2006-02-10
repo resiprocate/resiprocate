@@ -6,7 +6,7 @@
 #include "resip/stack/Message.hxx"
 
 #include "repro/AbstractDb.hxx"
-
+#include "repro/UserInfoMessage.hxx"
 
 namespace resip
 {
@@ -29,8 +29,8 @@ class UserStore
       
       void requestUserAuthInfo( const resip::Data& user, 
                                 const resip::Data& domain,
-                                const resip::Data& transactionId,
-                                resip::TransactionUser& transactionUser) const;
+                                const resip::Data& transactionToken,
+                                resip::TransactionUser& transactionUser ) const;
 
       AbstractDb::UserRecord getUserInfo( const Key& key ) const;
 

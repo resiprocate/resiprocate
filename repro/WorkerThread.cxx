@@ -1,35 +1,56 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#include "repro/WorkerThread.hxx"
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
+#include "resip/stack/SipStack.hxx"
+#include "resip/stack/ApplicationMessage.hxx"
+#include "rutil/Logger.hxx"
 
-class resip::SipStack;
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
+WorkerThread::WorkerThread(Worker* worker,
+                        resip::TimeLimitFifo<resip::ApplicationMessage>& fifo,
+                        resip::SipStack* stack):
+   mWorker(worker),
+   mFifo(fifo),
+   mStack(stack)
+{}
 
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
-      
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+WorkerThread::~WorkerThread()
+{
+   shutdown();
+   join();
+   delete mWorker;
 }
-#endif
+
+void
+WorkerThread::thread()
+{
+   resip::ApplicationMessage* msg;
+   
+   while(mWorker && !isShutdown())
+   {
+      if( (msg=mFifo.getNext(100)) != 0 )
+      {
+         mWorker->process(msg);
+
+         if(mStack)
+         {
+            //This clones msg.
+            mStack->post(*msg);
+         }
+         else
+         {
+            ErrLog(<<"Stack pointer not set!");
+         }
+
+         delete msg;
+      }
+   }
+}
+
+}//namespace repro
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

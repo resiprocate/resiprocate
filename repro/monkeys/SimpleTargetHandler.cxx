@@ -1,35 +1,43 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#include "repro/monkeys/SimpleTargetHandler.hxx"
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
+#include "repro/RequestContext.hxx"
+#include "repro/ResponseContext.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
-      
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+SimpleTargetHandler::SimpleTargetHandler()
+{
 }
-#endif
+
+SimpleTargetHandler::~SimpleTargetHandler()
+{
+}
+
+Processor::processor_action_t
+SimpleTargetHandler::process(RequestContext &rc)
+{
+   ResponseContext& rsp=rc.getResponseContext();
+
+   //The idea is that this goes at the end of the target ProcessorChain.
+   //If control gets here, it means that every other processor has finished
+   //everything it was intended to do, so we just fire up any stragglers.
+   rsp.beginClientTransactions();
+   
+   return Processor::Continue;
+}
+
+void 
+SimpleTargetHandler::dump(std::ostream &os) const
+{
+  os << "SimpleTargetHandler baboon" << std::endl;
+}
+
+
+
+
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -73,10 +81,4 @@ namespace repro
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

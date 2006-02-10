@@ -1,33 +1,27 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef Q_VALUE_TARGET_HXX
+#define Q_VALUE_TARGET_HXX 1
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
+#include "repro/Target.hxx"
 
-class resip::SipStack;
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class QValueTarget : public Target
+{
+   public:
+      QValueTarget(float q);
+      QValueTarget(const resip::Uri& uri, float q);
+      QValueTarget(const resip::NameAddr& nameAddr, float q);
+      explicit QValueTarget(const Target& orig, float q);
+      explicit QValueTarget(const QValueTarget& orig);
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      virtual ~QValueTarget();
+      
+      virtual QValueTarget* clone() const;
+};
 }
 #endif
 
@@ -73,10 +67,4 @@ namespace repro
  * DAMAGE.
  * 
  * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
  */

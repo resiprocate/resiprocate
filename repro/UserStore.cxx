@@ -12,6 +12,7 @@
 
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
+#include "repro/UserInfoMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 
@@ -40,9 +41,7 @@ UserStore::requestUserAuthInfo( const resip::Data& user,
    // TODO - this should put a message on a local queue then a thread should
    // read that and then do the stuff in the rest of this fucntion
    
-   Data key = buildKey(user,domain);
-   Data a1 = mDb.getUserAuthInfo(key);
-    
+   resip::Data a1 = getUserAuthInfo(user, domain);
    UserAuthInfo* msg = new UserAuthInfo(user,domain,a1,transactionToken);
    transactionUser.post( msg );
 }

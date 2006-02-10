@@ -2,6 +2,7 @@
 #define RESIP_REQUEST_PROCESSOR_HXX 
 
 #include <iosfwd>
+#include <vector>
 
 namespace repro
 {
@@ -10,7 +11,15 @@ class RequestContext;
 class Processor
 {
    public:
-      Processor();
+      typedef enum
+      {
+         NO_TYPE=0,
+         REQUEST_CHAIN,
+         RESPONSE_CHAIN,
+         TARGET_CHAIN
+      } ChainType;
+
+      Processor(ChainType type=NO_TYPE);
       virtual ~Processor()=0;
 
       typedef enum
@@ -24,6 +33,21 @@ class Processor
 
       virtual processor_action_t process(RequestContext &)=0;
       virtual void dump(std::ostream &os) const = 0;
+      
+      virtual void setChainType(ChainType type);
+      virtual ChainType getChainType() const;
+
+
+      virtual void pushAddress(const std::vector<short>& address);
+      virtual void pushAddress(const short address);
+
+      virtual const std::vector<short>& getAddress() const;
+      
+   protected:
+      std::vector<short> mAddress;
+      Processor::ChainType mType;
+      
+      
 };
 
 std::ostream &operator<<(std::ostream &os, const repro::Processor &rp);

@@ -3,14 +3,14 @@
 
 #include <memory>
 #include <vector>
-#include "Processor.hxx"
+#include "repro/Processor.hxx"
 
 namespace repro
 {
 class ProcessorChain : public Processor
 {
    public:
-      ProcessorChain();
+      ProcessorChain(ChainType type=NO_TYPE);
       virtual ~ProcessorChain();
 
       void addProcessor(std::auto_ptr<Processor>);
@@ -20,8 +20,18 @@ class ProcessorChain : public Processor
       typedef std::vector<Processor*> Chain;
       virtual void dump(std::ostream &os) const;
 
+      virtual void setChainType(ChainType type);
+
+   
+      virtual void pushAddress(const std::vector<short>& address);
+      virtual void pushAddress(const short address);
+
+
+      
    private:
       Chain mChain;
+      ChainType mType;
+
 };
 }
 #endif

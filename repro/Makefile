@@ -47,6 +47,9 @@ SRC 	+=   \
         Processor.cxx \
         ProcessorChain.cxx \
 		  Target.cxx \
+		  WorkerThread.cxx \
+		  Dispatcher.cxx \
+		  QValueTarget.cxx \
 	\
         monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
@@ -58,6 +61,8 @@ SRC 	+=   \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
+	monkeys/QValueTargetHandler.cxx \
+	monkeys/SimpleTargetHandler.cxx \
 	\
 
 
