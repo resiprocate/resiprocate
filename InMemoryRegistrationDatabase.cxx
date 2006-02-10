@@ -22,10 +22,10 @@ InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 
 void 
 InMemoryRegistrationDatabase::addAor(const Uri& aor,
-    RegistrationPersistenceManager::ContactPairList contacts)
+    RegistrationPersistenceManager::ContactRecordList contacts)
 {
   Lock g(mDatabaseMutex);
-  mDatabase[aor] = new ContactPairList(contacts);
+  mDatabase[aor] = new ContactRecordList(contacts);
 }
 
 void 
@@ -119,9 +119,9 @@ InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
 }
 
 RegistrationPersistenceManager::update_status_t 
-InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, time_t expires)
+InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, time_t expires,float q)
 {
-  ContactPairList *contactList = 0;
+  ContactRecordList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -130,7 +130,7 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, 
     i = mDatabase.find(aor);
     if (i == mDatabase.end() || i->second == 0)
     {
-      contactList = new ContactPairList();
+      contactList = new ContactRecordList();
       mDatabase[aor] = contactList;
     }
     else
@@ -142,28 +142,50 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, 
 
   assert(contactList);
 
-  ContactPairList::iterator j;
+  ContactRecordList::iterator j;
 
   // See if the contact is already present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
   {
-    if ((*j).first == contact)
+    if ((*j).uri == contact)
     {
-      (*j).first = contact;
-      (*j).second = expires;
+      (*j).uri = contact;
+      (*j).expires = expires;
+      if(q>=0)
+      {
+         (*j).q=q;
+         (*j).useQ=true;
+      }
+      else
+      {
+         (*j).useQ=false;
+      }
       return CONTACT_UPDATED;
     }
   }
 
+   ContactRecord newRec;
+   newRec.uri=contact;
+   newRec.expires=expires;
+   if(q>=0)
+   {
+      newRec.q=q;
+      newRec.useQ=true;
+   }
+   else
+   {
+      newRec.useQ=false;
+   }
+   
   // This is a new contact, so we add it to the list.
-  contactList->push_back(std::make_pair<Uri,time_t>(contact,expires));
+  contactList->push_back(newRec);
   return CONTACT_CREATED;
 }
 
 void 
 InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
 {
-  ContactPairList *contactList = 0;
+  ContactRecordList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -177,12 +199,12 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
     contactList = i->second;
   }
 
-  ContactPairList::iterator j;
+  ContactRecordList::iterator j;
 
   // See if the contact is present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
   {
-    if ((*j).first == contact)
+    if ((*j).uri == contact)
     {
       contactList->erase(j);
       if (contactList->empty())
@@ -194,7 +216,7 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
   }
 }
 
-RegistrationPersistenceManager::ContactPairList
+RegistrationPersistenceManager::ContactRecordList
 InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 {
   Lock g(mDatabaseMutex);
@@ -203,7 +225,7 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor)
   i = mDatabase.find(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
-    return ContactPairList();
+    return ContactRecordList();
   }
   return *(i->second);
 }
