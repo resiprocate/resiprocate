@@ -24,23 +24,23 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       InMemoryRegistrationDatabase();
       virtual ~InMemoryRegistrationDatabase();
       
-      virtual void addAor(const Uri& aor, ContactPairList contacts = ContactPairList());
+      virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList());
       virtual void removeAor(const Uri& aor);
       virtual bool aorIsRegistered(const Uri& aor);
       
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires);
+      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires,float q=-1);
       virtual void removeContact(const Uri& aor, const Uri& contact);
       
-      virtual ContactPairList getContacts(const Uri& aor);
+      virtual ContactRecordList getContacts(const Uri& aor);
    
       /// return all the AOR is the DB 
       virtual UriList getAors();
       
    private:
-      typedef std::map<Uri,ContactPairList *> database_map_t;
+      typedef std::map<Uri,ContactRecordList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
       
