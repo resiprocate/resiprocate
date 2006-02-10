@@ -41,8 +41,8 @@ ServerRegistration::accept(SipMessage& ok)
   
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  RegistrationPersistenceManager::ContactPairList contacts;
-  RegistrationPersistenceManager::ContactPairList::iterator i;
+  RegistrationPersistenceManager::ContactRecordList contacts;
+  RegistrationPersistenceManager::ContactRecordList::iterator i;
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
@@ -52,13 +52,17 @@ ServerRegistration::accept(SipMessage& ok)
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
   {
-    if (i->second - now <= 0)
+    if (i->expires - now <= 0)
     {
       continue;
     }
-    contact.uri() = i->first;
-    contact.param(p_expires) = int(i->second - now);
+    contact.uri() = i->uri;
+    contact.param(p_expires) = int(i->expires - now);
     ok.header(h_Contacts).push_back(contact);
+    if(i->useQ)
+    {
+      ok.header(h_Contacts).back().param(p_q)=i->q;
+    }
   }
 
   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
