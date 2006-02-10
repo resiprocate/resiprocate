@@ -283,7 +283,7 @@ ResponseContext::cancelAllClientTransactions()
    }
 
    for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
-        j != mCandidateTransactionMap.end(); ++j)
+        j != mCandidateTransactionMap.end();)
    {
       cancelClientTransaction(j->second);
       mTerminatedTransactionMap[j->second->tid()] = j->second;
