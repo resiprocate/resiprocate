@@ -952,7 +952,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          Data rewriteExpression = mHttpParams["routeDestination"];
          int  order = mHttpParams["routeOrder"].convertInt();
          
-         if (!rec.mMatchingPattern.empty() && !rec.mRewriteExpression.empty())
+         if (!matchingPattern.empty() && !rewriteExpression.empty())
          {
             // write out the updated record to the database now
             mStore.mRouteStore.updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
