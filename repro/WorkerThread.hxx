@@ -6,10 +6,13 @@
 #include "rutil/TimeLimitFifo.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 
+namespace resip
+{
+class SipStack;
+}
+
 namespace repro
 {
-
-class resip::SipStack;
 
 class WorkerThread : public resip::ThreadIf
 {
