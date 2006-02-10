@@ -14,7 +14,7 @@ TargetCommand::TargetCommand(Target& target,
 
 TargetCommand::TargetCommand(const TargetCommand& from)
    : mTarget(from.mTarget),
-     mMessage(from.mMessage)
+     mMessage(*(from.mMessage).clone())
 {
 }
 
