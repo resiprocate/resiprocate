@@ -135,6 +135,8 @@ TestRepro::TestRepro(const resip::Data& name,
 
 TestRepro::~TestRepro()
 {
+   mDumThread.shutdown();
+   mDumThread.join();   mStackThread.shutdown();   mStackThread.join();
 }
 
 void
