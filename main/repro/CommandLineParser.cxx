@@ -47,6 +47,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* mySqlServer = 0;
    int httpPort = 5080;
    int recursiveRedirect = 0;
+   int doQValue=0;
    char* enumSuffix = 0;
    int allowBadReg = 0;
    int timerC=180;
@@ -93,6 +94,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
       {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
+      {"q-value",0,   POPT_ARG_NONE,                              &doQValue, 0, "Enable sequential q-value processing", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
@@ -141,6 +143,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;
+   mDoQValue = doQValue?true:false;
    mAllowBadReg = allowBadReg?true:false;
    if (enumSuffix) mEnumSuffix = enumSuffix;
    

@@ -1,35 +1,140 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
-
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
 #include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
+#include "resip/stack/Message.hxx"
+#include "resip/stack/SipStack.hxx"
 
-class resip::SipStack;
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
-      
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+Dispatcher::Dispatcher(std::auto_ptr<Worker> prototype,
+                        resip::SipStack* stack,
+                        int workers, 
+                        bool startImmediately):
+   mStack(stack),
+   mFifo(0,0),
+   mAcceptingWork(false),
+   mShutdown(false),
+   mStarted(false),
+   mWorkerPrototype(prototype.release())
+{
+   for(int i=0; i<workers;i++)
+   {
+      mWorkerThreads.push_back(new WorkerThread(mWorkerPrototype->clone(),mFifo,mStack));
+   }
+   
+   if(startImmediately)
+   {
+      startAll();
+   }
 }
-#endif
+
+Dispatcher::~Dispatcher()
+{
+   shutdownAll();
+   
+   std::vector<WorkerThread*>::iterator i;
+   for(i=mWorkerThreads.begin(); i!=mWorkerThreads.end(); ++i)
+   {
+      delete *i;
+   }
+
+   mWorkerThreads.clear();
+
+   while(!mFifo.empty())
+   {
+      delete mFifo.getNext();
+   }
+   
+   delete mWorkerPrototype;
+   
+}
+
+bool
+Dispatcher::post(std::auto_ptr<resip::ApplicationMessage> work)
+{
+   resip::ReadLock r(mMutex);
+   if(mAcceptingWork)
+   {
+      mFifo.add(work.release(),
+                  resip::TimeLimitFifo<resip::ApplicationMessage>::InternalElement);
+      return true;
+   }
+   
+   return false;
+   
+   //If we aren't accepting work, the auto ptr is not released. (We don't
+   // take ownership, the auto_ptr falls out of scope, and deletion occurs.)
+}
+
+size_t
+Dispatcher::fifoCountDepth() const 
+{
+   return mFifo.getCountDepth();
+}
+
+time_t
+Dispatcher::fifoTimeDepth() const 
+{
+   return mFifo.getTimeDepth();
+}
+
+int
+Dispatcher::workPoolSize() const 
+{
+   return mWorkerThreads.size();
+}
+
+void
+Dispatcher::stop()
+{
+   resip::WriteLock w(mMutex);
+   mAcceptingWork=false;
+}
+
+void
+Dispatcher::resume()
+{
+   resip::WriteLock w(mMutex);
+   mAcceptingWork = !mShutdown;
+}
+
+void
+Dispatcher::shutdownAll()
+{
+   resip::WriteLock w(mMutex);
+   if(!mShutdown)
+   {
+      mAcceptingWork=false;
+      mShutdown=true;
+      
+      std::vector<WorkerThread*>::iterator i;
+      for(i=mWorkerThreads.begin(); i!=mWorkerThreads.end(); ++i)
+      {
+         (*i)->shutdown();
+         (*i)->join();
+      }
+   }
+
+   
+}
+
+void 
+Dispatcher::startAll()
+{
+   resip::WriteLock w(mMutex);
+   if(!mShutdown && !mStarted)
+   {
+      std::vector<WorkerThread*>::iterator i;
+      for(i=mWorkerThreads.begin(); i!=mWorkerThreads.end(); ++i)
+      {
+         (*i)->run();
+      }
+      mStarted=true;
+      mAcceptingWork=true;
+   }
+}
+
+} //namespace repro
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -19,7 +19,7 @@ class Target
    
       typedef enum
       {
-         Pending, //Transaction has not started
+         Candidate, //Transaction has not started
          Trying, //Transaction has started, no responses yet
          Proceeding, //Transaction has received 1xx
          WaitingToCancel, //Transaction should be cancelled when a 1xx comes in
@@ -37,20 +37,34 @@ class Target
       
       virtual const resip::Data& tid() const;
       
+      
       virtual Status& status();
       virtual const Status& status() const;
       
-      virtual resip::Uri& uri();
+      virtual const resip::Uri& setUri(const resip::Uri& uri);
       virtual const resip::Uri& uri() const;
       
-      virtual resip::Via& via();
+      virtual const resip::Via& setVia(const resip::Via& via);
       virtual const resip::Via& via() const;
       
-      virtual resip::NameAddr& nameAddr();
+      virtual const resip::NameAddr& setNameAddr(const resip::NameAddr& nameAddr);
       virtual const resip::NameAddr& nameAddr() const;
       
       virtual Target* clone() const;
-   private:
+      
+      //In case you need const accessors to keep things happy.
+      virtual float getPriority() const;
+      virtual bool shouldAutoProcess() const;
+      
+      static bool targetPtrCompare(const Target* lhs, const Target* rhs)
+      {
+         return lhs->mPriorityMetric < rhs->mPriorityMetric;
+      }
+
+      float mPriorityMetric;
+      bool mShouldAutoProcess;
+      
+   protected:
       Status mStatus;
       resip::Via mVia;
       resip::NameAddr mNameAddr;

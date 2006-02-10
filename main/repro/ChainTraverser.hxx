@@ -1,33 +1,62 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef CHAIN_TRAVERSAL_INTERFACE_HXX
+#define CHAIN_TRAVERSAL_INTERFACE_HXX 1
 
-#include "rutil/Data.hxx"
+#include <deque>
 #include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
 
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class ChainTraverser
+{
+   public:
+   
+      ChainTraverser(const Processor& proc)
+      {
+         mReturnAddress=proc.getAddress();
+         mType=proc.getChainType();
+      }
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      ChainTraverser(const ChainTraverser& orig)
+      {
+         mReturnAddress=orig.mReturnAddress;
+         mType=orig.mType;
+      }
+      
+      ~ChainTraverser(){}
+      
+      
+      void pushAddr(int addr)
+      {
+         mReturnAddress.push_back(addr);
+      }
+      
+      int popAddr()
+      {
+         if(mReturnAddress.empty())
+         {
+            return 0;
+         }
+         
+         int addr = mReturnAddress.back();
+         mReturnAddress.pop_back();
+         return addr;
+      }
+      
+      Processor::ChainType chainType() const
+      {
+         return mType;
+      }
+      
+   protected:
+      std::vector<short> mReturnAddress;
+      Processor::ChainType mType;
+
+
+
+};
+
 }
 #endif
 

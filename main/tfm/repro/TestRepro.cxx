@@ -6,6 +6,8 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
+#include "repro/monkeys/QValueTargetHandler.hxx"
+#include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Security.hxx"
 #include "tfm/repro/TestRepro.hxx"
@@ -19,8 +21,9 @@ using namespace repro;
 
 static ProcessorChain&  
 makeRequestProcessorChain(ProcessorChain& chain, 
-                          RouteStore& store, 
-                          RegistrationPersistenceManager& regData)
+                          Store& store,
+                          RegistrationPersistenceManager& regData,
+                          resip::SipStack* stack)
 {
    // Either the chainName is default or we don't know about it
    // Use default if we don't recognize the name
@@ -33,31 +36,48 @@ makeRequestProcessorChain(ProcessorChain& chain,
    IsTrustedNode* isTrusted = new IsTrustedNode;
    locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
-   DigestAuthenticator* da = new DigestAuthenticator;
+   DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,stack);
    locators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<Processor>(isme));
       
-   StaticRoute* sr = new StaticRoute(store,true);
+   StaticRoute* sr = new StaticRoute(store.mRouteStore,true);
    locators->addProcessor(std::auto_ptr<Processor>(sr));
  
    LocationServer* ls = new LocationServer(regData);
    locators->addProcessor(std::auto_ptr<Processor>(ls));
  
    chain.addProcessor(std::auto_ptr<Processor>(locators));
+   chain.setChainType(Processor::REQUEST_CHAIN);
    return chain;
 }
 
 static ProcessorChain&  
 makeResponseProcessorChain(ProcessorChain& chain) 
 {
+   chain.setChainType(Processor::RESPONSE_CHAIN);
    return chain;
 }
 
 static ProcessorChain&  
 makeTargetProcessorChain(ProcessorChain& chain) 
 {
+   ProcessorChain* baboons = new ProcessorChain;
+   QValueTargetHandler* qval=
+      new QValueTargetHandler(QValueTargetHandler::FULL_SEQUENTIAL,
+                              true, //Cancel btw fork groups?
+                              true, //Wait for termination btw fork groups?
+                              2000, //ms between fork groups, moot in this case
+                              2000 //ms before cancel
+                              );
+   baboons->addProcessor(std::auto_ptr<Processor>(qval));
+
+   SimpleTargetHandler* smpl = new SimpleTargetHandler;
+   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
+   
+   chain.addProcessor(std::auto_ptr<Processor>(baboons));
+   chain.setChainType(Processor::TARGET_CHAIN);
    return chain;
 }
 
@@ -78,9 +98,9 @@ makeUri(const resip::Data& domain, int port)
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
-                     const resip::Data& nwInterface,
+                     const resip::Data& interface,
                      Security* security) : 
-   TestProxy(name, host, port, nwInterface),
+   TestProxy(name, host, port, interface),
    mStack(security),
    mStackThread(mStack),
    mRegistrar(),
@@ -91,7 +111,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegData(),
    mProxy(mStack, 
           makeUri(host, port),
-          makeRequestProcessorChain(mRequestProcessors, mStore.mRouteStore, mRegData),
+          makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors),
           makeTargetProcessorChain(mTargetProcessors),
           mStore.mUserStore,
@@ -135,8 +155,6 @@ TestRepro::TestRepro(const resip::Data& name,
 
 TestRepro::~TestRepro()
 {
-   mDumThread.shutdown();
-   mDumThread.join();   mStackThread.shutdown();   mStackThread.join();
 }
 
 void
@@ -177,6 +195,11 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
                        const resip::Data& method, 
                        const resip::Data& event)
 {
+   mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
+}
+
+
+
    mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
 }
 

@@ -1,33 +1,50 @@
-#if !defined(RESIP_DIGEST_AUTHENTICATOR_HXX)
-#define RESIP_DIGEST_AUTHENTICATOR_HXX 
+#ifndef PROCESSOR_MESSAGE_HXX
+#define PROCESSOR_MESSAGE_HXX 1
 
-#include "rutil/Data.hxx"
-#include "repro/Processor.hxx"
-#include "repro/Dispatcher.hxx"
-#include "repro/UserStore.hxx"
-
-class resip::SipStack;
+#include "resip/stack/ApplicationMessage.hxx"
+#include "repro/ChainTraverser.hxx"
+#include "resip/stack/TransactionUser.hxx"
 
 namespace repro
 {
-  class DigestAuthenticator : public Processor
-  {
-    public:
-      DigestAuthenticator( UserStore& userStore,resip::SipStack* stack);
-      ~DigestAuthenticator();
 
-      virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
-
-    private:
-      bool authorizedForThisIdentity(const resip::Data &user, const resip::Data &realm, resip::Uri &fromUri);
-      void challengeRequest(RequestContext &, bool stale = false);
-      processor_action_t requestUserAuthInfo(RequestContext &, resip::Data & realm);
-      virtual resip::Data getRealm(RequestContext &);
+class ProcessorMessage : public resip::ApplicationMessage, public ChainTraverser
+{
+   public:
+   
+      ProcessorMessage(const Processor& proc,
+                        const resip::Data& tid,
+                        resip::TransactionUser* tupassed):
+         ChainTraverser(proc)
+      {
+         mTid=tid;
+         tu=tupassed;
+      }
       
-      Dispatcher* mAuthRequestDispatcher;
-  };
-  
+      ProcessorMessage(const ProcessorMessage& orig):
+         ChainTraverser(orig)
+      {
+         mTid=orig.mTid;
+         tu=orig.tu;
+      }
+
+
+      virtual ProcessorMessage* clone() const =0;
+      
+      virtual const resip::Data& getTransactionId() const
+      {
+         return mTid;
+      }
+      
+      virtual std::ostream& encode(std::ostream& ostr) const =0;
+      virtual std::ostream& encodeBrief(std::ostream& ostr) const=0;
+
+
+   protected:
+   
+      resip::Data mTid;
+};
+
 }
 #endif
 
