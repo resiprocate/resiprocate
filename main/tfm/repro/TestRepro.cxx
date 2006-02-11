@@ -98,9 +98,9 @@ makeUri(const resip::Data& domain, int port)
 TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
-                     const resip::Data& interface,
+                     const resip::Data& nwInterface,
                      Security* security) : 
-   TestProxy(name, host, port, interface),
+   TestProxy(name, host, port, nwInterface),
    mStack(security),
    mStackThread(mStack),
    mRegistrar(),
@@ -155,6 +155,10 @@ TestRepro::TestRepro(const resip::Data& name,
 
 TestRepro::~TestRepro()
 {
+   mDumThread.shutdown();
+   mDumThread.join();
+   mStackThread.shutdown();
+   mStackThread.join();
 }
 
 void
@@ -197,9 +201,3 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
 {
    mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
 }
-
-
-
-   mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
-}
-
