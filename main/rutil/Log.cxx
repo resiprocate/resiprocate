@@ -14,8 +14,9 @@
 
 #include "rutil/Log.hxx"
 #include "rutil/Lock.hxx"
-#include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
@@ -35,6 +36,7 @@ pid_t Log::mPid=0;
 #endif
 
 volatile short Log::touchCount = 0;
+
 
 #ifdef LOG_ENABLE_THREAD_SETTING
 HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
@@ -98,7 +100,6 @@ Log::initialize(Type type, Level level, const Data& appName,
 {
    Lock lock(_mutex);
    GenericLogImpl::reset();   
-   string copy(appName.c_str());
    
    _type = type;
    mLevel = level;
@@ -109,15 +110,10 @@ Log::initialize(Type type, Level level, const Data& appName,
    }
    mExternalLogger = externalLogger;
 
-   string::size_type pos = copy.find_last_of('/');
-   if ( pos == string::npos || pos == copy.size())
-   {
-      mAppName = appName;
-   }
-   else
-   {
-      mAppName = Data(copy.substr(pos+1).c_str());
-   }
+   ParseBuffer pb(appName);
+   pb.skipToEnd();
+   pb.skipBackToChar('/');
+   mAppName = pb.position();
  
    char buffer[1024];  
    gethostname(buffer, sizeof(buffer));
@@ -156,16 +152,18 @@ Log::toString(Level l)
 Log::Level
 Log::toLevel(const Data& l)
 {
-   string pri = l.c_str();
-   if (pri.find("LOG_", 0) == 0)
+   Data pri(l);
+   ParseBuffer pb(l);
+   pb.skipChars("LOG_");
+   if (!pb.eof())
    {
-      pri.erase(0, 4);
+      pri = pb.position();
    }
    
    int i=0;
-   while (string(mDescriptions[i]).size())
+   while (strlen(mDescriptions[i]))
    {
-      if (pri == string(mDescriptions[i])) 
+      if (strcmp(pri.c_str(), mDescriptions[i]) == 0)
       {
          return Level(i-1);
       }
