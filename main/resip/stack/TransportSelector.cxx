@@ -123,7 +123,8 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
-         if (transport->interfaceName().empty())
+         if (transport->interfaceName().empty() ||
+             transport->hasSpecificContact() )
          {
             mAnyInterfaceTransports[key] = transport;
             mAnyPortAnyInterfaceTransports[key] = transport;
@@ -579,7 +580,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is.
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = Tuple::inet_ntop(source);
+                  contact.uri().host() = (target.transport->hasSpecificContact() ? 
+                                          target.transport->interfaceName() : 
+                                          Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
                   if (target.transport->transport() != UDP)
                   {
