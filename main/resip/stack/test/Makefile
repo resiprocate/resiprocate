@@ -34,7 +34,6 @@ testLockStep.cxx \
 testMessageWaiting.cxx \
 testMultipartMixedContents.cxx \
 testMultipartRelated.cxx \
-testParseBuffer.cxx \
 testParserCategories.cxx \
 testPidf.cxx \
 testPidf.cxx \
@@ -59,8 +58,9 @@ testTuple.cxx \
 testTypedef.cxx \
 testUdp.cxx \
 testUri.cxx \
-testXMLCursor.cxx \
-#		testTransportSelector.cxx
+testXMLCursor.cxx 
+
+#testTransportSelector.cxx
 
 
 SRC = 		TestSupport.cxx
