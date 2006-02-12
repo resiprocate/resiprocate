@@ -8,7 +8,9 @@
 #include <memory>
 
 #include "resip/stack/Auth.hxx"
+#include "resip/stack/BasicNonceHelper.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/NonceHelper.hxx"
 #include "rutil/Coders.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
@@ -541,23 +543,18 @@ Helper::computeTag(int numBytes)
 
 // !jf! this should be settable by the application in case a group of apps
 // (e.g. proxies) want to share the same secret
-static Data privateKey("asdfklsadflkj"); // Random::getRandomHex(1));
+NonceHelper *Helper::nonceHelper = new BasicNonceHelper();
+
+void
+Helper::setNonceHelper(NonceHelper *nonceHelper)
+{
+   Helper::nonceHelper = nonceHelper;
+}
 
 Data
 Helper::makeNonce(const SipMessage& request, const Data& timestamp)
 {
-   Data nonce(100, Data::Preallocate);
-   nonce += timestamp;
-   nonce += Symbols::COLON;
-   Data noncePrivate(100, Data::Preallocate);
-   noncePrivate += timestamp;
-   noncePrivate += Symbols::COLON;
-   //!jf! don't include the Call-Id since it might not be the same. 
-   //noncePrivate += request.header(h_CallId).value(); 
-   noncePrivate += request.header(h_From).uri().user();
-   noncePrivate += privateKey;
-   nonce += noncePrivate.md5();
-   return nonce;
+   return nonceHelper->makeNonce(request, timestamp);
 }
 
 Data 
@@ -645,7 +642,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
                DebugLog(<< "Invalid nonce; expected timestamp.");
@@ -661,7 +658,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             }
 
             Data then;
-            pb.data(then, anchor);
+            pb.data(then, anchor); 
             if (expiresDelta > 0)
             {
                unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
@@ -670,7 +667,23 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                   DebugLog(<< "Nonce has expired.");
                   return make_pair(Expired,username);
                }
+            } */
+
+            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce)); 
+            if(x_nonce.getCreationTime() == 0) 
+               return make_pair(BadlyFormed,username);
+
+            if (expiresDelta > 0)
+            {
+               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
+               if ((unsigned int)x_nonce.getCreationTime() + expiresDelta < now)
+               {
+                  DebugLog(<< "Nonce has expired.");
+                  return make_pair(Expired,username);
+               }
             }
+
+            Data then((int)x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce. expected=" << makeNonce(request, then) 
@@ -764,7 +777,7 @@ Helper::authenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
                DebugLog(<< "Invalid nonce; expected timestamp.");
@@ -780,16 +793,23 @@ Helper::authenticateRequest(const SipMessage& request,
             }
 
             Data then;
-            pb.data(then, anchor);
+            pb.data(then, anchor); */
+ 
+            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce));
+            if(x_nonce.getCreationTime() == 0)
+               return BadlyFormed;
+
+
             if (expiresDelta > 0)
             {
                unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
-               if ((unsigned int)then.convertUInt64() + expiresDelta < now)
+               if ((unsigned int)x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
                }
             }
+   	    Data then((int)x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce.");
@@ -882,7 +902,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
                DebugLog(<< "Invalid nonce; expected timestamp.");
@@ -898,16 +918,22 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
             }
 
             Data then;
-            pb.data(then, anchor);
+            pb.data(then, anchor); */
+            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce));
+            if(x_nonce.getCreationTime() == 0)
+               return BadlyFormed;
+
+
             if (expiresDelta > 0)
             {
-               int now = (int)(Timer::getTimeMs()/1000);
-               if (then.convertInt() + expiresDelta < now)
+               unsigned int now = (int)(Timer::getTimeMs()/1000);
+               if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
                }
             }
+	    Data then((int)x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce.");
