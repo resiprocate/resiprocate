@@ -31,7 +31,6 @@ drivers="
 	testMessageWaiting 
 	testMultipartMixedContents 
 	testMultipartRelated 
-	testParseBuffer 
 	testParserCategories 
 	testPidf 
 	testPksc7 
