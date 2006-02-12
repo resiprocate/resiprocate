@@ -63,7 +63,11 @@ class Transport
 
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
-      
+
+      // return true here if the subclass has a specific contact value that it
+      // wishes the TransportSelector to use. 
+      virtual bool hasSpecificContact() const { return false; }
+
       // Perform basic sanity checks on message. Return false
       // if there is a problem eg) no Vias. --SIDE EFFECT--
       // This will queue a response if it CAN for a via-less 
