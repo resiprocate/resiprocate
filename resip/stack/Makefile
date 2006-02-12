@@ -3,7 +3,7 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += ARES PTHREAD OPENSSL
+PACKAGES += RESIP RUTIL ARES PTHREAD OPENSSL
 
 CXXFLAGS += -I../../
 CODE_SUBDIRS = external
@@ -30,6 +30,7 @@ SRC = \
 	Aor.cxx \
 	ApiCheck.cxx \
 	ApplicationSip.cxx \
+	BasicNonceHelper.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
 	ConnectionBase.cxx \
@@ -70,6 +71,7 @@ SRC = \
 	MultipartMixedContents.cxx \
 	MultipartRelatedContents.cxx \
 	MultipartSignedContents.cxx \
+	NonceHelper.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterHash.cxx \
@@ -85,6 +87,7 @@ SRC = \
 	RAckCategory.cxx \
 	Rlmi.cxx \
 	RportParameter.cxx \
+	SERNonceHelper.cxx \
 	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \

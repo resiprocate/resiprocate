@@ -3,6 +3,7 @@
 
 #include <time.h>
 
+#include "resip/stack/NonceHelper.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/MethodTypes.hxx"
@@ -414,6 +415,7 @@ class Helper
                                   const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
       
       
+      static void setNonceHelper(NonceHelper *nonceHelper);
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
       static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
@@ -463,6 +465,7 @@ class Helper
 
    private:
       static Data qopOption(const Auth& challenge);
+      static NonceHelper *nonceHelper;
 };
 
 }
