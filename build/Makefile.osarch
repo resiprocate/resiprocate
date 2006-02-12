@@ -59,7 +59,9 @@ ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
 
-	CXXFLAGS += -D_REENTRANT 
+#       LDFLAGS += -frepo
+#	CXXFLAGS += -D_REENTRANT -frepo
+	CXXFLAGS += -D_REENTRANT
 	CFLAGS   += -D_REENTRANT 
 
 ifeq ($(USE_GOOGLE_MALLOC),yes)
@@ -178,6 +180,10 @@ ifdef CODE_PROFILE
 VOCAL_COMPILE_TYPE := prof
 endif
 
+ifdef CODE_GCOV
+VOCAL_COMPILE_TYPE := gcov
+endif
+
 ifdef CODE_NODEBUG
 VOCAL_COMPILE_TYPE := nodebug
 endif
@@ -204,6 +210,12 @@ endif
 ifeq ($(VOCAL_COMPILE_TYPE),debug)
 CXXFLAGS += $(DEBUG_FLAG)
 CFLAGS   += $(DEBUG_FLAG)
+endif
+
+ifeq ($(VOCAL_COMPILE_TYPE),gcov)
+CXXFLAGS += -fprofile-arcs -ftest-coverage
+CFLAGS   += -fprofile-arcs -ftest-coverage
+LDFLAGS  += -fprofile-arcs -ftest-coverage
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),opt)
