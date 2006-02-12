@@ -20,6 +20,7 @@ TESTPROGRAMS += \
 	testIntrusiveList.cxx \
 	testLogger.cxx \
 	testMD5Stream.cxx \
+	testParseBuffer.cxx \
 	testRandomHex.cxx \
 	testSelectInterruptor.cxx \
 	testSHA1Stream.cxx \
