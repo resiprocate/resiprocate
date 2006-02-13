@@ -27,7 +27,6 @@ all: \
 	testMessageWaiting.obj testMessageWaiting.exe \
 	testMultipartMixedContents.obj testMultipartMixedContents.exe \
 	testMultipartRelated.obj testMultipartRelated.exe \
-	testParseBuffer.obj testParseBuffer.exe \
 	testParserCategories.obj testParserCategories.exe \
 	testPidf.obj testPidf.exe \
 	testPksc7.obj testPksc7.exe \
@@ -80,7 +79,6 @@ run:
 	testMessageWaiting.exe
 	testMultipartMixedContents.exe
 	testMultipartRelated.exe
-	testParseBuffer.exe
 	testParserCategories.exe
 	testPidf.exe
 	testPksc7.exe
