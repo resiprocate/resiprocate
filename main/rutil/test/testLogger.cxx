@@ -4,6 +4,11 @@
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Timer.hxx"
 
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x*1000)
+#endif
+
 using namespace resip;
 using namespace std;
 

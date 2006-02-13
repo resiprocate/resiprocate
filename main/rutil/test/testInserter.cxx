@@ -46,30 +46,8 @@ struct Foo
       Data value;
 };
 
-#if  defined(__INTEL_COMPILER )
-namespace std
-{
-size_t hash_value(const Foo& foo)
-{
-   return foo.value.hash();
-}
-}
-
-#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-namespace HASH_MAP_NAMESPACE
-{
-
-template<>
-struct hash<Foo>
-{
-      size_t operator()(const Foo& foo) const
-      {
-         return foo.value.hash();
-      }
-};
-
-}
-#endif // HASHMAP
+HashValue(Foo);
+HashValueImp(Foo, data.value.hash());
 
 ostream& operator<<(ostream& str, const Foo& foo)
 {
