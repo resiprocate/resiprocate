@@ -1,9 +1,14 @@
 #include <stdlib.h>
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <cassert>
 #include <memory>
 
 #include "rutil/compat.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/Coders.hxx"
 #include <iostream>
 
@@ -23,7 +28,7 @@ Data* randomData(int size)
 
    for(int i = 0 ; i < size; i++)
    {
-      p[i] = static_cast<unsigned char>(random()&0xff);
+	  p[i] = static_cast<unsigned char>(Random::getRandom()&0xff);
    }
 
    return new Data(p,size);
