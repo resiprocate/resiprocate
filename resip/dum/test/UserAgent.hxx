@@ -54,6 +54,7 @@ class UserAgent : public CommandLineParser,
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg);
       virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg);
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg);
+      virtual void onReferNoSub(InviteSessionHandle, const SipMessage& msg);
 
       virtual void onMessage(InviteSessionHandle, const SipMessage& msg);
       virtual void onMessageSuccess(InviteSessionHandle, const SipMessage& msg);
@@ -67,9 +68,9 @@ class UserAgent : public CommandLineParser,
 
       // ClientSubscriptionHandler ///////////////////////////////////////////////////
       virtual void onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejection);
-      virtual void onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify);
-      virtual void onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify);
-      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify);
+      virtual void onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
+      virtual void onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
+      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder);
       virtual void onTerminated(ClientSubscriptionHandle h, const SipMessage& notify);
       virtual void onNewSubscription(ClientSubscriptionHandle h, const SipMessage& notify);
       virtual int onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const SipMessage& notify);

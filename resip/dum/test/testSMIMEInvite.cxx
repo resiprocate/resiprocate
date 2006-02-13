@@ -200,6 +200,11 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
          dumShutDown++;
       }
 
+      virtual void onReferNoSub(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(<< "InviteSessionHandler::onReferNoSub(): " << msg.brief());
+      }
+
    public:
       std::vector<ClientRegistrationHandle> handles;
       ServerInviteSessionHandle sis;
