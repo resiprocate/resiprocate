@@ -36,8 +36,13 @@ class Helper
       template<typename T>
       static T aBitSmallerThan(T secs)
       {
-         //return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
-         return resipMax(T(0), T(secs-5));
+         return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
+      }
+
+      template<typename T>
+      static T smallerThan(T secs)
+      {
+         return resipMax(T(0), resipMin(T(secs-32), T(5*secs/6)));
       }
 
       // e.g. to jitter the expires in a SUBSCRIBE or REGISTER expires header
