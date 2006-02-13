@@ -122,7 +122,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       
       if (mExpires == 0 || now + expires < mExpires)
       {
-         refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
+         refreshInterval = Helper::smallerThan((unsigned long)expires);
          mExpires = now + refreshInterval;
       }
 
