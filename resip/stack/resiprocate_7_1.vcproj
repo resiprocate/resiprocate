@@ -219,6 +219,9 @@
 				RelativePath=".\Auth.cxx">
 			</File>
 			<File
+				RelativePath=".\BasicNonceHelper.cxx">
+			</File>
+			<File
 				RelativePath=".\BranchParameter.cxx">
 			</File>
 			<File
@@ -372,6 +375,9 @@
 				RelativePath=".\NameAddr.cxx">
 			</File>
 			<File
+				RelativePath=".\NonceHelper.cxx">
+			</File>
+			<File
 				RelativePath=".\OctetContents.cxx">
 			</File>
 			<File
@@ -430,6 +436,9 @@
 			</File>
 			<File
 				RelativePath=".\SecurityAttributes.cxx">
+			</File>
+			<File
+				RelativePath=".\SERNonceHelper.cxx">
 			</File>
 			<File
 				RelativePath=".\SipFrag.cxx">
@@ -566,6 +575,9 @@
 			</File>
 			<File
 				RelativePath=".\Auth.hxx">
+			</File>
+			<File
+				RelativePath=".\BasicNonceHelper.hxx">
 			</File>
 			<File
 				RelativePath=".\BranchParameter.hxx">
@@ -727,6 +739,9 @@
 				RelativePath=".\NameAddr.hxx">
 			</File>
 			<File
+				RelativePath=".\NonceHelper.hxx">
+			</File>
+			<File
 				RelativePath=".\OctetContents.hxx">
 			</File>
 			<File
@@ -800,6 +815,9 @@
 			</File>
 			<File
 				RelativePath=".\SendData.hxx">
+			</File>
+			<File
+				RelativePath=".\SERNonceHelper.hxx">
 			</File>
 			<File
 				RelativePath=".\ShutdownMessage.hxx">
