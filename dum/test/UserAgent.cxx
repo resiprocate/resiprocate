@@ -291,6 +291,12 @@ UserAgent::onReferRejected(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
+UserAgent::onReferNoSub(InviteSessionHandle, const SipMessage& msg)
+{
+   assert(0);
+}
+
+void
 UserAgent::onMessage(InviteSessionHandle, const SipMessage& msg)
 {
 }
@@ -340,17 +346,17 @@ UserAgent::onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejec
 }
 
 void
-UserAgent::onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify)
+UserAgent::onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
 }
 
 void
-UserAgent::onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify)
+UserAgent::onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
 }
 
 void
-UserAgent::onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify)
+UserAgent::onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder)
 {
 }
 

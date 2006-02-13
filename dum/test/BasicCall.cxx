@@ -232,6 +232,11 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onReferRejected - " << msg.brief() << endl;
       }
 
+      virtual void onReferNoSub(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onReferNoSub - " << msg.brief() << endl;
+      }
+
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onInfo - " << msg.brief() << endl;
