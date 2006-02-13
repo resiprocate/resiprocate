@@ -253,6 +253,9 @@
 				RelativePath=".\monkeys\DigestAuthenticator.cxx">
 			</File>
 			<File
+				RelativePath=".\Dispatcher.cxx">
+			</File>
+			<File
 				RelativePath=".\HttpBase.cxx">
 			</File>
 			<File
@@ -280,6 +283,12 @@
 				RelativePath=".\Proxy.cxx">
 			</File>
 			<File
+				RelativePath=".\QValueTarget.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\QValueTargetHandler.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\RecursiveRedirect.cxx">
 			</File>
 			<File
@@ -304,6 +313,9 @@
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\SimpleTargetHandler.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\StaticRoute.cxx">
 			</File>
 			<File
@@ -323,6 +335,9 @@
 			</File>
 			<File
 				RelativePath=".\WebAdminThread.cxx">
+			</File>
+			<File
+				RelativePath=".\WorkerThread.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -366,6 +381,9 @@
 				RelativePath=".\monkeys\DigestAuthenticator.hxx">
 			</File>
 			<File
+				RelativePath=".\Dispatcher.hxx">
+			</File>
+			<File
 				RelativePath=".\HttpBase.hxx">
 			</File>
 			<File
@@ -393,6 +411,12 @@
 				RelativePath=".\Proxy.hxx">
 			</File>
 			<File
+				RelativePath=".\QValueTarget.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\QValueTargetHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\RecursiveRedirect.hxx">
 			</File>
 			<File
@@ -412,6 +436,9 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\SimpleTargetHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\StaticRoute.hxx">
@@ -436,6 +463,9 @@
 			</File>
 			<File
 				RelativePath=".\WebAdminThread.hxx">
+			</File>
+			<File
+				RelativePath=".\WorkerThread.hxx">
 			</File>
 		</Filter>
 		<Filter
