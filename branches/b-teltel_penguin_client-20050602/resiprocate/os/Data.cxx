@@ -900,6 +900,30 @@ Data::operator+(char c) const
    return tmp;
 }
 
+void 
+Data::removeEscapeChar(char escapeChar)
+{
+   if (mSize)
+   {
+      c_str();
+      char* found = ::strchr(mBuf, escapeChar);
+      while (found)
+      {
+         char* orgFound = found;
+         int escapeCount = 1;
+         while((++found)[0] == escapeChar)
+         {
+            ++escapeCount;
+         }
+         escapeCount /= 2;
+         found -= escapeCount / 2;
+         ::strcpy(orgFound, found); 
+         mSize -= (found - orgFound);
+         found = ::strchr(found, escapeChar);
+      }
+   }
+}
+
 const char* 
 Data::c_str() const
 {
