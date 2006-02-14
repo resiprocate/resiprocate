@@ -152,14 +152,8 @@ Log::toString(Level l)
 Log::Level
 Log::toLevel(const Data& l)
 {
-   Data pri(l);
-   ParseBuffer pb(l);
-   pb.skipChars("LOG_");
-   if (!pb.eof())
-   {
-      pri = pb.position();
-   }
-   
+   Data pri( l.prefix("LOG_") ? l.substr(4) : l);
+
    int i=0;
    while (strlen(mDescriptions[i]))
    {
