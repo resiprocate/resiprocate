@@ -151,6 +151,7 @@ NameAddr::parse(ParseBuffer& pb)
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
          pb.data(mDisplayName, start);
+         mDisplayName.removeEscapeChar('\\');
          pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          laQuote = true;
          pb.skipToChar(Symbols::LA_QUOTE[0]);
@@ -250,9 +251,6 @@ NameAddr::encodeParsed(ostream& str) const
               char c = mDisplayName[i];
               switch(c)
               {
-                 //case '"':
-                 //   str << "&quot;";
-                 //   break;
                  case '"':
                  case '\\':
                     str << '\\' << c;

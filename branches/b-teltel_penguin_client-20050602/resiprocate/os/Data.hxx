@@ -161,6 +161,8 @@ class Data
       size_type find(const Data& match, size_type start = 0) const;
       size_type find(const char* match, size_type start = 0) const;
 
+      void removeEscapeChar(char escapeChar);
+
       static const Data Empty;
       static const size_type npos;
 
