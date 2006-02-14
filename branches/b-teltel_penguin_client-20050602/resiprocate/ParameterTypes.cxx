@@ -93,6 +93,7 @@ defineParam(transport, "transport", DataParameter, "RFC ????");
 defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
+defineParam(extension, "ext", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
 defineParam(refresher, "refresher", DataParameter, "Session Timer Draft");
