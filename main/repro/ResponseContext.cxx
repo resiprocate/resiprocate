@@ -651,17 +651,18 @@ ResponseContext::processResponse(SipMessage& response)
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
    response.header(h_Vias).pop_front();
 
+   if (response.header(h_Vias).empty())
+   {
+      // ignore CANCEL/200
+      return;
+   }
+
    const Via& via = response.header(h_Vias).front();
    if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
    {
       response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
    }
 
-   if (response.header(h_Vias).empty())
-   {
-      // ignore CANCEL/200
-      return;
-   }
    
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
 
