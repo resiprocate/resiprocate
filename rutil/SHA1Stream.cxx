@@ -14,7 +14,7 @@ SHA1Buffer::SHA1Buffer()
           mBuf(SHA_DIGEST_LENGTH)
 {
    SHA1_Init(mContext.get());
-   setp(&mBuf[0], &mBuf[mBuf.size()]);
+   setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
 }
 
 SHA1Buffer::~SHA1Buffer()
@@ -29,7 +29,7 @@ SHA1Buffer::sync()
    {
       SHA1_Update(mContext.get(), reinterpret_cast <unsigned const char*>(pbase()), len);
       // reset the put buffer
-      setp(&mBuf[0], &mBuf[mBuf.size()]);
+      setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
    }
    return 0;
 }
