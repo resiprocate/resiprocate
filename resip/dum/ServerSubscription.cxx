@@ -47,7 +47,6 @@ ServerSubscription::~ServerSubscription()
       }
    }
    
-   mDum.mServerSubscriptions.erase(key);
    mDialog.mServerSubscriptions.remove(this);
 }
 
