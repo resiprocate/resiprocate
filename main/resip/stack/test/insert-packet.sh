@@ -15,7 +15,7 @@ test ! -z "$1" -a ! -z "$2" || die "usage: $0 input output";
 
 quoted=`sed -e 's/\"/\\\"/g' \
             -e 's/^/         \"/' \
-	    -e 's/$//g' -e 's/$/\\\\r\\\\n\"/g' <$1`;
+	    -e $'s/\r$//g' -e 's/$/\\\\r\\\\n\"/g' <$1`;
 
 # Figure out where we want to insert this.
 line=`egrep -n 'initNetwork\(\)\;$' <$2 | sed -e 's/:/ /' | awk '{print $1}'`;
