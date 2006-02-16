@@ -149,7 +149,7 @@ $(BUILD)/fakepre: $(HEADERS_SPECIAL)
 #	$(TOOLS)/makeprefs $@
 $(ROOT)/.make_prefs:
 	echo 'USE_BUILDDIR=no' > $@
-        include $(ROOT)/.make_prefs
+	include $(ROOT)/.make_prefs
 
 prefs:
 	$(TOOLS)/makeprefs $(ROOT)/.make_prefs
@@ -297,7 +297,9 @@ install: all
 	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
 endif
 
--include $(DEPENDENCIES)
+ifneq ($(MAKECMDGOALS),clean)
+  -include $(DEPENDENCIES)
+endif
 
 # If the make configuration isn't there, create a default one.
 $(BUILD)/Makefile.conf:
