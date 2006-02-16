@@ -4,6 +4,7 @@
 #include "resip/dum/HttpProvider.hxx"
 #include "resip/dum/HttpGetMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
