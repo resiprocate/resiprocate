@@ -50,8 +50,7 @@ LocationServer::process(RequestContext& context)
            }
            else
            {
-               noqbatch.push_back(new Target(contact.uri));
-               noqbatch.push_back(new QValueTarget(contact.uri,1.0));
+               noqbatch.push_back(new QValueTarget(contact.uri,1.0));   
            }
         }
         else
