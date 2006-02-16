@@ -58,7 +58,7 @@ class Target
       
       static bool targetPtrCompare(const Target* lhs, const Target* rhs)
       {
-         return lhs->mPriorityMetric < rhs->mPriorityMetric;
+         return lhs->mPriorityMetric > rhs->mPriorityMetric;
       }
 
       float mPriorityMetric;
