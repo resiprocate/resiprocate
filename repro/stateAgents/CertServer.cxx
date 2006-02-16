@@ -6,6 +6,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/stateAgents/CertServer.hxx"
 #include "resip/dum/MasterProfile.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace repro;

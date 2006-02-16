@@ -4,6 +4,7 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/DumHelper.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

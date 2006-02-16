@@ -9,6 +9,8 @@
 
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 

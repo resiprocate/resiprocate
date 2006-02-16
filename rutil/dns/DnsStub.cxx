@@ -30,6 +30,7 @@
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 #include "rutil/dns/ExternalDnsFactory.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
