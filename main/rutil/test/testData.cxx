@@ -1063,6 +1063,12 @@ class TestData
          }
 
          {
+            assert(Data(UInt64(0)) == "0");
+            assert(Data(UInt64(1)) == "1");
+            assert(Data(UInt64(18446744073709551615)) == "18446744073709551615");  // 2^64 - 1
+         }
+
+         {
             cerr << "!! " << Data(true) << endl;
 
             assert(Data(true) == "true");
