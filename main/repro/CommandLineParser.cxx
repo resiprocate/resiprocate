@@ -160,6 +160,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    {
       mTimerC=0;
    }
+
+#ifdef HAVE_POPT_H
+   poptFreeContext(context);
+#endif
 }
 
 resip::Uri 
