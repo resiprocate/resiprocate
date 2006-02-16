@@ -153,7 +153,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    int iDepth = 0;
    pErrCert = X509_STORE_CTX_get_current_cert(pInStore);
    iErr = X509_STORE_CTX_get_error(pInStore);
-   iDepth =	X509_STORE_CTX_get_error_depth(pInStore);
+   iDepth = X509_STORE_CTX_get_error_depth(pInStore);
 
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
@@ -931,13 +931,16 @@ BaseSecurity::~BaseSecurity ()
    clearMap(mDomainPrivateKeys, EVP_PKEY_free);
    clearMap(mUserPrivateKeys, EVP_PKEY_free);
 
+/* !abr! This intentional memory leak appears to be unnecessary. Derek to verify.
+
+
    // sailesh@counterpath.com : this code leaks memory but it's necessary on
    // mac and windows. if we don't have this code then SSL_CTX_new( TLSv1_method() )
    // returns NULL when BaseSecurity::BaseSecurity() is called the second time.
    X509_STORE_free(mRootTlsCerts);
    X509_STORE_free(mRootSslCerts);
+*/
 
-/*
    // cleanup SSL_CTXes
    if (mTlsCtx)
    {
@@ -953,24 +956,23 @@ BaseSecurity::~BaseSecurity ()
 
    // Clean up data allocated during SSL_load_error_strings
    ERR_free_strings();
-*/
 }
 
 
 void
 BaseSecurity::initialize ()
 {
-	DebugLog( << "Setting up SSL library" );
+  DebugLog( << "Setting up SSL library" );
 
-	SSL_library_init();
-	SSL_load_error_strings();
-	OpenSSL_add_all_algorithms();
+  SSL_library_init();
+  SSL_load_error_strings();
+  OpenSSL_add_all_algorithms();
 
-	Random::initialize();
-	Timer::getTimeMs(); // initalize time offsets
+  Random::initialize();
+  Timer::getTimeMs(); // initalize time offsets
 
-	// make sure that necessary algorithms exist:
-	assert(EVP_des_ede3_cbc());
+  // make sure that necessary algorithms exist:
+  assert(EVP_des_ede3_cbc());
       
 }
 
@@ -995,18 +997,18 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
    assert( !x509PEMEncodedRootCerts.empty() );
 
    static X509_LOOKUP_METHOD x509_pemstring_lookup =
-	{
-   	"Load cert from PEM string into cache",
-   	NULL,		      /* new */
-   	NULL,		      /* free */
-   	NULL, 		   /* init */
-   	NULL,		      /* shutdown */
-   	pemstring_ctrl,/* ctrl */
-   	NULL,		      /* get_by_subject */
-   	NULL,		      /* get_by_issuer_serial */
-   	NULL,		      /* get_by_fingerprint */
-   	NULL,		      /* get_by_alias */
-	};
+  {
+     "Load cert from PEM string into cache",
+     NULL,  /* new */
+     NULL,  /* free */
+     NULL,   /* init */
+     NULL,  /* shutdown */
+     pemstring_ctrl,/* ctrl */
+     NULL,  /* get_by_subject */
+     NULL,  /* get_by_issuer_serial */
+     NULL,  /* get_by_fingerprint */
+     NULL,  /* get_by_alias */
+  };
 
    if (mRootCerts == 0)
    {
@@ -1267,7 +1269,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_EXTENSION* ext = X509_EXTENSION_new();
    
    // set version to X509v3 (starts from 0)
-   X509_set_version(cert, 2L);	
+   X509_set_version(cert, 2L);
    
    int serial = Random::getRandom();  // get an int worth of randomness
    assert(sizeof(int)==4);
@@ -2321,15 +2323,15 @@ matchHostName(char *certName, const char *domainName)
       /* hostname is not fully-qualified; unqualify the certName. */
       if (pnt != NULL) 
       {
-	 *pnt = '\0';
+         *pnt = '\0';
       }
    }
    else 
    {
       if (strncmp(certName, "*.", 2) == 0) 
       {
-	 domainName = dot + 1;
-	 certName += 2;
+         domainName = dot + 1;
+         certName += 2;
       }
    }
    return !strcasecmp(certName, domainName);
