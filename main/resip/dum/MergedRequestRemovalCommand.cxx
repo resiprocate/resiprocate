@@ -1,6 +1,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/dum/MergedRequestRemovalCommand.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

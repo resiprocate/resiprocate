@@ -1,4 +1,5 @@
 #include "resip/dum/HttpGetMessage.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

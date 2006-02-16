@@ -4,6 +4,7 @@
 #include "resip/stack/Uri.hxx"
 
 #include "repro/RouteStore.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;

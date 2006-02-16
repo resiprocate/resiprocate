@@ -1,4 +1,5 @@
 #include "rutil/SHA1Stream.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #if defined(USE_SSL)
 

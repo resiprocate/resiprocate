@@ -25,6 +25,7 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #if defined(USE_SSL)
 

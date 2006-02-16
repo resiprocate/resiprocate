@@ -6,6 +6,7 @@
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

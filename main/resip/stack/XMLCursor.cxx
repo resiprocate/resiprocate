@@ -7,9 +7,6 @@
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-//#ifndef   `WIN32 // !cj! TODO FIX 
-#if 1 
-
 using namespace resip;
 using namespace std;
 
@@ -618,7 +615,6 @@ resip::operator<<(std::ostream& str, const XMLCursor& cursor)
    return str;
 }
 
-#endif // WIN32
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

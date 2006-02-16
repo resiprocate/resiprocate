@@ -6,6 +6,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

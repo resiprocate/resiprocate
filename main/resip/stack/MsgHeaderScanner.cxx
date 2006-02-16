@@ -8,6 +8,7 @@
 #include "resip/stack/HeaderTypes.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 namespace resip 
 {

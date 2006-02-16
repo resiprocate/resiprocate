@@ -4,6 +4,7 @@
 
 #include "resip/stack/MultipartRelatedContents.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

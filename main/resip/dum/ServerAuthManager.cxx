@@ -8,6 +8,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 #include "resip/stack/Helper.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
