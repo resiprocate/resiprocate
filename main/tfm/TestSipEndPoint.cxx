@@ -1339,6 +1339,37 @@ TestSipEndPoint::RawReply::go(shared_ptr<SipMessage> msg)
    return mmsg;
 }                                                                       
 
+TestSipEndPoint::Send300::Send300(TestSipEndPoint & endpoint, std::set<resip::NameAddr> alternates)
+   : MessageExpectAction(endpoint),
+     mAlternates(alternates),
+     mEndpoint(endpoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send300::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   boost::shared_ptr<resip::SipMessage> response = mEndpoint.makeResponse(*msg, 300);
+   while(!response->header(h_Contacts).empty())
+   {
+      response->header(h_Contacts).pop_front();
+   }
+   for(std::set<resip::NameAddr>::const_iterator i=mAlternates.begin();i!=mAlternates.end();++i)
+   {
+      response->header(h_Contacts).push_back(*i);
+   }
+   
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send300(std::set<resip::NameAddr> alternates)
+{
+   return new Send300(*this,alternates);
+}
+
+
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint)
@@ -1806,6 +1837,49 @@ TestSipEndPoint::send503()
 {
    return new Send503(*this);
 }
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send500()
+{
+   return new Send500(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send513()
+{
+   return new Send513(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send504()
+{
+   return new Send504(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send600()
+{
+   return new Send600(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send603()
+{
+   return new Send603(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send604()
+{
+   return new Send604(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send606()
+{
+   return new Send606(*this);
+}
+
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::dump()
