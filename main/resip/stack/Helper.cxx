@@ -675,15 +675,15 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
-               if ((unsigned int)x_nonce.getCreationTime() + expiresDelta < now)
+               UInt64 now = Timer::getTimeMs()/1000;
+               if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return make_pair(Expired,username);
                }
             }
 
-            Data then((int)x_nonce.getCreationTime());
+            Data then(x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce. expected=" << makeNonce(request, then) 
@@ -802,14 +802,15 @@ Helper::authenticateRequest(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               unsigned int now = (unsigned int)(Timer::getTimeMs()/1000);
-               if ((unsigned int)x_nonce.getCreationTime() + expiresDelta < now)
+               UInt64 now = Timer::getTimeMs()/1000;
+               if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
                }
             }
-   	    Data then((int)x_nonce.getCreationTime());
+
+   	        Data then(x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce.");
@@ -926,14 +927,15 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               unsigned int now = (int)(Timer::getTimeMs()/1000);
+               UInt64 now = Timer::getTimeMs()/1000;
                if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
                   return Expired;
                }
             }
-	    Data then((int)x_nonce.getCreationTime());
+
+	        Data then(x_nonce.getCreationTime());
             if (i->param(p_nonce) != makeNonce(request, then))
             {
                InfoLog(<< "Not my nonce.");
@@ -1045,7 +1047,7 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
 {
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
+   Data timestamp(Timer::getTimeMs()/1000);
    auth.param(p_nonce) = makeNonce(request, timestamp);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = realm;

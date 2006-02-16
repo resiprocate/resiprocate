@@ -577,6 +577,47 @@ Data::Data(unsigned int value)
    }
 }
 
+// 18446744073709551615
+static const int UInt64MaxSize = 20;
+
+Data::Data(UInt64 value)
+   : mSize(0),
+     mBuf(UInt64MaxSize > LocalAlloc 
+          ? new char[UInt64MaxSize + 1]
+          : mPreBuffer),
+     mCapacity(UInt64MaxSize > LocalAlloc
+               ? UInt64MaxSize
+               : LocalAlloc),
+     mMine(UInt64MaxSize > LocalAlloc ? Take : Borrow)
+{
+   if (value == 0)
+   {
+      mBuf[0] = '0';
+      mBuf[1] = 0;
+      mSize = 1;
+      return;
+   }
+
+   int c = 0;
+   UInt64 v = value;
+   while (v /= 10)
+   {
+      ++c;
+   }
+
+   mSize = c+1;
+   mBuf[c+1] = 0;
+   
+   v = value;
+   while (v)
+   {
+      UInt64 digit = v%10;
+      unsigned char d = (char)digit;
+      mBuf[c--] = '0' + d;
+      v /= 10;
+   }
+}
+
 static const int CharMaxSize = 1;
 Data::Data(char c)
    : mSize(1),

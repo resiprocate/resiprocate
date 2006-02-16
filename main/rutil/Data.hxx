@@ -155,6 +155,14 @@ class Data
       */
       explicit Data(unsigned int value);
 
+      /**
+        Converts the passed in value into ascii-decimal
+        representation, and then creates a "Data" containing
+        that value. (E.g. "Data(75)" will create a Data
+        with length=2, and contents of 0x37 0x35).
+      */
+      explicit Data(UInt64 value);
+
       typedef enum {ZeroDigitPrecision = 0, OneDigitPrecision, 
 		    TwoDigitPrecision, ThreeDigitPrecision, 
 		    FourDigitPrecision, FiveDigitPrecision,
