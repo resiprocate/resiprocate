@@ -321,11 +321,29 @@ TlsConnection::read(char* buf, int count )
    {
       return -1;
    }
-   
+
    int bytesRead = SSL_read(mSsl,buf,count);
    StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, bytesRead) << "]");
-   
-   if (bytesRead <= 0 )
+
+   if (bytesRead > 0 && SSL_pending(mSsl))
+   {
+      int restBytes = SSL_pending(mSsl);
+      char* buffer = getWriteBufferForExtraBytes(restBytes);
+      StackLog(<< "reading remaining buffered bytes");
+      restBytes = SSL_read(mSsl, buffer, SSL_pending(mSsl));
+      StackLog(<< "SSL_read returned  " << restBytes << " bytes [" << Data(Data::Borrow, buffer, restBytes) << "]");
+
+      if (restBytes>0)
+      {
+         bytesRead += restBytes;
+      }
+      else
+      {
+         bytesRead = restBytes;
+      }
+   }
+
+   if (bytesRead <= 0)
    {
       int err = SSL_get_error(mSsl,bytesRead);
       switch (err)
@@ -421,7 +439,9 @@ TlsConnection::write( const char* buf, int count )
       }
    }
 
-   StackLog( << "Did TLS write"  );
+   Data monkey(Data::Borrow, buf, count);
+
+   StackLog( << "Did TLS write " << ret << " " << count << " " << "[[" << monkey << "]]" );
 
    return ret;
 #endif // USE_SSL
@@ -439,7 +459,7 @@ TlsConnection::hasDataToRead() // has data that can be read
    }
 
    int p = SSL_pending(mSsl);
-   //DebugLog(<<"hasDataToRead(): "<<p);
+   //DebugLog(<<"hasDataToRead(): " <<p);
    return (p>0);
 #else // USE_SSL
    return false;
