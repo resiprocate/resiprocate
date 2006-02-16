@@ -1,4 +1,5 @@
 #include "repro/QValueTarget.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 namespace repro

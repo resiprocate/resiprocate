@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "resip/stack/ContentsFactoryBase.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

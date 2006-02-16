@@ -14,6 +14,7 @@
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Ack200DoneMessage.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

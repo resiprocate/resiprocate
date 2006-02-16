@@ -31,6 +31,7 @@
 #include "Udp.hxx"
 #include "Stun.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace std;
 using namespace resip;

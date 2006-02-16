@@ -6,6 +6,7 @@
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
