@@ -1,5 +1,6 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TargetCommand.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

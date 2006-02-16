@@ -7,6 +7,7 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 #include "rutil/Logger.hxx"

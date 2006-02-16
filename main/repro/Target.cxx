@@ -4,6 +4,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 namespace repro
 {

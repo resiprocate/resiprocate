@@ -16,6 +16,7 @@
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/ForkControlMessage.hxx"
 #include "repro/ChainTraverser.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list
 #if defined(WIN32)

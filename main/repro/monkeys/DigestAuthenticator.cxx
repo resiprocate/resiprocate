@@ -13,6 +13,7 @@
 #include "repro/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 

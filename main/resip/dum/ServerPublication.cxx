@@ -5,6 +5,7 @@
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

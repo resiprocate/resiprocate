@@ -44,6 +44,7 @@
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 #if !defined(USE_ARES)

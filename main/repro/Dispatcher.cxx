@@ -1,6 +1,7 @@
 #include "repro/Dispatcher.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 
 namespace repro
