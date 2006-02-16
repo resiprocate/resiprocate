@@ -95,6 +95,7 @@ clean:
 	cd resip/dum; $(MAKE) clean
 	cd resip/stack/test; $(MAKE) clean
 	cd presSvr; $(MAKE) clean
+	$(MAKE) -C contrib/ares distclean
 
 # install does not include install-ares, because it did not in the
 # past.  (As far as I know, installing ares is needed only when
