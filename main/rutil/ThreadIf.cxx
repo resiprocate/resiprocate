@@ -84,11 +84,11 @@ ThreadIf::run()
    mThread =
 #ifdef _WIN32_WCE
        // there is no _beginthreadex() for WINCE
-       CreateThread(
+       CreateThread
 #else
-       (HANDLE)_beginthreadex(
+       (HANDLE)_beginthreadex
 #endif // _WIN32_WCE
-           
+         (
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
          0, // DWORD dwStackSize,                         // initial thread stack size
          RESIP_THREAD_START_ROUTINE
