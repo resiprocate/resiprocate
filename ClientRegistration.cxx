@@ -13,6 +13,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
