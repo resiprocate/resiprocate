@@ -36,12 +36,12 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+bool Random::mIsInitialized = false;
+Mutex Random::mMutex;
+
 #ifdef WIN32
 Random::Initializer Random::mInitializer;
 #endif
-
-Mutex Random::mMutex;
-bool Random::mIsInitialized = false;
 
 void
 Random::initialize()
