@@ -416,7 +416,7 @@ class Helper
       
       
       static void setNonceHelper(NonceHelper *nonceHelper);
-      static void getNonceHelper();
+      static NonceHelper* getNonceHelper();
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
       static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
