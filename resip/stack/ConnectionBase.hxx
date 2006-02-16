@@ -34,7 +34,7 @@ class ConnectionBase
       Tuple& who() { return mWho; }
       const UInt64& whenLastUsed() { return mLastUsed; }
 
-      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here? 
+      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
 
    protected:
       enum State
@@ -48,7 +48,8 @@ class ConnectionBase
       State getCurrentState() const { return mState; }
       void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
-	 
+      char* getWriteBufferForExtraBytes(int extraBytes);
+      
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
 
