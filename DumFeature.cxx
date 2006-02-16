@@ -2,6 +2,7 @@
 #include "resip/stack/Message.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/TargetCommand.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 

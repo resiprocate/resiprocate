@@ -1,6 +1,7 @@
 #include <ostream>
 #include "rutil/Data.hxx"
 #include "resip/dum/CertMessage.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
