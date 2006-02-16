@@ -321,15 +321,16 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             MessageConditionerFn mConditioner;
       };
 
-      class RawReply : public MessageExpectAction
+      class Send300 : public MessageExpectAction
       {
          public:
-            RawReply(TestSipEndPoint& from, const resip::Data& rawText);
-            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>);
-
-         private:
-            resip::Data mRawText;
+            explicit Send300(TestSipEndPoint& endpoint, std::set<resip::NameAddr> alternates);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            std::set<resip::NameAddr> mAlternates;
+            TestSipEndPoint& mEndpoint;
       };
+      MessageExpectAction* send300(std::set<resip::NameAddr> alternates);
 
       class Send302 : public MessageExpectAction
       {
@@ -340,6 +341,18 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint & mEndPoint;                                                      
       };
       MessageExpectAction* send302();
+
+
+      class RawReply : public MessageExpectAction
+      {
+         public:
+            RawReply(TestSipEndPoint& from, const resip::Data& rawText);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>);
+
+         private:
+            resip::Data mRawText;
+      };
+
 
 
       class Respond : public MessageExpectAction
@@ -509,6 +522,27 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send503, 503);
       MessageExpectAction* send503();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send500, 500);
+      MessageExpectAction* send500();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send513, 513);
+      MessageExpectAction* send513();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send504, 504);
+      MessageExpectAction* send504();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send600, 600);
+      MessageExpectAction* send600();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send603, 603);
+      MessageExpectAction* send603();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send604, 604);
+      MessageExpectAction* send604();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send606, 606);
+      MessageExpectAction* send606();
 
       EXPECT_FUNCTOR(TestSipEndPoint, Dump);
       MessageExpectAction* dump();
