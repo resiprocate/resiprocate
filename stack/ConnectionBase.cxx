@@ -136,7 +136,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // ...but the chunk is completely processed.
                //.jacob. I've discarded the "assigned" concept.
                //DebugLog(<< "Data assigned, not fragmented, not complete");
-               mBuffer = MsgHeaderScanner::allocateBuffer(ChunkSize);               
+               mBuffer = MsgHeaderScanner::allocateBuffer(ChunkSize);
                mBufferPos = 0;
                mBufferSize = ChunkSize;
             }
@@ -144,7 +144,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                // ...but some of the chunk must be shifted into the next one.
                size_t size = numUnprocessedChars*3/2;
-               if ( size < ConnectionBase::ChunkSize )
+               if (size < ConnectionBase::ChunkSize)
                {
                   size = ConnectionBase::ChunkSize;
                }
@@ -164,6 +164,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             if (numUnprocessedChars < contentLength)
             {
                // The message body is incomplete.
+               DebugLog(<< "partial body received");
                char* newBuffer = MsgHeaderScanner::allocateBuffer(contentLength);               
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
@@ -197,7 +198,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                {
                   // The next message has been partially read.
                   size_t size = overHang*3/2;
-                  if ( size < ConnectionBase::ChunkSize )
+                  if (size < ConnectionBase::ChunkSize)
                   {
                      size = ConnectionBase::ChunkSize;
                   }
@@ -260,6 +261,18 @@ ConnectionBase::getWriteBuffer()
       mBufferPos = 0;
    }
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
+}
+
+char*
+ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
+{
+   char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize + extraBytes);
+   memcpy(buffer, mBuffer, mBufferSize);
+   delete [] mBuffer;
+   mBuffer = buffer;
+   buffer += mBufferSize;
+   mBufferSize += extraBytes;
+   return buffer;
 }
             
 void 
