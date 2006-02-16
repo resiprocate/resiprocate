@@ -196,7 +196,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
       {
         RegistrationPersistenceManager::update_status_t status;
         InfoLog (<< "Adding " << mAor << " -> " << i->uri());
-        status = database->updateContact(mAor, i->uri(), now + expires);
+        if(i->exists(p_q))
+        {
+            status = database->updateContact(mAor, i->uri(), now + expires,i->param(p_q));
+        }
+        else
+        {
+            status = database->updateContact(mAor, i->uri(), now + expires);
+         }
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
           operation = ADD;
