@@ -268,22 +268,26 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
             // make timers to re-register
             int expiry = INT_MAX;
-            const Via& via = msg.header(h_Vias).front();
-            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-                 it != msg.header(h_Contacts).end(); it++)
+            if (msg.exists(h_Expires)) // !NASH! should check Expires Header first
             {
-               if (it->uri().host() == via.sentHost() &&
-                  it->uri().port() == via.sentPort() &&
-                  it->exists(p_expires))
+               expiry = msg.header(h_Expires).value();
+               if (expiry <= 0)
                {
-                  expiry = resipMin(it->param(p_expires), expiry);
+                  expiry = INT_MAX;
                }
             }
-            if (expiry == INT_MAX)
+            if (expiry == INT_MAX) // !NASH! if no Expires header value
             {
-               if (msg.exists(h_Expires))
+               const Via& via = msg.header(h_Vias).front();
+               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
+                  it != msg.header(h_Contacts).end(); it++)
                {
-                  expiry = msg.header(h_Expires).value();
+                  if (it->uri().host() == via.sentHost() &&
+                     it->uri().port() == via.sentPort() &&
+                     it->exists(p_expires))
+                  {
+                     expiry = resipMin(it->param(p_expires), expiry);
+                  }
                }
             }
             if (expiry != INT_MAX)
