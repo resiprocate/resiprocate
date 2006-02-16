@@ -268,10 +268,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
             // make timers to re-register
             int expiry = INT_MAX;
+            const Via& via = msg.header(h_Vias).front();
             for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
                  it != msg.header(h_Contacts).end(); it++)
             {
-               if (it->exists(p_expires))
+               if (it->uri().host() == via.sentHost() &&
+                  it->uri().port() == via.sentPort() &&
+                  it->exists(p_expires))
                {
                   expiry = resipMin(it->param(p_expires), expiry);
                }
