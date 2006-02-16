@@ -173,7 +173,7 @@ namespace {
 
 #		if defined(__APPLE__)
 		    int so_error, so_return;
-		    int so_len(sizeof(so_error));
+		    socklen_t so_len(sizeof(so_error));
 #		elif defined(WIN32)
 		    char so_error;
 		    int so_return;
