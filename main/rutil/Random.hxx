@@ -27,8 +27,8 @@ class Random
       static int  getCryptoRandom();
 
    private:
-      static bool  mIsInitialized;
       static Mutex mMutex;
+      static bool  mIsInitialized;
       
 #ifdef WIN32
       // ensure each thread is initialized since windows requires you to call srand for each thread

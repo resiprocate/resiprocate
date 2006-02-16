@@ -38,6 +38,10 @@ using namespace std;
 
 const int Helper::tagSize = 4;
 
+// !jf! this should be settable by the application in case a group of apps
+// (e.g. proxies) want to share the same secret
+NonceHelper *Helper::mNonceHelper = 0;
+
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
@@ -541,20 +545,27 @@ Helper::computeTag(int numBytes)
    return Random::getRandomHex(4);
 }
 
-// !jf! this should be settable by the application in case a group of apps
-// (e.g. proxies) want to share the same secret
-NonceHelper *Helper::nonceHelper = new BasicNonceHelper();
-
 void
 Helper::setNonceHelper(NonceHelper *nonceHelper)
 {
-   Helper::nonceHelper = nonceHelper;
+   Helper::mNonceHelper = nonceHelper;
 }
+
+NonceHelper* 
+Helper::getNonceHelper()
+{
+   if (mNonceHelper == 0)
+   {
+      mNonceHelper = new BasicNonceHelper();
+   }
+   return mNonceHelper;
+}
+
 
 Data
 Helper::makeNonce(const SipMessage& request, const Data& timestamp)
 {
-   return nonceHelper->makeNonce(request, timestamp);
+   return getNonceHelper()->makeNonce(request, timestamp);
 }
 
 Data 
@@ -669,7 +680,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                }
             } */
 
-            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce)); 
+            NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce)); 
             if(x_nonce.getCreationTime() == 0) 
                return make_pair(BadlyFormed,username);
 
@@ -795,7 +806,7 @@ Helper::authenticateRequest(const SipMessage& request,
             Data then;
             pb.data(then, anchor); */
  
-            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce));
+            NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
             if(x_nonce.getCreationTime() == 0)
                return BadlyFormed;
 
@@ -920,7 +931,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
             Data then;
             pb.data(then, anchor); */
-            NonceHelper::Nonce x_nonce = nonceHelper->parseNonce(i->param(p_nonce));
+            NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
             if(x_nonce.getCreationTime() == 0)
                return BadlyFormed;
 
