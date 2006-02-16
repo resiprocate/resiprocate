@@ -65,7 +65,7 @@ makeTargetProcessorChain(ProcessorChain& chain)
 {
    ProcessorChain* baboons = new ProcessorChain;
    QValueTargetHandler* qval=
-      new QValueTargetHandler(QValueTargetHandler::FULL_SEQUENTIAL,
+      new QValueTargetHandler(QValueTargetHandler::EQUAL_Q_PARALLEL,
                               true, //Cancel btw fork groups?
                               true, //Wait for termination btw fork groups?
                               2000, //ms between fork groups, moot in this case
