@@ -43,7 +43,8 @@ RequestContext::RequestContext(Proxy& proxy,
    mHaveSentFinalResponse(false),
    mTargetConnectionId(0),
    mResponseContext(*this),
-   mTCSerial(0)
+   mTCSerial(0),
+   mFromTrustedNode(false)
 {
    mInitialTimerCSet=false;
 }
@@ -476,6 +477,18 @@ ResponseContext&
 RequestContext::getResponseContext()
 {
    return mResponseContext;
+}
+
+void 
+RequestContext::setFromTrustedNode()
+{
+   mFromTrustedNode = true;
+}
+
+bool 
+RequestContext::fromTrustedNode() const
+{
+   return mFromTrustedNode;
 }
 
 std::ostream&
