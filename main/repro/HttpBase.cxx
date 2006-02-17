@@ -40,7 +40,8 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    nextConnection(0),
    mTuple(Data::Empty,port,ipVer,TCP,Data::Empty)
 {
-   assert( ipVer == V4 );
+   // !rwm! [TODO] check that this works for IPv6   
+   //assert( ipVer == V4 );
    
    for ( int i=0 ; i<MaxConnections; i++)
    {
