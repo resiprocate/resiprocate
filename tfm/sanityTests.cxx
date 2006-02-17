@@ -5595,7 +5595,7 @@ class MyTestCase
          TEST(testInviteSeqFork200And5xx);
          TEST(testInviteSeqFork6xxResponse);
          TEST(testInviteSeqFork4xxAnd5xx);
-         TEST(testInviteFork4xx5xx6xx);
+         TEST(testInviteSeqFork4xx5xx6xx);
          
          TEST(testInfo);
          TEST(testInviteClientRetransmitsAfter200);
