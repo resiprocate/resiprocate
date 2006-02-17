@@ -94,10 +94,6 @@ class DnsUtil
 
 };
 
-#if defined(WIN32) && !defined(__CYGWIN__)
-int	inet_pton4(const char *src, u_char *dst);
-int	inet_pton6(const char *src, u_char *dst);
-#endif
 }
 
 
