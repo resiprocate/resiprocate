@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\contrib\db\build_win32;..;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -137,6 +137,15 @@
 				RelativePath=".\ExpectActionEvent.cxx">
 			</File>
 			<File
+				RelativePath=".\predicates\ExpectUtils.cxx">
+			</File>
+			<File
+				RelativePath=".\Fixture.cxx">
+			</File>
+			<File
+				RelativePath=".\predicates\NotifyContents.cxx">
+			</File>
+			<File
 				RelativePath=".\Renderer.cxx">
 			</File>
 			<File
@@ -164,6 +173,15 @@
 				RelativePath=".\Source.cxx">
 			</File>
 			<File
+				RelativePath=".\predicates\SubscribeExpired.cxx">
+			</File>
+			<File
+				RelativePath=".\predicates\SubscribeExpires.cxx">
+			</File>
+			<File
+				RelativePath=".\TelnetClient.cxx">
+			</File>
+			<File
 				RelativePath=".\TestEndPoint.cxx">
 			</File>
 			<File
@@ -171,6 +189,12 @@
 			</File>
 			<File
 				RelativePath=".\TestProxy.cxx">
+			</File>
+			<File
+				RelativePath=".\repro\TestRepro.cxx">
+			</File>
+			<File
+				RelativePath=".\repro\TestReproUser.cxx">
 			</File>
 			<File
 				RelativePath=".\TestSipEndPoint.cxx">
@@ -226,7 +250,13 @@
 				RelativePath=".\ExpectFunctorDefs.hxx">
 			</File>
 			<File
+				RelativePath=".\predicates\ExpectUtils.hxx">
+			</File>
+			<File
 				RelativePath=".\Fixture.hxx">
+			</File>
+			<File
+				RelativePath=".\predicates\NotifyContents.hxx">
 			</File>
 			<File
 				RelativePath=".\PortAllocator.hxx">
@@ -283,6 +313,15 @@
 				RelativePath=".\SubDefns.hxx">
 			</File>
 			<File
+				RelativePath=".\predicates\SubscribeExpired.hxx">
+			</File>
+			<File
+				RelativePath=".\predicates\SubscribeExpires.hxx">
+			</File>
+			<File
+				RelativePath=".\TelnetClient.hxx">
+			</File>
+			<File
 				RelativePath=".\TestEndPoint.hxx">
 			</File>
 			<File
@@ -290,6 +329,12 @@
 			</File>
 			<File
 				RelativePath=".\TestProxy.hxx">
+			</File>
+			<File
+				RelativePath=".\repro\TestRepro.hxx">
+			</File>
+			<File
+				RelativePath=".\repro\TestReproUser.hxx">
 			</File>
 			<File
 				RelativePath=".\TestSipEndPoint.hxx">
@@ -300,6 +345,263 @@
 			<File
 				RelativePath=".\TransportDriver.hxx">
 			</File>
+		</Filter>
+		<Filter
+			Name="repro"
+			Filter="">
+			<File
+				RelativePath="..\repro\AbstractDb.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\AbstractDb.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Ack200DoneMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\AclStore.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\AclStore.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\BerkeleyDb.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\BerkeleyDb.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ChainTraverser.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\CommandLineParser.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\repro\CommandLineParser.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ConfigStore.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\ConfigStore.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Dispatcher.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Dispatcher.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ForkControlMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\genUsers.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\HttpBase.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\HttpBase.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\HttpConnection.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\HttpConnection.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\MySqlDb.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\MySqlDb.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Processor.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Processor.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ProcessorChain.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\ProcessorChain.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ProcessorMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Proxy.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Proxy.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\QValueTarget.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\QValueTarget.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Registrar.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Registrar.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ReproServerAuthManager.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\ReproServerAuthManager.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\RequestContext.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\RequestContext.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\ResponseContext.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\ResponseContext.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\RouteStore.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Store.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Store.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Target.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\Target.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\TimerCMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\UserAuthGrabber.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\UserInfoMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\UserStore.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\UserStore.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\WebAdmin.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\WebAdmin.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\WebAdminThread.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\WebAdminThread.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\Worker.hxx">
+			</File>
+			<File
+				RelativePath="..\repro\WorkerThread.cxx">
+			</File>
+			<File
+				RelativePath="..\repro\WorkerThread.hxx">
+			</File>
+			<Filter
+				Name="monkeys"
+				Filter="">
+				<File
+					RelativePath="..\repro\monkeys\AmIResponsible.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\AmIResponsible.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\ConstantLocationMonkey.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\ConstantLocationMonkey.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\DigestAuthenticator.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\DigestAuthenticator.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\IsTrustedNode.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\IsTrustedNode.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\LocationServer.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\LocationServer.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\QValueTargetHandler.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\QValueTargetHandler.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\RecursiveRedirect.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\RecursiveRedirect.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\SimpleStaticRoute.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\SimpleStaticRoute.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\SimpleTargetHandler.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\SimpleTargetHandler.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\StaticRoute.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\StaticRoute.hxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\StrictRouteFixup.cxx">
+				</File>
+				<File
+					RelativePath="..\repro\monkeys\StrictRouteFixup.hxx">
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
