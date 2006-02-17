@@ -72,13 +72,8 @@ std::pair<signed_size_type, Peer> call_recvfrom (Socket &socket, void *buffer, s
 
 #   if defined(WIN32) || defined(__CYGWIN__)
 	int *sa_size_ptr = reinterpret_cast<int*>(&sa_size);
-<<<<<<< .mine
 #   elif defined(__APPLE__) 
 	socklen_t  *sa_size_ptr = reinterpret_cast<socklen_t*>(&sa_size);
-=======
-#   elif defined(__APPLE__) 
-        socklen_t *sa_size_ptr = reinterpret_cast<sa_size_ptr*>(&sa_size);
->>>>>>> .r5933
 #   else
 	size_type *sa_size_ptr = &sa_size;
 #   endif
