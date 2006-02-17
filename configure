@@ -270,7 +270,11 @@ foreach $parameter (@parameters)
   print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
 }
 close (CONF);
-system "make -C contrib/ares distclean";
+
+if (-e 'contrib/ares/Makefile')
+{
+  system "make -C contrib/ares distclean";
+}
 
 ######################################################################
 sub validate
