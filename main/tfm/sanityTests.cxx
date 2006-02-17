@@ -3074,7 +3074,7 @@ class TestHolder : public Fixture
          (
             Sub
             (
-               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
             ),
             Sub
             (
