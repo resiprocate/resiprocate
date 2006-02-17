@@ -8,6 +8,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "resip/stack/Transport.hxx"
 
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
@@ -42,6 +43,8 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 {
    // !rwm! [TODO] check that this works for IPv6   
    //assert( ipVer == V4 );
+
+   sane = true;
    
    for ( int i=0 ; i<MaxConnections; i++)
    {
@@ -57,9 +60,9 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    if ( mFd == INVALID_SOCKET )
    {
       int e = getErrno();
-      InfoLog (<< "Failed to create socket: " << strerror(e));
-      assert(0); // TODO 
-      //throw Exception("Can't create HttpBase listner socket", __FILE__,__LINE__);
+      ErrLog (<< "Failed to create socket: " << strerror(e));
+      sane = false;
+      return;
    }
 
    DebugLog (<< "Creating fd=" << (int)mFd 
@@ -73,8 +76,9 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
 #endif
    {
       int e = getErrno();
-      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
-      assert(0); //throw Exception("Failed setsockopt", __FILE__,__LINE__);
+      ErrLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " << strerror(e));
+      sane = false;
+      return;
    }
    
    DebugLog (<< "Binding to " << Tuple::inet_ntop(mTuple));
@@ -85,20 +89,21 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
       if ( e == EADDRINUSE )
       {
          ErrLog (<< mTuple << " already in use ");
-         assert(0); // throw Transport::Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
          ErrLog (<< "Could not bind to " << mTuple);
-         assert(0); //throw Transport::Exception("Could not use port", __FILE__,__LINE__);
       }
+      sane = false;
+      return;
    }
    
    bool ok = makeSocketNonBlocking(mFd);
    if ( !ok )
    {
       ErrLog (<< "Could not make HTTP socket non-blocking " << port );
-       assert(0); // tthrow Transport::Exception("Failed making socket non-blocking", __FILE__,__LINE__);
+      sane = false;
+      return;
    }
    
    // do the listen, seting the maximum queue size for compeletly established
@@ -110,8 +115,8 @@ HttpBase::HttpBase( int port, IpVersion ipVer, const Data& realm ):
    {
       int e = getErrno();
       InfoLog (<< "Failed listen " << strerror(e));
-      // !cj! deal with errors
-	   assert(0); // tthrow Transport::Exception("Address already in use", __FILE__,__LINE__);
+      sane = false;
+      return;
    }
 }
 
@@ -194,6 +199,11 @@ void HttpBase::setPage( const Data& page, int pageNumber, int response, const Mi
          }
       }
    }
+}
+
+bool HttpBase::isSane()
+{
+  return sane;
 }
 
 /* ====================================================================
