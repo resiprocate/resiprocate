@@ -19,8 +19,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\;..\contrib\db\build_win32"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\;..\contrib\db\build_win32;..\contrib\db\build_win32"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -33,7 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\resip\stack\Debug\resiprocate.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;   ..\resip\dum\Debug\dum.lib ..\contrib\db\build_win32\Debug_static\libdb43sd.lib"
 				OutputFile="$(OutDir)/sanityTests.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -126,35 +126,11 @@
 						UsePrecompiledHeader="0"/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath=".\repro\TestRepro.cxx">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\repro\TestReproUser.cxx">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"/>
-				</FileConfiguration>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath=".\repro\TestRepro.hxx">
-			</File>
-			<File
-				RelativePath=".\repro\TestReproUser.hxx">
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
