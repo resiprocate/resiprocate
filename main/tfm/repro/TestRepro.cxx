@@ -121,7 +121,9 @@ TestRepro::TestRepro(const resip::Data& name,
 {
    mStack.addTransport(UDP, port, V4);
    //mStack.addTransport(TCP, port, V4);
+#ifdef USE_SSL
    mStack.addTransport(TLS, port, V4, StunDisabled, Data::Empty, host );
+#endif
    mProxy.addDomain(host);
    
    mProfile->clearSupportedMethods();
