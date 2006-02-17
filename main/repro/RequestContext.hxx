@@ -60,6 +60,9 @@ class RequestContext
       bool mInitialTimerCSet;
 
       void postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,int seconds);
+
+      void setFromTrustedNode();
+      bool fromTrustedNode() const;
       
 
    private:
@@ -77,7 +80,7 @@ class RequestContext
       ResponseContext mResponseContext;
       int mTCSerial;
       resip::Data mTid;
-
+      bool mFromTrustedNode;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
 
