@@ -60,7 +60,8 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
                   const short& family,
                   const short& transport)
 { 
-   InfoLog( << "Add ACL" );
+   Data key = buildKey(tlsPeerName, address, mask, port, family, transport);
+   InfoLog( << "Add ACL: key=" << key);
    
    AbstractDb::AclRecord rec;
    rec.mTlsPeerName = tlsPeerName;
@@ -71,7 +72,7 @@ AclStore::addAcl(const resip::Data& tlsPeerName,
    rec.mTransport = transport;
 
    // Add DB record
-   mDb.addAcl( buildKey(tlsPeerName, address, mask, port, family, transport), rec );
+   mDb.addAcl( key, rec );
 
    // Add local storage
    if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
@@ -115,8 +116,11 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
       bool ipv4 = false;
       bool ipv6 = false;
       Data hostOrIp;
-      u_char in6[20];
-      u_char in4[4];
+      //u_char in[28];
+      struct in_addr in4;
+#ifdef USE_IPV6
+      struct in6_addr in6;
+#endif
       int mask;
 
       if (*pb.position() == '[')   // encountered beginning of IPv6 reference
@@ -127,13 +131,13 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
          pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
          anchor = pb.skipChar();
 
-#if 0
          // try to convert into IPv6 network form
-         if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
+#ifdef USE_IPV6
+         if (!DnsUtil::inet_pton( hostOrIp.c_str(), in6)) 
+#endif
          {
             return false;
          }
-#endif
          ipv6 = true;
       }
       else
@@ -159,18 +163,15 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
          else if (*pb.position() == ':')     // Must be an IPv6 address
          {
             pb.skipToChar('/');
-
             pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
-            anchor = pb.skipChar();
-
 
             // try to convert into IPv6 network form
-#if 0
-            if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
+#ifdef USE_IPV6
+            if (!DnsUtil::inet_pton( hostOrIp.c_str(), in6)) 
+#endif
             {
                return false;
             }
-#endif
             ipv6 = true;
          }
          else // *pb.position() == '.'
@@ -180,14 +181,12 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
             pb.data(hostOrIp, anchor);  // copy the presentation form of the address
 
             // try to interpret as an IPv4 address, if that fails look it up in DNS
-#if 0
-            if (inet_pton4(hostOrIp.c_str(), in4)) // is this correct?
+            if (DnsUtil::inet_pton( hostOrIp.c_str(), in4)) 
             {
                // it was an IPv4 address
                ipv4 = true;
             }
             else
-#endif
             {
                // hopefully it is a legal FQDN, try it.
                addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
@@ -432,6 +431,37 @@ AclStore::getAddressMask( const resip::Data& key )
       return 0;
    }
    return mAddressCursor->mMask;
+}
+
+      
+bool 
+AclStore::isTlsPeerNameTrusted(const Data& tlsPeerName)
+{
+   for(TlsPeerNameList::iterator i = mTlsPeerNameList.begin(); i != mTlsPeerNameList.end(); i++)
+   {
+      if(i->mTlsPeerName == tlsPeerName)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+ 
+
+bool 
+AclStore::isAddressTrusted(const Tuple& address)
+{
+   // !slg! TODO - add use of mask in matching - for now it is ignored
+   for(AddressList::iterator i = mAddressList.begin(); i != mAddressList.end(); i++)
+   {
+      if(i->mAddressTuple == address ||
+         (i->mAddressTuple.getPort() == 0 &&     // if port is 0 in db, then allow any port
+          i->mAddressTuple == Tuple(address.presentationFormat(), 0, address.getType())))   
+      {
+         return true;
+      }
+   }
+   return false;
 }
 
 

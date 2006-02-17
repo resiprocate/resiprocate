@@ -56,6 +56,9 @@ class AclStore
       Key getFirstAddressKey(); // return empty if no more
       Key getNextAddressKey(Key& key); // return empty if no more ?slg? - Not sure why this takes a key - when we are tracking the cursor - but for now I'm following the RouteStore implementation logic
 
+      bool isTlsPeerNameTrusted(const resip::Data& tlsPeerName);
+      bool isAddressTrusted(const resip::Tuple& address);
+
    private:
       AbstractDb& mDb;  
       

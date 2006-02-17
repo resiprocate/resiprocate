@@ -276,7 +276,7 @@ main(int argc, char** argv)
       StrictRouteFixup* srf = new StrictRouteFixup;
       locators->addProcessor(std::auto_ptr<Processor>(srf));
       
-      IsTrustedNode* isTrusted = new IsTrustedNode;
+      IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
       if (!args.mNoChallenge)

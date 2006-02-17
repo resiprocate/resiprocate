@@ -338,10 +338,10 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      FQDN              server1.example.com" << endl <<
       "      IPv4 address      192.168.1.100" << endl <<
       "      IPv4 + mask       192.168.1.0/24" << endl <<
-      "      IPv6 address      :341:0:23:4bb:0011:2435:abcd" << endl <<
-      "      IPv6 + mask       :341:0:23:4bb:0011:2435:abcd/80" << endl <<
-      "      IPv6 reference    [:341:0:23:4bb:0011:2435:abcd]" << endl <<
-      "      IPv6 ref + mask   [:341:0:23:4bb:0011:2435:abcd]/64" << endl <<
+      "      IPv6 address      ::341:0:23:4bb:0011:2435:abcd" << endl <<
+      "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
+      "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
+      "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
       "</small></pre>" << endl <<
       
       "      </div>" << endl <<

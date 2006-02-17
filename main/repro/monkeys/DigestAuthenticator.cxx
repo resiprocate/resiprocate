@@ -75,11 +75,11 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       // for other reasons (for example, the StaticRoute monkey)
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
-         // if (!rc.fromTrustedNode())
-         // {
+         if (!rc.fromTrustedNode())
+         {
                challengeRequest(rc, false);
                return SkipAllChains;
-         // }
+         }
       }
    }
    else if (userInfo)

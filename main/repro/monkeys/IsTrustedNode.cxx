@@ -3,10 +3,15 @@
 #endif
 
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/Transport.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/TlsConnection.hxx"
+#include "resip/stack/TlsTransport.hxx"
+#include "resip/stack/ConnectionManager.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/AclStore.hxx"
 #include <ostream>
 
 #include "rutil/Logger.hxx"
@@ -16,7 +21,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-IsTrustedNode::IsTrustedNode()
+IsTrustedNode::IsTrustedNode(AclStore& store) :
+   mAclStore(store)
 {}
 
 IsTrustedNode::~IsTrustedNode()
@@ -28,46 +34,58 @@ IsTrustedNode::process(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
 
-   // resip::SipMessage& request = context.getOriginalRequest();
+   resip::SipMessage& request = context.getOriginalRequest();
+   Tuple source = request.getSource();
 
    // check the sender of the message via source IP address or identity from TLS 
    
-   // TODO check if the request came over a secure channel and sucessfully authenticated 
+   // check if the request came over a secure channel and sucessfully authenticated 
    // (ex: TLS or DTLS)
-   // if SecurityAttributes includes TLS mutual auth
-   // get TLS peer hostname
-   // walk the TrustedNode list
-   // for (;;)
-   // {
-   //    if (i->hostMatches(HOSTNAME, peername, TLS))
-   //    {
-   //       context.setIsFromTrusted();
-   //       break;
-   //    }
-   // }
-   //
-   
-   // if (context.fromTrustedNode())
-   // {
-      // TODO check the source address against the TrustedNode list
-      // 
-      // get the source IP family, address, and transport
-      // walk the TrustedNode list
-      // for (;;)
-      // {
-      //    if (i->hostMatches(family, address, transport))
-      //    {
-      //       context.setIsFromTrusted();
-      //       break;
-      //    }
-      // }
-   // }
+#ifdef USE_SSL
+   if(request.getReceivedTransport()->transport() == resip::TLS
+#ifdef USE_DTLS
+      || request.getReceivedTransport()->transport() == resip::DTLS
+#endif
+      )
+   {
+      TcpBaseTransport *transport = const_cast<TcpBaseTransport *>(dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport()));
+      assert(transport);
+      ConnectionManager &connectionManager = transport->getConnectionManager();
+      TlsConnection* conn = dynamic_cast<TlsConnection *>(connectionManager.findConnection(source));
+      assert(conn);
+
+      // !slg! TODO need mechanism in resip to check client cert chain - and we should verify cert is valid here.
+      if(mAclStore.isTlsPeerNameTrusted(conn->getPeerName()))
+      {
+         InfoLog (<< "IsTrustedNode Monkey - Tls peer name IS trusted: " << conn->getPeerName());
+         context.setFromTrustedNode();
+      }
+      else
+      {
+         InfoLog (<< "IsTrustedNode Monkey - Tls peer name NOT trusted: " << conn->getPeerName());
+      }
+   }
+#endif
+
+   // check the source address against the TrustedNode list
+   if(!context.fromTrustedNode())
+   {
+      if(mAclStore.isAddressTrusted(source))
+      {
+         InfoLog (<< "IsTrustedNode Monkey - source address IS trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
+         context.setFromTrustedNode();
+      }
+      else
+      {
+         InfoLog (<< "IsTrustedNode Monkey - source address NOT trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
+      }
+   }      
    
    // strip PAI headers that we don't trust
-   // if ((!context.fromTrustedNode()) && request->exists(h_PAssertedIdentities))
-   // {
-   //    request->header(h_PAssertedIdentities).remove();
-   // }
+   if ((!context.fromTrustedNode()) && request.exists(h_PAssertedIdentities))
+   {
+      request.remove(h_PAssertedIdentities);
+   }
    
    return Processor::Continue;
 }
