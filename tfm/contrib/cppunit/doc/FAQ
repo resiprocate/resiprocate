@@ -29,4 +29,3 @@ do so for all configurations.
    In Debug configurations, CppUnit use "Debug Multihreaded DLL".
    Check that Projects/Settings.../C++/Code Generation is indeed using
 the correct library.
-   
