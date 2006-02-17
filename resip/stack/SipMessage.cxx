@@ -250,9 +250,10 @@ SipMessage::getTransactionId() const
    
    assert(exists(h_Vias) && !header(h_Vias).empty());
    if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
-       && header(h_Vias).front().param(p_branch).hasMagicCookie() )
+       && header(h_Vias).front().param(p_branch).hasMagicCookie() 
+       && (!header(h_Vias).front().param(p_branch).getTransactionId().empty())
+     )
    {
-      assert (!header(h_Vias).front().param(p_branch).getTransactionId().empty());
       return header(h_Vias).front().param(p_branch).getTransactionId();
    }
    else
