@@ -99,9 +99,7 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 
   /* Nuke the trailing period if we wrote one. */
   if (q > *s)
-    q--;
-  /* Write a trailing NUL in any case. */
-  *q = 0;
+    *(q - 1) = 0;
 
   return ARES_SUCCESS;
 }
