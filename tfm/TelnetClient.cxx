@@ -1,5 +1,7 @@
 #include <cassert>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include "tfm/TelnetClient.hxx"
 
 using namespace std;
@@ -42,7 +44,11 @@ TelnetClient::expect(const Data& expects)
 {
    while (mBuffer != expects)
    {
-      usleep(10000);
+#ifdef WIN32
+   Sleep(1000);
+#else
+   usleep(100000);
+#endif
       read();
    }
    //cout << "Matched: " << expects << endl;
