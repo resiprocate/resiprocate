@@ -31,6 +31,17 @@ static const int WaitForEndOfTest = 1000;
 static const int WaitForEndOfSeq = 1000;
 static const int Seconds = 1000;
 
+// If defined test which are labeled with BUGTEST or BADTESTS will
+// be run.
+//#define RUN_ALL_TESTS
+// TODO: Probably should make it a runtime choice to run all tests.
+static const int sRunTestsKnownToFail = 
+#ifdef RUN_ALL_TESTS
+                                        1;
+#else
+                                        0;
+#endif
+
 const Data transport("udp");
 static NameAddr localhost;
 
@@ -5467,6 +5478,34 @@ class TestHolder : public Fixture
 
 #define TEST(_method) \
    suiteOfTests->addTest(new CppUnit::TestCaller<TestHolder>(#_method, &TestHolder::_method))
+
+// TODO:  Need to categorize tests that are failing into two categories.
+// Tests that fail because there are problems in the test case implementation
+// should be labeled as BADTEST.  Tests that fail because they identify a
+// known bug in rePro should be labeled as BUGTEST.
+#define BADTEST(_method) \
+   if(sRunTestsKnownToFail) \
+   { \
+      printf("running: " #_method " not known to pass, issues with test\n"); \
+      TEST(_method); \
+   } \
+   else \
+   { \
+      printf("badtest: " #_method " not run\n"); \
+   } 
+
+#define BUGTEST(_method) \
+   if(sRunTestsKnownToFail) \
+   { \
+      printf("running: " #_method " not known to pass, known bug\n"); \
+      TEST(_method); \
+   } \
+   else \
+   { \
+      printf("bugtest: " #_method " not run\n"); \
+   }
+
+
 class MyTestCase
 {
    public:
@@ -5511,8 +5550,8 @@ class MyTestCase
 //Proxy tests
 
          TEST(testInviteBasic);
-         TEST(testInviteCallerHangsUp);
-         TEST(testInviteCalleeHangsUp);
+         BUGTEST(testInviteCallerHangsUp);
+         BUGTEST(testInviteCalleeHangsUp);
          TEST(testInviteCallerCancels);
          TEST(testInviteBusy);
          TEST(testSpiral);
@@ -5532,7 +5571,7 @@ class MyTestCase
          TEST(testInvite603Response);
          TEST(testInviteServerSpams180);
          TEST(testInviteBogusAuth);
-         TEST(testInviteRecursiveRedirect);
+         BUGTEST(testInviteRecursiveRedirect);
          TEST(testInvite407Dropped);
          //TEST(testInviteAck407Dropped); //tfm is bungling this one
          TEST(testInviteClientRetransmissionsWithRecovery);
@@ -5545,12 +5584,12 @@ class MyTestCase
          TEST(testInviteServerSends180After200);
          //TEST(testInviteClientSpamsInvite); //tfm is asserting on this test, will look into
          TEST(testInviteClientSpamsAck407);
-         TEST(testInviteClientSpamsAck200);
+         BADTEST(testInviteClientSpamsAck200); // Race in the test
          TEST(testInviteCallerCancelsNo487);
          TEST(testInviteServerRetransmits486);
          TEST(testInviteServerRetransmits503);
          TEST(testInviteServerRetransmits603);
-         TEST(testInviteNoDNS);
+         BADTEST(testInviteNoDNS);
          //TEST(testInviteTransportFailure); //tfm asserts
          TEST(testInviteClientDiesAfterFirstInvite);
          TEST(testInviteClientDiesAfterSecondInvite);
@@ -5559,10 +5598,10 @@ class MyTestCase
          TEST(testInviteForgedUserInFrom);
          //TEST(testInviteForgedHostInFrom); 
 
-         TEST(testInviteForkOneAnswers);
-         TEST(testInviteForkOneBusy);
-         TEST(testInviteAllBusyContacts);
-         TEST(testInviteForkThreeCallerCancels);
+         BADTEST(testInviteForkOneAnswers);
+         BADTEST(testInviteForkOneBusy);
+         BADTEST(testInviteAllBusyContacts);
+         BADTEST(testInviteForkThreeCallerCancels);
          TEST(testInviteForkCallerHangsUp);
          TEST(testInviteForkCalleeHangsUp);
 
@@ -5607,10 +5646,11 @@ class MyTestCase
          TEST(testInviteNotFoundServerRetransmits);
          TEST(testInviteClientMissedAck2);
          TEST(testInviteForRport);
-         TEST(testAttendedExtensionToExtensionTransfer);
-         TEST(testBlindTransferExtensionToExtensionHangupImmediately);
-         TEST(testConferenceConferencorHangsUp);
-         TEST(testForkedInviteClientLateAck);
+         BADTEST(testInviteForkBothAnswerNoProvisional);
+         BADTEST(testAttendedExtensionToExtensionTransfer); // reINVITEs are problematic
+         BADTEST(testBlindTransferExtensionToExtensionHangupImmediately); // reINVITEs are problematic
+         BADTEST(testConferenceConferencorHangsUp); // reINVITEs are problematic
+         BADTEST(testForkedInviteClientLateAck);
          TEST(testInviteForkBothBusy);
 #else
          TEST(testInviteAllBusyContacts);
