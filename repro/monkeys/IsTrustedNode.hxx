@@ -6,15 +6,19 @@
 
 namespace repro
 {
+  class AclStore;
 
   class IsTrustedNode: public Processor
   {
     public:
-      IsTrustedNode();
+      IsTrustedNode(AclStore& store);
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
+
+  private:
+       AclStore& mAclStore;
   };
 }
 #endif
