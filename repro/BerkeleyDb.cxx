@@ -29,6 +29,7 @@ BerkeleyDb::BerkeleyDb()
 {
    char* dbName="repro";
    InfoLog( << "Using BerkeleyDb " << dbName );
+   sane = true;
    
    assert( MaxTable <= 4 );
    
@@ -63,7 +64,8 @@ BerkeleyDb::BerkeleyDb()
       if ( ret!=0 )
       {
          ErrLog( <<"Could not open user database at " << fileName );
-         assert(0);
+         sane = false;
+         return;
       }
       
       mDb[i]->cursor(NULL,&mCursor[i],0);
@@ -75,6 +77,7 @@ BerkeleyDb::BerkeleyDb()
 BerkeleyDb::BerkeleyDb( char* dbName )
 { 
    InfoLog( << "Using BerkeleyDb " << dbName );
+   sane = true;
    
    assert( MaxTable <= 4 );
    
@@ -109,7 +112,8 @@ BerkeleyDb::BerkeleyDb( char* dbName )
       if ( ret!=0 )
       {
          ErrLog( <<"Could not open user database at " << fileName );
-         assert(0);
+         sane = false;
+         return;
       }
       
       mDb[i]->cursor(NULL,&mCursor[i],0);
@@ -217,6 +221,11 @@ BerkeleyDb::dbNextKey( const Table table,
    return d;
 }
 
+bool
+BerkeleyDb::isSane()
+{
+  return sane;
+}
 
 
 /* ====================================================================
