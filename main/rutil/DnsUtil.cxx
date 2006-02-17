@@ -624,7 +624,10 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
    return (dst);
 }
 
+static int	inet_pton6(const char *src, u_char *dst);
 #endif //USE_IPV6
+
+static int	inet_pton4(const char *src, u_char *dst);
 
 /* int
  * inet_pton(af, src, dst)
@@ -664,8 +667,8 @@ DnsUtil::inet_pton(int af, const char* src, void* dst)
  * author:
  *	Paul Vixie, 1996.
  */
-int
-resip::inet_pton4(const char *src, u_char *dst)
+static int
+inet_pton4(const char *src, u_char *dst)
 {
    static const char digits[] = "0123456789";
    int saw_digit, octets, ch;
@@ -703,6 +706,8 @@ resip::inet_pton4(const char *src, u_char *dst)
    return (1);
 }
 
+#ifdef USE_IPV6
+
 /* int
  * inet_pton6(src, dst)
  *	convert presentation level address to network order binary form.
@@ -716,8 +721,8 @@ resip::inet_pton4(const char *src, u_char *dst)
  * author:
  *	Paul Vixie, 1996.
  */
-int
-resip::inet_pton6(const char *src, u_char *dst)
+static int
+inet_pton6(const char *src, u_char *dst)
 {
    static const char xdigits_l[] = "0123456789abcdef",
       xdigits_u[] = "0123456789ABCDEF";
@@ -799,6 +804,8 @@ resip::inet_pton6(const char *src, u_char *dst)
    return (1);
 }
 
+
+#endif
 #endif
 
 /* ====================================================================
