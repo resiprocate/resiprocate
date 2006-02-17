@@ -310,6 +310,9 @@
 				RelativePath=".\RouteStore.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\SetTargetConnection.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
 			</File>
 			<File
@@ -433,6 +436,9 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\SetTargetConnection.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx">
