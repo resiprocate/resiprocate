@@ -290,7 +290,7 @@ $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
 endif
 
 ifdef TARGET_BINARY
-INSTALL_BINDIR := $(DESTDIR)$(INSTALL_PREFIX)/bin
+INSTALL_BINDIR := $(DESTDIR)$(INSTALL_PREFIX)/sbin
 install: all
 	install -d $(DESTDIR)$(INSTALL_PREFIX)
 	install -d $(INSTALL_BINDIR)
