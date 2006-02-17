@@ -23,7 +23,7 @@ AclStore::AclStore(AbstractDb& db):
    mDb(db)
 {  
    AbstractDb::Key key = mDb.firstAclKey();
-   while ( !key.empty() )
+      while ( key != Data::Empty )
    {
       AbstractDb::AclRecord rec = mDb.getAcl(key);
       if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
