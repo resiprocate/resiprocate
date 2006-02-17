@@ -24,7 +24,8 @@ namespace repro
 class BerkeleyDb: public AbstractDb
 {
    public:
-      BerkeleyDb( char* dbName="repro" );
+      BerkeleyDb();
+      BerkeleyDb( char* dbName);
       
       virtual ~BerkeleyDb();
       
