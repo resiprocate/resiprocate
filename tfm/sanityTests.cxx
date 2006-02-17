@@ -407,7 +407,7 @@ class TestHolder : public Fixture
              500);
          ExecuteSequences();
          
-         sleep(1);
+         sleepSeconds(1);
 
          NameAddr con = *(derek->getDefaultContacts().begin());
          con.param(p_expires) = 6000;
@@ -439,7 +439,7 @@ class TestHolder : public Fixture
       
       ExecuteSequences();
       
-      sleep(1);
+      sleepSeconds(1);
       
       Seq
       (
@@ -577,7 +577,7 @@ class TestHolder : public Fixture
       
       ExecuteSequences();
       
-      sleep(5);
+      sleepSeconds(5);
       
       
       Seq
@@ -4605,8 +4605,8 @@ class TestHolder : public Fixture
          ExecuteSequences();
 
          Seq(derek->reInvite(*jason),
-             //optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-             //derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
 
              And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
                  Sub(jason->expect(INVITE, contact(derek), WaitForCommand, jason->answer()),
@@ -4635,8 +4635,8 @@ class TestHolder : public Fixture
          //103 puts 104 on hold
          
          Seq(derek->reInvite(*david),
-             //optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-             //derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
 
              And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
                  Sub(david->expect(INVITE, contact(derek), WaitForCommand, david->answer()),
@@ -4649,6 +4649,7 @@ class TestHolder : public Fixture
          //102 refers 103 to 104
 
          Seq(derek->referReplaces(jason->getContact().uri(), david->getAddressOfRecord()),
+               derek->expect(REFER/407,from(proxy),WaitForResponse,derek->digestRespond()),
              jason->expect(REFER, from(derek), WaitForCommand, chain(jason->send202(), jason->inviteReferReplaces())),
              And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
                      jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
