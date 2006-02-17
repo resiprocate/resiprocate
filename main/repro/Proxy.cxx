@@ -94,14 +94,14 @@ Proxy::thread()
                   // Verify that the request has all the mandatory headers
                   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
                   // See RFC 3261 Section 16.3 Step 1
-                  if (!sip->header(h_To).exists() ||
-                      !sip->header(h_From).exists() ||
-                      !sip->header(h_CallID).exists() ||
-                      !sip->header(h_CSeq).exists() )
+                  if (!sip->exists(h_To)     ||
+                      !sip->exists(h_From)   ||
+                      !sip->exists(h_CallID) ||
+                      !sip->exists(h_CSeq)     )
                   {
                      // skip this message and move on to the next one
                      delete sip;
-                     next;  
+                     continue;  
                   }
 			   
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
@@ -121,7 +121,7 @@ Proxy::thread()
                      }
                      // in either case get rid of the request and process the next one
                      delete sip;
-                     next;
+                     continue;
                   }
 
                   // [TODO] !rwm! Need to check Proxy-Require header field values
