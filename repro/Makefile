@@ -77,4 +77,17 @@ endif
 
 include $(BUILD)/Makefile.post
 
+#####################################################################
+# Redhat-esque system configuration install target 
+# (Should work with fairly recent versions of Redhat, RHEL, FC)
+#
+#   Create configuration file: /etc/repro.conf
+#   Create rc file: /etc/rc.d/init.d
+#   Create db files directory: /var/lib/repro
+#
 
+install-rh-config:
+	install -d $(DESTDIR)/etc/rc.d/init.d
+	install etc/repro.conf $(DESTDIR)/etc/repro.conf
+	install etc/init.d/repro $(DESTDIR)/etc/rc.d/init.d/repro
+	install -d $(DESTDIR)/var/lib/repro
