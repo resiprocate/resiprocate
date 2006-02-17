@@ -6,7 +6,6 @@
 
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
-#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/Helper.hxx"
@@ -442,29 +441,11 @@ RequestContext::removeTopRouteIfSelf()
            &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri())
       )
    {
-      // !jf! this is to get tcp connections to go over the correct connection id
-      const Uri& route = mOriginalRequest->header(h_Routes).front().uri();
+      // save the top-most Route header field so monkeys can check it later
+      mTopRoute = mOriginalRequest->header(h_Routes).front();
 
-      static ExtensionParameter p_cid("cid");
-      static ExtensionParameter p_cid1("cid1");
-      static ExtensionParameter p_cid2("cid2");
-
-      ConnectionId cid1 = route.exists(p_cid1) ? route.param(p_cid1).convertUnsignedLong() : 0;
-      ConnectionId cid2 = route.exists(p_cid2) ? route.param(p_cid2).convertUnsignedLong() : 0;
-      if (mOriginalRequest->getSource().connectionId != 0 && 
-          mOriginalRequest->getSource().connectionId == cid1)
-      {
-         mTargetConnectionId = cid2;
-      }
-      else if (mOriginalRequest->getSource().connectionId != 0 && 
-               mOriginalRequest->getSource().connectionId == cid2)
-      {
-         mTargetConnectionId = cid1;
-      }
-         
       mOriginalRequest->header(h_Routes).pop_front();
    }
-
 }
 
 Proxy& 
@@ -477,6 +458,18 @@ ResponseContext&
 RequestContext::getResponseContext()
 {
    return mResponseContext;
+}
+
+NameAddr&
+RequestContext::getTopRoute()
+{
+   return mTopRoute;
+}
+
+void
+RequestContext::setTargetConnection(ConnectionId cid)
+{
+   mTargetConnectionId = cid;
 }
 
 void 
