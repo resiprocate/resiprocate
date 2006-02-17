@@ -107,8 +107,6 @@ Proxy::thread()
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
-                     // [TODO] !rwm! this should not be an assert.  log and ignore instead.
-                     
                      if(i == mServerRequestContexts.end())
                      {
                         WarningLog(<< "Could not find Request Context for a CANCEL. Doing nothing.");
@@ -124,9 +122,10 @@ Proxy::thread()
                      // unique transaction id. 
                      static Data ack("ack");
                      Data tid = sip->getTransactionId() + ack;
-                     //assert (mServerRequestContexts.count(tid) == 0);
                      RequestContext* context=0;
-                     if (mServerRequestContexts.count(tid) == 0)
+
+                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
+                     if(i == mServerRequestContexts.end())
                      {
                         context = new RequestContext(*this, 
                                                      mRequestProcessorChain, 
@@ -136,7 +135,7 @@ Proxy::thread()
                      }
                      else
                      {
-                        context = mServerRequestContexts[tid];
+                        context = i->second;
                      }
 
                      // The stack will send TransactionTerminated messages for
