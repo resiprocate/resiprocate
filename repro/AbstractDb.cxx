@@ -335,11 +335,9 @@ AbstractDb::nextRouteKey()
 }
 
 
-
-
 void 
 AbstractDb::addAcl( const AbstractDb::Key& key, 
-                 const AbstractDb::AclRecord& rec )
+                    const AbstractDb::AclRecord& rec )
 { 
    assert( !key.empty() );
    
@@ -350,8 +348,13 @@ AbstractDb::addAcl( const AbstractDb::Key& key,
       short version=1;
       assert( sizeof( version) == 2 );
       s.write( (char*)(&version) , sizeof(version) );
-      
-      encodeString( s, rec.mMachine );
+
+      encodeString( s, rec.mTlsPeerName );
+      encodeString( s, rec.mAddress );
+      s.write( (char*)(&rec.mMask) , sizeof( rec.mMask ) );
+      s.write( (char*)(&rec.mPort) , sizeof( rec.mPort ) );
+      s.write( (char*)(&rec.mFamily) , sizeof( rec.mFamily ) );
+      s.write( (char*)(&rec.mTransport) , sizeof( rec.mTransport ) );
 
       s.flush();
    }
@@ -390,7 +393,12 @@ AbstractDb::getAcl( const AbstractDb::Key& key) const
    
    if ( version == 1 )
    {
-      rec.mMachine = decodeString( s );
+      rec.mTlsPeerName = decodeString( s );
+      rec.mAddress = decodeString( s );
+      s.read( (char*)(&rec.mMask), sizeof(rec.mMask) ); 
+      s.read( (char*)(&rec.mPort), sizeof(rec.mPort) ); 
+      s.read( (char*)(&rec.mFamily), sizeof(rec.mFamily) ); 
+      s.read( (char*)(&rec.mTransport), sizeof(rec.mTransport) ); 
    }
    else
    {

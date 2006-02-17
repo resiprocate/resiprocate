@@ -46,7 +46,12 @@ class AbstractDb
       class AclRecord
       {
          public:
-            resip::Data mMachine;
+            resip::Data mTlsPeerName;
+            resip::Data mAddress;
+            short mMask;            
+            short mPort;
+            short mFamily;
+            short mTransport;
       };
 
       class ConfigRecord

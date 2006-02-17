@@ -1,10 +1,16 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "repro/AclStore.hxx"
 
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
 
 using namespace resip;
 using namespace repro;
@@ -13,10 +19,31 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-
 AclStore::AclStore(AbstractDb& db):
    mDb(db)
 {  
+   AbstractDb::Key key = mDb.firstAclKey();
+   while ( !key.empty() )
+   {
+      AbstractDb::AclRecord rec = mDb.getAcl(key);
+      if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
+      {
+         AddressRecord addressRecord(rec.mAddress, rec.mPort, (resip::TransportType)rec.mTransport);
+         addressRecord.mMask = rec.mMask;
+         addressRecord.key = buildKey(Data::Empty, rec.mAddress, rec.mMask, rec.mPort, rec.mFamily, rec.mTransport);
+         mAddressList.push_back(addressRecord);
+      }
+      else
+      {
+         TlsPeerNameRecord tlsPeerNameRecord;
+         tlsPeerNameRecord.mTlsPeerName = rec.mTlsPeerName;
+         tlsPeerNameRecord.key = buildKey(rec.mTlsPeerName, Data::Empty, 0, 0, 0, 0);
+         mTlsPeerNameList.push_back(tlsPeerNameRecord); 
+      }
+      key = mDb.nextRouteKey();
+   } 
+   mTlsPeerNameCursor = mTlsPeerNameList.begin();
+   mAddressCursor = mAddressList.begin();
 }
 
 
@@ -26,45 +53,379 @@ AclStore::~AclStore()
 
       
 void 
-AclStore::addAcl(const resip::Data& acl )
+AclStore::addAcl(const resip::Data& tlsPeerName,
+                  const resip::Data& address,
+                  const short& mask,
+                  const short& port,
+                  const short& family,
+                  const short& transport)
 { 
    InfoLog( << "Add ACL" );
    
    AbstractDb::AclRecord rec;
-   rec.mMachine = acl;
-   
-   mDb.addAcl( buildKey(acl), rec );
+   rec.mTlsPeerName = tlsPeerName;
+   rec.mAddress = address;
+   rec.mMask = mask;
+   rec.mPort = port;
+   rec.mFamily = family;
+   rec.mTransport = transport;
+
+   // Add DB record
+   mDb.addAcl( buildKey(tlsPeerName, address, mask, port, family, transport), rec );
+
+   // Add local storage
+   if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
+   {
+      AddressRecord addressRecord(rec.mAddress, rec.mPort, (resip::TransportType)rec.mTransport);
+      addressRecord.mMask = rec.mMask;
+      addressRecord.key = buildKey(Data::Empty, rec.mAddress, rec.mMask, rec.mPort, rec.mFamily, rec.mTransport);
+      mAddressList.push_back(addressRecord);
+   }
+   else
+   {
+      TlsPeerNameRecord tlsPeerNameRecord;
+      tlsPeerNameRecord.mTlsPeerName = rec.mTlsPeerName;
+      tlsPeerNameRecord.key = buildKey(rec.mTlsPeerName, Data::Empty, 0, 0, 0, 0);
+      mTlsPeerNameList.push_back(tlsPeerNameRecord); 
+   }
 }
 
-      
-AclStore::DataList
-AclStore::getAcls() const
-{ 
-   AbstractDb::AclRecordList input = mDb.getAllAcls();
-   
-   DataList result;
-   result.reserve( input.size() );
-   
-   for (AbstractDb::AclRecordList::const_iterator it = input.begin();
-        it != input.end(); it++)
+
+bool 
+AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
+                  const short& port,
+                  const short& transport)
+{
+   // Input can be in any of these formats
+   // localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)
+   // bare hostname     server1
+   // FQDN              server1.example.com
+   // IPv4 address      192.168.1.100
+   // IPv4 + mask       192.168.1.0/24
+   // IPv6 address      :341:0:23:4bb:0011:2435:abcd
+   // IPv6 + mask       :341:0:23:4bb:0011:2435:abcd/80
+   // IPv6 reference    [:341:0:23:4bb:0011:2435:abcd]
+   // IPv6 ref + mask   [:341:0:23:4bb:0011:2435:abcd]/64
+
+   try
    {
-      result.push_back(it->mMachine);
+      ParseBuffer pb(tlsPeerNameOrAddress);
+      const char* anchor = pb.start();
+
+      bool ipv4 = false;
+      bool ipv6 = false;
+      Data hostOrIp;
+      u_char in6[20];
+      u_char in4[4];
+      int mask;
+
+      if (*pb.position() == '[')   // encountered beginning of IPv6 reference
+      {
+         anchor = pb.skipChar();
+         pb.skipToEndQuote(']');
+         // TODO check for end of stream here
+
+         pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
+         anchor = pb.skipChar();
+
+         // try to convert into IPv6 network form
+         if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
+         {
+            return false;
+         }
+         ipv6 = true;
+      }
+      else
+      {
+         pb.skipToOneOf(".:");
+         if (pb.position() == pb.end())   // We probably have a bare hostname
+         {
+            pb.data(hostOrIp, anchor);
+            if (hostOrIp.lowercase() == "localhost")
+            {
+               // add special localhost addresses for v4 and v6 to list and return
+               addAcl(Data::Empty, "127.0.0.1", 8, port, resip::V4, transport);
+               addAcl(Data::Empty, "::1", 128, port, resip::V6, transport);
+               addAcl(Data::Empty, "fe80::1", 64, port, resip::V6, transport);
+            }
+            else
+            {
+               // hostOrIp += default domain name (future)
+               addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
+            }
+            return true;
+         }
+         else if (*pb.position() == ':')     // Must be an IPv6 address
+         {
+            pb.skipToChar('/');
+
+            pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
+            anchor = pb.skipChar();
+
+            // try to convert into IPv6 network form
+            if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
+            {
+               return false;
+            }
+            ipv6 = true;
+         }
+         else // *pb.position() == '.'
+         {
+            // Could be either an IPv4 address or an FQDN
+            pb.skipToChar('/');
+            pb.data(hostOrIp, anchor);  // copy the presentation form of the address
+
+            // try to interpret as an IPv4 address, if that fails look it up in DNS
+            if (inet_pton4(hostOrIp.c_str(), in4)) // is this correct?
+            {
+               // it was an IPv4 address
+               ipv4 = true;
+            }
+            else
+            {
+               // hopefully it is a legal FQDN, try it.
+               addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
+               return true;
+            }
+         }   
+      }
+
+      if (!pb.eof() && *pb.position() == '/')    // grab the mask as well
+      {
+         anchor = pb.skipChar();
+         mask = pb.integer();
+
+         if (ipv4)
+         {
+            if (mask < 8 || mask > 32)
+            {
+               return false;
+            }
+         }
+         else if (ipv6)
+         {
+            if (mask < 64 || mask > 128)
+            {
+               return false;
+            }
+         }
+      }
+      else
+      {
+         if (ipv4)
+         {
+            mask = 32;
+         }
+         else // ipv6
+         {
+            mask = 128;
+         }
+      }
+
+      if(pb.eof())
+      {
+         if (ipv6)
+         {
+            addAcl(Data::Empty, hostOrIp, mask, port, resip::V6, transport);
+         }
+
+         if (ipv4)
+         {
+            addAcl(Data::Empty, hostOrIp, mask, port, resip::V4, transport);
+         }
+         return true;
+      }      
    }
-   return result;   
+   catch(ParseBuffer::Exception)
+   {
+   }
+   return false;
 }
 
 
 void 
-AclStore::eraseAcl(const resip::Data& acl)
+AclStore::eraseAcl(const resip::Data& key)
 {  
-   mDb.eraseAcl( buildKey(acl) );
+   // Erase DB record
+   mDb.eraseAcl( key );
+
+   // Erase local storage
+   if(key.prefix(":"))  // a key that starts with a : has no peer name - thus a Address key
+   {
+      if(findAddressKey(key))
+      {
+         mAddressList.erase(mAddressCursor);
+      }
+   }
+   else
+   {
+      if(findTlsPeerNameKey(key))
+      {
+         mTlsPeerNameList.erase(mTlsPeerNameCursor);
+      }
+   }
 }
 
 
 AbstractDb::Key 
-AclStore::buildKey(const resip::Data& acl ) const
+AclStore::buildKey(const resip::Data& tlsPeerName,
+                     const resip::Data& address,
+                     const short& mask,
+                     const short& port,
+                     const short& family,
+                     const short& transport) const
 {  
-   return acl;
+   Data pKey = tlsPeerName+":"+address+"/"+Data(mask)+":"+Data(port)+":"+Data(family)+":"+Data(transport); 
+   return pKey;
+}
+
+
+AclStore::Key 
+AclStore::getFirstTlsPeerNameKey()
+{
+   mTlsPeerNameCursor = mTlsPeerNameList.begin();
+   if ( mTlsPeerNameCursor == mTlsPeerNameList.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mTlsPeerNameCursor->key;
+}
+
+
+bool 
+AclStore::findTlsPeerNameKey(const Key& key)
+{ 
+   // check if cursor happens to be at the key
+   if ( mTlsPeerNameCursor != mTlsPeerNameList.end() )
+   {
+      if ( mTlsPeerNameCursor->key == key )
+      {
+         return true;
+      }
+   }
+   
+   // search for the key 
+   mTlsPeerNameCursor = mTlsPeerNameList.begin();
+   while (  mTlsPeerNameCursor != mTlsPeerNameList.end() )
+   {
+      if ( mTlsPeerNameCursor->key == key )
+      {
+         return true; // found the key 
+      }
+      mTlsPeerNameCursor++;
+   }
+   return false; // key was not found 
+}
+
+
+AclStore::Key 
+AclStore::getNextTlsPeerNameKey(Key& key)
+{  
+   if ( !findTlsPeerNameKey(key) )
+   {
+      return Key(Data::Empty);
+   }
+      
+   mTlsPeerNameCursor++;
+   
+   if ( mTlsPeerNameCursor == mTlsPeerNameList.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mTlsPeerNameCursor->key;
+}
+
+
+AclStore::Key 
+AclStore::getFirstAddressKey()
+{
+   mAddressCursor = mAddressList.begin();
+   if ( mAddressCursor == mAddressList.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mAddressCursor->key;
+}
+
+
+bool 
+AclStore::findAddressKey(const Key& key)
+{ 
+   // check if cursor happens to be at the key
+   if ( mAddressCursor != mAddressList.end() )
+   {
+      if ( mAddressCursor->key == key )
+      {
+         return true;
+      }
+   }
+   
+   // search for the key 
+   mAddressCursor = mAddressList.begin();
+   while (  mAddressCursor != mAddressList.end() )
+   {
+      if ( mAddressCursor->key == key )
+      {
+         return true; // found the key 
+      }
+      mAddressCursor++;
+   }
+   return false; // key was not found 
+}
+
+
+AclStore::Key 
+AclStore::getNextAddressKey(Key& key)
+{  
+   if ( !findAddressKey(key) )
+   {
+      return Key(Data::Empty);
+   }
+      
+   mAddressCursor++;
+   
+   if ( mAddressCursor == mAddressList.end() )
+   {
+      return Key( Data::Empty );
+   }
+   
+   return mAddressCursor->key;
+}
+
+
+resip::Data 
+AclStore::getTlsPeerName( const resip::Data& key )
+{
+   if ( !findTlsPeerNameKey(key) )
+   {
+      return Data::Empty;
+   }
+   return mTlsPeerNameCursor->mTlsPeerName;
+}
+
+
+resip::Tuple 
+AclStore::getAddressTuple( const resip::Data& key )
+{
+   if ( !findAddressKey(key) )
+   {
+      return Tuple();
+   }
+   return mAddressCursor->mAddressTuple;
+}
+ 
+
+short 
+AclStore::getAddressMask( const resip::Data& key )
+{
+   if ( !findAddressKey(key) )
+   {
+      return 0;
+   }
+   return mAddressCursor->mMask;
 }
 
 

@@ -246,9 +246,9 @@ main(int argc, char** argv)
    Store store(*db);
 
    /* Initialize a proxy */
-   ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);
-   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN);
-   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);
+   ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);   // Monkeys
+   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
+   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
 
    if (args.mRequestProcessorChainName=="StaticTest")
    {
@@ -362,7 +362,9 @@ main(int argc, char** argv)
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
+#ifdef USE_SSL
    profile->addSupportedScheme(Symbols::Sips);
+#endif
    if(args.mAllowBadReg)
    {
        profile->allowBadRegistrationEnabled() = true;
