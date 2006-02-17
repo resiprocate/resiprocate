@@ -236,18 +236,18 @@ WebAdmin::buildPage( const Data& uri,
             pb.skipChar('&');
          }
            
-         DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.urlDecoded() );
-
          if ( key.prefix("remove.") )  // special case of parameters to delete one or more records
          {
             Data tmp = key.substr(7);  // the ID is everything after the dot
             if (!tmp.empty())
             {
+               DebugLog (<< "  remove key=" << tmp.urlDecoded());
                mRemoveSet.insert(RemoveKey(tmp.urlDecoded(),value.urlDecoded()));   // add to the set of records to remove
             }
          }
          else if ( !key.empty() && !value.empty() ) // make sure both exist
          {
+            DebugLog (<< "  key=" << key << " value=" << value << " & unencoded form: " << value.urlDecoded() );
             mHttpParams[key] = value.urlDecoded();  // add other parameters to the Map
          }
       }
@@ -314,48 +314,94 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    Dictionary::iterator pos = mHttpParams.find("aclUri");
    if (pos != mHttpParams.end() && (mHttpParams["action"] == "Add")) // found 
    {
-      Data acl  = pos->second;
-      mStore.mAclStore.addAcl(acl);
+      Data hostOrIp = mHttpParams["aclUri"];
+      int port = mHttpParams["aclPort"].convertInt();
+      TransportType transport = Tuple::toTransport(mHttpParams["aclTransport"]);
+      
+      if (mStore.mAclStore.addAcl(hostOrIp, port, transport)){
+         s << "<p><em>Added</em> trusted access for: " << hostOrIp << "</p>\n";
+      }
+      else {
+         s << "<p>Error parsing: " << hostOrIp << "</p>\n";
+      }
    }   
    
    s << 
       "      <form id=\"aclsForm\" method=\"get\" action=\"acls.html\" name=\"aclsForm\">" << endl <<
+      "      <div class=space>" << endl <<
+      "        <br />" << endl <<
+      
+      "<pre><small>" << endl <<
+      "      Input can be in any of these formats" << endl <<
+      "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
+      "      bare hostname     server1" << endl <<
+      "      FQDN              server1.example.com" << endl <<
+      "      IPv4 address      192.168.1.100" << endl <<
+      "      IPv4 + mask       192.168.1.0/24" << endl <<
+      "      IPv6 address      :341:0:23:4bb:0011:2435:abcd" << endl <<
+      "      IPv6 + mask       :341:0:23:4bb:0011:2435:abcd/80" << endl <<
+      "      IPv6 reference    [:341:0:23:4bb:0011:2435:abcd]" << endl <<
+      "      IPv6 ref + mask   [:341:0:23:4bb:0011:2435:abcd]/64" << endl <<
+      "</small></pre>" << endl <<
+      
+      "      </div>" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
       "            <td align=\"right\">Host or IP:</td>" << endl <<
       "            <td><input type=\"text\" name=\"aclUri\" size=\"24\"/></td>" << endl <<
-      //    "            <td><input type=\"text\" name=\"aclMask\" size=\"2\"/></td>" << endl <<
+      "            <td><input type=\"text\" name=\"aclPort\" value=\"0\" size=\"5\"/></td>" << endl <<
+      "            <td><select name=\"aclTransport\">" << endl <<
+      "                <option selected=\"selected\">UDP</option>" << endl <<
+      "                <option>TCP</option>" << endl <<
+#ifdef USE_SSL
+      "                <option>TLS</option>" << endl <<
+#endif
+#ifdef USE_DTLS
+      "                <option>DTLS</option>" << endl <<
+#endif
+      "            </select></td>" << endl <<
       "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      <div class=space>" << endl <<
-      "        <br />" << endl <<
-      "      </div>" << endl <<
       "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
       "        <thead>" << endl <<
       "          <tr>" << endl <<
-      "            <td>Host</td>" << endl <<
-      "            <td align=\"center\">Mask <em>(unused)</em></td>" << endl <<
+      "            <td>Host Address or Peer Name</td>" << endl <<
+      "            <td>Port</td>" << endl <<
+      "            <td>Transport</td>" << endl <<
       "            <td><input type=\"submit\" name=\"action\" value=\"Remove\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
-   AclStore::DataList list = mStore.mAclStore.getAcls();
-   
-   for (AclStore::DataList::iterator i = list.begin();
-        i != list.end(); i++ )
+   AclStore::Key key = mStore.mAclStore.getFirstTlsPeerNameKey();
+   while (key != Data::Empty)
    {
       s << 
-         "          <tr>" << endl <<
-         "            <td>" << *i << "</td>" << endl <<
-         "            <td align=\"center\">" << "&nbsp;" << "</td>" << endl <<
-         "            <td><input type=\"checkbox\" name=\"remove." << *i << "\"/></td>" << endl <<
+         "          <tr>" << endl << 
+         "            <td colspan=\"2\">" << mStore.mAclStore.getTlsPeerName(key) << "</td>" << endl <<
+         "            <td>TLS auth</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl <<
+         "</tr>" << endl;
+         
+      key = mStore.mAclStore.getNextTlsPeerNameKey(key);
+   }
+   
+   key = mStore.mAclStore.getFirstAddressKey();
+   while (key != Data::Empty)
+   {
+      s <<
+         "          <tr>" << endl << 
+         "            <td>" << mStore.mAclStore.getAddressTuple(key).presentationFormat() << "/"
+                            << mStore.mAclStore.getAddressMask(key) << "</td>" << endl <<
+         "            <td>" << mStore.mAclStore.getAddressTuple(key).getPort() << "</td>" << endl <<
+         "            <td>" << Tuple::toData(mStore.mAclStore.getAddressTuple(key).getType()) << "</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl <<
          "          </tr>" << endl;
+      key = mStore.mAclStore.getNextAddressKey(key);
    }
    
    s <<  
-      "          </tr>" << endl <<
       "        </tbody>" << endl <<
       "      </table>" << endl <<
       "     </form>" << endl;

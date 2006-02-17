@@ -2,9 +2,8 @@
 #define REPRO_ACLSTORE_HXX
 
 #include "rutil/Data.hxx"
-
+#include "resip/stack/Tuple.hxx"
 #include "repro/AbstractDb.hxx"
-
 
 namespace repro
 {
@@ -12,25 +11,71 @@ namespace repro
 class AclStore
 {
    public:
-      typedef std::vector<resip::Data> DataList;
+      class TlsPeerNameRecord
+      {
+         public:
+            resip::Data key;
+            resip::Data mTlsPeerName;
+      };
+
+      class AddressRecord
+      {
+         public:
+            AddressRecord(const resip::Data& printableAddress, const int port, const resip::TransportType type) : mAddressTuple(printableAddress, port, type) {};
+            resip::Data key;
+            resip::Tuple mAddressTuple;
+            short mMask;
+      };
+
+      typedef resip::Data Key;
+      typedef std::vector<TlsPeerNameRecord> TlsPeerNameList;
+      typedef std::vector<AddressRecord> AddressList;
       
       AclStore(AbstractDb& db);
       ~AclStore();
       
-      void addAcl(const resip::Data& acl);
-      
-      DataList getAcls() const;
+      void addAcl(const resip::Data& tlsPeerName,
+                  const resip::Data& address,
+                  const short& mask,
+                  const short& port,
+                  const short& family,
+                  const short& transport);
 
-      void eraseAcl(const resip::Data& acl);
+      bool addAcl(const resip::Data& tlsPeerNameOrAddress,
+                  const short& port,
+                  const short& transport);
       
+      void eraseAcl(const resip::Data& key);
+      
+      resip::Data getTlsPeerName( const resip::Data& key );
+      resip::Tuple getAddressTuple( const resip::Data& key );
+      short getAddressMask( const resip::Data& key );
+      
+      Key getFirstTlsPeerNameKey(); // return empty if no more
+      Key getNextTlsPeerNameKey(Key& key); // return empty if no more  ?slg? - Not sure why this takes a key - when we are tracking the cursor - but for now I'm following the RouteStore implementation logic
+      Key getFirstAddressKey(); // return empty if no more
+      Key getNextAddressKey(Key& key); // return empty if no more ?slg? - Not sure why this takes a key - when we are tracking the cursor - but for now I'm following the RouteStore implementation logic
+
    private:
       AbstractDb& mDb;  
-      DataList mAcl;
       
-      AbstractDb::Key buildKey(const resip::Data& acl) const;
+      Key buildKey(const resip::Data& tlsPeerName,
+                   const resip::Data& address,
+                   const short& mask,
+                   const short& port,
+                   const short& family,
+                   const short& transport) const;
+
+      bool findTlsPeerNameKey(const Key& key); // move cursor to key
+      bool findAddressKey(const Key& key); // move cursor to key
+
+      TlsPeerNameList mTlsPeerNameList;
+      TlsPeerNameList::iterator mTlsPeerNameCursor;
+      AddressList mAddressList;
+      AddressList::iterator mAddressCursor;
 };
 
- }
+}
 #endif  
 
 /* ====================================================================
