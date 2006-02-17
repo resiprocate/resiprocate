@@ -1,5 +1,5 @@
 # $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
-VERSION=0.2
+VERSION=$(shell cat VERSION)
 REPRO_USER?=repro
 
 # repro is not GPL so if you want to link in MySQL, you needs a 
@@ -90,27 +90,27 @@ include $(BUILD)/Makefile.post
 #
 
 install-rh-config: \
-	$(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf \
-	$(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro \
+	$(DESTDIR)/etc/repro.conf \
+	$(DESTDIR)/etc/init.d/repro \
 	$(DESTDIR)/var/lib/repro
 
-$(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf:  etc/repro.conf.inst
+$(DESTDIR)/etc/repro.conf:  etc/repro.conf.inst
 	if [ -e $@ ]; \
 	then \
 		echo " Using existing $@"; \
-		install -D etc/repro.conf.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf.NEW; \
+		install -D etc/repro.conf.inst $(DESTDIR)/etc/repro.conf.NEW; \
 	else \
-		install -D etc/repro.conf.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf; \
+		install -D etc/repro.conf.inst $(DESTDIR)/etc/repro.conf; \
 	fi
 
-$(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro: etc/init.d/repro.inst
-	install -D etc/init.d/repro.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro
+$(DESTDIR)/etc/init.d/repro: etc/init.d/repro.inst
+	install -D etc/init.d/repro.inst $(DESTDIR)/etc/init.d/repro
 
 localize = sed \
 	-e 's,@REPROUSER@,$(REPRO_USER),g' \
 	-e 's,@REPRO_INSTALL@,$(INSTALL_PREFIX),g' \
 	-e 's,@REPRO_RUNDIR@,/var/run,g' \
-	-e 's,@REPRO_CONFDIR@,$(INSTALL_PREFIX)/etc,g' \
+	-e 's,@REPRO_CONFDIR@,/etc,g' \
 	-e 's,@bindir@,$(INSTALL_PREFIX)/sbin,g' \
 	-e 's,@VERSION@,$(VERSION),g' \
 
