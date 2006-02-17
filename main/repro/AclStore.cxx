@@ -40,7 +40,7 @@ AclStore::AclStore(AbstractDb& db):
          tlsPeerNameRecord.key = buildKey(rec.mTlsPeerName, Data::Empty, 0, 0, 0, 0);
          mTlsPeerNameList.push_back(tlsPeerNameRecord); 
       }
-      key = mDb.nextRouteKey();
+      key = mDb.nextAclKey();
    } 
    mTlsPeerNameCursor = mTlsPeerNameList.begin();
    mAddressCursor = mAddressList.begin();
@@ -439,7 +439,7 @@ AclStore::isTlsPeerNameTrusted(const Data& tlsPeerName)
 {
    for(TlsPeerNameList::iterator i = mTlsPeerNameList.begin(); i != mTlsPeerNameList.end(); i++)
    {
-      if(i->mTlsPeerName == tlsPeerName)
+      if(isEqualNoCase(i->mTlsPeerName, tlsPeerName))
       {
          return true;
       }
