@@ -65,6 +65,7 @@ SRC 	+=   \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
+	monkeys/SetTargetConnection.cxx \
 	\
 
 

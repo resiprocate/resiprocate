@@ -50,6 +50,9 @@ class RequestContext
       Proxy& getProxy();
       ResponseContext& getResponseContext();
       
+      resip::NameAddr& getTopRoute();
+      void setTargetConnection(resip::ConnectionId);
+      
       //Will return the tid of the new target, since this creates the instance 
       //of class Target for the user. (see ResponseContext::addTarget())
       resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=true);
@@ -76,6 +79,7 @@ class RequestContext
       int mTransactionCount;
       Proxy& mProxy;
       bool mHaveSentFinalResponse;
+      resip::NameAddr mTopRoute;
       resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
       int mTCSerial;

@@ -31,91 +31,83 @@ GruuMonkey::process(RequestContext& context)
 
    resip::SipMessage& request = context.getOriginalRequest();
 
-   // This monkey looks for a Request URIs such as:
    //    sip:alice;uuid:urn:00000-000-8....@example.com;user=gruu
    //
    // Looking for a Request URI which contains ";user=gruu"
    
+   
+   // This monkey looks for a Request URIs such as:
+   //    sip:alice@example.com;opaque=uuid:urn:0000-000-89akkskhnasd
+   //
+   // Looking for a Request URI which contains an opaque parameter
+   
+   
    Uri reqUri = request.header(h_RequestLine).uri();
    
-   if (reqUri.exists(p_user) && (reqUri.param(p_user) == "gruu"))
+   if (reqUri.exists(p_opaque))
    {
-      int pos = reqUri.user().find(";");
-      if (!pos)
+      Uri aor = reqUri.getAor();
+      Data instance = reqUri.param(p_opaque);
+      
+      // find the GRUU from the AOR and instance
+      
+      if (!mStore.mUserStore.aorExists(aor))
       {
-         // can't recognize GRUU, doesn't have a ";" in the userpart
          // send 404 Not Found
          resip::SipMessage response;
-         InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu" << uri << ", sending 404");
+         InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu: <" << uri << ">, sending 404");
          Helper::makeResponse(response, request, 404); 
          context.sendResponse(response);
-         return Processor::SkipThisChain;                     
+         return Processor::SkipThisChain;            
       }
-      else
+      
+      if (mStore.isContactRegistered(reqUri.getAor(), reqUri.param(p_opaque)))
       {
-         aor.user() = reqUri.user().substr(0,pos);
-         instance   = reqUri.user().substr(pos+1);
-         aor.host() = reqUri.host();
-
-         // check if AOR is valid in this domain
-         // !rwm! TODO - write this aorExists function
-         if (mStore.mUserStore.aorExists(aor))
+         // grab the grid from the Request URI
+         Data grid;
+         if (reqUri.exists(p_grid))
          {
-            // send 404 Not Found
-            resip::SipMessage response;
-            InfoLog (<< *this << ": no AOR matching this GRUU found.  Gruu" << uri << ", sending 404");
-            Helper::makeResponse(response, request, 404); 
-            context.sendResponse(response);
-            return Processor::SkipThisChain;            
+            grid = reqUri.params(p_grid);
          }
+      
+         // walk through the entries that match the instance and aor
+         RegistrationPersistenceManager::ContactList records = mStore.getRegistrationBinding(aor)->mContacts;
+         RegistrationPersistenceManager::ContactList::const_iterator i;
          
-         if (mStore.isContactRegistered(aor.getAor(), instance))
+         for (i = records.begin(); i != records.end(); ++i)
          {
-            // grab the grid from the Request URI
-            Data grid;
-            if (reqUri.exists(p_grid))
+            if (i->mInstance == reqUri.param(p_opaque))
             {
-               grid = reqUri.params(p_grid);
-            }
-         
-            // walk through the entries that match the instance and aor
-            RegistrationPersistenceManager::ContactList records = mStore.getRegistrationBinding(aor)->mContacts;
-            RegistrationPersistenceManager::ContactList::const_iterator i;
-            
-            for (i = records.begin(); p != records.end(); ++i)
-            {
-               if (i->mInstance == instance)
+               NameAddr newTarget = i->mContact.uri();
+               // strip caller prefs
+               // strip instance and flowId
+               // preserve q-values
+               if (i->mContact.exists(p_q))
                {
-                  NameAddr newTarget = i->mContact.uri();
-                  // strip caller prefs
-                  // strip instance and flowId
-                  // preserve q-values
-                  if (i->mContact.exists(p_q))
-                  {
-                     newTarget.param(p_q) = i->mContact.param(p_q);
-                  }
-                  
-                  // copy the grid over from the request URI
-                  if (!grid.empty())
-                  {
-                     newTarget.uri().param(p_grid) = grid;
-                  }
-                  
-                  // populate the targetSet with appropriate tuple (or sessionId) and URI combo
-                  // !rwm! TODO add a version of addTarget that take the server session id or the Path
-                  // and only uses sendOverExistingConnection 
-                  if (i->mSipPath.empty())
-                  {
-                     assert(i->mServerSessionId)  // make sure there is either a Path or a sessionId
-                     context.addTarget(newTarget, i->mServerSessionId);
-                  }
-                  else
-                  {
-                     context.addTarget(newTarget, i->mSipPath);
-                  }
+                  newTarget.param(p_q) = i->mContact.param(p_q);
                }
-
+               
+               // copy the grid over from the request URI
+               if (!grid.empty())
+               {
+                  newTarget.uri().param(p_grid) = grid;
+               }
+               
+               // populate the targetSet with appropriate tuple (or sessionId) and URI combo
+               // !rwm! TODO add a version of addTarget that take the server session id or the Path
+               // and only uses sendOverExistingConnection 
+               if (i->mSipPath.empty())
+               {
+                  assert(i->mServerSessionId)  // make sure there is either a Path or a sessionId
+                  context.addTarget(newTarget, i->mServerSessionId);
+               }
+               else
+               {
+                  context.addTarget(newTarget, i->mSipPath);
+               }
             }
+
+            
             InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
             // skip the rest of the monkeys
             return Processor::SkipThisChain;	            
@@ -124,7 +116,7 @@ GruuMonkey::process(RequestContext& context)
          {
             // send 480 Temporarily Unavailable
             resip::SipMessage response;
-            InfoLog (<< *this << ": no contacts matching this GRUU found.  Gruu" << uri << ", sending 480");
+            InfoLog (<< *this << ": no contacts matching this GRUU found.  Gruu: <" << uri << ">, sending 480");
             Helper::makeResponse(response, request, 480); 
             context.sendResponse(response);
             return Processor::SkipThisChain;
