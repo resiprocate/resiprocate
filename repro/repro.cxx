@@ -241,6 +241,11 @@ main(int argc, char** argv)
    if (!db)
    {
       db = new BerkeleyDb;
+      if (!static_cast<BerkeleyDb*>(db)->isSane())
+      {
+        CritLog(<<"Failed to open configuration database");
+        exit(-1);
+      }
    }
    assert( db );
    Store store(*db);

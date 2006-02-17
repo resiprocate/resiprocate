@@ -28,11 +28,15 @@ class BerkeleyDb: public AbstractDb
       BerkeleyDb( char* dbName);
       
       virtual ~BerkeleyDb();
+
+      bool isSane();
       
    private:
       //DbEnv mEnv; // !cj! TODO - move to using envoronments
       Db*   mDb[4];
       Dbc*  mCursor[4];
+      
+      bool sane;
       
       // Db manipulation routines
       virtual void dbWriteRecord( const Table table, 
