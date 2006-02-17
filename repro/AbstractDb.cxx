@@ -32,9 +32,14 @@ decodeString( iDataStream& s)
 	short len;
 	s.read( (char*)(&len), sizeof(len) ); 
 
-	char buf[2048];
-	assert( len < 2048 ); // !cj! TODO fix 
+   // [TODO] This is probably OK for now, but we can do better than this.
+   if (len > 8192)
+   {
+      ErrLog( << "Tried to decode a database record that was much larger (>8k) than expected.  Returning an empty Data instead." );
+      return Data::Empty;
+   }
 
+	char buf[len];
 	s.read( buf, len );
        
 	Data data( buf, len );

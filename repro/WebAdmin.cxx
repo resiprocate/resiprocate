@@ -197,7 +197,7 @@ WebAdmin::buildPage( const Data& uri,
          }
          else
          {
-            InfoLog(  << "user " << pUser << " failed to authneticate to web server" );
+            InfoLog(  << "user " << pUser << " failed to authenticate to web server" );
             DebugLog( << " compA1="<<compA1<< " dbA1="<<dbA1 );
             setPage( resip::Data::Empty, pageNumber,401 );
             return;
@@ -386,7 +386,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
          
       key = mStore.mAclStore.getNextTlsPeerNameKey(key);
    }
-   
    key = mStore.mAclStore.getFirstAddressKey();
    while (key != Data::Empty)
    {

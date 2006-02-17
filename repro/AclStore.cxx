@@ -123,7 +123,6 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
       {
          anchor = pb.skipChar();
          pb.skipToEndQuote(']');
-         // TODO check for end of stream here
 
          pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
          anchor = pb.skipChar();
