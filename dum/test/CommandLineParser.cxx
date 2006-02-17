@@ -106,6 +106,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    else mCertPath = basePath + "/.sipCerts";
    
    // pubList for publish targets
+
+   // Free the option parsing context.
+   poptFreeContext(context);
 }
 
 resip::Uri 
