@@ -703,8 +703,6 @@ resip::inet_pton4(const char *src, u_char *dst)
    return (1);
 }
 
-#ifdef USE_IPV6
-
 /* int
  * inet_pton6(src, dst)
  *	convert presentation level address to network order binary form.
@@ -801,8 +799,6 @@ resip::inet_pton6(const char *src, u_char *dst)
    return (1);
 }
 
-
-#endif
 #endif
 
 /* ====================================================================
