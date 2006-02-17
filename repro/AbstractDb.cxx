@@ -39,7 +39,7 @@ decodeString( iDataStream& s)
       return Data::Empty;
    }
 
-	char buf[len];
+	char buf[8192];
 	s.read( buf, len );
        
 	Data data( buf, len );
