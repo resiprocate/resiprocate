@@ -21,6 +21,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_5752D824D4BA4CC4AE9A4129533CC084"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_6288C29BB5B24D208BB744EE4D85C24F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -125,6 +131,26 @@
         }
         "File"
         {
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_5752D824D4BA4CC4AE9A4129533CC084"
+            {
+            "SourcePath" = "8:readme.txt"
+            "TargetName" = "8:readme.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_E0DA96C8995640EAA48E104879492F3D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{A582A373-4685-4296-BEFE-614B80A702C3}:_6288C29BB5B24D208BB744EE4D85C24F"
             {
             "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libintl-2.dll"
@@ -363,7 +389,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Setup"
         "ProductCode" = "8:{CD2939F7-D385-42FD-8371-A48FE8323E61}"
-        "PackageCode" = "8:{918BC6AA-CCA6-46F7-ADE7-FDBC7FE2FBA4}"
+        "PackageCode" = "8:{C51922A8-5E2B-458D-93DA-359447A3CA16}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
@@ -500,6 +526,20 @@
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
             "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_E0DA96C8995640EAA48E104879492F3D"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{478F747B-8505-45D1-9AAE-8C3B645C26E3}:_86981A780076446AB0844591EB5D0967"
+            {
+            "Name" = "8:readme.txt"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_5752D824D4BA4CC4AE9A4129533CC084"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:_E0DA96C8995640EAA48E104879492F3D"
             "Icon" = "8:"
