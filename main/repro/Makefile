@@ -1,4 +1,6 @@
 # $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
+VERSION=0.2
+REPRO_USER?=repro
 
 # repro is not GPL so if you want to link in MySQL, you needs a 
 # a comercial license for MySQL that is not GPL 
@@ -86,8 +88,38 @@ include $(BUILD)/Makefile.post
 #   Create db files directory: /var/lib/repro
 #
 
-install-rh-config:
-	install -d $(DESTDIR)/etc/rc.d/init.d
-	install etc/repro.conf $(DESTDIR)/etc/repro.conf
-	install etc/init.d/repro $(DESTDIR)/etc/rc.d/init.d/repro
+install-rh-config: \
+	$(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf \
+	$(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro \
+	$(DESTDIR)/var/lib/repro
+
+$(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf:  etc/repro.conf.inst
+	if [ -e $@ ]; \
+	then \
+		echo " Using existing $@"; \
+		install -D etc/repro.conf.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf.NEW; \
+	else \
+		install -D etc/repro.conf.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/repro.conf; \
+	fi
+
+$(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro: etc/init.d/repro.inst
+	install -D etc/init.d/repro.inst $(DESTDIR)$(INSTALL_PREFIX)/etc/init.d/repro
+
+localize = sed \
+	-e 's,@REPROUSER@,$(REPRO_USER),g' \
+	-e 's,@REPRO_INSTALL@,$(INSTALL_PREFIX),g' \
+	-e 's,@REPRO_RUNDIR@,/var/run,g' \
+	-e 's,@REPRO_CONFDIR@,$(INSTALL_PREFIX)/etc,g' \
+	-e 's,@bindir@,$(INSTALL_PREFIX)/sbin,g' \
+	-e 's,@VERSION@,$(VERSION),g' \
+
+%.inst: %
+	$(localize) < $< > $@
+
+$(DESTDIR)/var/lib/repro:
 	install -d $(DESTDIR)/var/lib/repro
+
+clean: clean-inst
+
+clean-inst:
+	rm -f etc/init.d/repro.inst etc/repro.conf.inst
