@@ -91,19 +91,42 @@ Proxy::thread()
             {
                if (sip->isRequest())
                {
-                  // [TODO] !rwm! need to verify that the request has required headers
+                  // Verify that the request has all the mandatory headers
                   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
                   // See RFC 3261 Section 16.3 Step 1
+                  if (!sip->header(h_To).exists() ||
+                      !sip->header(h_From).exists() ||
+                      !sip->header(h_CallID).exists() ||
+                      !sip->header(h_CSeq).exists() )
+                  {
+                     // skip this message and move on to the next one
+                     delete sip;
+                     next;  
+                  }
 			   
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
 			   
+                  // check the MaxForwards isn't too low
                   if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
-                  {
-                     // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
-                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                     mStack.send(*response, this);
-                  }// [TODO] !rwm! Need to check Proxy-Require header field values
-                  else if(sip->header(h_RequestLine).method() == CANCEL)
+                  {                     
+                     if (sip->header(h_RequestLine).method() != OPTIONS)
+                     {
+                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                        mStack.send(*response, this);
+                     }
+                     else  // If the request is an OPTIONS, send an appropropriate response
+                     {
+                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
+                        mStack.send(*response, this);                        
+                     }
+                     // in either case get rid of the request and process the next one
+                     delete sip;
+                     next;
+                  }
+
+                  // [TODO] !rwm! Need to check Proxy-Require header field values
+               
+                  if (sip->header(h_RequestLine).method() == CANCEL)
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
@@ -170,7 +193,7 @@ Proxy::thread()
                {
                   InfoLog (<< "Looking up RequestContext tid=" << sip->getTransactionId());
                
-                  // is there a problem with a stray 200
+                  // TODO  is there a problem with a stray 200?
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
@@ -178,10 +201,10 @@ Proxy::thread()
                   }
                   else
                   {
+                     // throw away stray responses
                      InfoLog (<< "Unmatched response (stray?) : " << endl << *msg);
+                     delete sip;  
                   }
-                  
-                  // [TODO] !rwm! who throws stray responses away?  does the stack do this?
                }
             }
             else if (app)
