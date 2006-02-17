@@ -23,6 +23,7 @@ class TcpBaseTransport : public InternalTransport
       virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
+      const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
 
    protected:
       virtual Connection* createConnection(Tuple& who, Socket fd, bool server=false)=0;

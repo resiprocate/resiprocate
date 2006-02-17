@@ -28,6 +28,7 @@ class ConnectionManager
 
       /// may return 0
       Connection* findConnection(const Tuple& tuple);
+      const Connection* findConnection(const Tuple& tuple) const;
 
       /**
          return the next Connection that is ready to read.

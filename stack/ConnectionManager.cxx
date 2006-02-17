@@ -60,6 +60,29 @@ ConnectionManager::findConnection(const Tuple& addr)
    return 0;
 }
 
+const Connection* 
+ConnectionManager::findConnection(const Tuple& addr) const
+{
+   if (addr.connectionId == 0)
+   {
+      AddrMap::const_iterator i = mAddrMap.find(addr);
+      if (i != mAddrMap.end())
+      {
+         return i->second;
+      }
+   }
+   else
+   {
+      IdMap::const_iterator i = mIdMap.find(addr.connectionId);
+      if (i != mIdMap.end())
+      {
+         return i->second;
+      }
+   }
+   
+   return 0;
+}
+
 Connection*
 ConnectionManager::getNextRead(FdSet &fdset)
 {
