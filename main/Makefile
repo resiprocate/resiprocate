@@ -90,12 +90,30 @@ tfmcontrib: cppunit netxx
 
 contrib: ares 
 
-clean: 
-	cd resip/stack; $(MAKE) clean
-	cd resip/dum; $(MAKE) clean
-	cd resip/stack/test; $(MAKE) clean
-	cd presSvr; $(MAKE) clean
-	$(MAKE) -C contrib/ares distclean
+###########################################################################
+# Various clean targets
+CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
+             rutil/test tfm
+
+cleancontrib:
+	-$(MAKE) -C contrib/ares distclean
+	-$(MAKE) -C tfm/contrib/cppunit distclean
+	-$(MAKE) -C tfm/contrib/Netxx-0.3.2 realclean
+	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
+
+clean:
+	for dir in $(CLEANDIRS); do make -C $$dir clean; done ; true
+
+cleanall: cleancontrib
+	for dir in $(CLEANDIRS); do make -C $$dir cleanall; done ; true
+	-$(MAKE) -C contrib/ares distclean
+
+distclean: cleancontrib
+	for dir in $(CLEANDIRS); do make -C $$dir distclean; done ; true
+	find * -name '*.db' -exec rm -f '{}' \;
+	-rm -Rf .make_prefs
+	-rm -Rf build/Makefile.conf
+###########################################################################
 
 # install does not include install-ares, because it did not in the
 # past.  (As far as I know, installing ares is needed only when
