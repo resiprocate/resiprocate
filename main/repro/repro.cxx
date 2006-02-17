@@ -251,6 +251,12 @@ main(int argc, char** argv)
    Store store(*db);
 
    /* Initialize a proxy */
+   
+   /* Explanation:  "Monkeys" are processors which operate on incoming requests
+                    "Lemurs"  are processors which operate on incoming responses
+                    "Baboons" are processors which operate on a request for each target  
+                              as the request is about to be forwarded to that target */
+      
    ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);   // Monkeys
    ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
    ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
@@ -270,11 +276,6 @@ main(int argc, char** argv)
       StrictRouteFixup* srf = new StrictRouteFixup;
       locators->addProcessor(std::auto_ptr<Processor>(srf));
       
-#if 0  // this is for request uri manipulation
-      ManipulationMonkey* manip = new ManipulationMonkey
-      locators->addProcessor(std::auto_ptr<Processor>(manip));
-#endif
-
       IsTrustedNode* isTrusted = new IsTrustedNode;
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
@@ -287,16 +288,10 @@ main(int argc, char** argv)
       AmIResponsible* isme = new AmIResponsible;
       locators->addProcessor(std::auto_ptr<Processor>(isme));
       
-      // [TODO] !rwm! put Gruu monkey here
+      // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
       
-      // [TODO] !rwm! put Tel URI monkey here 
-      
-      // TODO - remove next forwards all to 
-
-#if 0 // static routes here
-      ConstantLocationMonkey* cls = new ConstantLocationMonkey;
-      locators->addProcessor(std::auto_ptr<Processor>(cls));
-#endif
+      // [TODO] support for Manipulating Tel URIs is on the roadmap.
+      //        When added, the telUriMonkey will go here 
      
       if (args.mRouteSet.empty())
       {
