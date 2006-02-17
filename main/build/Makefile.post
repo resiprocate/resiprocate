@@ -124,7 +124,8 @@ EXTRAS = $(HWOBJS)
 
 HEADERS =  $(wildcard *.h)  $(wildcard *.hxx)
 
-CODETARGETS = $(patsubst %.cpp,$(BIN)/%,$(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(TESTPROGRAMS))))
+CODETARGETS = $(patsubst %.cpp,$(BIN)/%,$(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(TESTPROGRAMS)))) \
+              $(patsubst %,$(BIN)/%,$(TARGET_BINARY))
 
 TESTCASE_PROGRAMS = $(patsubst %,$(BIN)/%,$(TESTCASES))
 VERIFY_TESTCASE_PROGRAMS = $(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(VERIFY_TESTCASES)))
@@ -288,17 +289,25 @@ $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
 	@ test -h $(ROOT)/lib.$(TARGET_NAME)/$(strip $(TARGET_LIBRARY)).so || ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
 endif
 
+ifdef TARGET_BINARY
+INSTALL_BINDIR := $(DESTDIR)/$(INSTALL_PREFIX)/bin
+install: all
+	install -d $(DESTDIR)/$(INSTALL_PREFIX)
+	install -d $(INSTALL_BINDIR)
+	install $(BIN)/$(TARGET_BINARY) $(INSTALL_BINDIR)/$(TARGET_BINARY)
+else
 ifdef TARGET_LIBRARY
-INSTALL_LIBDIR := $(INSTALL_PREFIX)/lib
-INSTALL_INCDIR := $(INSTALL_PREFIX)/include/$(subst lib,,$(TARGET_LIBRARY))
+INSTALL_LIBDIR := $(DESTDIR)/$(INSTALL_PREFIX)/lib
+INSTALL_INCDIR := $(DESTDIR)/$(INSTALL_PREFIX)/include/$(subst lib,,$(TARGET_LIBRARY))
 
 install: all
-	install -d $(INSTALL_PREFIX)
-	install -d $(INSTALL_PREFIX)/lib
+	install -d $(DESTDIR)/$(INSTALL_PREFIX)
+	install -d $(DESTDIR)/$(INSTALL_PREFIX)/lib
 	install $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
 	install -d $(INSTALL_INCDIR)
 	install *.h* $(INSTALL_INCDIR)
 	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+endif
 endif
 
 ifeq ('',$(findstring clean,$(MAKECMDGOALS)))
