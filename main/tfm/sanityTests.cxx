@@ -2620,10 +2620,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
@@ -2687,10 +2690,13 @@ class TestHolder : public Fixture
          david->invite(proxy->makeUrl("spiral").uri()),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
@@ -2742,10 +2748,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send403()),
@@ -2791,10 +2800,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send403()),
@@ -2840,10 +2852,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send500()),
@@ -2889,10 +2904,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send500()),
@@ -2938,10 +2956,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,chain(jason->pause(200),jason->send600())),
@@ -2995,10 +3016,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send600()),
@@ -3045,10 +3069,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,chain(jason->pause(200),jason->send600())),
@@ -3057,7 +3084,7 @@ class TestHolder : public Fixture
             Sub
             (
                derek->expect(INVITE,contact(david),WaitForCommand,chain(derek->pause(200),derek->send603())),            
-                     derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
+               derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
             ),
             Sub
             (
@@ -3095,10 +3122,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send503()),
@@ -3143,10 +3173,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->send600()),
@@ -3274,10 +3307,13 @@ class TestHolder : public Fixture
          david->invite(*enlai),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407,from(proxy),WaitForResponse,chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          
          And
          (
+            Sub
+            (
+               optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction()))
+            ),
             Sub
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->answer()),
