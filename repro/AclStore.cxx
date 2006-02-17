@@ -23,7 +23,7 @@ AclStore::AclStore(AbstractDb& db):
    mDb(db)
 {  
    AbstractDb::Key key = mDb.firstAclKey();
-      while ( key != Data::Empty )
+   while ( !key.empty() )
    {
       AbstractDb::AclRecord rec = mDb.getAcl(key);
       if(rec.mTlsPeerName.empty())  // If there is no TlsPeerName then record is an Address ACL
@@ -128,11 +128,13 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
          pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
          anchor = pb.skipChar();
 
+#if 0
          // try to convert into IPv6 network form
          if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
          {
             return false;
          }
+#endif
          ipv6 = true;
       }
       else
@@ -162,11 +164,14 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
             pb.data(hostOrIp, anchor);  // copy the presentation form of the IPv6 address
             anchor = pb.skipChar();
 
+
             // try to convert into IPv6 network form
+#if 0
             if (!inet_pton6(hostOrIp.c_str(), in6))  // is this correct?
             {
                return false;
             }
+#endif
             ipv6 = true;
          }
          else // *pb.position() == '.'
@@ -176,12 +181,14 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
             pb.data(hostOrIp, anchor);  // copy the presentation form of the address
 
             // try to interpret as an IPv4 address, if that fails look it up in DNS
+#if 0
             if (inet_pton4(hostOrIp.c_str(), in4)) // is this correct?
             {
                // it was an IPv4 address
                ipv4 = true;
             }
             else
+#endif
             {
                // hopefully it is a legal FQDN, try it.
                addAcl(hostOrIp, Data::Empty, 0, 0, 0, 0);
