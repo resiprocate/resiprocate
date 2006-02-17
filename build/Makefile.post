@@ -178,6 +178,9 @@ clean:
 cleanall: clean
 	-rm -rf bin.* obj.*
 
+distclean: cleanall
+	-rm -rf *.db .dependlibs
+
 $(BIN):
 	-@ $(TOOLS)/mkbuildlinks $(BIN) $(ROOT)/.make_prefs
 ifdef CODE_SUBDIRS
@@ -298,7 +301,7 @@ install: all
 	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
 endif
 
-ifneq ($(MAKECMDGOALS),clean)
+ifeq ('',$(findstring clean,$(MAKECMDGOALS)))
   -include $(DEPENDENCIES)
 endif
 
