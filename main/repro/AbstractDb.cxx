@@ -54,8 +54,6 @@ AbstractDb::dbFirstKey(const AbstractDb::Table table)
 }
 
 
-
-
 AbstractDb::AbstractDb()
 {
 }
@@ -63,7 +61,6 @@ AbstractDb::AbstractDb()
 
 AbstractDb::~AbstractDb()
 {
-   
 }
 
 
@@ -99,6 +96,7 @@ AbstractDb::eraseUser( const AbstractDb::Key& key )
 {
    dbEraseRecord( UserTable, key);
 }
+
 
 void 
 AbstractDb::writeUser( const AbstractDb::Key& oldkey, const AbstractDb::Key& newkey, const AbstractDb::UserRecord& rec )
