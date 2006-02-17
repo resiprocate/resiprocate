@@ -149,7 +149,8 @@ $(BUILD)/fakepre: $(HEADERS_SPECIAL)
 #	$(TOOLS)/makeprefs $@
 $(ROOT)/.make_prefs:
 	echo 'USE_BUILDDIR=no' > $@
-	include $(ROOT)/.make_prefs
+
+-include $(ROOT)/.make_prefs
 
 prefs:
 	$(TOOLS)/makeprefs $(ROOT)/.make_prefs
