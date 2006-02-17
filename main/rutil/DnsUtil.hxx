@@ -95,9 +95,7 @@ class DnsUtil
 };
 
 int	inet_pton4(const char *src, u_char *dst);
-#ifdef USE_IPV6
 int	inet_pton6(const char *src, u_char *dst);
-#endif
 
 }
 
