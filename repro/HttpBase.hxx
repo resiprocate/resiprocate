@@ -24,6 +24,8 @@ class HttpBase
       void buildFdSet(resip::FdSet& fdset);
       void process(resip::FdSet& fdset);
 
+      bool isSane();
+
    protected:
       virtual void buildPage( const resip::Data& uri, 
                               int pageNumber, 
@@ -42,8 +44,11 @@ class HttpBase
       resip::Socket mFd;
       int nextConnection;
       resip::Tuple mTuple;
-      
+ 
+      bool sane;
+
       HttpConnection* mConnection[MaxConnections];
+
 };
 
 }

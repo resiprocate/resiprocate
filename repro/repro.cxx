@@ -358,6 +358,11 @@ main(int argc, char** argv)
 #else
    WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mHttpPort  );
 #endif
+   if (!admin.isSane())
+   {
+     CritLog(<<"Failed to start the WebAdmin - exiting");
+     exit(-1);
+   }
    WebAdminThread adminThread(admin);
 
    profile->clearSupportedMethods();
