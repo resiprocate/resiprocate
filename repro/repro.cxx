@@ -36,7 +36,6 @@
 #include "repro/monkeys/StrictRouteFixup.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
-#include "repro/monkeys/SetTargetConnection.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -277,9 +276,6 @@ main(int argc, char** argv)
       StrictRouteFixup* srf = new StrictRouteFixup;
       locators->addProcessor(std::auto_ptr<Processor>(srf));
       
-      SetTargetConnection* stc = new SetTargetConnection;
-      locators->addProcessor(std::auto_ptr<Processor>(stc));
-
       IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
@@ -369,9 +365,9 @@ main(int argc, char** argv)
    Data realm = addDomains(proxy, args, store);
    
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mHttpPort  );
+   WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
 #else
-   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mHttpPort  );
+   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
 #endif
    if (!admin.isSane())
    {

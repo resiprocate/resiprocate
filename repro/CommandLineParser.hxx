@@ -47,6 +47,7 @@ class CommandLineParser
       int mMsBeforeCancel;
       bool mAllowBadReg;
       int mTimerC;
+      Data mAdminPassword;
 };
  
 }
