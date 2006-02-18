@@ -136,5 +136,51 @@ install-dum:
 install-repro:
 	cd repro; $(MAKE) install
 
+SVN-VERSION: 
+	@if test -d .svn ; \
+	then \
+		echo "Generating SVN-VERSION from svnversion"; \
+		svnversion . \
+		| perl -p \
+			-e 'm /(\d+)/ && do { $$padded=sprintf( "%06d", $$1 ); s/\d+/$$padded/; };' \
+			-e 's/:/./; s/M/.M/;' \
+		> SVN-VERSION ; \
+	elif test -r SVN-EXPORT-VERSION ; \
+	then \
+		echo "Copying SVN-VERSION from SVN-EXPORT-VERSION"; \
+		cp SVN-EXPORT-VERSION SVN-VERSION ; \
+	else \
+		echo "Unknown SVN-VERSION"; \
+		echo '0' > SVN-VERSION ; \
+	fi
+	@echo -n "SVN-VERSION=" ; cat SVN-VERSION; echo ""
+
+REPRO_VERSION = $(shell cat repro/VERSION)
+
+RPMBUILD_TOPDIR = $(shell rpm --eval '%{_topdir}')
+repro-rpm: dist
+	rpmbuild -ta --define="buildno $(shell cat SVN-VERSION)" repro-$(REPRO_VERSION).tar.gz
+	mv -f $(RPMBUILD_TOPDIR)/SRPMS/repro-$(REPRO_VERSION)-*.rpm .
+	mv -f $(RPMBUILD_TOPDIR)/RPMS/*/repro*-$(REPRO_VERSION)-*.rpm .
+
+repro-dist: repro-$(REPRO_VERSION).tar.gz repro-$(REPRO_VERSION).tar.gz.md5
+
+tmptarfile=/tmp/repro.tar.gz.$$
+repro-$(REPRO_VERSION).tar.gz: SVN-VERSION repro.spec 
+	rm -f repro-$(REPRO_VERSION)
+	ln -s . repro-$(REPRO_VERSION)
+	find repro-$(REPRO_VERSION)/ \( -name .svn -prune -o -type f -print0 \) \
+	| tar -c -f $(tmptarfile) -z --null -h -T -
+	mv $(tmptarfile) $@
+	rm -f repro-$(REPRO_VERSION)
+
+repro-$(REPRO_VERSION).tar.gz.md5: repro-$(REPRO_VERSION).tar.gz
+	md5sum repro-$(REPRO_VERSION).tar.gz > repro-$(REPRO_VERSION).tar.gz.md5
+
+repro.spec: repro/repro.spec
+	$(MAKE) -C repro repro.spec.inst
+	mv repro/repro.spec.inst repro.spec
+
 .PHONY : resiprocate tests contrib ares dtls
 .PHONY : install install-ares install-rutil install-resip install-repro install-dum
+.PHONY : SVN-VERSION repro-rpm
