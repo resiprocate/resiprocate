@@ -647,14 +647,21 @@ ResponseContext::processResponse(SipMessage& response)
    // store this before we pop the via and lose the branch tag
    const Data transactionId = response.getTransactionId();
    
-   // for provisional responses, 
-   assert(response.isResponse());
+   assert (response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
    response.header(h_Vias).pop_front();
 
+   // Stop processing responses that have nowhere else to go
    if (response.header(h_Vias).empty())
    {
-      // ignore CANCEL/200
+      // CANCELs only have one Via.  Likewise 100s only have one Via  
+      // Silently stop processing the CANCEL responses.
+      // We will handle the 100 responses later
+      // Log other responses we can't forward 
+      if ((response.header(h_CSeq).method() != CANCEL) && 
+          (response.header(h_StatusLine).statusCode() != 100)) {
+         InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
+      }
       return;
    }
 
@@ -664,16 +671,21 @@ ResponseContext::processResponse(SipMessage& response)
       response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
    }
 
-   
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
 
    if (i == mActiveTransactionMap.end())
    {
-      // !bwc! Response is for a transaction that is no longer active.
-      // Statelessly forward, and bail out.
-      mRequestContext.sendResponse(response);
+      // This is a response for a transaction that is no longer/was never active.  
+      // This is probably a useless response (at best) or a malicious response (at worst).
+      // Log the response here:
+      InfoLog( << "Discarding stray response" );
+      
+      // Even though this is a tremendously bad idea, some developers may
+      // decide they want to statelessly forward the response
+      // Here is the gun.  Don't say we didn't warn you!
+      //mRequestContext.sendResponse(response);
       return;
    }
    
@@ -685,24 +697,25 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          mRequestContext.updateTimerC();
 
-         if  (code > 100 && !mForwardedFinalResponse)
+         if  (!mForwardedFinalResponse)
          {
-            mRequestContext.sendResponse(response);
-         }
-         
-         {
-            
-            if(target->status()==Target::Trying)
-            {
-               target->status()=Target::Proceeding;
-            }
-            else if (target->status() == Target::WaitingToCancel)
+            if (target->status() == Target::WaitingToCancel)
             {
                DebugLog(<< "Canceling a transaction with uri: " 
                         << resip::Data::from(target->uri()) << " , to host: " 
                         << target->via().sentHost());
                cancelClientTransaction(target);
+            } else if (target->status() == Target::Trying)
+            {
+               target->status() = Target::Proceeding;
+            }            
+            
+            if (code == 100)
+            {
+               return;  // stop processing 100 responses
             }
+               
+            mRequestContext.sendResponse(response);            
          }
          break;
          
@@ -774,22 +787,7 @@ ResponseContext::processResponse(SipMessage& response)
             
             if (areAllTransactionsTerminated())
             {
-               InfoLog (<< "Forwarding best response: " << response.brief());
-               
-               mForwardedFinalResponse = true;
-               
-               if(mBestResponse.header(h_StatusLine).statusCode() == 503)
-               {
-                  //See RFC 3261 sec 16.7, page 110, paragraph 2
-                  mBestResponse.header(h_StatusLine).statusCode() = 500;
-                  mRequestContext.sendResponse(mBestResponse);
-               }
-               else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
-                   response.header(h_CSeq).method() == INVITE)
-               {
-                  // don't forward 408 to NIT
-                  mRequestContext.sendResponse(mBestResponse);
-               }
+               forwardBestResponse();
             }
          }
          break;
@@ -1037,6 +1035,27 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
    // !rwm! replace with correct thingy here
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
 }
+
+void
+ResponseContext::forwardBestResponse()
+{
+   InfoLog (<< "Forwarding best response: " << mBestResponse.brief());
+   
+   mForwardedFinalResponse = true;
+   
+   if(mBestResponse.header(h_StatusLine).statusCode() == 503)
+   {
+      //See RFC 3261 sec 16.7, page 110, paragraph 2
+      mBestResponse.header(h_StatusLine).statusCode() = 500;
+      mRequestContext.sendResponse(mBestResponse);
+   }
+   else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
+            mBestResponse.header(h_CSeq).method() == INVITE)
+   {
+      // don't forward 408 to Non-INVITE Transactions (NITs)
+      mRequestContext.sendResponse(mBestResponse);
+   }
+}   
 
 
 std::ostream& 

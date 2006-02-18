@@ -67,7 +67,6 @@ class RequestContext
       void setFromTrustedNode();
       bool fromTrustedNode() const;
       
-
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
