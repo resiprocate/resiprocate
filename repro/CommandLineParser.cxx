@@ -48,6 +48,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int httpPort = 5080;
    int recursiveRedirect = 0;
    int doQValue=0;
+   char* forkBehavior="EQUAL_Q_PARALLEL";
+   bool cancelBetweenForkGroups=true;
+   bool waitForTerminate=true;
+   int msBetweenForkGroups=3000;//Moot by default
+   int msBeforeCancel=3000;
+   
    char* enumSuffix = 0;
    int allowBadReg = 0;
    int timerC=180;
@@ -95,6 +101,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       {"q-value",0,   POPT_ARG_NONE,                              &doQValue, 0, "Enable sequential q-value processing", 0},
+      {"q-value-behavior",0,   POPT_ARG_STRING,                              &forkBehavior, 0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-cancel-btw-fork-groups",0,   POPT_ARG_NONE,                              &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
+      {"q-value-wait-for-terminate-btw-fork-groups",0,   POPT_ARG_NONE,                              &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
+      {"q-value-ms-between-fork-groups",0,   POPT_ARG_INT,                              &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                              &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
@@ -144,6 +155,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;
    mDoQValue = doQValue?true:false;
+   mForkBehavior=forkBehavior;
+   mCancelBetweenForkGroups=cancelBetweenForkGroups?true:false;
+   mWaitForTerminate=waitForTerminate?true:false;
+   mMsBetweenForkGroups=msBetweenForkGroups;
+   mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
