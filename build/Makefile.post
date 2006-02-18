@@ -310,7 +310,7 @@ install: all
 endif
 endif
 
-ifeq ('',$(findstring clean,$(MAKECMDGOALS)))
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
   -include $(DEPENDENCIES)
 endif
 
