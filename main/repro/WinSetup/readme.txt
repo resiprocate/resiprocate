@@ -1,11 +1,14 @@
 Repro Version:  Capuchin 0.2 - Feb, 2006
 
+Main Web Site:
+http://www.sipfoundry.org/repro/
+
 For the latest documentation please see:  
 http://wiki.resiprocate.org/wiki/index.php?title=Main_Page#Repro_SIP_Proxy_Server or
 http://wiki.resiprocate.org/
 
-repro.exe --help
-Usage: SSL-Debug\repro.exe [OPTION...]
+repro --help
+Usage: SSL-Debug\repro [OPTION...]
   -l, --log-type=syslog|cerr|cout                       where to send logging
                                                         messages (default:
                                                         "cout")
@@ -14,11 +17,9 @@ Usage: SSL-Debug\repro.exe [OPTION...]
                                                         "INFO")
   -r, --record-route=sip:example.com                    specify uri to use as
                                                         Record-Route
-  --udp=5060                                            add UDP transport on
-                                                        specified port
+  --udp=5060                                            listen on UDP port
                                                         (default: 5060)
-  --tcp=5060                                            add TCP transport on
-                                                        specified port
+  --tcp=5060                                            listen on TCP port
                                                         (default: 5060)
   -t, --tls-domain=example.com                          act as a TLS server
                                                         for specified domain
@@ -56,6 +57,29 @@ Usage: SSL-Debug\repro.exe [OPTION...]
                                                         in the proxy
   --q-value                                             Enable sequential
                                                         q-value processing
+  --q-value-behavior=STRING                             Specify forking
+                                                        behavior for q-value
+                                                        targets:
+                                                        FULL_SEQUENTIAL,
+                                                        EQUAL_Q_PARALLEL, or
+                                                        FULL_PARALLEL
+  --q-value-cancel-btw-fork-groups                      Whether to cancel
+                                                        groups of parallel
+                                                        forks after the period
+                                                        specified by the
+                                                        --q-value-ms-before-cancel 
+                                                        parameter.
+  --q-value-wait-for-terminate-btw-fork-groups          Whether to wait for
+                                                        parallel fork groups
+                                                        to terminate before
+                                                        starting new
+                                                        fork-groups.
+  --q-value-ms-between-fork-groups=INT                  msec to wait before
+                                                        starting new groups of
+                                                        parallel forks
+  --q-value-ms-before-cancel=INT                        msec to wait before
+                                                        cancelling parallel
+                                                        fork groups
   -e, --enum-suffix=e164.arpa                           specify enum suffix to
                                                         search
   -b, --allow-bad-reg                                   allow To tag in
@@ -64,9 +88,11 @@ Usage: SSL-Debug\repro.exe [OPTION...]
                                                         timer C in sec (0 or
                                                         negative will disable
                                                         timer C)
+  -a, --admin-password=                                 set web administrator
+                                                        password
+  -V, --version                                         show the version number
 
 Help options:
   -?, --help                                            Show this help message
   --usage                                               Display brief usage
                                                         message
-
