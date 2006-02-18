@@ -16,6 +16,7 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/MessageDecorator.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Timer.hxx"
@@ -270,6 +271,9 @@ class SipMessage : public TransactionMessage
       void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
+      void addOutboundDecorator(MessageDecorator *md){mOutboundDecorators.push_back(md);}
+      void callOutboundDecorators(const Tuple &src, const Tuple &dest);
+
    protected:
       void cleanUp();
    
@@ -334,6 +338,8 @@ class SipMessage : public TransactionMessage
       Data mTlsDomain;
 
       mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
+
+      std::vector<MessageDecorator*> mOutboundDecorators;
 
       friend class TransportSelector;
 };
