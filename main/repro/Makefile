@@ -109,6 +109,7 @@ install-rh-config: \
 	$(DESTDIR)/etc/repro.conf \
 	$(DESTDIR)/etc/init.d/repro \
 	$(DESTDIR)/var/lib/repro \
+	$(DESTDIR)/var/run/repro \
 	$(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8
 
 $(DESTDIR)/etc/repro.conf:  etc/repro.conf.inst
@@ -134,6 +135,9 @@ localize = sed \
 
 %.inst: %
 	$(localize) < $< > $@
+
+$(DESTDIR)/var/run/repro:
+	install -d $(DESTDIR)/var/run/repro
 
 $(DESTDIR)/var/lib/repro:
 	install -d $(DESTDIR)/var/lib/repro
