@@ -78,20 +78,18 @@ SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
 endif
 
+reproSvnVersion=$(shell cat ../SVN-VERSION)
+reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//')
+reproBuildHost=$(shell hostname --short)
+
 .PHONY: BUILDSTAMP
 BUILDSTAMP: ../SVN-VERSION
-	@echo -n "Generating BUILDSTAMP: " ; \
-	reproSvnVersion=$(shell cat ../SVN-VERSION) ; \
-	reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//') ; \
-	reproBuildHost=$(shell hostname --short) ; \
-	echo "$${reproSvnVersion} $${reproBuildTime} $${reproBuildHost}" > BUILDSTAMP
-	@cat BUILDSTAMP
+	echo "$(reproSvnVersion) $(reproBuildTime) $(reproBuildHost)" > BUILDSTAMP
 
 ReproVersion.cxx: BUILDSTAMP
 
-REPRO_BUILD_FLAG = "-DREPRO_BUILDSTAMP=\"$(shell cat BUILDSTAMP)\""
-CXXFLAGS += $(REPRO_BUILD_FLAG)
-CXXFLAGS += -DREPRO_VERSION=\"$(VERSION)\"
+CXXFLAGS += "-DREPRO_BUILDSTAMP=\"$(reproSvnVersion) $(reproBuildTime) $(reproBuildHost)\""
+CXXFLAGS += "-DREPRO_VERSION=\"$(VERSION)\""
 
 ../SVN-VERSION: 
 	$(MAKE) -C .. SVN-VERSION
