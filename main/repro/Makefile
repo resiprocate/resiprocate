@@ -1,5 +1,5 @@
 # $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
-VERSION=$(shell cat VERSION)
+VERSION:=$(shell cat VERSION)
 REPRO_USER?=repro
 
 # repro is not GPL so if you want to link in MySQL, you needs a 
@@ -36,6 +36,7 @@ SRC 	+=   \
 	BerkeleyDb.cxx \
 	\
 	CommandLineParser.cxx \
+	ReproVersion.cxx \
 	HttpBase.cxx \
 	HttpConnection.cxx \
 	WebAdmin.cxx \
@@ -77,6 +78,23 @@ SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
 endif
 
+.PHONY: BUILDSTAMP
+BUILDSTAMP: ../SVN-VERSION
+	@echo -n "Generating BUILDSTAMP: " ; \
+	reproSvnVersion=$(shell cat ../SVN-VERSION) ; \
+	reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//') ; \
+	reproBuildHost=$(shell hostname --short) ; \
+	echo "$${reproSvnVersion} $${reproBuildTime} $${reproBuildHost}" > BUILDSTAMP
+	@cat BUILDSTAMP
+
+ReproVersion.cxx: BUILDSTAMP
+
+REPRO_BUILD_FLAG = "-DREPRO_BUILDSTAMP=\"$(shell cat BUILDSTAMP)\""
+CXXFLAGS += $(REPRO_BUILD_FLAG)
+CXXFLAGS += -DREPRO_VERSION=\"$(VERSION)\"
+
+../SVN-VERSION: 
+	$(MAKE) -C .. SVN-VERSION
 
 include $(BUILD)/Makefile.post
 
@@ -110,7 +128,7 @@ $(DESTDIR)/etc/init.d/repro: etc/init.d/repro.inst
 localize = sed \
 	-e 's,@REPROUSER@,$(REPRO_USER),g' \
 	-e 's,@REPRO_INSTALL@,$(INSTALL_PREFIX),g' \
-	-e 's,@REPRO_RUNDIR@,/var/run,g' \
+	-e 's,@REPRO_RUNDIR@,/var/run/repro,g' \
 	-e 's,@REPRO_CONFDIR@,/etc,g' \
 	-e 's,@REPRO_CWD@,/var/lib/repro,g' \
 	-e 's,@bindir@,$(INSTALL_PREFIX)/sbin,g' \
@@ -125,7 +143,10 @@ $(DESTDIR)/var/lib/repro:
 $(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8: doc/repro.8
 	install -D $< $@
 
-clean: clean-inst
+clean: clean-inst clean-build
+
+clean-build:
+	rm -f BUILDSTAMP
 
 clean-inst:
 	rm -f etc/init.d/repro.inst etc/repro.conf.inst
