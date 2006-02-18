@@ -365,27 +365,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    s << 
       "      <form id=\"aclsForm\" method=\"get\" action=\"acls.html\" name=\"aclsForm\">" << endl <<
       "      <div class=space>" << endl <<
-      "        <br />" << endl <<
-      
-      "<pre>" << endl <<
-      "      Input can be in any of these formats" << endl <<
-      "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
-      "      bare hostname     server1" << endl <<
-      "      FQDN              server1.example.com" << endl <<
-      "      IPv4 address      192.168.1.100" << endl <<
-      "      IPv4 + mask       192.168.1.0/24" << endl <<
-      "      IPv6 address      ::341:0:23:4bb:0011:2435:abcd" << endl <<
-      "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
-      "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
-      "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
-      "      Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
-      "             assumed.  All other transport types must specify ACLs" << endl <<
-      "             by IP Address.<br>" << endl <<
-      // TODO add code to compare the mask
-      "      Caveat:  Currently the database will store a mask, but the mask is never consulted." << endl <<
-      "      (Yes, this is a bug)." << endl <<
-      "</pre>" << endl <<
-      
       "      </div>" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
       "          <tr>" << endl <<
@@ -445,11 +424,31 @@ WebAdmin::buildAclsSubPage(DataStream& s)
    s <<  
       "        </tbody>" << endl <<
       "      </table>" << endl <<
-      "     </form>" << endl;
+      "     </form>" << endl <<
       
-    s << "<p>Note that the access lists are used as a whitelist to allow " 
-     << "gateways and other trusted nodes to skip authentication.  " 
-     << "**Currently this applies to all requests except Registrations.</p>";
+      "        <br />" << endl <<      
+      "<pre>" << endl <<
+      "      Input can be in any of these formats" << endl <<
+      "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
+      "      bare hostname     server1" << endl <<
+      "      FQDN              server1.example.com" << endl <<
+      "      IPv4 address      192.168.1.100" << endl <<
+      "      IPv4 + mask       192.168.1.0/24" << endl <<
+      "      IPv6 address      ::341:0:23:4bb:0011:2435:abcd" << endl <<
+      "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
+      "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
+      "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
+      "</pre>" << endl <<
+      
+      "<p>Note that the access lists are used as a whitelist to allow " << endl <<
+      "gateways and other trusted nodes to skip authentication.  " << endl <<
+      "**Currently this applies to all requests except Registrations.</p>" << endl <<
+      "<p>Also Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
+      "assumed.  All other transport types must specify ACLs" << endl <<
+      "by IP Address.</p>" << endl <<
+      // TODO add code to compare the mask
+      "<p>Caveat:  Currently the database will store a mask, but the mask is never consulted." << endl <<
+      "(Yes, this is a bug).</p>" << endl;
 }
 
 
