@@ -522,7 +522,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             request.header(h_RequestLine).method() == SUBSCRIBE ) )
       {
          
-         NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+         NameAddr rt(mRequestContext.mProxy.getRecordRoute(request.getReceivedTransport()));
          // !jf! could put unique id for this instance of the proxy in user portion
 
          if (request.exists(h_Routes) && request.header(h_Routes).size() != 0)
@@ -548,14 +548,21 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             {
                rt.uri().param(p_cid2) = request.header(h_RequestLine).uri().param(p_cid);
             }
-            InfoLog (<< "Added Record-Route: " << rt);
          }
 
          // !jf! By not specifying host in Record-Route, the TransportSelector
          //will fill it in. 
-         if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
+         // !abr! An examination of TransportSelector doesn't turn up any such
+         // behavior -- and RjS is pretty certain that the TransportSelector won't
+         // ever have enough information to do this properly.
+
+         // This pushes the Record-Route that represents the interface from which 
+         // the request was received.
+         if (!rt.uri().host().empty())
          {
             request.header(h_RecordRoutes).push_front(rt);
+            InfoLog (<< "Added inbound Record-Route: " << rt);
+            request.addOutboundDecorator(this);
          }
       }
       
@@ -592,6 +599,43 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
 }
 
+void
+ResponseContext::decorateMessage(resip::SipMessage &request,
+                                 const resip::Tuple &source,
+                                 const resip::Tuple &destination)
+{
+   static ExtensionParameter p_cid("cid");
+   NameAddr rt(mRequestContext.mProxy.getRecordRoute(destination.transport, &source));
+   // !jf! could put unique id for this instance of the proxy in user portion
+
+   if (request.exists(h_Routes) && request.header(h_Routes).size() != 0)
+   {
+      rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+   }
+   else
+   {
+      rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+   }
+       
+   if (destination.getType() != UDP)
+   {
+      if (request.header(h_RequestLine).uri().exists(p_cid))
+      {
+         rt.uri().param(p_cid) = request.header(h_RequestLine).uri().param(p_cid);
+      }
+   }
+
+   // This pushes the Record-Route that represents the interface from
+   // which the request is being sent
+   //
+   // !abr! If this duplicates the previous Record-Route, we shouldn't
+   //       add it. Adding doesn't hurt anything, but it's unnecessary.
+   if (!rt.uri().host().empty())
+   {
+      request.header(h_RecordRoutes).push_front(rt);
+      InfoLog (<< "Added outbound Record-Route: " << rt);
+   }
+}
 
 void 
 ResponseContext::sendRequest(const resip::SipMessage& request)

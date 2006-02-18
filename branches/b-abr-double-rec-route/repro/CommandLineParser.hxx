@@ -20,7 +20,6 @@ class CommandLineParser
       Data mTlsDomain;
       Data mEnumSuffix;
       bool mShouldRecordRoute;
-      resip::Uri mRecordRoute;
       int mUdpPort;
       int mTcpPort;
       int mTlsPort;

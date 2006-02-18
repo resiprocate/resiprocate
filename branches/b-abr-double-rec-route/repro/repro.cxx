@@ -349,7 +349,7 @@ main(int argc, char** argv)
    targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
 
    Proxy proxy(stack, 
-               args.mRecordRoute, 
+               args.mShouldRecordRoute, 
                requestProcessors, 
                responseProcessors, 
                targetProcessors, 
