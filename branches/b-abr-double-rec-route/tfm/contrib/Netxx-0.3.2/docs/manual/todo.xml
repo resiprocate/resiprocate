@@ -1,0 +1,119 @@
+<appendix><title>Todo List</title>
+    <itemizedlist><title>Todo Before 1.0.0 Release</title>
+	<listitem>
+	    <para>
+		Remove any calls to malloc with calls to new char[]. (Peer.cxx).
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		use SUN_LEN instead of sizeof for AF_LOCAL;
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Separate the inet_ntop and inet_pton implementations into
+		their own files.
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		Have a separate file for OS stuff, like os_starup,
+		os_finish, os_get_error, os_set_error.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Clean up documentation and make more complete.
+	    </para>
+	</listitem>
+
+
+	<listitem>
+	    <para>
+		Add Solaris >= 8 /dev/poll support to the Probe class.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Add thread callbacks for OpenSSL.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Call THREADS_init() if initializing OpenSSL.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Add more callbacks to TLS::Context so that developers can
+		better customize TLS behavior.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Verify what WSAETIMEDOUT and WSAEMSGSIZE mean.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Optimize Netxx::Netbuf::xsputn().
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Add support for the FreeBSD kqueue(2) function in
+		Probe_impl.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Should Netxx::Peer::operator&lt;&lt; print out something
+		different for AF_LOCAL?
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Should we allow some way to get user credentials from a
+		local domain socket?
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		TLS::handle_shutdown should be more robust and support
+		non-blocking sockets.
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		How should we handle file permissions for local domain
+		sockets? Right now we set them to 0666. There should be some
+		way for the developer to override this. Maybe using a fake
+		port, e.g., /some/file:0600?
+	    </para>
+	</listitem>
+
+	<listitem>
+	    <para>
+		Add another callback to the Context class so that we can
+		verify certs.
+	    </para>
+	</listitem>
+    </itemizedlist>
+</appendix>
+<!--
+    vim:ft=docbk
+-->

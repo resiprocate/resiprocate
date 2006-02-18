@@ -1,0 +1,160 @@
+.TH repro 8 "February 2006"
+.\" ====================================================================
+.\" The Vovida Software License, Version 1.0 
+.\" 
+.\" Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in
+.\"    the documentation and/or other materials provided with the
+.\"    distribution.
+.\" 
+.\" 3. The names "VOCAL", "Vovida Open Communication Application Library",
+.\"    and "Vovida Open Communication Application Library (VOCAL)" must
+.\"    not be used to endorse or promote products derived from this
+.\"    software without prior written permission. For written
+.\"    permission, please contact vocal@vovida.org.
+.\"
+.\" 4. Products derived from this software may not be called "VOCAL", nor
+.\"    may "VOCAL" appear in their name, without prior written
+.\"    permission of Vovida Networks, Inc.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+.\" WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+.\" NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+.\" NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+.\" IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+.\" EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+.\" PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+.\" OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\" USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+.\" DAMAGE.
+.\" 
+.\" ====================================================================
+.\" 
+.\" This software consists of voluntary contributions made by Vovida
+.\" Networks, Inc. and many individuals on behalf of Vovida Networks,
+.\" Inc.  For more information on Vovida Networks, Inc., please see
+.\" <http://www.vovida.org/>.
+.\"
+.\"
+.SH NAME
+repro \- repro SIP proxy server
+.SH SYNOPSIS
+.B
+repro [OPTIONS...]
+
+.SH DESCRIPTION
+.B repro
+is an open-source, free SIP server. SIP is changing the way people communicate
+using the Internet. It is not only about making phone calls over the Net. The
+SIP protocol and its extensions defines the way of establishing, modifying and
+ending interactive sessions, no matter if they are voice, video, IM or a
+combination of them. At the heart of SIP architecture, there are certain
+services which needs to be provided at some place of the network.
+.B repro
+provides SIP proxy, registrar, redirect, and identity services. These services
+are the foundation needed to run a SIP service.
+
+.SH OPTIONS
+.TP
+\fB\-l\fR, \fB\-\-log\-type\fR=\fBsyslog\fR|\fBcerr\fR|\fBcout\fR
+where to send logging messages (default: \fBcout\fR)
+.TP
+\fB\-v\fR, \fB\-\-log\-level\fR=\fBSTACK\fR|\fBDEBUG\fR|\fBINFO\fR|\fBWARNING\fR|\fBALERT\fR
+specify the default log level (default: \fBINFO\fR)
+.TP
+\fB\-r\fR, \fB\-\-record\-route\fR=\fIsip:example.com\fR
+specify uri to use as Record-Route
+.TP
+\fB\-\-udp\fR=\fI5060\fR
+add UDP transport on specified port (default: 5060)
+.TP
+\fB\-\-tcp\fR=\fI5060\fR
+add TCP transport on specified port (default: 5060)
+.TP
+\fB\-t\fR, \fB\-\-tls\-domain\fR=\fIexample.com\fR
+act as a TLS server for specified domain
+.TP
+\fB\-\-tls\fR=\fI5061\fR
+add TLS transport on specified port (default: 5061)
+.TP
+\fB\-\-dtls\fR=\fI0\fR
+add DTLS transport on specified port (default: 0)
+.TP
+\fB\-\-enable\-cert\-server
+run a cert server
+.TP
+\fB\-c\fR, \fB\-\-cert\-path\fR=\fISTRING\fR
+path for certificates (default: \fB~/.sipCerts\fR)
+.TP
+\fB\-\-enable\-v6\fR
+enable IPV6
+.TP
+\fB\-\-disable\-v4\fR
+disable IPV4
+.TP
+\fB\-\-disable\-auth\fR
+disable DIGEST challenges
+.TP
+\fB\-\-disable\-web\-auth\R
+disable HTTP challenges
+.TP
+\fB\-\-disable\-reg\fR
+disable registrar
+.TP
+\fB\-i\fR, \fB\-\-interfaces\fR=\fIsip:10.1.1.1:5065;transport=tls\fR
+specify interfaces to add transports to
+.TP
+\fB\-d\fR, \fB\-\-domains\fR=\fIexample.com,foo.com\fR
+specify domains that this proxy is authorative
+.TP
+\fB\-R\fR, \fB\-\-route\fR=\fIsip:p1.example.com,sip:p2.example.com\fR
+specify where to route requests that are in this proxy's domain
+.TP
+\fB\-\-reqChainName\fR=\fISTRING\fR
+name of request chain (default: default)
+.TP
+\fB\-\-http\fR=\fI5080\fR
+run HTTP server on specified port (default: 5080)
+.TP
+\fB\-\-recursive\-redirect\fR
+Handle 3xx responses in the proxy
+.TP
+\fB\-\-q\-value\fR
+Enable sequential q-value processing
+.TP
+\fB\-e\fR, \fB\-\-enum\-suffix\fR=\fIe164.arpa\fR
+specify enum suffix to search
+.TP
+\fB\-b\fR, \fB\-\-allow\-bad\-reg\fR
+allow To tag in registrations
+.TP
+\fB\-\-timer\-C\fR=\fI180\fR
+specify length of timer C in sec (0 or negative will disable timer C)
+.PP
+Help options:
+.TP
+\fB\-?\fR, \fB\-\-help\fR
+Show this help message
+.TP
+\fB\-\-usage
+Display brief usage message
+
+.SH SEE ALSO
+
+.SH AUTHORS
+
+.SH BUGS
+
+
