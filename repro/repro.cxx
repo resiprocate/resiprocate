@@ -333,12 +333,23 @@ main(int argc, char** argv)
 
    if( args.mDoQValue)
    {
+      QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
+      
+      if(args.mForkBehavior=="FULL_SEQUENTIAL")
+      {
+         behavior=QValueTargetHandler::FULL_SEQUENTIAL;
+      }
+      else if(args.mForkBehavior=="FULL_PARALLEL")
+      {
+         behavior=QValueTargetHandler::FULL_PARALLEL;
+      }
+      
       QValueTargetHandler* qval = 
-         new QValueTargetHandler(QValueTargetHandler::FULL_SEQUENTIAL,
-                                 true, //Cancel btw fork groups?
-                                 true, //Wait for termination btw fork groups?
-                                 2000, //ms between fork groups, moot in this case
-                                 2000 //ms before cancel
+         new QValueTargetHandler(behavior,
+                                 args.mCancelBetweenForkGroups, //Cancel btw fork groups?
+                                 args.mWaitForTerminate, //Wait for termination btw fork groups?
+                                 args.mMsBetweenForkGroups, //ms between fork groups, moot in this case
+                                 args.mMsBeforeCancel //ms before cancel
                                  );
       baboons->addProcessor(std::auto_ptr<Processor>(qval));
    }

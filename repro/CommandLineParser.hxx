@@ -40,6 +40,11 @@ class CommandLineParser
       int mHttpPort;
       bool mRecursiveRedirect;
       bool mDoQValue;
+      Data mForkBehavior;
+      bool mCancelBetweenForkGroups;
+      bool mWaitForTerminate;
+      int mMsBetweenForkGroups;
+      int mMsBeforeCancel;
       bool mAllowBadReg;
       int mTimerC;
 };
