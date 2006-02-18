@@ -1383,6 +1383,17 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
    mSecurityAttributes = sec;
 }
 
+void
+SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
+{
+  std::vector<MessageDecorator*>::iterator i;
+  for (i = mOutboundDecorators.begin();
+       i != mOutboundDecorators.end(); i++)
+  {
+    (*i)->decorateMessage(*this, src, dest);
+  }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
