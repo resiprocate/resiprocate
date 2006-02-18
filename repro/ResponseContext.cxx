@@ -675,22 +675,35 @@ ResponseContext::processResponse(SipMessage& response)
 
    TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
 
+   int code = response.header(h_StatusLine).statusCode();
+
    if (i == mActiveTransactionMap.end())
    {
       // This is a response for a transaction that is no longer/was never active.  
       // This is probably a useless response (at best) or a malicious response (at worst).
       // Log the response here:
-      InfoLog( << "Discarding stray response" );
-      
+      if ((code / 100) != 2)
+      {
+        InfoLog( << "Discarding stray response" );
+      }
       // Even though this is a tremendously bad idea, some developers may
       // decide they want to statelessly forward the response
       // Here is the gun.  Don't say we didn't warn you!
-      //mRequestContext.sendResponse(response);
+      else
+      {
+        // !abr! Because we don't run timers on the transaction after
+        //       it has terminated and because the ACKs on INVITE
+        //       200-class responses are end-to-end, we don't discard
+        //       200 responses. To do this properly, we should run a
+        //       transaction timer for 64*T1 and remove transactions from
+        //       the ActiveTransactionMap *only* after that timer expires.
+        //       IN OTHER WORDS, REMOVE THIS CODE.
+        mRequestContext.sendResponse(response);
+      }
       return;
    }
    
    Target* target = i->second;
-   int code = response.header(h_StatusLine).statusCode();
 
    switch (code / 100)
    {
