@@ -11,6 +11,8 @@
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/Transport.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
@@ -24,7 +26,7 @@ using namespace std;
 
 
 Proxy::Proxy(SipStack& stack, 
-             const Uri& recordRoute,
+             bool recordRoute,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
@@ -39,10 +41,6 @@ Proxy::Proxy(SipStack& stack,
      mUserStore(userStore)
 {
    mTimerC=timerC;
-   if (!mRecordRoute.uri().host().empty())
-   {
-      mRecordRoute.uri().param(p_lr);
-   }
 }
 
 
@@ -105,7 +103,7 @@ Proxy::thread()
                   }
 			   
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
-			   
+   
                   // check the MaxForwards isn't too low
                   if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
                   {                     
@@ -321,10 +319,86 @@ Proxy::isMyUri(const Uri& uri)
    return ret;
 }
 
-const resip::NameAddr& 
-Proxy::getRecordRoute() const
+const resip::NameAddr
+Proxy::getRecordRoute(const resip::Transport *t,
+                      const resip::Tuple *ourAddress) const
 {
-   return mRecordRoute;
+   // !abr! Long term, we should have a lookup table that allows
+   // each transport to have its own Record-Route header.
+   // Until the configuration setup is rich enough to let us do
+   // something more advanced, we will simply synthesize an
+   // appropriate NameAddr. When such a change is made,
+   // CHANGE THE RETURN VALUE BACK TO BE A REFERENCE INSTEAD
+   // OF A VALUE.
+
+   if (!t || !mRecordRoute)
+   {
+      return NameAddr("");
+   }
+
+   resip::Uri uri;
+   uri.scheme() = "sip";
+   uri.user() = "repro";
+
+   if (ourAddress)
+   {
+      uri.host() = ourAddress->presentationFormat();
+   }
+   else
+   {
+      const resip::Tuple &tuple = t->getTuple();
+      if (tuple.isAnyInterface())
+      {
+        Tuple firstInterface = TransportSelector::getFirstInterface
+          (tuple.isV4(), t->transport());
+        uri.host() = firstInterface.presentationFormat();
+      }
+      else
+      {
+        uri.host() = tuple.presentationFormat();
+      }
+   }
+
+   uri.port() = t->port();
+
+   switch (t->transport())
+   {
+      case UDP:
+         uri.param(p_transport) = "udp";
+         break;
+
+      case TCP:
+         uri.param(p_transport) = "tcp";
+         break;
+
+      // Yes, this is deprecated by 3261, but it's the only
+      // accurate thing we can say.
+      case TLS:
+         uri.param(p_transport) = "tls";
+         break;
+
+      // !abr! Everything below this line is not yet standardized
+
+      case DTLS:
+         uri.param(p_transport) = "dtls";
+         break;
+
+      case SCTP:
+         uri.param(p_transport) = "sctp";
+         break;
+
+      case DCCP:
+         uri.param(p_transport) = "dccp";
+         break;
+
+      default:
+         uri.param(p_transport) = "unknown";
+         break;
+   }
+
+   uri.param(p_lr);
+
+   return resip::NameAddr(uri);
 }
 
 
