@@ -52,8 +52,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%attr(750,root,root) %{_sbindir}/repro
-%attr(755,root,root) %{_sysconfdir}/init.d/repro
+%attr(750,root,@REPROUSER@) %{_sbindir}/repro
+%attr(750,root,root) %{_sysconfdir}/init.d/repro
 %{_mandir}/man8/repro.8.gz
 
 # The configuration directory needs to be writeable because
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 
 # the directory where repro is executed and stores its configuration files
 %dir %attr(750,@REPROUSER@,@REPROUSER@) @REPRO_CWD@
+# the directory where repro puts its pid file
+%dir %attr(770,root,@REPROUSER@) @REPRO_RUNDIR@
 
 %pre
 test id --user > /dev/null 2>&1 || /usr/sbin/useradd -M -c "repro sip proxy daemon" -r @REPROUSER@
