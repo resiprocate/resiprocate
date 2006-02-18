@@ -162,7 +162,7 @@ SVN-VERSION:
 REPRO_VERSION = $(shell cat repro/VERSION)
 
 RPMBUILD_TOPDIR = $(shell rpm --eval '%{_topdir}')
-repro-rpm: dist
+repro-rpm: repro-dist
 	rpmbuild -ta --define="buildno $(shell cat SVN-VERSION)" repro-$(REPRO_VERSION).tar.gz
 	mv -f $(RPMBUILD_TOPDIR)/SRPMS/repro-$(REPRO_VERSION)-*.rpm .
 	mv -f $(RPMBUILD_TOPDIR)/RPMS/*/repro*-$(REPRO_VERSION)-*.rpm .
