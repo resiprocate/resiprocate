@@ -152,6 +152,7 @@ SipMessage::operator=(const SipMessage& rhs)
             mSecurityAttributes.reset();
          }
       }
+      mOutboundDecorators = rhs.mOutboundDecorators;
    }
 
    return *this;
