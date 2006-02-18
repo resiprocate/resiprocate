@@ -58,6 +58,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int allowBadReg = 0;
    int timerC=180;
    
+   char* adminPassword = "";
+
 #ifdef WIN32
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
@@ -109,6 +111,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
+      {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -176,6 +179,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    {
       mTimerC=0;
    }
+
+   mAdminPassword = adminPassword;
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);

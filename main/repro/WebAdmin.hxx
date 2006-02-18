@@ -32,6 +32,7 @@ class WebAdmin: public HttpBase
                 resip::Security* security,
                 bool noWebChallenges,
                 const resip::Data& realm,
+                const resip::Data& adminPassword,
                 int port=5080, 
                 resip::IpVersion version=resip::V4 );
       

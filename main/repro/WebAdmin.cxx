@@ -26,6 +26,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+
 WebAdmin::RemoveKey::RemoveKey(const Data &key1, const Data &key2) : mKey1(key1), mKey2(key2) 
 {
 }; 
@@ -54,6 +55,7 @@ WebAdmin::WebAdmin(  Store& store,
                      Security* security,
                      bool noChal,  
                      const Data& realm, // this realm is used for http challenges
+                     const Data& adminPassword,
                      int port, 
                      IpVersion version ):
    HttpBase( port, version, realm ),
@@ -62,6 +64,38 @@ WebAdmin::WebAdmin(  Store& store,
    mSecurity(security),
    mNoWebChallenges( noChal ) 
 {
+      const Data adminName("admin");
+
+      Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
+      
+      DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
+      if ( dbA1.empty() ) // if the admin user does not exist, add it 
+      { 
+         DebugLog(<< "Creating admin user" );
+         
+         mStore.mUserStore.addUser( adminName, // user
+                          Data::Empty, // domain 
+                          Data::Empty, // realm 
+                          (adminPassword==""?Data("admin"):adminPassword), // password 
+                          Data::Empty, // name 
+                          Data::Empty ); // email 
+         dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
+         assert( !dbA1.empty() );
+      }
+      else if (adminPassword!=Data(""))
+      {
+         //All we're using for admin is the password.
+         //This next bit of code relies on it being ok that we 
+         //blow away any other information
+         //in that row. It also expects addUser to replace anything matching the existing key
+         DebugLog(<< "Changing the web admin password" );
+         mStore.mUserStore.addUser( adminName,
+                                       Data::Empty,
+				       Data::Empty,
+                                       adminPassword,
+                                       Data::Empty,
+                                       Data::Empty);
+      }
 }
 
 
@@ -168,6 +202,7 @@ WebAdmin::buildPage( const Data& uri,
       // check that authentication is correct 
       Data dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
       
+#if 0
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
          mStore.mUserStore.addUser( pUser, // user
@@ -179,6 +214,7 @@ WebAdmin::buildPage( const Data& uri,
          dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
          assert( !dbA1.empty() );
       }
+#endif
 
       assert( !dbA1.empty() );
       if ( !dbA1.empty() )
@@ -342,9 +378,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
       "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
       "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
-      "      Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
-      "             assumed.  All other transport types must specify ACLs" << endl <<
-      "             by IP Address." << endl <<
       "</small></pre>" << endl <<
       
       "      </div>" << endl <<
@@ -408,9 +441,9 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      </table>" << endl <<
       "     </form>" << endl;
       
-   s << "<p>Note that the access lists are used as a whitelist to allow " << endl
-     << "gateways and other trusted nodes to skip authentication.  " << endl
-     << "**Currently this applies to all requests except Registrations.</p>";
+   s << "<p>Note that the access lists are not yet used by the proxy.  " 
+     << "They will be used in a future version as a whitelist to allow "
+     << "gateways and other trusted nodes to skip authentication. </p>";
 }
 
 
@@ -1170,7 +1203,7 @@ WebAdmin::buildDefaultPage()
 
          "<body bgcolor=\"#ffffff\">" << endl << 
          "  <h1><a href=\"user.html\">Login</a></h1>" << endl << 
-         "  <p>The default account is 'admin' with password 'admin'</p>" << endl << 
+         "  <p>The default account is 'admin' with password 'admin', but if you're wise, you've already changed that using the command line</p>" << endl << 
          "</body>" << endl << 
          "</html>" << endl;
       
