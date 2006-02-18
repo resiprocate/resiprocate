@@ -68,93 +68,159 @@ are the foundation needed to run a SIP service.
 
 .SH OPTIONS
 .TP
-\fB\-l\fR, \fB\-\-log\-type\fR=\fBsyslog\fR|\fBcerr\fR|\fBcout\fR
-where to send logging messages (default: \fBcout\fR)
+\fB\-l\fR, \fB\-\-log\-type\fR=\fBcout\fR|\fBsyslog\fR|\fBcerr\fR
+Set where to send logging messages. The default \fBcout\fR sends the
+messages to standard output, \fBcerr\fR uses the standard error pipe.
+With \fBsyslog\fR the messages are send to the system log using the logging
+facility \fBlocal6\fR. See
+.BR syslogd (8)
+or
+.BR syslog.conf (5)
+for more information.
 .TP
 \fB\-v\fR, \fB\-\-log\-level\fR=\fBSTACK\fR|\fBDEBUG\fR|\fBINFO\fR|\fBWARNING\fR|\fBALERT\fR
-specify the default log level (default: \fBINFO\fR)
+Set the minimum level a logging message needs to have in order to by
+written. The severity rises from left to right in the above order. The
+default is to log messages with level \fBINFO\fR or above.
 .TP
 \fB\-r\fR, \fB\-\-record\-route\fR=\fIsip:example.com\fR
-specify uri to use as Record-Route
+Activate record routing. The argument is the URI used in the Record-Route
+header field.
 .TP
 \fB\-\-udp\fR=\fI5060\fR
-add UDP transport on specified port (default: 5060)
+Specify the port to use for the UDP transport. Set to 0 to turn
+UDP off. Defaults to port 5060.
 .TP
 \fB\-\-tcp\fR=\fI5060\fR
-add TCP transport on specified port (default: 5060)
+Specify the port to use for the TCP transport. Set to 0 to turn TCP
+off. Defaults to port 5060.
 .TP
 \fB\-t\fR, \fB\-\-tls\-domain\fR=\fIexample.com\fR
-act as a TLS server for specified domain
+Act as a TLS server for specified domain.
 .TP
 \fB\-\-tls\fR=\fI5061\fR
-add TLS transport on specified port (default: 5061)
+Set the port to use for the TLS transport. Set to 0 to turn TLS off.
+Defaults to port 5061.
 .TP
 \fB\-\-dtls\fR=\fI0\fR
-add DTLS transport on specified port (default: 0)
+Set the port to use for the DTLS transport. Set ot 0 to turn DTLS off
+which is the default.
 .TP
 \fB\-\-enable\-cert\-server
-run a cert server
+Run a cert server.
 .TP
 \fB\-c\fR, \fB\-\-cert\-path\fR=\fISTRING\fR
-path for certificates (default: \fB~/.sipCerts\fR)
+Set the path for certificates. Defaults to \fB~/.sipCerts\fR.
 .TP
 \fB\-\-enable\-v6\fR
-enable IPV6
+Enable IPv6.
 .TP
 \fB\-\-disable\-v4\fR
-disable IPV4
+Disable IPv4.
 .TP
 \fB\-\-disable\-auth\fR
-disable DIGEST challenges
+Disable DIGEST challenges for certain SIP requests.
 .TP
-\fB\-\-disable\-web\-auth\R
-disable HTTP challenges
+\fB\-\-disable\-web\-auth\fR
+Disable authentication for the web administration server.
 .TP
 \fB\-\-disable\-reg\fR
-disable registrar
+Disable the registrar.
 .TP
 \fB\-i\fR, \fB\-\-interfaces\fR=\fIsip:10.1.1.1:5065;transport=tls\fR
-specify interfaces to add transports to
+Specify interfaces to add transports to. Each transport is given as a
+SIP-URI with the IP address and port of the local interface as the
+hostport part and the transport protocol as a \fBtransport\fR parameter.
+Several transports are separated by a comma.
+
+For example, to set up two transports, one for TLS and one for UDP use
+.B sip:192.168.1.200:5060;transport=tls,sip:192.168.1.200:5060;transport=udp
 .TP
 \fB\-d\fR, \fB\-\-domains\fR=\fIexample.com,foo.com\fR
-specify domains that this proxy is authorative
+Specify the list of domains this proxy is authorative for separated by
+comma.
 .TP
 \fB\-R\fR, \fB\-\-route\fR=\fIsip:p1.example.com,sip:p2.example.com\fR
-specify where to route requests that are in this proxy's domain
+Specify a route set where all requests this proxy is authorative for are
+sent to. Using this option overides the routes set through the web
+interface.
 .TP
 \fB\-\-reqChainName\fR=\fISTRING\fR
-name of request chain (default: default)
+Name of request chain used for processing requests. Currently, the only
+chain available is \fBdefault\fR.
 .TP
 \fB\-\-http\fR=\fI5080\fR
-run HTTP server on specified port (default: 5080)
+Specify the port used by the HTTP server. Defaults to 5080.
 .TP
 \fB\-\-recursive\-redirect\fR
-Handle 3xx responses in the proxy
+Enable to handle of 3xx responses in the proxy.
 .TP
 \fB\-\-q\-value\fR
-Enable sequential q-value processing
+Enable q-value processing. The q-value can be given in registrations and is
+used by the location server to order forwarding for multiple registrations.
+Without this option a request is forked to all registrations.
+.TP
+\fB\-\-q\-value\-behavior\fR=\fBFULL_SEQUENTIAL\fR|\fBEQUAL_Q_PARALLEL\fR|\fBFULL_PARALLEL\fR
+Specify forking behavior if \fB\-\-q\-value\fR is given.
+With \fBFULL_SEQUENTIAL\fR one target is called after another in the order
+of their q values. Using \fBEQUAL_Q_PARALLEL\fR (the default), the request
+is sent in
+batches of all registrations with the same q value. The batches are again
+ordered by the q value.
+\fBFULL_PARALLEL\fR causes the request to be sent in parallel to all
+registrations.
+.TP
+\fB\-\-q\-value\-cancel\-btw\-fork\-groups\fR
+If given, groups of parallel forks are canceled after the period specified
+by the \fB\-\-q\-value\-ms\-before\-cancel\fR option if no response was
+received.
+.TP
+\fB\-\-q\-value\-wait\-for\-terminate\-btw\-fork\-groups\fR
+If given, the proxy waits for groups of parallel forks to terminate before
+a new group is started. Otherwise, the next group is started once the
+waiting time has passed.
+.TP
+\fB\-\-q\-value\-ms\-between\-fork\-groups\fR=\fIINT\fR
+Specify the number of milliseconds to wait for a response from a group of
+parallel forks before starting another group.
+.TP
+\fB\-\-q\-value\-ms\-before\-cancel\fR=\fIINT\fR
+Specify the number of milliseconds to wait before cancelling a group of
+parallel forks if the \fB\-\-q\-value\-cancel\-btw\-fork\-groups\fR option
+is given.
 .TP
 \fB\-e\fR, \fB\-\-enum\-suffix\fR=\fIe164.arpa\fR
-specify enum suffix to search
+Specify enum suffix to search.
 .TP
 \fB\-b\fR, \fB\-\-allow\-bad\-reg\fR
-allow To tag in registrations
+Allow To tag in registrations.
 .TP
 \fB\-\-timer\-C\fR=\fI180\fR
-specify length of timer C in sec (0 or negative will disable timer C)
+Specify the length of timer C in sec which specifies the time a proxy
+waits before generating a timeout response. Set to 0 or a negative value
+to turn timer C of completely.
+.TP
+\fB\-\-admin\-password\fR=\fISTRING\fR
+Set the web administrator password.
 .PP
 Help options:
 .TP
 \fB\-?\fR, \fB\-\-help\fR
-Show this help message
+Show a help message.
 .TP
 \fB\-\-usage
-Display brief usage message
+Display brief usage message.
+.TP
+\fB\-\-version\fR
+Display the version information.
 
 .SH SEE ALSO
+Repro web site at
+.B http://www.sipfoundry.org/repro/
 
-.SH AUTHORS
+.\".SH AUTHORS
 
-.SH BUGS
+.\".SH BUGS
+
 
 
