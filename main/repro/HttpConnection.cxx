@@ -9,6 +9,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
 
+#include "repro/ReproVersion.hxx"
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 
@@ -180,7 +181,7 @@ HttpConnection::setPage(const Data& pPage,int response,const Mime& pType)
    mTxBuffer += "\" ";
    mTxBuffer += Symbols::CRLF;
  
-   mTxBuffer += "Server: Repro Proxy " ; mTxBuffer += Symbols::CRLF;
+   mTxBuffer += "Server: Repro Proxy " ; mTxBuffer += ReproVersion ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Mime-version: 1.0 " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Pragma: no-cache " ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Content-Length: "; mTxBuffer += len; mTxBuffer += Symbols::CRLF;

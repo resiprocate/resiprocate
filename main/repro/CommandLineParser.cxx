@@ -7,6 +7,7 @@
 #endif
 
 #include "CommandLineParser.hxx"
+#include "repro/ReproVersion.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/ParseException.hxx"
@@ -56,6 +57,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    char* enumSuffix = 0;
    int allowBadReg = 0;
+   int showVersion = 0;
    int timerC=180;
    
    char* adminPassword = "";
@@ -78,8 +80,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
-      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        0, "add UDP transport on specified port", "5060"},
-      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        0, "add TCP transport on specified port", "5060"},
+      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        0, "listen on UDP port", "5060"},
+      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        0, "listen on TCP port", "5060"},
 #if defined(USE_SSL)
       {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      0, "act as a TLS server for specified domain", "example.com"},
       {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        0, "add TLS transport on specified port", "5061"},
@@ -112,6 +114,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
+      {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -129,6 +132,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mLogType = logType;
    mLogLevel = logLevel;
 
+   if (showVersion)
+   {
+      cout << ReproVersion;
+      cout << " ";
+      cout << ReproBuildStamp;
+      cout << "\n";
+   }
+   
    if (tlsDomain) 
    {
       mTlsDomain = tlsDomain;
