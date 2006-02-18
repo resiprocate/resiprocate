@@ -522,9 +522,15 @@ TlsConnection::computePeerName()
       return;
    }
 
-   // TODO - check that this certificate is valid 
+   // check that this certificate is valid 
+   if (X509_V_OK != SSL_get_verify_result(mSsl))
+   {
+      DebugLog(<< "Peer certificate in TLS connection is not valid" );
+      X509_free(cert); cert=NULL;
+      return;
+   }
 
-   // look at the Common Name to fine the peerName of the cert 
+   // look at the Common Name to find the peerName of the cert 
    X509_NAME* subject = X509_get_subject_name(cert);
    assert(subject);
    int i =-1;
