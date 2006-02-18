@@ -85,6 +85,7 @@ RouteStore::addRoute(const resip::Data& method,
    route.routeRecord.mRewriteExpression =  rewriteExpression;
    route.routeRecord.mOrder = order;
    route.key = key;
+   route.preq = 0;
    if( !route.routeRecord.mMatchingPattern.empty() )
    {
      int flags = REG_EXTENDED;
