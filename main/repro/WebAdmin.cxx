@@ -378,6 +378,9 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      IPv6 + mask       ::341:0:23:4bb:0011:2435:abcd/80" << endl <<
       "      IPv6 reference    [::341:0:23:4bb:0011:2435:abcd]" << endl <<
       "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
+      "      Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
+      "             assumed.  All other transport types must specify ACLs" << endl <<
+      "             by IP Address." << endl <<
       "</small></pre>" << endl <<
       
       "      </div>" << endl <<
@@ -441,9 +444,9 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      </table>" << endl <<
       "     </form>" << endl;
       
-   s << "<p>Note that the access lists are not yet used by the proxy.  " 
-     << "They will be used in a future version as a whitelist to allow "
-     << "gateways and other trusted nodes to skip authentication. </p>";
+    s << "<p>Note that the access lists are used as a whitelist to allow " 
+     << "gateways and other trusted nodes to skip authentication.  " 
+     << "**Currently this applies to all requests except Registrations.</p>";
 }
 
 

@@ -36,6 +36,7 @@
 #include "repro/monkeys/StrictRouteFixup.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
+#include "repro/monkeys/SetTargetConnection.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -275,6 +276,9 @@ main(int argc, char** argv)
       
       StrictRouteFixup* srf = new StrictRouteFixup;
       locators->addProcessor(std::auto_ptr<Processor>(srf));
+
+      SetTargetConnection* stc = new SetTargetConnection;   
+      locators->addProcessor(std::auto_ptr<Processor>(stc)); 
       
       IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
