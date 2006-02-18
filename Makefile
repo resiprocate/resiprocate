@@ -108,14 +108,11 @@ cleanall: cleancontrib
 	for dir in $(CLEANDIRS); do make -C $$dir cleanall; done ; true
 	-$(MAKE) -C contrib/ares distclean
 
-distclean: cleancontrib
+distclean: cleancontrib cleanpkg
 	for dir in $(CLEANDIRS); do make -C $$dir distclean; done ; true
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
-
-cleanpkg:
-	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
 
 ###########################################################################
 
@@ -161,23 +158,25 @@ SVN-VERSION:
 
 REPRO_VERSION = $(shell cat repro/VERSION)
 
-RPMBUILD_TOPDIR = $(shell rpm --eval '%{_topdir}')
-repro-rpm: rpmbuild-area repro-dist
-	rpmbuild -ta --define="buildno $(shell cat SVN-VERSION)" repro-$(REPRO_VERSION).tar.gz
-	mv -f $(RPMBUILD_TOPDIR)/SRPMS/repro-$(REPRO_VERSION)-*.rpm .
-	mv -f $(RPMBUILD_TOPDIR)/RPMS/*/repro*-$(REPRO_VERSION)-*.rpm .
+RPMBUILD_TOPDIR = $(shell pwd)/rpm
+repro-rpm: repro-dist rpmbuild-area 
+	rpmbuild -ta \
+		--define="buildno $(shell cat SVN-VERSION)" \
+		--define="_topdir $(RPMBUILD_TOPDIR)" \
+		repro-$(REPRO_VERSION).tar.gz
+	ls -l $(RPMBUILD_TOPDIR)/SRPMS/repro-$(REPRO_VERSION)-*.rpm
+	ls -l $(RPMBUILD_TOPDIR)/RPMS/*/repro*-$(REPRO_VERSION)-*.rpm
 
-rpmbuild-area: 
-	@test -d $(RPMBUILD_TOPDIR) -a -w $(RPMBUILD_TOPDIR) \
-	|| ( echo "Must be able to write to $(RPMBUILD_TOPDIR) or override _topdir to build an rpm" ; \
-			exit 1 )
-	@for subdir in BUILD RPMS SOURCES SPECS SRPMS; do \
-		test -d $(RPMBUILD_TOPDIR)/$$subdir \
-		|| mkdir $(RPMBUILD_TOPDIR)/$$subdir \
-		|| ( echo "Can not create build directory $(RPMBUILD_TOPDIR)/$$subdir"; exit 1 ); \
-	done
+RPMBUILD_SUBDIRS = BUILD RPMS SOURCES SPECS SRPMS
+rpmbuild-area: $(foreach subdir,$(RPMBUILD_SUBDIRS),$(RPMBUILD_TOPDIR)/$(subdir))
 
-repro-dist: repro-$(REPRO_VERSION).tar.gz repro-$(REPRO_VERSION).tar.gz.md5
+$(RPMBUILD_TOPDIR) :
+	test -d $(RPMBUILD_TOPDIR) || mkdir $(RPMBUILD_TOPDIR) 
+
+$(foreach subdir,$(RPMBUILD_SUBDIRS),$(RPMBUILD_TOPDIR)/$(subdir)) : $(RPMBUILD_TOPDIR)
+	test -d $@ || mkdir $@
+
+repro-dist: cleanpkg repro-$(REPRO_VERSION).tar.gz repro-$(REPRO_VERSION).tar.gz.md5
 
 tmptarfile=/tmp/repro.tar.gz.$$
 repro-$(REPRO_VERSION).tar.gz: SVN-VERSION repro.spec 
@@ -195,6 +194,10 @@ repro.spec: repro/repro.spec
 	$(MAKE) -C repro repro.spec.inst
 	mv repro/repro.spec.inst repro.spec
 
+cleanpkg:
+	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
+	rm -rf rpm repro-$(REPRO_VERSION)
+
 .PHONY : resiprocate tests contrib ares dtls
 .PHONY : install install-ares install-rutil install-resip install-repro install-dum
-.PHONY : SVN-VERSION repro-rpm cleanpkg rpmbuild-area-check
+.PHONY : SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
