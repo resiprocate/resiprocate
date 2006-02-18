@@ -21,7 +21,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logType = "cout";
    char* logLevel = "INFO";
    char* tlsDomain = 0;
-   char* recordRoute = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
 #if defined(USE_SSL)
@@ -42,6 +41,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    int noRegistrar = false;
    int certServer = true;
+   int shouldRecordRoute = false;
 
    char* reqChainName = "default";
    char* mySqlServer = 0;
@@ -66,7 +66,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"record-route",     'r',  POPT_ARG_NONE,                        &shouldRecordRoute,    0, "specify whether to record route", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -120,13 +120,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
-   mShouldRecordRoute = false;
-   if (recordRoute) 
-   {
-      mShouldRecordRoute = true;
-      mRecordRoute = toUri(recordRoute, "Record-Route");
-   }
-   
+   mShouldRecordRoute = shouldRecordRoute;
+
    mUdpPort = udpPort;
    mTcpPort = tcpPort;
    mTlsPort = tlsPort;
