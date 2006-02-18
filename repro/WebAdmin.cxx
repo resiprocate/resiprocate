@@ -367,7 +367,7 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      <div class=space>" << endl <<
       "        <br />" << endl <<
       
-      "<pre><small>" << endl <<
+      "<pre>" << endl <<
       "      Input can be in any of these formats" << endl <<
       "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
       "      bare hostname     server1" << endl <<
@@ -380,8 +380,11 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
       "      Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
       "             assumed.  All other transport types must specify ACLs" << endl <<
-      "             by IP Address." << endl <<
-      "</small></pre>" << endl <<
+      "             by IP Address.<br>" << endl <<
+      // TODO add code to compare the mask
+      "      Caveat:  Currently the database will store a mask, but the mask is never consulted." << endl <<
+      "      (Yes, this is a bug)." << endl <<
+      "</pre>" << endl <<
       
       "      </div>" << endl <<
       "        <table cellspacing=\"2\" cellpadding=\"0\">" << endl <<
