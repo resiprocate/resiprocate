@@ -281,7 +281,7 @@ bool isDgramTransport (TransportType type)
 }
 
 Tuple
-getFirstInterface(bool is_v4, TransportType type)
+TransportSelector::getFirstInterface(bool is_v4, TransportType type)
 {
 // !kh! both getaddrinfo() and IPv6 are not supported by cygwin, yet.
 #ifdef __CYGWIN__
@@ -647,6 +647,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             msg->header(h_RequestLine).uri().remove(p_cid);
             InfoLog (<< "Using existing connection id " << cid);
          }
+
+         // Call back anyone who wants to perform outbound decoration
+         msg->callOutboundDecorators(source, target);
 
          Data& encoded = msg->getEncoded();
          encoded.clear();
