@@ -162,10 +162,20 @@ SVN-VERSION:
 REPRO_VERSION = $(shell cat repro/VERSION)
 
 RPMBUILD_TOPDIR = $(shell rpm --eval '%{_topdir}')
-repro-rpm: repro-dist
+repro-rpm: rpmbuild-area repro-dist
 	rpmbuild -ta --define="buildno $(shell cat SVN-VERSION)" repro-$(REPRO_VERSION).tar.gz
 	mv -f $(RPMBUILD_TOPDIR)/SRPMS/repro-$(REPRO_VERSION)-*.rpm .
 	mv -f $(RPMBUILD_TOPDIR)/RPMS/*/repro*-$(REPRO_VERSION)-*.rpm .
+
+rpmbuild-area: 
+	@test -d $(RPMBUILD_TOPDIR) -a -w $(RPMBUILD_TOPDIR) \
+	|| ( echo "Must be able to write to $(RPMBUILD_TOPDIR) or override _topdir to build an rpm" ; \
+			exit 1 )
+	@for subdir in BUILD RPMS SOURCES SPECS SRPMS; do \
+		test -d $(RPMBUILD_TOPDIR)/$$subdir \
+		|| mkdir $(RPMBUILD_TOPDIR)/$$subdir \
+		|| ( echo "Can not create build directory $(RPMBUILD_TOPDIR)/$$subdir"; exit 1 ); \
+	done
 
 repro-dist: repro-$(REPRO_VERSION).tar.gz repro-$(REPRO_VERSION).tar.gz.md5
 
@@ -187,4 +197,4 @@ repro.spec: repro/repro.spec
 
 .PHONY : resiprocate tests contrib ares dtls
 .PHONY : install install-ares install-rutil install-resip install-repro install-dum
-.PHONY : SVN-VERSION repro-rpm cleanpkg
+.PHONY : SVN-VERSION repro-rpm cleanpkg rpmbuild-area-check
