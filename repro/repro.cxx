@@ -262,12 +262,14 @@ main(int argc, char** argv)
    ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
    ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
 
+#if 0
    if (args.mRequestProcessorChainName=="StaticTest")
    {
       ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
       requestProcessors.addProcessor(std::auto_ptr<Processor>(testMonkey));
    }
    else
+#endif
    {
       // Either the chainName is default or we don't know about it
       // Use default if we don't recognize the name
