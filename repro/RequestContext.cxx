@@ -143,9 +143,16 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             {
                if(mResponseContext.hasCandidateTransactions())
                {
-                  //Someone forgot to start any of the targets they just added.
-                  ErrLog(<<"In RequestContext, target processor chain appears "
-                  << "to have failed to process any targets. (Bad baboon?)");
+                  // Someone forgot to start any of the targets they just added.
+                  // Send a 500 response
+                  resip::SipMessage response;
+                  ErrLog(  << "In RequestContext, target processor chain appears "
+                           << "to have failed to process any targets. (Bad baboon?)"
+                           << "Sending a 500 response for this request:" 
+                           << mOriginalRequest->header(h_RequestLine).uri() );
+                  Helper::makeResponse(response, *mOriginalRequest, 500); 
+                  sendResponse(response);
+                  mHaveSentFinalResponse=true;
                }
                else
                {
@@ -153,7 +160,9 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   << " appears to have added Targets, but all of these Targets"
                   << " are already Terminated. Further, there are no candidate"
                   << " Targets. (Bad monkey?)");
-                  // TODO make sure to do the right thing here.
+
+                  // Send best response
+                  mResponseContext.forwardBestResponse();
                }
             }
 
@@ -170,9 +179,10 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       
       Processor::processor_action_t ret = Processor::Continue;
       ret = mResponseProcessorChain.process(*this);
-            
-      // this is temporarily not allowed since to allow async requests in the
-      // response chain we will need to maintain a collection of all of the
+
+      // TODO
+      // this is temporarily not allowed.  Allowing async requests in the
+      // response chain means we will need to maintain a collection of all of the
       // outstanding responses that are still processing. 
       assert(ret != Processor::WaitingForEvent);
       
@@ -189,21 +199,29 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          {
             if(mResponseContext.hasCandidateTransactions())
             {
-               //The last active transaction has ended, and the response processors
-               //did not start any of the pending transactions.
-               ErrLog(<<"In RequestContext, after processing a sip response:"
-               << " We have no active transactions, but there are candidates "
-               << " remaining. (Bad baboon?)");
+               resip::SipMessage response;
+               // The last active transaction has ended, and the response processors
+               // did not start any of the pending transactions.
+               // Send a 500 response.
+               ErrLog( << "In RequestContext, after processing a sip response:"
+                       << " We have no active transactions, but there are candidates "
+                       << " remaining. (Bad baboon?)"
+                       << "Sending a 500 response for this request:" 
+                       << mOriginalRequest->header(h_RequestLine).uri() );
+               Helper::makeResponse(response, *mOriginalRequest, 500); 
+               sendResponse(response);
+               mHaveSentFinalResponse=true;
             }
             else
             {
                ErrLog(<<"In RequestContext, after processing "
                << "a sip response: all transactions are terminated, but we"
                << " have not sent a final response. (What happened here?) ");
-               // TODO make sure to do the right thing.
+
+               // Send best response
+               mResponseContext.forwardBestResponse();
             }
          }
-
          
          return;
       }
@@ -286,10 +304,17 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                   {
                      if(mResponseContext.hasCandidateTransactions())
                      {
-                        //Someone forgot to start any of the targets they just added.
-                        ErrLog(<<"In RequestContext, request and target processor"
-                        << " chains have run, and we have some Candidate Targets,"
-                        << " but no active Targets. (Bad baboon?)");
+                        resip::SipMessage response;
+                        // Someone forgot to start any of the targets they just added.
+                        // Send a 500 response
+                        ErrLog( << "In RequestContext, request and target processor"
+                                << " chains have run, and we have some Candidate Targets,"
+                                << " but no active Targets. (Bad baboon?)"
+                                << "Sending a 500 response for this request:" 
+                                << mOriginalRequest->header(h_RequestLine).uri() );
+                        Helper::makeResponse(response, *mOriginalRequest, 500); 
+                        sendResponse(response);
+                        mHaveSentFinalResponse=true;
                      }
                      else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
                      {
@@ -297,7 +322,9 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                         << "chains have run, and all Targets are now Terminated."
                         << " However, we have not sent a final response, and our "
                         << "best final response is not a 408.(What happened here?)");
-                        // TODO what do we do here?
+
+                        // Send best response
+                        mResponseContext.forwardBestResponse();
                      }
                   }
 

@@ -242,6 +242,8 @@ class ResponseContext
       int mBestPriority;
       bool mSecure;
 
+      void forwardBestResponse();
+      
       friend class RequestContext;
       friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 };
