@@ -48,14 +48,12 @@ IsTrustedNode::process(RequestContext& context)
 #endif
       )
    {
-      //TcpBaseTransport *transport = const_cast<TcpBaseTransport *>(dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport()));
       const TcpBaseTransport *transport = dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport());
       assert(transport);
       const ConnectionManager &connectionManager = transport->getConnectionManager();
       const TlsConnection* conn = dynamic_cast<const TlsConnection *>(connectionManager.findConnection(source));
       assert(conn);
 
-      // !slg! TODO need mechanism in resip to check client cert chain 
       if(mAclStore.isTlsPeerNameTrusted(conn->getPeerName()))
       {
          InfoLog (<< "IsTrustedNode Monkey - Tls peer name IS trusted: " << conn->getPeerName());
