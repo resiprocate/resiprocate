@@ -45,6 +45,9 @@ else
   . /etc/init.d/functions
 fi
 
+## allow core files
+ulimit -c unlimited
+
 pidfile=@REPRO_RUNDIR@/repro.pid
 
 # See how we were called.
@@ -53,6 +56,7 @@ case "$1" in
     doit)
         echo $$ > $pidfile
         cmdargs=`sed s/#.*// @REPRO_CONFDIR@/repro.conf`
+        cd @REPRO_CWD@ || exit 1
         exec @bindir@/repro ${cmdargs}
         ;;
 
