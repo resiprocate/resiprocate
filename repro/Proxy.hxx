@@ -11,6 +11,7 @@
 namespace resip
 {
 class SipStack;
+class Transport;
 }
 
 namespace repro
@@ -23,7 +24,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
       Proxy(resip::SipStack&,
-            const resip::Uri& recordRoute, 
+            bool recordRoute, 
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
@@ -35,7 +36,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual void thread();
       
       bool isMyUri(const resip::Uri& uri);      
-      const resip::NameAddr& getRecordRoute() const;
+      const resip::NameAddr getRecordRoute(const resip::Transport *,
+                                           const resip::Tuple *ourAddress=0) const;
       
       UserStore& getUserStore();
       void send(const resip::SipMessage& msg);
@@ -53,7 +55,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
    private:
       resip::SipStack& mStack;
-      resip::NameAddr mRecordRoute;
+      bool mRecordRoute;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;
