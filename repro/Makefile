@@ -92,7 +92,8 @@ include $(BUILD)/Makefile.post
 install-rh-config: \
 	$(DESTDIR)/etc/repro.conf \
 	$(DESTDIR)/etc/init.d/repro \
-	$(DESTDIR)/var/lib/repro
+	$(DESTDIR)/var/lib/repro \
+	$(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8
 
 $(DESTDIR)/etc/repro.conf:  etc/repro.conf.inst
 	if [ -e $@ ]; \
@@ -120,6 +121,9 @@ localize = sed \
 
 $(DESTDIR)/var/lib/repro:
 	install -d $(DESTDIR)/var/lib/repro
+
+$(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8: doc/repro.8
+	install -D $< $@
 
 clean: clean-inst
 
