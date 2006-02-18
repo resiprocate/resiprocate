@@ -101,7 +101,7 @@ cleancontrib:
 	-$(MAKE) -C tfm/contrib/Netxx-0.3.2 realclean
 	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
 
-clean:
+clean: cleanpkg
 	for dir in $(CLEANDIRS); do make -C $$dir clean; done ; true
 
 cleanall: cleancontrib
@@ -113,6 +113,10 @@ distclean: cleancontrib
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
+
+cleanpkg:
+	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
+
 ###########################################################################
 
 # install does not include install-ares, because it did not in the
@@ -183,4 +187,4 @@ repro.spec: repro/repro.spec
 
 .PHONY : resiprocate tests contrib ares dtls
 .PHONY : install install-ares install-rutil install-resip install-repro install-dum
-.PHONY : SVN-VERSION repro-rpm
+.PHONY : SVN-VERSION repro-rpm cleanpkg
