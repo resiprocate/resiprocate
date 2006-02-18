@@ -111,6 +111,7 @@ localize = sed \
 	-e 's,@REPRO_INSTALL@,$(INSTALL_PREFIX),g' \
 	-e 's,@REPRO_RUNDIR@,/var/run,g' \
 	-e 's,@REPRO_CONFDIR@,/etc,g' \
+	-e 's,@REPRO_CWD@,/var/lib/repro,g' \
 	-e 's,@bindir@,$(INSTALL_PREFIX)/sbin,g' \
 	-e 's,@VERSION@,$(VERSION),g' \
 
