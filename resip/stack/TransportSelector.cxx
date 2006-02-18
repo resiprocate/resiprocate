@@ -632,6 +632,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                ErrLog (<< "Couldn't add identity header: " << e);
                msg->remove(h_Identity);
+               if (msg->exists(h_IdentityInfo)) 
+               {
+                  msg->remove(h_IdentityInfo);
+               }                  
             }
 #endif
          }
