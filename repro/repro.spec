@@ -53,7 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %attr(750,root,@REPROUSER@) %{_sbindir}/repro
-%attr(750,root,root) %{_sysconfdir}/init.d/repro
+%attr(750,root,@REPROUSER@) %{_sysconfdir}/init.d/repro
 %{_mandir}/man8/repro.8.gz
 
 # The configuration directory needs to be writeable because

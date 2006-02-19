@@ -114,7 +114,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
-      {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number", 0},
+      {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -138,6 +138,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       cout << " ";
       cout << ReproBuildStamp;
       cout << "\n";
+      exit(0);
    }
    
    if (tlsDomain) 
