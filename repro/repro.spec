@@ -66,7 +66,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(770,root,@REPROUSER@) @REPRO_RUNDIR@
 
 %pre
-test id --user @REPROUSER@ > /dev/null 2>&1 || /usr/sbin/useradd -M -c "repro sip proxy daemon" -r @REPROUSER@
+id --user @REPROUSER@ > /dev/null 2>&1 || /usr/sbin/useradd -M -c "repro sip proxy daemon" -r @REPROUSER@
 
 %post
 # Arrange for sipX to be started every time the system starts up.
