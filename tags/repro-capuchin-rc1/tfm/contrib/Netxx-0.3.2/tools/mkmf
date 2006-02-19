@@ -1,0 +1,637 @@
+#! /usr/bin/perl
+######################################################################
+# Copyright (C) 2001-2002 Peter J Jones (pjones@pmade.org)
+# All Rights Reserved
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name of the Author nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS''
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR
+# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+################################################################################
+#
+# mkmf (Make a Makefile)
+# Peter J Jones (pjones@pmade.org)
+#
+# This file is part of cxxtools (http://pmade.org/pjones/software/cxxtools/)
+#
+################################################################################
+#
+# Includes
+#
+################################################################################
+use strict;
+use File::Basename;
+use Getopt::Long;
+################################################################################
+#
+# Constants
+#
+################################################################################
+use constant DATE		=> 'Tue May  8 22:21:39 2001';
+use constant ID			=> '$Id: mkmf,v 1.1 2003/08/12 06:28:53 jason Exp $';
+################################################################################
+#
+# Global Variables
+#
+################################################################################
+my %clo;
+my $object_extension;
+my $static_lib_extension;
+my $shared_lib_extension;
+my $static_lib_prefix;
+my $shared_lib_prefix;
+my $exec_extension;
+my $depend_flag;
+my ($ar, $arflags, $arextra);
+my ($sar, $sarflags);
+my @objects;
+my $rmf = "rm -f";
+my $source_ext_re = qr{\.(cxx|cc|cpp|c|c\+\+)$};
+my $dirsep = '/';
+
+if ($^O =~ /mswin/i) {
+    $dirsep = '\\';
+}
+
+if ($^O =~ /mswin/i) {
+    $rmf = "del /F /Q";
+}
+################################################################################
+#
+# Code Start
+#
+################################################################################
+GetOptions(
+    \%clo,
+    'help|h!',
+
+    'cxxflags=s',
+    'setid=s',
+    'developer!',
+    'include=s@',
+    'linkwith=s@',
+    'slinkwith=s@',
+    'many-exec!',
+    'one-exec=s',
+    'output|o=s',
+    'quiet!',
+    'static-lib=s',
+    'shared-lib=s',
+    'wrapper!',
+    'major=i',
+    'install=s',
+    'test-cmds=s',
+    'with-test:s',
+    'append=s@',
+    'clean-target=s@',
+    'clean-file=s@',
+    'fake-header=s@',
+    'mt!',
+) or usage();
+$clo{'help'} && usage();
+$clo{'linkwith'} ||= [];
+$clo{'include'} ||= [];
+$clo{'append'}	||= [];
+$clo{'clean-target'} ||= [];
+$clo{'clean-file'} ||= [];
+$clo{'fake-header'} ||= [];
+
+sub usage {
+    print "Usage: $0 <options> <source files>\n", <<EOT;
+  --help, -h             This message
+  --cxxflags path        Give path to the cxxflags script
+  --setid id             Use the given compiler id instead of checking
+
+  --developer            Add helpful stuff for a developer
+  --include path         Add include path to CXXFLAGS
+  --install spec         Add an install target using spec
+  --linkwith lib         Link executables with lib
+  --linkwith path,lib    Link executables with lib in path
+  --slinkwith lib        Static Link with lib
+  --slinkwith path,lib   Static Link with lib in path
+  --major num            Set major version for shared libraries
+  --mt                   Generate multithread safe code
+  --many-exec            Generate a Makefile for multiple executables
+  --one-exec basename    Generate a Makefile for one executable
+  --output, -o name      Name of file to generate [Default: Makefile]
+  --static-lib basename  Generate a Makefile for a static library
+  --shared-lib basename  Generate a Makefile for a shared library
+  --quiet                Be quiet
+  --wrapper              Generate a Makefile that calls other Makefile
+  --with-test            Generate a test target when using --wrapper
+                         you should give a comma seperated list of 
+			 directories to include in the wrap. Default to all.
+  --test-cmds            Add a test target that executes the given
+                         comma seperated list of commands
+  --append filename      Append the given file to the Makefile
+  --clean-target target  Add another target to the clean target
+  --clean-file filename  Remove the given file on a make clean
+  --fake-header filename Create a temp file for dependancies
+
+You must give a target type as well, target types are:
+  --one-exec
+  --many-exec
+  --static-lib
+  --shared-lib
+
+You can use --static-lib and --shared-lib at the same time.
+EOT
+    exit 1;
+}
+
+# set some defaults
+$clo{'output'}	    ||= 'Makefile';
+$clo{'cxxflags'}    ||= "..${dirsep}tools${dirsep}cxxflags";
+$clo{'cxxflags'}      = "'$clo{cxxflags}'";
+$clo{'major'}	    ||= '1';
+$ENV{'CXX'}	    ||= 'c++';
+$ENV{'CXXFLAGS'}    ||= '';
+$ENV{'LD'}	    ||= `$^X $clo{'cxxflags'} --linker`; chomp $ENV{'LD'};
+$ENV{'LDFLAGS'}	    ||= '';
+$ENV{'POST_LDFLAGS'}||= '';
+
+if ($clo{'setid'}) {
+    addflags($clo{'cxxflags'}, " --setid $clo{'setid'}");
+} else {
+    addflags($clo{'cxxflags'}, "--setid " . `$^X $clo{'cxxflags'} --getid`);
+}
+
+chomp($object_extension = `$^X $clo{'cxxflags'} --object-extension`);
+chomp($exec_extension = `$^X $clo{'cxxflags'} --exec-extension`);
+chomp($static_lib_extension = `$^X $clo{'cxxflags'} --static-lib-extension`);
+chomp($shared_lib_extension = `$^X $clo{'cxxflags'} --shared-lib-extension`);
+chomp($static_lib_prefix = `$^X $clo{'cxxflags'} --static-lib-prefix`);
+chomp($shared_lib_prefix = `$^X $clo{'cxxflags'} --shared-lib-prefix`);
+chomp($depend_flag = `$^X $clo{'cxxflags'} --depend`);
+chomp($ar = `$^X $clo{'cxxflags'} --ar`);
+chomp($arflags = `$^X $clo{'cxxflags'} --arflags`);
+chomp($arextra = `$^X $clo{'cxxflags'} --arextra`);
+chomp($sar = `$^X $clo{'cxxflags'} --sar`);
+chomp($sarflags = `$^X $clo{'cxxflags'} --sarflags`);
+
+clean($object_extension);
+clean($exec_extension);
+clean($static_lib_extension);
+clean($shared_lib_extension);
+clean($static_lib_prefix);
+clean($shared_lib_prefix);
+clean($depend_flag);
+clean($ar);
+clean($arflags);
+clean($arextra);
+clean($sar);
+clean($sarflags);
+
+if ($clo{'developer'}) {
+    addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --warn`);
+    addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --debug`);
+} else {
+    addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --optimize`);
+}
+
+if ($clo{'static-lib'} or $clo{'shared-lib'}) {
+    addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --pic`);
+}
+
+if ($clo{'mt'}) {
+    addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --mtcompile`);
+    addflags($ENV{'LDFLAGS'}, `$^X $clo{'cxxflags'} --mtlink`);
+}
+
+addflags($ENV{'CXXFLAGS'}, `$^X $clo{'cxxflags'} --general`);
+
+foreach (@{$clo{'slinkwith'}}) {
+    my ($lib, $path);
+
+    if (/,/) {
+	($path, $lib) = split(/,/, $_, 2);
+	$path .= $dirsep unless $path =~ /$dirsep$/;
+    } else {
+	$path = ".$dirsep";
+	$lib = $_;
+    }
+
+    $lib = $static_lib_prefix . $lib . $static_lib_extension;
+    addflags($ENV{'LDFLAGS'}, "'$path$lib'");
+}
+
+foreach (@{$clo{'linkwith'}}) {
+    addflags($ENV{'LDFLAGS'}, `$^X $clo{'cxxflags'} --linkwith "$_"`);
+}
+
+foreach (@{$clo{'include'}}) {
+    addflags($ENV{'CXXFLAGS'}, "-I$_");
+}
+
+if (!$clo{'static-lib'} && !$clo{'shared-lib'} && !$clo{'many-exec'} && !$clo{'one-exec'} && !$clo{'wrapper'}) {
+    print STDERR "$0: missing target type type\n";
+    usage();
+}
+
+
+if (!$clo{'wrapper'}) {
+    my $x;
+    @objects = map{
+	($x=$_) =~ s/$source_ext_re/$object_extension/i; clean($x); $x
+    } @ARGV;
+}
+
+open(MF, ">$clo{'output'}") || die "$0: can't create $clo{'output'}: $!";
+
+print MF "# This Makefile automaticly generated by $0\n";
+print MF "# File created on: ", scalar localtime, "\n";
+print MF "# DO NOT EDIT THIS FILE!\n\n";
+
+if (!$clo{'wrapper'}) {
+    print MF "CXX=$ENV{CXX}\n";
+    print MF "CXXFLAGS=$ENV{CXXFLAGS}\n";
+    print MF "AR=$ar\n";
+    print MF "ARFLAGS=$arflags\n";
+    print MF "SAR=$sar\n";
+    print MF "SARFLAGS=$sarflags\n";
+    print MF "LD=$ENV{LD}\n";
+    print MF "LDFLAGS=$ENV{LDFLAGS}\n";
+    print MF "POST_LDFLAGS=$ENV{POST_LDFLAGS}\n";
+    print MF "OBJECTS=", join(' ', @objects), "\n";
+}
+
+if (!$clo{'quiet'}) {
+    print '+', '-' x 70, "\n";
+    print "|    -*- Compiler Settings -*-\n";
+    print "|\n";
+    print "|      CXX = $ENV{CXX}\n";
+    print "| CXXFLAGS = $ENV{CXXFLAGS}\n";
+    print "|       AR = $ar\n";
+    print "|  ARFLAGS = $arflags\n";
+    print "|      SAR = $sar\n";
+    print "| SARFLAGS = $sarflags\n";
+    print "|       LD = $ENV{LD}\n";
+    print "|  LDFLAGS = $ENV{LDFLAGS}\n";
+    print '+', '-' x 70, "\n";
+}
+
+if ($clo{'one-exec'}) {
+    my $target = $clo{'one-exec'} . $exec_extension;
+    my $mkexec; chomp($mkexec = `$^X $clo{'cxxflags'} --mkexec $target`);
+    print MF "TARGETS=$target\n";
+    print MF "\n";
+
+    print MF "all: \$(TARGETS)\n";
+    print MF "\n";
+
+    print MF "$target: \$(OBJECTS)\n";
+    print MF "\t\$(LD) $mkexec \$(OBJECTS) \$(LDFLAGS) \$(POST_LDFLAGS)\n";
+} elsif ($clo{'many-exec'}) {
+    my $x;
+
+    my @targets = map{
+	($x=$_) =~ s/$source_ext_re/$exec_extension/i; clean($x); $x
+    } @ARGV;
+
+    print MF "TARGETS=", join(' ', @targets), "\n";
+    print MF "\n";
+
+    print MF "all: \$(TARGETS)\n";
+    print MF "\n";
+
+    foreach my $src (@ARGV) {
+	my $exec = $src; $exec =~ s/$source_ext_re/$exec_extension/i;
+	my $obj = $src;  $obj  =~ s/$source_ext_re/$object_extension/i;
+	my $mkexec; chomp($mkexec = `$^X $clo{'cxxflags'} --mkexec $exec`);
+
+	print MF "$exec: $obj\n";
+	print MF "\t\$(LD) $mkexec $obj \$(LDFLAGS) \$(POST_LDFLAGS)\n";
+	print MF "\n";
+    }
+} elsif ($clo{'static-lib'} or $clo{'shared-lib'}) {
+	my $static_target = $static_lib_prefix . $clo{'static-lib'} . $static_lib_extension;
+	my $shared_target = $shared_lib_prefix . $clo{'shared-lib'} . $shared_lib_extension;
+	my $targets = '';
+
+	my $static_lib = `$^X $clo{'cxxflags'} --mkstatic $static_target`;
+	chomp($static_lib); clean($static_lib);
+
+	my $shared_lib = `$^X $clo{'cxxflags'} --major $clo{'major'} --mkshared $shared_target`;
+	chomp($shared_lib); clean($shared_lib);
+
+	$targets .= "$static_target " if $clo{'static-lib'};
+	$targets .= "$shared_target " if $clo{'shared-lib'};
+
+	print MF "TARGETS=$targets\n\n";
+	print MF "all: \$(TARGETS)\n\n";
+
+    if ($clo{'static-lib'}) {
+	print MF "$static_target: \$(OBJECTS)\n";
+	print MF "\t\$(AR) \$(ARFLAGS) $static_lib \$(OBJECTS)\n";
+	print MF "\t$arextra $static_lib\n" if length($arextra);
+	print MF "\n";
+    }
+
+    if ($clo{'shared-lib'}) {
+	print MF "$shared_target: \$(OBJECTS)\n";
+	print MF "\t\$(SAR) \$(SARFLAGS) $shared_lib \$(OBJECTS) \$(POST_LDFLAGS)\n";
+	print MF "\n";
+    }
+} elsif ($clo{'wrapper'}) {
+    $clo{'with-test'} ||= join(',', @ARGV);
+
+    print MF "\n";
+
+    print MF "all:\n";
+    foreach my $dir (@ARGV) {
+	print MF "\t\@(cd $dir; \${MAKE})\n";
+    }
+    print MF "\n";
+
+    print MF "clean: ", join(' ', @{$clo{'clean-target'}}), "\n";
+    print MF "\t- $rmf ", join(' ', @{$clo{'clean-file'}}), "\n" if @{$clo{'clean-file'}};
+    foreach my $dir (@ARGV) {
+	print MF "\t\@(cd $dir; \${MAKE} clean)\n";
+    }
+    print MF "\n";
+
+    print MF "realclean:\n";
+    foreach my $dir (@ARGV) {
+	print MF "\t\@(cd $dir; \${MAKE} realclean)\n";
+    }
+    print MF "\trm -f $clo{'output'}\n";
+    print MF "\n";
+
+    if ($clo{'with-test'}) {
+	print MF "test:\n";
+	foreach my $dir (split(/\s*,\s*/, $clo{'with-test'})) {
+	    print MF "\t\@(cd $dir; \${MAKE} test)\n";
+	}
+	print MF "\n";
+    }
+
+}
+
+if ($clo{'test-cmds'}) {
+    print MF "test: \${TARGETS}\n";
+    print MF "\t$_\n" foreach (split(/\s*,\s*/, $clo{'test-cmds'}));
+    print MF "\n";
+}
+	
+if ($depend_flag && $clo{'developer'} && !$clo{'wrapper'}) {
+    my @to_unlink;
+
+    foreach my $fake_header (@{$clo{'fake-header'}}) {
+	if (-e $fake_header) {
+	    print STDERR "$0: $fake_header already exists\n";
+	    next;
+	}
+
+	unless (open(FH, ">$fake_header")) {
+	    print STDERR "$0: could not create $fake_header: $!\n";
+	    next;
+	}
+
+	print FH "/* fake header */\n";
+	close FH;
+	push(@to_unlink, $fake_header);
+    }
+
+    foreach (@ARGV) {
+	print "  ===> Generating Dependancy Information for $_\n"
+	    unless $clo{'quiet'};
+
+	print MF `$ENV{'CXX'} $ENV{'CXXFLAGS'} $depend_flag $_`;
+	print MF "\n";
+    }
+
+    unlink(@to_unlink);
+}
+
+if (!$clo{'wrapper'}) {
+    print MF "clean: ", join(' ', @{$clo{'clean-target'}}), "\n";
+    print MF "\t- $rmf \$(OBJECTS) \$(TARGETS) *.core core ", join(' ', @{$clo{'clean-file'}}), "\n";
+    print MF "\t- rm -rf SunWS_cache ir.out\n" if $^O eq 'solaris';
+    print MF "\n";
+
+    print MF "realclean: clean\n";
+    print MF "\t- $rmf $clo{'output'}\n";
+    print MF "\n";
+
+    print MF ".SUFFIXES: .cxx\n";
+    print MF ".SUFFIXES: .obj\n";
+    print MF "\n";
+
+    print MF ".cxx.o:\n";
+
+    if ($^O eq 'solaris' and $clo{'many-exec'}) {
+	print MF "\t\@if test -d SunWS_cache ; then rm -rf SunWS_cache; fi\n";
+    }
+
+    print MF "\t\$(CXX) \$(CXXFLAGS) -c \$<\n";
+    print MF "\n";
+
+    print MF ".cxx.obj:\n";
+
+    if ($^O eq 'solaris' and $clo{'many-exec'}) {
+	print MF "\t\@if test -d SunWS_cache ; then rm -rf SunWS_cache; fi\n";
+    }
+
+    print MF "\t\$(CXX) \$(CXXFLAGS) -c \$<\n";
+    print MF "\n";
+}
+
+
+if ($clo{'install'} and $^O !~ /mswin/) {
+    unless (open(SPEC, $clo{'install'})) {
+	print STDERR "$0: can't open install spec file $clo{'install'}: $!\n";
+	exit 1;
+    }
+
+    my %vars = (
+	'BINDIR'	=> '/usr/local/bin',
+	'INCLUDEDIR'	=> '/usr/local/include',
+	'LIBDIR'	=> '/usr/local/lib',
+	'MANDIR'	=> '/usr/local/share/man',
+    );
+
+    my @binaries;
+    my @pkgconfig;
+    my @include_files;
+    my @include_dirs;
+    my @static_libraries;
+    my @shared_libraries;
+    my @man_pages;
+
+    while (<SPEC>) {
+	chomp; s/^\s+//g; s/\s+$//g;
+	next if /^$/ or /^#/;
+
+	if (/^\w+\s*=/) {
+	    my ($key, $value) = split(/\s*=\s*/, $_, 2);
+	    $key = uc $key;
+
+	    if (!exists $vars{$key}) {
+		print STDERR "$0: warning, $key is not a valid variable.\n";
+		print STDERR "$0: from $clo{'install'}:$.\n";
+		next;
+	    }
+
+	    $vars{$key} = $value;
+	} elsif (/^include-dir\s+(\S+)\s+(\S+)$/) {
+	    if (! -d $1) {
+		print STDERR "$0: warning, $1 is not a directory.\n";
+		print STDERR "$0: from $clo{'install'}:$.\n";
+		next;
+	    }
+
+	    push(@include_dirs, [$1, $2]);
+	} elsif (/^include-files?\s+(\S+)$/) {
+	    my @files = glob($1);
+
+	    if (!@files) {
+		print STDERR "$0: glob did not match any files\n";
+		print STDERR "$0: from $clo{'install'}:$.\n";
+		next;
+	    }
+
+	    my @names = map{s(^.*/)()} @files;
+
+	    for (my $i=0; $i<@files; ++$i) {
+		push(@include_files, [$files[$i], $names[$i]]);
+	    }
+	} elsif (/^binary\s+(\S+)$/) {
+	    my ($full, $base) = ($1, $1);
+	    $base =~ s(^.*/)();
+
+	    push(@binaries, [$full, $base]);
+	} elsif (/^pkgconfig\s+(\S+)$/) {
+	    push(@pkgconfig, $1);
+	} elsif (/^(static-lib|shared-lib)\s+(\S+)\s+(\S+)\s*(\d+)?$/) {
+	    if (! -d $2) {
+		print STDERR "$0: first option to $1 should be a directory.\n";
+		print STDERR "$0: $2 is not a directory.\n";
+		print STDERR "$0: from $clo{'install'}:$.\n";
+		next;
+	    }
+
+	    if ($1 eq 'static-lib') {
+		push(@static_libraries, [$2, $3]);
+	    } elsif ($1 eq 'shared-lib') {
+		my $major = $4 || 1;
+		push(@shared_libraries, [$2, $3, $major]);
+	    }
+	} elsif (/^man\s+(\d+)\s+(.+)$/) {
+	    if (! -e $2) {
+		print STDERR "$0: man page not found: $2\n";
+		next;
+	    }
+
+	    push(@man_pages, [$1, $2]);
+	} else {
+	    print STDERR "$0: I don't understand this line.\n";
+	    print STDERR "$0: $_\n";
+	    print STDERR "$0: from $clo{'install'}:$.\n";
+	    next;
+	}
+    }
+
+    if (@static_libraries or @shared_libraries or @binaries or @include_dirs or @include_files or @man_pages) {
+	print MF "install: all\n";
+	print MF "\tmkdir -p $vars{'BINDIR'}\n" if @binaries;
+	print MF "\tmkdir -p $vars{'INCLUDEDIR'}\n" if @include_files or @include_dirs;
+	print MF "\tmkdir -p $vars{'LIBDIR'}\n" if @static_libraries or @shared_libraries;
+	print MF "\tmkdir -p $vars{'LIBDIR'}/pkgconfig\n" if @pkgconfig;
+	print MF "\tmkdir -p $vars{'MANDIR'}\n" if @man_pages;
+
+	foreach my $binary (@binaries) {
+	    print MF "\tcp $binary->[0] $vars{'BINDIR'}/$binary->[1]\n";
+	    print MF "\tchmod 755 $vars{'BINDIR'}/$binary->[1]\n";
+	}
+
+	foreach my $pc (@pkgconfig) {
+	    print MF "\tcp $pc $vars{'LIBDIR'}/pkgconfig/$pc\n";
+	    print MF "\tchmod 644 $vars{'LIBDIR'}/pkgconfig/$pc\n";
+	}
+
+	foreach my $directory (@include_dirs) {
+	    print MF "\tmkdir -p $vars{'INCLUDEDIR'}/$directory->[1]\n";
+	    print MF "\tcp -r $directory->[0]/* $vars{'INCLUDEDIR'}/$directory->[1]\n";
+	    print MF "\tfind $vars{'INCLUDEDIR'}/$directory->[1] -type d | xargs chmod 755\n";
+	    print MF "\tfind $vars{'INCLUDEDIR'}/$directory->[1] -type f | xargs chmod 644\n";
+	}
+
+	foreach my $file (@include_files) {
+	    print MF "\tcp $file->[0] $vars{'INCLUDEDIR'}/$file->[1]\n";
+	    print MF "\tchmod 644 $vars{'INCLUDEDIR'}/$file->[1]\n";
+	}
+
+	foreach my $library (@static_libraries) {
+	    my $libname = "$static_lib_prefix$library->[1]$static_lib_extension";
+	    print MF "\tcp $library->[0]/$libname $vars{'LIBDIR'}/$libname\n";
+	    print MF "\tchmod 755 $vars{'LIBDIR'}/$libname\n";
+	}
+
+	foreach my $library (@shared_libraries) {
+	    my $libname = "$shared_lib_prefix$library->[1]$shared_lib_extension";
+	    my $major_name = `$^X $clo{'cxxflags'} --major $library->[2] --mkshared-name $library->[1]`;
+
+	    chomp($major_name); clean($major_name);
+
+	    print MF "\tcp $library->[0]/$libname $vars{'LIBDIR'}/$major_name\n";
+	    print MF "\tchmod 755 $vars{'LIBDIR'}/$major_name\n";
+	    print MF "\trm -f $vars{'LIBDIR'}/$libname\n";
+	    print MF "\t(cd $vars{'LIBDIR'}; ln -s $major_name $libname)\n";
+	}
+
+	foreach my $manpage (@man_pages) {
+	    my $file = basename($manpage->[1]);
+
+	    print MF "\tmkdir -p $vars{'MANDIR'}/man$manpage->[0]\n";
+	    print MF "\tcp $manpage->[1] $vars{'MANDIR'}/man$manpage->[0]\n";
+	    print MF "\tchmod 644 $vars{'MANDIR'}/man$manpage->[0]/$file\n";
+	}
+
+	print MF "\n";
+    }
+}
+
+foreach my $append (@{$clo{'append'}}) {
+    unless (open(AP, $append)) {
+	print STDERR "$0: can't open '$append' so that I could append it to the Makefile\n";
+	exit 1;
+    }
+
+    print MF "\n";
+    while (<AP>) { print MF; }
+    close AP;
+}
+
+close MF;
+
+sub addflags {
+    clean($_[0]); clean($_[1]);
+    chomp($_[0] .= ' ' . $_[1]);
+    clean($_[0]);
+}
+
+sub clean {
+    $_[0] =~ s/^\s+//; $_[0] =~ s/\s+$//;
+}
