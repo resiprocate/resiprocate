@@ -55,7 +55,7 @@ case "$1" in
     ## this is called from start below to get the pid in the background process
     doit)
         echo $$ > $pidfile
-        cmdargs=`sed s/#.*// @REPRO_CONFDIR@/repro.conf`
+        cmdargs=`sed 's/#.*//' @REPRO_CONFDIR@/repro.conf`
         cd @REPRO_CWD@ || exit 1
         exec @bindir@/repro ${cmdargs}
         ;;
