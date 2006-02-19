@@ -1,0 +1,11 @@
+#!/bin/bash 
+
+if test "x$@" = "x" ; then
+  echo "Usage copyto <gaimpath>"
+  exit -1;
+fi
+
+cp addsimple.patch $@
+
+tar cf - `find pixmaps -name CVS -prune -o -type f -print ` | (cd $@; tar xf -)
+tar cf - `find src -name CVS -prune -o -type f -print ` | (cd $@; tar xf -)
