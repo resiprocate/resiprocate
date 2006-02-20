@@ -49,10 +49,21 @@ class ServerAuthManager : public DumFeature
       
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
-      bool authorizedForThisIdentity(const resip::Data &user, 
-                                     const resip::Data &realm, 
-                                     resip::Uri &fromUri);
-      
+
+      /// should return true if the request must be challenged
+      /// The default is to challenge all requests - override this class to change this beviour
+      virtual bool requiresChallenge(const SipMessage& msg);
+
+      /// should return true if the passed in user is authorized for the provided uri
+      virtual bool authorizedForThisIdentity(const resip::Data &user, 
+                                             const resip::Data &realm, 
+                                             resip::Uri &fromUri);
+
+      /// returns the realm to be used for the challenge
+      virtual const Data& getChallengeRealm(const SipMessage& msg);   
+
+      /// should return true if realm passed in is ours and we can challenge
+      virtual bool isMyRealm(const Data& realm);
 };
 
  
