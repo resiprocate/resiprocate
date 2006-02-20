@@ -95,6 +95,10 @@ class Tuple
       ConnectionId connectionId;
       bool onlyUseExistingConnection;      
 
+      /// compares this tuple with the one passed in for family, port and address equality
+      /// using the passed in address mask (mask is specified by number of bits)
+      bool isEqualWithMask(const Tuple& tuple, short mask, bool ignorePort=false);
+
       // special comparitors
       class AnyInterfaceCompare
       {
