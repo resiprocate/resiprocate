@@ -301,6 +301,9 @@
 				RelativePath=".\ReproServerAuthManager.cxx">
 			</File>
 			<File
+				RelativePath=".\ReproVersion.cxx">
+			</File>
+			<File
 				RelativePath=".\RequestContext.cxx">
 			</File>
 			<File
@@ -427,6 +430,9 @@
 			</File>
 			<File
 				RelativePath=".\ReproServerAuthManager.hxx">
+			</File>
+			<File
+				RelativePath=".\ReproVersion.hxx">
 			</File>
 			<File
 				RelativePath=".\RequestContext.hxx">

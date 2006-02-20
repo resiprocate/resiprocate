@@ -48,6 +48,7 @@ class Symbols
       static const char* UDP;
       static const char* TCP;
       static const char* TLS;
+      static const char* DTLS;
       static const char* SCTP;
       static const char* SRVUDP;
       static const char* SRVTCP;

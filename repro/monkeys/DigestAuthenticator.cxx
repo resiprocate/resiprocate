@@ -90,7 +90,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       const Data& realm = userInfo->realm();
       const Data& user = userInfo->user();
       InfoLog (<< "Received user auth info for " << user << " at realm " << realm 
-               <<  "a1 is " << a1);
+               <<  " a1 is " << a1);
 
       pair<Helper::AuthResult,Data> result =
          Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
