@@ -52,12 +52,14 @@ class AclStore
       short getAddressMask( const resip::Data& key );
       
       Key getFirstTlsPeerNameKey(); // return empty if no more
-      Key getNextTlsPeerNameKey(Key& key); // return empty if no more  ?slg? - Not sure why this takes a key - when we are tracking the cursor - but for now I'm following the RouteStore implementation logic
+      Key getNextTlsPeerNameKey(Key& key); // return empty if no more  
       Key getFirstAddressKey(); // return empty if no more
-      Key getNextAddressKey(Key& key); // return empty if no more ?slg? - Not sure why this takes a key - when we are tracking the cursor - but for now I'm following the RouteStore implementation logic
+      Key getNextAddressKey(Key& key); // return empty if no more 
 
       bool isTlsPeerNameTrusted(const resip::Data& tlsPeerName);
       bool isAddressTrusted(const resip::Tuple& address);
+      bool isRequestTrusted(const resip::SipMessage& request);
+
 
    private:
       AbstractDb& mDb;  

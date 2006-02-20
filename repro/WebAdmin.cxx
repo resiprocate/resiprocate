@@ -440,15 +440,10 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      IPv6 ref + mask   [::341:0:23:4bb:0011:2435:abcd]/64" << endl <<
       "</pre>" << endl <<
       
-      "<p>Note that the access lists are used as a whitelist to allow " << endl <<
-      "gateways and other trusted nodes to skip authentication.  " << endl <<
-      "**Currently this applies to all requests except Registrations.</p>" << endl <<
-      "<p>Also Note:  If hostnames or fqdn's are used then a TLS transport is" << endl <<
-      "assumed.  All other transport types must specify ACLs" << endl <<
-      "by IP Address.</p>" << endl <<
-      // TODO add code to compare the mask
-      "<p>Caveat:  Currently the database will store a mask, but the mask is never consulted." << endl <<
-      "(Yes, this is a bug).</p>" << endl;
+      "<p>Access lists are used as a whitelist to allow " << endl <<
+      "gateways and other trusted nodes to skip authentication.</p>" << endl <<
+      "<p>Note:  If hostnames or FQDN's are used then a TLS transport type is" << endl <<
+      "assumed.  All other transport types must specify ACLs by address.</p>" << endl;
 }
 
 
