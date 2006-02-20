@@ -3,6 +3,10 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/TlsConnection.hxx"
+#include "resip/stack/TlsTransport.hxx"
+#include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 #include "repro/AclStore.hxx"
 
@@ -454,14 +458,66 @@ AclStore::isAddressTrusted(const Tuple& address)
    // !slg! TODO - add use of mask in matching - for now it is ignored
    for(AddressList::iterator i = mAddressList.begin(); i != mAddressList.end(); i++)
    {
-      if(i->mAddressTuple == address ||
-         (i->mAddressTuple.getPort() == 0 &&     // if port is 0 in db, then allow any port
-          i->mAddressTuple == Tuple(address.presentationFormat(), 0, address.getType())))   
+      if(i->mAddressTuple.isEqualWithMask(address, i->mMask, i->mAddressTuple.getPort() == 0))
       {
          return true;
       }
    }
    return false;
+}
+
+
+// check the sender of the message via source IP address or identity from TLS 
+bool
+AclStore::isRequestTrusted(const SipMessage& request)
+{
+   bool trusted = false;
+   Tuple source = request.getSource();
+   
+   // check if the request came over a secure channel and sucessfully authenticated 
+   // (ex: TLS or DTLS)
+   const Data& sentTransport = request.header(h_Vias).front().transport();
+#ifdef USE_SSL
+   if(sentTransport == Symbols::TLS
+#ifdef USE_DTLS
+      || sentTransport == Symbols::DTLS
+#endif
+      )
+   {
+      // !slg! TODO - accessing the transports from outside of the stack thread is not thread safe - this needs to be fixed
+      const TcpBaseTransport *transport = dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport());
+      assert(transport);
+      const ConnectionManager &connectionManager = transport->getConnectionManager();
+      const TlsConnection* conn = dynamic_cast<const TlsConnection *>(connectionManager.findConnection(source));
+      assert(conn);
+
+      if(isTlsPeerNameTrusted(conn->getPeerName()))
+      {
+         InfoLog (<< "AclStore - Tls peer name IS trusted: " << conn->getPeerName());
+         trusted = true;
+      }
+      else
+      {
+         InfoLog (<< "AclStore - Tls peer name NOT trusted: " << conn->getPeerName());
+      }
+   }
+#endif
+
+   // check the source address against the TrustedNode list
+   if(!trusted)
+   {
+      if(isAddressTrusted(source))
+      {
+         InfoLog (<< "AclStore - source address IS trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
+         trusted = true;
+      }
+      else
+      {
+         InfoLog (<< "AclStore - source address NOT trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
+      }
+   }      
+      
+   return trusted;
 }
 
 

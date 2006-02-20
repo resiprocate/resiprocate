@@ -47,6 +47,7 @@ const char* Symbols::ProtocolVersion = "2.0";
 const char* Symbols::UDP = "UDP";
 const char* Symbols::TCP = "TCP";
 const char* Symbols::TLS = "TLS";
+const char* Symbols::DTLS = "DTLS";
 const char* Symbols::SCTP = "SCTP";
 const char* Symbols::SRVUDP = "_udp.";
 const char* Symbols::SRVTCP = "_tcp.";
