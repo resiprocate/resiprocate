@@ -5,9 +5,6 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/TlsConnection.hxx"
-#include "resip/stack/TlsTransport.hxx"
-#include "resip/stack/ConnectionManager.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
@@ -35,57 +32,17 @@ IsTrustedNode::process(RequestContext& context)
             << "; reqcontext = " << context);
 
    resip::SipMessage& request = context.getOriginalRequest();
-   Tuple source = request.getSource();
 
-   // check the sender of the message via source IP address or identity from TLS 
-   
-   // check if the request came over a secure channel and sucessfully authenticated 
-   // (ex: TLS or DTLS)
-#ifdef USE_SSL
-   if(request.getReceivedTransport()->transport() == resip::TLS
-#ifdef USE_DTLS
-      || request.getReceivedTransport()->transport() == resip::DTLS
-#endif
-      )
+   if(mAclStore.isRequestTrusted(request))
    {
-      const TcpBaseTransport *transport = dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport());
-      assert(transport);
-      const ConnectionManager &connectionManager = transport->getConnectionManager();
-      const TlsConnection* conn = dynamic_cast<const TlsConnection *>(connectionManager.findConnection(source));
-      assert(conn);
-
-      if(mAclStore.isTlsPeerNameTrusted(conn->getPeerName()))
-      {
-         InfoLog (<< "IsTrustedNode Monkey - Tls peer name IS trusted: " << conn->getPeerName());
-         context.setFromTrustedNode();
-      }
-      else
-      {
-         InfoLog (<< "IsTrustedNode Monkey - Tls peer name NOT trusted: " << conn->getPeerName());
-      }
+      context.setFromTrustedNode();
    }
-#endif
-
-   // check the source address against the TrustedNode list
-   if(!context.fromTrustedNode())
-   {
-      if(mAclStore.isAddressTrusted(source))
-      {
-         InfoLog (<< "IsTrustedNode Monkey - source address IS trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
-         context.setFromTrustedNode();
-      }
-      else
-      {
-         InfoLog (<< "IsTrustedNode Monkey - source address NOT trusted: " << source.presentationFormat() << ":" << source.getPort() << " " << Tuple::toData(source.getType()));
-      }
-   }      
-   
    // strip PAI headers that we don't trust
-   if ((!context.fromTrustedNode()) && request.exists(h_PAssertedIdentities))
+   else if(request.exists(h_PAssertedIdentities))
    {
       request.remove(h_PAssertedIdentities);
    }
-   
+      
    return Processor::Continue;
 }
 

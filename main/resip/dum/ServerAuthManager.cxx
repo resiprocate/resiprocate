@@ -177,6 +177,13 @@ ServerAuthManager::useAuthInt() const
 }
 
 
+bool 
+ServerAuthManager::requiresChallenge(const SipMessage& msg)
+{
+   return true;  
+}
+
+
 bool
 ServerAuthManager::authorizedForThisIdentity(const resip::Data &user, 
                                                const resip::Data &realm, 
@@ -188,10 +195,30 @@ ServerAuthManager::authorizedForThisIdentity(const resip::Data &user,
 }
 
 
+const Data& 
+ServerAuthManager::getChallengeRealm(const SipMessage& msg)
+{
+   return msg.header(h_RequestLine).uri().host();
+}
+
+
+bool
+ServerAuthManager::isMyRealm(const Data& realm)
+{
+   return mDum.isMyDomain(realm);
+}
+
+
 // return true if request has been consumed 
 ServerAuthManager::Result
 ServerAuthManager::handle(SipMessage* sipMsg)
 {
+   // Is challenge required for this message
+   if(!requiresChallenge(*sipMsg))
+   {
+      return Skipped;
+   }
+
    //InfoLog( << "trying to do auth" );
    if (sipMsg->isRequest() && 
        sipMsg->header(h_RequestLine).method() != ACK && 
@@ -201,7 +228,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
       {
          //assume TransactionUser has matched/repaired a realm
          SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*sipMsg, 
-                                                                    sipMsg->header(h_RequestLine).uri().host(),
+                                                                    getChallengeRealm(*sipMsg),
                                                                     useAuthInt(),
                                                                     false /*stale*/));
          InfoLog (<< "Sending challenge to " << sipMsg->brief());
@@ -215,7 +242,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
          for(Auths::iterator it = sipMsg->header(h_ProxyAuthorizations).begin();
              it  != sipMsg->header(h_ProxyAuthorizations).end(); it++)
          {
-            if (mDum.isMyDomain(it->param(p_realm)))
+            if (isMyRealm(it->param(p_realm)))
             {
                InfoLog (<< "Requesting credential for " 
                         << it->param(p_username) << " @ " << it->param(p_realm));

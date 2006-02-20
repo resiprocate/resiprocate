@@ -442,7 +442,8 @@ main(int argc, char** argv)
       {
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
-                                                store.mUserStore ));
+                                                store.mUserStore,
+                                                store.mAclStore));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);

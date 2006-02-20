@@ -5,6 +5,7 @@
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 #include "repro/UserStore.hxx"
+#include "repro/AclStore.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -13,10 +14,12 @@ using namespace repro;
 
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
-                                               UserStore& db):
+                                               UserStore& userDb,
+                                               AclStore& aclDb):
    ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
-   mDb(db)
+   mUserDb(userDb),
+   mAclDb(aclDb)
 {
 }
 
@@ -33,12 +36,20 @@ ReproServerAuthManager::useAuthInt() const
 }
 
 
+bool 
+ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+   return !mAclDb.isRequestTrusted(msg);
+}
+
+
 void 
 ReproServerAuthManager::requestCredential(const Data& user, 
                                           const Data& realm, 
                                           const Data& transactionId )
 {
-   mDb.requestUserAuthInfo(user,realm,transactionId,mDum);
+   mUserDb.requestUserAuthInfo(user,realm,transactionId,mDum);
 }
  
 

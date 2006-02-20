@@ -17,12 +17,14 @@ class DialogUsageManager;
 namespace repro
 {
 class UserStore;
+class AclStore;
 
 class ReproServerAuthManager: public resip::ServerAuthManager
 {
    public:
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
-                             UserStore& db );
+                             UserStore& userDb, 
+                             AclStore& aclDb);
       
       ~ReproServerAuthManager();
       
@@ -33,10 +35,12 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                                      const resip::Data& transactionId );
       
       virtual bool useAuthInt() const;
+      virtual bool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       resip::DialogUsageManager& mDum;
-      UserStore& mDb;
+      UserStore& mUserDb;
+      AclStore&  mAclDb;
 };
 
  
