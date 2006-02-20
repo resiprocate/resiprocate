@@ -526,6 +526,68 @@ Tuple::inet_ntop(const Tuple& tuple)
 }
 
 
+bool
+Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort)
+{
+   if(getType() == compare.getType())  // check if transport type matches
+   {
+      if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET) // v4
+      {
+         sockaddr_in* addr1 = (sockaddr_in*)&mSockaddr;
+         sockaddr_in* addr2 = (sockaddr_in*)&compare.getSockaddr();
+
+         return ((ignorePort || addr1->sin_port == addr2->sin_port)  &&
+                 (addr1->sin_addr.S_un.S_addr & htonl((0xFFFFFFFF << (32 - mask)))) == 
+                  (addr2->sin_addr.S_un.S_addr & htonl((0xFFFFFFFF << (32 - mask)))));
+      }
+#ifdef USE_IPV6
+      else if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET6) // v6
+      {
+         sockaddr_in6* addr1 = (sockaddr_in6*)&mSockaddr;
+         sockaddr_in6* addr2 = (sockaddr_in6*)&compare.getSockaddr();
+
+         if(ignorePort || addr1->sin6_port == addr2->sin6_port)
+         {
+            unsigned long mask6part;
+            unsigned long temp;
+            bool match=true;
+            for(int i = 3; i >= 0; i--)
+            {
+               if(mask <= 32*i)
+               {
+                  mask6part = 0;
+               }
+               else
+               {
+                  temp = mask - 32*i;
+                  if(temp >= 32)
+                  {
+                     mask6part = 0xffffffff;
+                  }
+                  else
+                  {
+                     mask6part = 0xffffffff << (32 - temp);
+                  }
+               }
+               if((*((unsigned long*)&addr1->sin6_addr.u.Word[i*2]) & htonl(mask6part)) != 
+                  (*((unsigned long*)&addr2->sin6_addr.u.Word[i*2]) & htonl(mask6part)))
+               {
+                  match=false;
+                  break;
+               }
+            }
+            if(match)
+            {
+               return true;
+            }
+         }
+      }
+#endif
+   }
+   return false;
+}
+
+
 // special comparitors
 bool
 Tuple::AnyInterfaceCompare::operator()(const Tuple& lhs,
