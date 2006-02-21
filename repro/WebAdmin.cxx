@@ -547,26 +547,26 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
    
    s << 
       "<form id=\"addRouteFrom\" method=\"get\" action=\"addRoute.html\" name=\"addRouteForm\">" << endl << 
-      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
 
       "<tr>" << endl << 
       "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Destination</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeDestination\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
@@ -617,12 +617,12 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          //"<tr>" << endl << 
          //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
-         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>" << endl << 
+         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"40\"/></td>" << endl << 
          //"</tr>" << endl << 
 
          "<tr>" << endl << 
@@ -651,17 +651,17 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "</select></td></tr>" << endl <<
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
@@ -774,12 +774,12 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\">User Name:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" value=\"" << rec.user << "\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
          
          //"<tr>" << endl << 
          //"<td align=\"right\" valign=\"middle\" >Realm:</td>" << endl << 
-         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>" << endl << 
+         //"<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"40\"/></td>" << endl << 
          //"</tr>" << endl << 
 
          "<tr>" << endl << 
@@ -808,7 +808,7 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "</select></td></tr>" << endl <<
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Password:</td>" << endl << 
-         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>" << endl << 
+         "  <td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
          // Note that the UserStore only stores a passwordHash, so we will collect a password.  If one is provided in the
          // edit page, we will use it to generate a new passwordHash, otherwise we will leave the hash alone.
@@ -816,13 +816,13 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Full Name:</td>" << endl << 
          "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" value=\"" << rec.name << 
-         "\" size=\"24\"/></td>" << endl << 
+         "\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
          "  <td align=\"right\" valign=\"middle\" >Email:</td>" << endl << 
          "  <td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" value=\"" << rec.email <<
-         "\" size=\"24\"/></td>" << endl << 
+         "\" size=\"40\"/></td>" << endl << 
          "</tr>" << endl << 
 
          "<tr>" << endl << 
@@ -858,27 +858,27 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
 
       s << 
       "<form id=\"editRouteForm\" method=\"get\" action=\"showRoutes.html\" name=\"editRouteForm\">" << endl << 
-      "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
+      "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\">" << endl << 
       "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
       "<tr>" << endl << 
       "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" value=\"" <<  mStore.mRouteStore.getRoutePattern(key) << "\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" value=\"" <<  mStore.mRouteStore.getRoutePattern(key) << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" value=\"" <<  mStore.mRouteStore.getRouteMethod(key)  << "\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" value=\"" <<  mStore.mRouteStore.getRouteMethod(key)  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << mStore.mRouteStore.getRouteEvent(key)  << "\" size=\"24\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << mStore.mRouteStore.getRouteEvent(key)  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Destination</td>" << endl << 
       "<td><input type=\"text\" name=\"routeDestination\" value=\"" << mStore.mRouteStore.getRouteRewrite(key)  <<
-                            "\" size=\"24\"/></td>" << endl << 
+                            "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
@@ -948,7 +948,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       s << 
          //"<h1>Users</h1>" << endl << 
          "<form id=\"showUsers\" method=\"get\" action=\"showUsers.html\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
-         "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
+         "<table border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">" << endl << 
          "<tr>" << endl << 
          "  <td>User@Domain</td>" << endl << 
          //  "  <td>Realm</td>" << endl << 
@@ -1138,7 +1138,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "              "
       "              <tr>" << endl << 
       "                <td align=\"right\">Input:</td>" << endl << 
-      "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"24\"/></td>" << endl << 
+      "                <td><input type=\"text\" name=\"routeTestUri\" value=\"" << uri << "\" size=\"40\"/></td>" << endl << 
       "                <td><input type=\"submit\" name=\"testRoute\" value=\"Test Route\"/></td>" << endl << 
       "              </tr>" << endl;
    
