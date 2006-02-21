@@ -537,8 +537,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort)
          sockaddr_in* addr2 = (sockaddr_in*)&compare.getSockaddr();
 
          return ((ignorePort || addr1->sin_port == addr2->sin_port)  &&
-                 (addr1->sin_addr.S_un.S_addr & htonl((0xFFFFFFFF << (32 - mask)))) == 
-                  (addr2->sin_addr.S_un.S_addr & htonl((0xFFFFFFFF << (32 - mask)))));
+                 (addr1->sin_addr.s_addr & htonl((0xFFFFFFFF << (32 - mask)))) == 
+                  (addr2->sin_addr.s_addr & htonl((0xFFFFFFFF << (32 - mask)))));
       }
 #ifdef USE_IPV6
       else if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET6) // v6
