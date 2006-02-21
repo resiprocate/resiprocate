@@ -65,25 +65,32 @@ UserStore::getUserAuthInfo(  const resip::Data& user,
 
 void 
 UserStore::addUser( const Data& username,
-                         const Data& domain,
-                         const Data& realm,
-                         const Data& password, 
-                         const Data& fullName, 
-                         const Data& emailAddress )
+                    const Data& domain,
+                    const Data& realm,
+                    const Data& password, 
+                    bool  applyA1HashToPassword,
+                    const Data& fullName, 
+                    const Data& emailAddress )
 {
-   MD5Stream a1;
-   a1 << username
-      << Symbols::COLON
-      << realm
-      << Symbols::COLON
-      << password;
-   a1.flush();
-
    AbstractDb::UserRecord rec;
    rec.user = username;
    rec.domain = domain;
    rec.realm = realm;
-   rec.passwordHash = a1.getHex();
+   if(applyA1HashToPassword)
+   {
+      MD5Stream a1;
+      a1 << username
+         << Symbols::COLON
+         << realm
+         << Symbols::COLON
+         << password;
+      a1.flush();
+      rec.passwordHash = a1.getHex();
+   }
+   else
+   {
+      rec.passwordHash = password;
+   }
    rec.name = fullName;
    rec.email = emailAddress;
    rec.forwardAddress = Data::Empty;
@@ -104,12 +111,13 @@ UserStore::updateUser( const Key& originalKey,
                        const resip::Data& domain, 
                        const resip::Data& realm, 
                        const resip::Data& password, 
+                       bool  applyA1HashToPassword,
                        const resip::Data& fullName,
                        const resip::Data& emailAddress )
 {
    Key newkey = buildKey(user, domain);
    
-   addUser( user,domain,realm,password,fullName,emailAddress);
+   addUser( user,domain,realm,password,applyA1HashToPassword,fullName,emailAddress);
    if ( newkey != originalKey )
    {
       eraseUser(originalKey);

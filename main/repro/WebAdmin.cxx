@@ -77,6 +77,7 @@ WebAdmin::WebAdmin(  Store& store,
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           (adminPassword==""?Data("admin"):adminPassword), // password 
+                          true,        // applyA1HashToPassword
                           Data::Empty, // name 
                           Data::Empty ); // email 
          dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
@@ -91,8 +92,9 @@ WebAdmin::WebAdmin(  Store& store,
          DebugLog(<< "Changing the web admin password" );
          mStore.mUserStore.addUser( adminName,
                                        Data::Empty,
-				       Data::Empty,
+                                       Data::Empty,
                                        adminPassword,
+                                       true,        // applyA1HashToPassword
                                        Data::Empty,
                                        Data::Empty);
       }
@@ -426,7 +428,6 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "      </table>" << endl <<
       "     </form>" << endl <<
       
-      "        <br />" << endl <<      
       "<pre>" << endl <<
       "      Input can be in any of these formats" << endl <<
       "      localhost         localhost  (becomes 127.0.0.1/8, ::1/128 and fe80::1/64)" << endl <<
@@ -488,8 +489,8 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "            <td><input type=\"submit\" name=\"action\" value=\"Add\"/></td>" << endl <<
       "          </tr>" << endl <<
       "        </table>" << endl <<
-      "      <div class=sace>" << endl <<
-      "        <br />" << endl <<
+      "      <div class=space>" << endl <<
+      "        <br>" << endl <<
       "      </div>" << endl <<
       "      <table border=\"1\" cellspacing=\"2\" cellpadding=\"2\">" << endl <<
       "        <thead>" << endl <<
@@ -604,7 +605,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 //         realm = mHttpParams["domain"];
 //      }
             
-      mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],mHttpParams["name"],mHttpParams["email"]);      
+      mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]);      
       // !rwm! TODO check if the add was successful
       // if (success)
       //{
@@ -766,7 +767,8 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
       AbstractDb::UserRecord rec = mStore.mUserStore.getUserInfo(key);
       // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
       
-      s << "<p>Editing Record with key: " << key << "</p>" << endl;      
+      s << "<p>Editing Record with key: " << key << "</p>" << endl <<
+           "<p>Note:  If the username is not modified and you leave the password field empty the users current password will not be reset.</p>" << endl;
       
       s << 
          "<form id=\"editUserForm\" action=\"showUsers.html\"  method=\"get\" name=\"editUserForm\" enctype=\"application/x-www-form-urlencoded\">" << endl << 
@@ -831,7 +833,7 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "  </td>" << endl << 
          "</tr>" << endl << 
          
-         "</table>" << endl << 
+         "</table>" << endl <<
          "</form>" << endl
          ;
    }
@@ -927,8 +929,8 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
    {
       key = pos->second;
       rec = mStore.mUserStore.getUserInfo(key);
-      // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
-      if (1)
+      // check to see if we actually found a record corresponding to the key
+      if (!rec.user.empty())
       {
          Data user = mHttpParams["user"];
          Data domain = mHttpParams["domain"];                  
@@ -936,9 +938,16 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
          Data password = mHttpParams["password"];
          Data name = mHttpParams["name"];
          Data email = mHttpParams["email"];
+         bool applyA1HashToPassword = true;
          
+         // if no password was specified, then leave current password untouched
+         if(password == "" && user == rec.user && realm == rec.realm) 
+         {
+            password = rec.passwordHash;
+            applyA1HashToPassword = false;
+         }
          // write out the updated record to the database now
-         mStore.mUserStore.updateUser(key, user, domain, realm, password, name, email );
+         mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
          
          s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
       }
