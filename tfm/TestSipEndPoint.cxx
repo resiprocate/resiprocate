@@ -43,7 +43,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
                                  const Uri& outboundProxy,
                                  bool hasStack,
                                  const Data& interfaceObj,
-                                 Security* security)                                 
+                                 Security* security)
    : mAor(addressOfRecord),
      mContact(contactUrl),
      mOutboundProxy(outboundProxy),
@@ -85,6 +85,7 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
    {
       InfoLog (<< "Creating sip endpoint with no transport: " << addressOfRecord);
    }
+
    mContactSet.insert(mContact);
 }
 
@@ -161,6 +162,16 @@ TestSipEndPoint::clean()
    TestEndPoint::clear();
 }
 
+void
+TestSipEndPoint::setTransport(Transport* transport)
+{
+   assert(transport && !mTransport);
+   if (transport && !mTransport)
+   {
+      mTransport = transport;
+      registerWithTransportDriver();
+   }
+}
 
 void 
 TestSipEndPoint::send(shared_ptr<SipMessage>& msg)
