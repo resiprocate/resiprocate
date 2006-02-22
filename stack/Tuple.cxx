@@ -569,8 +569,13 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort)
                      mask6part = 0xffffffff << (32 - temp);
                   }
                }
+#ifdef WIN32
                if((*((unsigned long*)&addr1->sin6_addr.u.Word[i*2]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.u.Word[i*2]) & htonl(mask6part)))
+#else
+               if((*((unsigned long*)&addr1->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)) != 
+                  (*((unsigned long*)&addr2->sin6_addr.s6_addr16[i*2]) & htonl(mask6part)))
+#endif
                {
                   match=false;
                   break;
