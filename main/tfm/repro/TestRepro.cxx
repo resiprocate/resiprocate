@@ -167,7 +167,7 @@ void
 TestRepro::addUser(const Data& userid, const Uri& aor, const Data& password)
 {
    InfoLog (<< "Repro::addUser: " << userid << " " << aor);
-   mStore.mUserStore.addUser(userid,aor.host(),aor.host(), password, Data::from(aor), Data::from(aor));
+   mStore.mUserStore.addUser(userid,aor.host(),aor.host(), password, true, Data::from(aor), Data::from(aor));
 }
 
 void
