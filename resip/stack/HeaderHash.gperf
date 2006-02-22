@@ -23,6 +23,7 @@ r, Headers::ReferTo
 b, Headers::ReferredBy
 x, Headers::SessionExpires
 y, Headers::Identity
+o, Headers::Event
 cseq, Headers::CSeq
 call-id, Headers::CallID
 contact, Headers::Contact
