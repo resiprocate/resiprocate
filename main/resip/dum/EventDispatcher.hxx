@@ -1,48 +1,99 @@
-#if !defined(RESIP_CONNECTIONTERMINATED_HXX)
-#define RESIP_CONNECTIONTERMINATED_HXX 
+#ifndef RESIP_EventDispatcher_hxx
+#define RESIP_EventDispatcher_hxx
 
-#include "rutil/HeapInstanceCounter.hxx"
-#include "resip/stack/TransactionMessage.hxx"
-#include "resip/stack/Tuple.hxx"
+#include <vector>
+
+#include "resip/dum/DumCommand.hxx"
+#include "resip/dum/Postable.hxx"
+#include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
 
 namespace resip
 {
-class ConnectionUser;
 
-class ConnectionTerminated : public TransactionMessage
+template<class E>
+class EventDispatcher
 {
    public:
-      RESIP_HeapCount(ConnectionTerminated);
-
-      ConnectionTerminated(const Transport* transport, ConnectionId id) : 
-         mTransport(transport), 
-         mConnectionId(id)
+      EventDispatcher() 
       {
-      }
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
-      virtual bool isClientTransaction() const { assert(0); return false; }
-      virtual Message* clone() const { return new ConnectionTerminated(mTransport, mConnectionId); }
-      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
-      virtual std::ostream& encodeBrief(std::ostream& str) const 
-      {
-         return str << "ConnectionTerminated " << mConnectionId;
       }
 
-      ConnectionId getConnectionId() const 
+      bool dispatch(Message* msg)
       {
-         return mConnectionId;
+         Lock lock(mMutex);
+         bool ret = false;
+         
+         E* event = dynamic_cast<E*>(msg);
+         if (event)
+         {
+            ret = true;
+            unsigned int counter = 1;
+            for (std::vector<Postable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
+            {
+               if (counter == mListeners.size())
+               {
+                  (*it)->post(msg);
+               }
+               else
+               {
+                  ++counter;
+                  (*it)->post(msg->clone());
+               }
+            }
+         }         
+
+         return ret;
       }
-      
+
+      void addListener(Postable* listener)
+      {
+         Lock lock(mMutex);
+         std::vector<Postable*>::iterator it = find(listener);
+         if (it == mListeners.end())
+         {
+            mListeners.push_back(listener);
+         }
+      }
+
+      void removeListener(Postable* listener)
+      {
+         Lock lock(mMutex);
+         std::vector<Postable*>::iterator it = find(listener);         
+         if (it != mListeners.end())
+         {
+            mListeners.erase(it);
+         }
+      }
+
    private:
-      const Transport* mTransport;
-      const ConnectionId mConnectionId;
+      std::vector<Postable*> mListeners;
+      Mutex mMutex;
+
+      std::vector<Postable*>::iterator find(Postable* listener)
+      {
+         std::vector<Postable*>::iterator it;
+         for (it = mListeners.begin(); it != mListeners.end(); ++it)
+         {
+            if (listener == *it)
+            {
+               break;
+            }
+         }
+         return it;
+      }
 };
- 
+
 }
 
+
 #endif
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

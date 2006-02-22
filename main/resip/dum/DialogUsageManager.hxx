@@ -6,6 +6,7 @@
 #include <map>
 
 #include "resip/stack/Headers.hxx"
+#include "resip/dum/EventDispatcher.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DumTimeout.hxx"
 #include "resip/dum/HandleManager.hxx"
@@ -289,6 +290,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
       void applyToAllServerSubscriptions(ServerSubscriptionFunctor*);
 
+      void registerForConnectionTermination(Postable*);
+      void unRegisterForConnectionTermination(Postable*);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
@@ -476,6 +480,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
+
+      EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };
 
 }

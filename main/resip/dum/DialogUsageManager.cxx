@@ -6,6 +6,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
+#include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialogSetFactory.hxx"
@@ -61,6 +62,7 @@ using namespace resip;
 using namespace std;
 
 DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
+   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -104,6 +106,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
 #endif
 
    }
+
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -1045,6 +1048,17 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       }
       return;      
    }
+
+   ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
+   if (terminated)
+   {
+      DebugLog(<< "connection terminated message");
+      if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
+      {
+         msg.release();
+      }
+      return;
+   }
    
    DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
    if (command)
@@ -1807,6 +1821,18 @@ DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* fun
          }
       }
    }
+}
+
+void
+DialogUsageManager::registerForConnectionTermination(Postable* listener)
+{
+   mConnectionTerminatedEventDispatcher.addListener(listener);
+}
+
+void
+DialogUsageManager::unRegisterForConnectionTermination(Postable* listener)
+{
+   mConnectionTerminatedEventDispatcher.removeListener(listener);
 }
 
 void
