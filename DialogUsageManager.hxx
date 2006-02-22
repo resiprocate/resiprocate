@@ -61,6 +61,8 @@ class DumShutdownHandler;
 class KeepAliveManager;
 class HttpGetMessage;
 
+class ConnectionTerminated;
+
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
