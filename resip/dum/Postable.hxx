@@ -1,48 +1,24 @@
-#if !defined(RESIP_CONNECTIONTERMINATED_HXX)
-#define RESIP_CONNECTIONTERMINATED_HXX 
-
-#include "rutil/HeapInstanceCounter.hxx"
-#include "resip/stack/TransactionMessage.hxx"
-#include "resip/stack/Tuple.hxx"
+#ifndef RESIP_Postable_hxx
+#define RESIP_Postable_hxx
 
 namespace resip
 {
-class ConnectionUser;
 
-class ConnectionTerminated : public TransactionMessage
+class Postable
 {
    public:
-      RESIP_HeapCount(ConnectionTerminated);
-
-      ConnectionTerminated(const Transport* transport, ConnectionId id) : 
-         mTransport(transport), 
-         mConnectionId(id)
-      {
-      }
-      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
-      virtual bool isClientTransaction() const { assert(0); return false; }
-      virtual Message* clone() const { return new ConnectionTerminated(mTransport, mConnectionId); }
-      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
-      virtual std::ostream& encodeBrief(std::ostream& str) const 
-      {
-         return str << "ConnectionTerminated " << mConnectionId;
-      }
-
-      ConnectionId getConnectionId() const 
-      {
-         return mConnectionId;
-      }
-      
-   private:
-      const Transport* mTransport;
-      const ConnectionId mConnectionId;
+      virtual ~Postable(){}
+      virtual void post(Message*)=0;
 };
- 
+
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

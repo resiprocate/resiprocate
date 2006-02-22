@@ -584,10 +584,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                                           target.transport->interfaceName() : 
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
-                  if (target.transport->transport() != UDP)
-                  {
-                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
-                  }
+               }
+               
+               if (target.transport->transport() != UDP)
+               {
+                  contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                }
             }
          }
@@ -609,10 +610,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
-               if (target.transport->transport() != UDP)
-               {
-                  rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
-               }
+            }
+            
+            if (target.transport->transport() != UDP)
+            {
+               rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
             }
          }
          
