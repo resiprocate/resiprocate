@@ -71,7 +71,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
          case SUBSCRIBE:
          case NOTIFY:
          case PUBLISH:      
-            if (!eventIsInList(msg.header(h_Event).value()))
+            if (!eventIsInList(msg))
             {
                DebugLog(<< "Event is not in list. Rule does not match.");
                return false;
@@ -140,13 +140,20 @@ MessageFilterRule::methodIsInList(MethodTypes method) const
 }
 
 bool
-MessageFilterRule::eventIsInList(const Data& event) const
+MessageFilterRule::eventIsInList(const SipMessage& msg) const
 {
    // empty list means "match all"
    if (mEventList.empty())
    {
       return true;
    }
+
+   if (!msg.exists(h_Event))
+   {
+      return false;
+   }
+   
+   Data event = msg.header(h_Event).value();   
 
    for (EventList::const_iterator i = mEventList.begin();
         i != mEventList.end(); i++)

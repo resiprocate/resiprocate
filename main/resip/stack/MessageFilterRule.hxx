@@ -33,7 +33,7 @@ class MessageFilterRule
       bool schemeIsInList(const Data &scheme) const;
       bool hostIsInList(const Data &hostpart) const;
       bool methodIsInList(MethodTypes method) const;
-      bool eventIsInList(const Data &event) const;
+      bool eventIsInList(const SipMessage& msg) const;
 
       SchemeList mSchemeList;
       HostpartTypes mHostpartMatches;
