@@ -8,7 +8,7 @@
 
 #if !defined(RESIP_API_CHECK_HXX)
 #define RESIP_API_CHECK_HXX
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <stddef.h>
 #else
 #include <unistd.h>

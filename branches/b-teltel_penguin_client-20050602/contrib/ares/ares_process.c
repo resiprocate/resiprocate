@@ -14,10 +14,10 @@
  */
 
 
-#include <sys/types.h>
 #include <assert.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
@@ -79,7 +79,7 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 {
   struct server_state *server;
   struct send_request *sendreq;
-#ifdef WIN32
+#ifdef _WIN32
   WSABUF *vec;
 #else
   struct iovec *vec;
@@ -99,7 +99,7 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
       for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
 	n++;
 
-#ifdef WIN32
+#ifdef _WIN32
       /* Allocate iovecs so we can send all our data at once. */
       vec = malloc(n * sizeof(WSABUF));
       if (vec)
@@ -284,7 +284,7 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
       count = recv(server->udp_socket, buf, sizeof(buf), 0);
       if (count <= 0)
 	  {
-#if defined(WIN32)
+#if defined(_WIN32)
 		int err;
 		err = WSAGetLastError();
 		//err = errno;
@@ -422,7 +422,7 @@ static void next_server(ares_channel channel, struct query *query, time_t now)
 {
   /* Advance to the next server or try. */
   query->server++;
-  for (; query->try < channel->tries; query->try++)
+  for (; query->try_ < channel->tries; query->try_++)
     {
       for (; query->server < channel->nservers; query->server++)
 	{
@@ -492,8 +492,8 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	  return;
 	}
       query->timeout = now
-	  + ((query->try == 0) ? channel->timeout
-	     : channel->timeout << query->try / channel->nservers);
+	  + ((query->try_ == 0) ? channel->timeout
+	     : channel->timeout << query->try_ / channel->nservers);
     }
 }
 
@@ -515,7 +515,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     return -1;
 
   /* Set the socket non-blocking. */
-#ifdef WIN32
+#ifdef _WIN32
   {
 	unsigned long noBlock = 1;
 	int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
@@ -541,7 +541,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 }
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define PORTABLE_INPROGRESS_ERR WSAEINPROGRESS
 #else
 #define PORTABLE_INPROGRESS_ERR EINPROGRESS
@@ -611,7 +611,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
   /* Acquire a socket. */
   s = socket(server->family, SOCK_DGRAM, 0);
-#ifdef WIN32
+#ifdef _WIN32
   {
      unsigned long noBlock = 1;
      int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
@@ -788,7 +788,7 @@ static void end_query(ares_channel channel, struct query *query, int status,
 
 void ares__kill_socket(int s)
 {
-#ifdef WIN32
+#ifdef _WIN32
    closesocket(s);
 #else
    close(s);

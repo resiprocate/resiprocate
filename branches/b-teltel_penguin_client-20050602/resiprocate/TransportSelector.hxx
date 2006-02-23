@@ -1,7 +1,7 @@
 #if !defined(RESIP_TRANSPORTSELECTOR_HXX)
 #define RESIP_TRANSPORTSELECTOR_HXX
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/select.h>
 #endif
 

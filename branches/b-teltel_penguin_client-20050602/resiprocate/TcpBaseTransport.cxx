@@ -25,7 +25,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
    mFd = InternalTransport::socket(TCP, version);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
-#if !defined(WIN32)
+#if !defined(_WIN32)
    int on = 1;
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
    {

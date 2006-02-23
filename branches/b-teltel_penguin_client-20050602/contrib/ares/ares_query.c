@@ -13,9 +13,9 @@
  * without express or implied warranty.
  */
 
-#include <sys/types.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <netinet/in.h>
 #ifndef __CYGWIN__
 #  include <arpa/nameser.h>

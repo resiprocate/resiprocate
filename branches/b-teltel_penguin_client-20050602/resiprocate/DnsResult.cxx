@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>

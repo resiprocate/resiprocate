@@ -107,7 +107,7 @@ const char* Symbols::Credential = "credential";
 const char* Symbols::SipProfile = "sip-profile";
 
 
-#if defined(WIN32)
+#if defined(_WIN32)
 const char *Symbols::pathSep = "\\";
 #else
 const char *Symbols::pathSep = "/";

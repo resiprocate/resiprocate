@@ -27,7 +27,7 @@
 
 #if defined(USE_SSL)
 
-#if !defined(WIN32)
+#if !defined(_WIN32)
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/fcntl.h>

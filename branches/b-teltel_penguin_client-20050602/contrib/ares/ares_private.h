@@ -13,8 +13,8 @@
  * without express or implied warranty.
  */
 
+#ifndef _WIN32
 #include <sys/types.h>
-#ifndef WIN32
 #include <netinet/in.h>
 #else
 #include <errno.h>
@@ -89,7 +89,7 @@ struct query {
   void *arg;
 
   /* Query status */
-  int try;
+  int try_;
   int server;
   int *skip_server;
   int using_tcp;
@@ -137,7 +137,7 @@ int ares__read_line(FILE *fp, char **buf, int *bufsize);
 
 void ares__kill_socket(int s);
 
-#ifdef WIN32
+#ifdef _WIN32
 #define strcasecmp(a,b) stricmp(a,b)
 #define strncasecmp(a,b,n) strnicmp(a,b,n)
 #endif

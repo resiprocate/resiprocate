@@ -14,10 +14,10 @@
  */
 
 
-#include <sys/types.h>
 #include <stdlib.h>
 
-#if !defined(WIN32) && !defined(__CYGWIN__)
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #endif
