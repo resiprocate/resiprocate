@@ -2300,14 +2300,16 @@ void InviteSession::sendBye()
 {
    SharedPtr<SipMessage> bye(new SipMessage());
    mDialog.makeRequest(*bye, BYE);
-   Data reason;
+   Data txt;
    if (mEndReason != NotSpecified)
    {
-      reason = getEndReasonString(mEndReason);
-      bye->header(h_Reasons).push_back(Token(reason));      
+      Token reason("SIP");
+      txt = getEndReasonString(mEndReason);
+      reason.param(p_description) = txt;
+      bye->header(h_Reasons).push_back(reason);      
    }
    
-   InfoLog (<< myAddr() << " Sending BYE " << reason);
+   InfoLog (<< myAddr() << " Sending BYE " << txt);
    send(bye);
 }
 
