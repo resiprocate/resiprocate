@@ -16,7 +16,7 @@
 #ifndef ARES__H
 #define ARES__H
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <errno.h>
 #include <WinSock2.h>
 #include <io.h>
@@ -29,8 +29,8 @@
 #include <arpa/nameser_compat.h>
 #endif
 
+#ifndef _WIN32
 #include <sys/types.h>
-#ifndef WIN32
 /* why was this commented out?! ah, it was a 'fix for windows' */
 #include <netinet/in.h>
 #endif
@@ -150,7 +150,7 @@ const char *ares_strerror(int code);
 void ares_free_errmem(char *mem);
 
 
-#if defined(WIN32) || defined (__CYGWIN__)
+#if defined(_WIN32) || defined (__CYGWIN__)
 
 #define T_A             1               /* host address */
 #define T_NS            2               /* authoritative server */

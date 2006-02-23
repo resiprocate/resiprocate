@@ -22,7 +22,7 @@
 
 #if defined(USE_SSL)
 
-#if !defined(WIN32)
+#if !defined(_WIN32)
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/fcntl.h>
@@ -241,7 +241,7 @@ Security::getPath( const Data& dirPath, const Data& file )
          }
          else
          {
-#ifdef WIN32
+#ifdef _WIN32
             path = "C:\\certs";
 #else
             ErrLog( << "Environment variable HOME is not set" );
@@ -251,7 +251,7 @@ Security::getPath( const Data& dirPath, const Data& file )
       }
    }
 
-#ifdef WIN32
+#ifdef _WIN32
    path += Data("\\");
 #else
    path += Data("/");
@@ -441,7 +441,7 @@ Security::loadPublicCert(  const Data& filePath )
 {
    assert( !filePath.empty() );
 
-#ifdef WIN32
+#ifdef _WIN32
    WIN32_FIND_DATA FileData;
    HANDLE hSearch;
    Data searchPath = filePath + Data("*");

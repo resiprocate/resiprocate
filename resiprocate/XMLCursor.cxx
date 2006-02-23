@@ -7,7 +7,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
-//#ifndef   `WIN32 // !cj! TODO FIX 
+//#ifndef   `_WIN32 // !cj! TODO FIX 
 #if 1 
 
 using namespace resip;
@@ -715,7 +715,7 @@ resip::operator<<(std::ostream& str, const XMLCursor& cursor)
    return str;
 }
 
-#endif // WIN32
+#endif // _WIN32
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
 * 

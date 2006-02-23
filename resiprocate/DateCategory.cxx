@@ -71,7 +71,7 @@ DateCategory::DateCategory()
    }
    
    struct tm gmt;
-#if defined(WIN32) || defined(__sun)
+#if defined(_WIN32) || defined(__sun)
    struct tm *gmtp = gmtime(&now);
    if (gmtp == 0)
    {

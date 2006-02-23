@@ -13,13 +13,13 @@
  * without express or implied warranty.
  */
 
-#include <sys/types.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <stdlib.h>
 #include <io.h>
 #else
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -41,7 +41,7 @@
 #include "ares_dns.h"
 #include "ares_compat.h"
 
-#if defined(WIN32) || defined(__QNX__)
+#if defined(_WIN32) || defined(__QNX__)
 #define strcasecmp(a,b) stricmp(a,b)
 #define strncasecmp(a,b,c) strnicmp(a,b,c)
 #endif
@@ -139,7 +139,7 @@ static const char *type_name(int type);
 static const char *class_name(int dnsclass);
 static void usage(void);
 
-#ifdef WIN32
+#ifdef _WIN32
 struct option
 {
       const char *name;
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
   struct timeval *tvp, tv;
   char *errmem;
 
-#ifdef WIN32 
+#ifdef _WIN32 
    WORD wVersionRequested = MAKEWORD( 2, 2 );
    WSADATA wsaData;
    int err;

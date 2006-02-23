@@ -1,7 +1,7 @@
 #if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
 #define RESIP_GENERIC_IP_ADDRESS_HXX
 
-#ifndef WIN32  
+#ifndef _WIN32  
 #include <netinet/in.h>
 #endif
 
