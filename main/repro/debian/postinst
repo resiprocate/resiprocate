@@ -11,6 +11,10 @@ add_user_if_missing() {
 		                repro
 		fi
 	fi
+	if [ ! -e /var/lib/repro ]; then
+			mkdir /var/lib/repro
+			chown repro:repro /var/lib/repro
+	fi
 }
 link_down_docs() {
 	if [ -d /usr/doc -a ! -e /usr/doc/repro -a -d /usr/share/doc/repro ]
@@ -36,7 +40,7 @@ esac
 
 if [ -x "/etc/init.d/repro" ]; then
 	update-rc.d repro defaults 23 > /dev/null
-	if ! invoke-rd.c repro restart ; then
+	if ! invoke-rc.d repro restart ; then
 		echo ""
 		echo "Repro failed to (re)start."
 	fi

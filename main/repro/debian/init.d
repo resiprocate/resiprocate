@@ -37,10 +37,10 @@ test -x $DAEMON || exit 0
 #	Function that starts the daemon/service.
 #
 d_start() {
-	CMDARGS=`sed s/#.*// @REPRO_CONFDIR@/repro.conf`
-	cd $RUNDIR || exit 1
-	start-stop-daemon --start --quiet --pidfile $PIDFILE \
-		--chuid $RUNUSER --exec $DAEMON -- $CMDARGS \
+	CMDARGS=`sed s/#.*// /etc/repro.conf`
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --background \
+		--make-pidfile --chuid $RUNUSER --chdir $RUNDIR \
+		--exec $DAEMON -- $CMDARGS \
 		|| echo -n " already running"
 }
 
@@ -75,8 +75,7 @@ case "$1" in
   restart|force-reload)
 	echo -n "Restarting $DESC: $NAME"
 	d_stop
-	# It takes ages to stop...
-	sleep 20
+	sleep 1
 	d_start
 	echo "."
 	;;
