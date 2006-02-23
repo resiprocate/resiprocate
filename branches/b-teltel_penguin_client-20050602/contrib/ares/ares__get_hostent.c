@@ -14,13 +14,13 @@
  */
 
 
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

@@ -22,7 +22,7 @@ TcpConnection::read( char* buf, int count )
    assert(buf);
    assert(count > 0);
    
-#if defined(WIN32)
+#if defined(_WIN32)
    int bytesRead = ::recv(mSocket, buf, count, 0);
 #else
    int bytesRead = ::read(mSocket, buf, count);
@@ -34,7 +34,7 @@ TcpConnection::read( char* buf, int count )
       switch (e)
       {
          case EAGAIN:
-#ifdef WIN32 //EWOULDBLOCK is not returned from recv on *nix/*bsd
+#ifdef _WIN32 //EWOULDBLOCK is not returned from recv on *nix/*bsd
          case EWOULDBLOCK:  
 #endif
             InfoLog (<< "No data ready to read");
@@ -83,7 +83,7 @@ TcpConnection::write( const char* buf, const int count )
    assert(buf);
    assert(count > 0);
 
-#if defined(WIN32)
+#if defined(_WIN32)
    int bytesWritten = ::send(mSocket, buf, count, 0);
 #else
    int bytesWritten = ::write(mSocket, buf, count);

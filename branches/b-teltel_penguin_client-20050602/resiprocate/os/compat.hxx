@@ -13,7 +13,7 @@
 #include <sys/int_types.h>
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 // !cj! TODO would be nice to remove this 
 #pragma warning(disable : 4996)
@@ -23,7 +23,7 @@
 #include <io.h>
 #endif
  
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -33,7 +33,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 # include <windows.h>
 # include <winbase.h>
 # include <errno.h>
@@ -68,12 +68,12 @@ typedef long int ssize_t;
 
 #include <cstring>
 
-#if defined(WIN32) || defined(__QNX__)
+#if defined(_WIN32) || defined(__QNX__)
 #define strcasecmp(a,b) stricmp(a,b)
 #define strncasecmp(a,b,c) strnicmp(a,b,c)
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <pthread.h>
 #endif
 
@@ -115,7 +115,7 @@ typedef size_t socklen_t;
 #endif
 }
 
-#if defined( WIN32 )
+#if defined( _WIN32 )
 typedef unsigned __int64 UInt64;
 #else
 typedef unsigned long long UInt64;

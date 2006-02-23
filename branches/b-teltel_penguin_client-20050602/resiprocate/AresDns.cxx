@@ -12,7 +12,7 @@ extern "C"
 #error Must have ARES
 #endif
 
-#if !defined(WIN32)
+#if !defined(_WIN32)
 #if !defined(__CYGWIN__)
 #include <arpa/nameser.h>
 #endif

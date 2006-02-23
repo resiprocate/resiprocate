@@ -183,7 +183,7 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-#ifdef WIN32
+#ifdef _WIN32
       Security( const Data& pathToCerts = "C:\\sipCerts\\");
 #else
       Security( const Data& pathToCerts = "~/.sipCerts/" );

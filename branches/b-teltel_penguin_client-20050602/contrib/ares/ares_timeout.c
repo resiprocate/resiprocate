@@ -13,11 +13,11 @@
  * without express or implied warranty.
  */
 
-#include <sys/types.h>
 #include <time.h>
 #include "ares.h"
 #include "ares_private.h"
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <sys/time.h>
 #endif
 

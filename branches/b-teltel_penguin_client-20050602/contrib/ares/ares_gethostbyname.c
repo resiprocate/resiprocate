@@ -14,13 +14,13 @@
  */
 
 
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -57,7 +57,7 @@ static void sort_addresses(struct hostent *host, struct apattern *sortlist,
 static int get_address_index(struct in_addr *addr, struct apattern *sortlist,
 			     int nsort);
 
-#ifdef WIN32
+#ifdef _WIN32
 extern char w32hostspath[];
 #endif
 
@@ -225,7 +225,7 @@ static int file_lookup(const char *name, struct hostent **host)
   char **alias;
   int status;
 
-#ifdef WIN32
+#ifdef _WIN32
   fp = fopen(w32hostspath, "r");
 #else
   fp = fopen(PATH_HOSTS, "r");

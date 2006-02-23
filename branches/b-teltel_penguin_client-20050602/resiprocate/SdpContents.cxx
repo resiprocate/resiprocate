@@ -1533,7 +1533,7 @@ SdpContents::Session::Medium::codecs() const
 list<Codec>&
 SdpContents::Session::Medium::codecs()
 {
-#if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
+#if defined(_WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
 	assert(0);
 #else 
    if (!mRtpMapDone)

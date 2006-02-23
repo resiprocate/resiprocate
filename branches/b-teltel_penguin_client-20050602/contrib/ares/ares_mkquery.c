@@ -14,8 +14,8 @@
  */
 
 
+#ifndef _WIN32
 #include <sys/types.h>
-#ifndef WIN32
 #include <netinet/in.h>
 #ifndef __CYGWIN__
 #  include <arpa/nameser.h>

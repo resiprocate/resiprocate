@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include "ares.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <netdb.h>
 #endif
 

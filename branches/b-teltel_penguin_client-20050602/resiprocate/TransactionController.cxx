@@ -15,7 +15,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 
@@ -39,7 +39,7 @@ TransactionController::TransactionController(SipStack& stack,
 {
 }
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #pragma warning( default : 4355 )
 #endif
 

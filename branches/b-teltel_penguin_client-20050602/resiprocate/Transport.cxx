@@ -82,7 +82,7 @@ Transport::error(int e)
          InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
          break;
 
-#if defined(WIN32)
+#if defined(_WIN32)
       case WSAENETDOWN: 
          InfoLog (<<" The network subsystem has failed.  ");
          break;
