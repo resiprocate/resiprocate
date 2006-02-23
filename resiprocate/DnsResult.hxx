@@ -12,7 +12,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Ws2tcpip.h>
 #endif
 

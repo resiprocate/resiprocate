@@ -14,12 +14,12 @@
  */
 
 
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #ifndef __CYGWIN__
@@ -48,7 +48,7 @@ static void end_aquery(struct addr_query *aquery, int status,
 		       struct hostent *host);
 static int file_lookup(struct in_addr *addr, struct hostent **host);
 
-#ifdef WIN32
+#ifdef _WIN32
 extern char w32hostspath[];
 #endif
 
@@ -145,7 +145,7 @@ static int file_lookup(struct in_addr *addr, struct hostent **host)
   FILE *fp;
   int status;
 
-#ifdef WIN32
+#ifdef _WIN32
   fp = fopen(w32hostspath, "r");
 #else
   fp = fopen(PATH_HOSTS, "r");

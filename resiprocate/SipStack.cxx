@@ -2,7 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <unistd.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -34,7 +34,7 @@
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning( disable : 4355 )
 #endif
 

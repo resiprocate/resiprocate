@@ -14,7 +14,6 @@
  */
 
 
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +21,8 @@
 #include <time.h>
 #include <assert.h>
 
-#ifndef WIN32
+#ifndef _WIN32
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/param.h>
 #include <netinet/in.h>
@@ -37,7 +37,9 @@
 #include <Winsock2.h>
 #include <iphlpapi.h>
 #include <io.h>
+#  ifndef _WIN32_WCE
 #include <Windns.h>
+#  endif
 #endif
 
 #include "ares.h"
@@ -66,13 +68,13 @@ static int	inet_pton4(const char *src, u_char *dst);
 static int	inet_pton6(const char *src, u_char *dst);
 #endif 
 
-#ifdef WIN32
+#ifdef _WIN32
 char w32hostspath[256];
 #endif
 
 int ares_init(ares_channel *channelptr)
 {
-#ifdef WIN32
+#ifdef _WIN32
   HKEY hKey;  
   char hostpath[256];
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
@@ -355,7 +357,7 @@ static int init_by_defaults(ares_channel channel)
 
   if (channel->nservers == -1)
     {
-#ifdef WIN32
+#ifdef _WIN32
      /*
       * Way of getting nameservers that should work on all Windows from 98 on.
       */
