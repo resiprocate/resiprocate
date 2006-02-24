@@ -138,8 +138,18 @@ TransactionState::process(TransactionController& controller)
       return;
    }
 
-   Data tid = message->getTransactionId();
-
+   Data tid;   
+   try
+   {
+      tid = message->getTransactionId();
+   }
+   catch(SipMessage::Exception&)
+   {
+      DebugLog( << "TransactionState::process dropping message with invalid tid " << sip->brief());
+      delete sip;
+      return;
+   }
+   
    // This ensures that CANCEL requests form unique transactions
    if (sip && sip->header(h_CSeq).method() == CANCEL) 
    {
