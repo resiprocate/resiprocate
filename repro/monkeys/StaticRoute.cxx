@@ -49,13 +49,18 @@ StaticRoute::process(RequestContext& context)
                                                     method,
                                                     event));
    bool requireAuth = false;
-   
-   for ( RouteStore::UriList::const_iterator i = targets.begin();
-         i != targets.end(); i++ )
-   {      
-      // !rwm! TODO would be useful to check if these targets require authentication
-      // but for know we will just fail safe and assume that all routes require auth
-      requireAuth |= !mNoChallenge;
+   if(!context.fromTrustedNode() && 
+      msg.header(h_RequestLine).method() != ACK && 
+      msg.header(h_RequestLine).method() != BYE)
+   {
+      for ( RouteStore::UriList::const_iterator i = targets.begin();
+            i != targets.end(); i++ )
+      {      
+         // !rwm! TODO would be useful to check if these targets require authentication
+         // but for know we will just fail safe and assume that all routes require auth
+         // if the sender is not trusted
+         requireAuth |= !mNoChallenge;
+      }
    }
 
    if (requireAuth && context.getDigestIdentity().empty())
