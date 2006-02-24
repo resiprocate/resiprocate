@@ -88,7 +88,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       delete mCurrentEvent;
    }
    mCurrentEvent = sipMessage.release();
-
    
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
@@ -100,7 +99,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       fixStrictRouterDamage();
       removeTopRouteIfSelf();
    }
-
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 
@@ -127,7 +125,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      << " send 480");
             Helper::makeResponse(response, *mOriginalRequest, 480); 
             sendResponse(response);
-            mHaveSentFinalResponse=true;
          }
          else
          {
@@ -152,7 +149,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                            << mOriginalRequest->header(h_RequestLine).uri() );
                   Helper::makeResponse(response, *mOriginalRequest, 500); 
                   sendResponse(response);
-                  mHaveSentFinalResponse=true;
                }
                else
                {
@@ -165,12 +161,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   mResponseContext.forwardBestResponse();
                }
             }
-
          }
-
       }
-      
-      
    }
    else if (sip->isResponse())
    {
@@ -210,7 +202,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                        << mOriginalRequest->header(h_RequestLine).uri() );
                Helper::makeResponse(response, *mOriginalRequest, 500); 
                sendResponse(response);
-               mHaveSentFinalResponse=true;
             }
             else
             {
@@ -226,8 +217,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          return;
       }
    }
-   
-
 }
 
 
@@ -288,7 +277,6 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                            << " send 480");
                   Helper::makeResponse(response, *mOriginalRequest, 480); 
                   sendResponse(response);
-                  mHaveSentFinalResponse=true;
                }
                else
                {
@@ -314,7 +302,6 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                                 << mOriginalRequest->header(h_RequestLine).uri() );
                         Helper::makeResponse(response, *mOriginalRequest, 500); 
                         sendResponse(response);
-                        mHaveSentFinalResponse=true;
                      }
                      else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
                      {
@@ -426,7 +413,19 @@ void
 RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
-   mProxy.send(msg);
+
+   // We can't respond to an ACK request - so just drop it and generate an Ack200DoneMessage so the request contexts
+   // gets cleaned up properly
+   if(mOriginalRequest->header(h_RequestLine).method() == ACK)
+   {
+      DebugLog(<<"Posting Ack200DoneMessage");
+      static Data ack("ack");
+      mProxy.post(new Ack200DoneMessage(getTransactionId()+ack));
+   }
+   else
+   {
+      mProxy.send(msg);
+   }
    if (msg.header(h_StatusLine).statusCode()>199)
    {
       mHaveSentFinalResponse=true;
