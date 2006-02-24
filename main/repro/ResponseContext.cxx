@@ -28,7 +28,6 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mBestPriority(50),
    mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
-
 }
 
 
@@ -40,23 +39,19 @@ ResponseContext::~ResponseContext()
    {
       delete i->second;
    }
-   
    mTerminatedTransactionMap.clear();
    
    for(i=mActiveTransactionMap.begin(); i!=mActiveTransactionMap.end();++i)
    {
       delete i->second;
    }
-   
    mActiveTransactionMap.clear();
    
    for(i=mCandidateTransactionMap.begin(); i!=mCandidateTransactionMap.end();++i)
    {
       delete i->second;
    }
-   
    mCandidateTransactionMap.clear();
-   
 }
 
 bool
@@ -79,15 +74,12 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
       return false;
    }
    
-
-   
    if(beginImmediately)
    {
       if(isDuplicate(&target))
       {
          return false;
       }
-   
    
       mTargetList.push_back(target.uri());
       
@@ -107,8 +99,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
       mCandidateTransactionMap[target.tid()]=target.clone();
    }
    
-   return true;
-   
+   return true;   
 }
 
 bool
@@ -119,8 +110,6 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    {
       return false;
    }
-
-
      
    std::list<resip::Data> queue;
    Target* target=0;
@@ -133,14 +122,12 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
       if((!mSecure || target->uri().scheme() == Symbols::Sips) &&
          target->status() == Target::Candidate)
       {
-
          if(target->mShouldAutoProcess)
          {
             queue.push_back(target->tid());
          }
          DebugLog(<<"Adding Target to Candidates: " << target->uri());
          mCandidateTransactionMap[target->tid()]=target;
-
       }
       else
       {
@@ -199,7 +186,6 @@ ResponseContext::beginClientTransactions()
    }
    
    return true;
-
 }
 
 
@@ -329,8 +315,6 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
 Target* 
 ResponseContext::getTarget(const resip::Data& tid) const
 {
-
-
    // !bwc! This tid is most likely to be found in either the Candidate targets,
    // or the Active targets.
    TransactionMap::const_iterator pend = mCandidateTransactionMap.find(tid);
@@ -354,7 +338,6 @@ ResponseContext::getTarget(const resip::Data& tid) const
       return term->second;
    }
 
-
    return 0;
 }
 
@@ -364,7 +347,6 @@ ResponseContext::getCandidateTransactionMap() const
 {
    return mCandidateTransactionMap;
 }
-
 
 
 bool 
@@ -402,12 +384,14 @@ ResponseContext::areAllTransactionsTerminated() const
    return (mCandidateTransactionMap.empty() && mActiveTransactionMap.empty());
 }
 
+
 bool
 ResponseContext::isCandidate(const resip::Data& tid) const
 {
    TransactionMap::const_iterator i=mCandidateTransactionMap.find(tid);
    return i!=mCandidateTransactionMap.end();
 }
+
 
 bool
 ResponseContext::isActive(const resip::Data& tid) const
@@ -416,12 +400,14 @@ ResponseContext::isActive(const resip::Data& tid) const
    return i!=mActiveTransactionMap.end();
 }
 
+
 bool
 ResponseContext::isTerminated(const resip::Data& tid) const
 {
    TransactionMap::const_iterator i=mTerminatedTransactionMap.find(tid);
    return i!=mTerminatedTransactionMap.end();
 }
+
 
 void 
 ResponseContext::removeClientTransaction(const resip::Data& transactionId)
@@ -439,7 +425,6 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
       mTerminatedTransactionMap.erase(i);
       return;
    }
-
 
    i=mCandidateTransactionMap.find(transactionId);
    if(i!=mCandidateTransactionMap.end())
@@ -493,7 +478,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
       SipMessage request(mRequestContext.getOriginalRequest());
 
-      
       request.header(h_RequestLine).uri() = target->uri(); 
 
       if (request.exists(h_MaxForwards))
@@ -589,7 +573,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       sendRequest(request); 
 
       target->status() = Target::Trying;
-
 }
 
 
@@ -674,9 +657,7 @@ ResponseContext::processResponse(SipMessage& response)
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
-
    int code = response.header(h_StatusLine).statusCode();
-
    if (i == mActiveTransactionMap.end())
    {
       // This is a response for a transaction that is no longer/was never active.  
@@ -718,7 +699,8 @@ ResponseContext::processResponse(SipMessage& response)
                         << resip::Data::from(target->uri()) << " , to host: " 
                         << target->via().sentHost());
                cancelClientTransaction(target);
-            } else if (target->status() == Target::Trying)
+            } 
+            else if (target->status() == Target::Trying)
             {
                target->status() = Target::Proceeding;
             }            
@@ -1044,7 +1026,6 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
    assert(lhs.isResponse());
    assert(rhs.isResponse());
    
-   
    // !rwm! replace with correct thingy here
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
 }
@@ -1077,7 +1058,6 @@ repro::operator<<(std::ostream& strm, const repro::Target* t)
    strm << "Target: " << t->uri() << " " <<" status=" << t->status();
    return strm;
 }
-
 
 
 std::ostream&
