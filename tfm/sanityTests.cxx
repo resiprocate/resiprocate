@@ -5470,6 +5470,83 @@ class TestHolder : public Fixture
          ExecuteSequences();  
       }
 
+      /* Test that the routing logic can make decisions based on the method
+       * and (for SUBSCRIBEs) the event type.
+       */
+      void testRoutingBasic()
+      {
+         WarningLog(<<"*!testRoutingBasic!*");
+
+	 // INVITEs to u@.* are routed to derek.
+         RouteGuard dGuard1(*proxy, "sip:u@.*", "sip:derek@localhost",
+                            "INVITE");
+	 // SUBSCRIBEs for dialog u@.* are routed to david.
+         RouteGuard dGuard2(*proxy, "sip:u@.*", "sip:david@localhost",
+                            "SUBSCRIBE", "dialog");
+	 // SUBSCRIBEs for status u@.* are routed to enlai.
+         RouteGuard dGuard3(*proxy, "sip:u@.*", "sip:enlai@localhost",
+                            "SUBSCRIBE", "status");
+	 // Everything else is routed to jason.
+	 // Give weight 2 for the route to give this route a lower priority
+	 // than the ones above.
+         RouteGuard dGuard4(*proxy, "", "sip:jason@localhost", Data::Empty,
+			    Data::Empty, 2);
+
+	 // Register the users.
+
+         Seq(derek->registerUser(600, derek->getDefaultContacts()),
+             derek->expect(REGISTER/407, from(proxy), WaitForResponse,
+	                   derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), WaitForRegistration,
+                           derek->noAction()),
+	     WaitForEndOfSeq);
+
+         Seq(david->registerUser(600, david->getDefaultContacts()),
+             david->expect(REGISTER/407, from(proxy), WaitForResponse,
+	                   david->digestRespond()),
+             david->expect(REGISTER/200, from(proxy), WaitForRegistration,
+                           david->noAction()),
+	     WaitForEndOfSeq);
+
+         Seq(enlai->registerUser(600, enlai->getDefaultContacts()),
+             enlai->expect(REGISTER/407, from(proxy), WaitForResponse,
+	                   enlai->digestRespond()),
+             enlai->expect(REGISTER/200, from(proxy), WaitForRegistration,
+                           enlai->noAction()),
+	     WaitForEndOfSeq);
+
+         Seq(jason->registerUser(600, jason->getDefaultContacts()),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse,
+	                   jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForRegistration,
+                           jason->noAction()),
+
+             WaitForEndOfSeq);
+
+         ExecuteSequences();  
+
+	 // Send the requests.
+
+	 // cullen sends INVITE to u@.* which should be routed to derek.
+	 Seq(cullen->invite(proxy->makeUrl("u").uri()),
+	     optional(cullen->expect(INVITE/100, from(proxy), WaitFor100,
+				     cullen->noAction())),
+             cullen->expect(INVITE/407, from(proxy), WaitForResponse,
+			    chain(cullen->ack(),
+				  cullen->digestRespond())),
+	     And(Sub(optional(cullen->expect(INVITE/100, from(proxy), WaitFor100,
+					     cullen->noAction()))),
+		 Sub(derek->expect(INVITE, contact(cullen), WaitForCommand,
+				   derek->answer()),
+		     cullen->expect(INVITE/200, contact(derek), WaitForResponse,
+				    cullen->ack()),
+		     derek->expect(ACK, from(cullen), WaitForResponse,
+				   cullen->noAction()))),
+	     WaitForEndOfTest);
+
+         ExecuteSequences();  
+      }
+
       // provisioning here(automatic cleanup)
       static void createStatic()
       {
@@ -5652,6 +5729,9 @@ class MyTestCase
          BADTEST(testConferenceConferencorHangsUp); // reINVITEs are problematic
          BADTEST(testForkedInviteClientLateAck);
          TEST(testInviteForkBothBusy);
+
+	 // Tests of the routing pattern matching logic.
+         TEST(testRoutingBasic);
 #else
          TEST(testInviteAllBusyContacts);
 #endif         
