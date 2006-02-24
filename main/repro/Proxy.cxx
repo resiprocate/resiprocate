@@ -50,6 +50,7 @@ Proxy::~Proxy()
 {
    shutdown();
    join();
+   InfoLog (<< "Proxy::thread shutdown with " << mServerRequestContexts.size() << " ServerRequestContexts and " << mClientRequestContexts.size() << " ClientRequestContexts.");
 }
 
 
