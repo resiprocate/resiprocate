@@ -12,7 +12,6 @@
 
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
-#include "repro/UserInfoMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 

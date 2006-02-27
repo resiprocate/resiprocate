@@ -637,23 +637,29 @@ ResponseContext::processResponse(SipMessage& response)
    // Stop processing responses that have nowhere else to go
    if (response.header(h_Vias).empty())
    {
-      // CANCELs only have one Via.  Likewise 100s only have one Via  
+      // CANCEL/200s only have one Via.  Likewise 100s only have one Via  
       // Silently stop processing the CANCEL responses.
       // We will handle the 100 responses later
-      // Log other responses we can't forward 
+      // Log other responses we can't forward
+      if(response.header(h_CSeq).method()==CANCEL)
+      {
+         return;
+      }
+      
       if ((response.header(h_CSeq).method() != CANCEL) && 
           (response.header(h_StatusLine).statusCode() != 100)) {
          InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
       }
-      return;
    }
-
-   const Via& via = response.header(h_Vias).front();
-   if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
+   else
    {
-      response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
+      const Via& via = response.header(h_Vias).front();
+      if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
+      {
+         response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
+      }
    }
-
+   
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
@@ -899,6 +905,7 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 			case 501:	// these three have different priorities
 			case 503:   // which are addressed in the case statement
 			case 580:	// below (with the 4xx responses)
+         case 513:
 				break;
 			default:
 				return 42; // response priority of other 5xx is 42
@@ -977,6 +984,7 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 
 		case 436:		// Bad Identity-Info 
 		case 437:		// Unsupported Certificate
+      case 513:      // Message too large
            return 33;
 
 		case 403:		// Forbidden
@@ -1040,7 +1048,7 @@ ResponseContext::forwardBestResponse()
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
       //See RFC 3261 sec 16.7, page 110, paragraph 2
-      mBestResponse.header(h_StatusLine).statusCode() = 500;
+      mBestResponse.header(h_StatusLine).statusCode() = 480;
       mRequestContext.sendResponse(mBestResponse);
    }
    else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
