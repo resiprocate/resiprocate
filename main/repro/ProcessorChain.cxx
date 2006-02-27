@@ -4,11 +4,10 @@
 
 #include <iostream>
 
+#include "repro/ProcessorChain.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/SipStack.hxx"
 #include "repro/ChainTraverser.hxx"
 #include "repro/RequestContext.hxx"
-#include "repro/Proxy.hxx"
 
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
