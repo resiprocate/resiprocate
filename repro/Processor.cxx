@@ -5,8 +5,6 @@
 #include <ostream>
 #include "resip/stack/SipMessage.hxx"
 #include "repro/Processor.hxx"
-#include "repro/ProcessorChain.hxx"
-#include "repro/ProcessorMessage.hxx"
 
 using namespace resip;
 using namespace repro;

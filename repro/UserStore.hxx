@@ -6,7 +6,6 @@
 #include "resip/stack/Message.hxx"
 
 #include "repro/AbstractDb.hxx"
-#include "repro/UserInfoMessage.hxx"
 
 namespace resip
 {

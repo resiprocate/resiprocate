@@ -61,6 +61,9 @@ class Target
          return lhs->mPriorityMetric > rhs->mPriorityMetric;
       }
 
+      /**
+         Higher value denotes higher priority.
+      */
       float mPriorityMetric;
       bool mShouldAutoProcess;
       
