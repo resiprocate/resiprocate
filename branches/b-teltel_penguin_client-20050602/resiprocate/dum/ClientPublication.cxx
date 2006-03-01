@@ -198,6 +198,10 @@ ClientPublication::refresh(unsigned int expiration)
    {
       expiration = mPublish.header(h_Expires).value();
    }
+   if (!mPublish.exists(h_SIPIfMatch))
+   {
+      mPublish.setContents(mDocument);
+   }
    mPublish.header(h_CSeq).sequence()++;
    send(mPublish);
 }
