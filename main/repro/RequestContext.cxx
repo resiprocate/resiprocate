@@ -124,6 +124,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      << mOriginalRequest->header(h_RequestLine).uri() 
                      << " send 480");
             Helper::makeResponse(response, *mOriginalRequest, 480); 
+            mResponseContext.mForwardedFinalResponse=true;
             sendResponse(response);
          }
          else
@@ -148,6 +149,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                            << "Sending a 500 response for this request:" 
                            << mOriginalRequest->header(h_RequestLine).uri() );
                   Helper::makeResponse(response, *mOriginalRequest, 500); 
+                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -201,6 +203,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                        << "Sending a 500 response for this request:" 
                        << mOriginalRequest->header(h_RequestLine).uri() );
                Helper::makeResponse(response, *mOriginalRequest, 500); 
+               mResponseContext.mForwardedFinalResponse=true;
                sendResponse(response);
             }
             else
@@ -276,6 +279,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                            << mOriginalRequest->header(h_RequestLine).uri() 
                            << " send 480");
                   Helper::makeResponse(response, *mOriginalRequest, 480); 
+                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -301,6 +305,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                                 << "Sending a 500 response for this request:" 
                                 << mOriginalRequest->header(h_RequestLine).uri() );
                         Helper::makeResponse(response, *mOriginalRequest, 500); 
+                        mResponseContext.mForwardedFinalResponse=true;
                         sendResponse(response);
                      }
                      else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)

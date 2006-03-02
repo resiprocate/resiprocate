@@ -119,6 +119,13 @@ class ResponseContext
       bool cancelAllClientTransactions();
       
       /**
+         Removes all Candidate transactions.
+         
+         @returns true iff at least one Candidate transaction was removed.
+      */
+      bool clearCandidateTransactions();
+      
+      /**
          Cancels this client transaction if active, or Terminates it if
          Candidate.
          
