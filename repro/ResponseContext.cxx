@@ -153,22 +153,21 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
 bool 
 ResponseContext::beginClientTransactions()
 {
-   if(mForwardedFinalResponse)
-   {
-      return false;
-   }
+   
+   bool result=false;
    
    if(mCandidateTransactionMap.empty())
    {
-      return false;
+      return result;
    }
    
    for (TransactionMap::iterator i=mCandidateTransactionMap.begin(); i != mCandidateTransactionMap.end(); )
    {
-      if(!isDuplicate(i->second))
+      if(!isDuplicate(i->second) && !mForwardedFinalResponse)
       {
          mTargetList.push_back(i->second->uri());
          beginClientTransaction(i->second);
+         result=true;
          // see rfc 3261 section 16.6
          //This code moves the Target from mCandidateTransactionMap to mActiveTransactionMap,
          //and begins the transaction.
@@ -177,6 +176,7 @@ ResponseContext::beginClientTransactions()
       }
       else
       {
+         mTerminatedTransactionMap[i->second->tid()] = i->second;
          DebugLog(<<"Found a repeated target.");
       }
       
@@ -192,19 +192,16 @@ ResponseContext::beginClientTransactions()
 bool 
 ResponseContext::beginClientTransaction(const resip::Data& tid)
 {
-   if(mForwardedFinalResponse)
-   {
-      return false;
-   }
-
    TransactionMap::iterator i = mCandidateTransactionMap.find(tid);
    if(i==mCandidateTransactionMap.end())
    {
       return false;
    }
    
-   if(isDuplicate(i->second))
+   if(isDuplicate(i->second) || mForwardedFinalResponse)
    {
+      mTerminatedTransactionMap[i->second->tid()] = i->second;
+      mCandidateTransactionMap.erase(i);
       return false;
    }
    
@@ -249,10 +246,6 @@ ResponseContext::cancelActiveClientTransactions()
 bool
 ResponseContext::cancelAllClientTransactions()
 {
-   if(mForwardedFinalResponse)
-   {
-      return false;
-   }
 
    InfoLog (<< "Cancel ALL client transactions: " << mCandidateTransactionMap.size()
             << " pending, " << mActiveTransactionMap.size() << " active.");
@@ -263,10 +256,13 @@ ResponseContext::cancelAllClientTransactions()
    }
 
    // CANCEL INVITE branches
-   for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
-        i != mActiveTransactionMap.end(); ++i)
+   if(mRequestContext.getOriginalRequest().header(h_RequestLine).method()==INVITE)
    {
-      cancelClientTransaction(i->second);
+      for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
+           i != mActiveTransactionMap.end(); ++i)
+      {
+         cancelClientTransaction(i->second);
+      }
    }
 
    for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
@@ -283,14 +279,29 @@ ResponseContext::cancelAllClientTransactions()
 
 }
 
+bool
+ResponseContext::clearCandidateTransactions()
+{
+   bool result=false;
+   for (TransactionMap::iterator j = mCandidateTransactionMap.begin(); 
+        j != mCandidateTransactionMap.end();)
+   {
+      result=true;
+      cancelClientTransaction(j->second);
+      mTerminatedTransactionMap[j->second->tid()] = j->second;
+      TransactionMap::iterator temp = j;
+      j++;
+      mCandidateTransactionMap.erase(temp);
+   }
+   
+   return result;
+
+}
+
 
 bool 
 ResponseContext::cancelClientTransaction(const resip::Data& tid)
 {
-   if(mForwardedFinalResponse)
-   {
-      return false;
-   }
 
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
    if(i!=mActiveTransactionMap.end())
@@ -352,7 +363,7 @@ ResponseContext::getCandidateTransactionMap() const
 bool 
 ResponseContext::hasCandidateTransactions() const
 {
-   return !mCandidateTransactionMap.empty();
+   return !mForwardedFinalResponse && !mCandidateTransactionMap.empty();
 }
 
 
@@ -730,6 +741,7 @@ ResponseContext::processResponse(SipMessage& response)
          }
          else if (!mForwardedFinalResponse)
          {
+            clearCandidateTransactions();
             mForwardedFinalResponse = true;
             mRequestContext.sendResponse(response);            
          }
@@ -1042,6 +1054,13 @@ void
 ResponseContext::forwardBestResponse()
 {
    InfoLog (<< "Forwarding best response: " << mBestResponse.brief());
+   
+   clearCandidateTransactions();
+   
+   if(mRequestContext.getOriginalRequest().header(h_RequestLine).method()==INVITE)
+   {
+      cancelActiveClientTransactions();
+   }
    
    mForwardedFinalResponse = true;
    
