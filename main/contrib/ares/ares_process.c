@@ -37,6 +37,12 @@
 #include "ares_private.h"
 #include "ares_local.h"
 
+#ifdef WIN32
+static int getErrno() { return WSAGetLastError(); }
+#else
+static int getErrno() { return errno; }
+#endif
+
 static void write_tcp_data(ares_channel channel, fd_set *write_fds,
 			   time_t now);
 static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now);
@@ -216,14 +222,14 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
 	  /* We haven't yet read a length word, so read that (or
 	   * what's left to read of it).
 	   */
-#ifndef UNDER_CE
-	  count = read(server->tcp_socket,
-		       server->tcp_lenbuf + server->tcp_lenbuf_pos,
-		       2 - server->tcp_lenbuf_pos);
-#else
-	  count = recv(server->tcp_socket,
+#if defined UNDER_CE || defined WIN32
+      count = recv(server->tcp_socket,
                        server->tcp_lenbuf + server->tcp_lenbuf_pos,
                        2 - server->tcp_lenbuf_pos,0);
+#else
+      count = read(server->tcp_socket,
+		       server->tcp_lenbuf + server->tcp_lenbuf_pos,
+		       2 - server->tcp_lenbuf_pos);
 #endif
 	  if (count <= 0)
 	    {
@@ -248,14 +254,14 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
       else
 	{
 	  /* Read data into the allocated buffer. */
-#ifndef UNDER_CE
-	  count = read(server->tcp_socket,
-		       server->tcp_buffer + server->tcp_buffer_pos,
-		       server->tcp_length - server->tcp_buffer_pos);
-#else
-	  count = recv(server->tcp_socket,
+#if defined UNDER_CE || defined WIN32
+      count = recv(server->tcp_socket,
 		       server->tcp_buffer + server->tcp_buffer_pos,
 		       server->tcp_length - server->tcp_buffer_pos,0);
+#else
+      count = read(server->tcp_socket,
+		       server->tcp_buffer + server->tcp_buffer_pos,
+		       server->tcp_length - server->tcp_buffer_pos);
 #endif
 
 	  if (count <= 0)
@@ -303,10 +309,10 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
       if (count <= 0)
 	  {
 #if defined(WIN32)
-		int err;
-		err = WSAGetLastError();
+		//int err;
+		//err = WSAGetLastError();
 		//err = errno;
-		switch (err)
+		switch (getErrno())
 		{
 			case WSAEWOULDBLOCK: 
                FD_CLR(server->udp_socket, read_fds);
@@ -561,7 +567,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 #endif
 
 #ifdef WIN32
-#define PORTABLE_INPROGRESS_ERR WSAEINPROGRESS
+#define PORTABLE_INPROGRESS_ERR WSAEWOULDBLOCK
 #else
 #define PORTABLE_INPROGRESS_ERR EINPROGRESS
 #endif
@@ -579,7 +585,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     // do i need to explicitly set the length?
 
     if (connect(s, (const struct sockaddr *) &sin6 , sizeof(sin6)) == -1
-           && errno != PORTABLE_INPROGRESS_ERR)
+           && getErrno() != PORTABLE_INPROGRESS_ERR)
     {
       ares__kill_socket(s);
       return -1;
@@ -590,10 +596,9 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr = server->addr;
-    sin.sin_port = channel->tcp_port;
+    sin.sin_port = channel->tcp_port;    
 
-    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
-           && errno != PORTABLE_INPROGRESS_ERR)
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1 && getErrno() != PORTABLE_INPROGRESS_ERR)
     {
       ares__kill_socket(s);
       return -1;
@@ -606,7 +611,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   sin.sin_port = channel->tcp_port;
 
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
-         && errno != PORTABLE_INPROGRESS_ERR)
+         && getErrno() != PORTABLE_INPROGRESS_ERR)
   {
     ares__kill_socket(s);
     return -1;
