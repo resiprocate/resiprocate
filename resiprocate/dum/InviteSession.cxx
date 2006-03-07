@@ -20,7 +20,7 @@
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
-#if defined(WIN32)
+#if defined(_WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
 #pragma warning( disable : 4800 ) // forcing value to bool (performance warning)
 #endif
