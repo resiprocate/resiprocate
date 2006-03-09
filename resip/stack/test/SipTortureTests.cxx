@@ -22,7 +22,7 @@ test1()
 {
   CritLog(<< "2.1 INVITE Parser Torture Test Message" );
       
-      char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
+      const char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
                    "TO :\r\n"
                    " sip:called@called-company.com ;       tag      = 1918181833n\r\n"
                    "From     : \"Caller Name \\\\\\\"\" <sip:caller@caller-company.com>\r\n"
@@ -143,7 +143,7 @@ test1()
    {
       CritLog( << "2.2 INVITE with Proxy-Require and Require");
        
-      char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
+      const char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
                    "To: sip:called@called-company.com\r\n"
                    "From: sip:caller@caller-company.com;tag=242etr\r\n"
                    "Max-Forwards: 6\r\n"
@@ -215,7 +215,7 @@ test3()
        CritLog( << "2.3 INVITE with Unknown Schemes in URIs");
        
       
-      char *txt = ("INVITE name:John_Smith SIP/2.0\r\n"
+      const char *txt = ("INVITE name:John_Smith SIP/2.0\r\n"
                    "To: isbn:2983792873\r\n"
                    "From: <sip:www.cs.columbia.edu>;tag=3234233\r\n" // was http//
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
@@ -290,7 +290,7 @@ test4()
 {
       CritLog( << "2.4 REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
        
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -375,7 +375,7 @@ test5()
    {
       CritLog( << "2.5    INVITE with inconsistent Accept and message body");
       
-      char *txt = ("INVITE sip:user@company.com SIP/2.0 \r\n"
+      const char *txt = ("INVITE sip:user@company.com SIP/2.0 \r\n"
                    "To: sip:j_user@company.com \r\n"
                    "From: sip:caller@university.edu;tag=234 \r\n"
                    "Max-Forwards: 5 \r\n"
@@ -454,7 +454,7 @@ void test6()
 {
       CritLog( << "2.6    INVITE with non-SDP message body ");
       
-      char *txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+      const char *txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                    "To: sip:j.user@company.com\r\n"
                    "From: sip:caller@university.edu;tag=8\r\n"
                    "Max-Forwards: 70 \r\n"
@@ -506,7 +506,7 @@ void test7()
 {
       CritLog( << "2.7    Unknown Method Message");
       
-      char *txt = ("NEWMETHOD sip:user@company.com SIP/2.0 \r\n"
+      const char *txt = ("NEWMETHOD sip:user@company.com SIP/2.0 \r\n"
                    "To: sip:j.user@company.com \r\n"
                    "From: sip:caller@university.edu;tag=34525 \r\n"
                    "Max-Forwards: 6 \r\n"
@@ -585,7 +585,7 @@ void test8()
 {
    CritLog( << "2.8   Unknown Method with CSeq Error ");
    
-   char *txt = ("NEWMETHOD sip:user@comapny.com SIP/2.0\r\n"
+   const char *txt = ("NEWMETHOD sip:user@comapny.com SIP/2.0\r\n"
                 "To: sip:j.user@company.com\r\n"
                 "From: sip:caller@university.edu;tag=23411413\r\n"
                 "Max-Forwards: 3\r\n"
@@ -619,7 +619,7 @@ void test9()
 {
    CritLog( << "2.9    REGISTER with Unknown Authorization Scheme" );
    
-   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+   const char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                 "To: sip:j.user@company.com\r\n"
                 "From: sip:j.user@company.com;tag=87321hj23128\r\n"
                 "Max-Forwards: 8\r\n"
@@ -642,7 +642,7 @@ void test10()
 {
    CritLog( << "2.10 Multiple SIP Request in a Single Message");
    
-   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+   const char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                 "To: sip:j.user@company.com\r\n"
                 "From: sip:j.user@company.com;tag=43251j3j324\r\n"
                 "Max-Forwards: 8\r\n"
@@ -686,7 +686,7 @@ void test11()
 {
    CritLog( << "2.11 INVITE missing Required Headers");
 
-   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+   const char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "CSeq: 0 INVITE\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Content-Type: application/sdp\r\n"
@@ -716,7 +716,7 @@ void test12()
    CritLog( << "2.12 INVITE with Duplicate Required Headers");
    //with duplicate headers that are not multi, the first header is kept
    
-   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+   const char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Max-Forwards: 70\r\n"
                 "CSeq: 0 INVITE\r\n"
@@ -755,7 +755,7 @@ void test13()
    CritLog( << "2.13 INVITE with lots of header types");
    //with duplicate headers that are not multi, the first header is kept
    
-   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+   const char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "User-Agent: Lame Agent\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Max-Forwards: 70\r\n"
@@ -797,7 +797,7 @@ void test14()
 {
    CritLog( << "2.14 Response with lots of headers");
    
-   char* txt = ("SIP/2.0 200 OK\r\n"
+   const char* txt = ("SIP/2.0 200 OK\r\n"
                 "To: <sip:fluffy@example.org>;tag=fb86ad2694115d75c77dce61523c9f07.ca6e\r\n"
                 "From: <sip:fluffy@example.org>;tag=a1fd\r\n"
                 "Via: SIP/2.0/UDP cj14:5002;branch=z9hG4bK-c87542-472987176-1;received=1.2.3.4\r\n"
@@ -836,7 +836,7 @@ void test15()
 {
    CritLog( << "2.15 Interesting bodies");
    
-   char* txt = (
+   const char* txt = (
     "NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
     "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
     "To: sip:fluffy@212.157.205.40\r\n"
@@ -916,7 +916,7 @@ void test15()
 
 
 int
-main(int argc, char*argv[])
+main(int argc, const char*argv[])
 {
     Log::Level l = Log::Debug;
     

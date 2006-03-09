@@ -27,7 +27,8 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mAbsoluteExpiry(0)
 {
    Data key = getEventType() + getDocumentKey();
-   mDum.mServerSubscriptions.insert(std::make_pair(key, this));
+   mDum.mServerSubscriptions.insert(DialogUsageManager::ServerSubscriptions::value_type(key, this));
+   //mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
