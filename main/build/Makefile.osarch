@@ -104,7 +104,7 @@ ifeq ($(OSTYPE),SunOS)
         CXXFLAGS += -D_REENTRANT -mt -library=stlport4
         CFLAGS   += -D_REENTRANT -mt
         LDFLAGS  +=  -DTHREAD=MULTI -mt -library=stlport4
-        LDLIBS_LAST   += -liostream -lnsl -lsocket 
+        LDLIBS_LAST   += -liostream -lnsl -lsocket -lrt
     endif
 
 # Do I need any xarch parameters on CXXFLAGS        
