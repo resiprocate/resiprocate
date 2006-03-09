@@ -31,8 +31,8 @@ int
 main(int argc, char* argv[])
 {
 #ifdef USE_SSL
-   char* logType = "cout";
-   char* logLevel = "ALERT";
+   char logType[] = "cout";
+   char logLevel[] = "DEBUG";
 
    int window = 5*20;
    int seltime = 100;
@@ -42,7 +42,6 @@ main(int argc, char* argv[])
 
    //logLevel = "ALERT";
    //logLevel = "INFO";
-   logLevel = "DEBUG";
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {

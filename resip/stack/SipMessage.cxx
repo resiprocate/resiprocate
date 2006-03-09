@@ -472,7 +472,7 @@ SipMessage::encodeBrief(std::ostream& str) const
    static const Data cseq(" cseq=");
    static const Data slash(" / ");
    static const Data wire(" from(wire)");
-   static const Data tu(" from(tu)");
+   static const Data ftu(" from(tu)");
    static const Data tlsd(" tlsd=");
 
    if (isRequest()) 
@@ -524,7 +524,7 @@ SipMessage::encodeBrief(std::ostream& str) const
    
    str << slash;
    str << header(h_CSeq).sequence();
-   str << (mIsExternal ? wire : tu);
+   str << (mIsExternal ? wire : ftu);
    if (!mTlsDomain.empty())
    {
       str << tlsd << mTlsDomain;

@@ -25,7 +25,6 @@
 namespace resip
 {
 
-//#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 /// Completely generic insert function
 #ifdef REASONABLE_TEMPLATES
 template <class T>
@@ -36,31 +35,6 @@ insert(std::ostream& s, const T& t)
    s << t;
    return s;
 }
-#endif
-
-// sadly, not generally supported
-#if 0
-#if !defined(WIN32) && !defined(__SUNPRO_CC)
-/// Container generic insert function
-template <class T, template <class> class C>
-std::ostream&
-insert(std::ostream& s, const C<T>& c)
-{
-   s << "[";
-   for (typename C<T>::const_iterator i = c.begin();
-        i != c.end(); i++) 
-   {
-      if (i != c.begin()) 
-      {
-         s << ", ";
-      }
-      // recurse
-      insert(s, *i);
-   }
-   s << "]";
-   return s;
-}
-#endif
 #endif
 
 // specific collections, sigh

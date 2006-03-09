@@ -35,9 +35,9 @@ SERNonceHelper::~SERNonceHelper()
 }
 
 void
-SERNonceHelper::setPrivateKey(const Data& privateKey)
+SERNonceHelper::setPrivateKey(const Data& pprivateKey)
 {
-   this->privateKey = privateKey;
+   this->privateKey = pprivateKey;
 }
 
 Data 

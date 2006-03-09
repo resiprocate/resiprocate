@@ -129,12 +129,8 @@ typedef unsigned int   UInt32;
 //COMPLETE would allow template metaprogramming, template< template< > > tricks,
 //etc...REASONABLE should always be defined when COMPLETE is defined.
 
-// no longer needed 
-//#if defined(_MSC_VER) && (MSC_VER >= 1200)
-//#define REASONABLE_TEMPLATES
-//#endif
-
-#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+//#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+#if !defined(__INTEL_COMPILER)
 #  define REASONABLE_TEMPLATES
 #endif
 

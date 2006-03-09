@@ -13,7 +13,8 @@ class SipMessage;
 class Uri : public ParserCategory
 {
    public:
-      RESIP_HeapCount(Uri)
+      RESIP_HeapCount(Uri);
+      
       Uri();
       Uri(const Uri&);
       explicit Uri(const Data& data);
