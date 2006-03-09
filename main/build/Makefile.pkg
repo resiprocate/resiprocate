@@ -65,6 +65,13 @@ DB42_LIBNAME := db
 DB4CXX_LIBNAME := db_cxx
 endif
 
+ifeq ($(OSTYPE),SunOS)
+DB4CXX_INCLUDEDIRS := /opt/csw/bdb43/include
+DB4CXX_LIBDIRS := /opt/csw/bdb43/lib
+DB42_LIBNAME := db
+DB4CXX_LIBNAME := db_cxx
+endif
+
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
