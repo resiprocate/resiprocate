@@ -121,12 +121,13 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),sunpro)
 
 #MKSHLIB		= CC -xarch=v9 -G
 MKSHLIB		= CC -G
-AR		= CC -o
-ARFLAGS		=
+#AR		= CC -o
+AR		= /usr/ccs/bin/ar
+ARFLAGS		= rv
 CC		= cc
 CXX		= CC 
 DEP		= CC -xM
-DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
+#DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
 DFLAGS		= 
 INSTALL		= install
 LINKER		= CC

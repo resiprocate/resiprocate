@@ -93,20 +93,24 @@ ifeq ($(OSTYPE),SunOS)
     CFLAGS   += -DSUNXIL_WARNING_DISABLE
     CXXFLAGS += -DSUNXIL_WARNING_DISABLE 
 
-    INCDIRS += /opt/sfw/include
-    LIBDIRS += /opt/sfw/lib
+    INCDIRS += /opt/sfw/include /opt/csw/include 
+    LIBDIRS += /opt/sfw/lib /opt/csw/lib
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
         CXXFLAGS += -D_REENTRANT
         CFLAGS   += -D_REENTRANT
         LDLIBS_LAST   += -R/usr/local/lib -lnsl -lsocket
     else
-        CXXFLAGS += -D_REENTRANT -mt -D_RWSTD_MULTI_THREAD -dalign -xarch=v8plus
-        CFLAGS   += -D_REENTRANT -xarch=v8plus
-        LDFLAGS  +=  -DTHREAD=MULTI -mt  -dalign -xarch=v8plus -L/opt/SUNWspro/WS6/lib/rw7 -L/opt/SUNWspro/WS6/lib/ 
-        LDLIBS_LAST   += -lrwtool -liostream -lnsl -lsocket -lCstd
+        CXXFLAGS += -D_REENTRANT -mt -library=stlport4
+        CFLAGS   += -D_REENTRANT -mt
+        LDFLAGS  +=  -DTHREAD=MULTI -mt -library=stlport4
+        LDLIBS_LAST   += -liostream -lnsl -lsocket 
     endif
 
+# Do I need any xarch parameters on CXXFLAGS        
+    ifeq ($(ARCH),sparc)
+        CXXFLAGS += -dalign
+    endif
 endif
 
 
