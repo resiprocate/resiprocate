@@ -14,7 +14,7 @@ class Worker
       virtual ~Worker(){};
       
       virtual void process(resip::ApplicationMessage* msg){assert(0);}
-      virtual Worker* clone() const{assert(0);}
+      virtual Worker* clone() const{assert(0);return 0;}
 };
 }
 #endif
