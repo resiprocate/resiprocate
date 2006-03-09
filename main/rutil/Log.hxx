@@ -32,16 +32,16 @@ class ExternalLogger;
 class Log
 {
    public:
-      typedef enum 
+      enum Type
       {
          Cout = 0,
          Syslog, 
          File, 
          Cerr,
-         VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
-      } Type;
+         VSDebugWindow   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
+      };
       
-      typedef enum 
+      enum Level
       {
          None = -1,
 #ifdef WIN32
@@ -65,7 +65,8 @@ class Log
          Stack = 8,
          StdErr = 9,
          Bogus = 666
-      } Level;
+      };
+      
 
       /**
 	 Implementation for logging macros.

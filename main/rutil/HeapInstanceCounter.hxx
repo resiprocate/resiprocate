@@ -37,7 +37,7 @@
           resip::HeapInstanceCounter::deallocate(addr, typeid(type_));          \
       }
 #else
-#define RESIP_HeapCount(type_)
+#define RESIP_HeapCount(type_)class type_
 #endif // RESIP_HEAP_COUNT
 
 namespace resip
