@@ -37,7 +37,11 @@
           resip::HeapInstanceCounter::deallocate(addr, typeid(type_));          \
       }
 #else
+#if defined (__SUNPRO_CC) 
 #define RESIP_HeapCount(type_)class type_
+#else
+#define RESIP_HeapCount(type_)
+#endif
 #endif // RESIP_HEAP_COUNT
 
 namespace resip
