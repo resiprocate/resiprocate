@@ -608,6 +608,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             int mCount;
       };
 
+      class SaveMatcher : public Matcher
+      {
+         public:
+            SaveMatcher(Matcher* matcher, boost::shared_ptr<resip::SipMessage>& msg);
+            virtual bool isMatch(boost::shared_ptr<resip::SipMessage>& message) const;
+            virtual resip::Data toString() const;
+
+         private:
+            boost::shared_ptr<resip::SipMessage>& mMsg;
+            Matcher* mMatcher;
+      };
          
       class From : public Matcher
       {
@@ -844,6 +855,8 @@ TestSipEndPoint::From* from(TestProxy* testProxy);
 TestSipEndPoint::From* from(const resip::NameAddr* contact);
 TestSipEndPoint::From* from(const resip::Uri& clientUri);
 TestSipEndPoint::From* from(const resip::Data& instanceId);
+
+TestSipEndPoint::SaveMatcher* saveMatcher(TestSipEndPoint::Matcher* matcher, boost::shared_ptr<resip::SipMessage>& msg);
 
 TestSipEndPoint::AlwaysMatches* alwaysMatches();
 
