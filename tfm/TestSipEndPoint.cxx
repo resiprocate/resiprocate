@@ -2001,6 +2001,26 @@ TestSipEndPoint::notify200()
    return new Notify200(*this);
 }
 
+TestSipEndPoint::SaveMatcher::SaveMatcher(Matcher* matcher, boost::shared_ptr<SipMessage>& msg) :
+   mMsg(msg),
+   mMatcher(matcher)
+{
+}
+
+Data
+TestSipEndPoint::SaveMatcher::toString() const
+{
+   return "SaveMatcher: " + mMatcher->toString();
+}
+
+bool
+TestSipEndPoint::SaveMatcher::isMatch(boost::shared_ptr<resip::SipMessage>& message) const
+{
+   TestSipEndPoint::SaveMatcher* ncThis = const_cast<TestSipEndPoint::SaveMatcher*>(this);
+   ncThis->mMsg = message;
+   return mMatcher->isMatch(message);
+}
+
 TestSipEndPoint::From::From(const TestSipEndPoint& testEndPoint)
    : mEndPoint(&testEndPoint),
      mProxy(0),
@@ -2784,6 +2804,12 @@ resip::Data
 TestSipEndPoint::getAddressOfRecordString() const
 {
    return mAor.getAor();
+}
+
+TestSipEndPoint::SaveMatcher*
+saveMatcher(TestSipEndPoint::Matcher* matcher, boost::shared_ptr<SipMessage>& msg)
+{
+   return new TestSipEndPoint::SaveMatcher(matcher, msg);
 }
 
 TestSipEndPoint::From*
