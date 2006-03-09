@@ -13,11 +13,11 @@ class TransactionTerminated : public TransactionMessage
    public:
       RESIP_HeapCount(TransactionTerminated);
 
-      TransactionTerminated(const Data& tid, bool isClient, TransactionUser* tu) : 
+      TransactionTerminated(const Data& tid, bool isClient, TransactionUser* ptu) : 
          mTransactionId(tid), 
          mIsClient(isClient)
       {
-         setTransactionUser(tu);         
+         setTransactionUser(ptu);         
       }
       virtual const Data& getTransactionId() const { return mTransactionId; }
       virtual bool isClientTransaction() const { return mIsClient; }

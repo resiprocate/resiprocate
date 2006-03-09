@@ -143,6 +143,9 @@ getAor(const Data& filename, const  Security::PEMType &pemType )
    return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
 }
 
+extern "C"
+{
+   
 static int 
 verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 {
@@ -163,6 +166,8 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
       ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
    return iInCode;
+}
+ 
 }
 
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
@@ -896,16 +901,14 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
    SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
-   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-                      verifyCallback);
+   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
    assert(ret);
    
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
    SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
-   SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-                      verifyCallback);
+   SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mSslCtx,cipherSuite.cipherList().c_str());
    assert(ret);
 }
@@ -1304,7 +1307,8 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    X509_add_ext( cert, ext, -1);
    X509_EXTENSION_free(ext);
    
-   ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
+   static char CA_FALSE[] = "CA:FALSE";
+   ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
    assert(ret);  
    X509_EXTENSION_free(ext);
@@ -1399,7 +1403,8 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    assert( size > 0 );
 
    Data outData(outBuf,size);
-   Security::dumpAsn("resip-sign-out-sig",outData);
+   static char RESIP_SIGN_OUT_SIG[] = "resip-sign-out-sig";
+   Security::dumpAsn(RESIP_SIGN_OUT_SIG,outData);
 
    Pkcs7SignedContents* sigBody = new Pkcs7SignedContents( outData );
    assert( sigBody );
@@ -1499,7 +1504,8 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "Encrypted body size is " << outData.size() );
    InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
 
-   Security::dumpAsn("resip-encrypt-out",outData);
+   static char RESIP_ENCRYPT_OUT[] = "resip-encrypt-out";
+   Security::dumpAsn(RESIP_ENCRYPT_OUT, outData);
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
@@ -1594,10 +1600,15 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    Data enc = res.base64encode();
 
-   Security::dumpAsn("identity-in", in );
-   Security::dumpAsn("identity-in-hash", hashRes );
-   Security::dumpAsn("identity-in-rsa",res);
-   Security::dumpAsn("identity-in-base64",enc);
+   static char IDENTITY_IN[] = "identity-in";
+   static char IDENTITY_IN_HASH[] = "identity-in-hash";
+   static char IDENTITY_IN_RSA[] = "identity-in-rsa";
+   static char IDENTITY_IN_BASE64[] = "identity-in-base64";
+
+   Security::dumpAsn(IDENTITY_IN, in );
+   Security::dumpAsn(IDENTITY_IN_HASH, hashRes );
+   Security::dumpAsn(IDENTITY_IN_RSA,res);
+   Security::dumpAsn(IDENTITY_IN_BASE64,enc);
 
    return enc;
 }
@@ -1655,10 +1666,15 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 
    DebugLog( << "rsa verify result is " << ret  );
 
-   dumpAsn("identity-out-msg", in );
-   dumpAsn("identity-out-base64", sigBase64 );
-   dumpAsn("identity-out-sig", sig );
-   dumpAsn("identity-out-hash", hashRes );
+   static char IDENTITY_OUT_MSG[] = "identity-out-msg";
+   static char IDENTITY_OUT_BASE64[] = "identity-out-base64";
+   static char IDENTITY_OUT_SIG[] = "identity-out-sig";
+   static char IDENTITY_OUT_HASH[] = "identity-out-hash";
+
+   Security::dumpAsn(IDENTITY_OUT_MSG, in );
+   Security::dumpAsn(IDENTITY_OUT_BASE64,sigBase64);
+   Security::dumpAsn(IDENTITY_OUT_SIG, sig);
+   Security::dumpAsn(IDENTITY_OUT_HASH, hashRes );
 
    return (ret != 0);
 }
@@ -1732,7 +1748,8 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
    DebugLog( << "uncode body size = " << text.size() );
 
-   Security::dumpAsn("resip-asn-decrypt", text );
+   static char RESIP_ASN_DECRYPT[] = "resip-asn-decrypt";
+   Security::dumpAsn(RESIP_ASN_DECRYPT, text );
 
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(), text.size());
    assert(in);
@@ -1963,8 +1980,11 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    InfoLog( << "text <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
 
-   Security::dumpAsn( "resip-asn-uncode-signed-text", textData );
-   Security::dumpAsn( "resip-asn-uncode-signed-sig", sigData );
+   static char RESIP_ASN_UNCODE_SIGNED_TEXT[] = "resip-asn-uncode-signed-text";
+   static char RESIP_ASN_UNCODE_SIGNED_SIG[] = "resip-asn-uncode-signed-sig";
+
+   Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_TEXT, textData );
+   Security::dumpAsn( RESIP_ASN_UNCODE_SIGNED_SIG, sigData );
 
    BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
    assert(in);

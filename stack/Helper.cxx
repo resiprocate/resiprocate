@@ -1509,7 +1509,7 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    }
 
    return std::make_pair(pair.substr(2*saltBytes, pos), // strip out the salt
-                         pair.substr(pos+sep.size()).c_str());
+                         pair.substr(pos+sep.size()));
 }
 #endif
 Helper::ContentsSecAttrs::ContentsSecAttrs()

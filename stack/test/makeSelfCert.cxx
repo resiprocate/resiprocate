@@ -147,7 +147,8 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
   //X509_add_ext( selfcert, ext, -1);
   //X509_EXTENSION_free(ext);
 
-  ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
+  static char CA_FALSE[] = "CA:FALSE";
+  ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
   stat = X509_add_ext( selfcert, ext, -1);
   assert(stat);  
   X509_EXTENSION_free(ext);
