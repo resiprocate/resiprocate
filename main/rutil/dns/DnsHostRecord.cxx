@@ -2,6 +2,8 @@
 #include "rutil/config.hxx"
 #endif
 
+#include <stdlib.h>
+
 #if defined(USE_ARES)
 #include "ares.h"
 #include "ares_dns.h"

@@ -89,13 +89,8 @@ main(int argc, char* argv[])
          {
             struct sockaddr from;
             
-            int MaxBufferSize=1024*4;
-
-#ifdef WIN32
-            char buffer[1024*4];
-#else
+            const int MaxBufferSize=1024*4;
             char buffer[MaxBufferSize];
-#endif
             socklen_t fromLen = sizeof(from);
             
             int len = recvfrom( fd[port],

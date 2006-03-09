@@ -299,7 +299,7 @@ main(int argc, char** argv)
    }
    
    {
-      char buf[] = "Here is a \t buffer with some stuff.";
+      const char* buf = "Here is a \t buffer with some stuff.";
 
       ParseBuffer pb(buf, strlen(buf));
    
