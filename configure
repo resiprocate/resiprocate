@@ -5,7 +5,7 @@ for PERL in /usr/bin/perl \
             /usr/local/bin/perl \
             /usr/pkg/bin/perl \
             /usr/athena/bin/perl \
-            $(which perl)
+            `which perl`
 {
   if [ -x $PERL ]
   then
