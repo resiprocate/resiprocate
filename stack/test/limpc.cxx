@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <cassert>
+#include <stdio.h>
 
 //#define USE_CURSES
 
