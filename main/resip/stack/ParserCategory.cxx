@@ -23,6 +23,9 @@
 using namespace resip;
 using namespace std;
 
+const ParserCategory::ParameterTypeSet 
+ParserCategory::EmptyParameterTypeSet; 
+
 ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
                                Headers::Type headerType)
     : LazyParser(headerFieldValue),
