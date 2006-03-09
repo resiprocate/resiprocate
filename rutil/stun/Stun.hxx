@@ -157,14 +157,15 @@ typedef struct
 } StunAtrIntegrity;
 
 
-typedef enum 
+enum StunHmacStatus
 {
    HmacUnkown=0,
    HmacOK,
    HmacBadUserName,
    HmacUnkownUserName,
-   HmacFailed,
-} StunHmacStatus;
+   HmacFailed
+};
+
 
 typedef struct
 {
@@ -244,7 +245,7 @@ typedef struct
 
 
 // Define enum with different types of NAT 
-typedef enum 
+enum NatType
 {
    StunTypeUnknown=0,
    StunTypeFailure,
@@ -261,8 +262,9 @@ typedef enum
    //StunTypePortRestrictedNat,
    //StunTypeSymNat,
    
-   StunTypeFirewall,
-} NatType;
+   StunTypeFirewall
+};
+
 
 #define MAX_MEDIA_RELAYS 500
 #define MAX_RTP_MSG_SIZE 1500

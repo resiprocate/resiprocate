@@ -204,7 +204,7 @@ Log::tags(Log::Level level,
         << pfile << ":" << line;
 #else   
    char buffer[256];
-   Data tstamp(Data::Borrow, buffer, sizeof(buffer));
+   Data ts(Data::Borrow, buffer, sizeof(buffer));
 #if defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
@@ -217,14 +217,14 @@ Log::tags(Log::Level level,
       ++file;
    }
    strm << mDescriptions[level+1] << Log::delim
-        << timestamp(tstamp) << Log::delim  
+        << timestamp(ts) << Log::delim  
         << mAppName << Log::delim
         << subsystem << Log::delim 
         << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
 #else
    strm << mDescriptions[level+1] << Log::delim
-        << timestamp(tstamp) << Log::delim  
+        << timestamp(ts) << Log::delim  
         << mHostname << Log::delim  
         << mAppName << Log::delim
         << subsystem << Log::delim 

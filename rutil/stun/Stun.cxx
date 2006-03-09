@@ -26,6 +26,10 @@
 #include <resolv.h>
 #include <net/if.h>
 
+#if defined (__SUNPRO_CC) 
+#include <sys/sockio.h> // solaris only?
+#endif
+
 #endif
 
 #include "Udp.hxx"
@@ -1825,7 +1829,7 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
    struct ifconf ifc;
 	
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
-   int len = 100 * sizeof(struct ifreq);
+   const int len = 100 * sizeof(struct ifreq);
 	
    char buf[ len ];
 	
