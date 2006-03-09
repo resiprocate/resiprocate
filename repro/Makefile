@@ -49,10 +49,10 @@ SRC 	+=   \
 	ResponseContext.cxx \
         Processor.cxx \
         ProcessorChain.cxx \
-		  Target.cxx \
-		  WorkerThread.cxx \
-		  Dispatcher.cxx \
-		  QValueTarget.cxx \
+	Target.cxx \
+	WorkerThread.cxx \
+	Dispatcher.cxx \
+	QValueTarget.cxx \
 	\
         monkeys/DigestAuthenticator.cxx \
 	monkeys/StrictRouteFixup.cxx \
@@ -79,7 +79,8 @@ SRC +=	stateAgents/CertServer.cxx \
 endif
 
 reproSvnVersion=$(shell cat ../SVN-VERSION)
-reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//')
+#reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//')
+reproBuildTime=""
 reproBuildHost=$(shell hostname --short)
 
 .PHONY: BUILDSTAMP
