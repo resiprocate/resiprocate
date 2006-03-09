@@ -1977,15 +1977,6 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
    }
 	
    sendMessage( myFd, buf, len, dest.addr, dest.port, verbose );
-	
-   // add some delay so the packets don't get sent too quickly 
-#ifdef WIN32 // !cj! TODO - should fix this up in windows
-		 clock_t now = clock();
-		 assert( CLOCKS_PER_SEC == 1000 );
-		 while ( clock() <= now+10 ) { };
-#else
-		 usleep(10*1000);
-#endif
 
 }
 
