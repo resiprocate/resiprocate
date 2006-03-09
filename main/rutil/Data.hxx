@@ -163,13 +163,15 @@ class Data
       */
       explicit Data(UInt64 value);
 
-      typedef enum {ZeroDigitPrecision = 0, OneDigitPrecision, 
-		    TwoDigitPrecision, ThreeDigitPrecision, 
-		    FourDigitPrecision, FiveDigitPrecision,
-		    SixDigitPrecision, SevenDigitPrecision,
-		    EightDigitPrecision, NineDigitPrecision,
-		    TenDigitPrecision, MaxDigitPrecision,
-      } DoubleDigitPrecision;
+      enum DoubleDigitPrecision 
+      {
+         ZeroDigitPrecision = 0, OneDigitPrecision, 
+         TwoDigitPrecision, ThreeDigitPrecision, 
+         FourDigitPrecision, FiveDigitPrecision,
+         SixDigitPrecision, SevenDigitPrecision,
+         EightDigitPrecision, NineDigitPrecision,
+         TenDigitPrecision, MaxDigitPrecision
+      };
       /**
         Converts the passed in value into ascii-decimal
         representation, and then creates a "Data" containing
