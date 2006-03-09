@@ -33,9 +33,9 @@ BasicNonceHelper::~BasicNonceHelper()
 }
 
 void
-BasicNonceHelper::setPrivateKey(const Data& privateKey)
+BasicNonceHelper::setPrivateKey(const Data& pprivateKey)
 {
-  this->privateKey = privateKey;
+  this->privateKey = pprivateKey;
 }
 
 Data 

@@ -109,7 +109,7 @@ main()
       PlainContents *f11 = dynamic_cast<PlainContents*>(mpc->parts().front());
       assert(f11);
       f11->getBodyData();
-      MultipartRelatedContents::Parts::const_iterator i = ++mpc->parts().begin();
+      MultipartRelatedContents::Parts::const_iterator i = mpc->parts().begin(); i++;
       PlainContents *f12 = dynamic_cast<PlainContents*>(*i);
       assert(f12);
       f12->getBodyData();
@@ -128,7 +128,7 @@ main()
          PlainContents *f21 = dynamic_cast<PlainContents*>(mpc->parts().front());
          assert(f21);
          f21->getBodyData();
-         MultipartRelatedContents::Parts::const_iterator i = ++mpc->parts().begin();
+         MultipartRelatedContents::Parts::const_iterator i = mpc->parts().begin(); i++;
          PlainContents *f22 = dynamic_cast<PlainContents*>(*i);
          assert(f22);
          f22->getBodyData();
