@@ -353,21 +353,26 @@ ClientRegistration::dispatch(const SipMessage& msg)
             //small size, n^2, don't care
             if (mDialogSet.getUserProfile()->getRinstanceEnabled())
             {
+               int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
                   for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
                   {
                      try
                      {
-                        // rinstace parameter is added to contacts created by this client, so we can 
-                        // use it to determine which contacts in the 200 response are ours.  This
-                        // should eventually be replaced by gruu stuff.
-                        if (it->uri().exists(p_rinstance) && 
-                            it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
+                        if(it->exists(p_expires))
                         {
-                           if(it->exists(p_expires))
+                           // rinstace parameter is added to contacts created by this client, so we can 
+                           // use it to determine which contacts in the 200 response are ours.  This
+                           // should eventually be replaced by gruu stuff.
+                           if (it->uri().exists(p_rinstance) && 
+                               it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
                            {
                               expiry = resipMin(it->param(p_expires), expiry);
+                           }
+                           else
+                           {
+                              fallbackExpiry = resipMin(it->param(p_expires), fallbackExpiry);
                            }
                            break;
                         }
@@ -376,6 +381,10 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      {
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
+                  }
+                  if(expiry == INT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
+                  {
+                     expiry = fallbackExpiry;
                   }
                }
             }
