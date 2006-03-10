@@ -14,13 +14,13 @@ class SipMessage;
 class ClientPagerMessageHandler
 {
    public:
-      virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status)=0;
+      virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<std::map<resip::Data, resip::Data> > extraHeadersMap)=0;
       //call on failure. The usage will be destroyed.  Note that this may not
       //necessarily be 4xx...a malformed 200, etc. could also reach here.
       //virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status)=0;
       //!kh!
       // Application could re-page the failed contents or just ingore it.
-      virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents)=0;
+      virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents, std::auto_ptr<std::map<resip::Data, resip::Data> > extraHeadersMap)=0;
 };
 
 class ServerPagerMessageHandler

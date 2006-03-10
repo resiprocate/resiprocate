@@ -5,6 +5,7 @@
 #include "resiprocate/CSeqCategory.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include <deque>
+#include <map>
 #include <memory>
 
 namespace resip
@@ -27,7 +28,9 @@ class ClientPagerMessage : public NonDialogUsage
       //queues the message if there is one sent but not yet received a response
       //for it.
       //asserts if contents->get() is NULL.
-      virtual void page(std::auto_ptr<Contents> contents);
+
+      virtual void page(std::auto_ptr<Contents> contents, 
+         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -41,10 +44,32 @@ class ClientPagerMessage : public NonDialogUsage
       friend class DialogSet;
 
       //uses memory from creator
-	  SipMessage& mRequest;
+      SipMessage& mRequest;
+      
+      class MessageContents
+      {
+      public:
+         MessageContents(Contents* contents = 0, std::map<resip::Data, resip::Data>* extraHeadersMap = 0)
+            :mContents(contents)
+            ,mExtraHeadersMap(extraHeadersMap)
+         {
+         }
 
-      typedef std::deque<Contents*> MsgQueue;
-      MsgQueue                      mMsgQueue;
+         void reset()
+         {
+            delete mContents;
+            mContents = NULL;
+            delete mExtraHeadersMap;
+            mExtraHeadersMap = NULL;
+         }
+
+         Contents* mContents;
+         std::map<resip::Data, resip::Data>* mExtraHeadersMap;
+      };
+
+
+      typedef std::deque<MessageContents> MsgQueue;
+      MsgQueue mMsgQueue;
 
       // disabled
       ClientPagerMessage(const ClientPagerMessage&);
