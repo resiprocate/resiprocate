@@ -95,7 +95,7 @@ void Consumer::thread()
     {
        if (mFifo.messageAvailable())
        {
-          mFifo.getNext(100);
+          delete mFifo.getNext(100);
        }
        else
        {
