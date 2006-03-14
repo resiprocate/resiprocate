@@ -1341,6 +1341,14 @@ InviteSession::dispatchAnswered(const SipMessage& msg)
 void
 InviteSession::dispatchSentReinviteAnswered(const SipMessage& msg)
 {
+   if (msg.isResponse() &&
+       msg.header(h_CSeq).method() == INVITE &&
+       msg.header(h_StatusLine).statusCode() / 200 == 1)
+   {
+      // Receving a 200 retransmission is possible - but we don't have an ACK response yet - we are still waiting for provideAnswer to be
+      // called by the app - so just drop the retransmission
+      return;
+   }
    dispatchOthers(msg);
 }
 
