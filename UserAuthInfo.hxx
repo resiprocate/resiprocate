@@ -10,12 +10,31 @@ namespace resip
 class UserAuthInfo : public resip::DumFeatureMessage
 {
    public:
+
+      typedef enum InfoMode 
+      {
+        UserUnknown,       // the user/realm is not known
+        RetrievedA1,       // the A1 string has been retrieved
+        Stale,             // the nonce is stale, challenge again
+        DigestAccepted,    // the digest was accepted, no A1 returned
+        DigestNotAccepted, // the digest was wrong, challenge again/deny
+        Error              // some error occurred
+      };
+
+      UserAuthInfo( const resip::Data& user,
+                    const resip::Data& realm,
+                    InfoMode mode,
+                    const resip::Data& transactionID);
+
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
                     const resip::Data& a1,
                     const resip::Data& transactionID);
       ~UserAuthInfo();
          
+      InfoMode getMode() const;
+
+      // returns a blank Data("") if (mode != RetrievedA1)
       const resip::Data& getA1() const;
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
@@ -27,6 +46,7 @@ class UserAuthInfo : public resip::DumFeatureMessage
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
 
    private:
+      InfoMode mMode;
       resip::Data mUser;
       resip::Data mRealm;
       resip::Data mA1;

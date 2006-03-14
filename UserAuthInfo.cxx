@@ -10,12 +10,24 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+UserAuthInfo::UserAuthInfo(const Data& user,
+                           const Data& realm,
+                           InfoMode mode,
+                           const Data& transactionId ):
+   DumFeatureMessage(transactionId),
+   mMode(mode),
+   mUser(user),
+   mRealm(realm),
+   mA1(Data(""))
+{
+}
 
 UserAuthInfo::UserAuthInfo(const Data& user, 
                            const Data& realm, 
                            const Data& a1, 
                            const Data& transactionId ):
    DumFeatureMessage(transactionId),
+   mMode(RetrievedA1),
    mUser(user),
    mRealm(realm),
    mA1(a1)
@@ -27,6 +39,11 @@ UserAuthInfo::~UserAuthInfo()
 {
 }
 
+UserAuthInfo::InfoMode
+UserAuthInfo::getMode() const
+{
+   return mMode;
+}
 
 const Data&
 UserAuthInfo::getA1() const
