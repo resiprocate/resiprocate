@@ -1,5 +1,6 @@
 #include <cassert>
 
+#include "resip/dum/ChallengeInfo.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -23,6 +24,7 @@ ServerAuthManager::ServerAuthManager(DialogUsageManager& dum, TargetCommand::Tar
 
 ServerAuthManager::~ServerAuthManager()
 {
+   InfoLog(<< "~ServerAuthManager:  " << mMessages.size() << " messages in memory when destroying.");
 }
 
 DumFeature::ProcessingResult 
@@ -38,15 +40,51 @@ ServerAuthManager::process(Message* msg)
          case ServerAuthManager::Challenged:
             InfoLog(<< "ServerAuth challenged request " << sipMsg->brief());
             return DumFeature::ChainDoneAndEventDone;            
+         case ServerAuthManager::RequestedInfo:
+            InfoLog(<< "ServerAuth requested info (requiresChallenge) " << sipMsg->brief());
+            return DumFeature::EventTaken;
          case ServerAuthManager::RequestedCredentials:
             InfoLog(<< "ServerAuth requested credentials " << sipMsg->brief());
             return DumFeature::EventTaken;
          case ServerAuthManager::Rejected:
             InfoLog(<< "ServerAuth rejected request " << sipMsg->brief());
             return DumFeature::ChainDoneAndEventDone;            
-         default:
+         default:   // includes Skipped
             return DumFeature::FeatureDone;            
-            //break;
+      }
+   }
+
+   ChallengeInfo* challengeInfo = dynamic_cast<ChallengeInfo*>(msg);
+   if(challengeInfo)
+   {
+      InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
+      MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
+      assert(it != mMessages.end());
+      SipMessage* sipMsg = it->second;
+      mMessages.erase(it);
+
+      if(challengeInfo->isFailed()) 
+      {
+        // some kind of failure occurred while checking whether a 
+        // challenge is required
+        InfoLog(<< "ServerAuth requiresChallenge() async failed");
+        SharedPtr<SipMessage> response(new SipMessage);
+        Helper::makeResponse(*response, *sipMsg, 500, "Server Internal Error");
+        mDum.send(response);
+        return DumFeature::ChainDoneAndEventDone;
+      }
+
+      if(challengeInfo->isChallengeRequired()) 
+      {
+        issueChallenge(sipMsg);  
+        InfoLog(<< "ServerAuth challenged request (after async) " << sipMsg->brief());
+        return DumFeature::ChainDoneAndEventDone;
+      } 
+      else 
+      {
+        // challenge is not required, re-instate original message
+        postCommand(auto_ptr<Message>(sipMsg));
+        return FeatureDoneAndEventDone;
       }
    }
 
@@ -85,17 +123,33 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 
    InfoLog( << "Checking for auth result in realm=" << userAuth->getRealm() 
             << " A1=" << userAuth->getA1());
-         
-   if (userAuth->getA1().empty())
+
+   if (userAuth->getMode() == UserAuthInfo::UserUnknown || 
+       (userAuth->getMode() == UserAuthInfo::RetrievedA1 && userAuth->getA1().empty()))
    {
-      InfoLog (<< "Account does not exist " << userAuth->getUser() << " in " << userAuth->getRealm());
+      InfoLog (<< "User unknown " << userAuth->getUser() << " in " << userAuth->getRealm());
       SharedPtr<SipMessage> response(new SipMessage);
-      Helper::makeResponse(*response, *requestWithAuth, 404, "Account does not exist.");
+      Helper::makeResponse(*response, *requestWithAuth, 404, "User unknown.");
       mDum.send(response);
+      onAuthFailure(BadCredentials, *requestWithAuth);
       delete requestWithAuth;
       return 0;
    }
-   else
+
+   if (userAuth->getMode() == UserAuthInfo::Error)
+   {
+      InfoLog (<< "Error in auth procedure for " << userAuth->getUser() << " in " << userAuth->getRealm());
+      SharedPtr<SipMessage> response(new SipMessage);
+      Helper::makeResponse(*response, *requestWithAuth, 503, "Server Error.");
+      mDum.send(response);
+      onAuthFailure(Error, *requestWithAuth);
+      delete requestWithAuth;
+      return 0;
+   }
+
+   bool stale = false;
+   bool digestAccepted = (userAuth->getMode() == UserAuthInfo::DigestAccepted);
+   if(userAuth->getMode() == UserAuthInfo::RetrievedA1)
    {
       //!dcm! -- need to handle stale/unit test advancedAuthenticateRequest
       //!dcm! -- delta? deal with.
@@ -105,68 +159,87 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
                                              userAuth->getA1(),
                                              3000);
 
-      SharedPtr<SipMessage> response(new SipMessage);
-      //SipMessage* challenge;
-
       switch (resPair.first) 
       {
-         case Helper::Authenticated :
-            if (authorizedForThisIdentity(userAuth->getUser(), userAuth->getRealm(), 
-                                          requestWithAuth->header(h_From).uri()))
-            {
-               InfoLog (<< "Authorized request for " << userAuth->getRealm());
-               return requestWithAuth;
-            }
-            else
-            {
-               // !rwm! The user is trying to forge a request.  Respond with a 403
-               InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() << 
-                        " trying to forge request from: " << requestWithAuth->header(h_From).uri());
-
-               Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
-               mDum.send(response);
-               delete requestWithAuth;
-               return 0;
-            }
+         case Helper::Authenticated:
+            digestAccepted = true;
             break;
-         case Helper::Failed :
-            InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
-            InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
-
-            Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
-            mDum.send(response);
-            delete requestWithAuth;
-            return 0;
+         case Helper::Failed:
+            // digestAccepted = false;   // already false by default
             break;
-         case Helper::BadlyFormed :
+         case Helper::BadlyFormed:
+         {
             InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
 
+            SharedPtr<SipMessage> response(new SipMessage);
             Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
             mDum.send(response);
-            delete requestWithAuth;
-            return 0;
-            break;
-         case Helper::Expired :
-         {
-            InfoLog (<< "Nonce expired for " << userAuth->getUser());
-            
-            SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*requestWithAuth, 
-                                                                       requestWithAuth->header(h_RequestLine).uri().host(),
-                                                                       useAuthInt(),
-                                                                       true));
-
-            InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
-            mDum.send(challenge);
-            //delete challenge;
+            onAuthFailure(InvalidRequest, *requestWithAuth);
             delete requestWithAuth;
             return 0;
             break;
          }
-         default :
+         case Helper::Expired:
+            stale = true;
+            break;
+         default:
             break;
       }
    }
-   return 0;
+
+   if(stale || userAuth->getMode() == UserAuthInfo::Stale) 
+   {
+      InfoLog (<< "Nonce expired for " << userAuth->getUser());
+
+      SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*requestWithAuth,
+                                                                 requestWithAuth->header(h_RequestLine).uri().host(),
+                                                                 useAuthInt(),
+                                                                 true));
+
+      InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
+      mDum.send(challenge);
+      delete requestWithAuth;
+      return 0;
+   }
+
+   if(digestAccepted)
+   {
+      if (authorizedForThisIdentity(userAuth->getUser(), userAuth->getRealm(),
+                                    requestWithAuth->header(h_From).uri()))
+      {
+         InfoLog (<< "Authorized request for " << userAuth->getRealm());
+         onAuthSuccess(*requestWithAuth);
+         return requestWithAuth;
+      }
+      else
+      {
+         // !rwm! The user is trying to forge a request.  Respond with a 403
+         InfoLog (<< "User: " << userAuth->getUser() << " at realm: " << userAuth->getRealm() <<
+                  " trying to forge request from: " << requestWithAuth->header(h_From).uri());
+
+         SharedPtr<SipMessage> response(new SipMessage);
+         Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
+         mDum.send(response);
+         onAuthFailure(InvalidRequest, *requestWithAuth);
+         delete requestWithAuth;
+         return 0;
+      }
+   } 
+   else 
+   {
+      // Handles digestAccepted == false, DigestNotAccepted and any other
+      // case that is not recognised by the foregoing logic
+
+      InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+      InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
+
+      SharedPtr<SipMessage> response(new SipMessage);
+      Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
+      mDum.send(response);
+      onAuthFailure(BadCredentials, *requestWithAuth);
+      delete requestWithAuth;
+      return 0;
+   }
 }
 
             
@@ -177,10 +250,10 @@ ServerAuthManager::useAuthInt() const
 }
 
 
-bool 
+ServerAuthManager::AsyncBool
 ServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
-   return true;  
+   return True;  
 }
 
 
@@ -213,12 +286,6 @@ ServerAuthManager::isMyRealm(const Data& realm)
 ServerAuthManager::Result
 ServerAuthManager::handle(SipMessage* sipMsg)
 {
-   // Is challenge required for this message
-   if(!requiresChallenge(*sipMsg))
-   {
-      return Skipped;
-   }
-
    //InfoLog( << "trying to do auth" );
    if (sipMsg->isRequest() && 
        sipMsg->header(h_RequestLine).method() != ACK && 
@@ -226,15 +293,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
    {
       if (!sipMsg->exists(h_ProxyAuthorizations))
       {
-         //assume TransactionUser has matched/repaired a realm
-         SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*sipMsg, 
-                                                                    getChallengeRealm(*sipMsg),
-                                                                    useAuthInt(),
-                                                                    false /*stale*/));
-         InfoLog (<< "Sending challenge to " << sipMsg->brief());
-         mDum.send(challenge);
-         //delete challenge;
-         return Challenged;
+         return issueChallengeIfRequired(sipMsg);
       }
  
       try
@@ -249,6 +308,8 @@ ServerAuthManager::handle(SipMessage* sipMsg)
                
                requestCredential(it->param(p_username),
                                  it->param(p_realm), 
+                                 *sipMsg,
+                                  *it,
                                  sipMsg->getTransactionId());
                mMessages[sipMsg->getTransactionId()] = sipMsg;
                return RequestedCredentials;
@@ -256,10 +317,7 @@ ServerAuthManager::handle(SipMessage* sipMsg)
          }
 
          InfoLog (<< "Didn't find matching realm ");
-         SharedPtr<SipMessage> response(new SipMessage);
-         Helper::makeResponse(*response, *sipMsg, 404, "Account does not exist");
-         mDum.send(response);
-         return Rejected;
+         return issueChallengeIfRequired(sipMsg);
       }
       catch(BaseException& e)
       {
@@ -267,15 +325,56 @@ ServerAuthManager::handle(SipMessage* sipMsg)
          SharedPtr<SipMessage> response(new SipMessage);
          Helper::makeResponse(*response, *sipMsg, 400, "Invalid auth header");
          mDum.send(response);
+         onAuthFailure(InvalidRequest, *sipMsg);
          return Rejected;
       }
    }
    return Skipped;
 }
 
+ServerAuthManager::Result
+ServerAuthManager::issueChallengeIfRequired(SipMessage *sipMsg) 
+{
+   // Is challenge required for this message
+   AsyncBool required = requiresChallenge(*sipMsg);
+   switch(required) 
+   {
+     case False:
+        return Skipped;
+     case Async:
+        mMessages[sipMsg->getTransactionId()] = sipMsg;
+        return RequestedInfo;
+     case True:
+     default:
+        issueChallenge(sipMsg);
+        return Challenged;
+   }
+}
 
+void
+ServerAuthManager::issueChallenge(SipMessage *sipMsg) 
+{
+  //assume TransactionUser has matched/repaired a realm
+  SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*sipMsg,
+                                                             getChallengeRealm(*sipMsg), 
+                                                             useAuthInt(), 
+                                                             false /*stale*/));
 
+  InfoLog (<< "Sending challenge to " << sipMsg->brief());
+  mDum.send(challenge);
+}
 
+void 
+ServerAuthManager::onAuthSuccess(const SipMessage& msg) 
+{
+   // sub class may want to create a log entry
+}
+
+void 
+ServerAuthManager::onAuthFailure(AuthFailureReason reason, const SipMessage& msg) 
+{
+   // sub class may want to create a log entry
+}
 
 
 /* ====================================================================
