@@ -697,11 +697,23 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
    }
 
    assert(userProfile);
-   if (userProfile->hasUserAgent())
+   if (!userProfile->isAnonymous() && userProfile->hasUserAgent())
    {
       msg->header(h_UserAgent).value() = userProfile->getUserAgent();
    }
+   if (userProfile->isAnonymous())
+   {
+      msg->remove(h_ReplyTo);
+      msg->remove(h_UserAgent);
+      msg->remove(h_Organization);
+      msg->remove(h_Server);
+      msg->remove(h_Subject);
+      msg->remove(h_InReplyTo);
 
+      msg->remove(h_CallInfos);
+      msg->remove(h_Warnings);
+   }
+   
    assert(userProfile);
    if (msg->isRequest() 
        && userProfile->hasProxyRequires() 
