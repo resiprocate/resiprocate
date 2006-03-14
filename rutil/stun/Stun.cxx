@@ -762,17 +762,29 @@ stunEncodeMessage( const StunMessage& msg,
       if (verbose) clog << "Encoding TurnData (not shown)" << endl;
       ptr = encodeTurnData (ptr, msg.turnData);
    }
-
    if (password.sizeValue > 0)
    {
       if (verbose) clog << "HMAC with password: " << password.value << endl;
-		
+
+      // allocate space for message integrity attribute (hash + attribute type + size)
+      char* ptrMessageIntegrity = ptr;
+	  ptr += 20 + sizeof(MessageIntegrity) + sizeof(UInt16);
+      encode16(lengthp, UInt16(ptr - buf - sizeof(StunMsgHdr)));
+   
       StunAtrIntegrity integrity;
-      computeHmac(integrity.hash, buf, int(ptr-buf) , password.value, password.sizeValue);
-      ptr = encodeAtrIntegrity(ptr, integrity);
+      // pad with zeros prior to calculating message integrity attribute	   
+      int padding = 0;
+      int len = ptrMessageIntegrity - buf;
+      if (len % 64)
+      {
+         padding = 64 - (len % 64);
+         memset(ptrMessageIntegrity, 0, padding);
+      }
+	   computeHmac(integrity.hash, buf, len + padding, password.value, password.sizeValue);
+	   encodeAtrIntegrity(ptrMessageIntegrity, integrity);
    }
+
    if (verbose) clog << endl;
-	
    encode16(lengthp, UInt16(ptr - buf - sizeof(StunMsgHdr)));
    return int(ptr - buf);
 }
