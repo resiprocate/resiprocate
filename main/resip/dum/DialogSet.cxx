@@ -329,9 +329,53 @@ DialogSet::dispatch(const SipMessage& msg)
                }
                break;
             case SUBSCRIBE:
-               assert(0);
+               if (code / 100 == 1)
+               {
+                  // do nothing - wait for final response
+               }
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SharedPtr<SipMessage> unsubscribe(new SipMessage(*mCreator->getLastRequest().get()));  // create message from initial request so we get proper headers
+                  dialog.makeRequest(*unsubscribe, SUBSCRIBE);
+                  unsubscribe->header(h_Expires).value() = 0;
+                  dialog.send(unsubscribe);
+                  
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+               }
+               else
+               {
+                  mState = Destroying;
+                  mDum.destroy(this);
+               }
                break;
+            case PUBLISH:
+               if (code / 100 == 1)
+               {
+                  // do nothing - wait for final response
+               }
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SharedPtr<SipMessage> unpublish(new SipMessage(*mCreator->getLastRequest().get()));  // create message from initial request so we get proper headers
+                  dialog.makeRequest(*unpublish, PUBLISH);
+                  unpublish->header(h_Expires).value() = 0;
+                  dialog.send(unpublish);
+                  
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+               }
+               else
+               {
+                  mState = Destroying;
+                  mDum.destroy(this);
+               }
+               break;
+               // ?slg? shouldn't we handle register, ood and refer there too?
             default:
+               mState = Destroying;
+               mDum.destroy(this);
                break;
          }
       }
