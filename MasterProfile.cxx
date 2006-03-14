@@ -269,6 +269,12 @@ MasterProfile::allowBadRegistrationEnabled()
 }
 
 
+UserProfile*
+MasterProfile::clone() const
+{
+   return new MasterProfile(*this);
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
