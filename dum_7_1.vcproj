@@ -211,6 +211,9 @@
 				RelativePath=".\CertMessage.cxx">
 			</File>
 			<File
+				RelativePath=".\ChallengeInfo.cxx">
+			</File>
+			<File
 				RelativePath=".\ClientAuthManager.cxx">
 			</File>
 			<File
@@ -427,6 +430,9 @@
 			</File>
 			<File
 				RelativePath=".\CertMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\ChallengeInfo.hxx">
 			</File>
 			<File
 				RelativePath=".\ClientAuthManager.hxx">
