@@ -17,6 +17,7 @@ SRC =   \
 	BaseUsage.cxx \
 	UserAuthInfo.cxx \
 	BaseSubscription.cxx \
+	ChallengeInfo.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
 	ClientOutOfDialogReq.cxx \
