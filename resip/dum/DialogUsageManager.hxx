@@ -168,7 +168,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, AppDialogSet* ads = 0);
+      SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, 
+                                              const SharedPtr<UserProfile>& userProfile, 
+                                              const SdpContents* initialOffer, 
+                                              AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);
       SharedPtr<SipMessage> makeInviteSession(const NameAddr& target, const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative = 0, AppDialogSet* ads = 0);

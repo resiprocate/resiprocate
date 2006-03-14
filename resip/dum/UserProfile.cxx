@@ -24,6 +24,28 @@ UserProfile::~UserProfile()
     //InfoLog (<< "************ UserProfile destroyed!: " << *this);
 }
 
+static NameAddr anonymous("\"Anonymous\" <sip:anonymous@anonymous.invalid>");
+
+SharedPtr<UserProfile> 
+UserProfile::getAnonymousUserProfile() const
+{
+   SharedPtr<UserProfile> anon(this->clone());
+   anon->setDefaultFrom(anonymous);
+   return anon;
+}
+
+UserProfile* 
+UserProfile::clone() const
+{
+   return new UserProfile(*this);
+}
+
+bool
+UserProfile::isAnonymous() const
+{
+   return (mDefaultFrom.uri().getAor() == anonymous.uri().getAor());
+}
+
 void
 UserProfile::setDefaultFrom(const NameAddr& from)
 {
