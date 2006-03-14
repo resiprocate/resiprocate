@@ -105,6 +105,8 @@ const char* Symbols::Credential = "credential";
 
 const char* Symbols::SipProfile = "sip-profile";
 
+const char* Symbols::id = "id"; // from RFC 3323
+
 
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";

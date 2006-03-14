@@ -81,6 +81,7 @@ class MasterProfile : public UserProfile
       virtual const bool allowBadRegistrationEnabled() const;      
 
    private:
+      virtual UserProfile* clone() const;
       std::set<Data> mSupportedSchemes;
       std::set<MethodTypes> mSupportedMethodTypes;
       Tokens mSupportedMethods;

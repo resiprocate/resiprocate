@@ -35,7 +35,14 @@ class UserProfile : public Profile
          return mImsAuthUri;
       }
       
+
+      // Returns a UserProfile that will return a UserProfile that can be used
+      // to send requests according to RFC 3323 and RFC 3325
+      virtual SharedPtr<UserProfile> getAnonymousUserProfile() const;
       
+      bool isAnonymous() const;
+      
+
       // !cj! - this GRUU stuff looks very suspect
       virtual void addGruu(const Data& aor, const NameAddr& contact);
       virtual bool hasGruu(const Data& aor) const;
@@ -69,13 +76,15 @@ class UserProfile : public Profile
                                         const Data& user, 
                                         const Data& password);
       virtual const DigestCredential& getDigestCredential( const Data& realm  );
-
+   protected:
+      virtual UserProfile* clone() const;
    private:
       NameAddr mDefaultFrom;
       Data mInstanceId;
       NameAddrs mServiceRoute;
       Uri mImsAuthUri;
-
+      bool mIsAnonymous;
+      
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 
