@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include "resip/stack/Auth.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
@@ -32,10 +33,12 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       // this call back should async cause a post of UserAuthInfo
       virtual void requestCredential(const resip::Data& user, 
                                      const resip::Data& realm, 
+                                     const resip::SipMessage& msg,
+                                     const resip::Auth& auth,
                                      const resip::Data& transactionId );
       
       virtual bool useAuthInt() const;
-      virtual bool requiresChallenge(const resip::SipMessage& msg);
+      virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
       resip::DialogUsageManager& mDum;

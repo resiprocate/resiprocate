@@ -3,6 +3,7 @@
 
 #include <map>
 
+#include "resip/stack/Auth.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "DumFeature.hxx"
 
@@ -18,12 +19,13 @@ class ServerAuthManager : public DumFeature
       typedef enum Result
       {
          //Authorized,
+         RequestedInfo,
          RequestedCredentials,
          Challenged,
          Skipped,
          Rejected
       };
-      
+
       ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~ServerAuthManager();
 
@@ -40,9 +42,28 @@ class ServerAuthManager : public DumFeature
       virtual Result handle(SipMessage* sipMsg);
       
    protected:
+
+      typedef enum AsyncBool
+      {
+           True,  // response is true
+           False, // response is false
+           Async  // response will be sent asynchronously
+      };
+
+      typedef enum AuthFailureReason
+      {
+         InvalidRequest,   // some aspect of the request (e.g. nonce)
+                           // is not valid/tampered with
+         BadCredentials,   // credentials didn't match
+         Error             // processing/network error
+      };
+
       // this call back should async cause a post of UserAuthInfo
+
       virtual void requestCredential(const Data& user, 
                                      const Data& realm, 
+                                     const SipMessage& msg,
+                                     const Auth& auth, // the auth line we have chosen to authenticate against
                                      const Data& transactionToken ) = 0;
       
       virtual bool useAuthInt() const;
@@ -52,7 +73,7 @@ class ServerAuthManager : public DumFeature
 
       /// should return true if the request must be challenged
       /// The default is to challenge all requests - override this class to change this beviour
-      virtual bool requiresChallenge(const SipMessage& msg);
+      virtual AsyncBool requiresChallenge(const SipMessage& msg);
 
       /// should return true if the passed in user is authorized for the provided uri
       virtual bool authorizedForThisIdentity(const resip::Data &user, 
@@ -64,6 +85,19 @@ class ServerAuthManager : public DumFeature
 
       /// should return true if realm passed in is ours and we can challenge
       virtual bool isMyRealm(const Data& realm);
+
+      // Either
+      //  a) issues a challenge if necessary and returns `Challenged'
+      //  b) returns `Skipped' if no challenge necessary
+      //  c) waits asynchronously to find out if challenge required,
+      //      and returns `RequestedInfo'
+      Result issueChallengeIfRequired(SipMessage *sipMsg);
+
+      // sends a 407 challenge to the UAC who sent sipMsg
+      void ServerAuthManager::issueChallenge(SipMessage *sipMsg);
+
+      virtual void onAuthSuccess(const SipMessage& msg);
+      virtual void onAuthFailure(AuthFailureReason reason, const SipMessage& msg);
 };
 
  
