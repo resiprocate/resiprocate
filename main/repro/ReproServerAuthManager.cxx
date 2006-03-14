@@ -36,17 +36,26 @@ ReproServerAuthManager::useAuthInt() const
 }
 
 
-bool 
+ServerAuthManager::AsyncBool
 ReproServerAuthManager::requiresChallenge(const SipMessage& msg)
 {
    assert(msg.isRequest());
-   return !mAclDb.isRequestTrusted(msg);
+   if(!mAclDb.isRequestTrusted(msg))
+   {
+      return True;
+   }
+   else
+   {
+      return False;
+   }
 }
 
 
 void 
 ReproServerAuthManager::requestCredential(const Data& user, 
                                           const Data& realm, 
+                                          const SipMessage& msg,
+                                          const Auth& auth,
                                           const Data& transactionId )
 {
    mUserDb.requestUserAuthInfo(user,realm,transactionId,mDum);
