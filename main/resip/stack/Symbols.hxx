@@ -106,6 +106,7 @@ class Symbols
       static const char* SipProfile; //from draft-ietf-sipping-config-framework
 
       static const char* pathSep;
+      static const char* id;
 };
 
 }
