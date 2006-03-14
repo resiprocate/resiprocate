@@ -588,8 +588,12 @@ Dialog::dispatch(const SipMessage& msg)
                }
                else
                {
-                  if (!mInviteSession->mReferSub && (msg.exists(h_ReferSub) && msg.header(h_ReferSub).value()=="false"))
+                  //!dys! the OR condition below is not draft compliant.
+                  if (!mInviteSession->mReferSub && 
+                      ((msg.exists(h_ReferSub) && msg.header(h_ReferSub).value()=="false") || 
+                       !msg.exists(h_ReferSub)))
                   {
+                     DebugLog(<< "refer accepted with norefersub");
                      mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), ClientSubscriptionHandle::NotValid(), msg);
                   }
                   // else no need for action - first Notify will cause onReferAccepted to be called
