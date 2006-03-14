@@ -889,6 +889,11 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
+   if (mDialogSet.mUserProfile->isAnonymous())
+   {
+      request.header(h_Privacys).push_back(Token(Symbols::id));
+   }
+
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
