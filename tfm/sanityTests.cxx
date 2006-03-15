@@ -5547,6 +5547,28 @@ class TestHolder : public Fixture
          ExecuteSequences();  
       }
 
+      void testEarlyMedia()
+      {
+         InfoLog(<< "*!testEarlyMedia!*");
+
+         Seq(derek->registerUser(60, derek->getDefaultContacts()),
+             derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+             derek->expect(REGISTER/200, from(proxy), WaitForResponse, jason->registerUser(60, jason->getDefaultContacts())),
+             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), WaitForResponse, derek->invite(*jason)),
+             optional(derek->expect(INVITE/100, from(proxy), WaitForResponse, derek->noAction())),
+             derek->expect(INVITE/407, from(proxy),  WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+             optional(derek->expect(INVITE/100, from(proxy), WaitForResponse, derek->noAction())),
+             jason->expect(INVITE, from(proxy), WaitForResponse, jason->ring183()),
+             derek->expect(INVITE/183, from(proxy), WaitForResponse, chain(derek->pause(5000), jason->answer())),
+             derek->expect(INVITE/200, from(proxy), WaitForResponse, derek->ack()),
+             jason->expect(ACK, from(proxy), WaitForResponse, jason->bye(*derek)),
+             derek->expect(BYE, from(proxy), WaitForResponse, derek->ok()),
+             jason->expect(BYE/200, from(proxy), WaitForResponse, derek->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
       // provisioning here(automatic cleanup)
       static void createStatic()
       {
@@ -5729,6 +5751,7 @@ class MyTestCase
          BADTEST(testConferenceConferencorHangsUp); // reINVITEs are problematic
          BADTEST(testForkedInviteClientLateAck);
          TEST(testInviteForkBothBusy);
+         TEST(testEarlyMedia);
 
 	 // Tests of the routing pattern matching logic.
          TEST(testRoutingBasic);
