@@ -3,6 +3,7 @@
 
 #include "rutil/Mutex.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/OpenSSLInit.hxx"
 #include <cassert>
 
 namespace resip
