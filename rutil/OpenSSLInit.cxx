@@ -19,41 +19,51 @@ using namespace resip;
 using namespace std;
 
 static bool invokeOpenSSLInit = OpenSSLInit::init();
-vector<Mutex*> OpenSSLInit::mMutexes;
+Mutex* OpenSSLInit::mMutexes;
+
+static bool openSSLInitInvoked = false;
 
 bool
 OpenSSLInit::init()
 {
-//#if defined(THREADS)
-	for(int i=0; i < CRYPTO_num_locks(); i++)
+	if (!openSSLInitInvoked)
 	{
-		OpenSSLInit::mMutexes.push_back(new Mutex());
-	}
-   CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
-#if !defined(WIN32)
-   CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
+		openSSLInitInvoked = true;
+		//#if defined(THREADS)
+		int locks = CRYPTO_num_locks();
+//		ErrLog(<< "Creating " << locks << " locks for OpenSSL");
+		//for(int i=0; i < locks; i++)
+		//{
+		//	OpenSSLInit::mMutexes.push_back(new Mutex());
+		//}
+		mMutexes = new Mutex[locks];
+		CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
+#if !defined(WIN32) && defined(PTHREADS)
+		CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
 #endif
 
 #if 0 //?dcm? -- not used by OpenSSL yet?
-   CRYPTO_set_dynlock_create_callback(OpenSSLInit::dynCreateFunction);
-   CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
-   CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
+		CRYPTO_set_dynlock_create_callback(OpenSSLInit::dynCreateFunction);
+		CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
+		CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
 #endif
-//#endif
+		//#endif
+	}
    return true;
 }
+
 
 void
 OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
 {
-   ErrLog(<< "OpenSSLInit::lockingFunction: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
+   StackLog(<< "OpenSSLInit::lockingFunction: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
    if (mode & CRYPTO_LOCK)
    {
-      OpenSSLInit::mMutexes[n]->lock();
+      OpenSSLInit::mMutexes[n].lock();
    }
    else
    {
-      OpenSSLInit::mMutexes[n]->unlock();
+      OpenSSLInit::mMutexes[n].unlock();
    }
 }
 
