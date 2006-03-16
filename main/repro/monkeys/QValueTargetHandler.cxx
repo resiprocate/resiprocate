@@ -61,8 +61,10 @@ QValueTargetHandler::process(RequestContext &rc)
       
       std::vector<resip::Data>::iterator i;
       
-      //Might we have scheduled cancellations?
-      if(mCancelBetweenForkGroups)
+      //Might we have scheduled cancellations? If so, is there anything else
+      //worth trying? (We won't cancel stuff if there is nothing else left 
+      //to try)
+      if(mCancelBetweenForkGroups && rsp.hasCandidateTransactions())
       {
          std::vector<resip::Data>& cancelTids=fc->mTransactionsToCancel;
          for(i=cancelTids.begin();i!=cancelTids.end();i++)
