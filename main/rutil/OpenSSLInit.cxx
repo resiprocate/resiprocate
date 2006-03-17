@@ -1,3 +1,5 @@
+#ifdef USE_SSL
+
 #include "rutil/OpenSSLInit.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
@@ -8,7 +10,7 @@
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
-
+#include <openssl/ssl.h>
 
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/opensslconf.h>
@@ -48,7 +50,14 @@ OpenSSLInit::init()
 		CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
 #endif
 		//#endif
-	}
+
+        DebugLog( << "Setting up SSL library" );
+        
+        SSL_library_init();
+        SSL_load_error_strings();
+        OpenSSL_add_all_algorithms();
+        assert(EVP_des_ede3_cbc());
+    }
    return true;
 }
 
@@ -113,3 +122,5 @@ OpenSSLInit::dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, con
       dynlock->mutex->unlock();
    }
 }
+
+#endif

@@ -22,6 +22,7 @@
 #include "rutil/Logger.hxx"
 
 #ifdef USE_SSL
+#include "rutil/OpenSSLInit.hxx"
 #  define USE_OPENSSL 1
 #else
 #  define USE_OPENSSL 0
@@ -84,7 +85,8 @@ Random::initialize()
 #endif
 
 #else
-   
+   // ?dcm? -- OpenSSL will transparently initialize PRNG if /dev/urandom is
+   // present. In any case, will move into OpenSSLInit
    if ( !Random::mIsInitialized)
    {
       Lock lock(mMutex);
