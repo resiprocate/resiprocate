@@ -1,11 +1,15 @@
 #if !defined(RESIP_OPENSSLINIT_HXX)
 #define RESIP_OPENSSLINIT_HXX 
 
+#ifdef USE_SSL
+
 #include "rutil/Mutex.hxx"
 #include "rutil/RWMutex.hxx"
 #include "rutil/Data.hxx"
 #include <cassert>
 #include <vector>
+
+
 
 struct CRYPTO_dynlock_value
 {
@@ -30,5 +34,7 @@ class OpenSSLInit
 static bool invokeOpenSSLInit = OpenSSLInit::init();
 
 }
+
+#endif
 
 #endif
