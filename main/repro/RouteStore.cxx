@@ -177,11 +177,8 @@ RouteStore::updateRoute( const resip::Data& originalKey,
                          const int order )
 {
    resip::Data newkey = buildKey( method, event, matchingPattern );
+   eraseRoute(originalKey);
    addRoute( method, event, matchingPattern, rewriteExpression, order );
-   if ( newkey != originalKey )
-   {
-      eraseRoute(originalKey);
-   }
 }
 
 
