@@ -5,30 +5,113 @@
 #include <iostream>
 
 #include "resip/stack/Security.hxx"
+//#include "rutil/OpenSSLInit.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
+
+#ifdef USE_SSL
+#include <openssl/evp.h>
+#endif
 
 using namespace std;
+using namespace resip;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+// the destructor in BaseSecurity started crashing on the Mac and Windows
+// at Revision 5785. The crash can be reproduced by creating 2 security
+// objects, one after another.
+void testMultiple()
 {
-
-   // the destructor in BaseSecurity started crashing on the Mac and Windows
-   // at Revision 5785. The crash can be reproduced by creating 2 security
-   // objects, one after another.
-   void testMultiple()
    {
-      {
-         Security security;
-      }
-      {
-         Security security;
-      }
+      Security security;
+   }
+      sleep(10);      
+   {
+      Security security;
    }
 }
+
+class HashThread : public ThreadIf
+{
+   public:
+      void thread()
+      {
+         Security security;
+         for(int i = 0; i < 500000; i++)
+         {
+            if (i % 1000 == 0)
+            {
+               DebugLog(<< "1000 digest calculations complete. ");               
+            }
+            makeMD5Digest("I don't give a damn about digest");
+         }
+      }
+   private:
+      void makeMD5Digest(const char *pBuf)
+      {
+
+#ifdef USE_SSL
+         unsigned char MD5_digest[EVP_MAX_MD_SIZE+1];
+         unsigned int iDigest = 0;
+         memset(MD5_digest, 0, sizeof(MD5_digest));
+
+         if(0 == pBuf)
+            return;
+
+         const EVP_MD *pDigest = EVP_md5();
+         if( 0 == pDigest)
+            return;
+
+         EVP_MD_CTX cCtx;
+         EVP_DigestInit(&cCtx, pDigest);
+         EVP_DigestUpdate(&cCtx, pBuf, strlen(pBuf));
+         EVP_DigestFinal(&cCtx, MD5_digest, &iDigest);
+         EVP_MD_CTX_cleanup(&cCtx);
+
+//         cout << "Your digest is: " << MD5_digest << endl;
+#else
+//         cout << "OpenSSL not enabled; cannot calculate digest !!!";
+#endif
+      }
+};
+
+class DumbInitThread : public ThreadIf
+{
+   public:
+      void thread()
+      {
+         for(int i = 0; i < 500; i++)
+         {
+            DebugLog(<< "Creating Security object on stack");           
+            Security security;
+         }
+      }
+};
+
+void testSecurityMultiThread()
+{
+   HashThread t1;
+   DumbInitThread t2;
+
+   t1.run();
+   t2.run();
+
+   t1.join();
+   t2.join();
+}
+
 
 int
 main(int argc, const char** argv)
 {
-   resip::testMultiple();
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+#if 0
+   testMultiple();
+#else
+   testSecurityMultiThread();
+#endif
    return 0;
 }
 

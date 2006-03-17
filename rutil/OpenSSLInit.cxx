@@ -20,6 +20,8 @@
 using namespace resip;
 using namespace std;
 
+#include <iostream>
+
 static bool invokeOpenSSLInit = OpenSSLInit::init();
 Mutex* OpenSSLInit::mMutexes;
 
@@ -28,8 +30,11 @@ static bool openSSLInitInvoked = false;
 bool
 OpenSSLInit::init()
 {
+   
 	if (!openSSLInitInvoked)
 	{
+       cerr << "OpenSSLInit::init() invoked" << endl;
+       
 		openSSLInitInvoked = true;
 		//#if defined(THREADS)
 		int locks = CRYPTO_num_locks();
@@ -51,7 +56,6 @@ OpenSSLInit::init()
 #endif
 		//#endif
 
-        DebugLog( << "Setting up SSL library" );
         
         SSL_library_init();
         SSL_load_error_strings();
@@ -61,17 +65,27 @@ OpenSSLInit::init()
    return true;
 }
 
+//.dcm. -- should prob. cleanup in a static guard object...prob. doesn't matter
+// Clean up data allocated during OpenSSL_add_all_algorithms
+//   EVP_cleanup();       
+
+// Clean up data allocated during SSL_load_error_strings
+//   ERR_free_strings();
+
+
 
 void
 OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
 {
-   StackLog(<< "OpenSSLInit::lockingFunction: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
+//   StackLog(<< "OpenSSLInit::lockingFunction: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
    if (mode & CRYPTO_LOCK)
    {
+      StackLog(<< "OpenSSLInit::lockingFunction, locking: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
       OpenSSLInit::mMutexes[n].lock();
    }
    else
-   {
+   {      
+      StackLog(<< "OpenSSLInit::lockingFunction, unlocking: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
       OpenSSLInit::mMutexes[n].unlock();
    }
 }
