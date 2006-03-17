@@ -965,18 +965,7 @@ BaseSecurity::~BaseSecurity ()
 void
 BaseSecurity::initialize ()
 {
-  DebugLog( << "Setting up SSL library" );
-
-  SSL_library_init();
-  SSL_load_error_strings();
-  OpenSSL_add_all_algorithms();
-
-  Random::initialize();
   Timer::getTimeMs(); // initalize time offsets
-
-  // make sure that necessary algorithms exist:
-  assert(EVP_des_ede3_cbc());
-      
 }
 
 

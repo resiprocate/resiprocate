@@ -26,6 +26,7 @@ SRC = \
 	Logger.cxx \
 	MD5Stream.cxx \
 	Mutex.cxx \
+	OpenSSLInit.cxx \
 	ParseBuffer.cxx \
 	Poll.cxx \
 	RWMutex.cxx \
