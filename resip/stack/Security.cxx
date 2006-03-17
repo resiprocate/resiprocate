@@ -891,6 +891,8 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mRootTlsCerts(0),
    mRootSslCerts(0)
 { 
+   DebugLog(<< "BaseSecurity::BaseSecurity");
+   
    int ret;
    initialize(); 
    
@@ -899,7 +901,18 @@ BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    assert(mRootTlsCerts && mRootSslCerts);
 
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
+   if (!mTlsCtx)
+   {
+      ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
+      while (ERR_peek_error())
+      {
+         char errBuf[120];
+         ERR_error_string(ERR_get_error(), errBuf);
+         ErrLog(<< "OpenSSL error stack: " << errBuf);
+      }
+   }
    assert(mTlsCtx);
+
    SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
    SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
    ret = SSL_CTX_set_cipher_list(mTlsCtx, cipherSuite.cipherList().c_str());
@@ -926,6 +939,8 @@ void clearMap(T& m, Func& clearFunc)
          
 BaseSecurity::~BaseSecurity ()
 {
+   DebugLog(<< "BaseSecurity::~BaseSecurity");
+
    // cleanup certificates
    clearMap(mDomainCerts, X509_free);
    clearMap(mUserCerts, X509_free);
@@ -934,8 +949,9 @@ BaseSecurity::~BaseSecurity ()
    clearMap(mDomainPrivateKeys, EVP_PKEY_free);
    clearMap(mUserPrivateKeys, EVP_PKEY_free);
 
-/* !abr! This intentional memory leak appears to be unnecessary. Derek to verify.
-
+/*
+// !abr! This intentional memory leak appears to be unnecessary. Derek to verify.
+// !dcm! - still crashses...I think if there were no certs to load. 
 
    // sailesh@counterpath.com : this code leaks memory but it's necessary on
    // mac and windows. if we don't have this code then SSL_CTX_new( TLSv1_method() )
@@ -954,11 +970,6 @@ BaseSecurity::~BaseSecurity ()
       SSL_CTX_free(mSslCtx);mSslCtx=0;  // This free's X509_STORE (mRootSslCerts)
    }
 
-   // Clean up data allocated during OpenSSL_add_all_algorithms
-   EVP_cleanup();       
-
-   // Clean up data allocated during SSL_load_error_strings
-   ERR_free_strings();
 }
 
 
