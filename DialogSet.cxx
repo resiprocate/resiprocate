@@ -179,7 +179,7 @@ DialogSet::findDialog(const SipMessage& msg)
    //match off transaction ID
    else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
    {
-   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
       {
          if (it->second->matches(msg))
          {
@@ -700,7 +700,8 @@ DialogSet::dispatch(const SipMessage& msg)
          {
             //don't delete on provisional responses, as FWD will eventually send a
             //valid 200
-            if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
+            if(mDialogs.empty() && 
+               msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
                mState = Destroying;
