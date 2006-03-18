@@ -54,6 +54,8 @@ ClientSubscription::getHandle()
 void
 ClientSubscription::dispatch(const SipMessage& msg)
 {
+   DebugLog (<< "ClientSubscription::dispatch " << msg.brief());
+   
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);
 
@@ -74,7 +76,11 @@ ClientSubscription::dispatch(const SipMessage& msg)
       if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest->header(h_To));
-         mDialog.mRemoteTarget = msg.header(h_Contacts).front();
+         if (msg.exists(h_Contacts))
+         {
+            mDialog.mRemoteTarget = msg.header(h_Contacts).front();
+         }
+         
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
