@@ -1622,6 +1622,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 
    if (!request.exists(h_Event))
    {
+      InfoLog (<< "No Event header in " << request.header(h_RequestLine).unknownMethodName());
       failureCode = 400;
    }
    else
@@ -1631,18 +1632,24 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
          case SUBSCRIBE:
             if (!getServerSubscriptionHandler(request.header(h_Event).value()))
             {
+               InfoLog (<< "No handler for event package for SUBSCRIBE: " 
+                        << request.header(h_Event).value());
                failureCode = 489;
             }
             break;
          case NOTIFY:
             if (!getClientSubscriptionHandler(request.header(h_Event).value()))
             {
+               InfoLog (<< "No handler for event package for NOTIFY: " 
+                        << request.header(h_Event).value());
                failureCode = 489;
             }
             break;
          case PUBLISH:
             if (!getServerPublicationHandler(request.header(h_Event).value()))
             {
+               InfoLog (<< "No handler for event package for PUBLISH: " 
+                        << request.header(h_Event).value());
                failureCode = 489;
             }
             break;
