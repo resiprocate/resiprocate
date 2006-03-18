@@ -1,7 +1,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Security.hxx"
-#include "resip/stack/GenericContents.hxx"
+#include "resip/stack/OctetContents.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientSubscription.hxx"
@@ -23,8 +23,7 @@ AddAor::AddAor(RegEventClient& client, const resip::Uri& aor) :
 void
 AddAor::executeCommand()
 {
-   InfoLog (<< "Execute: " << *this);
-   
+   //InfoLog (<< "Execute: " << *this);
    SharedPtr<SipMessage> sub = mClient.mDum.makeSubscription(resip::NameAddr(mAor), regEvent.value());
    mClient.mDum.send(sub);
 }
@@ -60,6 +59,7 @@ RegEventClient::RegEventClient(SharedPtr<MasterProfile> profile) :
    mDum.addTransport(UDP, 5060);
    mDum.addTransport(TCP, 5060);
 
+   mProfile->addSupportedMethod(NOTIFY);
    mProfile->addAllowedEvent(regEvent);
    mProfile->validateAcceptEnabled() = false;
    mProfile->validateContentEnabled() = false;
@@ -68,6 +68,7 @@ RegEventClient::RegEventClient(SharedPtr<MasterProfile> profile) :
    
    std::auto_ptr<resip::ClientAuthManager> clam(new resip::ClientAuthManager());
    mDum.setClientAuthManager(clam);
+   mDum.setClientRegistrationHandler(this);
    
    mDum.addClientSubscriptionHandler(regEvent.value(), this);
 }
@@ -92,10 +93,14 @@ RegEventClient::watchAor(const resip::Uri& aor)
    mDum.post(add);
 }
  
-const GenericContents* 
+const OctetContents* 
 toGenericContents(const SipMessage& notify)
 {
-   const GenericContents* generic = dynamic_cast<const GenericContents*>(notify.getContents());
+   assert(notify.getContents());
+   
+   const OctetContents* generic = dynamic_cast<const OctetContents*>(notify.getContents());
+   assert(generic);
+   
    if (generic && 
        generic->getType().type() == "application" && 
        generic->getType().subType() == "reginfo+xml")
@@ -125,13 +130,19 @@ toGenericContents(const SipMessage& notify)
 // Client must call acceptUpdate or rejectUpdate for any onUpdateFoo
 
 void 
+RegEventClient::onNewSubscription(ClientSubscriptionHandle h, const SipMessage& notify)
+{
+   InfoLog (<< "Got subscription " << notify.brief());
+}
+
+void 
 RegEventClient::onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
    h->acceptUpdate();
-   const GenericContents* generic = toGenericContents(notify);
+   const OctetContents* generic = toGenericContents(notify);
    if (generic)
    {
-      onRegEvent(h->getDocumentKey(), generic->text());
+      onRegEvent(h->getDocumentKey(), generic->octets());
    }
 }
 
@@ -139,10 +150,10 @@ void
 RegEventClient::onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
    h->acceptUpdate();
-   const GenericContents* generic = toGenericContents(notify);
+   const OctetContents* generic = toGenericContents(notify);
    if (generic)
    {
-      onRegEvent(h->getDocumentKey(), generic->text());
+      onRegEvent(h->getDocumentKey(), generic->octets());
    }
 }
 
@@ -164,8 +175,4 @@ RegEventClient::onTerminated(ClientSubscriptionHandle, const SipMessage& msg)
    WarningLog (<< "Subscription terminated " << msg.brief());
 }
 
-void 
-RegEventClient::onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)
-{
-}
 
