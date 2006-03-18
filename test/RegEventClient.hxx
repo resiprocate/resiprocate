@@ -2,6 +2,7 @@
 #define RESIP_RegEventClient_hxx
 
 #include "resip/dum/SubscriptionHandler.hxx"
+#include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumThread.hxx"
@@ -17,7 +18,8 @@ class Security;
 class MasterProfile;
 }
 
-class RegEventClient  : public resip::ClientSubscriptionHandler
+class RegEventClient  : public resip::ClientSubscriptionHandler,
+                        public resip::ClientRegistrationHandler
 {
    public:
       RegEventClient(resip::SharedPtr<resip::MasterProfile> profile);
@@ -49,7 +51,31 @@ class RegEventClient  : public resip::ClientSubscriptionHandler
       virtual void onNewSubscription(resip::ClientSubscriptionHandle, 
                                      const resip::SipMessage& notify);
 
-   private:
+
+      virtual void onSuccess(resip::ClientRegistrationHandle, 
+                             const resip::SipMessage& response)
+      {
+      }
+      
+      virtual void onRemoved(resip::ClientRegistrationHandle, 
+                             const resip::SipMessage& response)
+      {
+      }
+      
+      virtual int onRequestRetry(resip::ClientRegistrationHandle, 
+                                 int retrySeconds, 
+                                 const resip::SipMessage& response)
+      {
+         return -1;
+      }
+      
+      virtual void onFailure(resip::ClientRegistrationHandle, 
+                             const resip::SipMessage& response)
+      {
+      }
+      
+
+   protected:
       resip::Security* mSecurity;
       resip::SipStack mStack;
       resip::StackThread mStackThread;
