@@ -10,8 +10,10 @@ TARGET_LIBRARY =
 #testDumTimer.cxx
 TESTPROGRAMS += basicRegister.cxx BasicCall.cxx testSMIMEMessage.cxx basicMessage.cxx testSMIMEInvite.cxx
 
-TESTPROGRAMS += limpc.cxx
+TESTPROGRAMS += limpc.cxx treg.cxx
 SRC = CommandLineParser.cxx UserAgent.cxx
+
+SRC += RegEventClient.cxx
 
 ifeq ($(USE_CURL),yes)
 TESTPROGRAMS += testIdentity.cxx
