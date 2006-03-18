@@ -123,7 +123,7 @@ CommandLineParser::toUri(const char* input, const char* description)
       }
       else
       {
-         WarningLog (<< "No " << description << " specified");
+         //WarningLog (<< "No " << description << " specified");
       }
    } 
    catch (ParseException& e)
