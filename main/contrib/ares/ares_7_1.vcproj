@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(SolutionDir)/contrib/ares"
-				PreprocessorDefinitions="WIN32;_DEBUG;USE_IPV6;LEAK_CHECK"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
