@@ -266,14 +266,13 @@ InviteSession::requestOffer()
       case Connected:
       case WaitingToRequestOffer:
          transition(SentReinviteNoOffer);
-         mDialog.makeRequest(mLastSessionModification, INVITE);
-         mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
-         mLastSessionModification.setContents(0);		// Clear the SDP contents from the INVITE
-         setSessionTimerHeaders(mLastSessionModification);
+         mDialog.makeRequest(mLastLocalSessionModification, INVITE);
+         mLastLocalSessionModification.setContents(0);		// Clear the SDP contents from the INVITE
+         setSessionTimerHeaders(mLastLocalSessionModification);
 
-         InfoLog (<< "Sending " << mLastSessionModification.brief());
+         InfoLog (<< "Sending " << mLastLocalSessionModification.brief());
          // call send to give app an chance to adorn the message.
-         send(mLastSessionModification);
+         send(mLastLocalSessionModification);
          break;
 
       case Answered:
@@ -299,20 +298,19 @@ InviteSession::provideOffer(const SdpContents& offer)
          if (updateMethodSupported())
          {
             transition(SentUpdate);
-            mDialog.makeRequest(mLastSessionModification, UPDATE);
+            mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
          }
          else
          {
             transition(SentReinvite);
-            mDialog.makeRequest(mLastSessionModification, INVITE);
+            mDialog.makeRequest(mLastLocalSessionModification, INVITE);
          }
-         mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
-         setSessionTimerHeaders(mLastSessionModification);
+         setSessionTimerHeaders(mLastLocalSessionModification);
 
-         InfoLog (<< "Sending " << mLastSessionModification.brief());
-         InviteSession::setSdp(mLastSessionModification, offer);
+         InfoLog (<< "Sending " << mLastLocalSessionModification.brief());
+         InviteSession::setSdp(mLastLocalSessionModification, offer);
          mProposedLocalSdp = InviteSession::makeSdp(offer);
-         send(mLastSessionModification);
+         send(mLastLocalSessionModification);
          break;
 
       case Answered:
@@ -324,8 +322,8 @@ InviteSession::provideOffer(const SdpContents& offer)
       case ReceivedReinviteNoOffer:
          assert(!mProposedRemoteSdp.get());
          transition(ReceivedReinviteSentOffer);
-         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
-         handleSessionTimerRequest(mInvite200, mLastSessionModification);
+         mDialog.makeResponse(mInvite200, mLastRemoteSessionModification, 200);
+         handleSessionTimerRequest(mInvite200, mLastRemoteSessionModification);
          InviteSession::setSdp(mInvite200, offer);
          mProposedLocalSdp  = InviteSession::makeSdp(offer);
 
@@ -349,8 +347,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
    {
       case ReceivedReinvite:
          transition(Connected);
-         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
-         handleSessionTimerRequest(mInvite200, mLastSessionModification);
+         mDialog.makeResponse(mInvite200, mLastRemoteSessionModification, 200);
+         handleSessionTimerRequest(mInvite200, mLastRemoteSessionModification);
          InviteSession::setSdp(mInvite200, answer);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
@@ -364,8 +362,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
          transition(Connected);
 
          SipMessage response;
-         mDialog.makeResponse(response, mLastSessionModification, 200);
-         handleSessionTimerRequest(response, mLastSessionModification);
+         mDialog.makeResponse(response, mLastRemoteSessionModification, 200);
+         handleSessionTimerRequest(response, mLastRemoteSessionModification);
          InviteSession::setSdp(response, answer);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
@@ -376,7 +374,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
 
       case SentReinviteAnswered:
          transition(Connected);
-         sendAck(mLastSessionModification, &answer);
+         sendAck(&answer);
 
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
@@ -436,7 +434,7 @@ InviteSession::end(EndReason reason)
       case ReceivedReinviteNoOffer:
       {
          SipMessage response;
-         mDialog.makeResponse(response, mLastSessionModification, 488);
+         mDialog.makeResponse(response, mLastRemoteSessionModification, 488);
          InfoLog (<< "Sending " << response.brief());
          send(response);
 
@@ -476,7 +474,7 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          transition(Connected);
 
          SipMessage response;
-         mDialog.makeResponse(response, mLastSessionModification, statusCode);
+         mDialog.makeResponse(response, mLastRemoteSessionModification, statusCode);
          if(warning)
          {
             response.header(h_Warnings).push_back(*warning);
@@ -719,7 +717,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
       {
-         if (timeout.seq() == mLastSessionModification.header(h_CSeq).sequence())
+         if (timeout.seq() == mLastRemoteSessionModification.header(h_CSeq).sequence())
          {
             mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
@@ -769,21 +767,21 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentUpdate);
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
-         send(mLastSessionModification);
+         send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteGlare)
       {
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
-         send(mLastSessionModification);
+         send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteNoOfferGlare)
       {
          transition(SentReinviteNoOffer);
 
          InfoLog (<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
-         send(mLastSessionModification);
+         send(mLastLocalSessionModification);
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
@@ -820,7 +818,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
    {
       case OnInvite:
       case OnInviteReliable:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(ReceivedReinviteNoOffer);
          //handler->onDialogModified(getSessionHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
@@ -828,7 +826,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnInviteOffer:
       case OnInviteReliableOffer:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
@@ -840,7 +838,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case On2xxAnswer:
          // retransmission of 200I
          // !jf! Need to include the answer here.
-         sendAck(mLastSessionModification);  // !slg! ?????????  Look up ACK map???
+         sendAck(); 
          break;
 
       case OnUpdateOffer:
@@ -849,7 +847,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  !kh!
          //  Find out if it's an UPDATE requiring state change.
          //  See rfc3311 5.2, 4th paragraph.
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
@@ -858,9 +856,9 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       {
          // ?slg? no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
          SipMessage response;
-         mLastSessionModification = msg;
-         mDialog.makeResponse(response, mLastSessionModification, 200);
-         handleSessionTimerRequest(response, mLastSessionModification);
+         mLastRemoteSessionModification = msg;
+         mDialog.makeResponse(response, mLastRemoteSessionModification, 200);
+         handleSessionTimerRequest(response, mLastRemoteSessionModification);
          send(response);
          break;
       }
@@ -906,7 +904,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case On200Update:
          transition(Connected);
          handleSessionTimerResponse(msg);
-         if (sdp.get())
+         if (sdp.get() && mProposedLocalSdp.get())
          {
             mCurrentLocalSdp = mProposedLocalSdp;
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -935,7 +933,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          }
          else
          {
-            // Response must contact Min_SE - if not - just ignore
+            // Response must contain Min_SE - if not - just ignore
             // ?slg? callback?
             transition(Connected);
             mProposedLocalSdp.reset();
@@ -994,7 +992,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          // !jf! I need to potentially include an answer in the ACK here
-         sendAck(mLastSessionModification);
+         sendAck();
          handler->onAnswer(getSessionHandle(), msg, *sdp);
 
 
@@ -1004,7 +1002,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
       }
       case On2xx:
-         sendAck(mLastSessionModification);
+         sendAck();
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -1095,7 +1093,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       }
 
       case On2xx:
-         sendAck(mLastSessionModification);
+         sendAck();
          transition(Connected);
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -1108,8 +1106,8 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
             // Change interval to min from 422 response
             mSessionInterval = msg.header(h_MinSE).value();
             mMinSE = mSessionInterval;
-            setSessionTimerHeaders(mLastSessionModification);
-            send(mLastSessionModification);
+            setSessionTimerHeaders(mLastLocalSessionModification);
+            send(mLastLocalSessionModification);
          }
          else
          {
@@ -1299,7 +1297,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       if(msg.header(h_StatusLine).statusCode() / 200 == 1)  // Note: stack ACK's non-2xx final responses only
       {
          // !jf! Need to include the answer here.
-         sendAck(mLastSessionModification);
+         sendAck();
       }
       sendBye();
       transition(Terminated);
@@ -1559,7 +1557,7 @@ void
 InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;
-   int seq = mLastSessionModification.header(h_CSeq).sequence();
+   int seq = mLastRemoteSessionModification.header(h_CSeq).sequence();
    mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
@@ -1574,7 +1572,7 @@ InviteSession::startRetransmit200Timer()
 void
 InviteSession::start491Timer()
 {
-   int seq = mLastSessionModification.header(h_CSeq).sequence();
+   int seq = mLastLocalSessionModification.header(h_CSeq).sequence();
 
    if (dynamic_cast<ClientInviteSession*>(this))
    {
@@ -1623,21 +1621,20 @@ InviteSession::sessionRefresh()
    if (updateMethodSupported())
    {
       transition(SentUpdate);
-      mDialog.makeRequest(mLastSessionModification, UPDATE);
-      mLastSessionModification.releaseContents();  // Don't send SDP
+      mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
+      mLastLocalSessionModification.releaseContents();  // Don't send SDP
    }
    else
    {
       transition(SentReinvite);
-      mDialog.makeRequest(mLastSessionModification, INVITE);
-      InviteSession::setSdp(mLastSessionModification, *mCurrentLocalSdp);
+      mDialog.makeRequest(mLastLocalSessionModification, INVITE);
+      InviteSession::setSdp(mLastLocalSessionModification, *mCurrentLocalSdp);
       mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp);
    }
-   mLastSessionModification.remove(h_ProxyAuthorizations); // remove remote credentials.
-   setSessionTimerHeaders(mLastSessionModification);
+   setSessionTimerHeaders(mLastLocalSessionModification);
 
-   InfoLog (<< "sessionRefresh: Sending " << mLastSessionModification.brief());
-   send(mLastSessionModification);
+   InfoLog (<< "sessionRefresh: Sending " << mLastLocalSessionModification.brief());
+   send(mLastLocalSessionModification);
 }
 
 void
@@ -2161,24 +2158,24 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
 }
 
-void InviteSession::sendAck(SipMessage& originalInvite, const SdpContents *sdp)
+void InviteSession::sendAck(const SdpContents *sdp)
 {
    SipMessage ack;
 
-   assert(mAcks.count(originalInvite.header(h_CSeq).sequence()) == 0);
+   assert(mAcks.count(mLastLocalSessionModification.header(h_CSeq).sequence()) == 0);
 
    mDialog.makeRequest(ack, ACK);
 
    // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
-   if(originalInvite.exists(h_Authorizations))
+   if(mLastLocalSessionModification.exists(h_Authorizations))
    {
-      ack.header(h_Authorizations) = originalInvite.header(h_Authorizations);
+      ack.header(h_Authorizations) = mLastLocalSessionModification.header(h_Authorizations);
    }
-   if(originalInvite.exists(h_ProxyAuthorizations))
+   if(mLastLocalSessionModification.exists(h_ProxyAuthorizations))
    {
-      ack.header(h_ProxyAuthorizations) = originalInvite.header(h_ProxyAuthorizations);
+      ack.header(h_ProxyAuthorizations) = mLastLocalSessionModification.header(h_ProxyAuthorizations);
    }
-   ack.header(h_CSeq).sequence() = originalInvite.header(h_CSeq).sequence();
+   ack.header(h_CSeq).sequence() = mLastLocalSessionModification.header(h_CSeq).sequence();
 
    if(sdp != 0)
    {
