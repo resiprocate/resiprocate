@@ -1330,7 +1330,7 @@ DialogUsageManager::validateAccept(const SipMessage& request)
       for (Mimes::const_iterator i = request.header(h_Accepts).begin();
            i != request.header(h_Accepts).end(); i++)
       {
-	     if (getMasterProfile()->isMimeTypeSupported(method, *i))
+         if (getMasterProfile()->isMimeTypeSupported(method, *i))
          {
             return true;  // Accept header passes validation if we support as least one of the mime types
          }
@@ -1342,7 +1342,7 @@ DialogUsageManager::validateAccept(const SipMessage& request)
            method == PRACK ||
            method == UPDATE)
    {
-	  if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
+      if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
       {
          return true;
       }

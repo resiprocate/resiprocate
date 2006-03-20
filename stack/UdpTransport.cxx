@@ -130,6 +130,8 @@ UdpTransport::process(FdSet& fdset)
       if (len == 4 &&
           strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
       {
+         delete[] buffer;
+         buffer = 0;
          StackLog(<<"Throwing away incoming firewall keep-alive");
          return;
       }
@@ -181,6 +183,8 @@ UdpTransport::process(FdSet& fdset)
             SendData* stunResponse = new SendData(tuple, response, rlen);
             mTxFifo.add(stunResponse);
          }
+         delete[] buffer;
+         buffer = 0;
          return;
       }
       
@@ -206,7 +210,6 @@ UdpTransport::process(FdSet& fdset)
    
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
-
 
       mMsgHeaderScanner.prepareForMessage(message);
 

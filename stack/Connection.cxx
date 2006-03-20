@@ -119,6 +119,7 @@ Connection::read(Fifo<TransactionMessage>& fifo)
    int bytesRead = read(writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {
+      delete [] writePair.first;
       return bytesRead;
    }  
    getConnectionManager().touch(this);
