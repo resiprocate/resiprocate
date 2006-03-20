@@ -476,29 +476,23 @@ AclStore::isRequestTrusted(const SipMessage& request)
    
    // check if the request came over a secure channel and sucessfully authenticated 
    // (ex: TLS or DTLS)
-   const Data& sentTransport = request.header(h_Vias).front().transport();
+   const Data& receivedTransport = request.header(h_Vias).front().transport();
 #ifdef USE_SSL
-   if(sentTransport == Symbols::TLS
+   if(receivedTransport == Symbols::TLS
 #ifdef USE_DTLS
-      || sentTransport == Symbols::DTLS
+      || receivedTransport == Symbols::DTLS
 #endif
       )
    {
-      // !slg! TODO - accessing the transports from outside of the stack thread is not thread safe - this needs to be fixed
-      const TcpBaseTransport *transport = dynamic_cast<const TcpBaseTransport *>(request.getReceivedTransport());
-      assert(transport);
-      const ConnectionManager &connectionManager = transport->getConnectionManager();
-      const TlsConnection* conn = dynamic_cast<const TlsConnection *>(connectionManager.findConnection(source));
-      assert(conn);
-
-      if(isTlsPeerNameTrusted(conn->getPeerName()))
+      const Data& tlsPeerName = request.getTlsPeerName();
+      if(tlsPeerName != Data::Empty && isTlsPeerNameTrusted(tlsPeerName))
       {
-         InfoLog (<< "AclStore - Tls peer name IS trusted: " << conn->getPeerName());
+         InfoLog (<< "AclStore - Tls peer name IS trusted: " << tlsPeerName);
          trusted = true;
       }
       else
       {
-         InfoLog (<< "AclStore - Tls peer name NOT trusted: " << conn->getPeerName());
+         InfoLog (<< "AclStore - Tls peer name NOT trusted: " << tlsPeerName);
       }
    }
 #endif

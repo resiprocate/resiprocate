@@ -20,7 +20,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../contrib/ares&quot;;&quot;$(ProjectDir)../&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6;LEAK_CHECK"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES;USE_IPV6"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -257,6 +257,9 @@
 				RelativePath=".\Mutex.cxx">
 			</File>
 			<File
+				RelativePath=".\OpenSSLInit.cxx">
+			</File>
+			<File
 				RelativePath=".\ParseBuffer.cxx">
 			</File>
 			<File
@@ -437,6 +440,9 @@
 			</File>
 			<File
 				RelativePath=".\Mutex.hxx">
+			</File>
+			<File
+				RelativePath=".\OpenSSLInit.hxx">
 			</File>
 			<File
 				RelativePath=".\ParseBuffer.hxx">
