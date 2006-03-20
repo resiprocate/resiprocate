@@ -6,6 +6,7 @@
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Security.hxx"
+#include "resip/stack/TlsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -93,6 +94,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
+               delete [] mBuffer;
+               mBuffer = 0;
                return;
             }
          }
@@ -102,6 +105,13 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+         // Set TlsPeerName if message is from TlsConnection
+         TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
+         if(tlsConnection)
+         {
+            mMessage->setTlsPeerName(tlsConnection->getPeerName());
+         }
          mMsgHeaderScanner.prepareForMessage(mMessage);
          // Fall through to the next case.
       }
@@ -226,6 +236,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          mBufferPos += bytesRead;
          if (mBufferPos == contentLength)
          {
+            mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, contentLength);
             if (!transport()->basicCheck(*mMessage))
             {
@@ -234,7 +245,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+               DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
                fifo.add(mMessage);

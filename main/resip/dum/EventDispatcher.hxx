@@ -27,21 +27,29 @@ class EventDispatcher
          E* event = dynamic_cast<E*>(msg);
          if (event)
          {
-            ret = true;
-            unsigned int counter = 1;
-            for (std::vector<Postable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
+            if(mListeners.size() > 0)
             {
-               if (counter == mListeners.size())
+               ret = true;
+               unsigned int counter = 1;
+               for (std::vector<Postable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
                {
-                  (*it)->post(msg);
+                  if (counter == mListeners.size())
+                  {
+                     (*it)->post(msg);
+                  }
+                  else
+                  {
+                     ++counter;
+                     (*it)->post(msg->clone());
+                  }
                }
-               else
-               {
-                  ++counter;
-                  (*it)->post(msg->clone());
-               }
-            }
-         }         
+            }         
+         }
+         else
+         {
+            // no listeners - just delete the message
+            delete msg;
+         }
 
          return ret;
       }
