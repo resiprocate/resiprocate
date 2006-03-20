@@ -27,7 +27,11 @@ void testMultiple()
    {
       Security security;
    }
+#ifdef WIN32
+      Sleep(10000);
+#else
       sleep(10);      
+#endif
    {
       Security security;
    }

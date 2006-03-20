@@ -414,7 +414,7 @@ class Helper
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
                                   const Data& cnonceCount = Data::Empty, const Contents *entityBody = 0);
       
-      
+      /// Note: Helper assumes control of NonceHelper object and will delete when global scope is cleaned up      
       static void setNonceHelper(NonceHelper *nonceHelper);
       static NonceHelper* getNonceHelper();
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
@@ -466,7 +466,14 @@ class Helper
 
    private:
       static Data qopOption(const Auth& challenge);
-      static NonceHelper *mNonceHelper;
+      class NonceHelperPtr
+      {
+         public:
+            NonceHelperPtr() : mNonceHelper(0) {}
+            ~NonceHelperPtr() { delete mNonceHelper; }
+            NonceHelper *mNonceHelper;
+      };
+      static NonceHelperPtr mNonceHelperPtr;
 };
 
 }

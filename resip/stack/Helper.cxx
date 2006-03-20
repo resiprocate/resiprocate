@@ -40,7 +40,7 @@ const int Helper::tagSize = 4;
 
 // !jf! this should be settable by the application in case a group of apps
 // (e.g. proxies) want to share the same secret
-NonceHelper *Helper::mNonceHelper = 0;
+Helper::NonceHelperPtr Helper::mNonceHelperPtr;
 
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
@@ -547,17 +547,17 @@ Helper::computeTag(int numBytes)
 void
 Helper::setNonceHelper(NonceHelper *nonceHelper)
 {
-   Helper::mNonceHelper = nonceHelper;
+   mNonceHelperPtr.mNonceHelper = nonceHelper;
 }
 
 NonceHelper* 
 Helper::getNonceHelper()
 {
-   if (mNonceHelper == 0)
+   if (mNonceHelperPtr.mNonceHelper == 0)
    {
-      mNonceHelper = new BasicNonceHelper();
+      mNonceHelperPtr.mNonceHelper = new BasicNonceHelper();
    }
-   return mNonceHelper;
+   return mNonceHelperPtr.mNonceHelper;
 }
 
 

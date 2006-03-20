@@ -291,12 +291,13 @@ Dialog::dispatch(const SipMessage& msg)
 
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
 
-   if (msg.getReceivedTransport())
+   if(msg.isExternal())
    {
-      TransportType type = msg.getReceivedTransport()->getTuple().getType();
+      const Data& receivedTransport = msg.header(h_Vias).front().transport();
       int keepAliveTime = 0;
-
-      if (type == TCP || type == TLS || type == SCTP)
+      if(receivedTransport == Symbols::TCP ||
+         receivedTransport == Symbols::TLS ||
+         receivedTransport == Symbols::SCTP)
       {
          keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTimeForStream();
       }
