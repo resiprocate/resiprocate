@@ -45,11 +45,6 @@ class EventDispatcher
                }
             }         
          }
-         else
-         {
-            // no listeners - just delete the message
-            delete msg;
-         }
 
          return ret;
       }
