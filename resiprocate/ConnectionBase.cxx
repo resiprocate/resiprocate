@@ -86,6 +86,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
+               delete [] mBuffer;
+               mBuffer = 0;
                return;
             }
          }
@@ -218,6 +220,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          mBufferPos += bytesRead;
          if (mBufferPos == contentLength)
          {
+            mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, contentLength);
             if (!transport()->basicCheck(*mMessage))
             {
@@ -226,7 +229,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+               DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
                fifo.add(mMessage);

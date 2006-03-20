@@ -24,7 +24,7 @@ class MergedRequestKey
       //MergedRequestKey(const MergedRequestKey& key);
       MergedRequestKey& operator=(const MergedRequestKey& key);
       
-      Data mRequestUri;
+//      Data mRequestUri;
       Data mCSeq;
       Data mTag;
       Data mCallId;

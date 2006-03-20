@@ -563,7 +563,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
@@ -573,7 +573,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInvite:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_NoOffer);
          handler->onNewSession(getHandle(), None, msg);
          if(!isTerminated())  
@@ -582,7 +582,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInviteReliableOffer:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
@@ -592,7 +592,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          }
          break;
       case OnInviteReliable:
-         mLastSessionModification = msg;
+         mLastRemoteSessionModification = msg;
          transition(UAS_NoOfferReliable);
          handler->onNewSession(getHandle(), None, msg);
          if(!isTerminated())  
@@ -975,9 +975,9 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
    if (updateMethodSupported())
    {
-      mDialog.makeRequest(mLastSessionModification, UPDATE);
-      InviteSession::setSdp(mLastSessionModification, sdp);
-      send(mLastSessionModification);
+      mDialog.makeRequest(mLastLocalSessionModification, UPDATE);
+      InviteSession::setSdp(mLastLocalSessionModification, sdp);
+      send(mLastLocalSessionModification);
    }
    else
    {
