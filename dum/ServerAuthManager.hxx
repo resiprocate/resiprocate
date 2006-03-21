@@ -94,7 +94,7 @@ class ServerAuthManager : public DumFeature
       Result issueChallengeIfRequired(SipMessage *sipMsg);
 
       // sends a 407 challenge to the UAC who sent sipMsg
-      void ServerAuthManager::issueChallenge(SipMessage *sipMsg);
+      void issueChallenge(SipMessage *sipMsg);
 
       virtual void onAuthSuccess(const SipMessage& msg);
       virtual void onAuthFailure(AuthFailureReason reason, const SipMessage& msg);
