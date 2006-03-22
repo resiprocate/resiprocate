@@ -1627,7 +1627,7 @@ SdpContents::Session::Medium::codecs()
 }
 
 const Codec& 
-SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecs) const
+SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecs, Codec* pMatchingCodec) const
 {
    static Codec emptyCodec;
    std::list<resip::SdpContents::Session::Codec>::const_iterator sIter;
@@ -1642,6 +1642,7 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& co
          if (*sIter == *eIter)
          {
             found = true;
+			if (pMatchingCodec) *pMatchingCodec = *eIter;
             return *sIter;
          }
       }
