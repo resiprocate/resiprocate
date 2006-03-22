@@ -391,13 +391,13 @@ class SdpContents : public Contents
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
-                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecs) const;
-                  const Codec& findFirstMatchingCodecs(const Medium& medium) const
+                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecs, Codec* pMatchingCodec = 0) const;
+                  const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const
                   {
                      if (&medium == this)
                         return codecs().front();
                      else
-                        return findFirstMatchingCodecs(medium.codecs());
+                        return findFirstMatchingCodecs(medium.codecs(), pMatchingCodec);
                   }
 
                   int findTelephoneEventPayloadType() const;
