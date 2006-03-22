@@ -81,6 +81,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          }
          else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
          {
+            mPublish.releaseContents();
             mPublish.header(h_SIPIfMatch) = msg.header(h_SIPETag);
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::smallerThan(msg.header(h_Expires).value()), 
@@ -106,7 +107,13 @@ ClientPublication::dispatch(const SipMessage& msg)
             mPublish.remove(h_SIPIfMatch);
             update(mDocument);
             return;
-         }         
+         }
+         else if (code == 415)
+         {
+            InfoLog(<< "415 body required -- republish with body");
+            update(mDocument);
+            return;
+         }
          else if (code == 423) // interval too short
          {
             if (msg.exists(h_MinExpires))
@@ -198,10 +205,6 @@ ClientPublication::refresh(unsigned int expiration)
    {
       expiration = mPublish.header(h_Expires).value();
    }
-   if (!mPublish.exists(h_SIPIfMatch))
-   {
-      mPublish.setContents(mDocument);
-   }
    mPublish.header(h_CSeq).sequence()++;
    send(mPublish);
 }
@@ -241,7 +244,6 @@ ClientPublication::send(SipMessage& request)
       mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
-      mPublish.releaseContents();
    }
 }
 
