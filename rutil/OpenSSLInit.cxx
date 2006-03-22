@@ -77,15 +77,12 @@ OpenSSLInit::init()
 void
 OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
 {
-//   StackLog(<< "OpenSSLInit::lockingFunction: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
    if (mode & CRYPTO_LOCK)
    {
-      StackLog(<< "OpenSSLInit::lockingFunction, locking: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
       OpenSSLInit::mMutexes[n].lock();
    }
    else
    {      
-      StackLog(<< "OpenSSLInit::lockingFunction, unlocking: " << file << "::" << line << " Mutex# " << n << " Mode: " << mode);
       OpenSSLInit::mMutexes[n].unlock();
    }
 }
