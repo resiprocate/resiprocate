@@ -31,6 +31,7 @@ class OctetContents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       Data& octets() {checkParsed(); return mOctets;}
+      const Data& octets() const {checkParsed(); return mOctets;}
 
       static bool init();
    private:
