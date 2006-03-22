@@ -878,7 +878,7 @@ SipMessage::header(const ExtensionHeader& headerName) const
          HeaderFieldValueList* hfvs = i->second;
          if (hfvs->getParserContainer() == 0)
          {
-            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
+            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::RESIP_DO_NOT_USE));
          }
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
@@ -901,7 +901,7 @@ SipMessage::header(const ExtensionHeader& headerName)
          HeaderFieldValueList* hfvs = i->second;
          if (hfvs->getParserContainer() == 0)
          {
-            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
+            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::RESIP_DO_NOT_USE));
          }
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
@@ -909,7 +909,7 @@ SipMessage::header(const ExtensionHeader& headerName)
 
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
+   hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::RESIP_DO_NOT_USE));
    mUnknownHeaders.push_back(make_pair(headerName.getName(), hfvs));
    return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
 }
