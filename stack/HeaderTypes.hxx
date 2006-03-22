@@ -123,7 +123,8 @@ class Headers
 
          defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261"),
          defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
-
+         
+         defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
          NONE
       };
