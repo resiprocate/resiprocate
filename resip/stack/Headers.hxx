@@ -255,6 +255,9 @@ defineHeader(Date, "Date", DateCategory, "RFC 3261");
 //====================
 defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
 
+//Enforces string encoding of extension headers
+defineMultiHeader(RESIP_DO_NOT_USE, "If you see this things are seriously awry", StringCategory, "NA");
+
 //====================
 // Via
 //====================
@@ -274,7 +277,7 @@ extern RequestLineType h_RequestLine;
 
 class StatusLineType {};
 extern StatusLineType h_StatusLine;
- 
+
 }
 
 #undef defineHeader

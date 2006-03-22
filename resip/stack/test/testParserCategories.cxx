@@ -428,6 +428,11 @@ main(int arc, char** argv)
       // test header hash
       for (int i = Headers::CSeq; i < Headers::MAX_HEADERS; i++)
       {
+         if (i == Headers::RESIP_DO_NOT_USE)
+         {
+            continue;
+         }
+         
          Data hdr = Headers::getHeaderName(i);
          if (!hdr.size()) continue;
          Data msg("Checking hash of: ");
