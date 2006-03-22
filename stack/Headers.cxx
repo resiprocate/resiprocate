@@ -258,6 +258,29 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
 defineMultiHeader(Via, "Via", Via, "RFC 3261");
 
+//Enforces string encoding of extension headers
+Headers::Type                                                          
+H_RESIP_DO_NOT_USEs::getTypeNum() const {return Headers::RESIP_DO_NOT_USE;}                                                                               
+                                                                                                                                        
+H_RESIP_DO_NOT_USEs::H_RESIP_DO_NOT_USEs()                                                                                                            
+{                                                                                                                                       
+   Headers::CommaTokenizing[Headers::RESIP_DO_NOT_USE+1] = bool(Type::value_type::commaHandling & ParserCategory::CommasAllowedOutputMulti);       
+   Headers::CommaEncoding[Headers::RESIP_DO_NOT_USE+1] = bool(Type::value_type::commaHandling & 2);                                                
+   Headers::HeaderNames[Headers::RESIP_DO_NOT_USE+1] = "RESIP_DO_NOT_USE";                                                                                      
+}                                                                                                                                       
+                                                                                                                                        
+ParserContainer<StringCategory>&                                                                                                                 
+H_RESIP_DO_NOT_USEs::knownReturn(ParserContainerBase* container)                                                                               
+{                                                                                                                                       
+   return *dynamic_cast<ParserContainer<StringCategory>*>(container);                                                                            
+}                                                                                                                                       
+                                                                                                                                        
+H_RESIP_DO_NOT_USEs resip::h_RESIP_DO_NOT_USEs;
+
+void H_RESIP_DO_NOT_USEs::merge(SipMessage& target, const SipMessage& embedded)                                                   \
+{                                                                                                                       \
+}                                                                                                                       \
+
 RequestLineType resip::h_RequestLine;
 StatusLineType resip::h_StatusLine;
 
