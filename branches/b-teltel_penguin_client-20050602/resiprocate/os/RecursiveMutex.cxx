@@ -1,9 +1,11 @@
 #include <cassert>
+#ifndef _WIN32_WCE
 #include <cerrno>
+#endif
 
 #include "resiprocate/os/RecursiveMutex.hxx"
 
-#if defined(WIN32) 
+#if defined(_WIN32) 
 #  include <windows.h>
 #  include <winbase.h>
 #else
