@@ -7,7 +7,9 @@ typedef unsigned int size_t;
 
 */
 #include <cassert>
-#include <cerrno>
+# ifndef _WIN32_WCE
+#  include <cerrno>
+# endif
 #include "resiprocate/os/Mutex.hxx"
 
 #if defined(WIN32)

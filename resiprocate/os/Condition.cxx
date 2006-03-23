@@ -51,7 +51,7 @@
 #include <cassert>
 #include <climits>
 
-#ifndef WIN32
+#ifndef _WIN32
 #  include <pthread.h>
 #  include <errno.h>
 #  include <sys/time.h>
