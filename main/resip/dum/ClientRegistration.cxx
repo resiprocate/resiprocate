@@ -319,15 +319,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (msg.exists(h_ServiceRoutes))
             {
-               InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));               
-
-               NameAddrs nmAddrs(msg.header(h_ServiceRoutes));
-               if (getUserProfile()->hasOutboundProxy())
-               {
-                  nmAddrs.push_front(getUserProfile()->getOutboundProxy());
-               }
-
-               getUserProfile()->setServiceRoute(nmAddrs);
+               InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
+			   getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
