@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#ifdef _WIN32_WCE
+#include <stdlibex.h>
+#endif
 #include <iostream>
 #include <iomanip>
 
