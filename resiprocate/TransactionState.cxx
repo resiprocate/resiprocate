@@ -1528,11 +1528,11 @@ TransactionState::sendToTU(TransactionUser* tu, TransactionController& controlle
 {
    if (!tu)
    {
-      DebugLog(<< "Send to default TU: " << *msg);
+      DebugLog(<< "Send to default TU:\n" << *msg);
    }
    else
    {
-      DebugLog (<< "Send to TU: " << *tu << " " << *msg);
+      DebugLog (<< "Send to TU: " << *tu << " \n" << *msg);
    }
    
    msg->setTransactionUser(tu);   

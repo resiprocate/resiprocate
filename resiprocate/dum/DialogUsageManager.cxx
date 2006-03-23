@@ -600,7 +600,7 @@ DialogUsageManager::send(SipMessage& msg)
       msg.header(h_UserAgent).value() = userProfile->getUserAgent();
    }
 
-   DebugLog (<< "SEND: " << msg);
+   DebugLog (<< "SEND:\n" << msg);
    if (msg.isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
@@ -1386,7 +1386,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   DebugLog ( << "DialogUsageManager::processResponse: " << response);
+   DebugLog ( << "DialogUsageManager::processResponse:\n" << response);
 
    // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
    //if (mShutdownState != Running)
