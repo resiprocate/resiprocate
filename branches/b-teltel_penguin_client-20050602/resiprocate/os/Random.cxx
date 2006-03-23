@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "resiprocate/os/Socket.hxx"
 #else
 #include <unistd.h>
@@ -53,7 +53,7 @@ Random::initialize()
       //throwing away first 32 bits
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 
-#ifdef WIN32
+#ifdef _WIN32
       Socket fd = -1;
       // !cj! need to find a better way - use pentium random commands?
 #else
@@ -99,7 +99,11 @@ Random::initialize()
 
       if (fd != -1 )
       {
-         ::close(fd);
+#ifdef _WIN32
+		 closeSocket(fd);
+#else
+         close(fd);
+#endif
       }
 
 #ifdef WIN32

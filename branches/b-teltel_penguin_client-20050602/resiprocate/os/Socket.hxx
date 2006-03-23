@@ -7,15 +7,18 @@
 #include <errno.h>
 #include <algorithm>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #include <stdlib.h>
+# ifdef _WIN32_WCE
+#  include <stringex.h>
+# endif // # ifdef _WIN32_WCE
 #include <io.h>
 #include <WS2TCPIP.H>
 #endif
 
 
-#ifdef WIN32
+#ifdef _WIN32
 
 typedef int socklen_t;
 inline int getErrno() { return WSAGetLastError(); }

@@ -23,7 +23,7 @@
 #include <string.h>		/* for memcpy() */
 #include <sys/types.h>		/* for stupid systems */
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <netinet/in.h>		/* for ntohl() */
 #endif
 

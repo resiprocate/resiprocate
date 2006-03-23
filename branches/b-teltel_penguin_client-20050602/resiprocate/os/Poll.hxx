@@ -19,7 +19,7 @@
 #endif
 
 #ifdef RESIP_POLL_IMPL_SELECT
-# ifdef WIN32
+# ifdef _WIN32
 #  include <winsock2.h>
 # else
 #  include <sys/time.h>

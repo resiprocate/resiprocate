@@ -14,13 +14,8 @@
 #endif
 
 #ifdef _WIN32
-
 // !cj! TODO would be nice to remove this 
 #pragma warning(disable : 4996)
-
-#include <errno.h>
-#include <winsock2.h>
-#include <io.h>
 #endif
  
 #ifndef _WIN32
@@ -34,43 +29,50 @@
 #endif
 
 #ifdef _WIN32
+# include <winsock2.h>
 # include <windows.h>
 # include <winbase.h>
+# ifndef _WIN32_WCE
 # include <errno.h>
-# include <winsock2.h>
 # include <io.h>
+# endif
 
 #ifndef __BIT_TYPES_DEFINED__ /* sleepcat DB uses this */ 
 typedef unsigned long int u_int32_t;
 typedef long int ssize_t;
-#endif
+#endif // #ifdef _WIN32
 
-#endif
+#endif // #ifdef _WIN32
 
 #if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
-#include <netdb.h>
-#include <arpa/nameser_compat.h>
-#ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
-#ifndef __SCHAR_MAX__ 
-#define __SCHAR_MAX__ 127
-#endif
-#endif
-#endif
+# include <netdb.h>
+# include <arpa/nameser_compat.h>
+# ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
+#  ifndef __SCHAR_MAX__ 
+#   define __SCHAR_MAX__ 127
+#  endif // #  ifndef __SCHAR_MAX__ 
+# endif // # ifdef __MWERKS__ 
+#endif // #if defined(TARGET_OS_MAC)
 
 #if defined(__SUNPRO_CC)
-#if defined(_TIME_T)
+# if defined(_TIME_T)
  using std::time_t;
-#endif
+# endif // # if defined(_TIME_T)
 #include <time.h>
 #include <memory.h>
 #include <string.h>
-#endif
+#endif // #if defined(__SUNPRO_CC)
 
 #include <cstring>
 
 #if defined(_WIN32) || defined(__QNX__)
-#define strcasecmp(a,b) stricmp(a,b)
-#define strncasecmp(a,b,c) strnicmp(a,b,c)
+# ifdef _WIN32_WCE
+#  define strcasecmp(a,b) _stricmp(a,b)
+#  define strncasecmp(a,b,c) _strnicmp(a,b,c)
+# else
+#  define strcasecmp(a,b) stricmp(a,b)
+#  define strncasecmp(a,b,c) strnicmp(a,b,c)
+# endif // # ifdef _WIN32_WCE
 #endif
 
 #ifndef _WIN32
