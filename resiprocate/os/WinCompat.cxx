@@ -1,4 +1,4 @@
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <Winsock2.h>
 #include <Iphlpapi.h>
 #endif
@@ -16,16 +16,18 @@ WinCompat::Exception::Exception(const Data& msg, const Data& file, const int lin
 WinCompat::Version
 WinCompat::getVersion()
 {
-#if defined(WIN32)
-   OSVERSIONINFOEX osvi;
+#if defined(_WIN32)
    BOOL bOsVersionInfoEx;
-
-   // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
-   // If that fails, try using the OSVERSIONINFO structure.
-
+#ifdef _WIN32_WCE
+   OSVERSIONINFO osvi;
+   ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#else
+   OSVERSIONINFOEX osvi;
    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-
+#endif
+  
    if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
    {
       osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
@@ -100,6 +102,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 //        you can define NO_IPHLPAPI so that you are not required to link with this 
 //        library. (SLG)
 #if defined(WIN32) && !defined(NO_IPHLPAPI)  
+#ifndef _WIN32_WCE
    // try to figure the best route to the destination
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
@@ -145,6 +148,10 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 
    delete [] (char *) pIpAddrTable;
    return Tuple(sourceIP, 0, destination.getType());
+#else
+	return Tuple();
+#endif
+
 #else
    assert(0);
    return Tuple();

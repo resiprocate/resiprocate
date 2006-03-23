@@ -1,4 +1,4 @@
-#if !defined(WIN32)
+#if !defined(_WIN32)
 #include <syslog.h>
 #endif
 
@@ -9,7 +9,7 @@ using resip::SysLogBuf;
 
 SysLogBuf::SysLogBuf ()
 {
-#if !defined(WIN32)
+#if !defined(_WIN32)
    setp(buffer,buffer+Size);
    openlog (0, LOG_NDELAY, LOG_LOCAL6);
 #endif
@@ -22,7 +22,7 @@ SysLogBuf::~SysLogBuf()
 int 
 SysLogBuf::sync()
 {
-#if !defined(WIN32)
+#if !defined(_WIN32)
    *(pptr()) = 0;
    syslog (LOG_LOCAL6 | LOG_DEBUG, pbase());
    setp(buffer, buffer+Size);

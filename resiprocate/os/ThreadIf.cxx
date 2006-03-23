@@ -1,15 +1,11 @@
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
-#ifdef _WIN32_WCE
-typedef LPTHREAD_START_ROUTINE RESIP_THREAD_START_ROUTINE;
-#else
 #include <process.h> // for _beginthreadex()
-typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
-#endif
-
+#else
+//typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 //from Random.cxx
 #include "resiprocate/os/Socket.hxx"
 #endif
@@ -28,30 +24,24 @@ using namespace resip;
 
 extern "C"
 {
-static void*
-#ifdef WIN32
-#ifdef _WIN32_WCE
-WINAPI
-#else
+static unsigned int
 __stdcall
-#endif
-#endif
 threadWrapper( void* threadParm )
 {
    assert( threadParm );
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
 
    assert( t );
-#if defined(WIN32)
+#if defined(_WIN32)
    srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 #endif
    t->thread();
-#if defined(WIN32)
-#ifdef _WIN32_WCE
+#if defined(_WIN32)
+# ifdef _WIN32_WCE
    ExitThread( 0 );
-#else
+# else
    _endthreadex(0);
-#endif
+# endif
 #endif
    return 0;
 }
@@ -90,11 +80,13 @@ ThreadIf::run()
            
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
          0, // DWORD dwStackSize,                         // initial thread stack size
-         RESIP_THREAD_START_ROUTINE
+#ifdef _WIN32_WCE
+         LPTHREAD_START_ROUTINE
+#endif
          (threadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
          this, //LPVOID lpParameter,                        // argument for new thread
          0, //DWORD dwCreationFlags,                     // creation flags
-         &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
+         (unsigned *)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
          );
    assert( mThread != 0 );
 #else

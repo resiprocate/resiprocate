@@ -1,5 +1,5 @@
 
-#if !defined(WIN32) && !defined (__sun__)
+#if !defined(_WIN32) && !defined (__sun__)
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
