@@ -81,7 +81,7 @@ endif
 reproSvnVersion=$(shell cat ../SVN-VERSION)
 #reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//')
 reproBuildTime=""
-reproBuildHost=$(shell hostname --short)
+reproBuildHost=$(shell hostname)
 
 .PHONY: BUILDSTAMP
 BUILDSTAMP: ../SVN-VERSION
