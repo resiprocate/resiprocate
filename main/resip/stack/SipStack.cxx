@@ -547,6 +547,18 @@ SipStack::setEnumSuffixes(const std::vector<Data>& suffixes)
    mDnsStub->setEnumSuffixes(suffixes);
 }
 
+void
+SipStack::clearDnsCache()
+{
+   mDnsStub->clearDnsCache();
+}
+
+void
+SipStack::logDnsCache()
+{
+   mDnsStub->logDnsCache();
+}
+
 volatile bool& 
 SipStack::statisticsManagerEnabled()
 {

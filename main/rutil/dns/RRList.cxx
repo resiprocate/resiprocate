@@ -5,13 +5,21 @@
 #include <vector>
 #include <list>
 
+#include "ares.h"
+
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 #include "rutil/dns/RRFactory.hxx"
 #include "rutil/dns/RRList.hxx"
+#include "rutil/dns/DnsAAAARecord.hxx"
+#include "rutil/dns/DnsHostRecord.hxx"
+#include "rutil/dns/DnsNaptrRecord.hxx"
+#include "rutil/dns/DnsSrvRecord.hxx"
+#include "rutil/dns/DnsCnameRecord.hxx"
 
 using namespace resip;
 using namespace std;
@@ -173,5 +181,94 @@ void RRList::blacklist(RecordItem& item, int protocol)
    if (item.blacklistedProtocols.end() == it)
    {
       item.blacklistedProtocols.push_back(protocol);
+   }
+}
+
+void RRList::log()
+{
+   for (RecordArr::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
+   {
+      Data buffer;
+      DataStream strm(buffer);
+
+      strm << "DNSCACHE: Type=";
+
+      switch(mRRType)
+      {
+      case T_CNAME:
+      {
+         DnsCnameRecord* record = dynamic_cast<DnsCnameRecord*>((*it).record);
+         assert(record);
+         strm << "CNAME: " << record->name() << " -> " << record->cname();
+         break;
+      }
+
+      case T_NAPTR:
+      {
+         DnsNaptrRecord* record = dynamic_cast<DnsNaptrRecord*>((*it).record);
+         assert(record);
+         strm << "NAPTR: " << record->name() << " -> repl=" << record->replacement() << " service=" << record->service() 
+              << " order=" << record->order() << " pref=" << record->preference() << " flags=" << record->flags() 
+              << " regexp=" << record->regexp().regexp();
+         break;
+      }
+
+      case T_SRV:
+      {
+         DnsSrvRecord* record = dynamic_cast<DnsSrvRecord*>((*it).record);
+         assert(record);
+         strm << "SRV: " << record->name() << " -> " << record->target() << ":" << record->port() 
+              << " priority=" << record->priority() << " weight=" << record->weight();               
+         break;
+      }
+
+      case T_AAAA:
+      {
+         DnsAAAARecord* record = dynamic_cast<DnsAAAARecord*>((*it).record);
+         assert(record);
+         strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address());
+         break;
+      }
+
+      case T_A:
+      {
+         DnsHostRecord* record = dynamic_cast<DnsHostRecord*>((*it).record);
+         assert(record);
+         strm << "A(Host): " << record->name() << " -> " << record->host();
+         break;
+      }
+      default:
+         strm << "UNKNOWN(" << mRRType << ")" << " key=" << mKey << " name=" << (*it).record->name();
+         break;
+      }
+      
+      if((*it).blacklistedProtocols.size() > 0)
+      {
+          strm << " **blacklisted for protocols=";
+          for(std::vector<int>::iterator it2 = (*it).blacklistedProtocols.begin(); 
+              it2 != (*it).blacklistedProtocols.end(); it2++)
+          {
+              switch((*it2))
+              {
+              case Protocol::Sip:
+                strm << "SIP ";
+                break;
+              case Protocol::Stun:
+                strm << "STUN ";
+                break;
+              case Protocol::Http:
+                strm << "HTTP ";
+                break;
+              case Protocol::Enum:
+                strm << "ENUM ";
+                break;
+              default:
+                strm << "UNKNOWN(" << (*it2) << ") ";
+                break;
+              }
+          }
+      }
+      strm.flush();
+      WarningLog( << buffer);
    }
 }
