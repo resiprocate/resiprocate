@@ -13,6 +13,8 @@
 #endif
 #endif
 
+#include <stdlib.h>
+
 #include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
