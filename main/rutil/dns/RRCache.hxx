@@ -40,6 +40,8 @@ class RRCache
                     RROverlay overlay);
       bool lookup(const Data& target, int type, int proto, Result& records, int& status);
       void blacklist(const Data& target, int rrType, int protocol, const DataArr& targetsToBlacklist);
+      void clearCache();
+      void logCache();
 
    private:
       static const int MIN_TO_SEC = 60;

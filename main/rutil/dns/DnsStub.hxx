@@ -100,6 +100,8 @@ class DnsStub : public ExternalDnsHandler
       void unregisterBlacklistListener(int rrType, BlacklistListener*);
       void setEnumSuffixes(const std::vector<Data>& suffixes);
       const std::vector<Data>& getEnumSuffixes() const;
+      void clearDnsCache();
+      void logDnsCache();
 
       template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
@@ -309,6 +311,42 @@ class DnsStub : public ExternalDnsHandler
          private:
             DnsStub& mStub;
             std::vector<Data> mEnumSuffixes;
+      };
+
+      void doClearDnsCache();
+
+      class ClearDnsCacheCommand : public Command
+      {
+         public:
+            ClearDnsCacheCommand(DnsStub& stub)
+               : mStub(stub)
+            {}             
+            ~ClearDnsCacheCommand() {}
+            void execute()
+            {
+               mStub.doClearDnsCache();
+            }
+
+         private:
+            DnsStub& mStub;
+      };
+
+      void doLogDnsCache();
+
+      class LogDnsCacheCommand : public Command
+      {
+         public:
+            LogDnsCacheCommand(DnsStub& stub)
+               : mStub(stub)
+            {}             
+            ~LogDnsCacheCommand() {}
+            void execute()
+            {
+               mStub.doLogDnsCache();
+            }
+
+         private:
+            DnsStub& mStub;
       };
 
       resip::Fifo<Command> mCommandFifo;
