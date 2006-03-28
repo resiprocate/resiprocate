@@ -586,3 +586,29 @@ DnsStub::doSetEnumSuffixes(const std::vector<Data>& suffixes)
 {
    mEnumSuffixes = suffixes;
 }
+
+void
+DnsStub::clearDnsCache()
+{
+   ClearDnsCacheCommand* command = new ClearDnsCacheCommand(*this);
+   mCommandFifo.add(command);
+}
+
+void
+DnsStub::doClearDnsCache()
+{
+    RRCache::instance()->clearCache();
+}
+
+void
+DnsStub::logDnsCache()
+{
+   LogDnsCacheCommand* command = new LogDnsCacheCommand(*this);
+   mCommandFifo.add(command);
+}
+
+void
+DnsStub::doLogDnsCache()
+{
+    RRCache::instance()->logCache();
+}

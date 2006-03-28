@@ -187,6 +187,12 @@ void RRCache::blacklist(const Data& target,
    (*it)->blacklist(protocol, targetsToBlacklist);
 }
 
+void 
+RRCache::clearCache()
+{
+    cleanup();
+}
+
 void RRCache::touch(RRList* node)
 {
    node->remove();
@@ -228,4 +234,12 @@ void RRCache::purge()
    lst->remove();
    delete *it;
    mRRSet.erase(it);
+}
+
+void RRCache::logCache()
+{
+   for (std::set<RRList*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
+   {
+      (*it)->log();
+   }
 }
