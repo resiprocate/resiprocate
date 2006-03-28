@@ -49,6 +49,7 @@ class RRList : public IntrusiveListElement<RRList*>
       int rrType() const { return mRRType; }
       UInt64 absoluteExpiry() const { return mAbsoluteExpiry; }
       UInt64& absoluteExpiry() { return mAbsoluteExpiry; }
+      void log();
 
    private:
 

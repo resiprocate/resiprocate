@@ -424,6 +424,16 @@ class SipStack
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       /**
+          Clear the DNS Cache
+      */
+      void clearDnsCache();
+
+      /**
+          Log the DNS Cache to WarningLog for Debugging
+      */
+      void logDnsCache();
+
+      /**
           Enable Statistics Manager.  SIP Statistics will be collected and 
           dispatched periodically via a StatisticsMessage.  Note:  By default 
           the Statistics Manager is enabled.
