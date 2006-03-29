@@ -222,6 +222,7 @@ void RRList::log()
          break;
       }
 
+#ifdef USE_IPV6
       case T_AAAA:
       {
          DnsAAAARecord* record = dynamic_cast<DnsAAAARecord*>((*it).record);
@@ -229,6 +230,7 @@ void RRList::log()
          strm << "AAAA(Host): " << record->name() << " -> " << DnsUtil::inet_ntop(record->v6Address());
          break;
       }
+#endif
 
       case T_A:
       {
