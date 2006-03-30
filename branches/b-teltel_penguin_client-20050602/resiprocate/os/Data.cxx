@@ -942,10 +942,19 @@ Data::removeEscapeChar(char escapeChar)
 const char* 
 Data::c_str() const
 {
-   //if (mCapacity > mSize)
-   //{
-   //   const_cast<Data*>(this)->resize(mSize+1,true);
-   //}
+   if (mMine == Share)
+   {
+      if (mSize <= LocalAlloc)
+      {
+         memcpy(const_cast<Data*>(this)->mPreBuffer, mBuf, mSize);
+         const_cast<Data*>(this)->mBuf = (char*)mPreBuffer;
+         const_cast<Data*>(this)->mMine = Borrow;
+      }
+      else
+      {
+         const_cast<Data*>(this)->resize(mSize, true);   
+      }
+   }
    // mostly is zero terminated, but not by DataStream
    mBuf[mSize] = 0;
    return mBuf;
