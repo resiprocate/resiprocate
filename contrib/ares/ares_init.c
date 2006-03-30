@@ -89,6 +89,7 @@ int ares_init(ares_channel *channelptr)
             strcat(w32hostspath, "\\hosts");
          }
       }
+      RegCloseKey(hKey);
   }
 #endif
   return ares_init_options(channelptr, NULL, 0);
