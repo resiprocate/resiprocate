@@ -7,6 +7,12 @@
 
 #include "ares.h"
 
+#ifndef WIN32
+#ifndef __CYGWIN__
+#include <arpa/nameser.h>
+#endif
+#endif
+
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/BaseException.hxx"
