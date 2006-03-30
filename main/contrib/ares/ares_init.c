@@ -124,6 +124,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
 					strcat(w32hostspath, "\\hosts");
 				}
 			}
+         RegCloseKey(hKey);
 		}
 	}
 #endif
