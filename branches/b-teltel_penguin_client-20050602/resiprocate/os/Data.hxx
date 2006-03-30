@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <string>
+#include <stdlib.h>
+#include <string.h>
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -54,7 +56,7 @@ class Data
           
           'Take' means that the Data instance MAY write to the buffer and MUST
           delete the buffer.
-    */
+      */
       enum  ShareEnum {Share, Borrow, Take};
 
       Data(ShareEnum, const char* buffer, int length);
