@@ -571,12 +571,27 @@ Data::Data(bool value)
      mMine(Borrow)
 {}
 
+#ifdef _DEBUG
+int gAvgSize = 0;
+int gCount = 0;
+#endif
 Data::~Data()
 {
    if (mMine == Take)
    {
       delete[] mBuf;
    }
+#ifdef _DEBUG
+   if (mSize)
+   {
+      ++gCount;
+      gAvgSize += mSize;
+      if (gCount % 10000 == 0)
+      {
+         gAvgSize /= 10000;
+      }
+   }
+#endif
 }
 
 bool 
@@ -927,10 +942,10 @@ Data::removeEscapeChar(char escapeChar)
 const char* 
 Data::c_str() const
 {
-   if (mCapacity == mSize)
-   {
-      const_cast<Data*>(this)->resize(mSize+1,true);
-   }
+   //if (mCapacity > mSize)
+   //{
+   //   const_cast<Data*>(this)->resize(mSize+1,true);
+   //}
    // mostly is zero terminated, but not by DataStream
    mBuf[mSize] = 0;
    return mBuf;
