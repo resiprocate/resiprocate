@@ -673,14 +673,14 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       else
       {
          InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
-         mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
+         mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoTransport));
       }
 
    }
    catch (Transport::Exception& )
    {
       InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
-      mStateMacFifo.add(new TransportFailure(msg->getTransactionId()));
+      mStateMacFifo.add(new TransportFailure(msg->getTransactionId(), TransportFailure::NoRoute));
       return;
    }
 }
