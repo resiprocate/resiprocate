@@ -16,16 +16,29 @@ class TransportFailure : public TransactionMessage
 {
    public:
       RESIP_HeapCount(TransportFailure);
-      TransportFailure(const Data& transactionId);
+      enum FailureReason
+      {
+         None = 0, //invalid
+         Failure, 
+         NoTransport,
+         NoRoute,
+         CertNameMismatch,
+         CertValidationFailure
+      };
+
+      TransportFailure(const Data& transactionId, FailureReason f);
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
       
+      FailureReason getFailureReason() const { return mFailureReason; }
+         
       virtual std::ostream& encodeBrief(std::ostream& str) const;
       virtual std::ostream& encode(std::ostream& strm) const;      
       
    private:
       Data mTransactionId;
+      FailureReason mFailureReason;
 };
 
 }

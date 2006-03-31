@@ -63,6 +63,7 @@ class ConnectionBase
       ConnectionBase& operator=(const Connection&);
    protected:
       Tuple mWho;
+      TransportFailure::FailureReason mFailureReason;      
    private:
       SipMessage* mMessage;
       char* mBuffer;

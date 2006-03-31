@@ -4,6 +4,7 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
+#include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
 
 namespace resip
@@ -47,7 +48,10 @@ class Transport
       virtual void buildFdSet( FdSet& fdset) =0;
 
       void connectionTerminated(ConnectionId id);
-      void fail(const Data& tid); // called when transport failed
+            
+         
+      void fail(const Data& tid, TransportFailure::FailureReason reason = TransportFailure::Failure); // called when transport failed
+      
       static void error(int e);
       
       // These methods are used by the TransportSelector

@@ -231,6 +231,8 @@ TlsConnection::checkState()
          
          mState = Broken;
          mBio = 0;
+         //.dcm. -- may not be correct
+         mFailureReason = TransportFailure::CertValidationFailure;
          ErrLog (<< "Couldn't TLS connect");
          return mState;
       }
@@ -262,6 +264,7 @@ TlsConnection::checkState()
                     << "ok=" << ok << " err=" << err << " " << buf );
             mBio = NULL;
             mState = Broken;
+            mFailureReason = TransportFailure::CertValidationFailure;         
             return mState;
       }
    }
@@ -280,6 +283,7 @@ TlsConnection::checkState()
                  << who().getTargetDomain()
                  << "> remote cert domain is <" 
                  << getPeerName() << ">" );
+         mFailureReason = TransportFailure::CertNameMismatch;         
          return mState;
       }
    }

@@ -194,11 +194,11 @@ Transport::connectionTerminated(ConnectionId id)
 }
    
 void
-Transport::fail(const Data& tid)
+Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
 {
    if (!tid.empty())
    {
-      mStateMachineFifo.add(new TransportFailure(tid));
+      mStateMachineFifo.add(new TransportFailure(tid, reason));
    }
 }
 
