@@ -20,6 +20,7 @@ ConnectionBase::connectionStates[ConnectionBase::MAX][32] = { "NewMessage", "Rea
 ConnectionBase::ConnectionBase()
    : mSendPos(0),
      mWho(),
+     mFailureReason(TransportFailure::None),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -33,6 +34,7 @@ ConnectionBase::ConnectionBase()
 ConnectionBase::ConnectionBase(const Tuple& who)
    : mSendPos(0),
      mWho(who),
+     mFailureReason(TransportFailure::None),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -53,7 +55,7 @@ ConnectionBase::~ConnectionBase()
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mWho.transport->fail(sendData->transactionId);
+      mWho.transport->fail(sendData->transactionId, mFailureReason);
       
       delete sendData;
       mOutstandingSends.pop_front();

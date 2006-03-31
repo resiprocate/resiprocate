@@ -2,8 +2,9 @@
 
 using namespace resip;
 
-TransportFailure::TransportFailure(const Data& transactionId)
-   : mTransactionId(transactionId) 
+TransportFailure::TransportFailure(const Data& transactionId, FailureReason f)
+   : mTransactionId(transactionId),
+     mFailureReason(f)
 {
 }
 
