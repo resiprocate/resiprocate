@@ -17,6 +17,7 @@
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
+#include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TuSelector.hxx"
@@ -44,7 +45,8 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mMsgToRetransmit(0),
    mDnsResult(0),
    mId(id),
-   mTransactionUser(tu)
+   mTransactionUser(tu),
+   mFailureReason(TransportFailure::None)
 {
    StackLog (<< "Creating new TransactionState: " << *this);
 }
@@ -432,7 +434,7 @@ TransactionState::processStateless(TransactionMessage* message)
    }
    else if (isTransportError(message))
    {
-      processTransportFailure();
+      processTransportFailure(message);
       
       delete message;
       delete this;
@@ -581,7 +583,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else
@@ -791,7 +793,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else
@@ -901,7 +903,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else
@@ -1153,7 +1155,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
    }
    else if (isTransportError(msg))
    {
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else
@@ -1187,7 +1189,7 @@ TransactionState::processClientStale(TransactionMessage* msg)
    {
       WarningLog (<< "Got a transport error in Stale Client state");
       StackLog (<< *this);
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else
@@ -1232,7 +1234,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
    {
       WarningLog (<< "Got a transport error in Stale Server state");
       StackLog (<< *this);
-      processTransportFailure();
+      processTransportFailure(msg);
       delete msg;
    }
    else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == ACK)
@@ -1277,7 +1279,25 @@ TransactionState::processNoDnsResults()
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
    warning.code() = 499;
-   warning.text() = "No other DNS entries to try";
+   switch(mFailureReason)
+   {
+      warning.text() = "No other DNS entries to try";
+      case TransportFailure::None:
+      case TransportFailure::Failure:
+         break;
+      case TransportFailure::NoTransport:
+         response->header(h_StatusLine).reason() = "No matching transport found";
+         break;
+      case TransportFailure::NoRoute:
+         response->header(h_StatusLine).reason() = "No route to host";
+         break;
+      case TransportFailure::CertNameMismatch:
+         response->header(h_StatusLine).reason() = "Certificate Name Mismatch";
+         break;
+      case TransportFailure::CertValidationFailure:
+         response->header(h_StatusLine).reason() = "Certificate Validation Failure";
+   }
+         
    response->header(h_Warnings).push_back(warning);
 
    sendToTU(response); // !jf! should be 480? 
@@ -1289,11 +1309,18 @@ TransactionState::processNoDnsResults()
 }
 
 void
-TransactionState::processTransportFailure()
+TransactionState::processTransportFailure(TransactionMessage* msg)
 {
+   TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
+   assert(failure);
+   
    InfoLog (<< "Try sending request to a different dns result");
    assert(mMsgToRetransmit);
-
+   if (failure->getFailureReason() > mFailureReason)
+   {
+      mFailureReason = failure->getFailureReason();
+   }
+   
    if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == CANCEL)
    {
       WarningLog (<< "Failed to deliver a CANCEL request");
@@ -1303,6 +1330,7 @@ TransactionState::processTransportFailure()
       // In the case of a client-initiated CANCEL, we don't want to
       // try other transports in the case of transport error as the
       // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+      //?dcm? insepct failure enum?
       SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
       WarningCategory warning;
       warning.hostname() = DnsUtil::getLocalHostName();

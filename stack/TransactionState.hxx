@@ -62,7 +62,7 @@ class TransactionState : public DnsHandler
       void processServerInvite(TransactionMessage* msg);
       void processClientStale(TransactionMessage* msg);
       void processServerStale(TransactionMessage* msg);
-      void processTransportFailure();
+      void processTransportFailure(TransactionMessage* failure);
       void processNoDnsResults();
       void processReliability(TransportType type);
       
@@ -114,7 +114,8 @@ class TransactionState : public DnsHandler
 
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
-      TransactionUser* mTransactionUser;      
+      TransactionUser* mTransactionUser;
+      TransportFailure::FailureReason mFailureReason;      
 
       static unsigned long StatelessIdCounter;
       
