@@ -7,9 +7,9 @@ namespace resip
 typedef enum 
 {
    UNKNOWN_TRANSPORT = 0,
-   UDP,
-   TCP,
    TLS,
+   TCP,
+   UDP,
    SCTP,
    DCCP,
    DTLS,
