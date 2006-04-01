@@ -414,15 +414,17 @@ Dialog::dispatch(const SipMessage& msg)
          break;
          case REFER:
          {
-            if (mInviteSession == 0)
-            {
-               InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
-               SipMessage failure;
-               makeResponse(failure, request, 603);
-               mDum.sendResponse(failure);
-               return;
-            }
-            else if  (!request.exists(h_ReferTo))
+//             if (mInviteSession == 0)
+//             {
+//                InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
+//                SipMessage failure;
+//                makeResponse(failure, request, 603);
+//                mDum.sendResponse(failure);
+//                return;
+//             }
+//             else 
+
+            if  (!request.exists(h_ReferTo))
             {
                InfoLog (<< "Received refer w/out a Refer-To: " << request.brief());
                SipMessage failure;
@@ -434,6 +436,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                if (request.exists(h_ReferSub) && request.header(h_ReferSub).value()=="false")
                {
+                  assert(mInviteSession);
                   mInviteSession->referNoSub(msg);
                }
                else
@@ -452,7 +455,12 @@ Dialog::dispatch(const SipMessage& msg)
                      serverHandle = server->getHandle();
                      server->dispatch(request);
                   }
-                  mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);
+
+                  if (mInviteSession)
+                  {
+                     mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);
+                  }
+                  
                }
             }
          }
@@ -599,9 +607,9 @@ Dialog::dispatch(const SipMessage& msg)
                   }
                   // else no need for action - first Notify will cause onReferAccepted to be called
                }
+               break;
             }
-            break;
-
+            // fall through, out of dialog refer was sent.
          case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();

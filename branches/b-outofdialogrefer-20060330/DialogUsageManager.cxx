@@ -562,6 +562,17 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    return inv;
 }
 
+SharedPtr<SipMessage>
+DialogUsageManager::makeRefer(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, userProfile, referTo), appDs);
+}
+
+SharedPtr<SipMessage>
+DialogUsageManager::makeRefer(const NameAddr& target, const H_ReferTo::Type& referTo, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), referTo), appDs);
+}
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* appDs)
