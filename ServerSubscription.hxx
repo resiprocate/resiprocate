@@ -19,7 +19,7 @@ class ServerSubscription : public BaseSubscription
      
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
-      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> accept(int statusCode = 202);
       SharedPtr<SipMessage> reject(int responseCode);
 
       //used to accept a reresh when there is no useful state to convey to the
