@@ -38,6 +38,7 @@ class ServerSubscriptionHandler
       virtual ~ServerSubscriptionHandler() {}
 
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
+      virtual void onNewSubscriptionFromRefer(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
       virtual void onPublished(ServerSubscriptionHandle associated, 
                                ServerPublicationHandle publication, 
