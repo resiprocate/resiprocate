@@ -482,17 +482,10 @@ Dialog::dispatch(const SipMessage& msg)
 	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
                       ClientSubscription* sub = makeClientSubscription(msg);
                       mClientSubscriptions.push_back(sub);
-			          ClientSubscriptionHandle client = sub->getHandle();				      
-                      sub->dispatch(request);
+			          ClientSubscriptionHandle client = sub->getHandle();
+                      mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
                       mInviteSession->mSentRefer = false;
-                      if (client.isValid())
-                      {
-                         mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
-                      }
-                      else
-                      {
-                         mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
-                      }
+                      sub->dispatch(request);
 				   }
 				   else
 				   {
