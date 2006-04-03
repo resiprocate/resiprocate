@@ -87,17 +87,12 @@ digraph UAC {
   WaitingToOffer -> WaitingToOffer        [ label = "timer::2xx/resend::2xx" ];
   WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
   WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
-  WaitingToOffer -> SentUpdate            [ label = "onTimerNoACK/app::onOfferRejected/send::UPDATE-offer" ];
-  WaitingToOffer -> SentReinvite          [ label = "onTimerNoACK/app::onOfferRejected/send::INVITE-offer" ];
+  WaitingToOffer -> Terminated            [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
   WaitingToOffer -> WaitingToHangup       [ label = "dum::end" ];
 
   WaitingToRequestOffer -> WaitingToRequestOffer [ label = "timer::2xx/resend::2xx" ];
-  WaitingToRequestOffer -> SentUpdate      [ label = "onACK/send::UPDATE-offer" ]; 
-  WaitingToRequestOffer -> SentReinvite    [ label = "onACK/send::INVITE-offer" ]; 
   WaitingToRequestOffer -> SentReinviteNoOffer [ label = "onACK/send::INVITE" ]; 
-  WaitingToRequestOffer -> SentUpdate      [ label = "onTimerNoACK/app::onOfferRejected/send::UPDATE-offer" ];
-  WaitingToRequestOffer -> SentReinvite    [ label = "onTimerNoACK/app::onOfferRejected/send::INVITE-offer" ];
-  WaitingToRequestOffer -> SentReinviteNoOffer [ label = "onTimerNoACK/app::onOfferRejected/send::INVITE" ];
+  WaitingToRequestOffer -> SentReinviteNoOffer [ label = "onTimerNoACK/app::onAckNotReceived/send::INVITE" ];
   WaitingToRequestOffer -> WaitingToHangup [ label = "dum::end" ];
 
   ReceivedReinviteNoOffer -> ReceivedReinviteSentOffer    [ label = "dum::provideOffer/send::200-offer,timer::200I,timer::NoACK" ];
