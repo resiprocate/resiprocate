@@ -200,6 +200,7 @@ InviteSession::isConnected() const
       case ReceivedReinviteNoOffer:
       case Answered:
       case WaitingToOffer:
+      case WaitingToRequestOffer:
          return true;
 
       default:
@@ -280,6 +281,7 @@ InviteSession::requestOffer()
    {
       case Connected:
       case WaitingToRequestOffer:
+      case UAS_WaitingToRequestOffer:
          transition(SentReinviteNoOffer);
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
          mLastLocalSessionModification->setContents(0);		// Clear the SDP contents from the INVITE
@@ -457,8 +459,19 @@ InviteSession::end(EndReason reason)
 
       case Answered:
       case WaitingToOffer:
+      case WaitingToRequestOffer:
       case ReceivedReinviteSentOffer:
-         transition(WaitingToHangup);
+         if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
+         {
+            transition(WaitingToHangup);
+         }
+         else
+         {
+             // ACK has likely timedout - hangup immediately
+             sendBye();
+             transition(Terminated);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+         }
          break;
 
       case ReceivedUpdate:
@@ -788,12 +801,24 @@ InviteSession::dispatch(const DumTimeout& timeout)
                //!dcm! -- should this be onIllegalNegotiation?
                mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
             }
-            else if(mState == WaitingToOffer)
+            else if(mState == WaitingToOffer || 
+                    mState == UAS_WaitingToOffer)
             {
                assert(mProposedLocalSdp.get());
-               //!dcm! -- should this be onIllegalNegotiation?
-               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), 0);
-               provideProposedOffer(); 
+               mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
+               if(!isTerminated())  
+               {
+                  provideProposedOffer(); 
+               }
+            }
+            else if(mState == WaitingToRequestOffer ||
+                    mState == UAS_WaitingToRequestOffer)
+            {
+               mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
+               if(!isTerminated())  
+               {
+                  requestOffer(); 
+               }
             }
             else
             {
@@ -920,8 +945,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdateRejected:
       case On200Update:
-            WarningLog (<< "DUM delivered an UPDATE response in an incorrect state " << endl << msg);
-            assert(0);
+         WarningLog (<< "DUM delivered an UPDATE response in an incorrect state " << endl << msg);
+         assert(0);
          break;
 
       case OnAck:
@@ -1372,7 +1397,6 @@ InviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-      assert(mProposedLocalSdp.get());
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
       requestOffer(); 
    }
