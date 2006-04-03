@@ -73,6 +73,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
       case UAS_SentUpdateAccepted:
@@ -128,6 +129,7 @@ ServerInviteSession::provisional(int code)
          
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_OfferReliable: 
@@ -187,7 +189,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
 
       case UAS_WaitingToOffer:
          InviteSession::provideOffer(offer, level, alternative);
-	 break;
+         break;
 
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
@@ -205,6 +207,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
+      case UAS_WaitingToRequestOffer:
       case UAS_AcceptedWaitingAnswer:
          assert(0);
          break;
@@ -218,6 +221,27 @@ void
 ServerInviteSession::provideOffer(const SdpContents& offer)
 {
    this->provideOffer(offer, mCurrentEncryptionLevel, 0);
+}
+
+void
+ServerInviteSession::requestOffer()
+{
+   InfoLog (<< toData(mState) << ": requestOffer");
+   switch (mState)
+   {
+      case UAS_Accepted:
+         // queue the request to be sent after the ACK is received
+         transition(UAS_WaitingToRequestOffer);
+         break;
+
+      case UAS_WaitingToRequestOffer:
+         InviteSession::requestOffer();
+         break;
+
+      default:
+         InviteSession::requestOffer();
+         break;
+   }
 }
 
 void 
@@ -258,6 +282,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
@@ -328,6 +353,7 @@ ServerInviteSession::end(EndReason reason)
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
       case UAS_SentUpdateAccepted:
       case UAS_AcceptedWaitingAnswer:
          if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
@@ -396,6 +422,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -441,6 +468,7 @@ ServerInviteSession::accept(int code)
          
       case UAS_Accepted:
       case UAS_WaitingToOffer:
+      case UAS_WaitingToRequestOffer:
          assert(0);  // Already Accepted
          break;
          
@@ -508,6 +536,9 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_WaitingToOffer:
          dispatchWaitingToOffer(msg);
          break;
+      case UAS_WaitingToRequestOffer:
+         dispatchWaitingToRequestOffer(msg);
+         break;
       case UAS_AcceptedWaitingAnswer:
          dispatchAcceptedWaitingAnswer(msg);
          break;         
@@ -558,7 +589,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
       if (mCurrentRetransmit1xx && m1xx->header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
          send(m1xx);
-		 startRetransmit1xxTimer();
+         startRetransmit1xxTimer();
       }
    }
    else
@@ -707,7 +738,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-   InfoLog (<< "dispatchAccepted: " << msg.brief());
+   InfoLog (<< "dispatchWaitingToOffer: " << msg.brief());
    
    switch (toEvent(msg, sdp.get()))
    {
@@ -744,8 +775,63 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          send(b200);
 
          transition(Terminated);
-    	 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
-    	 mDum.destroy(this);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         mDum.destroy(this);
+         break;
+      }
+              
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   InfoLog (<< "dispatchWaitingToRequestOffer: " << msg.brief());
+   
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnAck:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         requestOffer(); 
+         break;
+      }
+
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
+         break;
+      }
+      
+      case OnCancel:
+      {
+         // Cancel and 200 crossed
+         SharedPtr<SipMessage> c200(new SipMessage);
+         mDialog.makeResponse(*c200, msg, 200);
+         send(c200);
+         break;
+      }
+
+      case OnBye:
+      {
+         SharedPtr<SipMessage> b200(new SipMessage);
+         mDialog.makeResponse(*b200, msg, 200);
+         send(b200);
+
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         mDum.destroy(this);
          break;
       }
               
