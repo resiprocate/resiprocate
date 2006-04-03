@@ -38,6 +38,7 @@ digraph UAS {
   Accepted -> Terminated                                [ label = "onBye/app::onTerminated,send::200B" ]; 
   Accepted -> WaitingToHangup                           [ label = "dum::end" ];
   Accepted -> WaitingToOffer                            [ label = "dum::provideOffer/saveOffer" ];
+  Accepted -> WaitingToRequestOffer                     [ label = "dum::requestOffer/saveOffer" ];
 
   WaitingToOffer -> SentUpdate                          [ label = "onACK/send::UPDATE-offer" ]; 
   WaitingToOffer -> SentReinvite                        [ label = "onACK/send::INVITE-offer" ]; 
@@ -47,6 +48,14 @@ digraph UAS {
   WaitingToOffer -> Terminated                          [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
   WaitingToOffer -> Terminated                          [ label = "onBye/app::onTerminated,send::200B" ]; 
   WaitingToOffer -> WaitingToHangup                     [ label = "dum::end" ];
+
+  WaitingToRequestOffer -> SentReinviteNoOffer          [ label = "onACK/send::INVITE" ]; 
+  WaitingToRequestOffer -> WaitingToRequestOffer        [ label = "onCANCEL/send::200C" ]; 
+  WaitingToRequestOffer -> WaitingToRequestOffer        [ label = "onTimer2xx/resend::2XXI" ];
+  WaitingToRequestOffer -> Terminated                   [ label = "onACK-answer/send::BYE" ];
+  WaitingToRequestOffer -> Terminated                   [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
+  WaitingToRequestOffer -> Terminated                   [ label = "onBye/app::onTerminated,send::200B" ]; 
+  WaitingToRequestOffer -> WaitingToHangup              [ label = "dum::end" ];
 
   EarlyOffer -> EarlyOffer                              [ label = "onTimer1xx/resend::1xx" ];
   EarlyOffer -> EarlyOffer                              [ label = "dum::provisional/send::1xx,timer::1xx" ];

@@ -160,6 +160,7 @@ class InviteSession : public DialogUsage
          UAS_EarlyProvidedOffer, 
          UAS_Accepted, 
          UAS_WaitingToOffer, 
+         UAS_WaitingToRequestOffer, 
 
          UAS_AcceptedWaitingAnswer, 
          UAS_OfferReliable,

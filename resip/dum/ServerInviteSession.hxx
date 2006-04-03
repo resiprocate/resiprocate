@@ -28,6 +28,10 @@ class ServerInviteSession: public InviteSession
       virtual void provideOffer(const SdpContents& offer);
       virtual void provideOffer(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
 
+      /** Called to request that the far end provide an offer.  This will cause a 
+          reinvite with no sdp to be sent.  */
+      virtual void requestOffer();
+
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
@@ -54,6 +58,7 @@ class ServerInviteSession: public InviteSession
       void dispatchOfferOrEarly(const SipMessage& msg);
       void dispatchAccepted(const SipMessage& msg);
       void dispatchWaitingToOffer(const SipMessage& msg);
+      void dispatchWaitingToRequestOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
       void dispatchOfferReliable(const SipMessage& msg);
       void dispatchNoOfferReliable(const SipMessage& msg);
