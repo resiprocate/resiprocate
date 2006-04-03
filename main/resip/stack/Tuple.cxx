@@ -482,9 +482,9 @@ HashValueImp(resip::Tuple, data.hash());
 static const Data transportNames[MAX_TRANSPORT] =
 {
    Data("UNKNOWN_TRANSPORT"),
-   Data("UDP"),
-   Data("TCP"),
    Data("TLS"),
+   Data("TCP"),
+   Data("UDP"),
    Data("SCTP"),
    Data("DCCP"),
    Data("DTLS")
