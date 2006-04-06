@@ -352,7 +352,6 @@ TransactionState::processStateless(TransactionMessage* message)
    {
       InfoLog (<< "Received message from wire on a stateless transaction");
       StackLog (<< *message);
-      //assert(0);
       sendToTU(sip);
    }
    else if (isTransportError(message))
@@ -533,7 +532,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             break;
             
          case CANCEL:
-            assert(0);
+            WarningLog(<< "received a weird CANCEL request: " << *msg);
+            delete msg;
             break;
 
          default:
@@ -637,16 +637,16 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      /* This should never Happen if it happens we should have a plan
                         what to do here?? for now assert will work
                      */
-                     CritLog(  << "State invalid");
-                     // !ah! syslog
-                     assert(0);
+                     CritLog(<< "State invalid");
+		     delete msg;
                   }
                }
             }
             break;
             
          case CANCEL:
-            assert(0);
+            WarningLog(<< "received a weird CANCEL response: " << *msg);
+            delete msg;
             break;
 
          default:
@@ -748,7 +748,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
                   << msg->brief()
                   << " state=" << *this);
          assert(0);
-         return;
+         delete msg;
       }
    }
    else if (isResponse(msg) && isFromTU(msg))
@@ -799,7 +799,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
                         << msg->brief()
                         << " state=" << *this);
                assert(0);
-               return;
+               delete msg;
             }
          }
       }
@@ -897,8 +897,9 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             break;
 
          case CANCEL:
-            assert(0);
-            break;
+            WarningLog(<< "received a weird CANCEL request: " << *msg);
+            delete msg;
+	    break;
 
          default:
             //StackLog (<< "Received unexpected request. Ignoring message");
@@ -1009,7 +1010,8 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             break;
             
          case CANCEL:
-            assert(0);
+            WarningLog(<< "received a weird CANCEL response: " << *msg);
+            delete msg;
             break;
             
          default:
