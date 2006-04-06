@@ -41,6 +41,7 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
 {
    makeInitialRequest(target, REFER);
    mLastRequest->header(h_ReferTo) = referTo;
+   mLastRequest->header(h_Event).value() = "refer";
 }
 
 bool 
