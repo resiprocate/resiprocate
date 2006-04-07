@@ -19,6 +19,7 @@
 #include "resip/dum/ServerOutOfDialogReq.hxx"
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/DumHelper.hxx"
+#include "resip/dum/SubscriptionCreator.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -453,6 +454,25 @@ DialogSet::dispatch(const SipMessage& msg)
             break;
             
          case REFER:
+            if (request.header(h_To).exists(p_tag) || findDialog(request))
+            {
+               DebugLog(<< "in dialog refer request");
+               break; // in dialog
+            }
+            else if (!request.exists(h_ReferSub) || request.header(h_ReferSub).value() == "true")
+            {
+               DebugLog(<< "out of dialog refer request with refer sub");
+               break; // dialog creating
+            }
+            else // out of dialog & noReferSub=true
+            {
+               DebugLog(<< "out of dialog refer request with norefersub");
+               assert(mServerOutOfDialogRequest == 0);
+               mServerOutOfDialogRequest = makeServerOutOfDialog(request);
+               mServerOutOfDialogRequest->dispatch(request);
+               return;
+            }
+            break;            
          case NOTIFY:
 
             // !jf! there shouldn't be a dialogset for ServerOutOfDialogReq
@@ -637,7 +657,11 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }
-         case REFER:  
+         case REFER:
+            if (dynamic_cast<SubscriptionCreator*>(getCreator()))
+            {
+               break;
+            }
          case NOTIFY:
             if (dialog)
             {

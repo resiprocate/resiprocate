@@ -1,3 +1,4 @@
+#include "resip/dum/AppDialog.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ServerSubscription.hxx"
@@ -217,16 +218,30 @@ ServerSubscription::dispatch(const SipMessage& msg)
          send(reject(400));
          return;
       }
+
+      InviteSessionHandle invSession;
+      if (getAppDialog().isValid())
+      {
+         invSession = getAppDialog()->getInviteSession();
+      }
+
       if (mExpires == 0)
       {
          /* This is to handle the case where mExpires is zero because the client
             is attempting to poll.  In order for polling to work, the subscription
             handler needs to get the onNewSubscription call. .mjf.
           */
-         if (mSubscriptionState == Invalid && mEventType != "refer")
+         if (mSubscriptionState == Invalid)
          {
-             mSubscriptionState = Terminated;
-             handler->onNewSubscription(getHandle(), msg);
+            mSubscriptionState = Terminated;
+            if (mEventType != "refer" )
+            {
+               handler->onNewSubscription(getHandle(), msg);
+            }
+            else if (!invSession.isValid())
+            {
+               handler->onNewSubscriptionFromRefer(getHandle(), msg);
+            }
          }
 
          makeNotifyExpires();
@@ -244,11 +259,18 @@ ServerSubscription::dispatch(const SipMessage& msg)
          mSubscriptionState = Init;
          if (mEventType != "refer")
          {
+            DebugLog(<< "onNewSubscription called");
             handler->onNewSubscription(getHandle(), msg);
+         }
+         else if (!invSession.isValid())
+         {
+            DebugLog(<< "onNewSubscriptionFromRefer called");
+            handler->onNewSubscriptionFromRefer(getHandle(), msg);
          }
       }
       else
       {
+         DebugLog(<< "onRefresh called");
          handler->onRefresh(getHandle(), msg);            
       }
    }
