@@ -1,3 +1,4 @@
+
 #include "resip/dum/DefaultServerReferHandler.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/Logger.hxx"
@@ -8,6 +9,10 @@ using namespace resip;
 
 void 
 DefaultServerReferHandler::onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)
+{}
+
+void 
+DefaultServerReferHandler::onNewSubscriptionFromRefer(ServerSubscriptionHandle, const SipMessage& sub)
 {}
 
 void 
