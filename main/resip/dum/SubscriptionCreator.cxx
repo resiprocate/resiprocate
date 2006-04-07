@@ -32,6 +32,18 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
    mLastRequest->header(h_Expires).value() = subscriptionTime;
 }
 
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum,
+                                         const NameAddr& target,
+                                         SharedPtr<UserProfile> userProfile,
+                                         const H_ReferTo::Type& referTo)
+   : BaseCreator(dum, userProfile),
+     mRefreshInterval(-1)
+{
+   makeInitialRequest(target, REFER);
+   mLastRequest->header(h_ReferTo) = referTo;
+   mLastRequest->header(h_Event).value() = "refer";
+}
+
 bool 
 SubscriptionCreator::hasRefreshInterval() const
 {

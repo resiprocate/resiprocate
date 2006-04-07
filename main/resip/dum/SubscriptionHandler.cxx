@@ -74,6 +74,11 @@ ServerSubscriptionHandler::onReadyToSend(ServerSubscriptionHandle h, SipMessage&
    // default is to do nothing. this is for adornment   
 }
 
+void
+ServerSubscriptionHandler::onNewSubscriptionFromRefer(ServerSubscriptionHandle, const SipMessage& sub)
+{
+}
+
 
 
 
