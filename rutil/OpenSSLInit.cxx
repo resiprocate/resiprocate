@@ -1,10 +1,9 @@
-#ifdef USE_SSL
-
 #include "rutil/OpenSSLInit.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
-
 #include "rutil/Logger.hxx"
+
+#ifdef USE_SSL
 
 #include <openssl/e_os2.h>
 #include <openssl/rand.h>
