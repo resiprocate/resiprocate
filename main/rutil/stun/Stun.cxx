@@ -2005,7 +2005,7 @@ stunGetUserNameAndPassword(  const StunAddress4& dest,
 }
 
 
-void 
+bool 
 stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
 { 
    assert( dest.addr != 0 );
@@ -2022,6 +2022,10 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
       }
    }
    resip::Socket myFd = openPort(port,interfaceIp,verbose);
+
+   if (myFd == INVALID_SOCKET)
+	   return false;
+
 	
    StunAtrString username;
    StunAtrString password;
@@ -2039,16 +2043,17 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
    int msgLen = STUN_MAX_MESSAGE_SIZE;
 	
    StunAddress4 from;
-   getMessage( myFd,
-               msg,
-               &msgLen,
-               &from.addr,
-               &from.port,verbose );
+   if (!getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose))
+   {
+	   closesocket(myFd);
+	   return false;
+   }
 	
    StunMessage resp;
    memset(&resp, 0, sizeof(StunMessage));
 	
    if ( verbose ) clog << "Got a response" << endl;
+
    bool ok = stunParseMessage( msg,msgLen, resp,verbose );
 	
    if ( verbose )
@@ -2065,6 +2070,9 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
       sAddr->port = resp.mappedAddress.ipv4.port;
       sAddr->addr = resp.mappedAddress.ipv4.addr;
    }
+
+   closesocket(myFd);
+   return ok;
 }
 
 
