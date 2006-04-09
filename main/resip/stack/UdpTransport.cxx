@@ -46,6 +46,8 @@ UdpTransport::~UdpTransport()
 void 
 UdpTransport::process(FdSet& fdset)
 {
+	resip::Lock lock(myMutex);
+
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
@@ -135,8 +137,26 @@ UdpTransport::process(FdSet& fdset)
          StackLog(<<"Throwing away incoming firewall keep-alive");
          return;
       }
+
+      // this must be a STUN response (or garbage)
+      if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
+      {
+	     StunMessage resp;
+	     memset(&resp, 0, sizeof(StunMessage));
+		
+	     if (stunParseMessage(buffer, len, resp, false))
+		 {
+			 //mStunMappedAddress.setPort( resp.mappedAddress.ipv4.port);
+			 in_addr sin_addr;
+			 sin_addr.S_un.S_addr = resp.mappedAddress.ipv4.addr;
+			 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+			 mStunSuccess = true;
+		 }
+		 return;
+	  }
+
       // this must be a STUN request (or garbage)
-      if (buffer[0] == 0 || buffer[0] == 1 && ipVersion() == V4)
+      if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
       {
          bool changePort = false;
          bool changeIp = false;
@@ -267,6 +287,51 @@ UdpTransport::buildFdSet( FdSet& fdset )
      fdset.setWrite(mFd);
    }
 }
+
+bool 
+UdpTransport::stunSendTest(const Tuple&  dest)
+{
+   resip::Lock lock(myMutex);
+
+   bool changePort=false;
+   bool changeIP=false;
+
+   StunAtrString username;
+   StunAtrString password;
+
+   username.sizeValue = 0;
+   password.sizeValue = 0;
+	
+   StunMessage req;
+   memset(&req, 0, sizeof(StunMessage));
+	
+   stunBuildReqSimple(&req, username, changePort , changeIP , 1);
+	
+   char* buf = new char[STUN_MAX_MESSAGE_SIZE];
+   int len = STUN_MAX_MESSAGE_SIZE;
+	
+   int rlen = stunEncodeMessage(req, buf, len, password, false);
+	
+   SendData* stunRequest = new SendData(dest, buf, rlen);
+   mTxFifo.add(stunRequest);
+
+   mStunSuccess = false;
+
+   return true;
+}
+
+bool
+UdpTransport::stunResult(Tuple& mappedAddress)
+{
+	resip::Lock lock(myMutex);
+
+	if (mStunSuccess)
+	{
+		mappedAddress = mStunMappedAddress;
+	}
+	return mStunSuccess;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

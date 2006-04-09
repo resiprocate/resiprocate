@@ -30,8 +30,15 @@ class UdpTransport : public InternalTransport
 
       static const int MaxBufferSize = 8192;
 
+	  // STUN client functionality
+	  bool stunSendTest(const Tuple& dest);
+	  bool stunResult(Tuple& mappedAddress); 
+
    private:
       MsgHeaderScanner mMsgHeaderScanner;
+	  mutable resip::Mutex  myMutex;
+	  Tuple mStunMappedAddress;
+	  bool mStunSuccess;
 };
 
 }
