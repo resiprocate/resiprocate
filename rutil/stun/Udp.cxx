@@ -73,11 +73,13 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
          case 0:
          {
             cerr << "Could not bind socket" << endl;
+			closesocket(fd);
             return INVALID_SOCKET;
          }
          case EADDRINUSE:
          {
             cerr << "Port " << port << " for receiving UDP is in use" << endl;
+			closesocket(fd);
             return INVALID_SOCKET;
          }
          break;
@@ -87,6 +89,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
             {
                cerr << "Cannot assign requested address" << endl;
             }
+			closesocket(fd);
             return INVALID_SOCKET;
          }
          break;
@@ -94,6 +97,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
          {
             cerr << "Could not bind UDP receive port"
                  << "Error=" << e << " " << strerror(e) << endl;
+			closesocket(fd);
             return INVALID_SOCKET;
          }
          break;
