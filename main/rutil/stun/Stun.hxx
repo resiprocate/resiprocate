@@ -355,7 +355,7 @@ stunServerProcess(StunServerInfo& info, bool verbose);
 int 
 stunFindLocalInterfaces(UInt32* addresses, int maxSize );
 
-void 
+bool 
 stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0 );
 
 NatType
