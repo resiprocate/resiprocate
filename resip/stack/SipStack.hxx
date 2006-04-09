@@ -97,7 +97,7 @@ class SipStack
 
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
       */      
-      void addTransport( TransportType protocol,
+      Transport* addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
                          StunSetting stun=StunDisabled,
