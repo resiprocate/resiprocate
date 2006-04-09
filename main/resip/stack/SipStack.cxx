@@ -100,7 +100,7 @@ SipStack::shutdown()
    mTransactionController.shutdown();
 }
 
-void
+Transport*
 SipStack::addTransport( TransportType protocol,
                         int port, 
                         IpVersion version,
@@ -165,6 +165,8 @@ SipStack::addTransport( TransportType protocol,
       throw;
    }
    addTransport(std::auto_ptr<Transport>(transport));   
+
+   return (Transport*)transport;
 }
 
 void 
