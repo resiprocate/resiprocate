@@ -12,7 +12,7 @@
 #if !defined (WIN32)
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#if defined(TARGET_OS_MAC) && !defined(s6_addr16)
+#if defined(__APPLE__) && !defined(s6_addr16)
 #define s6_addr16 __u6_addr.__u6_addr16
 #endif
 #endif
