@@ -2045,7 +2045,11 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
    StunAddress4 from;
    if (!getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose))
    {
+#if defined(__APPLE__)
+      close(myFd);
+#else
 	   closesocket(myFd);
+#endif
 	   return false;
    }
 	
@@ -2071,7 +2075,11 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
       sAddr->addr = resp.mappedAddress.ipv4.addr;
    }
 
+#if defined(__APPLE__)
+   close(myFd);
+#else
    closesocket(myFd);
+#endif
    return ok;
 }
 
