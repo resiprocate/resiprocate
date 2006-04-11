@@ -617,8 +617,7 @@ Uri::getAorNoPort() const
    checkParsed();
    getAor();
 
-   Data aor;
-   aor.reserve(mUser.size() + mCanonicalHost.size() + 2 /* for @ */ );
+   Data aor(mUser.size() + mCanonicalHost.size() + 2 /* for @ */, true);
    
    if (mUser.empty())
    {
