@@ -21,7 +21,7 @@ using namespace std;
 
 #include <iostream>
 
-static bool invokeOpenSSLInit = OpenSSLInit::init();
+static bool invokeOpenSSLInit = OpenSSLInit::init(); //.dcm. - only in hxx
 Mutex* OpenSSLInit::mMutexes;
 
 static bool openSSLInitInvoked = false;
