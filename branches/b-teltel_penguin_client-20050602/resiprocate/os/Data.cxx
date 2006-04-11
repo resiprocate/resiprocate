@@ -178,16 +178,26 @@ Data::init()
 
 Data::Data() 
    : mSize(0),
+#ifndef COMPACT_DATA
      mBuf(mPreBuffer),
      mCapacity(LocalAlloc),
      mMine(Borrow)
+#else
+     mBuf(0),
+     mCapacity(0),
+     mMine(Take)
+#endif
+     
 {
+#ifndef COMPACT_DATA
    mBuf[mSize] = 0;
+#endif
 }
 
 // pre-allocate capacity
 Data::Data(int capacity, bool) 
    : mSize(0),
+#ifndef COMPACT_DATA
      mBuf(capacity > LocalAlloc 
           ? new char[capacity + 1]
           : mPreBuffer),
@@ -195,6 +205,11 @@ Data::Data(int capacity, bool)
                ? capacity
                : LocalAlloc),
      mMine(capacity > LocalAlloc ? Take : Borrow)
+#else
+     mBuf( new char[capacity + 1]),
+     mCapacity(capacity),
+     mMine(Take)
+#endif
 {
    assert( capacity >= 0 );
    mBuf[mSize] = 0;
@@ -202,6 +217,7 @@ Data::Data(int capacity, bool)
 
 Data::Data(const char* str, int length) 
    : mSize(length),
+#ifndef COMPACT_DATA
      mBuf(mSize > LocalAlloc 
           ? new char[mSize + 1]
           : mPreBuffer),
@@ -209,17 +225,24 @@ Data::Data(const char* str, int length)
                ? mSize
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
+#endif
 {
-   if (mSize > 0)
+   if (mBuf)
    {
       assert(str);
-      memcpy(mBuf, str, mSize);
+      memcpy(mBuf, str, mSize); 
+      mBuf[mSize]=0;
    }
-   mBuf[mSize]=0;
+
 }
 
 Data::Data(const unsigned char* str, int length) 
    : mSize(length),
+#ifndef COMPACT_DATA
      mBuf(mSize > LocalAlloc 
           ? new char[mSize + 1]
           : mPreBuffer),
@@ -227,13 +250,18 @@ Data::Data(const unsigned char* str, int length)
                ? mSize
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
+#endif
 {
-   if (mSize > 0)
+   if (mBuf)
    {
       assert(str);
-      memcpy(mBuf, str, mSize);
+      memcpy(mBuf, str, mSize); 
+      mBuf[mSize]=0;
    }
-   mBuf[mSize]=0;
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -281,6 +309,7 @@ Data::Data(ShareEnum se, const Data& staticData)
 
 Data::Data(const char* str) 
    : mSize(str ? strlen(str) : 0),
+#ifndef COMPACT_DATA
      mBuf(mSize > LocalAlloc
           ? new char[mSize + 1]
           : mPreBuffer),
@@ -288,6 +317,11 @@ Data::Data(const char* str)
                ? mSize
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
+#endif
 {
    if (str)
    {
@@ -301,6 +335,7 @@ Data::Data(const char* str)
 
 Data::Data(const string& str)
    : mSize(str.size()),
+#ifndef COMPACT_DATA
      mBuf(mSize > LocalAlloc
           ? new char[mSize + 1]
           : mPreBuffer),
@@ -308,12 +343,25 @@ Data::Data(const string& str)
                ? mSize
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
+#endif
 {
-   memcpy(mBuf, str.c_str(), mSize + 1);
+   if (!str.empty())
+   {
+      memcpy(mBuf, str.c_str(), mSize + 1);
+   }
+   else
+   {
+      mBuf[mSize] = 0;
+   }
 }
 
 Data::Data(const Data& data) 
    : mSize(data.mSize),
+#ifndef COMPACT_DATA
      mBuf(mSize > LocalAlloc
           ? new char[mSize + 1]
           : mPreBuffer),
@@ -321,12 +369,20 @@ Data::Data(const Data& data)
                ? mSize
                : LocalAlloc),
      mMine(mSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
+#endif
 {
-   if (mSize)
+   if (mBuf && data.mBuf)
    {
-      memcpy(mBuf, data.mBuf, mSize);
+      memcpy(mBuf, data.mBuf, mSize+1);
    }
-   mBuf[mSize] = 0;
+   else
+   {
+      mBuf[mSize] = 0;
+   }
 }
 
 // -2147483646
@@ -334,6 +390,7 @@ static const int IntMaxSize = 12;
 
 Data::Data(int val)
    : mSize(0),
+#ifndef COMPACT_DATA
      mBuf(IntMaxSize > LocalAlloc 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
@@ -341,6 +398,11 @@ Data::Data(int val)
                ? IntMaxSize
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[IntMaxSize + 1]),
+     mCapacity(IntMaxSize),
+     mMine(Take)
+#endif
 {
    if (val == 0)
    {
@@ -390,6 +452,7 @@ Data::Data(int val)
 static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
 Data::Data(unsigned long value)
    : mSize(0),
+#ifndef COMPACT_DATA
      mBuf(MaxLongSize > LocalAlloc 
           ? new char[MaxLongSize + 1]
           : mPreBuffer),
@@ -397,6 +460,11 @@ Data::Data(unsigned long value)
                ? MaxLongSize
                : LocalAlloc),
      mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[MaxLongSize + 1]),
+     mCapacity(MaxLongSize),
+     mMine(Take)
+#endif
 {
    if (value == 0)
    {
@@ -430,6 +498,7 @@ static const int DoubleMaxPrecision = 10;
 static const int DoubleMaxSize = MaxLongSize + DoubleMaxPrecision;
 Data::Data(double value, int precision)
    : mSize(0),
+#ifndef COMPACT_DATA
      mBuf(DoubleMaxSize + precision > LocalAlloc 
           ? new char[DoubleMaxSize + precision + 1]
           : mPreBuffer),
@@ -437,6 +506,11 @@ Data::Data(double value, int precision)
                ? DoubleMaxSize + precision
                : LocalAlloc),
      mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[DoubleMaxSize + 1]),
+     mCapacity(DoubleMaxSize),
+     mMine(Take)
+#endif
 {
    assert(precision >= 0);
    assert(precision < DoubleMaxPrecision);
@@ -513,13 +587,19 @@ Data::Data(double value, int precision)
 
 Data::Data(unsigned int value)
    : mSize(0),
-     mBuf(IntMaxSize > LocalAlloc 
+#ifndef COMPACT_DATA
+   mBuf(IntMaxSize > LocalAlloc 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
      mCapacity(IntMaxSize > LocalAlloc
                ? IntMaxSize
                : LocalAlloc),
      mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[IntMaxSize + 1]),
+     mCapacity(IntMaxSize),
+     mMine(Take)
+#endif
 {
    if (value == 0)
    {
@@ -552,6 +632,7 @@ Data::Data(unsigned int value)
 static const int CharMaxSize = 1;
 Data::Data(char c)
    : mSize(1),
+#ifndef COMPACT_DATA
      mBuf(CharMaxSize > LocalAlloc 
           ? new char[CharMaxSize + 1]
           : mPreBuffer),
@@ -559,6 +640,11 @@ Data::Data(char c)
                ? CharMaxSize
                : LocalAlloc),
      mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
+#else
+     mBuf(new char[CharMaxSize + 1]),
+     mCapacity(CharMaxSize),
+     mMine(Take)
+#endif
 {
    mBuf[0] = c;
    mBuf[1] = 0;
@@ -601,6 +687,10 @@ Data::operator==(const Data& rhs) const
    {
       return false;
    }
+   else if (mSize == 0 && mSize == rhs.mSize)
+   {
+      return true;
+   }
    return memcmp(mBuf, rhs.mBuf, mSize) == 0;
 }
 
@@ -608,33 +698,52 @@ bool
 Data::operator==(const char* rhs) const
 {
    assert(rhs); // .dlb. not consistent with constructor
-   if (memcmp(mBuf, rhs, mSize) != 0)
+   if (rhs)
    {
-      return false;
+      int rhsLen = strlen(rhs);
+      if (rhsLen != mSize)
+      {
+         return false;
+      }
+      else if (mSize == 0 && mSize == rhsLen)
+      {
+         return true;
+      }
+      return (memcmp(mBuf, rhs, mSize) == 0);
    }
-   else
-   {
-      // make sure the string terminates at size
-      return rhs[mSize] == 0;
-   }
+   return false;
 }
 
 bool
 Data::operator<(const Data& rhs) const
 {
-   int res = memcmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
+   if (mBuf)
+   {
+      int res = memcmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
 
-   if (res < 0)
-   {
-      return true;
-   }
-   else if (res > 0)
-   {
-      return false;
+      if (res < 0)
+      {
+         return true;
+      }
+      else if (res > 0)
+      {
+         return false;
+      }
+      else
+      {
+         return (mSize < rhs.mSize);
+      }
    }
    else
    {
-      return (mSize < rhs.mSize);
+      if (rhs.mSize == 0)
+      {
+         return false;
+      }
+      else
+      {
+         return true;
+      }
    }
 }
 
@@ -648,20 +757,27 @@ bool
 Data::operator<(const char* rhs) const
 {
    assert(rhs);
-   size_type l = strlen(rhs);
-   int res = memcmp(mBuf, rhs, resipMin(mSize, l));
+   if (mBuf)
+   {
+      size_type l = strlen(rhs);
+      int res = memcmp(mBuf, rhs, resipMin(mSize, l));
 
-   if (res < 0)
-   {
-      return true;
-   }
-   else if (res > 0)
-   {
-      return false;
+      if (res < 0)
+      {
+         return true;
+      }
+      else if (res > 0)
+      {
+         return false;
+      }
+      else
+      {
+         return (mSize < l);
+      }
    }
    else
    {
-      return (mSize < l);
+      return false;
    }
 }
 
@@ -698,8 +814,6 @@ Data::operator>=(const char* rhs) const
 Data& 
 Data::operator=(const Data& data)
 {
-   assert(mBuf);
-   
    if (&data != this)
    {
       if (mMine == Share)
@@ -716,11 +830,12 @@ Data::operator=(const Data& data)
       
       mSize = data.mSize;
       // could overlap!
-      if (mSize > 0)
+      if (mBuf && mSize > 0)
       {
          memmove(mBuf, data.mBuf, mSize);
+         mBuf[mSize] = 0;
       }
-      mBuf[mSize] = 0;
+      
    }
    return *this;
 }
@@ -741,13 +856,43 @@ Data
 Data::operator+(const Data& data) const
 {
    Data tmp(mSize + data.mSize, true);
-   tmp.mSize = mSize + data.mSize;
-   tmp.mCapacity = tmp.mSize;
-   memcpy(tmp.mBuf, mBuf, mSize);
-   memcpy(tmp.mBuf + mSize, data.mBuf, data.mSize);
-   tmp.mBuf[tmp.mSize] = 0;
+   return tmp.append(mBuf, mSize).append(data.mBuf, data.mSize);
+}
 
-   return tmp;
+Data
+Data::operator+(char c) const
+{
+   if (c != 0)
+   {
+      Data tmp(mSize + 1, true);
+      tmp.append(mBuf, mSize);
+      tmp.mSize = mSize + 1;
+      tmp.mBuf[mSize] = c;
+      tmp.mBuf[mSize+1] = 0;
+      return tmp;
+   }
+   else
+   {
+      return *this;
+   }
+   
+}
+
+Data 
+Data::operator+(const char* str) const
+{
+   if (str)
+   {
+      size_t l = strlen(str);
+      if (l > 0)
+      {
+         Data tmp(mSize + l, true);
+         return tmp.append(mBuf, mSize).append(str, l);
+      }
+   }
+
+   return *this;
+
 }
 
 Data& 
@@ -770,20 +915,21 @@ Data::operator^=(const Data& rhs)
    {
       resize(rhs.mSize, true);
    }
-   if (mSize < rhs.mSize)
+   if (mSize < rhs.mSize && mBuf)
    {
       memset(mBuf+mSize, 0, mCapacity - mSize);
    }
-
-   char* c1 = mBuf;
-   char* c2 = rhs.mBuf;
-   char* end = c2 + rhs.mSize;
-   while (c2 != end)
+   if (mBuf) // rhs is also empty
    {
-      *c1++ ^= *c2++;
+      char* c1 = mBuf;
+      char* c2 = rhs.mBuf;
+      char* end = c2 + rhs.mSize;
+      while (c2 != end)
+      {
+         *c1++ ^= *c2++;
+      }
+      mSize = resipMax(mSize, rhs.mSize);
    }
-   mSize = resipMax(mSize, rhs.mSize);
-   
    return *this;
 }
 
@@ -798,6 +944,13 @@ Data::operator[](size_type p)
 {
    assert(p < mSize);
    own();
+   return mBuf[p];
+}
+
+char 
+Data::operator[](size_type p) const
+{
+   assert(p < mSize);
    return mBuf[p];
 }
 
@@ -821,50 +974,33 @@ Data::at(size_type p)
    return mBuf[p];
 }
 
-char 
-Data::operator[](size_type p) const
-{
-   assert(p < mSize);
-   return mBuf[p];
-}
-
 Data& 
 Data::operator=(const char* str)
 {
-   assert(str);
-   size_type l = strlen(str);
+   if (str)
+   {
+      size_type l = strlen(str);
 
-   if (mMine == Share)
-   {
-      resize(l, false);
-   }
-   else
-   {
-      if (l > mCapacity)
+      if (mMine == Share)
       {
          resize(l, false);
       }
+      else
+      {
+         if (l > mCapacity)
+         {
+            resize(l, false);
+         }
+      }
+      if (mBuf)
+      {
+         mSize = l;
+         // could conceivably overlap
+         memmove(mBuf, str, mSize+1);
+         mBuf[mSize] = 0;
+      }
    }
-      
-   mSize = l;
-   // could conceivably overlap
-   memmove(mBuf, str, mSize+1);
-
    return *this;
-}
-
-Data 
-Data::operator+(const char* str) const
-{
-   assert(str);
-   size_t l = strlen(str);
-   Data tmp(mSize + l, true);
-   tmp.mSize = mSize + l;
-   tmp.mCapacity = tmp.mSize;
-   memcpy(tmp.mBuf, mBuf, mSize);
-   memcpy(tmp.mBuf + mSize, str, l+1);
-
-   return tmp;
 }
 
 void
@@ -879,11 +1015,14 @@ Data::reserve(size_type len)
 Data&
 Data::append(const char* str, size_type len)
 {
-   assert(str);
    if (mCapacity < mSize + len)
    {
       // .dlb. pad for future growth?
+#ifndef COMPACT_DATA
       resize(((mSize + len +16)*3)/2, true);
+#else
+      resize( (mSize + len), true);
+#endif
    }
    else
    {
@@ -894,31 +1033,23 @@ Data::append(const char* str, size_type len)
    }
 
    // could conceivably overlap
-   memmove(mBuf + mSize, str, len);
-   mSize += len;
-   mBuf[mSize] = 0;
+   if (len)
+   {
+      assert(str);
+      memmove(mBuf + mSize, str, len);
+      mSize += len;
+      mBuf[mSize] = 0;
+   }
 
    return *this;
 }
 
 
-Data
-Data::operator+(char c) const
-{
-   Data tmp(mSize + 1, true);
-   tmp.mSize = mSize + 1;
-   tmp.mCapacity = tmp.mSize;
-   memcpy(tmp.mBuf, mBuf, mSize);
-   tmp.mBuf[mSize] = c;
-   tmp.mBuf[mSize+1] = 0;
-
-   return tmp;
-}
 
 void 
 Data::removeEscapeChar(char escapeChar)
 {
-   if (mSize)
+   if (mBuf)
    {
       c_str();
       char* found = ::strchr(mBuf, escapeChar);
@@ -944,6 +1075,7 @@ Data::c_str() const
 {
    if (mMine == Share)
    {
+#ifndef COMPACT_DATA
       if (mSize <= LocalAlloc)
       {
          memcpy(const_cast<Data*>(this)->mPreBuffer, mBuf, mSize);
@@ -954,10 +1086,22 @@ Data::c_str() const
       {
          const_cast<Data*>(this)->resize(mSize, true);   
       }
+#else
+      const_cast<Data*>(this)->resize(mSize, true);  
+#endif
+
    }
-   // mostly is zero terminated, but not by DataStream
-   mBuf[mSize] = 0;
-   return mBuf;
+
+   if (mBuf)
+   {
+      // mostly is zero terminated, but not by DataStream
+      mBuf[mSize] = 0;
+      return mBuf;
+   }
+   else
+   {
+      return "";
+   }
 }
 
 const char* 
@@ -975,7 +1119,14 @@ Data::begin() const
 const char* 
 Data::end() const
 {
-   return mBuf + mSize;
+   if (mBuf)
+   {
+      return mBuf + mSize;
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 
@@ -1000,7 +1151,7 @@ Data::resize(size_type newCapacity,
 
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
-   if (copy)
+   if (copy && oldBuf)
    {
       memcpy(mBuf, oldBuf, mSize);
       mBuf[mSize] = 0;
@@ -1016,16 +1167,23 @@ Data::resize(size_type newCapacity,
 Data
 Data::md5() const
 {
-   MD5Context context;
-   MD5Init(&context);
-   MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
+   if (mBuf)
+   {
+      MD5Context context;
+      MD5Init(&context);
+      MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
 
-   unsigned char digestBuf[16];
-   MD5Final(digestBuf, &context);
-   Data digest(digestBuf,16);
-   Data ret = digest.hex();
-   
-   return ret;
+      unsigned char digestBuf[16];
+      MD5Final(digestBuf, &context);
+      Data digest(digestBuf,16);
+      Data ret = digest.hex();
+      
+      return ret;
+   }
+   else
+   {
+      return *this;
+   }
 }
 
 Data 
@@ -1034,38 +1192,41 @@ Data::escaped() const
    Data ret((int)floor(1.1*size()), true );  
 
    const char* p = data();
-   for (size_type i=0; i < size(); ++i)
+   if (p)
    {
-      unsigned char c = *p++;
-
-      if ( c == 0x0d )
+      for (size_type i=0; i < size(); ++i)
       {
-         if ( i+1 < size() )
+         unsigned char c = *p++;
+
+         if ( c == 0x0d )
          {
-            if ( *p == 0x0a )
+            if ( i+1 < size() )
             {
-               // found a CRLF sequence
-               ret += c;
-               c = *p++; i++;
-               ret += c;
-               continue;
+               if ( *p == 0x0a )
+               {
+                  // found a CRLF sequence
+                  ret += c;
+                  c = *p++; i++;
+                  ret += c;
+                  continue;
+               }
             }
          }
-      }
-      
-      if ( !isprint(c) )
-      {
-         ret +='%';
          
-         int hi = (c & 0xF0)>>4;
-         int low = (c & 0x0F);
-	   
-         ret += hexmap[hi];
-         ret += hexmap[low];
-      }
-      else
-      {
-         ret += c;
+         if ( !isprint(c) )
+         {
+            ret +='%';
+            
+            int hi = (c & 0xF0)>>4;
+            int low = (c & 0x0F);
+   	   
+            ret += hexmap[hi];
+            ret += hexmap[low];
+         }
+         else
+         {
+            ret += c;
+         }
       }
    }
 
@@ -1076,45 +1237,47 @@ Data
 Data::charEncoded() const
 { 
    Data ret((int)floor(1.1*size()), true );  
-
+   
    const char* p = data();
-   for (size_type i=0; i < size(); ++i)
+   if (p)
    {
-      unsigned char c = *p++;
-
-      if ( c == 0x0d )
+      for (size_type i=0; i < size(); ++i)
       {
-         if ( i+1 < size() )
+         unsigned char c = *p++;
+
+         if ( c == 0x0d )
          {
-            if ( *p == 0x0a )
+            if ( i+1 < size() )
             {
-               // found a CRLF sequence
-               ret += c;
-               c = *p++; i++;
-               ret += c;
-               continue;
+               if ( *p == 0x0a )
+               {
+                  // found a CRLF sequence
+                  ret += c;
+                  c = *p++; i++;
+                  ret += c;
+                  continue;
+               }
             }
          }
-      }
-      
-      if ( !isprint(c) ||
-           // rfc 3261 reserved + mark + space + tab
-           strchr(" \";/?:@&=+%$,\t-_.!~*'()", c))
-      {
-         ret +='%';
          
-         int hi = (c & 0xF0)>>4;
-         int low = (c & 0x0F);
-	   
-         ret += hexmap[hi];
-         ret += hexmap[low];
-      }
-      else
-      {
-         ret += c;
+         if ( !isprint(c) ||
+            // rfc 3261 reserved + mark + space + tab
+            strchr(" \";/?:@&=+%$,\t-_.!~*'()", c))
+         {
+            ret +='%';
+            
+            int hi = (c & 0xF0)>>4;
+            int low = (c & 0x0F);
+   	   
+            ret += hexmap[hi];
+            ret += hexmap[low];
+         }
+         else
+         {
+            ret += c;
+         }
       }
    }
-
    return ret;
 }
 
@@ -1183,7 +1346,6 @@ Data::urlDecoded() const
 std::ostream&
 Data::urlDecode(std::ostream& s) const
 {
-
    unsigned int i = 0;
    for (const char* p = data(); p != data()+size(); ++p, ++i)
    {
@@ -1300,23 +1462,29 @@ Data::trunc(size_t s) const
 Data
 Data::hex() const
 {
-   Data ret( 2*mSize, true );
-
-   const char* p = mBuf;
-   char* r = ret.mBuf;
-   for (size_type i=0; i < mSize; ++i)
+   if (mBuf)
    {
-      unsigned char temp = *p++;
-	   
-      int hi = (temp & 0xf0)>>4;
-      int low = (temp & 0xf);
-      
-      *r++ = hexmap[hi];
-      *r++ = hexmap[low];
+      Data ret( 2*mSize, true );
+      const char* p = mBuf;
+      char* r = ret.mBuf;
+      for (size_type i=0; i < mSize; ++i)
+      {
+         unsigned char temp = *p++;
+   	   
+         int hi = (temp & 0xf0)>>4;
+         int low = (temp & 0xf);
+         
+         *r++ = hexmap[hi];
+         *r++ = hexmap[low];
+      }
+      *r = 0;
+      ret.mSize = 2*mSize;
+      return ret;
    }
-   *r = 0;
-   ret.mSize = 2*mSize;
-   return ret;
+   else
+   {
+      return *this;
+   }
 }
 
 Data&
@@ -1345,166 +1513,120 @@ Data::uppercase()
    return *this;
 }
 
-void
+Data&
 Data::clear()
 {
    mSize = 0;
+   return *this;
 }
 
 int 
 Data::convertInt() const
 {
    int val = 0;
-   char* p = mBuf;
-   int l = mSize;
    int s = 1;
+   if (mBuf)
+   {
+      char* p = mBuf;
+      int l = mSize;
 
-   while (isspace(*p++))
-   {
-      l--;
-   }
-   p--;
-   
-   if (*p == '-')
-   {
-      s = -1;
-      ++p;
-      l--;
-   }
-   
-   while (l--)
-   {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      while (isspace(*p++))
       {
-         val *= 10;
-         val += c - '0';
+         l--;
       }
-      else
+      p--;
+      
+      if (*p == '-')
       {
-         return s*val;
+         s = -1;
+         ++p;
+         l--;
+      }
+      
+      while (l--)
+      {
+         char c = *p++;
+         if (!isdigit(c)) break;
+         if ((c >= '0') && (c <= '9'))
+         {
+            val *= 10;
+            val += c - '0';
+         }
+         else
+         {
+            return s*val;
+         }
       }
    }
-
    return s*val;
 }
 
-UInt64
-Data::convertUInt64() const
+Int64
+Data::convertInt64() const
 {
-   UInt64 val = 0;
-   char* p = mBuf;
-   int l = mSize;
+   Int64 val = 0;
    int s = 1;
+   if (mBuf)
+   {
+      char* p = mBuf;
+      int l = mSize;
 
-   while (isspace(*p++))
-   {
-      l--;
-   }
-   p--;
-   
-   if (*p == '-')
-   {
-      s = -1;
-      ++p;
-      l--;
-   }
-   
-   while (l--)
-   {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
+      while (isspace(*p++))
       {
-         val *= 10;
-         val += c - '0';
+         l--;
       }
-      else
+      p--;
+      
+      if (*p == '-')
       {
-         return s*val;
+         s = -1;
+         ++p;
+         l--;
+      }
+      
+      while (l--)
+      {
+         char c = *p++;
+         if (!isdigit(c)) break;
+         if ((c >= '0') && (c <= '9'))
+         {
+            val *= 10;
+            val += c - '0';
+         }
+         else
+         {
+            return s*val;
+         }
       }
    }
-
    return s*val;
 }
 
 size_t
 Data::convertSize() const
 {
-   size_t val = 0;
-   char* p = mBuf;
-   int l = mSize;
-
-   while (isspace(*p++))
-   {
-      l--;
-   }
-   p--;
-   
-   while (l--)
-   {
-      char c = *p++;
-      if (!isdigit(c)) break;
-      if ((c >= '0') && (c <= '9'))
-      {
-         val *= 10;
-         val += c - '0';
-      }
-      else
-      {
-         return val;
-      }
-   }
-
-   return val;
+   return (size_t)convertUInt64();
 }
 
 double 
 Data::convertDouble() const
 {
-   long val = 0;
-   char* p = mBuf;
-   int s = 1;
-
-   while (isspace(*p++));
-   p--;
-   
-   if (*p == '-')
+   if (mBuf && mSize)
    {
-      s = -1;
-      ++p;
+      return atof(mBuf);
    }
-   
-   while (isdigit(*p))
+   else
    {
-      val *= 10;
-      val += *p - '0';
-      ++p;
+      return 0.0;
    }
-
-   if (*p == '.')
-   {
-      ++p;
-      long d = 0;
-      double div = 1.0;
-      while (isdigit(*p))
-      {
-         d *= 10;
-         d += *p - '0';
-         div *= 10;
-         ++p;
-      }
-      return s*(val + d/div);
-   }
-
-   return s*val;
 }
 
 bool
 Data::prefix(const Data& pre) const
 {
-   if (pre.size() > size())
+   if (pre.mSize > mSize ||
+       pre.mSize == 0 ||
+       mSize == 0)
    {
       return false;
    }
@@ -1515,7 +1637,9 @@ Data::prefix(const Data& pre) const
 bool
 Data::postfix(const Data& post) const
 {
-   if (post.size() > size())
+   if (post.mSize > mSize ||
+       post.mSize == 0 ||
+       mSize == 0)
    {
       return false;
    }
@@ -1527,9 +1651,16 @@ Data
 Data::substr(size_type first, size_type count) const
 {
    assert(first <= mSize);
-   if ( count == Data::npos)
+   if (count == Data::npos)
    {
-      return Data(mBuf+first, mSize-first);
+      if (mBuf)
+      {
+         return Data(mBuf + first, mSize - first);
+      }
+      else
+      {
+         return *this;
+      }
    }
    else
    {
@@ -1553,15 +1684,22 @@ Data::find(const char* match, size_type start) const
    }
    else
    {
-      ParseBuffer pb(mBuf+start, mSize);
-      pb.skipToChars(match);
-      if (pb.eof()) 
+      if (mBuf)
       {
-         return Data::npos;
+         ParseBuffer pb(mBuf+start, mSize);
+         pb.skipToChars(match);
+         if (pb.eof()) 
+         {
+            return Data::npos;
+         }
+         else
+         {
+            return pb.position() - pb.start() + start;
+         }
       }
       else
       {
-         return pb.position() - pb.start() + start;
+         return Data::npos;
       }
    }
 }
@@ -1570,41 +1708,34 @@ bool
 resip::operator==(const char* s, const Data& d)
 {
    assert(s);
-   return ((memcmp(s, d.data(), d.size()) == 0) &&
-           strlen(s) == d.size() );
+   return (d == s);
 }
 
 bool
 resip::operator!=(const char* s, const Data& d)
 {
-   return !(s == d);
+   assert(s);
+   return (d != s);
 }
 
 bool
 resip::operator<(const char* s, const Data& d)
 {
    assert(s);
-   Data::size_type l = strlen(s);
-   int res = memcmp(s, d.data(), resipMin(d.size(), l));
-
-   if (res < 0)
-   {
-      return true;
-   }
-   else if (res > 0)
-   {
-      return false;
-   }
-   else
-   {
-      return (l < d.size());
-   }
+   return (d >= s);
 }
 
 ostream& 
 resip::operator<<(ostream& strm, const Data& d)
 {
-   return strm.write(d.mBuf, d.mSize);
+   if (d.mBuf)
+   {
+      return strm.write(d.mBuf, d.mSize);
+   }
+   else
+   {
+      return strm;
+   }
 }
 
 // random permutation of 0..255
@@ -1662,36 +1793,43 @@ Data::rawHash(const char* c, size_t size)
 size_t 
 Data::rawCaseInsensitiveHash(const char* c, size_t size)
 {
-   union 
+   if (c && size)
    {
-         size_t st;
-         unsigned char bytes[4];
-   };
-   st = 0; // suppresses warnings about unused st
-   bytes[0] = randomPermutation[0];
-   bytes[1] = randomPermutation[1];
-   bytes[2] = randomPermutation[2];
-   bytes[3] = randomPermutation[3];
+      union 
+      {
+            size_t st;
+            unsigned char bytes[4];
+      };
+      st = 0; // suppresses warnings about unused st
+      bytes[0] = randomPermutation[0];
+      bytes[1] = randomPermutation[1];
+      bytes[2] = randomPermutation[2];
+      bytes[3] = randomPermutation[3];
 
-   const char* end = c + size;
-   for ( ; c != end; ++c)
-   {
-      char cc = tolower(*c); 
-      bytes[0] = randomPermutation[cc ^ bytes[0]];
-      bytes[1] = randomPermutation[cc ^ bytes[1]];
-      bytes[2] = randomPermutation[cc ^ bytes[2]];
-      bytes[3] = randomPermutation[cc ^ bytes[3]];
+      const char* end = c + size;
+      for ( ; c != end; ++c)
+      {
+         char cc = tolower(*c); 
+         bytes[0] = randomPermutation[cc ^ bytes[0]];
+         bytes[1] = randomPermutation[cc ^ bytes[1]];
+         bytes[2] = randomPermutation[cc ^ bytes[2]];
+         bytes[3] = randomPermutation[cc ^ bytes[3]];
+      }
+
+      // convert from network to host byte order
+      return ntohl(st);
    }
-
-   // convert from network to host byte order
-   return ntohl(st);
+   else
+   {
+      return 0;
+   }
 }
 
 Data
 bits(size_t v)
 {
    Data ret;
-   for (unsigned int i = 0; i < 8*sizeof(size_t); ++i)
+   for (unsigned int i = 0; i < 8 * sizeof(size_t); ++i)
    {
       ret += ('0' + v%2);
       v /= 2;

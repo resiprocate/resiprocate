@@ -16,7 +16,13 @@
 #endif
 
 #if !defined(RESIP_DATA_LOCAL_SIZE)
-#define RESIP_DATA_LOCAL_SIZE 16
+# ifdef COMPACT_DATA
+#  define RESIP_DATA_LOCAL_SIZE 0
+# else
+#  define RESIP_DATA_LOCAL_SIZE 16
+# endif // # ifdef COMPACT_DATA
+#else
+# undef COMPACT_DATA
 #endif
 
 class TestData;
@@ -151,11 +157,12 @@ class Data
       Data trunc(size_type trunc) const;
 	
       // resize to zero without changing capacity
-      void clear();
+      Data& clear();
       int convertInt() const;
       size_t convertSize() const;
       double convertDouble() const;
-      UInt64 convertUInt64() const;
+      Int64  convertInt64() const;
+      UInt64 convertUInt64() const { return (UInt64)convertInt64(); }
       
       bool prefix(const Data& pre) const;
       bool postfix(const Data& post) const;
@@ -195,8 +202,10 @@ class Data
       // Larger LocalAlloc makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
 
+#ifndef COMPACT_DATA
       enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE};
       char mPreBuffer[LocalAlloc+1];
+#endif
 
       size_type mSize;
       char* mBuf;

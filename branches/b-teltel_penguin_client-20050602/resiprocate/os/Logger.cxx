@@ -68,6 +68,14 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
 #endif
 }
 
+bool
+genericLogCheckLevel(resip::Log::Level level)
+{
+   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
+   return ((setting && level <= setting->level) ||
+	   (!setting && resip::GenericLogImpl::isLogging(level)));
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
