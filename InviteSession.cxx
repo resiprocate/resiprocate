@@ -2018,6 +2018,8 @@ InviteSession::toData(State state)
          return "UAS_WaitingToTerminate";
       case UAS_WaitingToHangup:
          return "UAS_WaitingToHangup";
+      case UAS_WaitingToRequestOffer:
+         return "UAS_WaitingToRequestOffer";
    }
    assert(0);
    return "Undefined";
