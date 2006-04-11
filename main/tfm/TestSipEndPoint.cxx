@@ -2,7 +2,6 @@
 
 #include "resip/stack/DeprecatedDialog.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/Pidf.hxx"
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -1655,59 +1654,6 @@ TestSipEndPoint::respond(int code)
 {
    return new Respond(*this, code);
 }
-
-/*
-TestSipEndPoint::Notify::Notify(TestSipEndPoint& endPoint,
-                                const resip::Uri& presentity)
-   : MessageExpectAction(endPoint),
-     mEndPoint(endPoint),
-     mPresentity(presentity)
-{
-}
-   
-boost::shared_ptr<resip::SipMessage>
-TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
-{
-   WarningLog(<< "Notify: " << *msg);
-   Pidf* pidf = new Pidf;
-   boost::shared_ptr<resip::Contents> body(pidf);   
-
-   if (msg->header(h_Event).value() == resip::Symbols::Presence)
-   {
-      pidf->setSimpleStatus(false, "offline", Data::from(mPresentity));
-      pidf->getTuples().front().id = mPresentity.getAor();
-      pidf->getTuples().front().attributes["displayName"] = "displayName";
-   }
-   else if (msg->header(h_Event).value() == "callme")
-   {}
-   else
-   {
-      assert(false);
-   }
-   pidf->setEntity(mPresentity);
-
-   DeprecatedDialog depd(NameAddr(mEndPoint.getAddressOfRecord()));
-   delete depd.makeResponse(*msg, 202);
-   
-   shared_ptr<SipMessage> notify(depd.makeNotify());
-   notify->header(h_SubscriptionState).value() = "active";
-   if (msg->exists(h_Event))
-   {
-      notify->header(h_Event) = msg->header(h_Event);
-   }
-   // hack to statelessly set the CSequence
-   notify->header(h_CSeq).sequence() = msg->header(h_CSeq).sequence();
-   notify->setContents(pidf);
-   
-   return notify;
-}
-
-TestSipEndPoint::Notify* 
-TestSipEndPoint::notify(const resip::Uri& presentity)
-{
-   return new Notify(*this, presentity);
-}
-*/
 
 TestSipEndPoint::Answer::Answer(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
