@@ -112,7 +112,11 @@ Log::initialize(Type type, Level level, const Data& appName,
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
-   pb.skipBackToChar('/');
+#ifdef _WIN32
+   pb.skipBackToChar('\\');
+#else
+   pb.skipBackToChar(‘/’);
+#endif
    mAppName = pb.position();
  
    char buffer[1024];  
