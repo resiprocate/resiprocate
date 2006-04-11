@@ -415,7 +415,7 @@ XMLCursor::getValue() const
 Data
 XMLCursor::encodeXMLCompatible(const Data& strData)
 {
-   Data encodedStr;
+   Data encodedStr(strData.size() << 1, true);
    int charCount = strData.size();
    for (register int i = 0; i < charCount; ++i)
    {
@@ -468,7 +468,7 @@ XMLCursor::decodeXMLCompatible(const Data& strData)
          FindStruct("&nbsp;", " ") 
       };
 
-   Data decodedStr;
+   Data decodedStr(strData.size(), true);
    Data lowerStrData(strData);
    lowerStrData.lowercase();
    int lastIdx = 0;
