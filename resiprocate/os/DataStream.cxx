@@ -11,6 +11,7 @@ using namespace resip;
 DataBuffer::DataBuffer(Data& str)
    : mStr(str)
 {
+   str.reserve(32);
    char* gbuf = const_cast<char*>(mStr.mBuf);
    setg(gbuf, gbuf, gbuf+mStr.size());
    // expose the excess capacity as the put buffer

@@ -39,7 +39,6 @@ class BaseSubscription: public DialogUsage
       virtual ~BaseSubscription();
 
       SipMessage mLastRequest;
-      SipMessage mLastResponse;
       
       Data mDocumentKey;
       Data mEventType;
