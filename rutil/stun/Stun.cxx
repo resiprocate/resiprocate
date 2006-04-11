@@ -820,14 +820,10 @@ stunRand()
       asm("rdtsc" : "=A" (tick));
 #elif defined (__SUNPRO_CC) || defined( __sparc__ )	
       tick = gethrtime();
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__MACH__)
       int fd=open("/dev/random",O_RDONLY);
       read(fd,&tick,sizeof(tick));
-      close(fd);
-#elif defined(__MACH__) 
-      int fd=open("/dev/random",O_RDONLY);
-      read(fd,&tick,sizeof(tick));
-      closesocket(fd);
+      closeSocket(fd);
 #else
 #     error Need some way to seed the random number generator 
 #endif 
@@ -2045,11 +2041,7 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
    StunAddress4 from;
    if (!getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose))
    {
-#if defined(__APPLE__)
-      close(myFd);
-#else
-	   closesocket(myFd);
-#endif
+	   closeSocket(myFd);
 	   return false;
    }
 	
@@ -2075,11 +2067,7 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
       sAddr->addr = resp.mappedAddress.ipv4.addr;
    }
 
-#if defined(__APPLE__)
-   close(myFd);
-#else
-   closesocket(myFd);
-#endif
+   closeSocket(myFd);
    return ok;
 }
 

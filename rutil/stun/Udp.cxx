@@ -73,21 +73,13 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
          case 0:
          {
             cerr << "Could not bind socket" << endl;
-#if defined(__APPLE__)
-            close(fd);
-#else
-            closesocket(fd);
-#endif
+            closeSocket(fd);
             return INVALID_SOCKET;
          }
          case EADDRINUSE:
          {
             cerr << "Port " << port << " for receiving UDP is in use" << endl;
-#if defined(__APPLE__)
-            close(fd);
-#else
-            closesocket(fd);
-#endif
+            closeSocket(fd);
             return INVALID_SOCKET;
          }
          break;
@@ -97,11 +89,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
             {
                cerr << "Cannot assign requested address" << endl;
             }
-#if defined(__APPLE__)
-            close(fd);
-#else
-            closesocket(fd);
-#endif
+            closeSocket(fd);
             return INVALID_SOCKET;
          }
          break;
@@ -109,11 +97,7 @@ openPort( unsigned short port, unsigned int interfaceIp, bool verbose )
          {
             cerr << "Could not bind UDP receive port"
                  << "Error=" << e << " " << strerror(e) << endl;
-#if defined(__APPLE__)
-            close(fd);
-#else
-            closesocket(fd);
-#endif
+            closeSocket(fd);
             return INVALID_SOCKET;
          }
          break;

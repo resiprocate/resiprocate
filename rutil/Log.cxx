@@ -115,7 +115,7 @@ Log::initialize(Type type, Level level, const Data& appName,
 #ifdef _WIN32
    pb.skipBackToChar('\\');
 #else
-   pb.skipBackToChar(‘/’);
+   pb.skipBackToChar('/');
 #endif
    mAppName = pb.position();
  
