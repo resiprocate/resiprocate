@@ -370,23 +370,6 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* respond(int code);
 
-      /*
-     /// Send a NOTIFY that matches the SUBSCRIBE (the triggering message)
-     class Notify : public MessageExpectAction
-     {
-     public:
-     Notify(TestSipEndPoint& endPoint, const resip::Uri& presentity);
-
-     virtual boost::shared_ptr<resip::SipMessage>
-     go(boost::shared_ptr<resip::SipMessage> msg);
-
-     private:
-     TestSipEndPoint& mEndPoint;
-     resip::Uri mPresentity;
-     };
-     Notify* notify(const resip::Uri& presentity);
-      */
-
       // 202 to SUBSCRIBE
       class Send202ToSubscribe : public MessageExpectAction
       {
