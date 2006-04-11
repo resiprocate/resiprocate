@@ -148,11 +148,10 @@ UdpTransport::process(FdSet& fdset)
 		 {
 			 //mStunMappedAddress.setPort( resp.mappedAddress.ipv4.port);
 			 in_addr sin_addr;
-#if defined(__APPLE__)
-			 sin_addr.s_addr = resp.mappedAddress.ipv4.addr;
-#else
-            //OS X doesn't have the union S_un.
+#if defined(WIN32)
 			 sin_addr.S_un.S_addr = resp.mappedAddress.ipv4.addr;
+#else
+			 sin_addr.s_addr = resp.mappedAddress.ipv4.addr;
 #endif
 			 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
 			 mStunSuccess = true;
