@@ -51,6 +51,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
       //!dcm! -- heavy, should just store enough information to make response
       mLastNotify = msg;
+      mLastNotify.setContents( NULL );
 
       if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
       {
@@ -108,9 +109,10 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
          else
          {            
-            mDialog.makeResponse(mLastResponse, msg, 400);
-            mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-            send(mLastResponse);
+            SipMessage lastResponse;
+            mDialog.makeResponse(lastResponse, msg, 400);
+            lastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
+            send(lastResponse);
             handler->onTerminated(getHandle(), msg);
             delete this;
          }
@@ -328,23 +330,27 @@ ClientSubscription::end()
 void 
 ClientSubscription::acceptUpdate(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
-   send(mLastResponse);
+   SipMessage lastResponse;
+   mDialog.makeResponse(lastResponse, mLastNotify, statusCode);
+   send(lastResponse);
 }
 
 void 
 ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
-   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
+   assert(handler);  
+
+   SipMessage lastResponse;
+
+   mDialog.makeResponse(lastResponse, mLastNotify, statusCode);
    if (!reasonPhrase.empty())
    {
-      mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
+      lastResponse.header(h_StatusLine).reason() = reasonPhrase;
    }
    
-   send(mLastResponse);
-   switch (Helper::determineFailureMessageEffect(mLastResponse))
+   send(lastResponse);
+   switch (Helper::determineFailureMessageEffect(lastResponse))
    {
       case Helper::TransactionTermination:
       case Helper::RetryAfter:
@@ -356,7 +362,7 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
          break;            
       case Helper::DialogTermination: //?dcm? -- throw or destroy this?
       case Helper::UsageTermination:
-         handler->onTerminated(getHandle(), mLastResponse);
+         handler->onTerminated(getHandle(), lastResponse);
          delete this;
          break;
    }
