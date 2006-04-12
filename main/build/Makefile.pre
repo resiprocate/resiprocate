@@ -58,8 +58,6 @@
 # legends also need to be complied with as well.
 # 
 
-include $(BUILD)/Makefile.all
-
 # This is the section where default tool names and macros are set
 
 ######################################################################
@@ -103,6 +101,7 @@ endif
 # the following line includes options manageable by configure
 
 -include $(BUILD)/Makefile.conf
+include $(BUILD)/Makefile.all
 
 USE_IPV6?=no
 USE_SSL?=yes
