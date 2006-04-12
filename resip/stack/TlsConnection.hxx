@@ -27,6 +27,8 @@ class TlsConnection : public Connection
                      Security* security, bool server, Data domain, 
                      SecurityTypes::SSLType sslType );
       
+      ~TlsConnection();
+
       int read( char* buf, const int count );
       int write( const char* buf, const int count );
       virtual bool hasDataToRead(); // has data that can be read 
