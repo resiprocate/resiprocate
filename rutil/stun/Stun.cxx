@@ -824,6 +824,10 @@ stunRand()
       int fd=open("/dev/random",O_RDONLY);
       read(fd,&tick,sizeof(tick));
       closeSocket(fd);
+#elif defined(__linux__)
+      int fd=open("/dev/urandom",O_RDONLY);
+      read(fd,&tick,sizeof(tick));
+      closeSocket(fd);
 #else
 #     error Need some way to seed the random number generator 
 #endif 
