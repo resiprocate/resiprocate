@@ -291,6 +291,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
       void internalProcess(std::auto_ptr<Message> msg);
+      bool messageAvailable(void) { return mFifo.messageAvailable(); }
 
       void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
       void applyToAllServerSubscriptions(ServerSubscriptionFunctor*);
