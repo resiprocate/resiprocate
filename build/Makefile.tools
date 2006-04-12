@@ -86,12 +86,16 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
 ifndef VOCAL_CROSS_ROOT
 VOCAL_CROSS_ROOT = /skiff/local/bin
 endif
-CC		:= $(VOCAL_CROSS_ROOT)/arm-linux-gcc
-CXX		:= $(VOCAL_CROSS_ROOT)/arm-linux-g++
+ifndef CROSS_PLATFORM
+CROSS_PLATFORM = arm-linux
+endif
+
+CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-g++
 MKSHLIB		:= $(CC) -fPIC -shared 
 DEP		:= $(CXX) 
 LINKER		:= $(CXX) 
-AR		:= $(VOCAL_CROSS_ROOT)/arm-linux-ar
+AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ar
 ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
@@ -104,9 +108,9 @@ COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 LD_STATIC       = -Wl,-Bstatic
 LD_DYNAMIC      = -Wl,-Bdynamic
 ARCH		= arm
-CONFIGURE_ARGS	= --target=arm-linux --host=i686-linux
+CONFIGURE_ARGS	= --target=$(CROSS_PLATFORM) --host=i686-linux
 DFLAG_INTEGRATED = -MMD
-RANLIB		= $(VOCAL_CROSS_ROOT)/arm-linux-ranlib
+RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
 
 Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
 ifneq ($(Z),1)

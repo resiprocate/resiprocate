@@ -24,6 +24,7 @@ then
     echo "VOCAL_TOOLCHAIN_TYPE := gnu
 VOCAL_COMPILE_TYPE := debug
 VOCAL_CROSS_ROOT := /skiff/local/bin
+CROSS_PLATFORM := arm-linux
 BUILD_SHARED_LIBS := no
 USE_DISTCC := no
 USE_CCACHE := no
@@ -108,6 +109,13 @@ $uname = `uname`;
     default     => "/skiff/local/bin",
     predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
     option      => 'with-cross-compiler-dir',
+  },
+  {
+    name        => "CROSS_PLATFORM",
+    description => "What is the name your toolchain uses for the cross platform?",
+    default     => "arm-linux",
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    option      => 'with-cross-platform',
   },
   {
     name        => "BUILD_SHARED_LIBS",
