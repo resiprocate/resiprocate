@@ -32,7 +32,9 @@ StackThread::thread()
          {
             // .dlb. use return value to peak at the message to see if it is a
             // shutdown, and call shutdown if it is
+            beforeProcess();
             mStack.process(fdset);
+            afterProcess();
          }
       }
       catch (BaseException& e)
