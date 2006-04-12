@@ -170,6 +170,10 @@ override OSTYPE := Darwin
 endif
 
 
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
+ARCH = arm
+endif
+
 ifndef ARCH
 ARCH = $(shell uname -m| sed 's/ /_/g')
 endif
