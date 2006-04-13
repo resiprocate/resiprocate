@@ -1122,7 +1122,7 @@ void DnsResult::blacklistLastReturnedResult()
    records.push_back(top.value);
    DebugLog( << "Blacklisting " << top.domain << "(" << top.rrType << "): " << top.value);
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
-   DebugLog( << "Remove vip" << top.domain << "(" << top.rrType << ")");
+   DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
    mVip.removeVip(top.domain, top.rrType);
    mCurrResultPath.pop();
 }

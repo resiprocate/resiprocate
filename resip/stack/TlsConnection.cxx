@@ -281,7 +281,7 @@ TlsConnection::checkState()
    //post-connection verification: check that certificate name matches domain name
    if (!mServer)
    {
-      if (getPeerName() != who().getTargetDomain())
+      if(!isEqualNoCase(getPeerName(), who().getTargetDomain()))
       {
          mState = Broken;
          mBio = 0;
