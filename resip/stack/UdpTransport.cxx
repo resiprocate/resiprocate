@@ -46,8 +46,6 @@ UdpTransport::~UdpTransport()
 void 
 UdpTransport::process(FdSet& fdset)
 {
-	resip::Lock lock(myMutex);
-
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
@@ -141,17 +139,17 @@ UdpTransport::process(FdSet& fdset)
       // this must be a STUN response (or garbage)
       if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
       {
+         resip::Lock lock(myMutex);
 	     StunMessage resp;
 	     memset(&resp, 0, sizeof(StunMessage));
 		
 	     if (stunParseMessage(buffer, len, resp, false))
 		 {
-			 //mStunMappedAddress.setPort( resp.mappedAddress.ipv4.port);
 			 in_addr sin_addr;
 #if defined(WIN32)
-			 sin_addr.S_un.S_addr = resp.mappedAddress.ipv4.addr;
+			 sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
-			 sin_addr.s_addr = resp.mappedAddress.ipv4.addr;
+			 sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
 			 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
 			 mStunSuccess = true;
