@@ -20,8 +20,7 @@ namespace resip
 class OpenSSLInit
 {
    public:
-      static void init();
-      static void uninit();
+      static bool init();
    private:
       static void lockingFunction(int mode, int n, const char* file, int line);
       static unsigned long threadIdFunction();
@@ -30,6 +29,7 @@ class OpenSSLInit
       static void dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
       static Mutex* mMutexes;      
 };
+static bool invokeOpenSSLInit = OpenSSLInit::init();
 
 }
 
