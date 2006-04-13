@@ -587,10 +587,6 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
          if(iter != mUserPassPhrases.end())
          {
-            //Data passPhrase = iter->second;
-            
-            //kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
-            //klen = passPhrase.size();
             kstr = (char*)iter->second.c_str(); 
             klen = iter->second.size();
          }
@@ -894,7 +890,7 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 BaseSecurity::BaseSecurity (const CipherList& cipherSuite) :
    mTlsCtx(0),
    mSslCtx(0),
-   mRootTlsCerts(0),
+   mRootTlsCerts(0),                    
    mRootSslCerts(0)
 { 
    DebugLog(<< "BaseSecurity::BaseSecurity");
@@ -1862,6 +1858,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, const Pkcs7Contents* contents)
       {
          if (mUserPrivateKeys.count(decryptorAor) == 0)
          {
+            BIO_free(in);
+            BIO_free(out);
+            sk_X509_free(certs);
             InfoLog( << "Don't have a private key for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing private key", __FILE__, __LINE__);
          }
