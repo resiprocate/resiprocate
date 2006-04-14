@@ -426,7 +426,9 @@ Profile::unsetAdvertisedCapabilities()
 void 
 Profile::setOutboundProxy( const Uri& uri )
 {
-   mOutboundProxy = NameAddr(uri);
+   Uri tmpUri(uri);
+   tmpUri.param(p_lr);
+   mOutboundProxy = NameAddr(tmpUri);
    mHasOutboundProxy = true;
 }
 
