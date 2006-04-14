@@ -878,10 +878,6 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
    DialogId id(*msg);
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
-      if (!userProfile.getOutboundProxy().uri().exists(p_lr))
-      {
-         userProfile.getOutboundProxy().uri().param(p_lr);
-      }
       // prepend the outbound proxy to the service route
       msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
 
