@@ -111,8 +111,10 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
 
 TlsConnection::~TlsConnection()
 {
+#if defined(USE_SSL)
    SSL_shutdown(mSsl);
    SSL_free(mSsl);
+#endif // USE_SSL   
 }
 
 
