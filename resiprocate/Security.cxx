@@ -377,7 +377,8 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       case RootCert:
       {
-         X509_STORE_add_cert(mRootCerts,cert);
+         X509_STORE_add_cert(mRootCerts, cert);
+	 X509_free(cert);
       }
       break;
       default:
@@ -514,6 +515,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
 
+   /*
    // make a copy of the the key 
    assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
@@ -521,8 +523,10 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    EVP_PKEY* nKey = EVP_PKEY_new();
    assert( nKey );
    EVP_PKEY_set1_RSA(nKey, rsa);
+   */
    
-   privateKeys.insert(std::make_pair(name, nKey));
+   //privateKeys.insert(std::make_pair(name, nKey));
+   privateKeys.insert(std::make_pair(name, pKey));
       
    if (write)
    {
@@ -534,10 +538,12 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
          if(iter != mUserPassPhrases.end())
          {
-            Data passPhrase = iter->second;
+            //Data passPhrase = iter->second;
             
-            kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
-            klen = passPhrase.size();
+            //kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
+            //klen = passPhrase.size();
+            kstr = (char*)iter->second.c_str(); 
+            klen = iter->second.size();
          }
       }
 
@@ -1350,6 +1356,9 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    if (mUserCerts.count(senderAor) == 0 ||
        mUserPrivateKeys.count(senderAor) == 0)
    {
+      BIO_free(in);
+      BIO_free(out);
+      sk_X509_free(chain);
       WarningLog (<< "Tried to sign with no cert or private key for " << senderAor);
       throw Exception("No cert or private key to sign with",__FILE__,__LINE__);
    }
@@ -1363,6 +1372,9 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, flags);
    if ( !pkcs7 )
    {
+      BIO_free(in);
+      BIO_free(out);
+      sk_X509_free(chain);
       ErrLog( << "Error creating PKCS7 signature object" );
       return 0;
    }
@@ -1393,6 +1405,10 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    // add the signature to it
    multi->parts().push_back( sigBody );
    assert( multi->parts().size() == 2 );
+
+   BIO_free(in);
+   BIO_free(out);
+   sk_X509_free(chain);
 
    return multi;
 }
@@ -1432,6 +1448,8 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    InfoLog( << "target cert name is " << recipCertName );
    if (mUserCerts.count(recipCertName) == 0)
    {
+      BIO_free(in);
+      BIO_free(out);
       WarningLog (<< "Tried to encrypt with no cert or private key for " << recipCertName);
       throw Exception("No cert or private key to encrypt with",__FILE__,__LINE__);
    }
@@ -1458,6 +1476,9 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
    {
+      BIO_free(in);
+      BIO_free(out);
+      sk_X509_free(certs);
       ErrLog( << "Error creating PKCS7 encrypt object" );
       throw Exception("Can't encrypt",__FILE__,__LINE__);
    }
@@ -1489,6 +1510,10 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    outBody->header(h_ContentDisposition).param( p_handling ) = "required";
    outBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7";
    outBody->header(h_ContentDisposition).value() =  "attachment" ;
+
+   BIO_free(in);
+   BIO_free(out);
+   sk_X509_free(certs);
 
    return outBody;
 }
@@ -1737,6 +1762,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
          InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
 
+      BIO_free(in);
+      BIO_free(out);
+
       return 0;
    }
    BIO_flush(in);
@@ -1778,6 +1806,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
    {
       case NID_pkcs7_signedAndEnveloped:
       {
+         BIO_free(in);
+         BIO_free(out);
+         sk_X509_free(certs);
          throw Exception("Signed and enveloped is not supported", __FILE__, __LINE__);
       }
       break;
@@ -1791,6 +1822,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
          }
          else if (mUserCerts.count(decryptorAor) == 0)
          {
+            BIO_free(in);
+            BIO_free(out);
+            sk_X509_free(certs);
             InfoLog( << "Don't have a public cert for " << decryptorAor << " for  PKCS7_decrypt" );
             throw Exception("Missing cert", __FILE__, __LINE__);
          }
@@ -1818,12 +1852,18 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
                InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
             }
 
+            BIO_free(in);
+            BIO_free(out);
+            sk_X509_free(certs);
             return 0;
          }
       }
       break;
 
       default:
+         BIO_free(in);
+         BIO_free(out);
+         sk_X509_free(certs);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          throw Exception("Unsupported PKCS7 data type", __FILE__, __LINE__);
    }
@@ -1835,6 +1875,11 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 
    Data outData(outBuf,size);
    DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
+
+   BIO_set_close(out, BIO_CLOSE);
+   BIO_free(out);
+   BIO_free(in);
+   sk_X509_free(certs);
 
    // parse out the header information and form new body.
    // TODO !jf! this is a really crappy parser - shoudl do proper mime stuff
@@ -1975,6 +2020,9 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          ErrLog( << buf  );
          InfoLog( <<"Error code = "<< code <<" file=" << file << " line=" << line );
       }
+      BIO_free(in);
+      BIO_free(out);
+      BIO_free(pkcs7Bio);
 
       return first;
    }
@@ -2087,6 +2135,10 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
    else
    {
+      BIO_free(in);
+      BIO_free(out);
+      BIO_free(pkcs7Bio);
+      sk_X509_free(certs);
       *sigStat = SignatureIsBad;
       InfoLog(<< "No valid signers of this messages" );
       return first;
@@ -2149,7 +2201,10 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                ErrLog( << buf  );
                InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
             }
-
+            BIO_free(in);
+            BIO_free(out);
+            BIO_free(pkcs7Bio);
+            sk_X509_free(certs);
             return first;
          }
          if ( sigStat )
@@ -2177,6 +2232,10 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       break;
 
       default:
+         BIO_free(in);
+         BIO_free(out);
+         BIO_free(pkcs7Bio);
+         sk_X509_free(certs);
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          return 0;
    }
@@ -2189,6 +2248,10 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Data outData(outBuf,size);
    DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
 
+   BIO_free(in);
+   BIO_free(out);
+   BIO_free(pkcs7Bio);
+   sk_X509_free(certs);
    return first;
 }
 
