@@ -766,6 +766,11 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       {
          mClientAuthManager->addAuthentication(*msg);
       }
+
+	   // Add outbound decorator from userprofile
+	   SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
+	   if (outboundDecorator.get())
+		   msg->addOutboundDecorator(outboundDecorator.get());
    }
 
    DebugLog (<< "SEND: " << *msg);
