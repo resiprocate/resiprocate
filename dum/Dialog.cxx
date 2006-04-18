@@ -96,6 +96,11 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                {
                   mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
                   mRemoteTarget = contact;
+                  if (mDialogSet.getUserProfile()->hasOverrideHostAndPort())
+                  {
+                     mLocalContact.uri().host() = mDialogSet.getUserProfile()->getOverrideHostAndPort().host();
+                     mLocalContact.uri().port() = mDialogSet.getUserProfile()->getOverrideHostAndPort().port();
+                  }
                }
                else
                {
