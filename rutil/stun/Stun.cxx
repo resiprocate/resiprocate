@@ -2006,7 +2006,7 @@ stunGetUserNameAndPassword(  const StunAddress4& dest,
 
 
 bool 
-stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
+stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, unsigned long timeoutMs )
 { 
    assert( dest.addr != 0 );
    assert( dest.port != 0 );
@@ -2024,8 +2024,15 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
    resip::Socket myFd = openPort(port,interfaceIp,verbose);
 
    if (myFd == INVALID_SOCKET)
+   {
 	   return false;
+   }
 
+   // make socket non-blocking
+   if (!makeSocketNonBlocking(myFd))
+   {
+      return false;
+   }
 	
    StunAtrString username;
    StunAtrString password;
@@ -2042,6 +2049,15 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr )
    char msg[STUN_MAX_MESSAGE_SIZE];
    int msgLen = STUN_MAX_MESSAGE_SIZE;
 	
+   // Wait to receive a packet
+   resip::FdSet myFdSet;
+   myFdSet.setRead(myFd);
+   if (myFdSet.selectMilliSeconds(timeoutMs) < 1)
+   {
+      // no packet received or an error occured
+      return false;
+   }
+
    StunAddress4 from;
    if (!getMessage(myFd, msg, &msgLen, &from.addr, &from.port, verbose))
    {
