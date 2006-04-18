@@ -128,7 +128,7 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   if(mState != Initial &&  // !jf! may not be correct
+   if(mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -138,6 +138,7 @@ void DialogSet::possiblyDie()
         mClientRegistration ||
         mServerRegistration))
    {
+      mState = Destroying;
       mDum.destroy(this);
    }
 }
@@ -227,7 +228,7 @@ DialogSet::empty() const
 bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
+   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -325,16 +326,62 @@ DialogSet::dispatch(const SipMessage& msg)
                   SipMessage bye;
                   dialog.makeRequest(bye, BYE);
                   dialog.send(bye);
+
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
                else
                {
+                  mState = Destroying;
                   mDum.destroy(this);
                }
                break;
             case SUBSCRIBE:
-               assert(0);
+               if (code / 100 == 1)
+               {
+                  // do nothing - wait for final response
+               }
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SipMessage unsubscribe(mCreator->getLastRequest());  // create message from initial request so we get proper headers
+                  dialog.makeRequest(unsubscribe, SUBSCRIBE);
+                  unsubscribe.header(h_Expires).value() = 0;
+                  dialog.send(unsubscribe);
+                  
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+               }
+               else
+               {
+                  mState = Destroying;
+                  mDum.destroy(this);
+               }
+               break;
+            case PUBLISH:
+               if (code / 100 == 1)
+               {
+                  // do nothing - wait for final response
+               }
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SipMessage unpublish(mCreator->getLastRequest());  // create message from initial request so we get proper headers
+                  dialog.makeRequest(unpublish, PUBLISH);
+                  unpublish.header(h_Expires).value() = 0;
+                  dialog.send(unpublish);
+                  
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+               }
+               else
+               {
+                  mState = Destroying;
+                  mDum.destroy(this);
+               }
                break;
             default:
+               mState = Destroying;
+               mDum.destroy(this);
                break;
          }
       }
@@ -357,7 +404,25 @@ DialogSet::dispatch(const SipMessage& msg)
 
    if (dialog)
    {
-      DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      if(dialog->isDestroying())
+      {
+         if (msg.isRequest())
+         {
+            StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
+            SipMessage response;
+            mDum.makeResponse(response, msg, 481);
+            mDum.send(response);
+         }
+         else
+         {
+	         StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+         }
+         return;
+      }
+      else
+      {
+         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+      }
    }
    else
    {
@@ -373,8 +438,25 @@ DialogSet::dispatch(const SipMessage& msg)
          case CANCEL:  //cancel needs work
          case SUBSCRIBE:
          case REFER: //need to add out-of-dialog refer logic
-            break; //dialog creating/handled by dialog
-
+            if (request.header(h_To).exists(p_tag) || findDialog(request))
+            {
+               DebugLog(<< "in dialog refer request");
+               break; // in dialog
+            }
+            else if (!request.exists(h_ReferSub) || request.header(h_ReferSub).value() == "true")
+            {
+               DebugLog(<< "out of dialog refer request with refer sub");
+               break; // dialog creating
+            }
+            else // out of dialog & noReferSub=true
+            {
+               DebugLog(<< "out of dialog refer request with norefersub");
+               assert(mServerOutOfDialogRequest == 0);
+               mServerOutOfDialogRequest = makeServerOutOfDialog(request);
+               mServerOutOfDialogRequest->dispatch(request);
+               return;
+            }
+            break;            
          case BYE:
          case INFO:
          case ACK:
@@ -391,7 +473,7 @@ DialogSet::dispatch(const SipMessage& msg)
             // !jf! This should really not use to tag since 2543 endpoints won't
             // have a to tag. 
             // !jf! there shouldn't be a dialogset for ServerOutOfDialogReq
-            if (request.header(h_To).exists(p_tag))
+            if (request.header(h_To).exists(p_tag) || findDialog(request))
             {
                break; //dialog creating/handled by dialog
             }
@@ -421,8 +503,11 @@ DialogSet::dispatch(const SipMessage& msg)
 
          case MESSAGE:
             // !jf! move this to DialogUsageManager
-            mServerPagerMessage = makeServerPagerMessage(request);
-            mServerPagerMessage->dispatch(request);
+            if (!dialog)
+            {
+               mServerPagerMessage = makeServerPagerMessage(request);
+               mServerPagerMessage->dispatch(request);
+            }
             return;
 
          default:
@@ -626,6 +711,7 @@ DialogSet::dispatch(const SipMessage& msg)
             if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -638,6 +724,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -684,7 +771,14 @@ DialogSet::findDialog(const DialogId id)
    }
    else
    {
-      return i->second;
+      if(i->second->isDestroying())
+      {
+         return 0;
+      }
+      else
+      {
+         return i->second;
+      }
    }
 }
 
@@ -711,7 +805,8 @@ DialogSet::end()
             // !jf! if 200/INV crosses a CANCEL that was sent after receiving
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
-            // then send a BYE and destroy the dialogset. 
+            // then send a BYE and destroy the dialogset.
+            mState = Destroying;
             mDum.destroy(this);
          }
          else
@@ -749,7 +844,9 @@ DialogSet::end()
          break;
       }
       case Terminating:
-         assert(0);
+      case Destroying:
+         DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
+         break;
    }
 }
 

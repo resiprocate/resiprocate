@@ -44,6 +44,8 @@ class DialogSet
       ClientOutOfDialogReqHandle getClientOutOfDialog();
       ServerOutOfDialogReqHandle getServerOutOfDialog();
 
+      bool isDestroying() const { return mState == Destroying; };
+
    private:
       friend class Dialog;
       friend class DialogUsage;
@@ -65,7 +67,8 @@ class DialogSet
          WaitingToEnd,
          ReceivedProvisional,
          Established,
-         Terminating
+         Terminating,
+         Destroying,
       } State;
 
       void possiblyDie();
@@ -95,7 +98,7 @@ class DialogSet
       
       ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
 
-      void dispatchToAllDialogs(const SipMessage& msg);      
+      void dispatchToAllDialogs(const SipMessage& msg);  
 
       MergedRequestKey mMergeKey;
       Data mCancelKey;
