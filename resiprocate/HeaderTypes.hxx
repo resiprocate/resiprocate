@@ -116,6 +116,7 @@ class Headers
          defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03"),
 
          defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261"),
+         defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
 
          MAX_HEADERS,
          NONE
