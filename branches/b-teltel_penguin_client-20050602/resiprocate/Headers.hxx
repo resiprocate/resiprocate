@@ -138,6 +138,8 @@ extern H_Privacys h_Privacies;
 
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
+defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+
 //====================
 // Mime
 //====================
