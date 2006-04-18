@@ -70,6 +70,8 @@ class Dialog
       void onForkAccepted();      
       void cancel();
 
+      bool isDestroying() const { return mDestroying; }
+
    private:
       virtual ~Dialog();
       friend class DialogUsage;
