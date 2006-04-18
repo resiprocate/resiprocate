@@ -46,6 +46,7 @@ Profile::reset()
    unsetFixedTransportPort(); 
    unsetFixedTransportInterface(); 
    unsetRinstanceEnabled();
+   unsetOutboundDecorator();
 }
 
 void
@@ -747,7 +748,39 @@ Profile::unsetRinstanceEnabled()
    }
 }
 
-   
+	  ////If set then dum will add this MessageDecorator to all outbound messages
+	  //virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
+	  //virtual SharedPtr<MessageDecorator> getOutboundDecorator();
+	  //virtual void unsetOutboundDecorator();
+
+void 
+Profile::setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator)
+{
+   mOutboundDecorator = outboundDecorator;
+   mHasOutboundDecorator = true;
+}
+
+SharedPtr<MessageDecorator> 
+Profile::getOutboundDecorator()
+{
+   // Fall through seting (if required)
+   if(!mHasOutboundDecorator && mBaseProfile.get())
+   {
+       return mBaseProfile->getOutboundDecorator();
+   }
+   return mOutboundDecorator;
+}
+
+void
+Profile::unsetOutboundDecorator()
+{
+   if (mHasOutboundDecorator)
+	   mOutboundDecorator.reset();
+
+   mHasOutboundDecorator = false;
+
+}
+  
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
