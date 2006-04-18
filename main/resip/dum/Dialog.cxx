@@ -943,6 +943,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
    }
+
    DebugLog ( << "Dialog::makeResponse: " << response);
 }
 

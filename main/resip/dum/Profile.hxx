@@ -6,6 +6,7 @@
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "resip/stack/messagedecorator.hxx"
 
 namespace resip
 {
@@ -177,6 +178,11 @@ class Profile
       virtual bool getRinstanceEnabled() const;
       virtual void unsetRinstanceEnabled();
 
+	  //If set then dum will add this MessageDecorator to all outbound messages
+	  virtual void setOutboundDecorator(SharedPtr<MessageDecorator> outboundDecorator);
+	  virtual SharedPtr<MessageDecorator> getOutboundDecorator();
+	  virtual void unsetOutboundDecorator();
+
    private:
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
@@ -237,6 +243,9 @@ class Profile
 
       bool mHasRinstanceEnabled;
       bool mRinstanceEnabled;
+      
+      bool mHasOutboundDecorator;
+      SharedPtr<MessageDecorator> mOutboundDecorator;
       
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
