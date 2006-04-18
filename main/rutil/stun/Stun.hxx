@@ -356,7 +356,7 @@ int
 stunFindLocalInterfaces(UInt32* addresses, int maxSize );
 
 bool 
-stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0 );
+stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* srcAddr=0, unsigned long timeoutMs=5000 );
 
 NatType
 stunNatType( StunAddress4& dest, bool verbose, 
