@@ -72,6 +72,11 @@ DB42_LIBNAME := db
 DB4CXX_LIBNAME := db_cxx
 endif
 
+ifeq ($(OSTYPE),Darwin)
+DB4CXX_LIBDIRS += /opt/local/lib/db42
+# falling through for values of DB42_LIBNAME and DB4CXX_LIBNAME
+endif
+
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
