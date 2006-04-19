@@ -6,8 +6,10 @@
 #include <cassert>
 #ifdef WIN32
 #include <db_cxx.h>
+#elif defined(__APPLE__)
+#include <db42/db_cxx.h>
 #else
-#include <db4/db_cxx.h>
+#include<db4/db_cxx.h>
 #endif
 
 #include "rutil/Data.hxx"
@@ -106,6 +108,7 @@ BerkeleyDb::BerkeleyDb( char* dbName )
             assert(0);
       }
       
+	  DebugLog( << "About to open Berkeley DB: " << fileName );
       int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE,0);
       //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
       
@@ -115,6 +118,8 @@ BerkeleyDb::BerkeleyDb( char* dbName )
          sane = false;
          return;
       }
+	  DebugLog( << "Opened Berkeley DB: " << fileName );
+
       
       mDb[i]->cursor(NULL,&mCursor[i],0);
       assert( mCursor );
