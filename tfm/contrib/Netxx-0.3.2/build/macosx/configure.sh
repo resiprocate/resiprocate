@@ -13,4 +13,5 @@ elif [ -r /sw/include/openssl/ssl.h ]; then
     TLS="--enable-tls --openssl-prefix=/sw"
 fi
 
-./configure.pl --disable-shared --disable-streambuf $TLS $IPV6 $*
+cd ../..
+perl configure.pl --disable-shared --disable-streambuf $TLS $IPV6 $*
