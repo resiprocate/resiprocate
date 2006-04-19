@@ -100,6 +100,13 @@ main(int argc, char* argv[])
        s6.host();
        s6.param(p_q) = 1;
 
+       Uri s7("sip:testproxy.example.com");
+	   assert (s7.user().empty());
+	   s7.user() = "test";
+	   assert (!s7.user().empty());
+	   s7.user().clear();
+	   assert (s7.user().empty());
+
        NameAddr na1;
        na1.uri().user() = "alice";
        na1.uri().host() = "example.com";
