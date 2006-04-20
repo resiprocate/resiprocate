@@ -644,6 +644,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
+         handler->onNewSession(getHandle(), None, msg);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
@@ -655,6 +656,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On422Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
+         handler->onNewSession(getHandle(), None, msg);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
