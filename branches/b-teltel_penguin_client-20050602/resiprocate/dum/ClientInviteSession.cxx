@@ -658,7 +658,14 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(Terminated);
          handler->onNewSession(getHandle(), None, msg);
          handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         if (event == OnInviteFailure)
+         {
+            handler->onTerminated(getSessionHandle(), InviteSessionHandler::InviteFailure, &msg);
+         }
+         else
+         {
+            handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         }
          mDum.destroy(this);
          break;
 

@@ -1600,7 +1600,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          return On2xx;
       }
    }
-   else if (method == INVITE && code == 422)
+   else if (method == INVITE && code == 422) // Session Interval Too Small
    {
       return On422Invite;
    }
