@@ -30,6 +30,8 @@ class MasterProfile : public UserProfile
       virtual void addSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
+      virtual Data getAllowedMethodsData() const;
+
       virtual void clearSupportedMethods(void);
 
       /// Default is none
