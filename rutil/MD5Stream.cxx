@@ -52,6 +52,15 @@ MD5Buffer::getHex()
    return digest.hex();   
 }
 
+Data
+MD5Buffer::getBin()
+{
+   MD5Context tmp = mContext;
+   MD5Final((unsigned char*)mBuf, &tmp);
+   Data digest(Data::Share, (const char*)mBuf,16);
+   return digest;
+}
+
 MD5Stream::MD5Stream()
    : std::ostream(this)
 {
@@ -67,6 +76,14 @@ MD5Stream::getHex()
    return MD5Buffer::getHex();
    //return mStreambuf.getHex();
 }
+
+Data
+MD5Stream::getBin()
+{
+   flush();
+   return MD5Buffer::getBin();
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
