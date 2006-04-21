@@ -1,5 +1,6 @@
 #include "resip/dum/RegistrationCreator.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/MasterProfile.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 
@@ -22,6 +23,10 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
       mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
+   if (userProfile->getMethodsParamEnabled())
+   {
+      mLastRequest->header(h_Contacts).front().param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
+   }
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
    // add instance parameter to the contact for gruu !cj! TODO 
