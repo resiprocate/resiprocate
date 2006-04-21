@@ -18,6 +18,7 @@ class MD5Buffer : public std::streambuf
       /** @returns the MD5 hexadecimal representation of the data from the buffer
        */
       Data getHex();
+      Data getBin();
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
@@ -39,6 +40,7 @@ class MD5Stream : private MD5Buffer, public std::ostream
           stream and convert the data to MD5.
        */
       Data getHex();
+      Data getBin();
    private:
       //MD5Buffer mStreambuf;
 };
