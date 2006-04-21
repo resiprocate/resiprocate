@@ -47,6 +47,7 @@ Profile::reset()
    unsetFixedTransportInterface(); 
    unsetRinstanceEnabled();
    unsetOutboundDecorator();
+   unsetMethodsParamEnabled();
 }
 
 void
@@ -779,6 +780,38 @@ Profile::unsetOutboundDecorator()
 
    mHasOutboundDecorator = false;
 
+}
+
+void 
+Profile::setMethodsParamEnabled(bool enabled)
+{
+   mMethodsParamEnabled = enabled;
+   mHasMethodsParamEnabled = true;
+}
+
+bool 
+Profile::getMethodsParamEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasMethodsParamEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getMethodsParamEnabled();
+   }
+   return mMethodsParamEnabled;
+}
+
+void
+Profile::unsetMethodsParamEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasMethodsParamEnabled = false;
+   }
+   else
+   {
+      mHasMethodsParamEnabled = true;
+      mMethodsParamEnabled = false;
+   }
 }
   
 /* ====================================================================
