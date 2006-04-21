@@ -63,6 +63,24 @@ MasterProfile::getAllowedMethods() const
    return mSupportedMethods;
 }
 
+Data
+MasterProfile::getAllowedMethodsData() const
+{
+   Data result;
+   
+   for (Tokens::const_iterator i = mSupportedMethods.begin();
+        i != mSupportedMethods.end(); ++i)
+   {
+      if (i != mSupportedMethods.begin())
+      {
+         result += ',';
+      }
+      result += i->value();
+   }
+   
+   return result;
+}
+
 void 
 MasterProfile::clearSupportedMethods()
 {
