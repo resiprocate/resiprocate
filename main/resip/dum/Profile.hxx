@@ -6,7 +6,7 @@
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "rutil/SharedPtr.hxx"
-#include "resip/stack/messagedecorator.hxx"
+#include "resip/stack/MessageDecorator.hxx"
 
 namespace resip
 {
@@ -183,6 +183,11 @@ class Profile
 	  virtual SharedPtr<MessageDecorator> getOutboundDecorator();
 	  virtual void unsetOutboundDecorator();
 
+      ///If enabled then methods parameter is added to contacts.
+      virtual void setMethodsParamEnabled(bool enabled) ;
+      virtual bool getMethodsParamEnabled() const;
+      virtual void unsetMethodsParamEnabled();
+
    private:
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
@@ -246,6 +251,9 @@ class Profile
       
       bool mHasOutboundDecorator;
       SharedPtr<MessageDecorator> mOutboundDecorator;
+      
+      bool mHasMethodsParamEnabled;
+      bool mMethodsParamEnabled;
       
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
