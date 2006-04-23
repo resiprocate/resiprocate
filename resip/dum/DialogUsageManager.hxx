@@ -482,7 +482,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
-      SharedPtr<IncomingTarget> pTest;
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };
