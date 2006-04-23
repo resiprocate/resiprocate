@@ -278,15 +278,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       void setOutgoingMessageInterceptor(resip::SharedPtr<DumFeature> feat);
 
-      TargetCommand::Target& dumIncomingTarget() 
-      {
-         return *mIncomingTarget;
-      }
+      TargetCommand::Target& dumIncomingTarget();
 
-      TargetCommand::Target& dumOutgoingTarget()
-      {
-         return *mOutgoingTarget;
-      }
+      TargetCommand::Target& dumOutgoingTarget();
 
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
@@ -337,6 +331,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       friend class NetworkAssociation;
 
       friend class MergedRequestRemovalCommand;
+      friend class TargetCommand::Target;
 
       class IncomingTarget : public TargetCommand::Target
       {
@@ -487,6 +482,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       IncomingTarget* mIncomingTarget;
       OutgoingTarget* mOutgoingTarget;
+      SharedPtr<IncomingTarget> pTest;
 
       EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };

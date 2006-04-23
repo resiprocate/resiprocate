@@ -85,6 +85,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mIncomingTarget = new IncomingTarget(*this);
    mOutgoingTarget = new OutgoingTarget(*this);
 
+   pTest = SharedPtr<IncomingTarget>(new IncomingTarget(*this));
+
    if (createDefaultFeatures)
    {
       SharedPtr<IdentityHandler> identity = SharedPtr<IdentityHandler>(new IdentityHandler(*this, *mIncomingTarget));
@@ -1888,6 +1890,18 @@ DialogUsageManager::removeMergedRequest(const MergedRequestKey& key)
 {
    DebugLog(<< "Merged request removed");
    mMergedRequests.erase(key);
+}
+
+TargetCommand::Target& 
+DialogUsageManager::dumIncomingTarget() 
+{
+   return *mIncomingTarget;
+}
+
+TargetCommand::Target& 
+DialogUsageManager::dumOutgoingTarget() 
+{
+   return *mOutgoingTarget;
 }
 
 
