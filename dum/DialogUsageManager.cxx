@@ -85,8 +85,6 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mIncomingTarget = new IncomingTarget(*this);
    mOutgoingTarget = new OutgoingTarget(*this);
 
-   pTest = SharedPtr<IncomingTarget>(new IncomingTarget(*this));
-
    if (createDefaultFeatures)
    {
       SharedPtr<IdentityHandler> identity = SharedPtr<IdentityHandler>(new IdentityHandler(*this, *mIncomingTarget));
