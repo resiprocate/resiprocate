@@ -157,7 +157,6 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          if (bytesRead == -1)
          {
             DebugLog (<< "Closing connection bytesRead=" << bytesRead);
-            delete writePair.first;
             delete currConnection;
          }
          else if (bytesRead > 0) 

@@ -64,6 +64,9 @@ Connection::~Connection()
 
       getConnectionManager().removeConnection(this);
    }
+
+   delete [] mBuffer;
+   delete mMessage;
 }
 
 ConnectionId
@@ -107,7 +110,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
          {
             //.jacob. Not a terribly informative warning.
             WarningLog(<< "Discarding preparse!");
-            delete mBuffer;
+            delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
@@ -181,6 +184,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
                int overHang = numUnprocessedChars - contentLength;
 
                mState = NewMessage;
+               mBuffer = 0;
                if (overHang > 0) 
                {
                   // The next message has been partially read.
@@ -228,6 +232,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
               fifo.add(mMessage);
             }
             mState = NewMessage;
+            mBuffer = 0;
          }
          break;
       }
