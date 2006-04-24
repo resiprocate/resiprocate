@@ -154,7 +154,8 @@ class BaseSecurity
       static void dumpAsn(char*, Data);
 
       // root cert list
-      mutable X509_STORE*    mRootCerts;
+      mutable X509_STORE*    mRootTlsCerts;
+      mutable X509_STORE*    mRootSslCerts;
 
       mutable X509Map        mDomainCerts;
       mutable PrivateKeyMap  mDomainPrivateKeys;

@@ -377,7 +377,8 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       break;
       case RootCert:
       {
-         X509_STORE_add_cert(mRootCerts, cert);
+         X509_STORE_add_cert(mRootTlsCerts,cert);
+         X509_STORE_add_cert(mRootSslCerts,cert);
 	 X509_free(cert);
       }
       break;
@@ -861,14 +862,17 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 BaseSecurity::BaseSecurity () :
    mTlsCtx(0),
    mSslCtx(0),
-   mRootCerts(0)
+   mRootTlsCerts(0),                    
+   mRootSslCerts(0)
 { 
-   int ret;
+   DebugLog(<< "BaseSecurity::BaseSecurity");
    
+   int ret;
    initialize(); 
    
-   mRootCerts = X509_STORE_new();
-   assert(mRootCerts);
+   mRootTlsCerts = X509_STORE_new();
+   mRootSslCerts = X509_STORE_new();
+   assert(mRootTlsCerts && mRootSslCerts);
 
    // static char* cipher="RSA+SHA+AES+3DES";
    // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
@@ -877,19 +881,28 @@ BaseSecurity::BaseSecurity () :
    static char* cipher="TLSv1";
      
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
+   if (!mTlsCtx)
+   {
+      ErrLog(<< "SSL_CTX_new failed, dumping OpenSSL error stack:");
+      while (ERR_peek_error())
+      {
+         char errBuf[120];
+         ERR_error_string(ERR_get_error(), errBuf);
+         ErrLog(<< "OpenSSL error stack: " << errBuf);
+      }
+   }
    assert(mTlsCtx);
-   SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
-   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-      verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
+
+   SSL_CTX_set_cert_store(mTlsCtx, mRootTlsCerts);
+   SSL_CTX_set_verify(mTlsCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   ret = SSL_CTX_set_cipher_list(mTlsCtx, cipher);
    assert(ret);
-   
+
    mSslCtx = SSL_CTX_new( SSLv23_method() );
    assert(mSslCtx);
-   SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
-    SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,
-       verifyCallback);
-   ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
+   SSL_CTX_set_cert_store(mSslCtx, mRootSslCerts);
+   SSL_CTX_set_verify(mSslCtx, SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE, verifyCallback);
+   ret = SSL_CTX_set_cipher_list(mSslCtx, cipher);
    assert(ret);
 }
 
@@ -906,29 +919,28 @@ void clearMap(T& m, Func& clearFunc)
          
 BaseSecurity::~BaseSecurity ()
 {
-      // cleanup certificates
-      clearMap(mDomainCerts, X509_free);
-	  clearMap(mUserCerts, X509_free);
+   // cleanup certificates
+   clearMap(mDomainCerts, X509_free);
+   clearMap(mUserCerts, X509_free);
 
-      // cleanup private keys
-      clearMap(mDomainPrivateKeys, EVP_PKEY_free);
-      clearMap(mUserPrivateKeys, EVP_PKEY_free);
+   // cleanup private keys
+   clearMap(mDomainPrivateKeys, EVP_PKEY_free);
+   clearMap(mUserPrivateKeys, EVP_PKEY_free);
 
-      // cleanup root certs
-      X509_STORE_free(mRootCerts);
-#if 0 // TODO - mem leak but seg faults
+   // cleanup root certs
+   //X509_STORE_free(mRootCerts);
+
+   // cleanup SSL_CTXes
+   if (mTlsCtx)
    {
-      // cleanup SSL_CTXes
-      if (mTlsCtx)
-      {
-         SSL_CTX_free(mTlsCtx);mTlsCtx=0;
-      }
-      if (mSslCtx)
-      {
-         SSL_CTX_free(mSslCtx);mSslCtx=0;
-      }
+      SSL_CTX_free(mTlsCtx);
+      mTlsCtx = 0;
    }
-#endif
+   if (mSslCtx)
+   {
+      SSL_CTX_free(mSslCtx);
+      mSslCtx = 0;
+   }
 }
 
 
@@ -970,7 +982,7 @@ BaseSecurity::getRootCertDescriptions() const
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 { 
-   assert( mRootCerts );
+   assert( mRootTlsCerts && mRootSslCerts );
 #if 1
    addCertPEM(RootCert,Data::Empty,x509PEMEncodedRootCerts,false);
 #else
@@ -1800,7 +1812,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 
    //   flags |= PKCS7_NOVERIFY;
 
-   assert( mRootCerts );
+   assert( mRootTlsCerts );
 
    switch (type)
    {
@@ -2060,23 +2072,12 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    if ( *signedBy == Data::Empty )
    {
-#if 0 // CJ TODO FIX 
-      // THIS IS ALL WRONG 
-      *signedBy == Data("kumiko@example.net");
-      
-      if (mUserCerts.count( *signedBy))
-      {
-         X509* cert = mUserCerts[ *signedBy ];
-         assert(cert);
-         sk_X509_push(certs, cert);
-      }
-#else
-      //assert(0);
-       InfoLog( <<"Adding cert from root list to check sig" );  
-
-       sk_X509_push(certs, mRootCerts );
-        // need to add back in code that adds all certs when sender unkonwn
-#endif
+       //add all the certificates from mUserCerts stack to 'certs' stack  
+       for(X509Map::iterator it = mUserCerts.begin(); it != mUserCerts.end(); it++)
+       {
+           assert(it->second);
+           sk_X509_push(certs, it->second);
+       }
    }
    else
    {
@@ -2170,13 +2171,13 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
 #endif
 
-   assert( mRootCerts );
+   assert( mRootTlsCerts );
 
    switch (type)
    {
       case NID_pkcs7_signed:
       {
-         if ( PKCS7_verify(pkcs7, certs, mRootCerts, pkcs7Bio, out, flags ) != 1 )
+         if ( PKCS7_verify(pkcs7, certs, mRootTlsCerts, pkcs7Bio, out, flags ) != 1 )
          {
             ErrLog( << "Problems doing PKCS7_verify" );
 
