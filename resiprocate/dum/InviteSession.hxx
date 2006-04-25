@@ -248,6 +248,7 @@ class InviteSession : public DialogUsage
       bool mSessionRefresherUAS;
       int  mSessionTimerSeq;
       bool mSentRefer;
+      int  mLastCSeq;
       
    private:
       friend class Dialog;
