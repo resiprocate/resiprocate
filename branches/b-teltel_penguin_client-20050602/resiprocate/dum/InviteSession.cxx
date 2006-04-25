@@ -574,8 +574,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
       if (mState == SentUpdateGlare)
       {
          transition(SentUpdate);
-
+            
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         mLastSessionModification.header(h_CSeq).sequence() = timeout.seq() + 1;
          mDialog.send(mLastSessionModification);
       }
       else if (mState == SentReinviteGlare)
@@ -583,6 +584,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
+         mLastSessionModification.header(h_CSeq).sequence() = timeout.seq() + 1;
          mDialog.send(mLastSessionModification);
       }
    }
