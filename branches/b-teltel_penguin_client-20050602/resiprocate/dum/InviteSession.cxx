@@ -39,7 +39,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionInterval(0),
      mSessionRefresherUAS(false),
      mSessionTimerSeq(0),
-     mSentRefer(false)
+     mSentRefer(false),
+     mLastCSeq(0)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
    assert(mDum.mInviteSessionHandler);
@@ -244,6 +245,7 @@ InviteSession::provideOffer(const SdpContents& offer)
          InfoLog (<< "Sending " << mLastSessionModification.brief());
          InviteSession::setSdp(mLastSessionModification, offer);
          mProposedLocalSdp = InviteSession::makeSdp(offer);
+         mLastCSeq = mLastSessionModification.header(h_CSeq).sequence();
          mDialog.send(mLastSessionModification);
          break;
 
@@ -788,14 +790,21 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On2xxAnswer:
       case On2xxOffer:
       {
-         transition(Connected);
-         handleSessionTimerResponse(msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         // !jf! I need to potentially include an answer in the ACK here
-         sendAck();
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
-
+         int seq = msg.header(h_CSeq).sequence();
+         if ( seq < mLastCSeq)
+         {
+            sendAck();
+         }
+         else
+         {
+            transition(Connected);
+            handleSessionTimerResponse(msg);
+            mCurrentLocalSdp = mProposedLocalSdp;
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            // !jf! I need to potentially include an answer in the ACK here
+            sendAck();
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+         }
 
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
@@ -803,13 +812,22 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
       }
       case On2xx:
-         sendAck();
-         transition(Connected);
-         handleSessionTimerResponse(msg);
-         handler->onIllegalNegotiation(getSessionHandle(), msg);
-         mProposedLocalSdp.reset();
+      {
+         int seq = msg.header(h_CSeq).sequence();
+         if (seq < mLastCSeq)
+         {
+            sendAck();
+         }
+         else
+         {
+            sendAck();
+            transition(Connected);
+            handleSessionTimerResponse(msg);
+            handler->onIllegalNegotiation(getSessionHandle(), msg);
+            mProposedLocalSdp.reset();
+         }
          break;
-
+      }
       case On422Invite:
          if(msg.exists(h_MinSE))
          {
