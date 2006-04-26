@@ -644,6 +644,15 @@ main(int argc, char* argv[])
     assert( sip8.uri().getAor() == Data("user@host.com") );
   }
 
+   // Embedded header testing
+   {
+       NameAddr addr("sip:user@domain.com?Call-Info=%3csip:192.168.0.1%3e%3banswer-after=0");
+       //cout << addr << endl;
+       assert(Data::from(addr.uri()) == "sip:user@domain.com?Call-Info=%3csip:192.168.0.1%3e%3banswer-after=0");
+       //cout << "CallInfo:  " << addr.uri().embedded().header(h_CallInfos).front() << endl;
+       assert(Data::from(addr.uri().embedded().header(h_CallInfos).front()) == "<sip:192.168.0.1>;answer-after=0");
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
