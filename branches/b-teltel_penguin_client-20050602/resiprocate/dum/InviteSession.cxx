@@ -875,8 +875,9 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    if (method == INVITE && msg.isRequest())
    {
       // Received inbound reinvite, when waiting to resend outbound reinvite or update
-      transition(ReceivedReinvite);
       handler->onOfferRejected(getSessionHandle(), msg);
+      transition(Connected);
+      dispatchConnected(msg);
    }
    else if (method == UPDATE && msg.isRequest())
    {
