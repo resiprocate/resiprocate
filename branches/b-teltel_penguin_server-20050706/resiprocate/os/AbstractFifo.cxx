@@ -39,19 +39,22 @@ AbstractFifo ::getNext()
 void*
 AbstractFifo::getNext(int ms)
 {
-   const UInt64 end(Timer::getTimeMs() + ms);
-
    Lock lock(mMutex); (void)lock;
 
    // Wait until there are messages available
-   while (mFifo.empty())
+   if (mFifo.empty())
    {
-      // bail if total wait time exceeds limit
-      bool signaled = mCondition.wait(&mMutex, (unsigned int)(end - Timer::getTimeMs()));
-      if (!signaled)
+      const UInt64 end(Timer::getTimeMs() + ms);
+
+      do
       {
-        return 0;
-      }
+	 // bail if total wait time exceeds limit
+	 bool signaled = mCondition.wait(&mMutex, (unsigned int)(end - Timer::getTimeMs()));
+	 if (!signaled)
+	 {
+	    return 0;
+	 }
+      } while (mFifo.empty());
    }
 
    // Return the first message on the fifo.
