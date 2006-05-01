@@ -844,6 +844,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentUpdate);
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
          send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteGlare)
@@ -851,6 +852,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, INVITE); // increments CSeq
          send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteNoOfferGlare)
@@ -858,6 +860,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentReinviteNoOffer);
 
          InfoLog (<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, INVITE);  // increments CSeq
          send(mLastLocalSessionModification);
       }
    }
@@ -1214,8 +1217,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
             // Change interval to min from 422 response
             mSessionInterval = msg.header(h_MinSE).value();
             mMinSE = mSessionInterval;
-            setSessionTimerHeaders(*mLastLocalSessionModification);
-            send(mLastLocalSessionModification);
+            sessionRefresh();
          }
          else
          {
