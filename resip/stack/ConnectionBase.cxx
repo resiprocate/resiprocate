@@ -61,8 +61,8 @@ ConnectionBase::~ConnectionBase()
       mOutstandingSends.pop_front();
    }
    DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
-//   delete mBuffer;
-//   delete mMessage;
+   delete [] mBuffer;
+   delete mMessage;
 }
 
 ConnectionId
@@ -251,6 +251,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
                Transport::stampReceived(mMessage);
                fifo.add(mMessage);
+               mMessage = 0;
             }
             mState = NewMessage;
             mBuffer = 0;            
