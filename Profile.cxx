@@ -48,6 +48,7 @@ Profile::reset()
    unsetRinstanceEnabled();
    unsetOutboundDecorator();
    unsetMethodsParamEnabled();
+   unsetExpressOutboundAsRouteSetEnabled();
 }
 
 void
@@ -811,6 +812,38 @@ Profile::unsetMethodsParamEnabled()
    {
       mHasMethodsParamEnabled = true;
       mMethodsParamEnabled = false;
+   }
+}
+  
+void 
+Profile::setExpressOutboundAsRouteSetEnabled(bool enabled)
+{
+   mExpressOutboundAsRouteSetEnabled = enabled;
+   mHasExpressOutboundAsRouteSetEnabled = true;
+}
+
+bool 
+Profile::getExpressOutboundAsRouteSetEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasExpressOutboundAsRouteSetEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getExpressOutboundAsRouteSetEnabled();
+   }
+   return mExpressOutboundAsRouteSetEnabled;
+}
+
+void
+Profile::unsetExpressOutboundAsRouteSetEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasExpressOutboundAsRouteSetEnabled = false;
+   }
+   else
+   {
+      mHasExpressOutboundAsRouteSetEnabled = true;
+      mExpressOutboundAsRouteSetEnabled = false;
    }
 }
   
