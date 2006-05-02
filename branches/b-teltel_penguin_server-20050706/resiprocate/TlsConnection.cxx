@@ -67,14 +67,22 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       assert( mSecurity );
 
       X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
-      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
-
+      if (!cert)
+      {
+         ErrLog(<< "Don't have certificate for domain " << mDomain );
+      }
+      
       if( !SSL_use_certificate(mSsl, cert) )
       {
          throw Security::Exception("SSL_use_certificate failed",
                                    __FILE__,__LINE__);
       }
       
+      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
+      if (!pKey)
+      {
+         ErrLog(<< "Don't have private key for domain " << mDomain );
+      }
       if ( !SSL_use_PrivateKey(mSsl, pKey) )
       {
          throw Security::Exception("SSL_use_PrivateKey failed.",
@@ -82,17 +90,13 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       }
    }
    
-   mBio = BIO_new_socket(fd,0/*close flag*/);
+   mBio = BIO_new_socket(fd, 0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );
 
    mState = mServer ? Accepting : Connecting;
 
-   if (checkState() == Broken)
-   {
-      throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
-   }
 #endif // USE_SSL   
 }
 
@@ -128,6 +132,8 @@ TlsConnection::checkState()
 
    int ok=0;
 
+   ERR_clear_error();
+   
    if (mState != Handshaking)
    {
        if (mState == Accepting)
@@ -434,7 +440,7 @@ TlsConnection::isGood() // has data that can be read
 }
 
 
-Data 
+const Data& 
 TlsConnection::getPeerName()
 {
    return mPeerName;
