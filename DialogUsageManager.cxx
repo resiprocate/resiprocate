@@ -885,13 +885,20 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, aut
    DialogId id(*msg);
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
-      // prepend the outbound proxy to the service route
-      msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
-
       DebugLog ( << "Using outbound proxy: " 
                  << userProfile.getOutboundProxy().uri() 
                  << " -> " << msg->brief());
-      mStack.send(msg, this);
+
+      if (userProfile.getExpressOutboundAsRouteSetEnabled())
+      {
+         // prepend the outbound proxy to the service route
+         msg->header(h_Routes).push_front(NameAddr(userProfile.getOutboundProxy().uri()));
+         mStack.send(msg, this);
+      }
+      else
+      {
+         mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
+      }
    }
    else
    {
