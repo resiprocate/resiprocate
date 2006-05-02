@@ -188,6 +188,12 @@ class Profile
       virtual bool getMethodsParamEnabled() const;
       virtual void unsetMethodsParamEnabled();
 
+      ///If enabled, add a route header for the outbound proxy
+      virtual void setExpressOutboundAsRouteSetEnabled(bool enabled) ;
+      virtual bool getExpressOutboundAsRouteSetEnabled() const;
+      virtual void unsetExpressOutboundAsRouteSetEnabled();
+      
+
    private:
       bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
@@ -254,7 +260,10 @@ class Profile
       
       bool mHasMethodsParamEnabled;
       bool mMethodsParamEnabled;
-      
+
+      bool mHasExpressOutboundAsRouteSetEnabled;
+      bool mExpressOutboundAsRouteSetEnabled;
+
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
 
