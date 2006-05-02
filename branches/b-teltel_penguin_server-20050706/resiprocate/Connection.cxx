@@ -179,6 +179,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
                  Transport::stampReceived(mMessage);
                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
                  fifo.add(mMessage);
+		 mMessage = 0;
                }
 
                int overHang = numUnprocessedChars - contentLength;
@@ -230,6 +231,7 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
 
               Transport::stampReceived(mMessage);
               fifo.add(mMessage);
+	      mMessage = 0;
             }
             mState = NewMessage;
             mBuffer = 0;
