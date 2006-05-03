@@ -53,23 +53,26 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage
 #endif
 }
 
+template<class T> void 
+deleteMap(T& m)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      delete it->second;
+   }
+   m.clear();
+}
+
 TransportSelector::~TransportSelector()
 {
-   while (!mExactTransports.empty())
-   {
-      ExactTupleMap::const_iterator i = mExactTransports.begin();
-      Transport* t = i->second;
-      mExactTransports.erase(i->first);
-      delete t;
-   }
-
-   while (!mAnyInterfaceTransports.empty())
-   {
-      AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
-      Transport* t = i->second;
-      mAnyInterfaceTransports.erase(i->first);
-      delete t;
-   }
+   deleteMap(mExactTransports);
+   deleteMap(mAnyInterfaceTransports);
+#if defined( USE_SSL )  
+   deleteMap(mTlsTransports);
+#endif
+#if defined( USE_DTLS )
+   deleteMap(mDtlsTransports);
+#endif
 }
 
 void
