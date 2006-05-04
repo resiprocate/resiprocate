@@ -58,7 +58,11 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       ctx = mSecurity->getTlsCtx();
    }   
    assert(ctx);
-   
+   if ( mServer )
+   {
+      SSL_CTX_set_quiet_shutdown(ctx, 1);
+   }
+
    mSsl = SSL_new(ctx);
    assert(mSsl);
 
