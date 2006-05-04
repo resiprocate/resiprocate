@@ -306,6 +306,11 @@ Connection::getWriteBuffer()
 {
    if (mState == NewMessage)
    {
+      if (mBuffer)
+      {
+	 delete [] mBuffer;
+      }
+
       DebugLog (<< "Creating buffer for " << *this);
 
       // .dlb. room for sentinels
