@@ -200,17 +200,22 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       RawInvite* rawInvite(const TestSipEndPoint* endPoint, const resip::Data& rawText);
       RawInvite* rawInvite(const TestUser& endPoint, const resip::Data& rawText);
       
-      class RawSend : public MessageAction
+      class RawSend : public Action
       {
          public:
             RawSend(TestSipEndPoint* from, 
                     const resip::Uri& to, 
                     const resip::Data& rawText);
+            virtual void operator()();
+            virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
 
          private:
-            virtual boost::shared_ptr<resip::SipMessage> go();
-            
+            virtual void go();
+
+         private:
+            TestSipEndPoint& mEndPoint;
+            resip::NameAddr mTo;
             resip::Data mRawText;
       };
       friend class RawSend;

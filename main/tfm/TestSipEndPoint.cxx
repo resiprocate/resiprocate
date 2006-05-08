@@ -977,16 +977,28 @@ TestSipEndPoint::rawInvite(const TestSipEndPoint* endPoint,
 TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from, 
                                   const resip::Uri& to, 
                                   const resip::Data& rawText)
-   : MessageAction(*from, to),
+   : mEndPoint(*from),
+     mTo(to),
      mRawText(rawText)
 {}
 
-shared_ptr<SipMessage>
+void
+TestSipEndPoint::RawSend::operator()()
+{
+   go();
+}
+
+void
+TestSipEndPoint::RawSend::operator()(boost::shared_ptr<Event> event)
+{
+   go();
+}
+
+void 
 TestSipEndPoint::RawSend::go()
 {
-   shared_ptr<SipMessage> msg(SipMessage::make(mRawText));
-   msg->header(h_To) = NameAddr(mTo);
-   return msg;
+   Tuple target(mTo.uri().host(), mTo.uri().port(), TCP);
+   mEndPoint.mTransport->send(target, mRawText, 0);
 }
 
 resip::Data
