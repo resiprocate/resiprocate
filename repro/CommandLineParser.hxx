@@ -34,6 +34,7 @@ class CommandLineParser
       bool mNoChallenge;
       bool mNoWebChallenge;
       bool mNoRegistrar;
+      bool mNoIdentityHeaders;
       bool mCertServer;
       Data mRequestProcessorChainName;
       Data mMySqlServer;
