@@ -34,6 +34,7 @@ TestUser* Fixture::derek = 0;
 TestUser* Fixture::david = 0;
 TestUser* Fixture::enlai = 0;
 TestUser* Fixture::cullen = 0;
+TestUser* Fixture::jozsef = 0;
 
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
@@ -47,7 +48,7 @@ Fixture::~Fixture()
 {
 }
 
-static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host, Security* security)
+static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Data& host, Security* security, resip::TransportType transport = resip::UDP)
 {
    Uri j;
    j.user() = user;
@@ -56,9 +57,8 @@ static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Da
    j.param(p_transport) = Symbols::TLS;
    return new TestReproUser(proxy, j, j.user(), j.user(), TLS, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
 #else
-   return new TestReproUser(proxy, j, j.user(), j.user(), UDP, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
+   return new TestReproUser(proxy, j, j.user(), j.user(), transport, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
 #endif
-
 }
 
 void
@@ -80,6 +80,7 @@ Fixture::initialize(int argc, char** argv)
    david = makeReproUser(*proxy, "david", "localhost", security);
    enlai = makeReproUser(*proxy, "enlai", "localhost", security);
    cullen = makeReproUser(*proxy, "cullen", "localhost", security);
+   jozsef = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
 #endif
 }
 
@@ -123,6 +124,7 @@ Fixture::tearDown()
    david->clean();
    enlai->clean();
    cullen->clean();
+   jozsef->clean();
 }
 
       
