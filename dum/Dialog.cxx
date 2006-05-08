@@ -847,6 +847,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    request.header(h_CallId) = mCallId;
 
    request.remove(h_RecordRoutes);  //!dcm! -- all of this is rather messy
+   request.remove(h_Replaces);
 
    request.remove(h_Contacts);
    request.header(h_Contacts).push_front(mLocalContact);
