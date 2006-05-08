@@ -283,6 +283,10 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
          
    if (NO_ERROR == GetIpAddrTable(pIpAddrTable, &addrSize, FALSE)) 
    {
+      enum ENICEntryPreference {ENICUnknown = 0, ENextHopNotWithinNICSubnet, ENICSubnetIsAll1s, ENICServicesNextHop};
+      ENICEntryPreference eCurrSelection = ENICUnknown;
+
+      sourceIP.sin_family = AF_INET;
       // try to find a match
       for (DWORD i=0; i<pIpAddrTable->dwNumEntries; i++) 
       {
@@ -290,12 +294,50 @@ WinCompat::determineSourceInterfaceWithoutIPv6(const GenericIPAddress& destinati
    	   
          ULONG addr = pIpAddrTable->table[i].dwAddr;
          ULONG gw = bestRoute.dwForwardNextHop;
-         if( (entry.dwIndex == bestRoute.dwForwardIfIndex) &&
-             (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) )
+         if(entry.dwIndex == bestRoute.dwForwardIfIndex)    // Note: there MAY be > 1 entry with the same index, see AddIPAddress.
          {
-            sourceIP.sin_family = AF_INET;
-            sourceIP.sin_addr.s_addr = entry.dwAddr;
-            break;
+            if( (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) )
+            {
+               sourceIP.sin_addr.s_addr = entry.dwAddr;
+               eCurrSelection = ENICServicesNextHop;
+               break;
+            }
+            else if (entry.dwMask == 0xffffffff && eCurrSelection < ENICSubnetIsAll1s)
+            {
+               sourceIP.sin_addr.s_addr = entry.dwAddr;
+               eCurrSelection = ENICSubnetIsAll1s;    // Lucent/Avaya VPN has Subnet Mask of 255.255.255.255. Illegal perhaps but we should use
+                                                      // if cannot find one that serves next hop.
+            }
+            else if (eCurrSelection < ENextHopNotWithinNICSubnet)
+            {
+               sourceIP.sin_addr.s_addr = entry.dwAddr;
+               eCurrSelection = ENextHopNotWithinNICSubnet;   // should use if nothing else works since bestRoute told us to use this NIC.
+            }
+         }
+      }
+
+      if (eCurrSelection != ENICServicesNextHop)
+      {
+         // rarely happens but it does. We would fail before with the old code, let's see what the ip table looks like.
+         in_addr subnet, netMask, nextHop;
+         subnet.s_addr = bestRoute.dwForwardDest;
+         netMask.s_addr = bestRoute.dwForwardMask;
+         nextHop.s_addr = bestRoute.dwForwardNextHop;
+         // best-route
+         DebugLog(<< "Best Route - subnet=" <<DnsUtil::inet_ntop(subnet)
+                  <<" net-mask=" <<DnsUtil::inet_ntop(netMask)
+                  <<" next-hop=" <<DnsUtil::inet_ntop(nextHop)
+                  <<" if-index=" <<bestRoute.dwForwardIfIndex );
+         // ip-table
+         for (DWORD i=0; i<pIpAddrTable->dwNumEntries; i++)
+         {
+            MIB_IPADDRROW & entry = pIpAddrTable->table[i];
+            in_addr nicIP, nicMask;
+            nicIP.s_addr = entry.dwAddr;
+            nicMask.s_addr = entry.dwMask;
+            DebugLog(<<"IP Table entry " <<i+1 <<'/' <<pIpAddrTable->dwNumEntries <<" if-index=" <<entry.dwIndex
+                     <<" NIC IP=" <<DnsUtil::inet_ntop(nicIP)
+                     <<" NIC Mask=" <<DnsUtil::inet_ntop(nicMask) );
          }
       }
    }
