@@ -524,7 +524,7 @@ Dialog::dispatch(const SipMessage& msg)
       RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
       if (r != mRequests.end())
       {
-	     bool handledByAuth = false;
+         bool handledByAuth = false;
          if (mDum.mClientAuthManager.get() && 
              mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
          {
@@ -534,10 +534,10 @@ Dialog::dispatch(const SipMessage& msg)
 
             mLocalCSeq++;
             send(r->second);
-			handledByAuth = true;
+            handledByAuth = true;
          }
          mRequests.erase(r);
-		 if (handledByAuth) return;
+         if (handledByAuth) return;
       }
       else
       {

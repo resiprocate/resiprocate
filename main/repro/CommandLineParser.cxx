@@ -42,6 +42,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noWebChallenge = false;
    
    int noRegistrar = false;
+   int noIdentityHeaders = false;
    int certServer = true;
 
    char* reqChainName = "default";
@@ -98,6 +99,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
+      {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
       {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
       {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
@@ -166,6 +168,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mNoChallenge = noChallenge != 0;
    mNoWebChallenge = noWebChallenge != 0;
    mNoRegistrar = noRegistrar != 0 ;
+   mNoIdentityHeaders = noIdentityHeaders != 0;
    mCertServer = certServer !=0 ;
    mRequestProcessorChainName=reqChainName;
    mRecursiveRedirect = recursiveRedirect?true:false;

@@ -287,7 +287,7 @@ main(int argc, char** argv)
 
       if (!args.mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,&stack);
+         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,&stack,args.mNoIdentityHeaders,args.mHttpPort);
          locators->addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
@@ -394,7 +394,6 @@ main(int argc, char** argv)
    
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
-
 
    resip::MessageFilterRuleList ruleList;
    if (!args.mNoRegistrar || args.mCertServer)
