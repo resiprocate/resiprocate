@@ -13,7 +13,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders, int httpPort);
+      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders=false, int httpPort=5080);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
