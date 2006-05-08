@@ -143,8 +143,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          fdset.clear(currConnection->getSocket());
 
          int bytesRead = currConnection->read(mStateMachineFifo);
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " 
-                   << *currConnection << " read=" << bytesRead);            
+         DebugLog (<< "TcpBaseTransport::processSomeReads() " << " read=" << bytesRead);            
          if (bytesRead < 0)
          {
             DebugLog (<< "Closing connection bytesRead=" << bytesRead);
