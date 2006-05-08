@@ -21,7 +21,12 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-DigestAuthenticator::DigestAuthenticator( UserStore& userStore,resip::SipStack* stack)
+DigestAuthenticator::DigestAuthenticator( UserStore& userStore, 
+                                          resip::SipStack* stack, 
+                                          bool noIdentityHeaders, 
+                                          int httpPort) :
+            mNoIdentityHeaders(noIdentityHeaders),
+            mHttpPort(httpPort)
 {
    std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
    mAuthRequestDispatcher= new Dispatcher(grabber,stack);
@@ -185,15 +190,17 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                }            
             
 #if defined(USE_SSL)
-               // TODO need nerd knob to enable/disable adding Identity header
-               sipMessage->header(h_Identity).value() = Data::Empty;
-               static Data http("http://");
-               static Data post(":5080/cert?domain=");
-               sipMessage->header(h_IdentityInfo).uri() = http 
-                  + DnsUtil::getLocalHostName() 
-                  + post + realm;
-               InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
-               InfoLog (<< *sipMessage);
+               if(!mNoIdentityHeaders)
+               {
+                  static Data http("http://");
+                  static Data post(":" + Data(mHttpPort) + "/cert?domain=");
+                  sipMessage->header(h_Identity).value() = Data::Empty;
+                  sipMessage->header(h_IdentityInfo).uri() = http 
+                     + DnsUtil::getLocalHostName() 
+                     + post + realm;
+                  InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
+                  InfoLog (<< *sipMessage);
+               }
 #endif
             }
             else
