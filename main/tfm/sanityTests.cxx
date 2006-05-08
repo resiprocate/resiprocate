@@ -5569,6 +5569,53 @@ class TestHolder : public Fixture
          ExecuteSequences();
       }
 
+      void testTCPPreparseError()
+      {
+         InfoLog(<< "*!testTCPPreparseError!*");
+
+         Random::initialize();
+
+         Uri server;
+         server.host() = "127.0.0.1";
+         server.port() = 5060;
+//         server.host() = proxy->getUri().host();
+//         server.port() = proxy->getUri().port();
+         Data preparseError = "fMBMTyr0ChZkQM0Ue3DLPSInEQKSMKVUiHRCU1tMKnyGC55/nhZbZNxd5wJRcjFcPNA=";
+         Data errMsg = preparseError.base64decode();
+
+         Seq(jozsef->registerUser(60, jozsef->getDefaultContacts()),
+             jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
+             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, chain(jozsef->rawSend(server, errMsg), jozsef->registerUser(60, jozsef->getDefaultContacts()))),
+             jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
+             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, jozsef->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+      void testTCPParseBufferError()
+      {
+         InfoLog(<< "*!testTCPParseBufferError!*");
+
+         Random::initialize();
+
+         Uri server;
+         server.host() = "127.0.0.1";
+         server.port() = 5060;
+//         server.host() = proxy->getUri().host();
+//         server.port() = proxy->getUri().port();
+         Data parseBufferError = "NsKkOMmAiiygF/lFP0d2DYWrbQwOZx5X/UG5Eiv0dgoJ++Y8fT+RfM83cg6CEHxnNh8=";
+         Data errMsg = parseBufferError.base64decode();
+
+         Seq(jozsef->registerUser(60, jozsef->getDefaultContacts()),
+             jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
+             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, chain(jozsef->rawSend(server, errMsg), jozsef->registerUser(60, jozsef->getDefaultContacts()))),
+             jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
+             jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, jozsef->noAction()),
+             WaitForEndOfTest);
+         ExecuteSequences();
+      }
+
+
       // provisioning here(automatic cleanup)
       static void createStatic()
       {
@@ -5755,6 +5802,10 @@ class MyTestCase
 
 	 // Tests of the routing pattern matching logic.
          TEST(testRoutingBasic);
+
+         // TCP send errors 
+         TEST(testTCPPreparseError);
+         TEST(testTCPParseBufferError);
 #else
          TEST(testInviteAllBusyContacts);
 #endif         
