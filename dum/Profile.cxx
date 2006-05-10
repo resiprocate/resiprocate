@@ -6,12 +6,14 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-Profile::Profile()
+Profile::Profile() :
+   mHasOutboundDecorator(false)
 {
    reset();  // set defaults
 }
 
 Profile::Profile(SharedPtr<Profile> baseProfile) : 
+   mHasOutboundDecorator(false),
    mBaseProfile(baseProfile)
 {
    assert(baseProfile.get());
@@ -777,7 +779,9 @@ void
 Profile::unsetOutboundDecorator()
 {
    if (mHasOutboundDecorator)
-	   mOutboundDecorator.reset();
+   {
+      mOutboundDecorator.reset();
+   }
 
    mHasOutboundDecorator = false;
 
