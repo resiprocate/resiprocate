@@ -103,10 +103,6 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
 
    mState = mServer ? Accepting : Connecting;
 
-   if (checkState() == Broken)
-   {
-      throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
-   }
 #endif // USE_SSL   
 }
 
