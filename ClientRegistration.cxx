@@ -368,7 +368,6 @@ ClientRegistration::dispatch(const SipMessage& msg)
                            {
                               fallbackExpiry = resipMin(it->param(p_expires), fallbackExpiry);
                            }
-                           break;
                         }
                      }
                      catch(ParseBuffer::Exception& e)
