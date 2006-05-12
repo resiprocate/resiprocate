@@ -184,9 +184,9 @@ class Security : public BaseSecurity
 {
    public:
 #ifdef _WIN32
-      Security( const Data& pathToCerts = "C:\\sipCerts\\");
+      Security(const Data& pathToCerts = "C:\\sipCerts\\", bool serverAuthentication = true);
 #else
-      Security( const Data& pathToCerts = "~/.sipCerts/" );
+      Security(const Data& pathToCerts = "~/.sipCerts/", bool serverAuthentication = true);
 #endif
 
       virtual void preload();
@@ -195,8 +195,11 @@ class Security : public BaseSecurity
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
       virtual void onRemovePEM(const Data& name, PEMType type) const;
 
+      bool requireServerAuthentication() { return mServerAuthentication; }
+
    private:
       Data mPath;
+      bool mServerAuthentication;
 };
 
 }
