@@ -95,6 +95,14 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 DtlsTransport::~DtlsTransport()
 {
    DebugLog (<< "Shutting down " << mTuple);
+
+   while(mDtlsConnections.begin() != mDtlsConnections.end())
+   {
+       _cleanupConnectionState(mDtlsConnections.begin()->second, mDtlsConnections.begin()->first);
+   }       
+   SSL_CTX_free(mClientCtx);mClientCtx=0;  
+   SSL_CTX_free(mServerCtx);mServerCtx=0;  
+
    BIO_free( mDummyBio) ;
    ThreadIf::shutdown();
    join();
