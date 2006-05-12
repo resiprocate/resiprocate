@@ -1430,8 +1430,9 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
    }
    else if (sip->getDestination().transport)
    {
-      processReliability(sip->getDestination().getType());
-      mController.mTransportSelector.transmit(sip, sip->getDestination()); // dns not used
+      mTarget = sip->getDestination();
+      processReliability(mTarget.getType());
+      mController.mTransportSelector.transmit(sip, mTarget); // dns not used
    }
    else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
