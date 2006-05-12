@@ -147,7 +147,9 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    return iInCode;
 }
 
-Security::Security(const Data& directory) : mPath(directory)
+Security::Security(const Data& directory, bool serverAuthentication)
+   : mPath(directory),
+     mServerAuthentication(serverAuthentication)
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
@@ -2076,7 +2078,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                      InfoLog(<< "choose <" << name << "> signature" );
                  }
                }
-               catch (ParseBuffer::Exception& e)
+               catch (...)
                {
                }
             }

@@ -261,35 +261,36 @@ TlsConnection::checkState()
             return mState;
       }
    }
+
    //post-connection verification: check that certificate name matches domain name
-   
-
-   X509* cert = SSL_get_peer_certificate(mSsl);
-   if (cert)
+   if (mSecurity->requireServerAuthentication())
    {
-      if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
+      X509* cert = SSL_get_peer_certificate(mSsl);
+      if (cert)
       {
-         mState = Broken;
-         mBio = 0;
-         ErrLog (<< "Certificate name mismatch ");
-         return mState;
+         if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
+         {
+            mState = Broken;
+            mBio = 0;
+            ErrLog (<< "Certificate name mismatch ");
+            return mState;
+         }
       }
+      else
+      {
+         //!dcm! -- add 'require mutual tls' logic here
+         if (!mServer)
+         {
+            ErrLog(<< "No server certificate in TLS connection" );
+            mState = Broken;
+            mBio = 0;
+            return mState;
+         }
+      }
+      X509_free(cert); 
+      cert=NULL;
+   }
 
-   }
-   else
-   {
-      //!dcm! -- add 'require mutual tls' logic here
-      if (!mServer)
-      {
-         ErrLog(<< "No server certificate in TLS connection" );
-         mState = Broken;
-         mBio = 0;
-         return mState;
-      }
-   }
-   X509_free(cert); 
-   cert=NULL;
-    
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
 
