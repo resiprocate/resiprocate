@@ -64,7 +64,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       ctx = mSecurity->getTlsCtx();
    }   
    assert(ctx);
-   
+
    mSsl = SSL_new(ctx);
    assert(mSsl);
 
@@ -96,7 +96,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       }
    }
    
-   mBio = BIO_new_socket(fd,0/*close flag*/);
+   mBio = BIO_new_socket(fd, 0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );
@@ -139,6 +139,8 @@ TlsConnection::checkState()
    }
    
    int ok=0;
+   
+   ERR_clear_error();
    
    ERR_clear_error();
    
@@ -481,7 +483,7 @@ TlsConnection::isGood() // has data that can be read
 }
 
 
-Data 
+const Data& 
 TlsConnection::getPeerName()
 {
    return mPeerName;
