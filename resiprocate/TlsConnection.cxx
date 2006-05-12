@@ -142,8 +142,6 @@ TlsConnection::checkState()
    
    ERR_clear_error();
    
-   ERR_clear_error();
-   
    if (mState != Handshaking)
    {
       if (mState == Accepting)
@@ -481,14 +479,6 @@ TlsConnection::isGood() // has data that can be read
 #endif       
    return true;
 }
-
-
-const Data& 
-TlsConnection::getPeerName()
-{
-   return mPeerName;
-}
-
 
 void
 TlsConnection::computePeerName()
