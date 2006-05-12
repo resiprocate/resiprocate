@@ -230,6 +230,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
                Transport::stampReceived(mMessage);
                fifo.add(mMessage);
+               mMessage = 0;
             }
             mState = NewMessage;
             mBuffer = 0;            
@@ -246,6 +247,11 @@ ConnectionBase::getWriteBuffer()
 {
    if (mState == NewMessage)
    {
+      if (mBuffer)
+      {
+         delete [] mBuffer;
+      }
+
       DebugLog (<< "Creating buffer for " << *this);
 
       mBuffer = new char [ConnectionBase::ChunkSize + MsgHeaderScanner::MaxNumCharsChunkOverflow];
