@@ -2,23 +2,30 @@
 #ifndef INCLUDED_DTLS_SHIM
 #define INCLUDED_DTLS_SHIM
 
+
 typedef struct {
     sockaddr remote;
-} connection_info_s;
+} dtls_shim_con_info_s;
 
 typedef struct {
     unsigned char key_material[48];
-} srtp_key_s;
+} dtls_shim_srtp_key_s;
 
 typedef struct {
     unsigned char *fingerprint;
-} fingerprint_s;
+} dtls_shim_fingerprint_s;
 
 typedef enum {
     DTLS_SHIM_OK = 1;          /* no action required. */
     DTLS_SHIM_WANT_READ = 2;   /* _read() needs to be called next. */
 	DTLS_SHIM_WANT_WRITE = 3;  /* _write() needs to be called next. */
 } dtls_shim_iostatus_e;
+
+typedef enum {
+    DTLS_SHIM_FINGERPRINT_MATCH    = 1;
+    DTLS_SHIM_FINGERPRINT_MISMATCH = 2;
+	DTLS_SHIM_FINGERPRINT_CHECK_PENDING = 3;
+} dtls_shim_fingerprint_status_e;
 
 
 typedef dtls_shim_s *dtls_shim_h;
@@ -27,7 +34,7 @@ typedef dtls_shim_s *dtls_shim_h;
  * Initialize the library; set-up data structures.
  * RETURNS: NULL handle if an error occurs. 
  */
-dtls_shim_h dtls_shim_init(const X509 *cert);
+dtls_shim_h dtls_shim_init(const X509 *cert, void *);
 
 /* 
  * Clean-up and release allocated memory.  This function is *not*
@@ -36,11 +43,17 @@ dtls_shim_h dtls_shim_init(const X509 *cert);
 void dtls_shim_fini(dtls_shim_h);
 
 
+/*
+ * Return client data.
+ */
+void *dtls_shim_get_client_data(dtls_shim_h);
+
+
 /* 
  * Get SRTP keys for a given connection.
- * RETURNS: NULL on error. 
+ * RETURNS: NULL on error.
  */
-srtp_key_s *dtls_get_srtp_key(dtls_shim_h, connection_info_s, 
+srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s, 
     srtp_key_s *);
 
 /* 
@@ -49,7 +62,7 @@ srtp_key_s *dtls_get_srtp_key(dtls_shim_h, connection_info_s,
  * invoked. 
  * RETURNS: a non-zero timeout value.
  */
-int dtls_shim_get_timeout(dtls_shim_h, connection_info_s);
+int dtls_shim_get_timeout(dtls_shim_h, dtls_shim_con_info_s);
 
 
 /*
@@ -57,15 +70,16 @@ int dtls_shim_get_timeout(dtls_shim_h, connection_info_s);
  * RETURNS: the number of bytes written to obuf.  If return value is <= 0,
  * then call dtls_shim_get_status() for further information.
  */
-int dtls_shim_read(dtls_shim_h, connection_info_s, unsigned char *obuf, 
-    unsigned int olen, const unsigned char *ibuf, unsigned int ilen);
+int dtls_shim_read(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf, 
+    unsigned int olen, const unsigned char *ibuf, unsigned int ilen,
+	dtls_shim_iostatus_e *status);
 
 /*
  * Encrypts and MACs DTLS records.
  * RETURNS: the number of bytes written to obuf.  If the return value is <= 0,
  * then call dtls_shim_get_status() for further information.
  */
-int dtls_shim_write(dtls_shim_h, connection_info_s, unsigned char *obuf, 
+int dtls_shim_write(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf, 
     unsigned int olen, const unsigned char *ibuf, unsigned int ilen, 
 	dtls_shim_iostatus_e *status);
 
@@ -73,7 +87,18 @@ int dtls_shim_write(dtls_shim_h, connection_info_s, unsigned char *obuf,
  * This function requests that the connection be closed.
  * dtls_shim_write() should be called after this.
  */
-void dtls_shim_close(dtls_shim_h, connection_info_s);
+void dtls_shim_close(dtls_shim_h, dtls_shim_con_info_s);
 
+void dtls_shim_add_fingerprint(dtls_shim_h, fingerprint_s);
+
+dtls_shim_fingerprint_status_e dtls_shim_fingerprint_match(dtls_shim_h, 
+	dtls_shim_con_info_s);
+
+/*
+ * Returns an array of connection info structures associated with this
+ * session.  
+ */
+dtls_shim_con_info_s *dtls_shim_get_conn_info(dtls_shim_h, 
+	unsigned int *count);
 
 #endif /* ! INCLUDED_DTLS_SHIM */
