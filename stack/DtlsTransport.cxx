@@ -2,7 +2,7 @@
 #ifdef USE_DTLS
 
 #if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+  #include "resip/stack/config.hxx"
 #endif
 
 #include <memory>
