@@ -158,6 +158,7 @@ class BaseSecurity
       
       X509*     getDomainCert( const Data& domain );
       EVP_PKEY* getDomainKey(  const Data& domain );
+      X509*     getUserCert(const Data& aor);
 
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
