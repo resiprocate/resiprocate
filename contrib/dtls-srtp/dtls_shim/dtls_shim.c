@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <openssl/ssl.h>
 #include <time.h>
 
@@ -109,10 +109,10 @@ dtls_shim_table_get_entries(dtls_shim_table_s *table, unsigned int *count)
 
 static BIO *g_dummy_bio = NULL;
 
-struct dtls_shim *
+dtls_shim_h
 dtls_shim_init(const X509 *cert, void *app_data)
 {
-    dtls_shim_s *handle = NULL;
+    dtls_shim_h handle = NULL;
 
     handle = (dtls_shim_s *)malloc(sizeof(dtls_shim_s));
     if ( handle == NULL)
@@ -148,7 +148,7 @@ dtls_shim_init(const X509 *cert, void *app_data)
 
 
 void
-dtls_shim_fini(dtls_shim_s *handle)
+dtls_shim_fini(dtls_shim_h handle)
 {
     int i;
 
@@ -171,7 +171,7 @@ dtls_shim_fini(dtls_shim_s *handle)
 
 
 void *
-dtls_shim_get_client_data(dtls_shim_s *handle)
+dtls_shim_get_client_data(dtls_shim_h handle)
 {
     if ( handle != NULL)
         return handle->app_data;
@@ -181,7 +181,7 @@ dtls_shim_get_client_data(dtls_shim_s *handle)
 
 
 dtls_shim_srtp_key_s *
-dtls_shim_get_srtp_key(dtls_shim_s *handle, dtls_shim_con_info_s *con)
+dtls_shim_get_srtp_key(dtls_shim_h handle, dtls_shim_con_info_s *con)
 {
     dtls_shim_srtp_key_s *srtp_key;
     SSL *ssl = NULL;
@@ -210,7 +210,7 @@ dtls_shim_get_srtp_key(dtls_shim_s *handle, dtls_shim_con_info_s *con)
 
 
 int
-dtls_shim_get_timeout(dtls_shim_s *handle, dtls_shim_con_info_s con, int read)
+dtls_shim_get_timeout(dtls_shim_h handle, dtls_shim_con_info_s con, int read)
 {
     struct timeval timeout;
     SSL *ssl = NULL;
@@ -241,7 +241,7 @@ dtls_shim_get_timeout(dtls_shim_s *handle, dtls_shim_con_info_s con, int read)
 
 
 int 
-dtls_shim_read(dtls_shim_s *handle, dtls_shim_con_info_s con, unsigned char *obuf, 
+dtls_shim_read(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf, 
     unsigned int olen, const unsigned char *ibuf, unsigned int ilen,
 	dtls_shim_iostatus_e *status)
 {
@@ -301,7 +301,7 @@ dtls_shim_read(dtls_shim_s *handle, dtls_shim_con_info_s con, unsigned char *obu
 }
 
 int 
-dtls_shim_write(dtls_shim_s *handle, dtls_shim_con_info_s con, unsigned char *obuf, 
+dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf, 
     unsigned int olen, const unsigned char *ibuf, unsigned int ilen, 
 	dtls_shim_iostatus_e *status)
 {
@@ -362,13 +362,13 @@ dtls_shim_write(dtls_shim_s *handle, dtls_shim_con_info_s con, unsigned char *ob
 
 
 void 
-dtls_shim_close(dtls_shim_s *handle, dtls_shim_con_info_s con)
+dtls_shim_close(dtls_shim_h handle, dtls_shim_con_info_s con)
 {
 }
 
 dtls_shim_fingerprint_s *
-dtls_shim_add_fingerprint(dtls_shim_s *handle, 
-    dtls_shim_fingerprint_s *fingerprint)
+dtls_shim_add_fingerprint(dtls_shim_h handle, 
+                          dtls_shim_fingerprint_s *fingerprint)
 {
     if ( handle == NULL || fingerprint == NULL)
         return;
@@ -392,15 +392,17 @@ dtls_shim_add_fingerprint(dtls_shim_s *handle,
     return fingerprint;
 }
 
-dtls_shim_fingerprint_status_e dtls_shim_fingerprint_match(dtls_shim_s *handle, 
-	dtls_shim_con_info_s con)
+dtls_shim_fingerprint_status_e 
+dtls_shim_fingerprint_match(dtls_shim_h handle, 
+                            dtls_shim_con_info_s con)
 {
     dtls_shim_fingerprint_status_e status = DTLS_SHIM_FINGERPRINT_MATCH;
     return status;
 }
 
-dtls_shim_con_info_s *dtls_shim_get_con_info(dtls_shim_s *handle, 
-	unsigned int *count)
+dtls_shim_con_info_s 
+*dtls_shim_get_con_info(dtls_shim_h handle, 
+                        unsigned int *count)
 {
     if ( handle == NULL || count == NULL)
         return NULL;
