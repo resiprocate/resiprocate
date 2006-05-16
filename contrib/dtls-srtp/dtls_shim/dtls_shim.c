@@ -1,6 +1,7 @@
 #include <string.h>
 #include <openssl/ssl.h>
 #include <time.h>
+#include <assert.h>
 
 #include "dtls_shim.h"
 
@@ -212,32 +213,33 @@ dtls_shim_get_client_data(dtls_shim_h handle)
 }
 
 
-dtls_shim_srtp_key_s *
-dtls_shim_get_srtp_key(dtls_shim_h handle, dtls_shim_con_info_s *con)
+int
+dtls_shim_get_srtp_key(dtls_shim_h handle, 
+                       dtls_shim_con_info_s *con,
+                       dtls_shim_srtp_key_s *srtp_key)
 {
-    dtls_shim_srtp_key_s *srtp_key;
     SSL *ssl = NULL;
 
     if ( handle == NULL || con == NULL)
-        return NULL;
-
-    ssl = dtls_shim_table_find(handle->table, con);
-    if (ssl == NULL)
-        return NULL;
-    if ( SSL_is_init_finished(ssl) && SSL_srtp_negotiated())
     {
-        srtp_key = (dtls_shim_srtp_key_s *)
-            malloc(sizeof(dtls_shim_srtp_key_s));
-        if (srtp_key == NULL)
-            return NULL;
-        else
-        {
-            SSL_get_srtp_key(ssl, srtp_key->key_material);
-            return srtp_key;
-        }
+       return 0;
     }
 
-    return NULL;
+    ssl = dtls_shim_table_find(handle->table, con);
+    if ( ssl && SSL_is_init_finished(ssl) && SSL_get_selected_srtp_profile(ssl))
+    {
+       SSL_get_srtp_key_info(ssl, 
+                             &srtp_key->client_write_master_key,
+                             &srtp_key->client_write_master_key_len,
+                             &srtp_key->server_write_master_key,
+                             &srtp_key->server_write_master_key_len,
+                             &srtp_key->client_write_master_salt,
+                             &srtp_key->client_write_master_salt_len,
+                             &srtp_key->server_write_master_salt,
+                             &srtp_key->server_write_master_salt_len);
+       return 1;
+    }
+    return 0;
 }
 
 
