@@ -113,6 +113,10 @@
 #include <openssl/objects.h>
 #include "ssl_locl.h"
 
+#ifndef OPENSSL_NO_SRTP
+#include "srtp.h"
+#endif
+
 const char *tls1_version_str="TLSv1" OPENSSL_VERSION_PTEXT;
 
 SSL3_ENC_METHOD TLSv1_enc_data={
@@ -242,7 +246,29 @@ unsigned char *ssl_add_clienthello_tlsext(SSL *s, unsigned char *p, unsigned cha
 		ret+=s->tlsext_ellipticcurvelist_length;
 		}
 #endif /* OPENSSL_NO_EC */
+#ifndef OPENSSL_NO_SRTP
+        if(SSL_get_srtp_profiles(s))
+                {
+                int el;
 
+                ssl_add_clienthello_use_srtp_ext(s, 0, &el, 0);
+                
+                if((limit - p - 4 - el) < 0) return NULL;
+
+                s2n(TLSEXT_TYPE_use_srtp,ret);
+                s2n(el,ret);
+
+                if(ssl_add_clienthello_use_srtp_ext(s, ret, &el, el))
+                    {
+			SSLerr(SSL_F_SSL_ADD_CLIENTHELLO_TLSEXT, ERR_R_INTERNAL_ERROR);
+			return NULL;
+                    }
+                ret += el;
+                
+                }
+        
+#endif
+        
 	if ((extdatalen = ret-p-2)== 0) 
 		return p;
 
@@ -288,7 +314,28 @@ unsigned char *ssl_add_serverhello_tlsext(SSL *s, unsigned char *p, unsigned cha
 		}
 	/* Currently the server should not respond with a SupportedCurves extension */
 #endif /* OPENSSL_NO_EC */
-	
+#ifndef OPENSSL_NO_SRTP
+        if(s->srtp_profile)
+                {
+                int el;
+
+                ssl_add_serverhello_use_srtp_ext(s, 0, &el, 0);
+                
+                if((limit - p - 4 - el) < 0) return NULL;
+
+                s2n(TLSEXT_TYPE_use_srtp,ret);
+                s2n(el,ret);
+
+                if(ssl_add_serverhello_use_srtp_ext(s, ret, &el, el))
+                    {
+			SSLerr(SSL_F_SSL_ADD_CLIENTHELLO_TLSEXT, ERR_R_INTERNAL_ERROR);
+			return NULL;
+                    }
+                ret+=el;
+                }
+        
+#endif
+
 	if ((extdatalen = ret-p-2)== 0) 
 		return p;
 
@@ -472,7 +519,18 @@ int ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d, in
 #endif
 			}
 #endif /* OPENSSL_NO_EC */
-		data+=size;		
+
+#ifndef OPENSSL_NO_SRTP                
+		else if (type == TLSEXT_TYPE_use_srtp)
+                    {
+                    if(ssl_parse_clienthello_use_srtp_ext(s, data, size, al))
+                        {
+                        return 0;
+                        }
+                    }
+#endif
+                
+                data+=size;		
 		}
 
 	*p = data;
@@ -540,6 +598,15 @@ int ssl_parse_serverhello_tlsext(SSL *s, unsigned char **p, unsigned char *d, in
 #endif
 			}
 #endif /* OPENSSL_NO_EC */
+#ifndef OPENSSL_NO_SRTP                
+		else if (type == TLSEXT_TYPE_use_srtp)
+                    {
+                    if(ssl_parse_serverhello_use_srtp_ext(s, data, size, al))
+                        {
+                        return 0;
+                        }
+                    }
+#endif
 		data+=size;		
 		}
 

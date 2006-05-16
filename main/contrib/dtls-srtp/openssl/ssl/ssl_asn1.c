@@ -233,7 +233,7 @@ int i2d_SSL_SESSION(SSL_SESSION *in, unsigned char **pp)
 		a.psk_identity.data=(unsigned char *)(in->psk_identity);
 		}
 #endif /* OPENSSL_NO_PSK */
-
+                
 	M_ASN1_I2D_len(&(a.version),		i2d_ASN1_INTEGER);
 	M_ASN1_I2D_len(&(a.ssl_version),	i2d_ASN1_INTEGER);
 	M_ASN1_I2D_len(&(a.cipher),		i2d_ASN1_OCTET_STRING);
@@ -265,7 +265,6 @@ int i2d_SSL_SESSION(SSL_SESSION *in, unsigned char **pp)
 	if (in->psk_identity)
         	M_ASN1_I2D_len_EXP_opt(&(a.psk_identity), i2d_ASN1_OCTET_STRING,8,v8);
 #endif /* OPENSSL_NO_PSK */
-
 	M_ASN1_I2D_seq_total();
 
 	M_ASN1_I2D_put(&(a.version),		i2d_ASN1_INTEGER);

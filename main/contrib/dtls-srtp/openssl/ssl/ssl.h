@@ -222,6 +222,18 @@
 extern "C" {
 #endif
 
+#ifndef OPENSSL_NO_SRTP
+typedef struct srtp_protection_profile_st
+    {
+    const char *name;
+    unsigned long id;
+    int master_key_bits;
+    int salt_bits;
+    } SRTP_PROTECTION_PROFILE;
+
+DECLARE_STACK_OF(SRTP_PROTECTION_PROFILE);
+#endif
+
 /* SSLeay version number for ASN.1 encoding of the session information */
 /* Version 0 - initial version
  * Version 1 - added the optional peer certificate
@@ -444,6 +456,7 @@ typedef struct ssl_method_st
  *	ECPointFormatList [ 7 ] OCTET STRING,     -- optional EC point format list from TLS extension
  *	PSK_identity_hint [ 8 ] EXPLICIT OCTET STRING, -- optional PSK identity hint
  *	PSK_identity [ 9 ] EXPLICIT OCTET STRING -- optional PSK identity
+ *      SRTP_profile [ 10 ]  EXPLICIT INTEGER    -- the profile value 
  *	}
  * Look in ssl/ssl_asn1.c for more details
  * I'm using EXPLICIT tags so I can read the damn things using asn1parse :-).
@@ -515,8 +528,11 @@ typedef struct ssl_session_st
 	size_t tlsext_ellipticcurvelist_length;
 	unsigned char *tlsext_ellipticcurvelist; /* peer's list */
 #endif /* OPENSSL_NO_EC */
+#ifndef OPENSSL_NO_SRTP
+        SRTP_PROTECTION_PROFILE *srtp_profile;
+#endif        
 #endif
-	} SSL_SESSION;
+    } SSL_SESSION;
 
 
 #define SSL_OP_MICROSOFT_SESS_ID_BUG			0x00000001L
@@ -804,6 +820,9 @@ struct ssl_ctx_st
 	/* TLS extensions servername callback */
 	int (*tlsext_servername_callback)(SSL*, int *, void *);
 	void *tlsext_servername_arg;
+#ifndef OPENSSL_NO_SRTP
+        STACK_OF(SRTP_PROTECTION_PROFILE) *srtp_profiles;  /* What we'll do */
+#endif
 #endif
 #ifndef OPENSSL_NO_PSK
 	char *psk_identity_hint;
@@ -814,6 +833,7 @@ struct ssl_ctx_st
 		unsigned char *psk, unsigned int max_psk_len);
 #endif
 	};
+
 
 #define SSL_SESS_CACHE_OFF			0x0000
 #define SSL_SESS_CACHE_CLIENT			0x0001
@@ -1073,9 +1093,18 @@ struct ssl_st
 #endif /* OPENSSL_NO_EC */
 	SSL_CTX * initial_ctx; /* initial ctx, used to store sessions */
 #define session_ctx initial_ctx
+
+#ifndef OPENSSL_NO_SRTP
+        STACK_OF(SRTP_PROTECTION_PROFILE) *srtp_profiles;  /* What we'll do */
+        SRTP_PROTECTION_PROFILE *srtp_profile;            /* What's been chosen */
+        unsigned char *srtp_key_block;
+        int srtp_key_block_length;
+#endif
+        
 #else
 #define session_ctx ctx
 #endif
+         
 	};
 
 #ifdef __cplusplus
@@ -1087,6 +1116,7 @@ struct ssl_st
 #include <openssl/tls1.h> /* This is mostly sslv3 with a few tweaks */
 #include <openssl/dtls1.h> /* Datagram TLS */
 #include <openssl/ssl23.h>
+#include <openssl/srtp.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -1769,9 +1799,11 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL3_WRITE_BYTES				 158
 #define SSL_F_SSL3_WRITE_PENDING			 159
 #define SSL_F_SSL_ADD_CLIENTHELLO_TLSEXT		 277
+#define SSL_F_SSL_ADD_CLIENTHELLO_USE_SRTP_EXT		 282
 #define SSL_F_SSL_ADD_DIR_CERT_SUBJECTS_TO_STACK	 215
 #define SSL_F_SSL_ADD_FILE_CERT_SUBJECTS_TO_STACK	 216
 #define SSL_F_SSL_ADD_SERVERHELLO_TLSEXT		 278
+#define SSL_F_SSL_ADD_SERVERHELLO_USE_SRTP_EXT		 283
 #define SSL_F_SSL_BAD_METHOD				 160
 #define SSL_F_SSL_BYTES_TO_CIPHER_LIST			 161
 #define SSL_F_SSL_CERT_DUP				 221
@@ -1786,6 +1818,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL_CREATE_CIPHER_LIST			 166
 #define SSL_F_SSL_CTRL					 232
 #define SSL_F_SSL_CTX_CHECK_PRIVATE_KEY			 168
+#define SSL_F_SSL_CTX_ENABLE_USE_SRTP			 279
 #define SSL_F_SSL_CTX_NEW				 169
 #define SSL_F_SSL_CTX_SET_CIPHER_LIST			 269
 #define SSL_F_SSL_CTX_SET_PURPOSE			 226
@@ -1811,6 +1844,8 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL_INIT_WBIO_BUFFER			 184
 #define SSL_F_SSL_LOAD_CLIENT_CA_FILE			 185
 #define SSL_F_SSL_NEW					 186
+#define SSL_F_SSL_PARSE_CLIENTHELLO_USE_SRTP_EXT	 280
+#define SSL_F_SSL_PARSE_SERVERHELLO_USE_SRTP_EXT	 281
 #define SSL_F_SSL_PEEK					 270
 #define SSL_F_SSL_READ					 223
 #define SSL_F_SSL_RSA_PRIVATE_DECRYPT			 187
@@ -1883,6 +1918,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_BAD_RSA_MODULUS_LENGTH			 121
 #define SSL_R_BAD_RSA_SIGNATURE				 122
 #define SSL_R_BAD_SIGNATURE				 123
+#define SSL_R_BAD_SRTP_PROTECTION_PROFILE_LIST		 318
 #define SSL_R_BAD_SSL_FILETYPE				 124
 #define SSL_R_BAD_SSL_SESSION_ID_LENGTH			 125
 #define SSL_R_BAD_STATE					 126
@@ -1915,6 +1951,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_DIGEST_CHECK_FAILED			 149
 #define SSL_R_DUPLICATE_COMPRESSION_ID			 309
 #define SSL_R_ECGROUP_TOO_LARGE_FOR_CIPHER		 310
+#define SSL_R_EMPTY_SRTP_PROTECTION_PROFILE_LIST	 322
 #define SSL_R_ENCRYPTED_LENGTH_TOO_LONG			 150
 #define SSL_R_ERROR_GENERATING_TMP_RSA_KEY		 282
 #define SSL_R_ERROR_IN_RECEIVED_CIPHER_LIST		 151
@@ -2015,6 +2052,8 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_SESSION_ID_CONTEXT_UNINITIALIZED		 277
 #define SSL_R_SHORT_READ				 219
 #define SSL_R_SIGNATURE_FOR_NON_SIGNING_CERTIFICATE	 220
+#define SSL_R_SRTP_PROTECTION_PROFILE_LIST_TOO_LONG	 323
+#define SSL_R_SRTP_UNKNOWN_PROTECTION_PROFILE		 317
 #define SSL_R_SSL23_DOING_SESSION_ID_REUSE		 221
 #define SSL_R_SSL2_CONNECTION_ID_TOO_LONG		 299
 #define SSL_R_SSL3_EXT_INVALID_ECPOINTFORMAT		 321
@@ -2091,6 +2130,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_UNSUPPORTED_ELLIPTIC_CURVE		 315
 #define SSL_R_UNSUPPORTED_PROTOCOL			 258
 #define SSL_R_UNSUPPORTED_SSL_VERSION			 259
+#define SSL_R_USE_SRTP_NOT_NEGOTIATED			 324
 #define SSL_R_WRITE_BIO_NOT_SET				 260
 #define SSL_R_WRONG_CIPHER_RETURNED			 261
 #define SSL_R_WRONG_MESSAGE_TYPE			 262

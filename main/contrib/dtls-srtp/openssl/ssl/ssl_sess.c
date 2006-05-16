@@ -215,6 +215,9 @@ SSL_SESSION *SSL_SESSION_new(void)
 	ss->psk_identity_hint=NULL;
 	ss->psk_identity=NULL;
 #endif
+#ifndef OPENSSL_NO_SRTP
+        ss->srtp_profile=0;
+#endif        
 	return(ss);
 	}
 
