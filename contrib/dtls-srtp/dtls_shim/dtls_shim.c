@@ -25,9 +25,9 @@ typedef struct dtls_shim {
 } dtls_shim_s;
 
 
-dtls_shim_table_s *dtls_shim_table_new();
-void              dtls_shim_table_free(dtls_shim_table_s *);
-SSL               *dtls_shim_table_find(dtls_shim_table_s *, dtls_shim_con_info_s *);
+dtls_shim_table_s    *dtls_shim_table_new();
+void                 dtls_shim_table_free(dtls_shim_table_s *);
+SSL                 *dtls_shim_table_find(dtls_shim_table_s *, dtls_shim_con_info_s *);
 dtls_shim_con_info_s *dtls_shim_table_get_entries(dtls_shim_table_s *, unsigned int *);
 
 
@@ -97,6 +97,38 @@ dtls_shim_table_find(dtls_shim_table_s *table, dtls_shim_con_info_s *con)
     }
 
     return NULL;
+}
+
+
+SSL *
+dtls_shim_table_add(dtls_shim_table_s *table, dtls_shim_con_info_s con, SSL *ssl)
+{
+    int i;
+
+    if (table->count == table->max)
+    {
+        table->connections = (dtls_shim_con_info_s *)realloc(table->connections,
+            table->max + DTLS_SHIM_DEFAULT_NUM_CONNECTIONS);
+        table->ssl = (SSL **)realloc(table->ssl,
+            table->max + DTLS_SHIM_DEFAULT_NUM_CONNECTIONS);
+
+        if ( table->connections == NULL || table->ssl == NULL)
+        {
+            if ( table->connections != NULL) free(table->connections);
+            if ( table->ssl != NULL) free(table->ssl);
+            table->connections = NULL;
+            table->ssl = NULL;
+            return NULL;
+        }
+
+        table->max += DTLS_SHIM_DEFAULT_NUM_CONNECTIONS;
+    }
+
+    table->connections[table->count] = con;
+    table->ssl[table->count] = ssl;
+    table->count++;
+    return ssl;
+
 }
 
 dtls_shim_con_info_s *
