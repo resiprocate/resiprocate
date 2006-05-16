@@ -1934,30 +1934,56 @@ static int init_ssl_connection(SSL *con)
 		BIO_printf(bio_s_out,"Shared ciphers:%s\n",buf);
 	str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
 	BIO_printf(bio_s_out,"CIPHER is %s\n",(str != NULL)?str:"(NONE)");
+        
 #ifndef OPENSSL_NO_SRTP
         {
         SRTP_PROTECTION_PROFILE *srtp_profile=SSL_get_selected_srtp_profile(con);
+
         if(srtp_profile)
             {
-            unsigned char *srtp_block;
-            int srtp_length;
+            unsigned char *cmk,*smk,*cms,*sms;
+            int cmkl,smkl,cmsl,smsl;            
             int i;
             
             BIO_printf(bio_s_out,"SRTP Extension negotiated, profile=%s\n", srtp_profile->name);
-            if(!SSL_get_srtp_key_block(con,&srtp_block,&srtp_length))
+            if(!SSL_get_srtp_key_info(con,&cmk,&cmkl,&smk,&smkl,&cms,&cmsl,&sms,&smsl))
                 {
-                BIO_printf(bio_s_out,"SRTP key block (len=%d):",srtp_length);
+                BIO_printf(bio_s_out,"SRTP client master key (len=%d): ",cmkl);
                 
-                for (i=0; i<srtp_length;i++)
+                for (i=0; i<cmkl;i++)
                     {
-                    BIO_printf(bio_s_out,"%02X",srtp_block[i]);
+                    BIO_printf(bio_s_out,"%02X",cmk[i]);
+                    }
+                BIO_puts(bio_s_out,"\n");
+
+                BIO_printf(bio_s_out,"SRTP server master key (len=%d): ",smkl);
+                
+                for (i=0; i<smkl;i++)
+                    {
+                    BIO_printf(bio_s_out,"%02X",smk[i]);
+                    }
+                BIO_puts(bio_s_out,"\n");
+
+                BIO_printf(bio_s_out,"SRTP client master salt (len=%d): ",cmsl);
+                
+                for (i=0; i<cmsl;i++)
+                    {
+                    BIO_printf(bio_s_out,"%02X",cms[i]);
+                    }
+                BIO_puts(bio_s_out,"\n");
+
+                BIO_printf(bio_s_out,"SRTP server master salt (len=%d): ",smsl);
+                
+                for (i=0; i<smkl;i++)
+                    {
+                    BIO_printf(bio_s_out,"%02X",smk[i]);
                     }
                 BIO_puts(bio_s_out,"\n");
                 }
             }
+        
         }
 #endif        
-
         
 	if (con->hit) BIO_printf(bio_s_out,"Reused session-id\n");
 	if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
