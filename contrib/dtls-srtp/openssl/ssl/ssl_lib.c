@@ -546,6 +546,16 @@ void SSL_free(SSL *s)
 		kssl_ctx_free(s->kssl_ctx);
 #endif	/* OPENSSL_NO_KRB5 */
 
+#ifndef OPENSSL_NO_SRTP
+        if (s->srtp_profiles)
+            sk_SRTP_PROTECTION_PROFILE_free(s->srtp_profiles);
+        if(s->srtp_key_block)
+            {
+            OPENSSL_cleanse(s->srtp_key_block,s->srtp_key_block_length);
+            OPENSSL_free(s->srtp_key_block);
+            s->srtp_key_block=0;
+            }
+#endif        
 	OPENSSL_free(s);
 	}
 
@@ -1619,6 +1629,10 @@ void SSL_CTX_free(SSL_CTX *a)
 #ifndef OPENSSL_NO_PSK
 	if (a->psk_identity_hint)
 		OPENSSL_free(a->psk_identity_hint);
+#endif
+#ifndef OPENSSL_NO_SRTP
+        if (a->srtp_profiles)
+                sk_SRTP_PROTECTION_PROFILE_free(a->srtp_profiles);
 #endif
 	OPENSSL_free(a);
 	}

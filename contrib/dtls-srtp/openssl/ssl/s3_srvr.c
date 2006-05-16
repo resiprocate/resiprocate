@@ -932,7 +932,7 @@ int ssl3_get_client_hello(SSL *s)
 
 #ifndef OPENSSL_NO_TLSEXT
 	/* TLS extensions*/
-	if (s->version > SSL3_VERSION)
+	if ((s->version > SSL3_VERSION) || (s->version==DTLS1_VERSION))
 		{
 		if (!ssl_parse_clienthello_tlsext(s,&p,d,n, &al))
 			{
@@ -940,11 +940,11 @@ int ssl3_get_client_hello(SSL *s)
 			SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO,SSL_R_PARSE_TLSEXT);
 			goto f_err;
 			}
-		}
+                }
 		if (ssl_check_clienthello_tlsext(s) <= 0) {
 			SSLerr(SSL_F_SSL3_ACCEPT,SSL_R_CLIENTHELLO_TLSEXT);
 			goto err;
-		}
+                }
 #endif
 
 	/* Worst case, we will use the NULL compression, but if we have other
