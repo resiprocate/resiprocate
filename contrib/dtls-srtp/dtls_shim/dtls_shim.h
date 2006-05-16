@@ -1,7 +1,8 @@
-
 #ifndef INCLUDED_DTLS_SHIM
 #define INCLUDED_DTLS_SHIM
 
+#include <netinet/in.h>
+#include <openssl/x509.h>
 
 typedef struct {
     sockaddr remote;
@@ -16,19 +17,20 @@ typedef struct {
 } dtls_shim_fingerprint_s;
 
 typedef enum {
-    DTLS_SHIM_OK = 1;          /* no action required. */
-    DTLS_SHIM_WANT_READ = 2;   /* _read() needs to be called next. */
-	DTLS_SHIM_WANT_WRITE = 3;  /* _write() needs to be called next. */
+   DTLS_SHIM_OK = 1,          /* no action required. */
+   DTLS_SHIM_WANT_READ = 2,   /* _read() needs to be called next. */
+   DTLS_SHIM_WANT_WRITE = 3  /* _write() needs to be called next. */
 } dtls_shim_iostatus_e;
 
 typedef enum {
-    DTLS_SHIM_FINGERPRINT_MATCH    = 1;
-    DTLS_SHIM_FINGERPRINT_MISMATCH = 2;
-	DTLS_SHIM_FINGERPRINT_CHECK_PENDING = 3;
+   DTLS_SHIM_FINGERPRINT_MATCH    = 1,
+   DTLS_SHIM_FINGERPRINT_MISMATCH = 2,
+   DTLS_SHIM_FINGERPRINT_CHECK_PENDING = 3
 } dtls_shim_fingerprint_status_e;
 
 
-typedef dtls_shim_s *dtls_shim_h;
+typedef struct dtls_shim_s *dtls_shim_h;
+
 
 /* 
  * Initialize the library; set-up data structures.
@@ -53,7 +55,7 @@ void *dtls_shim_get_client_data(dtls_shim_h);
  * Get SRTP keys for a given connection.
  * RETURNS: NULL on error.
  */
-srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s);
+dtls_shim_srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s);
 
 /* 
  * To be invoked after each read or write call.  If, and when, a timer
@@ -89,7 +91,7 @@ int dtls_shim_write(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf,
  */
 void dtls_shim_close(dtls_shim_h, dtls_shim_con_info_s);
 
-void dtls_shim_add_fingerprint(dtls_shim_h, fingerprint_s);
+void dtls_shim_add_fingerprint(dtls_shim_h, dtls_shim_fingerprint_s);
 
 dtls_shim_fingerprint_status_e dtls_shim_fingerprint_match(dtls_shim_h, 
 	dtls_shim_con_info_s);
