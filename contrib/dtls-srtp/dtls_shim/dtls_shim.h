@@ -53,16 +53,16 @@ void *dtls_shim_get_client_data(dtls_shim_h);
  * Get SRTP keys for a given connection.
  * RETURNS: NULL on error.
  */
-srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s, 
-    srtp_key_s *);
+srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s);
 
 /* 
  * To be invoked after each read or write call.  If, and when, a timer
  * set to the returned timeout expires, dtls_shim_write() should be
- * invoked. 
- * RETURNS: a non-zero timeout value.
+ * invoked.  If read is non zero, then the read timeout is returned,
+ * otherwise write timeout is returned.  
+ * RETURNS: a non-zero timeout value.  
  */
-int dtls_shim_get_timeout(dtls_shim_h, dtls_shim_con_info_s);
+int dtls_shim_get_timeout(dtls_shim_h, dtls_shim_con_info_s, int read);
 
 
 /*
