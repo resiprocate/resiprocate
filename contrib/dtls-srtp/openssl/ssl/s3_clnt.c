@@ -828,7 +828,7 @@ int ssl3_get_server_hello(SSL *s)
 #endif
 #ifndef OPENSSL_NO_TLSEXT
 	/* TLS extensions*/
-	if (s->version > SSL3_VERSION)
+	if ((s->version > SSL3_VERSION) || (s->version == DTLS1_VERSION))
 		{
 		if (!ssl_parse_serverhello_tlsext(s,&p,d,n, &al))
 			{

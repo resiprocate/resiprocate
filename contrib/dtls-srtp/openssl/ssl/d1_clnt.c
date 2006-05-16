@@ -608,6 +608,18 @@ int dtls1_client_hello(SSL *s)
 			*(p++)=comp->id;
 			}
 		*(p++)=0; /* Add the NULL method */
+#ifndef OPENSSL_NO_TLSEXT
+		if (ssl_prepare_clienthello_tlsext(s) <= 0)
+			{
+			SSLerr(SSL_F_SSL3_CLIENT_HELLO,SSL_R_CLIENTHELLO_TLSEXT);
+			goto err;
+			}
+		if ((p = ssl_add_clienthello_tlsext(s, p, buf+SSL3_RT_MAX_PLAIN_LENGTH)) == NULL)
+			{
+			SSLerr(SSL_F_SSL3_CLIENT_HELLO,ERR_R_INTERNAL_ERROR);
+			goto err;
+			}
+#endif
 		
 		l=(p-d);
 		d=buf;

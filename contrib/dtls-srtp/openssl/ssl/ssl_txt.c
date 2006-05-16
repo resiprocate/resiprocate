@@ -199,6 +199,7 @@ int SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
 			}
 		}	
 #endif
+        
 	if (x->time != 0L)
 		{
 		if (BIO_printf(bp, "\n    Start Time: %ld",x->time) <= 0) goto err;
