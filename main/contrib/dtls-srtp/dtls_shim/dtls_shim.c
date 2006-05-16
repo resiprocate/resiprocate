@@ -339,9 +339,11 @@ dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obu
     unsigned int olen, const unsigned char *ibuf, unsigned int ilen, 
 	dtls_shim_iostatus_e *status)
 {
-    int len, err;
+   int len, err, wlen;
     BIO *wbio = NULL;
     SSL *ssl = NULL;
+    char *p;
+    
 
     if ( handle == NULL)
         return -1;
@@ -359,18 +361,15 @@ dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obu
         dtls_shim_table_add(handle->table, con, ssl);
     }
 
-    wbio = BIO_new_mem_buf(obuf, olen);
+    wbio = BIO_new(BIO_s_mem());
     if ( wbio == NULL)
         return -1;
 
-    BIO_set_mem_eof_return(wbio, -1);
+    /* BIO_set_mem_eof_return(wbio, -1); */
     
     ssl->wbio = wbio;
 
     len = SSL_write(ssl, ibuf, ilen);
-
-    BIO_free(ssl->wbio);
-    ssl->wbio = g_dummy_bio;
 
     *status = DTLS_SHIM_OK;
 
@@ -390,6 +389,18 @@ dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obu
                 break;
         }
     }
+
+    wlen = BIO_get_mem_data(ssl->wbio, &p);
+    if (wlen > olen)
+    {
+       *status = DTLS_SHIM_WRITE_ERROR;
+       return -1;
+    }
+    memcpy(obuf, p, wlen);
+    len = wlen;
+
+    BIO_free(ssl->wbio);
+    ssl->wbio = g_dummy_bio;
 
     return len;
 }
