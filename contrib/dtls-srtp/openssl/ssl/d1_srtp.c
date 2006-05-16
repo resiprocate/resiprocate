@@ -1,3 +1,14 @@
+/**
+d1_srtp.c
+
+Copyright (C) 2006, Network Resonance, Inc.
+All Rights Reserved.
+
+ekr@networkresonance.com  Mon May 15 20:42:33 2006
+ */
+
+
+static char *RCSSTRING="$Id$";
 /* ssl/t1_lib.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
@@ -259,8 +270,15 @@ SRTP_PROTECTION_PROFILE *SSL_get_selected_srtp_profile(SSL *s)
     return(s->srtp_profile);
     }
 
-int SSL_get_srtp_key_block(SSL *s,unsigned char **blk, int *len)
+int SSL_get_srtp_key_info(SSL *s,
+  unsigned char **client_write_master_key,  int *client_write_master_key_len,
+  unsigned char **server_write_master_key,  int *server_write_master_key_len,  
+  unsigned char **client_write_master_salt, int *client_write_master_salt_len,
+  unsigned char **server_write_master_salt, int *server_write_master_salt_len)
     {
+    int kl,sl;
+    unsigned char *ptr;
+    
     if(!s->srtp_profile)
         return(1);
     if(!s->srtp_key_block)
@@ -268,8 +286,20 @@ int SSL_get_srtp_key_block(SSL *s,unsigned char **blk, int *len)
     if(!s->srtp_key_block_length)
         return(1);
 
-    *blk=s->srtp_key_block;
-    *len=s->srtp_key_block_length;
+    kl=s->srtp_profile->master_key_bits/8;
+    sl=s->srtp_profile->salt_bits/8;
+
+    if(((kl+sl)*2)!=s->srtp_key_block_length)
+        {
+        SSLerr(SSL_F_SSL_GET_SRTP_KEY_INFO,SSL_R_SRTP_KEY_LENGTH_INCONSISTENCY);
+        return(1);
+        }
+
+    ptr=s->srtp_key_block;
+    *client_write_master_key=ptr; *client_write_master_key_len=kl; ptr+=kl;
+    *server_write_master_key=ptr; *server_write_master_key_len=kl; ptr+=kl;
+    *client_write_master_salt=ptr; *client_write_master_salt_len=sl; ptr+=sl;
+    *server_write_master_salt=ptr; *server_write_master_salt_len=sl; ptr+=sl;
 
     return(0);
     }
