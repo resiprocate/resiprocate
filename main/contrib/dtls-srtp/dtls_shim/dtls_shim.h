@@ -6,8 +6,12 @@
 #include <netinet/in.h>
 #include <openssl/x509.h>
 
+/* read and write timeouts. */
+#define DTLS_SHIM_DEFAULT_RECV_TIMEOUT  250000  /* 250 ms */
+#define DTLS_SHIM_DEFAULT_SEND_TIMEOUT  250000  /* 250 ms */
+
 typedef  struct {
-    sockaddr_in remote;
+    struct sockaddr remote;
 } dtls_shim_con_info_s;
 
 typedef struct {
@@ -33,7 +37,7 @@ typedef enum {
 } dtls_shim_fingerprint_status_e;
 
 
-typedef struct dtls_shim_s *dtls_shim_h;
+typedef struct dtls_shim *dtls_shim_h;
 
 
 /* 
@@ -95,7 +99,8 @@ int dtls_shim_write(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf,
  */
 void dtls_shim_close(dtls_shim_h, dtls_shim_con_info_s);
 
-void dtls_shim_add_fingerprint(dtls_shim_h, dtls_shim_fingerprint_s);
+dtls_shim_fingerprint_s *dtls_shim_add_fingerprint(dtls_shim_h, 
+    dtls_shim_fingerprint_s *);
 
 dtls_shim_fingerprint_status_e dtls_shim_fingerprint_match(dtls_shim_h, 
 	dtls_shim_con_info_s);
