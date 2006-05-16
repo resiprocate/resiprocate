@@ -15,7 +15,14 @@ typedef  struct {
 } dtls_shim_con_info_s;
 
 typedef struct {
-    unsigned char key_material[48];
+      unsigned char *client_write_master_key;
+      int client_write_master_key_len;
+      unsigned char *server_write_master_key;
+      int server_write_master_key_len;
+      unsigned char *client_write_master_salt;
+      int client_write_master_salt_len;
+      unsigned char *server_write_master_salt;
+      int server_write_master_salt_len;
 } dtls_shim_srtp_key_s;
 
 typedef struct {
@@ -61,9 +68,9 @@ void *dtls_shim_get_client_data(dtls_shim_h);
 
 /* 
  * Get SRTP keys for a given connection.
- * RETURNS: NULL on error.
+ * RETURNS: 0 on error, 1 on success
  */
-dtls_shim_srtp_key_s *dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s);
+int dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s, dtls_shim_srtp_key_s *);
 
 /* 
  * To be invoked after each read or write call.  If, and when, a timer
