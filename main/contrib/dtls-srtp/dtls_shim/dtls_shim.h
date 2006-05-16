@@ -1,11 +1,13 @@
 #ifndef INCLUDED_DTLS_SHIM
 #define INCLUDED_DTLS_SHIM
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <openssl/x509.h>
 
-typedef struct {
-    sockaddr remote;
+typedef  struct {
+    sockaddr_in remote;
 } dtls_shim_con_info_s;
 
 typedef struct {
@@ -17,9 +19,11 @@ typedef struct {
 } dtls_shim_fingerprint_s;
 
 typedef enum {
-   DTLS_SHIM_OK = 1,          /* no action required. */
-   DTLS_SHIM_WANT_READ = 2,   /* _read() needs to be called next. */
-   DTLS_SHIM_WANT_WRITE = 3  /* _write() needs to be called next. */
+    DTLS_SHIM_OK = 1,          /* no action required. */
+    DTLS_SHIM_READ_ERROR = 2,
+    DTLS_SHIM_WRITE_ERROR = 3,
+    DTLS_SHIM_WANT_READ = 4,   /* _read() needs to be called next. */
+	DTLS_SHIM_WANT_WRITE = 5  /* _write() needs to be called next. */
 } dtls_shim_iostatus_e;
 
 typedef enum {
@@ -100,7 +104,7 @@ dtls_shim_fingerprint_status_e dtls_shim_fingerprint_match(dtls_shim_h,
  * Returns an array of connection info structures associated with this
  * session.  
  */
-dtls_shim_con_info_s *dtls_shim_get_conn_info(dtls_shim_h, 
+dtls_shim_con_info_s *dtls_shim_get_con_info(dtls_shim_h, 
 	unsigned int *count);
 
 #endif /* ! INCLUDED_DTLS_SHIM */
