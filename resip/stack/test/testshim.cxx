@@ -1,19 +1,27 @@
+#include <iostream>
+extern "C" 
+{
 #include "dtls_shim.h"
+}
+
 #include "resip/stack/Security.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
+using namespace std;
 using namespace resip;
 
 int openSocket(int port);
 bool 
 getMessage( int fd, 
-            unsigned char* buf, int* len,
+            unsigned char* buf, unsigned int bufsize,
+            int& bytesRead,
             sockaddr& source);
 bool 
 sendMessage( int fd, 
-             unsigned char* buf, int l, 
+             unsigned char* buf, unsigned int l, 
              const sockaddr& dest);
 
 int
@@ -23,17 +31,19 @@ main(int argc, char* argv[])
    
    if (argc == 0)
    {
-      cerr << "testshim myport myaor [targetip targetport]" << endl;
+      std::cerr << "testshim myport myaor [targetip targetport]" << endl;
       exit(0);
    }
    
    int myPort = atoi(argv[1]);
    char* aorp = argv[2];
    char* target = 0;
+   int remotePort = 0;
+   
    if (argc > 3)
    {
       target = argv[3];
-      int remotePort = atoi(argv[4]);
+      remotePort = atoi(argv[4]);
    }
    
    resip::Security sec("~/.sipCerts");
@@ -47,7 +57,7 @@ main(int argc, char* argv[])
    dtls_shim_h shim = dtls_shim_init(cert, 0);
    InfoLog (<< "DTLS shim initialized");
    
-   if (result == 0)
+   if (shim == 0)
    {
       exit(-1);
    }
@@ -55,11 +65,12 @@ main(int argc, char* argv[])
 
    
    dtls_shim_con_info_s targetc;
-   targetc.remote.sin_family = AF_INET;
-   resip::DnsUtil::inet_pton(target, targetc.remote.sin_addr);
-   targetc.remote.sin_port = htons(remotePort);
+   sockaddr_in* sin = (sockaddr_in*)(&targetc.remote);
+   sin->sin_family = AF_INET;
+   resip::DnsUtil::inet_pton(target, sin->sin_addr);
+   sin->sin_port = htons(remotePort);
 
-   resip::Socket socket = openSocket(myPort, 0, false);
+   resip::Socket socket = openSocket(myPort);
    makeSocketNonBlocking(socket);
    
    // This kicks off the handshake
@@ -71,9 +82,12 @@ main(int argc, char* argv[])
       switch (status)
       {
          case DTLS_SHIM_WANT_WRITE:
-            sendMessage(source, obuf, bytes, targetc.remote);
+            sendMessage(socket, obuf, bytes, targetc.remote);
             break;
-
+         case DTLS_SHIM_READ_ERROR:
+         case DTLS_SHIM_WRITE_ERROR:
+            exit(-1); 
+            
          case DTLS_SHIM_OK:
          case DTLS_SHIM_WANT_READ:
             break;
@@ -89,10 +103,10 @@ main(int argc, char* argv[])
       {
          if (fdset.readyToRead(socket))
          {
-            char buffer[4096];
-            unsigned int len = sizeof(buffer);
+            unsigned char buffer[4096];
+            int len = 0;
             dtls_shim_con_info_s source;
-            if (getMessage(socket, buffer, &len, source.remote))
+            if (getMessage(socket, buffer, sizeof(buffer), len, source.remote))
             {
                unsigned char obuf[4096];
                dtls_shim_iostatus_e status;
@@ -100,9 +114,13 @@ main(int argc, char* argv[])
                switch (status)
                {
                   case DTLS_SHIM_WANT_WRITE:
-                     sendMessage(source, obuf, bytes, targetc.remote);
+                     sendMessage(socket, obuf, bytes, targetc.remote);
                      break;
 
+                  case DTLS_SHIM_READ_ERROR:
+                  case DTLS_SHIM_WRITE_ERROR:
+                     exit(-1);
+                     
                   case DTLS_SHIM_OK:
                   case DTLS_SHIM_WANT_READ:
                      break;
@@ -160,23 +178,23 @@ int openSocket(int port)
 
 bool 
 getMessage( int fd, 
-            unsigned char* buf, int* len,
+            unsigned char* buf, unsigned int bufsize,
+            int& bytesRead,
             sockaddr& source)
 {
    assert( fd != -1 );
 	
-   int originalSize = *len;
-   assert( originalSize > 0 );
+   assert( bufsize > 0 );
    
-   int fromLen = sizeof(source);
-   *len = recvfrom(fd,
-                   buf,
-                   originalSize,
-                   0,
-                   (struct sockaddr *)&source,
-                   (socklen_t*)&fromLen);
-	
-   if ( *len == -1 )
+   unsigned int fromLen = sizeof(source);
+   bytesRead = recvfrom(fd,
+                        buf,
+                        bufsize,
+                        0,
+                        (struct sockaddr *)&source,
+                        (socklen_t*)&fromLen);
+   
+   if ( bytesRead == -1 )
    {
       int err = errno;
       switch (err)
@@ -194,33 +212,28 @@ getMessage( int fd,
       return false;
    }
    
-   if ( *len < 0 )
+   if ( bytesRead < 0 )
    {
       clog << "socket closed? negative len" << endl;
       return false;
    }
     
-   if ( *len == 0 )
+   if ( bytesRead == 0 )
    {
       clog << "socket closed? zero len" << endl;
       return false;
    }
     
-   if ( (*len)+1 >= originalSize )
-   {
-      clog << "Received a message that was too large" << endl;
-      return false;
-   }
    return true;
 }
 
 bool 
 sendMessage( int fd, 
-             unsigned char* buf, int l, 
+             unsigned char* buf, unsigned int l, 
              const sockaddr& dest)
 {
    assert( fd != -1 );
-   s = sendto(fd, buf, l, 0, &dest, sizeof(dest));
+   int s = sendto(fd, buf, l, 0, &dest, sizeof(dest));
    if ( s == SOCKET_ERROR )
    {
       int e = errno;
@@ -249,12 +262,6 @@ sendMessage( int fd,
    if ( s == 0 )
    {
       clog << "no data sent in send" << endl;
-      return false;
-   }
-    
-   if ( s != l )
-   {
-      clog << "only " << s << " out of " << l << " bytes sent" << endl;
       return false;
    }
     
