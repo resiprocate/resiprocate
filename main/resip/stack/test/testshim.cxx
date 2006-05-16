@@ -1,4 +1,9 @@
+// server: ./testshim 10000 jason@localhost
+// client: ./testshim 20000 nagendra@localhost localhost 10000
+
 #include <iostream>
+#include <openssl/err.h>
+
 extern "C" 
 {
 #include "dtls_shim.h"
@@ -29,7 +34,7 @@ main(int argc, char* argv[])
 {
    Log::initialize(Log::Cout, Log::Info, argv[0]);
    
-   if (argc == 0)
+   if (argc <= 1)
    {
       std::cerr << "testshim myport myaor [targetip targetport]" << endl;
       exit(0);
@@ -46,7 +51,7 @@ main(int argc, char* argv[])
       remotePort = atoi(argv[4]);
    }
    
-   resip::Security sec("~/.sipCerts");
+   resip::Security sec(".sipCerts");
    sec.preload();
 
    resip::Data aor(aorp);
@@ -76,6 +81,8 @@ main(int argc, char* argv[])
    // This kicks off the handshake
    if (target)
    {
+      InfoLog (<< "Connecting to " << target << ":" << remotePort);
+
       dtls_shim_iostatus_e status;
       unsigned char obuf[4096];
       int bytes = dtls_shim_write(shim, targetc, obuf, sizeof(obuf), 0, 0, &status);
@@ -85,7 +92,13 @@ main(int argc, char* argv[])
             sendMessage(socket, obuf, bytes, targetc.remote);
             break;
          case DTLS_SHIM_READ_ERROR:
+            WarningLog (<< "Failed dtls_shim_read ");
+            ERR_print_errors_fp(stderr);
+            exit(-1); 
+
          case DTLS_SHIM_WRITE_ERROR:
+            WarningLog (<< "Failed dtls_shim_write ");
+            ERR_print_errors_fp(stderr);
             exit(-1); 
             
          case DTLS_SHIM_OK:
@@ -118,8 +131,14 @@ main(int argc, char* argv[])
                      break;
 
                   case DTLS_SHIM_READ_ERROR:
+                     WarningLog (<< "Failed dtls_shim_read ");
+                     ERR_print_errors_fp(stderr);
+                     exit(-1); 
+
                   case DTLS_SHIM_WRITE_ERROR:
-                     exit(-1);
+                     WarningLog (<< "Failed dtls_shim_write ");
+                     ERR_print_errors_fp(stderr);
+                     exit(-1); 
                      
                   case DTLS_SHIM_OK:
                   case DTLS_SHIM_WANT_READ:
