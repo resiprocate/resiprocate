@@ -335,7 +335,6 @@ int ssl_parse_clienthello_use_srtp_ext(SSL *s, unsigned char *d, int len,int *al
 
         if(!find_profile_by_num(id,&cprof))
             {
-            printf("Client offered %s\n",cprof->name);
             sk_SRTP_PROTECTION_PROFILE_push(clnt,cprof);
             }
         else
@@ -361,7 +360,6 @@ int ssl_parse_clienthello_use_srtp_ext(SSL *s, unsigned char *d, int len,int *al
                 if(s->session) s->session->srtp_profile=sprof;                
                 *al=0;
                 ret=0;
-                printf("Choosing profile %s\n",cprof->name);
                 goto done;
                 }
             }
