@@ -85,7 +85,7 @@ dtls_shim_table_free(dtls_shim_table_s *table)
 
 
 SSL *
-dtls_shim_find(dtls_shim_table_s *table, dtls_shim_con_info_s *con)
+dtls_shim_table_find(dtls_shim_table_s *table, dtls_shim_con_info_s *con)
 {
     int i;
 
