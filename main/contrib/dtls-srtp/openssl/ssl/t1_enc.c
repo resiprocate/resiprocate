@@ -474,6 +474,10 @@ int tls1_setup_key_block(SSL *s)
 	const EVP_MD *hash;
 	int num;
 	SSL_COMP *comp;
+#ifndef OPENSSL_NO_SRTP
+        int srtp_bytes=0;
+        int non_srtp_num;
+#endif        
 
 #ifdef KSSL_DEBUG
 	printf ("tls1_setup_key_block()\n");
@@ -496,15 +500,28 @@ int tls1_setup_key_block(SSL *s)
 
 	ssl3_cleanup_key_block(s);
 
+#ifndef OPENSSL_NO_SRTP
+        non_srtp_num=num;
+
+        if(s->srtp_profile)
+            {
+            srtp_bytes=2*((s->srtp_profile->master_key_bits+s->srtp_profile->salt_bits)/8);
+            }
+
+        num+=srtp_bytes;
+#endif
+        
 	if ((p1=(unsigned char *)OPENSSL_malloc(num)) == NULL)
 		goto err;
 	if ((p2=(unsigned char *)OPENSSL_malloc(num)) == NULL)
 		goto err;
-
+#ifndef OPENSSL_NO_SRTP
 	s->s3->tmp.key_block_length=num;
+#else
+	s->s3->tmp.key_block_length=non_srtp_num;
+#endif
 	s->s3->tmp.key_block=p1;
-
-
+            
 #ifdef TLS_DEBUG
 printf("client random\n");
 { int z; for (z=0; z<SSL3_RANDOM_SIZE; z++) printf("%02X%c",s->s3->client_random[z],((z+1)%16)?' ':'\n'); }
@@ -516,6 +533,27 @@ printf("pre-master\n");
 	tls1_generate_key_block(s,p1,p2,num);
 	OPENSSL_cleanse(p2,num);
 	OPENSSL_free(p2);
+#ifndef OPENSSL_NO_SRTP
+        if(srtp_bytes)
+            {
+            if(s->srtp_key_block)
+                {
+                OPENSSL_cleanse(s->srtp_key_block,s->srtp_key_block_length);
+                OPENSSL_free(s->srtp_key_block);
+                s->srtp_key_block=0;
+                }
+            if(!(s->srtp_key_block=OPENSSL_malloc(srtp_bytes)))
+                goto err;
+            memcpy(s->srtp_key_block,p1+non_srtp_num,srtp_bytes);
+            s->srtp_key_block_length=srtp_bytes;
+            
+            
+            OPENSSL_cleanse(p1+num,srtp_bytes);
+
+            num=non_srtp_num;
+            }
+
+#endif
 #ifdef TLS_DEBUG
 printf("\nkey block\n");
 { int z; for (z=0; z<num; z++) printf("%02X%c",p1[z],((z+1)%16)?' ':'\n'); }

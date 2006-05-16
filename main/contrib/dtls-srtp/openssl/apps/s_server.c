@@ -1,3 +1,14 @@
+/**
+s_server.c
+
+Copyright (C) 2006, Network Resonance, Inc.
+All Rights Reserved.
+
+ekr@networkresonance.com  Mon May 15 17:24:45 2006
+ */
+
+
+static char *RCSSTRING="$Id$";
 /* apps/s_server.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
@@ -471,6 +482,9 @@ static void sv_usage(void)
 	BIO_printf(bio_err,"                 (default is %s)\n",TEST_CERT2);
 	BIO_printf(bio_err," -key2 arg     - Private Key file to use for servername, in cert file if\n");
 	BIO_printf(bio_err,"                 not specified (default is %s)\n",TEST_CERT2);
+#ifndef OPENSSL_NO_SRTP
+	BIO_printf(bio_err," -use_srtp profiles - Offer SRTP key management with a colon-separated profile list");
+#endif
 #endif
 	}
 
@@ -636,7 +650,6 @@ typedef struct tlsextctx_st {
    int extension_error;
 } tlsextctx;
 
-
 static int MS_CALLBACK ssl_servername_cb(SSL *s, int *ad, void *arg)
 	{
 	tlsextctx * p = (tlsextctx *) arg;
@@ -659,6 +672,10 @@ static int MS_CALLBACK ssl_servername_cb(SSL *s, int *ad, void *arg)
 		}
 	return SSL_TLSEXT_ERR_OK;
 }
+
+#ifndef OPENSSL_NO_SRTP
+        char *srtp_profiles = NULL;
+#endif        
 #endif
 
 int MAIN(int, char **);
@@ -983,6 +1000,13 @@ int MAIN(int argc, char *argv[])
 			if (--argc < 1) goto bad;
 			s_key_file2= *(++argv);
 			}
+#ifndef OPENSSL_NO_SRTP
+                else if (strcmp(*argv,"-use_srtp") == 0)
+                        {
+			if (--argc < 1) goto bad;
+			srtp_profiles = *(++argv);
+                        }
+#endif
 #endif
 		else
 			{
@@ -1235,6 +1259,12 @@ bad:
 		store = SSL_CTX_get_cert_store(ctx2);
 		X509_STORE_set_flags(store, vflags);
 		}
+#ifndef OPENSSL_NO_SRTP
+        if (srtp_profiles != NULL)
+                {
+                SSL_CTX_set_tlsext_use_srtp(ctx, srtp_profiles);
+                }
+#endif        
 #endif 
 
 #ifndef OPENSSL_NO_DH
@@ -1904,6 +1934,31 @@ static int init_ssl_connection(SSL *con)
 		BIO_printf(bio_s_out,"Shared ciphers:%s\n",buf);
 	str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
 	BIO_printf(bio_s_out,"CIPHER is %s\n",(str != NULL)?str:"(NONE)");
+#ifndef OPENSSL_NO_SRTP
+        {
+        SRTP_PROTECTION_PROFILE *srtp_profile=SSL_get_selected_srtp_profile(con);
+        if(srtp_profile)
+            {
+            unsigned char *srtp_block;
+            int srtp_length;
+            int i;
+            
+            BIO_printf(bio_s_out,"SRTP Extension negotiated, profile=%s\n", srtp_profile->name);
+            if(!SSL_get_srtp_key_block(con,&srtp_block,&srtp_length))
+                {
+                BIO_printf(bio_s_out,"SRTP key block (len=%d):",srtp_length);
+                
+                for (i=0; i<srtp_length;i++)
+                    {
+                    BIO_printf(bio_s_out,"%02X",srtp_block[i]);
+                    }
+                BIO_puts(bio_s_out,"\n");
+                }
+            }
+        }
+#endif        
+
+        
 	if (con->hit) BIO_printf(bio_s_out,"Reused session-id\n");
 	if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
 		TLS1_FLAGS_TLS_PADDING_BUG)

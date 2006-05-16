@@ -322,9 +322,11 @@ static void sc_usage(void)
 	BIO_printf(bio_err," -rand file%cfile%c...\n", LIST_SEPARATOR_CHAR, LIST_SEPARATOR_CHAR);
 #ifndef OPENSSL_NO_TLSEXT
 	BIO_printf(bio_err," -servername host  - Set TLS extension servername in ClientHello\n");
+#ifndef OPENSSL_NO_SRTP
+	BIO_printf(bio_err," -use_srtp profiles - Offer SRTP key management with a colon-separated profile list");
 #endif
-	}
-
+#endif        
+        }
 #ifndef OPENSSL_NO_TLSEXT
 
 /* This is a context that we pass to callbacks */
@@ -394,6 +396,9 @@ int MAIN(int argc, char **argv)
 	char *servername = NULL; 
         tlsextctx tlsextcbp = 
         {NULL,0};
+#ifndef OPENSSL_NO_SRTP
+        char *srtp_profiles = NULL;
+#endif        
 #endif
 	struct sockaddr peer;
 	int peerlen = sizeof(peer);
@@ -632,7 +637,14 @@ int MAIN(int argc, char **argv)
 			servername= *(++argv);
 			/* meth=TLSv1_client_method(); */
 			}
+#ifndef OPENSSL_NO_SRTP
+                else if (strcmp(*argv,"-use_srtp") == 0)
+                        {
+			if (--argc < 1) goto bad;
+			srtp_profiles = *(++argv);
+                        }
 #endif
+#endif                
 		else
 			{
 			BIO_printf(bio_err,"unknown option %s\n",*argv);
@@ -771,6 +783,12 @@ bad:
 		SSL_CTX_set_tlsext_servername_callback(ctx, ssl_servername_cb);
 		SSL_CTX_set_tlsext_servername_arg(ctx, &tlsextcbp);
 		}
+#ifndef OPENSSL_NO_SRTP
+        if (srtp_profiles != NULL)
+                {
+                SSL_CTX_set_tlsext_use_srtp(ctx, srtp_profiles);
+                }
+#endif        
 #endif
 
 	con=SSL_new(ctx);
@@ -1415,6 +1433,31 @@ static void print_stuff(BIO *bio, SSL *s, int full)
 	BIO_printf(bio,"Expansion: %s\n",
 		expansion ? SSL_COMP_get_name(expansion) : "NONE");
 #endif
+#ifndef OPENSSL_NO_SRTP
+        {
+        SRTP_PROTECTION_PROFILE *srtp_profile=SSL_get_selected_srtp_profile(s);
+
+        if(srtp_profile)
+            {
+            unsigned char *srtp_block;
+            int srtp_length;
+            int i;
+            
+            BIO_printf(bio,"SRTP Extension negotiated, profile=%s\n", srtp_profile->name);
+            if(!SSL_get_srtp_key_block(s,&srtp_block,&srtp_length))
+                {
+                BIO_printf(bio,"SRTP key block (len=%d):",srtp_length);
+                
+                for (i=0; i<srtp_length;i++)
+                    {
+                    BIO_printf(bio,"%02X",srtp_block[i]);
+                    }
+                BIO_puts(bio,"\n");
+                }
+            }
+        
+        }
+#endif        
 	SSL_SESSION_print(bio,SSL_get_session(s));
 	BIO_printf(bio,"---\n");
 	if (peer != NULL)

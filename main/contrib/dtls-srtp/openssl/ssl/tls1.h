@@ -193,6 +193,9 @@ extern "C" {
 #define TLSEXT_TYPE_elliptic_curves		10
 #define TLSEXT_TYPE_ec_point_formats		11
 
+/* EKR */
+#define TLSEXT_TYPE_use_srtp                    0x8001
+                                                
 /* NameType value from RFC 3546 */
 #define TLSEXT_NAMETYPE_host_name 0
 
