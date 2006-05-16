@@ -2467,14 +2467,19 @@ BaseSecurity::dumpAsn( char* name, Data data)
 X509*     
 BaseSecurity::getDomainCert( const Data& domain )
 {
-   return mDomainCerts[domain];
+   return mDomainCerts.count(domain) ? mDomainCerts[domain] : 0;
+}
+
+X509*     
+BaseSecurity::getUserCert( const Data& aor )
+{
+   return mUserCerts.count(aor) ? mUserCerts[aor] : 0;
 }
 
 EVP_PKEY* 
 BaseSecurity::getDomainKey(  const Data& domain )
 {
-   return mDomainPrivateKeys[domain];
-   
+   return mDomainPrivateKeys.count(domain) ? mDomainPrivateKeys[domain] : 0;
 }
 
 #endif
