@@ -1439,18 +1439,42 @@ static void print_stuff(BIO *bio, SSL *s, int full)
 
         if(srtp_profile)
             {
-            unsigned char *srtp_block;
-            int srtp_length;
+            unsigned char *cmk,*smk,*cms,*sms;
+            int cmkl,smkl,cmsl,smsl;            
             int i;
             
             BIO_printf(bio,"SRTP Extension negotiated, profile=%s\n", srtp_profile->name);
-            if(!SSL_get_srtp_key_block(s,&srtp_block,&srtp_length))
+            if(!SSL_get_srtp_key_info(s,&cmk,&cmkl,&smk,&smkl,&cms,&cmsl,&sms,&smsl))
                 {
-                BIO_printf(bio,"SRTP key block (len=%d):",srtp_length);
+                BIO_printf(bio,"SRTP client master key (len=%d): ",cmkl);
                 
-                for (i=0; i<srtp_length;i++)
+                for (i=0; i<cmkl;i++)
                     {
-                    BIO_printf(bio,"%02X",srtp_block[i]);
+                    BIO_printf(bio,"%02X",cmk[i]);
+                    }
+                BIO_puts(bio,"\n");
+
+                BIO_printf(bio,"SRTP server master key (len=%d): ",smkl);
+                
+                for (i=0; i<smkl;i++)
+                    {
+                    BIO_printf(bio,"%02X",smk[i]);
+                    }
+                BIO_puts(bio,"\n");
+
+                BIO_printf(bio,"SRTP client master salt (len=%d): ",cmsl);
+                
+                for (i=0; i<cmsl;i++)
+                    {
+                    BIO_printf(bio,"%02X",cms[i]);
+                    }
+                BIO_puts(bio,"\n");
+
+                BIO_printf(bio,"SRTP server master salt (len=%d): ",smsl);
+                
+                for (i=0; i<smkl;i++)
+                    {
+                    BIO_printf(bio,"%02X",smk[i]);
                     }
                 BIO_puts(bio,"\n");
                 }

@@ -131,7 +131,12 @@ SRTP_PROTECTION_PROFILE *SSL_get_selected_srtp_profile(SSL *s);
 
 STACK_OF(SRTP_PROTECTION_PROFILE) *SSL_get_srtp_profiles(SSL *ssl);
 SRTP_PROTECTION_PROFILE *SSL_get_selected_srtp_profile(SSL *s);
-int SSL_get_srtp_key_block(SSL *s,unsigned char **blk, int *len);
+int SSL_get_srtp_key_info(SSL *s,
+  unsigned char **client_write_master_key,  int *client_write_master_key_len,
+  unsigned char **server_write_master_key,  int *server_write_master_key_len,  
+  unsigned char **client_write_master_salt, int *client_write_master_salt_len,
+  unsigned char **server_write_master_salt, int *server_write_master_salt_len);
+
 int ssl_add_clienthello_use_srtp_ext(SSL *s, unsigned char *p, int *len, int maxlen);
 int ssl_parse_clienthello_use_srtp_ext(SSL *s, unsigned char *d, int len,int *al);
 int ssl_add_serverhello_use_srtp_ext(SSL *s, unsigned char *p, int *len, int maxlen);
