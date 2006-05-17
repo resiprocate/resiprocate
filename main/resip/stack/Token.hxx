@@ -25,6 +25,7 @@ class Token : public ParserCategory
       Token& operator=(const Token&);
       bool isEqual(const Token& rhs) const;
       bool operator==(const Token& rhs) const;
+      bool operator!=(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
       Data& value() const;
