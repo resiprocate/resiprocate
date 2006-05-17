@@ -29,19 +29,19 @@ class TR
 
       void show(const char * s)
       {
-	 os << s << ' ' << label << endl;
+         os << s << ' ' << label << endl;
       }
 
       void start()
       {
-	 show("-->");
+         show("-->");
       }
-
+      
       void end()
       {
-	 show("<--");
+         show("<--");
       }
-
+      
    public:
       TR(Data  s,ostream& o = cerr ):os(o),label(s) { start(); }
       TR(const char* l,ostream& o = cerr):os(o),label(l) { start(); }
@@ -52,6 +52,8 @@ int
 main(int arc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+
+
 
    {
       TR _tr("Test poorly formed NameAddr by construction");
@@ -639,6 +641,80 @@ main(int arc, char** argv)
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
+   }
+
+   {
+      TR _tr("Test poorly formed DataParameter by construction");
+
+      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;tag=";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      try
+      {
+         Via via(&hfv, Headers::UNKNOWN);
+         via.sentPort();
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << "Caught parse exception for Via" << endl;
+      }
+   }
+
+   {
+      TR _tr("Test poorly formed UnknownParameter by construction");
+
+      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;foobar=";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      try
+      {
+         Via via(&hfv, Headers::UNKNOWN);
+         via.sentPort();
+         UnknownParameterType p_foobar("foobar");
+         via.exists(p_foobar);
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << "Caught parse exception for Via" << endl;
+      }
+   }
+
+   {
+      TR _tr("Test poorly formed IntegerParameter by construction");
+
+      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;duration=";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      try
+      {
+         Via via(&hfv, Headers::UNKNOWN);
+         via.sentPort();
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << "Caught parse exception for Via " << endl;
+      }
+   }
+
+   {
+      TR _tr("Test poorly formed QuotedDataParameter by construction");
+
+      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;domain=\"";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      try
+      {
+         Via via(&hfv, Headers::UNKNOWN);
+         via.sentPort();
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << "Caught parse exception for Via " << endl;
+      }
    }
 
 #ifdef USE_IPV6
