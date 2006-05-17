@@ -25,7 +25,9 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
-   if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
+   pb.assertNotEof(); // handle cases such as ;tag=
+
+   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
    {
       setQuoted(true);
       pb.skipChar();
