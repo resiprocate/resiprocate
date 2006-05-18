@@ -541,7 +541,7 @@ Helper::computeCallId()
 Data
 Helper::computeTag(int numBytes)
 {
-   return Random::getRandomHex(4);
+   return Random::getRandomHex(numBytes);
 }
 
 void
