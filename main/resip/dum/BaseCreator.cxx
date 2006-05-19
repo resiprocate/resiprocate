@@ -100,10 +100,13 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       }
       mLastRequest->header(h_Contacts).push_front(contact);
 
-      const NameAddrs& sRoute = mUserProfile->getServiceRoute();
-      if (!sRoute.empty())
+      if (method != REGISTER)
       {
-         mLastRequest->header(h_Routes) = sRoute;
+         const NameAddrs& sRoute = mUserProfile->getServiceRoute();
+         if (!sRoute.empty())
+         {
+            mLastRequest->header(h_Routes) = sRoute;
+         }
       }
    }
       
