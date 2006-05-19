@@ -284,7 +284,14 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
+                  TransactionState* state = new TransactionState(controller, ServerNonInvite, Trying, tid, tu);
+                  state->mResponseTarget = sip->getSource();
+                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+                  state->mIsReliable = state->mResponseTarget.transport->isReliable();
+                  state->mIsCancel=true;
+                  state->add(tid);
+                  //was TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
+                  state->sendToWire(Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
