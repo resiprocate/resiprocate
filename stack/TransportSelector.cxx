@@ -585,9 +585,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
                }
-               
-               if (target.transport->transport() != UDP)
+
+               //!dys! temp fix for redirect. will add control token in message.
+               if (msg->isRequest() && target.transport->transport() != UDP)
                {
+                  DebugLog(<< "added transport to Contact");
                   contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                }
             }
@@ -610,11 +612,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
-            }
-            
-            if (target.transport->transport() != UDP)
-            {
-               rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+               if (target.transport->transport() != UDP)
+               {
+                  rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+               }
             }
          }
          
