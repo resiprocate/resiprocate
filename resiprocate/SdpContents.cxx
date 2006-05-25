@@ -695,6 +695,7 @@ parseTypedTime(ParseBuffer& pb)
 	 case 'h' :
 	    v *= 3600;
 	    pb.skipChar();
+		break;
 	 case 'd' :
 	    v *= 3600*24;
 	    pb.skipChar();
@@ -972,6 +973,8 @@ SdpContents::Session::parse(ParseBuffer& pb)
 
    if (!pb.eof() && *pb.position() == 'u')
    {
+      pb.skipChar('u');
+      pb.skipChar(Symbols::EQUALS[0]);
       mUri.parse(pb);
       skipEol(pb);
    }
