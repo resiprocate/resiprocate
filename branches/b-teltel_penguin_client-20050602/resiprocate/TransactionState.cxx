@@ -110,9 +110,11 @@ TransactionState::process(TransactionController& controller)
       tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
       tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
       Tuple target(sip->getSource());
-      delete sip;
       controller.mTransportSelector.transmit(tryLater, target);
-      return;
+	  delete sip;
+	  delete tryLater;
+      
+	  return;
    }
 
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
@@ -254,11 +256,16 @@ TransactionState::process(TransactionController& controller)
                   controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
-                  InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
-                  delete sip;
-                  return;
-               }
+				   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
+					
+				   SipMessage* noFoundCancel = Helper::makeResponse(*sip, 481);
+				   Tuple target(sip->getSource());
+				   controller.mTransportSelector.transmit(noFoundCancel, target);
+				   delete sip;
+				   delete noFoundCancel;
+
+				   return;
+			   }
                else
                {
                   assert(matchingInvite);
