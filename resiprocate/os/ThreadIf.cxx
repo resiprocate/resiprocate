@@ -24,8 +24,14 @@ using namespace resip;
 
 extern "C"
 {
-static unsigned int
+static void*
+#ifdef WIN32
+#ifdef _WIN32_WCE
+WINAPI
+#else
 __stdcall
+#endif
+#endif
 threadWrapper( void* threadParm )
 {
    assert( threadParm );
