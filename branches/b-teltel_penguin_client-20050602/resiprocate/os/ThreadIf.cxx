@@ -3,9 +3,14 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
-#include <process.h> // for _beginthreadex()
+
+#ifdef _WIN32_WCE
+typedef LPTHREAD_START_ROUTINE RESIP_THREAD_START_ROUTINE;
 #else
-//typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
+#include <process.h> // for _beginthreadex()
+typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
+#endif
+
 //from Random.cxx
 #include "resiprocate/os/Socket.hxx"
 #endif
@@ -86,9 +91,7 @@ ThreadIf::run()
            
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
          0, // DWORD dwStackSize,                         // initial thread stack size
-#ifdef _WIN32_WCE
-         LPTHREAD_START_ROUTINE
-#endif
+         RESIP_THREAD_START_ROUTINE
          (threadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
          this, //LPVOID lpParameter,                        // argument for new thread
          0, //DWORD dwCreationFlags,                     // creation flags
