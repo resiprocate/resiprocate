@@ -331,7 +331,7 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
-   if (responseCode/100 == 2)
+   if (responseCode/100 == 2 && !response.exists(h_Contacts))
    {
       // in general, this should not create a Contact header since only requests
       // that create a dialog (or REGISTER requests) should produce a response with
