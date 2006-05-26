@@ -110,11 +110,10 @@ TransactionState::process(TransactionController& controller)
       tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
       tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
       Tuple target(sip->getSource());
+      delete sip;
       controller.mTransportSelector.transmit(tryLater, target);
-	  delete sip;
-	  delete tryLater;
-      
-	  return;
+      delete tryLater;
+      return;
    }
 
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
@@ -256,16 +255,14 @@ TransactionState::process(TransactionController& controller)
                   controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
-				   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-					
-				   SipMessage* noFoundCancel = Helper::makeResponse(*sip, 481);
-				   Tuple target(sip->getSource());
-				   controller.mTransportSelector.transmit(noFoundCancel, target);
-				   delete sip;
-				   delete noFoundCancel;
-
-				   return;
-			   }
+		  InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
+		  SipMessage* notExist = Helper::makeResponse(*sip, 481);
+		  Tuple target(sip->getSource());
+		  controller.mTransportSelector.transmit(notExist, target);
+		  delete sip;
+		  delete notExist;
+		  return;
+	       }
                else
                {
                   assert(matchingInvite);
@@ -341,7 +338,6 @@ TransactionState::process(TransactionController& controller)
                {
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
-                  state->processReliability(matchingInvite->mTarget.getType());
                   state->processClientNonInvite(sip);
                   
                   // for the INVITE in case we never get a 487
@@ -1296,7 +1292,7 @@ TransactionState::processTransportFailure()
       warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
       response->header(h_Warnings).push_back(warning);
       
-      sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
+      sendToTU(response);
       return;
    }
 

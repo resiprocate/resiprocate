@@ -695,7 +695,7 @@ parseTypedTime(ParseBuffer& pb)
 	 case 'h' :
 	    v *= 3600;
 	    pb.skipChar();
-		break;
+	    break;
 	 case 'd' :
 	    v *= 3600*24;
 	    pb.skipChar();
