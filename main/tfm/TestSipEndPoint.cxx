@@ -704,11 +704,17 @@ void
 TestSipEndPoint::ReInvite::go()
 {
    DebugLog(<< "Re-Inviting to: " << mTo);
-      DeprecatedDialog* dialog;
+   DeprecatedDialog* dialog;
    if( mMatchUserOnly )
+   {
       dialog = mEndPoint.getDialog(mTo.uri().user());
+   }
+   
    else
+   {
       dialog = mEndPoint.getDialog(mTo);
+   }
+   
    if (!dialog) 
    {
       InfoLog (<< "No matching dialog on " << mEndPoint.getName() << " for " << mTo);
@@ -717,7 +723,10 @@ TestSipEndPoint::ReInvite::go()
       
    shared_ptr<SipMessage> invite(dialog->makeInvite());
    if (mSdp.get())
+   {
       invite->setContents(mSdp.get());
+   }
+  
    DebugLog(<< "TestSipEndPoint::ReInvite: " << *invite);
    mEndPoint.storeSentInvite(invite);
    mEndPoint.send(invite);
@@ -1710,7 +1719,18 @@ TestSipEndPoint::ring()
 TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
    : MessageExpectAction(endPoint),
      mEndPoint(endPoint),
-     mSdp(sdp)
+     mSdp(sdp),
+     mReliable(false),
+     mRseq(0)
+{
+}
+
+TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp, int rseq)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp),
+     mReliable(true),
+     mRseq(rseq)
 {
 }
 
@@ -1718,8 +1738,40 @@ boost::shared_ptr<resip::SipMessage>
 TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)                                
 {
    boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 183);
+
+   if (mReliable)
+   {
+      bool required = msg->exists(h_Requires) && msg->header(h_Requires).find(Token(Symbols::C100rel));
+      bool supported = msg->exists(h_Supporteds) && msg->header(h_Supporteds).find(Token(Symbols::C100rel));
+
+      if (mReliable && (!required || !supported) )
+      {
+         throw AssertException("Trying to send reliable provisional when UAC doesn't support it",
+                               __FILE__, __LINE__);
+      }
+      if (!mReliable && required)
+      {
+         throw AssertException("Failing to send reliable provisional when UAC requires it",
+                               __FILE__, __LINE__);
+      }
+
+      if (mReliable && msg->header(h_RequestLine).method() != INVITE)
+      {
+         throw AssertException("Requesting reliable provisional on non-INVITE method",
+                               __FILE__, __LINE__);
+      }
+      
+      if (mReliable)
+      {
+         response->header(h_Requires).push_back(Token(Symbols::C100rel));
+         response->header(h_RSeq).value() = mRseq;
+      }
+   }
+
    if( mSdp.get() )
+   {
       response->setContents(mSdp.get());
+   }
    return response;
 }
 
@@ -1733,6 +1785,17 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ring183(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Ring183(*this, sdp);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::reliableProvisional(const boost::shared_ptr<resip::SdpContents>& sdp, int rseq)
+{
+   if (rseq <= 0)
+   {
+      throw AssertException("RSEQ value must be greater than 0",
+                            __FILE__, __LINE__);
+   }
+   return new Ring183(*this, sdp, rseq);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -1764,6 +1827,28 @@ TestSipEndPoint::send415()
 {
    return new Send415(*this);
 }
+
+TestSipEndPoint::Send420::Send420(TestSipEndPoint & endPoint, const Token& unsupported)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mUnsupported(unsupported)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>                                
+TestSipEndPoint::Send420::go(boost::shared_ptr<resip::SipMessage> msg)                                
+{
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 420);
+   response->header(h_Unsupporteds).push_back(mUnsupported);
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send420(const resip::Token& unsupported)
+{
+   return new Send420(*this, unsupported);
+}
+
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send480()
