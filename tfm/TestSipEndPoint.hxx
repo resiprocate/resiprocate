@@ -471,13 +471,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       {
          public:
             explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp, int rseq);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
          private:
             TestSipEndPoint& mEndPoint;
             boost::shared_ptr<resip::SdpContents> mSdp;
+            bool mReliable;
+            int mRseq;
       };
       MessageExpectAction* ring183();
       MessageExpectAction* ring183(const boost::shared_ptr<resip::SdpContents>& sdp);
+      MessageExpectAction* reliableProvisional(const boost::shared_ptr<resip::SdpContents>& sdp, int rseq);
       
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ok, 200);
       MessageExpectAction* ok();
@@ -491,6 +495,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send415, 415);
       MessageExpectAction* send415();
 
+      class Send420 : public MessageExpectAction
+      {
+         public:
+            explicit Send420(TestSipEndPoint& endPoint, const resip::Token& unsupported);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            resip::Token mUnsupported;
+      };
+      MessageExpectAction* send420(const resip::Token& unsupported);
+      
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send480, 480);
       MessageExpectAction* send480();
 
