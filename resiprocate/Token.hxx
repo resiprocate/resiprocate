@@ -24,6 +24,7 @@ class Token : public ParserCategory
       Token(const Token&);
       Token& operator=(const Token&);
       bool operator==(const Token& rhs) const;
+      bool operator!=(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
       Data& value() const;

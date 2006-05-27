@@ -596,10 +596,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                {
                   contact.uri().host() = DnsUtil::inet_ntop(source);
                   contact.uri().port() = target.transport->port();
-                  if (target.transport->transport() != UDP)
-                  {
-                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
-                  }
+
+		  if (msg->isRequest() && target.transport->transport() != UDP)
+		  {
+		     DebugLog(<< "added transport to Contact");
+		     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+		  }
+
                   DebugLog(<<"!sipit! Populated Contact: " << contact);
                }
             }
