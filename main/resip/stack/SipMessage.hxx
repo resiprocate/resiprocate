@@ -264,8 +264,8 @@ class SipMessage : public TransactionMessage
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
-      const Data& getTlsPeerName() const { return mTlsPeerName; }
-      void setTlsPeerName(const Data& tlsPeerName) { mTlsPeerName = tlsPeerName; }
+      const std::list<Data>& getTlsPeerNames() const { return mTlsPeerNames; }
+      void setTlsPeerNames(const std::list<Data>& tlsPeerNames) { mTlsPeerNames = tlsPeerNames; }
 
       Data getCanonicalIdentityString() const;
       
@@ -341,7 +341,7 @@ class SipMessage : public TransactionMessage
       Data mTlsDomain;
 
       // peers domain associate with this message (MTLS)
-      Data mTlsPeerName; 
+      std::list<Data> mTlsPeerNames; 
 
       mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
 

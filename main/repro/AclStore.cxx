@@ -439,13 +439,17 @@ AclStore::getAddressMask( const resip::Data& key )
 
       
 bool 
-AclStore::isTlsPeerNameTrusted(const Data& tlsPeerName)
+AclStore::isTlsPeerNameTrusted(const std::list<Data>& tlsPeerNames)
 {
-   for(TlsPeerNameList::iterator i = mTlsPeerNameList.begin(); i != mTlsPeerNameList.end(); i++)
+   for(std::list<Data>::const_iterator it = tlsPeerNames.begin(); it != tlsPeerNames.end(); it++)
    {
-      if(isEqualNoCase(i->mTlsPeerName, tlsPeerName))
+      for(TlsPeerNameList::iterator i = mTlsPeerNameList.begin(); i != mTlsPeerNameList.end(); i++)
       {
-         return true;
+         if(isEqualNoCase(i->mTlsPeerName, *it))
+         {
+            InfoLog (<< "AclStore - Tls peer name IS trusted: " << *it);
+            return true;
+         }
       }
    }
    return false;
@@ -484,15 +488,10 @@ AclStore::isRequestTrusted(const SipMessage& request)
 #endif
       )
    {
-      const Data& tlsPeerName = request.getTlsPeerName();
-      if(tlsPeerName != Data::Empty && isTlsPeerNameTrusted(tlsPeerName))
+      const std::list<Data>& tlsPeerNames = request.getTlsPeerNames();
+      if(!tlsPeerNames.empty() && isTlsPeerNameTrusted(tlsPeerNames))
       {
-         InfoLog (<< "AclStore - Tls peer name IS trusted: " << tlsPeerName);
          trusted = true;
-      }
-      else
-      {
-         InfoLog (<< "AclStore - Tls peer name NOT trusted: " << tlsPeerName);
       }
    }
 #endif
