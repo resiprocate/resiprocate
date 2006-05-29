@@ -36,8 +36,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mResponse(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
-     mTlsDomain(Data::Empty),
-     mTlsPeerName(Data::Empty)
+     mTlsDomain(Data::Empty)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {

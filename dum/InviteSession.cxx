@@ -131,7 +131,6 @@ InviteSession::getSessionHandle()
 
 void InviteSession::storePeerCapabilities(const SipMessage& msg)
 {
-   // !slg! ToDo - add methods to get this data, App may be interested
    if (msg.exists(h_Allows))
    {
       mPeerSupportedMethods = msg.header(h_Allows);
@@ -155,6 +154,10 @@ void InviteSession::storePeerCapabilities(const SipMessage& msg)
    if (msg.exists(h_Accepts))
    {
       mPeerSupportedMimeTypes = msg.header(h_Accepts);
+   }
+   if (msg.exists(h_UserAgent))
+   {
+      mPeerUserAgent = msg.header(h_UserAgent).value();
    }
 }
 
