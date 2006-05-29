@@ -100,8 +100,16 @@ class InviteSession : public DialogUsage
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
-      bool isAccepted() const;  // UAS States before accept is called
-      
+      bool isAccepted() const;  // UAS States after accept is called
+
+      Tokens& getPeerSupportedMethods() { return mPeerSupportedMethods; }
+      Tokens& getPeerSupportedOptionTags() { return mPeerSupportedOptionTags; }
+      Mimes&  getPeerSupportedMimeTypes() { return mPeerSupportedMimeTypes; }
+      Tokens& getPeerSupportedEncodings() { return mPeerSupportedEncodings; }
+      Tokens& getPeerSupportedLanguages() { return mPeerSupportedLanguages; }
+      Tokens& getPeerAllowedEvents() { return mPeerAllowedEvents; }
+      Data&   getPeerUserAgent() { return mPeerUserAgent; }
+
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
 
@@ -279,10 +287,11 @@ class InviteSession : public DialogUsage
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
-      Mimes mPeerSupportedMimeTypes;
+      Mimes  mPeerSupportedMimeTypes;
       Tokens mPeerSupportedEncodings;
       Tokens mPeerSupportedLanguages;
       Tokens mPeerAllowedEvents;
+      Data   mPeerUserAgent;
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       

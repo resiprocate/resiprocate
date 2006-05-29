@@ -34,13 +34,14 @@ class TlsConnection : public Connection
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
       
-      const Data& getPeerName() const;
+      const std::list<Data>& getPeerNames() const;
       
       typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
       static const char * fromState(State);
    
    private:
       void computePeerName();
+      Data getPeerNamesData() const;
       State checkState();
 
       bool mServer;
@@ -52,7 +53,7 @@ class TlsConnection : public Connection
 
       SSL* mSsl;
       BIO* mBio;
-      Data mPeerName;
+      std::list<Data> mPeerNames;
 };
  
 }
