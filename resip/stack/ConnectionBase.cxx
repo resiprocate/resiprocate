@@ -112,7 +112,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
          if(tlsConnection)
          {
-            mMessage->setTlsPeerName(tlsConnection->getPeerName());
+            mMessage->setTlsPeerNames(tlsConnection->getPeerNames());
          }
          mMsgHeaderScanner.prepareForMessage(mMessage);
          // Fall through to the next case.
