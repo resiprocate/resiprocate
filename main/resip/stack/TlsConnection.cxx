@@ -38,7 +38,6 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
             << " on " << fd);
 
    mSsl = NULL;
-   mPeerName = Data::Empty;
    mBio= NULL;
   
    if (mServer)
@@ -283,20 +282,29 @@ TlsConnection::checkState()
    //post-connection verification: check that certificate name matches domain name
    if (!mServer)
    {
-      if(!isEqualNoCase(getPeerName(), who().getTargetDomain()))
+      bool matches = false;
+      for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+      {
+         if(isEqualNoCase(*it, who().getTargetDomain()))
+         {
+             matches=true;
+             break;
+         }
+      }
+      if(!matches)
       {
          mState = Broken;
          mBio = 0;
          ErrLog (<< "Certificate name mismatch: trying to connect to <" 
                  << who().getTargetDomain()
-                 << "> remote cert domain is <" 
-                 << getPeerName() << ">" );
+                 << "> remote cert domain(s) are <" 
+                 << getPeerNamesData() << ">" );
          mFailureReason = TransportFailure::CertNameMismatch;         
          return mState;
       }
    }
 
-   InfoLog( << "TLS handshake done for peer " << getPeerName()); 
+   InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
    mState = Up;
 
 #endif // USE_SSL   
@@ -499,10 +507,28 @@ TlsConnection::isGood() // has data that can be read
 }
 
 
-const Data&
-TlsConnection::getPeerName() const
+const std::list<Data>&
+TlsConnection::getPeerNames() const
 {
-   return mPeerName;
+   return mPeerNames;
+}
+
+Data
+TlsConnection::getPeerNamesData() const
+{
+   Data peerNamesString;
+   for(std::list<Data>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   {
+      if(it == mPeerNames.begin())
+      {
+         peerNamesString += *it;
+      }
+      else
+      {
+         peerNamesString += ", " + *it;
+      }
+   }
+   return peerNamesString;
 }
 
 
@@ -510,6 +536,8 @@ void
 TlsConnection::computePeerName()
 {
 #if defined(USE_SSL)
+   Data commonName;
+
    assert(mSsl);
 
    if (!mBio)
@@ -569,7 +597,7 @@ TlsConnection::computePeerName()
       
       DebugLog( << "Found common name in cert of " << name );
       
-      mPeerName = name;
+      commonName = name;
    }
 
 #if 0  // junk code to print certificates extentions for debugging 
@@ -609,7 +637,7 @@ TlsConnection::computePeerName()
          Data name(dat,l);
          InfoLog(<< "subjectAltName of TLS seesion cert contains <" << name << ">" );
          
-         mPeerName = name;
+         mPeerNames.push_back(name);
       }
           
       if (gen->type == GEN_EMAIL)
@@ -624,16 +652,24 @@ TlsConnection::computePeerName()
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
 
-   // add the certificate to the Security store
-   assert( mPeerName != Data::Empty );
-   if ( !mSecurity->hasDomainCert( mPeerName ) )
+   // If there are no peer names from the subjectAltName, then use the commonName
+   if(mPeerNames.empty())
    {
-      unsigned char* buf = NULL;
-      int len = i2d_X509( cert, &buf );
-      Data derCert( buf, len );
-      mSecurity->addDomainCertDER(mPeerName,derCert);
-      OPENSSL_free(buf); buf=NULL;
+       mPeerNames.push_back(commonName);
    }
+
+   // add the certificate to the Security store
+   unsigned char* buf = NULL;
+   int len = i2d_X509( cert, &buf );
+   Data derCert( buf, len );
+   for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   {
+      if ( !mSecurity->hasDomainCert( *it ) )
+      {
+         mSecurity->addDomainCertDER(*it,derCert);
+      }
+   }
+   OPENSSL_free(buf); buf=NULL;
 
    X509_free(cert); cert=NULL;
 #endif // USE_SSL

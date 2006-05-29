@@ -56,7 +56,7 @@ class AclStore
       Key getFirstAddressKey(); // return empty if no more
       Key getNextAddressKey(Key& key); // return empty if no more 
 
-      bool isTlsPeerNameTrusted(const resip::Data& tlsPeerName);
+      bool isTlsPeerNameTrusted(const std::list<resip::Data>& tlsPeerNames);
       bool isAddressTrusted(const resip::Tuple& address);
       bool isRequestTrusted(const resip::SipMessage& request);
 
