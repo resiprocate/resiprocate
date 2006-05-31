@@ -1,0 +1,52 @@
+Content-Type: multipart/related;type="application/rlmi+xml";boundary=d6041e4f6c76e925
+
+--d6041e4f6c76e925
+Content-Type: application/rlmi+xml;charset="UTF-8"
+Content-Transfer-Encoding: binary
+Content-Id: <nXYxAE@pres.example.com>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<list xmlns="urn:ietf:params:xml:ns:rmli"
+      uri="sip:adam-friends@pres.example.com" version="1"
+      name="Buddy List at COM" fullState="true">
+  <resource uri="sip:bob@example.com" name="Bob Smith">
+    <instance id="juwigmtboe" state="active"
+              cid="bUZBsM@pres.example.com"/>
+  </resource>
+  <resource uri="sip:dave@example.com" name="Dave Jones">
+    <instance id="hqzsuxtfyq" state="active"
+              cid="ZvSvkz@pres.example.com"/>
+  </resource>
+  <resource uri="sip:ed@example.net" name="Ed at NET" />
+  <resource uri="sip:adam-friends@example.org"
+            name="My Friends at ORG" />
+</list>
+
+--d6041e4f6c76e925
+Content-Type: application/pidf+xml;charset="UTF-8"
+Content-Transfer-Encoding: binary
+Content-Id: <bUZBsM@pres.example.com>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf"
+          entity="sip:bob@example.com">
+  <tuple id="sg89ae" >
+     <status><basic>open</basic></status>
+     <contact priority="1">sip:bob@example.com</contact>
+  </tuple>
+</presence>
+
+--d6041e4f6c76e925
+Content-Type: application/pidf+xml;charset="UTF-8"
+Content-Transfer-Encoding: binary
+Content-Id: <ZvSvkz@pres.example.com>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf"
+          entity="sip:dave@example.com">
+  <tuple id="slie74" >
+     <status><basic>closed</basic></status>
+  </tuple>
+</presence>
+
+--d6041e4f6c76e925--
