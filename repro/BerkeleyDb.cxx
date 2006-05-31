@@ -4,22 +4,14 @@
 
 #include <fcntl.h>
 #include <cassert>
-#ifdef WIN32
-#include <db_cxx.h>
-#elif defined(__APPLE__)
-#include <db42/db_cxx.h>
-#else
-#include<db4/db_cxx.h>
-#endif
 
+#include "rutil/WinLeakCheck.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
 
 using namespace resip;
 using namespace repro;
