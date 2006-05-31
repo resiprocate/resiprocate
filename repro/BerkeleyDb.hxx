@@ -6,8 +6,8 @@
 #elif HAVE_CONFIG_H
 #include "config.hxx"
 #include DB_HEADER
-#elif defined(__APPLE__)
-#include <db42/db_cxx.h>
+//#elif defined(__APPLE__) 
+//#include <db42/db_cxx.h>
 #else
 #include<db4/db_cxx.h>
 #endif
