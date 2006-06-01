@@ -36,6 +36,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mState(Undefined),
      mNitState(NitComplete),
      mCurrentRetransmit200(0),
+     mCurrentRetransmit200CSeq(0),
      mSessionInterval(0),
      mSessionRefresherUAS(false),
      mSessionTimerSeq(0),
@@ -554,10 +555,10 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::WaitForAck)
    {
-      if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet
-      {
+      if(mCurrentRetransmit200 && mCurrentRetransmit200CSeq == timeout.seq())  // If retransmit200 timer is active then ACK is not received yet
+      {                                                                        //  mCurrentRetransmit200CSeq must match most recent DumTimeout::Retransmit200.
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-
+         mCurrentRetransmit200CSeq = 0;
          // this is so the app can decided to ignore this. default implementation
          // will call end next
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
@@ -672,7 +673,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
 
       case OnAck:
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         mCurrentRetransmit200     = 0; // stop the 200 retransmit timer
+         mCurrentRetransmit200CSeq = 0; // reset so DumTimeout::WaitForAck handles only active retransmit timeout.
          break;
 
       default:
@@ -917,6 +919,7 @@ InviteSession::dispatchAnswered(const SipMessage& msg)
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      mCurrentRetransmit200CSeq = 0;
       transition(Connected);
    }
    else
@@ -931,6 +934,7 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      mCurrentRetransmit200CSeq = 0;
       provideOffer(*mProposedLocalSdp);
    }
    else
@@ -1169,6 +1173,7 @@ InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;
    int seq = mLastSessionModification.header(h_CSeq).sequence();
+   mCurrentRetransmit200CSeq = seq; // Jun. 1st, 2006: to match corresponding DumTimeout::WaitForAck.
    mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
@@ -1713,7 +1718,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
    else
    {
-      assert(0); 
+      assert(method == INFO); // !polo!: allows INFO method.
       return Unknown;
    }
 }

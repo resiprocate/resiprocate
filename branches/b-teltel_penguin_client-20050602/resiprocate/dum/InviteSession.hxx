@@ -242,6 +242,7 @@ class InviteSession : public DialogUsage
       SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
       
       unsigned long mCurrentRetransmit200;
+      unsigned long mCurrentRetransmit200CSeq; // to match corresponding DumTimeout::WaitForAck.
 
       // Session Timer settings
       int  mSessionInterval;
