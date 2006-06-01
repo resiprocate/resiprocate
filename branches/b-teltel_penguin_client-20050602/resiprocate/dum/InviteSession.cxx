@@ -547,10 +547,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit200)
       {
-         InfoLog (<< "Retransmitting: " << endl << mInvite200);
-         mDialog.send(mInvite200);
-         mCurrentRetransmit200 *= 2;
-         mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
+         assert(mCurrentRetransmit200CSeq == timeout.seq() && "need to investigate why seq number is out of order");
+         //if (mCurrentRetransmit200CSeq == timeout.seq())
+         {
+            InfoLog (<< "Retransmitting: " << endl << mInvite200);
+            mDialog.send(mInvite200);
+            mCurrentRetransmit200 *= 2;
+            mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(), timeout.seq());
+         }
       }
    }
    else if (timeout.type() == DumTimeout::WaitForAck)
