@@ -1286,12 +1286,20 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
          break;         
       case OnAck:
-         transition(Connected);
-         mProposedLocalSdp.reset();
-         mProposedEncryptionLevel = DialogUsageManager::None;
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-		 //!dcm! -- should this be onIllegalNegotiation?
-		 handler->onOfferRejected(getSessionHandle(), &msg);
+         if (mDialog.mRemoteCSeq > msg.header(h_CSeq).sequence())
+         {
+            InfoLog(<< "dropped stale ACK");
+         }
+         else
+         {
+            InfoLog(<< "Got Ack with no answer");
+            transition(Connected);
+            mProposedLocalSdp.reset();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+            //!dcm! -- should this be onIllegalNegotiation?
+            handler->onOfferRejected(getSessionHandle(), &msg);
+         }
          break;
       default:
          dispatchOthers(msg);
