@@ -433,7 +433,12 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    assert(!mQueuedNotifies.empty());
-   //std::auto_ptr<QueuedNotify> qn(mQueuedNotifies.front());
+   if (mQueuedNotifies.empty())
+   {
+      InfoLog(<< "No queued notify to accept");
+      return;
+   }
+
    QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);
@@ -465,6 +470,12 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);   
    assert(!mQueuedNotifies.empty());
+   if (mQueuedNotifies.empty())
+   {
+      InfoLog(<< "No queued notify to reject");
+      return;
+   }
+
    QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);
