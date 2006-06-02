@@ -219,11 +219,13 @@ SipMessage::getTransactionId() const
       throw Exception("No Via in message", __FILE__,__LINE__);
    }
    
-   assert(exists(h_Vias) && !header(h_Vias).empty());
    if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
-      assert (!header(h_Vias).front().param(p_branch).getTransactionId().empty());
+      if (header(h_Vias).front().param(p_branch).getTransactionId().empty())
+      {
+	 throw Exception("No TransactionId in message", __FILE__,__LINE__);
+      }
       return header(h_Vias).front().param(p_branch).getTransactionId();
    }
    else
