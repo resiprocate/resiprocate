@@ -1,0 +1,23 @@
+1. Changing an existing header type:
+- modify the Type of the header in Headers.hxx
+class Expires_Header : public HeaderBase
+{
+   public:
+      typedef ExpiresCategory Type; // this defines the type
+      virtual Headers::Type getTypeNum() const {return Headers::Expires;}
+      Expires_Header()
+      {
+         Headers::CommaTokenizing[Headers::Expires] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Expires] = Symbols::Expires;
+      }
+};
+- define the new derived ParserCategory according to the ParserCategoy interface
+
+2. Adding a new header.
+- determine its type.
+- add to HeaderTypes.hxx Type enum.
+- create a type class in Headers.hxx
+- update the gperf functions in Headers.cxx
+  - change the hash and in_word_set function names
+  - make the comparisons case insensitive
+  - use strcasencmp -- Data not NULL terminated

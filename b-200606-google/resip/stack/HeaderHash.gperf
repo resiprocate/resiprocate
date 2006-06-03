@@ -1,0 +1,113 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "resip/stack/HeaderTypes.hxx"
+
+namespace resip
+{
+using namespace std;
+%}
+struct headers { char *name; Headers::Type type; };
+%%
+i, Headers::CallID
+m, Headers::Contact
+e, Headers::ContentEncoding
+l, Headers::ContentLength
+c, Headers::ContentType
+f, Headers::From
+s, Headers::Subject
+k, Headers::Supported
+t, Headers::To
+v, Headers::Via
+r, Headers::ReferTo
+b, Headers::ReferredBy
+x, Headers::SessionExpires
+y, Headers::Identity
+o, Headers::Event
+cseq, Headers::CSeq
+call-id, Headers::CallID
+contact, Headers::Contact
+content-length, Headers::ContentLength
+expires, Headers::Expires
+from, Headers::From
+max-forwards, Headers::MaxForwards
+route, Headers::Route
+subject, Headers::Subject
+to, Headers::To
+via, Headers::Via
+accept, Headers::Accept
+accept-contact, Headers::AcceptContact
+accept-encoding, Headers::AcceptEncoding
+accept-language, Headers::AcceptLanguage
+alert-info,Headers::AlertInfo
+allow, Headers::Allow
+authentication-info, Headers::AuthenticationInfo
+call-info, Headers::CallInfo
+content-disposition, Headers::ContentDisposition
+content-id, Headers::ContentId
+content-encoding, Headers::ContentEncoding
+content-language, Headers::ContentLanguage
+content-type, Headers::ContentType
+content-transfer-encoding, Headers::ContentTransferEncoding
+date, Headers::Date
+error-info, Headers::ErrorInfo
+in-reply-to, Headers::InReplyTo
+min-expires, Headers::MinExpires
+mime-version, Headers::MIMEVersion
+organization, Headers::Organization
+priority, Headers::Priority
+proxy-authenticate, Headers::ProxyAuthenticate
+proxy-authorization, Headers::ProxyAuthorization
+proxy-require, Headers::ProxyRequire
+record-route, Headers::RecordRoute
+reply-to, Headers::ReplyTo
+require, Headers::Require
+retry-after, Headers::RetryAfter
+server, Headers::Server
+sip-etag, Headers::SIPETag
+sip-if-match, Headers::SIPIfMatch
+supported, Headers::Supported
+timestamp, Headers::Timestamp
+unsupported, Headers::Unsupported
+user-agent, Headers::UserAgent
+warning, Headers::Warning
+www-authenticate,Headers::WWWAuthenticate
+subscription-state,Headers::SubscriptionState
+authorization, Headers::Authorization
+allow-events, Headers::AllowEvents
+encryption, Headers::UNKNOWN
+event, Headers::Event
+hide, Headers::UNKNOWN
+identity, Headers::Identity
+identity-info, Headers::IdentityInfo
+join, Headers::Join
+p-asserted-identity, Headers::PAssertedIdentity
+p-associated-uri, Headers::PAssociatedUri
+p-called-party-id, Headers::PCalledPartyId
+p-media-authorization, Headers::PMediaAuthorization
+p-preferred-identity, Headers::PPreferredIdentity
+path, Headers::Path
+join, Headers::Join
+target-dialog, Headers::TargetDialog
+privacy, Headers::Privacy
+rack, Headers::RAck
+reason, Headers::Reason
+refer-to,Headers::ReferTo
+referred-by,Headers::ReferredBy
+replaces,Headers::Replaces
+reject-contact, Headers::RejectContact
+p-called-party-id, Headers::PCalledPartyId
+p-associated-uri, Headers::PAssociatedUri
+service-route, Headers::ServiceRoute
+request-disposition, Headers::RequestDisposition
+response-key, Headers::UNKNOWN
+rseq, Headers::RSeq
+security-client, Headers::SecurityClient
+security-server, Headers::SecurityServer
+security-verify, Headers::SecurityVerify
+service-route, Headers::ServiceRoute
+session-expires, Headers::SessionExpires
+min-se, Headers::MinSE
+refer-sub, Headers::ReferSub
+%%
+}

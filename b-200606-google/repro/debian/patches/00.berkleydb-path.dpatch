@@ -1,0 +1,32 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 00-berkleydb-path-patch.dpatch by  <m@martinh>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fixes the include path for Berkley DB
+
+@DPATCH@
+
+diff -Naur predeb/repro/BerkeleyDb.cxx middeb/repro/BerkeleyDb.cxx
+--- predeb/repro/BerkeleyDb.cxx	2006-02-17 17:37:05.000000000 +0100
++++ middeb/repro/BerkeleyDb.cxx	2006-02-17 17:52:03.000000000 +0100
+@@ -7,7 +7,7 @@
+ #ifdef WIN32
+ #include <db_cxx.h>
+ #else
+-#include <db4/db_cxx.h>
++#include <db_cxx.h>
+ #endif
+ 
+ #include "rutil/Data.hxx"
+diff -Naur predeb/repro/BerkeleyDb.hxx middeb/repro/BerkeleyDb.hxx
+--- predeb/repro/BerkeleyDb.hxx	2006-02-17 17:37:05.000000000 +0100
++++ middeb/repro/BerkeleyDb.hxx	2006-02-17 17:52:10.000000000 +0100
+@@ -7,7 +7,7 @@
+ #include "config.hxx"
+ #include DB_HEADER
+ #else 
+-#include <db4/db_cxx.h>
++#include <db_cxx.h>
+ #endif
+ 
+ #include "rutil/Data.hxx"
