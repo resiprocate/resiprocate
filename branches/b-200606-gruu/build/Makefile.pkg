@@ -27,8 +27,8 @@ endif
 ifeq ($(USE_SSL),yes)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
-OPENSSL_LIBDIRS := /usr/local/ssl/lib
+#OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
+#OPENSSL_LIBDIRS := /usr/local/ssl/lib
 OPENSSL_DEFINES += USE_SSL
 endif
 
@@ -72,10 +72,11 @@ DB42_LIBNAME := db
 DB4CXX_LIBNAME := db_cxx
 endif
 
-ifeq ($(OSTYPE),Darwin)
-DB42_LIBNAME := db-4.2
-DB4CXX_LIBNAME := db_cxx-4.2
-endif
+# OSX just uses default 
+#ifeq ($(OSTYPE),Darwin)
+#DB42_LIBNAME := db-4.2
+#DB4CXX_LIBNAME := db_cxx-4.2
+#endif
 
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
