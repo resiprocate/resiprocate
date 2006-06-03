@@ -1,8 +1,0 @@
-		KNOWN BUGS
-		----------
-
-The test suite does not build consistently using GCC 3.
-
-The handling of html and man pages in doc/Makefile.am is
-flawed.  It will not pass "make distcheck".
-
