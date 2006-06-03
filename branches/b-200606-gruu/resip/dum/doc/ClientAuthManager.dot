@@ -1,0 +1,24 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+//state machine for each realm encountered in a challenge
+//authentication headers are added in DialogUsageManager::send, but are calculated when processing challenges
+digraph ClientAuthManager {
+//  rankdir=LR;
+  node [shape = box];
+
+  Invalid -> Current [ label = "401/407, create credentials" ];
+  
+  Current -> Cached  [ label = ">180 && !(401 || 407)" ];
+  Current -> Current [ label = "401/407 stale=true or different nonce, recreate credentials" ];
+  Current -> TryOnce [ label = "401/407 different nonce, recreate credentials" ]; 
+  Current -> Failed  [ label = "401/407 same nonce and not stale" ];
+  
+  Cached -> Current [ label = "401/407 no conditions, recreate credentials" ];
+
+  TryOnce -> Current [ label = ">180 && !(401 || 407)" ];
+  TryOnce -> Failed [ label = "401/407" ];
+}

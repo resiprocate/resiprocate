@@ -1,0 +1,17 @@
+Source: repro
+Section: net
+Priority: optional
+Maintainer: Martin Hoffmann <hn@nvnc.de>
+Build-Depends: debhelper (>= 4.1), dpatch, libpopt-dev, libssl-dev, libdb4.4++-dev, libboost-dev, libboost-regex-dev
+Standards-Version: 3.6.2
+
+Package: repro
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Repro SIP proxy
+ The repro SIP server provides SIP proxy, registrar, redirect and identity
+ services. It can be used as the central rendezvous service for peer-to-peer
+ voice, IM, and presence services, as the core of large scale internet
+ telephony services, and as a tool to enforce policy at the boundary between
+ networks or domains.
+

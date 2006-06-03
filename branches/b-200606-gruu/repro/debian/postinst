@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -e
+
+add_user_if_missing() {
+	if [ -x /usr/sbin/adduser ]; then
+        	if ! id -u repro > /dev/null 2>&1; then
+			adduser --system --group --home /var/lib/repro \
+				--no-create-home --disabled-password \
+				--shell /bin/false \
+		                repro
+		fi
+	fi
+	if [ ! -e /var/lib/repro ]; then
+			mkdir /var/lib/repro
+			chown repro:repro /var/lib/repro
+	fi
+}
+link_down_docs() {
+	if [ -d /usr/doc -a ! -e /usr/doc/repro -a -d /usr/share/doc/repro ]
+	then
+		ln -sf ../share/doc/repro /usr/doc/repro
+	fi
+}
+
+case "$1" in
+	configure)
+		add_user_if_missing
+		#link_down_docs
+		;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+		;;
+
+	*)
+		echo "postinst called with unknown argument \'$1\'" >&2
+		exit 1
+		;;
+esac
+
+if [ -x "/etc/init.d/repro" ]; then
+	update-rc.d repro defaults 23 > /dev/null
+	if ! invoke-rc.d repro restart ; then
+		echo ""
+		echo "Repro failed to (re)start."
+	fi
+fi
+
+exit 0
