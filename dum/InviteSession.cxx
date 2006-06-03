@@ -1286,7 +1286,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
          break;         
       case OnAck:
-         if (mDialog.mRemoteCSeq > msg.header(h_CSeq).sequence())
+         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
          {
             InfoLog(<< "dropped stale ACK");
          }
