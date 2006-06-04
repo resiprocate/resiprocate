@@ -2,10 +2,10 @@
 
 using namespace resip;
 
-Prd::Prd(SipMessage &initialMessage)
-  : mInitialMessage(initialMessage),
+Prd::Prd(PrdManager &prdManager, SharedPtr<UserProfile> userProfile)
+  : mPrdManager(prdManager),
+    mUserProfile(userProfile),
     mIsDead(false)
-
 {
 }
 
