@@ -21,15 +21,15 @@ Prd::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodType
 {
    RequestLine rLine(method);
    rLine.uri() = target.uri();   
-   mInitialRequest.header(h_RequestLine) = rLine;
+   mLastRequest.header(h_RequestLine) = rLine;
 
-   mInitialRequest.header(h_To) = target;
-   mInitialRequest.header(h_MaxForwards).value() = 70;
-   mInitialRequest.header(h_CSeq).method() = method;
-   mInitialRequest.header(h_CSeq).sequence() = 1;
-   mInitialRequest.header(h_From) = from;
-   mInitialRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-   mInitialRequest.header(h_CallId).value() = Helper::computeCallId();
+   mLastRequest.header(h_To) = target;
+   mLastRequest.header(h_MaxForwards).value() = 70;
+   mLastRequest.header(h_CSeq).method() = method;
+   mLastRequest.header(h_CSeq).sequence() = 1;
+   mLastRequest.header(h_From) = from;
+   mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   mLastRequest.header(h_CallId).value() = Helper::computeCallId();
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
 
@@ -45,14 +45,14 @@ Prd::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodType
       auth.param(p_uri) = "sip:" + source.host();
       auth.param(p_nonce) = Data::Empty;
       auth.param(p_response) = Data::Empty;
-      mInitialRequest.header(h_Authorizations).push_back(auth);
+      mLastRequest.header(h_Authorizations).push_back(auth);
       DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);   
    }
 
    if (mUserProfile->hasGruu(target.uri().getAor()))
    {
       contact = mUserProfile->getGruu(target.uri().getAor());
-      mInitialRequest.header(h_Contacts).push_front(contact);
+      mLastRequest.header(h_Contacts).push_front(contact);
    }
    else
    {
@@ -66,29 +66,29 @@ Prd::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodType
       {
          contact.param(p_Instance) = instanceId;
       }
-      mInitialRequest.header(h_Contacts).push_front(contact);
+      mLastRequest.header(h_Contacts).push_front(contact);
 
       if (method != REGISTER)
       {
          const NameAddrs& sRoute = mUserProfile->getServiceRoute();
          if (!sRoute.empty())
          {
-            mInitialRequest.header(h_Routes) = sRoute;
+            mLastRequest.header(h_Routes) = sRoute;
          }
       }
    }
       
    Via via;
-   mInitialRequest.header(h_Vias).push_front(via);
+   mLastRequest.header(h_Vias).push_front(via);
 
-   if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mInitialRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-   if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mInitialRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-   if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mInitialRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-   if(mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) mInitialRequest.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-   if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mInitialRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+   if(mUserProfile->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+   if(mUserProfile->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mUserProfile->isAdvertisedCapability(Headers::AllowEvents)) mLastRequest.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
+   if(mUserProfile->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    // Merge Embedded parameters
-   mInitialRequest.mergeUri(target.uri());
+   mLastRequest.mergeUri(target.uri());
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
