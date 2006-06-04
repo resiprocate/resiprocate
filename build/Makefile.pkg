@@ -27,8 +27,8 @@ endif
 ifeq ($(USE_SSL),yes)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
-OPENSSL_LIBDIRS := /usr/local/ssl/lib
+OPENSSL_INCLUDEDIRS := $(wildcard /usr/local/ssl/include)
+OPENSSL_LIBDIRS := $(wildcard /usr/local/ssl/lib)
 OPENSSL_DEFINES += USE_SSL
 endif
 
