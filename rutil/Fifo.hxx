@@ -8,8 +8,8 @@
 namespace resip
 {
 
-template < class Msg >
-class Fifo : public AbstractFifo, public Postable<Msg*>
+template < typename Msg >
+class Fifo : public AbstractFifo , public Postable<Msg*> 
 {
    public:
       Fifo();

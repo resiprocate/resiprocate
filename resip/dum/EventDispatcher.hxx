@@ -4,9 +4,10 @@
 #include <vector>
 
 #include "resip/dum/DumCommand.hxx"
-#include "resip/dum/Postable.hxx"
+#include "resip/dum/DumPostable.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
+
 
 namespace resip
 {
@@ -31,7 +32,7 @@ class EventDispatcher
             {
                ret = true;
                unsigned int counter = 1;
-               for (std::vector<Postable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
+               for (std::vector<DumPostable*>::iterator it = mListeners.begin(); it != mListeners.end(); ++it)
                {
                   if (counter == mListeners.size())
                   {
@@ -49,20 +50,20 @@ class EventDispatcher
          return ret;
       }
 
-      void addListener(Postable* listener)
+      void addListener(DumPostable* listener)
       {
          Lock lock(mMutex);
-         std::vector<Postable*>::iterator it = find(listener);
+         std::vector<DumPostable*>::iterator it = find(listener);
          if (it == mListeners.end())
          {
             mListeners.push_back(listener);
          }
       }
 
-      void removeListener(Postable* listener)
+      void removeListener(DumPostable* listener)
       {
          Lock lock(mMutex);
-         std::vector<Postable*>::iterator it = find(listener);         
+         std::vector<DumPostable*>::iterator it = find(listener);         
          if (it != mListeners.end())
          {
             mListeners.erase(it);
@@ -70,12 +71,12 @@ class EventDispatcher
       }
 
    private:
-      std::vector<Postable*> mListeners;
+      std::vector<DumPostable*> mListeners;
       Mutex mMutex;
 
-      std::vector<Postable*>::iterator find(Postable* listener)
+      std::vector<DumPostable*>::iterator find(DumPostable* listener)
       {
-         std::vector<Postable*>::iterator it;
+         std::vector<DumPostable*>::iterator it;
          for (it = mListeners.begin(); it != mListeners.end(); ++it)
          {
             if (listener == *it)

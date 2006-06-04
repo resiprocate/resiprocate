@@ -73,7 +73,7 @@ LDFLAGS  += $(foreach package,$(PACKAGES), $($(package)_LDFLAGS))
 LIBDIRS  += $(foreach package,$(PACKAGES), $($(package)_LIBDIRS))
 LIBNAMES += $(foreach package,$(PACKAGES), $($(package)_LIBNAME) )
 LDLIBS_LAST += $(foreach package,$(PACKAGES), $($(package)_LDLIBS_LAST))
-LDLIBS	 += $(foreach libs,$(LIBDIRS), -L$(libs)) $(foreach libs,$(LIBNAMES), -l$(libs))
+LDLIBS	 += $(foreach libs,$(wildcard $(LIBDIRS)), -L$(libs)) $(foreach libs,$(LIBNAMES), -l$(libs))
 DEFINES += $(foreach package,$(PACKAGES), $($(package)_DEFINES) )
 
 # because order is important
@@ -90,7 +90,7 @@ endif
 	touch .dependlibs
 
 RELEASE = $(patsubst %/build,%/release, $(BUILD))
-INCLUDE_LIST = $(foreach dir,$(INCDIRS),-I$(dir))
+INCLUDE_LIST = $(foreach dir,$(wildcard $(INCDIRS)),-I$(dir))
 DEFINE_LIST = $(foreach dir,$(DEFINES),-D$(dir))
 CXXFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 CFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)

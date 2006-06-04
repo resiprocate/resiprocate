@@ -291,8 +291,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void applyToAllServerSubscriptions(ServerSubscriptionFunctor*);
 
       /// Note:  Implementations of Postable must delete the message passed via post
-      void registerForConnectionTermination(Postable*);
-      void unRegisterForConnectionTermination(Postable*);
+      void registerForConnectionTermination(DumPostable*);
+      void unRegisterForConnectionTermination(DumPostable*);
 
    protected:
       virtual void onAllHandlesDestroyed();      
