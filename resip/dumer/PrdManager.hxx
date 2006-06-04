@@ -111,6 +111,9 @@ class PrdManager : public TransactionUser
                       int seq, 
                       int altseq=-1);
 
+      // None of these methods should be used by anybody except
+      // PrdCommands. Required to avoid being repeatedly pummelled in the
+      // kidneys. 
       void internalManage(SharedPtr<Prd> prd);
       void internalUnmanage(SharedPtr<Prd> prd);
       void internalSend(std::auto_ptr<SipMessage> msg);
