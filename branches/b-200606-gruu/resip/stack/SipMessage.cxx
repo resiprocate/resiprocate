@@ -26,14 +26,12 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 SipMessage::SipMessage(const Transport* fromWire)
-   : mIsExternal(fromWire != 0),
+   : TransactionMessage(fromWire), // mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
      mRFC2543TransactionId(),
-     mRequest(false),
-     mResponse(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
      mTlsDomain(Data::Empty)
@@ -450,17 +448,6 @@ SipMessage::setRFC2543TransactionId(const Data& tid)
    mRFC2543TransactionId = tid;
 }
 
-bool
-SipMessage::isRequest() const
-{
-   return mRequest;
-}
-
-bool
-SipMessage::isResponse() const
-{
-   return mResponse;
-}
 
 std::ostream&
 SipMessage::encodeBrief(std::ostream& str) const
