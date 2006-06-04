@@ -67,7 +67,6 @@ SRC 	+=   \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
 	monkeys/SetTargetConnection.cxx \
-	monkeys/RouteHeaderInserter.cxx \
 	\
 
 
