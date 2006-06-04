@@ -1,6 +1,3 @@
-#if !defined(RESIP_PRD_HXX)
-#define RESIP_PRD_HXX
-
 #include "Prd.h"
 
 namespace resip
@@ -15,7 +12,6 @@ Prd::Prd(SipMessage &initialMessage)
 
 }
 
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
