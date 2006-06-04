@@ -64,20 +64,6 @@ class SipMessage : public TransactionMessage
             const char* name() const { return "SipMessage::Exception"; }
       };
 
-      void setFromTU() 
-      {
-         mIsExternal = false;
-      }
-
-      void setFromExternal()
-      {
-         mIsExternal = true;
-      }
-      
-      bool isExternal() const
-      {
-         return mIsExternal;
-      }
 
       virtual bool isClientTransaction() const;
       
@@ -89,8 +75,6 @@ class SipMessage : public TransactionMessage
       
       virtual std::ostream& encodeBrief(std::ostream& str) const;
 
-      bool isRequest() const;
-      bool isResponse() const;
 
       const RequestLine& 
       header(const RequestLineType& l) const;
@@ -238,16 +222,8 @@ class SipMessage : public TransactionMessage
       // wire, getReceivedTransport() returns 0. Set in constructor
       const Transport* getReceivedTransport() const { return mTransport; }
 
-      // Returns the source tuple that the message was received from
-      // only makes sense for messages received from the wire
-      void setSource(const Tuple& tuple) { mSource = tuple; }
-      const Tuple& getSource() const { return mSource; }
-      
-      // Used by the stateless interface to specify where to send a request/response
-      void setDestination(const Tuple& tuple) { mDestination = tuple; }
-      Tuple& getDestination() { return mDestination; }
 
-      void addBuffer(char* buf);
+      virtual void addBuffer(char* buf);
 
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
@@ -291,9 +267,6 @@ class SipMessage : public TransactionMessage
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single);
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const; // throws if not present
 
-      // indicates this message came from the wire, set by the Transport
-      bool mIsExternal;
-      
       // raw text corresponding to each typed header (not yet parsed)
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
 
@@ -303,12 +276,6 @@ class SipMessage : public TransactionMessage
       // !jf!
       const Transport* mTransport;
 
-      // For messages received from the wire, this indicates where it came
-      // from. Can be used to get to the Transport and/or reliable Connection
-      Tuple mSource;
-
-      // Used by the TU to specify where a message is to go
-      Tuple mDestination;
       
       // Raw buffers coming from the Transport. message manages the memory
       std::vector<char*> mBufferList;
@@ -325,10 +292,6 @@ class SipMessage : public TransactionMessage
       // cached value of a hash of the transaction id for a message received
       // from a 2543 sip element. as per rfc3261 see 17.2.3
       mutable Data mRFC2543TransactionId;
-
-      // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
 
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;

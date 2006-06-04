@@ -1,26 +1,19 @@
 #if !defined(RESIP_STUNMESSAGE_HXX)
 #define RESIP_STUNMESSAGE_HXX 
 
-#include <sys/types.h>
+//#include <sys/types.h>
+//#include <list>
+//#include <vector>
+//#include <utility>
+//#include <memory> 
 
-#include <list>
-#include <vector>
-#include <utility>
-#include <memory> 
-
-#include "resip/stack/Contents.hxx"
-#include "resip/stack/Headers.hxx"
 #include "resip/stack/TransactionMessage.hxx"
-#include "resip/stack/ParserContainer.hxx"
-#include "resip/stack/ParserCategories.hxx"
-#include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Tuple.hxx"
-#include "resip/stack/Uri.hxx"
-#include "resip/stack/MessageDecorator.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/Timer.hxx"
+#include "rutil/compat.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/stun/Stun.hxx"
 
 namespace resip
 {
@@ -58,70 +51,76 @@ class StunMessage : public TransactionMessage
             const char* name() const { return "StunMessage::Exception"; }
       };
 
-      void setFromTU() 
-      {
-         mIsExternal = false;
-      }
-
-      void setFromExternal()
-      {
-         mIsExternal = true;
-      }
-      
-      bool isExternal() const
-      {
-         return mIsExternal;
-      }
-
+/*
+  
+  void setFromTU() 
+  {
+  mIsExternal = false;
+  }
+  
+  void setFromExternal()
+  {
+  mIsExternal = true;
+  }
+  
+  bool isExternal() const
+  {
+  return mIsExternal;
+  }
+  
+*/
       virtual bool isClientTransaction() const;
       
       virtual std::ostream& encode(std::ostream& str) const;      
-        
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
-
-      bool isRequest() const;
-      bool isResponse() const;
-
- 
-      void setSource(const Tuple& tuple) { mSource = tuple; }
-      const Tuple& getSource() const { return mSource; }
       
-      // Used by the stateless interface to specify where to send a request/response
-      void setDestination(const Tuple& tuple) { mDestination = tuple; }
-      Tuple& getDestination() { return mDestination; }
-
-      void addBuffer(char* buf);
-
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
+      
+      /*
+        bool isRequest() const;
+        bool isResponse() const;
+        
+        void setSource(const Tuple& tuple) { mSource = tuple; }
+        const Tuple& getSource() const { return mSource; }
+        
+        // Used by the stateless interface to specify where to send a request/response
+        void setDestination(const Tuple& tuple) { mDestination = tuple; }
+        Tuple& getDestination() { return mDestination; }
+      */
+      
+      virtual void addBuffer(char* buf);
+      
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
       Data& getEncoded();
-
+      
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
-
+      
    protected:
       // void cleanUp();
-   
+      
    private:
-      // indicates this message came from the wire, set by the Transport
-      bool mIsExternal;
+/*
+  // indicates this message came from the wire, set by the Transport
+  bool mIsExternal;
+  
+  // For messages received from the wire, this indicates where it came
+  // from. Can be used to get to the Transport and/or reliable Connection
+  Tuple mSource;
+  
+  // Used by the TU to specify where a message is to go
+  Tuple mDestination;
+  
+  // Raw buffers coming from the Transport. message manages the memory
+  std::vector<char*> mBufferList;
+  
+  // is a request or response
+  mutable bool mRequest;
+  mutable bool mResponse;
+*/
       
-      // For messages received from the wire, this indicates where it came
-      // from. Can be used to get to the Transport and/or reliable Connection
-      Tuple mSource;
-
-      // Used by the TU to specify where a message is to go
-      Tuple mDestination;
+//      Data mEncoded; // to be retransmitted
+       UInt64 mCreatedTime;
       
-      // Raw buffers coming from the Transport. message manages the memory
-      std::vector<char*> mBufferList;
-
-      // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
-
-      Data mEncoded; // to be retransmitted
-      UInt64 mCreatedTime;
-
       friend class TransportSelector;
 };
 

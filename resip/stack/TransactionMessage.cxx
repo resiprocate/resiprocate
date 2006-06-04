@@ -1,82 +1,34 @@
-#ifndef RESIP_TransactionMessage_hxx
-#define RESIP_TransactionMessage_hxx
 
-#include <cassert>
-#include "resip/stack/Message.hxx"
-#include "resip/stack/Tuple.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/TransactionMessage.hxx"
 
-namespace resip
+using namespace resip;
+
+
+TransactionMessage::TransactionMessage(const Transport* fromWire):
+   mIsExternal(fromWire != 0) ,
+     mRequest(false),
+     mResponse(false)
+
 {
-
-class TransactionMessage : public Message
+}
+      
+bool
+TransactionMessage::isRequest() const
 {
-   public:
-      RESIP_HeapCount(TransactionMessage);
-
-      virtual const Data& getTransactionId() const=0; 
-
-      // indicates this message is associated with a Client Transaction for the
-      // purpose of determining which TransactionMap to use
-      virtual bool isClientTransaction() const {assert(false); return true;}; 
-
-      virtual Message* clone() const {assert(false); return NULL;}
-
-      virtual void addBuffer(char* buf) { assert(false); } ;
-
-      void setFromTU() 
-      {
-         mIsExternal = false;
-      }
-
-      void setFromExternal()
-      {
-         mIsExternal = true;
-      }
-      
-      bool isExternal() const
-      {
-         return mIsExternal;
-      }
-
-      bool isRequest() const;
-      bool isResponse() const;
-
-      // Returns the source tuple that the message was received from
-      // only makes sense for messages received from the wire
-      void setSource(const Tuple& tuple) { mSource = tuple; }
-      const Tuple& getSource() const { return mSource; }
-      
-      // Used by the stateless interface to specify where to send a request/response
-      void setDestination(const Tuple& tuple) { mDestination = tuple; }
-      Tuple& getDestination() { return mDestination; }
-
-   protected:
-      TransactionMessage(const Transport* fromWire); 
-      TransactionMessage(); 
-      
-      // For messages received from the wire, this indicates where it came
-      // from. Can be used to get to the Transport and/or reliable Connection
-      Tuple mSource;
-      // Used by the TU to specify where a message is to go
-      Tuple mDestination;
-
-      // indicates this message came from the wire, set by the Transport
-      bool mIsExternal;
-      
-      // is a request or response
-      mutable bool mRequest;
-      mutable bool mResponse;
-};
-
+   return mRequest;
 }
 
-#endif
+bool
+TransactionMessage::isResponse() const
+{
+   return mResponse;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -122,4 +74,3 @@ class TransactionMessage : public Message
  * <http://www.vovida.org/>.
  *
  */
-
