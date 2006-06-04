@@ -136,11 +136,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    if (showVersion)
    {
-      cout << ReproVersion;
-      cout << " ";
-      cout << ReproBuildStamp;
-      cout << "\n";
-      exit(0);
+     cout << repro::VersionUtils::instance().displayVersion() << endl;
+     exit(0);
    }
    
    if (tlsDomain) 
