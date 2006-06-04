@@ -10,7 +10,9 @@ using namespace resip;
 TimerMessage::TimerMessage(Data transactionId, Timer::Type type, unsigned long duration)
    : mTransactionId(transactionId),
      mType(type),
-     mDuration(duration) {}
+     mDuration(duration) 
+{
+}
 
 const Data&
 TimerMessage::getTransactionId() const

@@ -11,6 +11,8 @@ TARGET_LIBRARY = libresip
 TESTPROGRAMS =
 
 SRC = \
+	StunMessage.cxx \
+	TransactionMessage.cxx \
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \

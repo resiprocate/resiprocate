@@ -12,6 +12,8 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StunMessage.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
 namespace resip 
@@ -175,8 +177,15 @@ class SipStack
           @param tu  TransactionUser to send from.
       */
       void send(const SipMessage& msg, TransactionUser* tu=0);
-
       void send(std::auto_ptr<SipMessage> msg, TransactionUser* tu = 0);
+
+      /** 
+          Interface for the TU to send a STUN message.
+
+          @param dest Destination to sent from and can also specify interface to
+          send from 
+      */
+      void sendSendTest(const Tuple& dest, TransactionUser* tu=0);
       
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
