@@ -479,7 +479,6 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
          if ( (mLastReceivedRSeq == -1) || (rseq == mLastReceivedRSeq+1))
          {
             startStaleCallTimer();
-            mLastReceivedRSeq = rseq;
             InfoLog (<< "Got a reliable 1xx with rseq = " << rseq);
             handler->onProvisional(getHandle(), msg);
          }
@@ -538,10 +537,12 @@ ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp
 void
 ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 {
+   int rseq = msg.header(h_RSeq).value();
    if ( isReliable(msg) &&
-        (mLastReceivedRSeq == -1 || msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
+        (mLastReceivedRSeq == -1 || rseq == mLastReceivedRSeq+1))
    {
       SharedPtr<SipMessage> prack(new SipMessage);
+      mLastReceivedRSeq = rseq;
       mDialog.makeRequest(*prack, PRACK);
       prack->header(h_RSeq) = msg.header(h_RSeq);
       send(prack);
@@ -599,6 +600,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    InviteSession::Event event = toEvent(msg, sdp.get());
+
    switch (event)
    {
       case On1xx:
@@ -654,7 +656,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
-            if(!isTerminated())  
+            if(!isTerminated())   //?jf? can this be terminated here but not above? 
             {
                handler->onConnected(getHandle(), msg);  
             }
@@ -812,7 +814,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 void
 ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp.get()))
@@ -836,6 +838,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
       // !slg! This probably doesn't even make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
+#if 0 // !jf! don't think this is right
       {
          sendBye();
          InfoLog (<< "Failure:  error response: " << msg.brief());
@@ -845,7 +848,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          mDum.destroy(this);
          break;
       }
-
+#endif
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1095,19 +1098,113 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 void
 ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
 {
-   assert(0);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case On200Update:
+         transition(UAC_EarlyWithAnswer);
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         break;
+         
+      case OnUpdateOffer:
+         transition(UAC_EarlyWithAnswer);
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, msg, 491);
+            send(response);
+         }
+         break;
+         
+      case On491Update:
+         transition(UAC_EarlyWithAnswer);
+         // need to start glare timer as per RFC3311 5.3
+         // !jf! 
+         break;
+
+      case On2xx:
+         transition(UAC_SentUpdateConnected);         
+         sendAck();
+         break;
+         
+         
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
+                       // here then it's because the redirect was intentionaly
+                       // not handled and should be treated as an INVITE failure
+      case OnInviteFailure:
+      case OnGeneralFailure:
+      case On422Invite:
+      case On487Invite:
+      case On489Invite:
+      case On491Invite:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         mDum.destroy(this);
+         break;
+
+      default:
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
 ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
 {
-   assert(0);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case On200Update:
+         transition(Connected);
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         break;
+
+      case On488Update:
+         transition(Connected);
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
+         
+      case On491Update:
+         transition(Connected);
+         // need to start glare timer as per RFC3311 5.3
+         // !jf! 
+         break;
+
+      default:
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 {
-   assert(0);
+   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      default:
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
