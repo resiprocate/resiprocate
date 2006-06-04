@@ -2,12 +2,8 @@
 #include <iterator>
 
 #include "resip/stack/Helper.hxx"
-#include "resip/dum/BaseCreator.hxx"
-#include "resip/dum/ClientRegistration.hxx"
-#include "resip/dum/RegistrationHandler.hxx"
-#include "resip/dum/DialogUsageManager.hxx"
-#include "resip/dum/Dialog.hxx"
-#include "resip/dum/MasterProfile.hxx"
+#include "resip/dumer/ClientRegistration.hxx"
+//#include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UsageUseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
@@ -19,19 +15,10 @@
 
 using namespace resip;
 
-ClientRegistrationHandle
-ClientRegistration::getHandle()
-{
-   return ClientRegistrationHandle(mDum, getBaseHandle().getId());
-}
-
-ClientRegistration::ClientRegistration(DialogUsageManager& dum,
-                                       DialogSet& dialogSet,
-                                       SharedPtr<SipMessage> request)
-   : NonDialogUsage(dum, dialogSet),
-     mLastRequest(request),
+ClientRegistration::ClientRegistration()
+   : NonDialogPrd(),
      mTimerSeq(0),
-     mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
+     mState(AddingOrQuerying),
      mEndWhenDone(false),
      mUserRefresh(false),
      mExpires(0),
@@ -55,10 +42,42 @@ ClientRegistration::~ClientRegistration()
    getUserProfile()->setServiceRoute(NameAddrs());
 }
 
+SipMessage& 
+ClientRegistration::initialize(const NameAddr& target)
+{
+   initialize(target, mUserProfile->getDefaultRegistrationTime());
+}
+
+SipMessage& 
+ClientRegistration::initialize(const NameAddr& target, int registrationTime)
+{
+   makeInitialRequest(target, target, REGISTER);
+      
+   mInitialMsg.header(h_RequestLine).uri().user() = Data::Empty;
+   mInitialMsg.header(h_Expires).value() = registrationTime;
+
+   if (mUserProfile->getRinstanceEnabled())
+   {
+      mInitialMsg.header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+   }
+
+   if (mUserProfile->getMethodsParamEnabled())
+   {
+      mInitialMsg.header(h_Contacts).front().param(p_methods) = mPrd.getMasterProfile()->getAllowedMethodsData();
+   }
+   
+   DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
+   // add instance parameter to the contact for gruu !cj! TODO 
+
+   // store caller prefs in Contact
+
+   return mInitialMsg;
+}
+
 void
 ClientRegistration::addBinding(const NameAddr& contact)
 {
-   addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
+   addBinding(contact, mUserProfile->getDefaultRegistrationTime());
 }
 
 SharedPtr<SipMessage>
@@ -94,10 +113,10 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 void
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
-   SharedPtr<SipMessage> next = tryModification(Adding);
+   SharedPtr<SipMessage> next = tryModification(AddingOrQuerying);
    mMyContacts.push_back(contact);
 
-   if(mDialogSet.getUserProfile()->getRinstanceEnabled())
+   if(mUserProfile->getRinstanceEnabled())
    {
       mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
@@ -217,7 +236,7 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 void ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
-   delete this;
+   unmanage();
 }
 
 void
@@ -279,13 +298,14 @@ ClientRegistration::dump(std::ostream& strm) const
 }
 
 void
-ClientRegistration::dispatch(const SipMessage& msg)
+ClientRegistration::protectedDispatch(const SipMessage& msg)
 {
    try
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
 
+      /*   !slg! Needs to be fixed
       if(msg.isExternal())
       {
          const Data& receivedTransport = msg.header(h_Vias).front().transport();
@@ -305,7 +325,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             mNetworkAssociation.update(msg, keepAliveTime);
          }
-      }
+      }*/
 
       const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
@@ -320,12 +340,12 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (msg.exists(h_ServiceRoutes))
             {
                InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-			   getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+               mUserProfile->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
                InfoLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
-               getUserProfile()->setServiceRoute(NameAddrs());
+               mUserProfile->setServiceRoute(NameAddrs());
             }
          }
          catch(BaseException &e)
@@ -345,7 +365,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             int expiry = INT_MAX;
             //!dcm! -- should do set intersection with my bindings and walk that
             //small size, n^2, don't care
-            if (mDialogSet.getUserProfile()->getRinstanceEnabled())
+            if (mUserProfile->getRinstanceEnabled())
             {
                int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
@@ -413,7 +433,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             {
                int exp = Helper::aBitSmallerThan(expiry);
                mExpires = exp + Timer::getTimeMs() / 1000;
-               mDum.addTimer(DumTimeout::Registration,
+               mPrd.addTimer(DumTimeout::Registration,
                              exp,
                              getBaseHandle(),
                              ++mTimerSeq);
@@ -422,15 +442,14 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
          switch (mState)
          {
-            case Querying:
-            case Adding:
+            case AddingOrQuerying:
                mState = Registered;
-               mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               onSuccess(msg);
                break;
 
             case Removing:
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
-               mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
+               onRemoved(msg);
                InfoLog (<< "Finished removing registration " << *this << " mEndWhenDone=" << mEndWhenDone);
                if (mEndWhenDone)
                {
@@ -449,7 +468,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                if(mUserRefresh)
                {
                    mUserRefresh = false;
-                   mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+                   onSuccess(msg);
                }
                break;
 
@@ -468,11 +487,11 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else
       {
-         if((mState == Adding || mState == Refreshing) && !mEndWhenDone)
+         if((mState == AddingOrQuerying || mState == Refreshing) && !mEndWhenDone)
          {
             if (code == 423) // interval too short
             {
-               int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               int maxRegistrationTime = mUserProfile->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
@@ -484,7 +503,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
             else if (code == 408)
             {
-               int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
+               int retry = onRequestRetry(0, msg);
             
                if (retry < 0)
                {
@@ -504,7 +523,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   mExpires = 0;
                   switch(mState)
                   {
-                  case Adding:
+                  case AddingOrQuerying:
                      mState = RetryAdding;
                      break;
                   case Refreshing:
@@ -514,7 +533,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      assert(false);
                      break;
                   }
-                  mDum.addTimer(DumTimeout::RegistrationRetry, 
+                  mPrd.addTimer(DumTimeout::RegistrationRetry, 
                                 retry, 
                                 getBaseHandle(),
                                 ++mTimerSeq);       
@@ -523,14 +542,14 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
          }
          
-         mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+         onFailure(msg);
 
          // Retry if Profile setting is set
-         if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
-             (mState == Adding || mState == Refreshing) &&
+         if (mUserProfile->getDefaultRegistrationRetryTime() > 0 &&
+             (mState == AddingOrQuerying || mState == Refreshing) &&
              !mEndWhenDone)
          {
-            unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
+            unsigned int retryInterval = mUserProfile)->getDefaultRegistrationRetryTime();
             if (msg.exists(h_RetryAfter))
             {
                // Use retry interval from error response
@@ -539,7 +558,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             mExpires = 0;
             switch(mState)
             {
-            case Adding:
+            case AddingOrQuerying:
                mState = RetryAdding;
                break;
             case Refreshing:
@@ -550,7 +569,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
             }
 
-            mDum.addTimer(DumTimeout::RegistrationRetry,
+            mPrd.addTimer(DumTimeout::RegistrationRetry,
                           retryInterval,
                           getBaseHandle(),
                           ++mTimerSeq);
@@ -561,21 +580,21 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // assume that if a failure occurred, the bindings are gone
          if (mEndWhenDone)
          {
-            mDum.mClientRegistrationHandler->onRemoved(getHandle(), msg);
+            onRemoved(msg);
          }
-         delete this;
+         unmanage();
       }
    }
    catch(BaseException& e)
    {
       InfoLog( << "Exception in ClientRegistration::dispatch: "  <<  e.getMessage());
-      mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
-      delete this;
+      onFailure(msg);
+      unmanage();
    }
 }
 
 void
-ClientRegistration::dispatch(const DumTimeout& timer)
+ClientRegistration::protectedDispatch(const DumTimeout& timer)
 {
    switch(timer.type())
    {
@@ -597,7 +616,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
             switch(mState)
             {
             case RetryAdding:
-               mState = Adding;
+               mState = AddingOrQuerying;
                break;
             case RetryRefreshing:
                mState = Refreshing;
