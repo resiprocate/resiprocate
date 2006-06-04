@@ -64,7 +64,8 @@ class SendPrdManagerCommand : public PrdManagerCommand
       std::auto_ptr<SipMessage> mSipMessage;
 };
 
-class RussianDollPrdManagerCommand : public PrdManagerCommand
+class RussianDollPrdManagerCommand : public PrdManagerCommand,
+                                     public ApplicationMessage
 {
    public:
       RussianDollPrdManagerCommand(PrdManager &m,
@@ -74,12 +75,12 @@ class RussianDollPrdManagerCommand : public PrdManagerCommand
 
       virtual void operator()()
       {
-         mPostable->post(mPrdCommand);
+         mPostable.post(mPrdCommand);
       }
 
    protected:
       std::auto_ptr<PrdCommand> mPrdCommand;
-      Postable mPostable;
+      Postable &mPostable;
 };
 
    
