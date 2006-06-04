@@ -17,6 +17,21 @@ class Prd
       void dispatch(SipMessage &m) { protectedDispatch(m); }
       void dispatch(DumTimeout &t) { protectedDispatch(t); }
 
+      void makeInitialRequest(const NameAddr& target, MethodTypes method);
+      void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
+
+      void addTimer(DumTimeout::Type type,
+                    unsigned long durationSeconds,
+                    BaseUsageHandle target, 
+                    int seq, 
+                    int altseq=-1);
+
+      void addTimerMs(DumTimeout::Type type,
+                      unsigned long duration,
+                      BaseUsageHandle target, 
+                      int seq, 
+                      int altseq=-1);
+
    protected:
       virtual void protectedDispatch(SipMessage&) = 0;
       virtual void protectedDispatch(DumTimeout&) = 0;
@@ -33,7 +48,7 @@ class Prd
       */
       std::vector<std::pair<Data,FeatureChain> > mFeatureChains;
       const FeatureChain& mPrototypeChain;
-
+      SipMessage mInitialMessage;
 };
 
 }

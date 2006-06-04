@@ -11,11 +11,85 @@ class ClientRegistration : public NonDialogPrd
    public:
       ClientRegistration();
       virtual ~ClientRegistration() {}
-      void send(SipMessage &);
+      virtual void send(SipMessage &);
+      SipMessage& initialize(const NameAddr& target);
+      SipMessage& initialize(const NameAddr& target, int registrationTime);
+
+      /** Callbacks **/
+      void onSuccess(SipMessage& msg) = 0;
+      void onRemoved(SipMessage& msg) = 0;
+      int  onRequestRetry(int retrySeconds, SipMessage& msg) = 0;
+
+      /** Adds a registration binding, using the registration from the UserProfile */
+      void addBinding(const NameAddr& contact);
+
+      /** Adds a registration binding, using the specified registration time */
+      void addBinding(const NameAddr& contact, int registrationTime);
+
+      /** Removes one particular binding */
+      void removeBinding(const NameAddr& contact);
+
+      /** Removes all bindings associated with the AOR - even those that may have been
+          by a another UA.  Note:  Set's contact header to '*'.  Set flag to true
+          to end the usage when complete.  */
+      void removeAll(bool stopRegisteringWhenDone=false);
+
+      /** Removes all bindings added by addBinding.  Set flag to true to end the usage 
+          when complete */
+      void removeMyBindings(bool stopRegisteringWhenDone=false);
+
+      /** Request a manual refresh of the registration.  Default to using original expires 
+          value (0 is not allowed - call removeXXX() instead) */
+      void requestRefresh(int expires = -1);  
+      
+      /** kills the usgage, does not unregister, call removeMyBindings to unregister */
+      void stopRegistering(); 
+      
+      /** returns a list of contacts added by addBinding */
+      const NameAddrs& myContacts();
+
+      /** returns a list of all contacts for this AOR - may include those added by other UA's */
+      const NameAddrs& allContacts();
+
+      /** returns the number of seconds until the registration expires - relative */
+      int whenExpires() const; 
+      
+      /** Calls removeMyBindings and ends usage when complete */
+      virtual void end();
 
    protected:
       virtual void protectedDispatch(SipMessage &);
       virtual void protectedDispatch(DumTimeout &);
+
+   private:
+      typedef enum
+      {
+         AddingOrQuerying,
+         Refreshing,
+         Registered,
+         Removing,
+         RetryAdding,    // Waiting to retry an add
+         RetryRefreshing, // Waiting to retry a refresh
+         None // for queued only
+      } State;
+
+      SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
+      void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
+
+      //SipMessage& mLastRequest;
+      SharedPtr<SipMessage> mLastRequest;
+      NameAddrs mMyContacts; // Contacts that this UA is requesting 
+      NameAddrs mAllContacts; // All the contacts Registrar knows about 
+      int mTimerSeq; // expected timer seq (all < are stale)
+
+      State mState;
+      bool mEndWhenDone;
+      bool mUserRefresh;
+      UInt64 mExpires;
+      State mQueuedState;
+      SharedPtr<SipMessage> mQueuedRequest;
+
+      NetworkAssociation mNetworkAssociation;
 };
 
 }
