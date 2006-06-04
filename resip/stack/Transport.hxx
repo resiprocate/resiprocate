@@ -12,6 +12,7 @@ namespace resip
 
 class TransactionMessage;
 class SipMessage;
+class StunMessage;
 class Connection;
 
 class Transport
@@ -78,6 +79,7 @@ class Transport
       // request. Response will go straight into the TxFifo
 
       bool basicCheck(const SipMessage& msg);
+      bool basicCheck(const StunMessage& msg);
 
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,

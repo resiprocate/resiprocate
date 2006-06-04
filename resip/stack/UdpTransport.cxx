@@ -7,6 +7,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SendData.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StunMessage.hxx"
 #include "resip/stack/UdpTransport.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -127,8 +128,7 @@ UdpTransport::process(FdSet& fdset)
       }
 
       //handle incoming CRLFCRLF keep-alive packets
-      if (len == 4 &&
-          strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+      if ( len == 4 && strncmp(buffer, Symbols::CRLFCRLF, 4) == 0)
       {
          delete[] buffer;
          buffer = 0;
@@ -136,6 +136,7 @@ UdpTransport::process(FdSet& fdset)
          return;
       }
 
+#if 0 
       // this must be a STUN response (or garbage)
       if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
       {
@@ -209,21 +210,27 @@ UdpTransport::process(FdSet& fdset)
          buffer = 0;
          return;
       }
-      
+#endif
+
 
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
       //DebugLog ( << "UDP Rcv : " << len << " b" );
       //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-      SipMessage* message = new SipMessage(this);
-
-      // set the received from information into the received= parameter in the
-      // via
-
+      TransactionMessage* message;
+      if ( ( buffer[0] == 0 || buffer[0] == 1 )  
+           && ( buffer[1] >= 1 && buffer[1] <= 0x12 ) )
+      {
+         message = new StunMessage;
+      }
+      else
+      {
+         message = new SipMessage(this);
+      }
+ 
       // It is presumed that UDP Datagrams are arriving atomically and that
-      // each one is a unique SIP message
-
+      // each one is a unique message
 
       // Save all the info where this message came from
       tuple.transport = this;
@@ -233,47 +240,67 @@ UdpTransport::process(FdSet& fdset)
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 
-      mMsgHeaderScanner.prepareForMessage(message);
-
-      char *unprocessedCharPtr;
-      if (mMsgHeaderScanner.scanChunk(buffer,
-                                      len,
-                                      &unprocessedCharPtr) !=
-          MsgHeaderScanner::scrEnd)
+      if ( dynamic_cast<StunMessage*>( message ) )
       {
-         StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         StackLog(<< Data(buffer, len));
-         delete message; 
-         message=0; 
-         return;
+         StunMessage* msg = dynamic_cast<StunMessage*>(message);
+         assert(msg);
+         
+         if (!basicCheck(*msg))
+         {
+            delete msg; // cannot use it, so, punt on it...
+            msg = 0;
+            message =0;
+            return;
+         }
       }
-
-      // no pp error
-      int used = unprocessedCharPtr - buffer;
-
-      if (used < len)
+      else
       {
-         // body is present .. add it up.
-         // NB. The Sip Message uses an overlay (again)
-         // for the body. It ALSO expects that the body
-         // will be contiguous (of course).
-         // it doesn't need a new buffer in UDP b/c there
-         // will only be one datagram per buffer. (1:1 strict)
+         SipMessage* msg = dynamic_cast<SipMessage*>(message);
+         assert(msg);
+         
+         mMsgHeaderScanner.prepareForMessage(msg);
 
-         message->setBody(buffer+used,len-used);
-         //DebugLog(<<"added " << len-used << " byte body");
+         char *unprocessedCharPtr;
+         if (mMsgHeaderScanner.scanChunk(buffer,
+                                         len,
+                                         &unprocessedCharPtr) !=
+             MsgHeaderScanner::scrEnd)
+         {
+            StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+            StackLog(<< Data(buffer, len));
+            delete msg; 
+            msg=0; message=0;
+            return;
+         }
+         
+         // no pp error
+         int used = unprocessedCharPtr - buffer;
+         
+         if (used < len)
+         {
+            // body is present .. add it up.
+            // NB. The Sip Message uses an overlay (again)
+            // for the body. It ALSO expects that the body
+            // will be contiguous (of course).
+            // it doesn't need a new buffer in UDP b/c there
+            // will only be one datagram per buffer. (1:1 strict)
+            
+            msg->setBody(buffer+used,len-used);
+            //DebugLog(<<"added " << len-used << " byte body");
+         }
+         
+         if (!basicCheck(*msg))
+         {
+            // basicCheck queued any response required
+            delete msg; // cannot use it, so, punt on it...
+            msg = 0;
+            message =0;
+            return;
+         }
+         
+         stampReceived(msg);
       }
-
-      if (!basicCheck(*message))
-      {
-         delete message; // cannot use it, so, punt on it...
-         // basicCheck queued any response required
-         message = 0;
-         return;
-      }
-
-      stampReceived(message);
-
+      
       mStateMachineFifo.add(message);
    }
 }
@@ -290,6 +317,7 @@ UdpTransport::buildFdSet( FdSet& fdset )
    }
 }
 
+#if 0 
 bool 
 UdpTransport::stunSendTest(const Tuple&  dest)
 {
@@ -333,6 +361,7 @@ UdpTransport::stunResult(Tuple& mappedAddress)
 	}
 	return mStunSuccess;
 }
+#endif
 
 
 /* ====================================================================
