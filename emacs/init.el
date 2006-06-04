@@ -19,10 +19,6 @@
   (keyboard-translate ?\C-h ?\C-?))
 
 
-(setq load-path (append load-path '("~/.xemacs")))
-;(setq load-path (append load-path '("~/.xemacs")))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;			Basic Customization			    ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
