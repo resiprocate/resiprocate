@@ -1869,13 +1869,13 @@ DialogUsageManager::applyToAllClientSubscriptions(ClientSubscriptionFunctor* fun
 }
 
 void
-DialogUsageManager::registerForConnectionTermination(Postable* listener)
+DialogUsageManager::registerForConnectionTermination(DumPostable* listener)
 {
    mConnectionTerminatedEventDispatcher.addListener(listener);
 }
 
 void
-DialogUsageManager::unRegisterForConnectionTermination(Postable* listener)
+DialogUsageManager::unRegisterForConnectionTermination(DumPostable* listener)
 {
    mConnectionTerminatedEventDispatcher.removeListener(listener);
 }

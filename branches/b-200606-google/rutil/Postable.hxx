@@ -4,12 +4,12 @@
 namespace resip
 {
 
-template<class T>
+template < typename T >
 class Postable
 {
    public:
-      virtual ~Postable(){}
-      virtual void post(T)=0;
+  virtual ~Postable(){};
+  virtual void post(T)=0;
 };
 
 }
