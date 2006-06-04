@@ -100,16 +100,8 @@ class InviteSession : public DialogUsage
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;     // UAC Early states
-      bool isAccepted() const;  // UAS States after accept is called
-
-      Tokens& getPeerSupportedMethods() { return mPeerSupportedMethods; }
-      Tokens& getPeerSupportedOptionTags() { return mPeerSupportedOptionTags; }
-      Mimes&  getPeerSupportedMimeTypes() { return mPeerSupportedMimeTypes; }
-      Tokens& getPeerSupportedEncodings() { return mPeerSupportedEncodings; }
-      Tokens& getPeerSupportedLanguages() { return mPeerSupportedLanguages; }
-      Tokens& getPeerAllowedEvents() { return mPeerAllowedEvents; }
-      Data&   getPeerUserAgent() { return mPeerUserAgent; }
-
+      bool isAccepted() const;  // UAS States before accept is called
+      
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
 
@@ -171,11 +163,11 @@ class InviteSession : public DialogUsage
          UAS_WaitingToRequestOffer, 
 
          UAS_AcceptedWaitingAnswer, 
-         UAS_OfferReliable,
+         UAS_ReceivedOfferReliable,
          UAS_NoOfferReliable,
          UAS_FirstSentOfferReliable,
-         UAS_FirstEarlyReliable,
-         UAS_EarlyReliable,
+         UAS_FirstSentAnswerReliable,
+         UAS_NegotiatedReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
          UAS_ReceivedUpdate,
@@ -215,8 +207,8 @@ class InviteSession : public DialogUsage
          OnUpdateOffer,
          OnUpdateRejected,
          On422Update,
+         On488Update,
          On491Update,
-         On489Update,
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
@@ -287,11 +279,10 @@ class InviteSession : public DialogUsage
 
       Tokens mPeerSupportedMethods;
       Tokens mPeerSupportedOptionTags;
-      Mimes  mPeerSupportedMimeTypes;
+      Mimes mPeerSupportedMimeTypes;
       Tokens mPeerSupportedEncodings;
       Tokens mPeerSupportedLanguages;
       Tokens mPeerAllowedEvents;
-      Data   mPeerUserAgent;
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       
