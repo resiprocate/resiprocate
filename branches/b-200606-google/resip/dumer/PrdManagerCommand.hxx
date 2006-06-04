@@ -1,4 +1,4 @@
-n#if !defined(DumPrdManagerCommand_hxx)
+#if !defined(DumPrdManagerCommand_hxx)
 #define DumPrdManagerCommand_hxx
 
 #include "rutil/SharedPtr.hxx"
@@ -10,14 +10,10 @@ class Postable;
 class PrdManager;
 class SipMessage;
 
-class PrdManagerCommandFunctor
+class PrdManagerCommand
 {
    public:
       virtual void operator()()=0;
-};
-
-class PrdManagerCommand : public PrdManagerCommandFunctor
-{
    protected:
       PrdManagerCommand(PrdManagerCore& m) : mPrdManagerCore(m){}
       PrdManagerCore& mPrdManagerCore;
@@ -68,12 +64,13 @@ class SendPrdManagerCommand : public PrdManagerCommand
       std::auto_ptr<SipMessage> mSipMessage;
 };
 
-class RussianDollPrdManagerCommand : public PrdManagerCommandFunctor
+class RussianDollPrdManagerCommand : public PrdManagerCommand
 {
    public:
-      RussianDollPrdManagerCommand(std::auto_ptr<PrdCommand> cmd,
+      RussianDollPrdManagerCommand(PrdManager &m,
+                                   std::auto_ptr<PrdCommand> cmd,
                                    Postable &postable)
-        :  mPrdCommand(msg), mPostable(postable) {}
+        :  PrdManagerCommand(m), mPrdCommand(msg), mPostable(postable) {}
 
       virtual void operator()()
       {
