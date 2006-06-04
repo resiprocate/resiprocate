@@ -43,14 +43,14 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       case UAS_EarlyOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
-      case UAS_EarlyReliable:
-      case UAS_FirstEarlyReliable:
+      case UAS_NegotiatedReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
       case UAS_ProvidedOffer:
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
@@ -122,7 +122,7 @@ ServerInviteSession::provisional(int code)
          
 
       case UAS_NoOfferReliable:
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          // TBD
          assert(0);
          break;
@@ -130,9 +130,9 @@ ServerInviteSession::provisional(int code)
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
@@ -172,7 +172,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
          // !jf! transition ? 
          break;
 
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          // queue offer
          transition(UAS_SentUpdate);
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
@@ -193,11 +193,11 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
 
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_Offer:
       case UAS_EarlyOffer:
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
       case UAS_ReceivedUpdate:
@@ -263,14 +263,14 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          break;
          
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
          // send1XX-answer, timer::1xx
-         transition(UAS_FirstEarlyReliable);
+         transition(UAS_FirstSentAnswerReliable);
          break;
 
       case UAS_ReceivedUpdate:
          // send::200U-answer
-         transition(UAS_EarlyReliable);
+         transition(UAS_NegotiatedReliable);
          break;
          
       case UAS_ReceivedUpdateWaitingAnswer:
@@ -286,8 +286,8 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
-      case UAS_EarlyReliable:
-      case UAS_FirstEarlyReliable:
+      case UAS_NegotiatedReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
@@ -335,10 +335,10 @@ ServerInviteSession::end(EndReason reason)
          reject(480);
          break;         
          
-      case UAS_OfferReliable: 
-      case UAS_EarlyReliable:
+      case UAS_ReceivedOfferReliable: 
+      case UAS_NegotiatedReliable:
       case UAS_FirstSentOfferReliable:
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_NoOfferReliable:
       case UAS_ReceivedUpdate:   // !slg! todo: send 488U
       case UAS_ReceivedUpdateWaitingAnswer: // !slg! todo: send 488U
@@ -394,11 +394,11 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
 
-      case UAS_EarlyReliable:
-      case UAS_FirstEarlyReliable:
+      case UAS_NegotiatedReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdate:
       case UAS_SentUpdate:
       {
@@ -472,7 +472,7 @@ ServerInviteSession::accept(int code)
          assert(0);  // Already Accepted
          break;
          
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
          // queue 2xx
          // waiting for PRACK
          transition(UAS_Accepted);
@@ -480,7 +480,7 @@ ServerInviteSession::accept(int code)
          handleSessionTimerRequest(*mInvite200, mFirstRequest);
          break;
          
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          transition(Connected);
          sendAccept(code, 0);
          handler->onConnected(getSessionHandle(), *mInvite200);
@@ -499,7 +499,7 @@ ServerInviteSession::accept(int code)
          
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
-      case UAS_OfferReliable: 
+      case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -542,10 +542,10 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_AcceptedWaitingAnswer:
          dispatchAcceptedWaitingAnswer(msg);
          break;         
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          dispatchEarlyReliable(msg);
          break;
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
          dispatchFirstEarlyReliable(msg);
          break;
       case UAS_FirstSentOfferReliable:
@@ -554,7 +554,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_NoOfferReliable:
          dispatchNoOfferReliable(msg);
          break;
-      case UAS_OfferReliable:
+      case UAS_ReceivedOfferReliable:
          dispatchOfferReliable(msg);
          break;
       case UAS_ReceivedUpdate:
@@ -632,7 +632,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          break;
       case OnInviteReliableOffer:
          *mLastRemoteSessionModification = msg;
-         transition(UAS_OfferReliable);
+         transition(UAS_ReceivedOfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), Offer, msg);
