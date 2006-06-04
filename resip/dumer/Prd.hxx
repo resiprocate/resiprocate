@@ -33,6 +33,13 @@ class Prd
                       int seq, 
                       int altseq=-1);
 
+
+      /* Callbacks Invoked by PrdCommands ******************************/
+      void onSipMessage(std::auto_ptr<SipMessage>) = 0;
+      void onTransactionTerminated(std::auto_ptr<TransactionTerminated>) = 0;
+      void onDumTimeout(std::auto_ptr<DumTimeout>) = 0;
+      void onConnectionTerminated(std::auto_ptr<ConnectionTerminated>) {;}
+
    protected:
       virtual void protectedDispatch(SipMessage&) = 0;
       virtual void protectedDispatch(DumTimeout&) = 0;
