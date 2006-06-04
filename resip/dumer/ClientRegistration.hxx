@@ -11,14 +11,13 @@ class ClientRegistration : public NonDialogPrd
    public:
       ClientRegistration();
       virtual ~ClientRegistration() {}
-      virtual void send(SipMessage &);
       SipMessage& initialize(const NameAddr& target);
       SipMessage& initialize(const NameAddr& target, int registrationTime);
 
       /** Callbacks **/
-      void onSuccess(SipMessage& msg) = 0;
-      void onRemoved(SipMessage& msg) = 0;
-      int  onRequestRetry(int retrySeconds, SipMessage& msg) = 0;
+      virtual void onSuccess(SipMessage& msg) = 0;
+      virtual void onRemoved(SipMessage& msg) = 0;
+      virtual int  onRequestRetry(int retrySeconds, SipMessage& msg) = 0;
 
       /** Adds a registration binding, using the registration from the UserProfile */
       void addBinding(const NameAddr& contact);
@@ -73,11 +72,9 @@ class ClientRegistration : public NonDialogPrd
          None // for queued only
       } State;
 
-      SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
+      SipMessage& tryModification(ClientRegistration::State state);
       void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
 
-      //SipMessage& mLastRequest;
-      SharedPtr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
       int mTimerSeq; // expected timer seq (all < are stale)
@@ -87,7 +84,7 @@ class ClientRegistration : public NonDialogPrd
       bool mUserRefresh;
       UInt64 mExpires;
       State mQueuedState;
-      SharedPtr<SipMessage> mQueuedRequest;
+      SipMessage mQueuedRequest;
 
       NetworkAssociation mNetworkAssociation;
 };

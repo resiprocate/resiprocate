@@ -13,6 +13,7 @@ class Prd
       virtual ~Prd() {}
 
       virtual void send(SipMessage &);
+      virtual void end()=0;
       void processFeatures();
 
       void dispatch(SipMessage &m) { protectedDispatch(m); }
@@ -47,9 +48,9 @@ class Prd
 
       void unmanage();
 
-      SipMessage& mInitialMessage;
-	  SharedPtr<UserProfile> mUserProfile;
-	  PrdManager& mPrdManager;
+      SipMessage mLastRequest;
+	   SharedPtr<UserProfile> mUserProfile;
+	   PrdManager& mPrdManager;
 
    private:
 
