@@ -474,7 +474,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       typedef std::map<Data, ServerPublication*> ServerPublications;
       ServerPublications mServerPublications;
       typedef std::map<Data, SipMessage*> RequiresCerts;
-      RequiresCerts mRequiresCerts;      
       // from Event-Type+document-aor -> ServerSubscription
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
