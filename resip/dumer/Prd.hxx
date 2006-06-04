@@ -40,6 +40,8 @@ class Prd
       void unmanage();
 
       SipMessage& mInitialMessage;
+	  SharedPtr<UserProfile> mUserProfile;
+	  PrdManager& mPrdManager;
 
       bool mIsDead;
 
@@ -51,7 +53,6 @@ class Prd
       */
       std::vector<std::pair<Data,FeatureChain> > mFeatureChains;
       const FeatureChain& mPrototypeChain;
-      SipMessage mInitialMessage;
 };
 
 }
