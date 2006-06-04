@@ -34,7 +34,28 @@ namespace resip
 class Data;
 class SipStack;
 
-class PrdManager : public TransactionUser
+class PrdManager 
+{
+   public:
+
+      /** Give a prd implementation to the manager. The returned value
+          is the input wrapped in a shared pointer. */
+      virtual SharedPtr<T> manage(std::auto_ptr<T> prd)=0;
+
+      /** Remove from the PrdManager datastructure. Application can keep this
+          around until PrdManager is deleted */
+      virtual void unmanage(Prd& prd)=0;
+      
+      /// Posts to the PrdManager postable to avoid the manage/send race condition
+      virtual void send(SharePtr<SipMessage> msg)=0;
+      
+      virtual SharedPtr<MasterProfile> getMasterProfile()=0;      
+
+      /// Post a PrdCommand to the TU fifo. When it fires, will be added to postable
+      virtual void post(std::auto_ptr<PrdCommand>, Postable& postable, unsigned long timeMs=0)=0;
+};
+   
+class PrdManagerCore : public TransactionUser, public PrdManager
 {
    public:
       class Exception : public BaseException
@@ -65,9 +86,17 @@ class PrdManager : public TransactionUser
       SharedPtr<MasterProfile> getMasterProfile();
       SipStack& getSipStack();
 
-      /** Give a prd implementation to the manager. The returned value
-          is the input wrapped in a shared pointer. */
-      SharedPtr<T> manage(std::auto_ptr<T> prd);
+      virtual SharedPtr<T> manage(std::auto_ptr<T> prd)
+      {
+         SharedPtr<T> spt(prd.release());
+         mFifo.post(new ManagePrdManagerCommand(*this, spt));
+         return spt;
+      }
+
+      virtual void unmanage(Prd& prd);
+      virtual void send(SharePtr<SipMessage> msg);
+      virtual SharedPtr<MasterProfile> getMasterProfile();
+      virtual void post(std::auto_ptr<PrdCommand>, Postable& postable, unsigned long timeMs=0); 
 
       /// Note:  Implementations of Postable must delete the message passed via post
       // !jf! this should always be done in the constructor/destructor of PrdManager
@@ -89,10 +118,10 @@ class PrdManager : public TransactionUser
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
       bool process();
+      void internalProcess(std::auto_ptr<Message> msg);
 
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
-      void internalProcess(std::auto_ptr<Message> msg);
       bool messageAvailable(void) { return mFifo.messageAvailable(); }
 
       // makes a proto response to a request
