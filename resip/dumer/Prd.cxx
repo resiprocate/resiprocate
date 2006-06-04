@@ -1,40 +1,17 @@
 #if !defined(RESIP_PRD_HXX)
 #define RESIP_PRD_HXX
 
-#include "FeatureChain.hxx"
+#include "Prd.h"
 
 namespace resip
 {
 
-class Prd
+Prd::Prd(SipMessage &initialMessage)
+  : mInitialMessage(initialMessage),
+    mIsDead(false)
+
 {
-   public:
-      Prd(SipMessage &);
-      virtual ~Prd() {}
-      void send(SipMessage &);
-      void processFeatures();
-
-      void dispatch(SipMessage &m) { protectedDispatch(m); }
-      void dispatch(DumTimeout &t) { protectedDispatch(t); }
-
-   protected:
-      virtual void protectedDispatch(SipMessage&) = 0;
-      virtual void protectedDispatch(DumTimeout&) = 0;
-
-      SipMessage& mInitialMessage;
-
-      bool mIsDead;
-
-   private:
-
-      /**
-        List of pending feature chains, keyed by TransactionId
-        @todo Feature design is not yet complete.
-      */
-      std::vector<std::pair<Data,FeatureChain> > mFeatureChains;
-      const FeatureChain& mPrototypeChain;
-
-};
+}
 
 }
 
