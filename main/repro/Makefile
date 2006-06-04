@@ -67,6 +67,7 @@ SRC 	+=   \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
 	monkeys/SetTargetConnection.cxx \
+	monkeys/RouteHeaderInserter.cxx \
 	\
 
 
@@ -79,18 +80,16 @@ SRC +=	stateAgents/CertServer.cxx \
 endif
 
 reproSvnVersion=$(shell cat ../SVN-VERSION)
-#reproBuildTime=$(shell date -u --iso-8601=seconds | sed 's/+0000//')
-reproBuildTime=""
 reproBuildHost=$(shell hostname)
 
-.PHONY: BUILDSTAMP
-BUILDSTAMP: ../SVN-VERSION
-	echo "$(reproSvnVersion) $(reproBuildTime) $(reproBuildHost)" > BUILDSTAMP
 
-ReproVersion.cxx: BUILDSTAMP
+reproInfo.hxx: ../SVN-VERSION VERSION
+	@echo "#define REPRO_BUILD_REV \"$(reproSvnVersion)\"" >  reproInfo.hxx
+	@echo "#define REPRO_BUILD_HOST \"$(reproBuildHost)\"" >> reproInfo.hxx
+	@echo "#define REPRO_RELEASE_VERSION \"$(VERSION)\"" >> reproInfo.hxx
+	cat reproInfo.hxx
 
-CXXFLAGS += "-DREPRO_BUILDSTAMP=\"$(reproSvnVersion) $(reproBuildTime) $(reproBuildHost)\""
-CXXFLAGS += "-DREPRO_VERSION=\"$(VERSION)\""
+ReproVersion.cxx: reproInfo.hxx
 
 ../SVN-VERSION: 
 	$(MAKE) -C .. SVN-VERSION
@@ -149,7 +148,11 @@ $(DESTDIR)$(INSTALL_PREFIX)/share/man/man8/repro.8: doc/repro.8
 clean: clean-inst clean-build
 
 clean-build:
-	rm -f BUILDSTAMP
+	rm -f reproInfo.hxx
 
 clean-inst:
 	rm -f etc/init.d/repro.inst etc/repro.conf.inst
+
+
+testVersion: ReproVersion.cxx ReproVersion.hxx
+	g++ -I.. -DTESTDRIVER ReproVersion.cxx -o testVersion
