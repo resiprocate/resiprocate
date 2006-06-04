@@ -1,4 +1,4 @@
-<#include "resip/dumer/PrdManagerCommand.hxx"
+#include "resip/dumer/PrdManagerCommand.hxx"
 #include "resip/dumer/PrdManager.hxx"
 #include "rutil/Postable.hxx"
 
