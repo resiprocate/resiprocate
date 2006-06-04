@@ -1,28 +1,21 @@
-#if !defined(RESIP_PRD_HXX)
-#define RESIP_PRD_HXX
+#if !defined(RESIP_SERVER_REFER_HXX)
+#define RESIP_SERVER_REFER_HXX
 
+#include "ServerSubscription.hxx"
 
 namespace resip
 {
 
-class Prd
+class ServerRefer : public ServerSubscription
 {
    public:
-      Prd();
-      virtual ~Prd() {}
+      ServerRefer();
+      virtual ~ServerRefer() {}
       void send(SipMessage &);
-      void processFeatures();
-
-      void addFeature();
-
-      void dispatch(SipMessage &);
 
    protected:
-      virtual void protectedDispatch(SipMessage &) = 0;
-      virtual void protectedDispatch(DumTimeout &) = 0;
-
-   private:
-      FeatureChain mFeatureChain;
+      virtual void protectedDispatch(SipMessage &);
+      virtual void protectedDispatch(DumTimeout &);
 };
 
 }
@@ -50,7 +43,7 @@ class Prd
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
  *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
+ *    permission, please contact vocal.org.
  *
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
@@ -61,7 +54,7 @@ class Prd
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
  * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
  * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * IN EXCESS OF ,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
