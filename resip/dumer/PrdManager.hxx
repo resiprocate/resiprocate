@@ -50,17 +50,19 @@ class PrdManager : public TransactionUser
       };
 
 
-      PrdManager(SipStack& stack, bool createDefaultFeatures=false);
+      PrdManager(SipStack& stack, SharedPtr<MasterProfile> profile, bool createDefaultFeatures=false);
       virtual ~PrdManager();
 
-      void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
-      virtual void onDumCanBeDeleted()=0;
+      const Data& name() const;
 
-      // ?jf? Is this really changeable or should it be passed into the constructor
-      void setMasterProfile(const SharedPtr<MasterProfile>& masterProfile);
+      // request to terminate all active Prds
+      void requestTerminate();
+      virtual void onTerminated(); // default calls requestShutdown()
+
+      void requestShutdown();
+      virtual void onShutdown()=0;
+      
       SharedPtr<MasterProfile> getMasterProfile();
-      SharedPtr<UserProfile> getMasterUserProfile();
-
       SipStack& getSipStack();
 
       /** Give a prd implementation to the manager. The returned value
@@ -173,7 +175,7 @@ class PrdManager : public TransactionUser
 
 }
    
-
+#if 0
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
    private:     
@@ -195,8 +197,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void requestMergedRequestRemoval(const MergedRequestKey&);
       void removeMergedRequest(const MergedRequestKey&);
 };
-
-}
+#endif
 
 #endif
 
