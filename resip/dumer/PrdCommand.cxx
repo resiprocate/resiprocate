@@ -4,43 +4,18 @@
 
 using namespace resip;
 
-PrdCommand::PrdCommand(PrdManager& prdm) : mPrdManager(prdm)
+void SipMessagePrdCommand::operator()()
 {
+   SharedPtr<Ptr> prd(mPrd);
+   if (prd.get() != 0)
+   {
+      prd->onSipMessage(mSipMessage);
+   }
+   else if (mSipMessage.get() && mSipMessage->isRequest())
+   {
+      /* create new SIP 481 and tell the other guy to go away */
+      SipMessage response = Helper::makeResponse(mSipMessage, 481);
+      assert(response.hasTransactionUser());
+      mStack.send(response);
+   }
 }
-
-ManagePrdCommand::ManagePrdCommand(PrdManager& prdm, SharedPtr<Prd> prd) : 
-   PrdCommand(prdm),
-   mPrd(prd)
-{
-}
-
-void 
-ManagePrdCommand::operator()
-{
-   mPrdManager.internalManage(mPrd);
-}
-
-UnmanagePrdCommand::UnmanagePrdCommand(PrdManager& prdm, SharedPtr<Prd> prd) : 
-   PrdCommand(prdm),
-   mPrd(prd)
-{
-}
-
-void 
-UnmanagePrdCommand::operator()
-{
-   mPrdManager.internalUnmanage(mPrd);
-}
-
-SendPrdCommand::SendPrdCommand(PrdManager& prdm, std::auto_ptr<SipMessage> msg) : 
-   PrdCommand(prdm),
-   mMsg(msg)
-{
-}
-
-void 
-SendPrdCommand::operator()()
-{
-   mPrdManager.internalSend(mMsg);
-}
-
