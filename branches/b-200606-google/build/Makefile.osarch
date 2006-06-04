@@ -127,7 +127,7 @@ ifeq ($(OSTYPE),Darwin)
     CFLAGS   += -D_REENTRANT
 
     INCDIRS += /sw/include /opt/local/include
-    LIBDIRS += /sw/lib /opt/local/lib
+    LIBDIRS +=  /sw/lib /opt/local/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
