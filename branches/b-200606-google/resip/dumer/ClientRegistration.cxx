@@ -3,8 +3,7 @@
 
 #include "resip/stack/Helper.hxx"
 #include "resip/dumer/ClientRegistration.hxx"
-//#include "resip/dum/MasterProfile.hxx"
-#include "resip/dum/UsageUseException.hxx"
+#include "resip/dumer/PrdUseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Random.hxx"
@@ -22,14 +21,9 @@ ClientRegistration::ClientRegistration()
      mEndWhenDone(false),
      mUserRefresh(false),
      mExpires(0),
-     mQueuedState(None),
-     mQueuedRequest(new SipMessage)
+     mQueuedState(None)
 {
-   // If no Contacts header, this is a query
-   if (mLastRequest->exists(h_Contacts))
-   {
-      mMyContacts = mLastRequest->header(h_Contacts);
-   }
+   // ?jpr? Handle NetworkAssociation
    mNetworkAssociation.setDum(&dum);
 }
 
@@ -51,27 +45,29 @@ ClientRegistration::initialize(const NameAddr& target)
 SipMessage& 
 ClientRegistration::initialize(const NameAddr& target, int registrationTime)
 {
+   // Initialize the mLastRequest member
    makeInitialRequest(target, target, REGISTER);
-      
-   mInitialMsg.header(h_RequestLine).uri().user() = Data::Empty;
-   mInitialMsg.header(h_Expires).value() = registrationTime;
+
+   mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
+   mLastRequest.header(h_Expires).value() = registrationTime;
 
    if (mUserProfile->getRinstanceEnabled())
    {
-      mInitialMsg.header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+      mLastRequest.header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
    if (mUserProfile->getMethodsParamEnabled())
    {
-      mInitialMsg.header(h_Contacts).front().param(p_methods) = mPrd.getMasterProfile()->getAllowedMethodsData();
+      mLastRequest.header(h_Contacts).front().param(p_methods) = mPrd.getMasterProfile()->getAllowedMethodsData();
    }
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
+   
    // add instance parameter to the contact for gruu !cj! TODO 
 
    // store caller prefs in Contact
 
-   return mInitialMsg;
+   return mLastRequest;
 }
 
 void
@@ -80,7 +76,7 @@ ClientRegistration::addBinding(const NameAddr& contact)
    addBinding(contact, mUserProfile->getDefaultRegistrationTime());
 }
 
-SharedPtr<SipMessage>
+SipMessage&
 ClientRegistration::tryModification(ClientRegistration::State state)
 {
    if (mState != Registered)
@@ -90,10 +86,10 @@ ClientRegistration::tryModification(ClientRegistration::State state)
          if (mQueuedState != None)
          {
             WarningLog (<< "Trying to modify bindings when another request is already queued");
-            throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
+            throw PrdUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
          }
 
-         *mQueuedRequest = *mLastRequest;
+         mQueuedRequest = mLastRequest;
          mQueuedState = state;
 
          return mQueuedRequest;
@@ -113,7 +109,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 void
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
-   SharedPtr<SipMessage> next = tryModification(AddingOrQuerying);
+   SipMessage& next = tryModification(AddingOrQuerying);
    mMyContacts.push_back(contact);
 
    if(mUserProfile->getRinstanceEnabled())
@@ -121,9 +117,9 @@ ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
       mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
-   next->header(h_Contacts) = mMyContacts;
-   next->header(h_Expires).value() = registrationTime;
-   next->header(h_CSeq).sequence()++;
+   next.header(h_Contacts) = mMyContacts;
+   next.header(h_Expires).value() = registrationTime;
+   next.header(h_CSeq).sequence()++;
    // caller prefs
 
    if (mQueuedState == None)
@@ -138,19 +134,19 @@ ClientRegistration::removeBinding(const NameAddr& contact)
    if (mState == Removing)
    {
       WarningLog (<< "Already removing a binding");
-      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
+      throw PrdUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   SipMessage& next = tryModification(Removing);
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
       {
          mMyContacts.erase(i);
 
-         next->header(h_Contacts) = mMyContacts;
-         next->header(h_Expires).value() = 0;
-         next->header(h_CSeq).sequence()++;
+         next.header(h_Contacts) = mMyContacts;
+         next.header(h_Expires).value() = 0;
+         next.header(h_CSeq).sequence()++;
 
          if (mQueuedState == None)
          {
@@ -171,20 +167,20 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
    if (mState == Removing)
    {
       WarningLog (<< "Already removing a binding");
-      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
+      throw PrdUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   SipMessage& next = tryModification(Removing);
 
    mAllContacts.clear();
    mMyContacts.clear();
 
    NameAddr all;
    all.setAllContacts();
-   next->header(h_Contacts).clear();
-   next->header(h_Contacts).push_back(all);
-   next->header(h_Expires).value() = 0;
-   next->header(h_CSeq).sequence()++;
+   next.header(h_Contacts).clear();
+   next.header(h_Contacts).push_back(all);
+   next.header(h_Expires).value() = 0;
+   next.header(h_CSeq).sequence()++;
    mEndWhenDone = stopRegisteringWhenDone;
 
    if (mQueuedState == None)
@@ -201,16 +197,16 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    if (mState == Removing)
    {
       WarningLog (<< "Already removing a binding");
-      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
+      throw PrdUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
    if (mMyContacts.empty())
    {
       WarningLog (<< "No bindings to remove");
-      throw UsageUseException("No bindings to remove", __FILE__,__LINE__);
+      throw PrdUseException("No bindings to remove", __FILE__,__LINE__);
    }
 
-   SharedPtr<SipMessage> next = tryModification(Removing);
+   SipMessage& next = tryModification(Removing);
 
    NameAddrs myContacts = mMyContacts;
    mMyContacts.clear();
@@ -220,9 +216,9 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
       i->param(p_expires) = 0;
    }
 
-   next->header(h_Contacts) = myContacts;
-   next->remove(h_Expires);
-   next->header(h_CSeq).sequence()++;
+   next.header(h_Contacts) = myContacts;
+   next.remove(h_Expires);
+   next.header(h_CSeq).sequence()++;
 
    // !jf! is this ok if queued
    mEndWhenDone = stopRegisteringWhenDone;
@@ -357,6 +353,12 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
+         // If no Contacts header, this is a query
+         if (mInitialRequest->exists(h_Contacts))
+         {
+            mMyContacts = mInitialRequest->header(h_Contacts);
+         }
+
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
@@ -478,10 +480,10 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
 
          if (mQueuedState != None)
          {
-            InfoLog (<< "Sending queued request: " << *mQueuedRequest);
+            InfoLog (<< "Sending queued request: " << mQueuedRequest);
             mState = mQueuedState;
             mQueuedState = None;
-            *mLastRequest = *mQueuedRequest;
+            mLastRequest = mQueuedRequest;
             send(mLastRequest);
          }
       }
