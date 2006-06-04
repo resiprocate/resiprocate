@@ -19,7 +19,8 @@ class Prd
       void dispatch(DumTimeout &t) { protectedDispatch(t); }
 
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
-      void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
+      void makeInitialRequest(const NameAddr& target, const NameAddr& from,
+                              MethodTypes method);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
@@ -49,8 +50,6 @@ class Prd
       SipMessage& mInitialMessage;
 	  SharedPtr<UserProfile> mUserProfile;
 	  PrdManager& mPrdManager;
-
-      bool mIsDead;
 
    private:
 
