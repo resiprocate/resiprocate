@@ -16,9 +16,6 @@ class Prd
       virtual void end()=0;
       void processFeatures();
 
-      void dispatch(SipMessage &m) { protectedDispatch(m); }
-      void dispatch(DumTimeout &t) { protectedDispatch(t); }
-
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
       void makeInitialRequest(const NameAddr& target, const NameAddr& from,
                               MethodTypes method);
@@ -37,8 +34,8 @@ class Prd
 
 
       /* Callbacks Invoked by PrdCommands ******************************/
-      void onSipMessage(std::auto_ptr<SipMessage>) = 0;
-      void onDumTimeout(std::auto_ptr<DumTimeout>) = 0;
+      void dispatch(SipMessage &m) { protectedDispatch(m); }
+      void dispatch(DumTimeout &t) { protectedDispatch(t); }
       void onTransactionTerminated(std::auto_ptr<TransactionTerminated>) {;}
       void onConnectionTerminated(std::auto_ptr<ConnectionTerminated>) {;}
 

@@ -59,7 +59,7 @@ class DumTimeoutPrdCommand : public PrdCommand
          SharedPtr<Ptr> prd(mPrd);
          if (prd.get() != 0)
          {
-           prd->onDumTimeout(mDumTimeout);
+           prd->dispatch(mDumTimeout);
          }
       }
 
@@ -82,7 +82,7 @@ class SipMessagePrdCommand : public PrdCommand
          SharedPtr<Ptr> prd(mPrd);
          if (prd.get() != 0)
          {
-           prd->onSipMessage(mSipMessage);
+           prd->dispatch(mSipMessage);
          }
       }
 
