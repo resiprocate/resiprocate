@@ -1,117 +1,25 @@
-#if !defined(RESIP_FIFO_HXX)
-#define RESIP_FIFO_HXX 
-
-#include <cassert>
-#include "rutil/AbstractFifo.hxx"
-#include "rutil/Postable.hxx"
+#ifndef RESIP_Postable_hxx
+#define RESIP_Postable_hxx
 
 namespace resip
 {
 
-template < class Msg >
-class Fifo : public AbstractFifo, public Postable<Msg*>
+template<class T>
+class Postable
 {
    public:
-      Fifo();
-      virtual ~Fifo();
-
-      /// Deprecated. Calls through to post
-      void add(Msg* msg);
-
-      /// Add a message to the fifo.
-      void post(Msg* msg);
-      
-      /** Returns the first message available. It will wait if no
-       *  messages are available. If a signal interrupts the wait,
-       *  it will retry the wait. Signals can therefore not be caught
-       *  via getNext. If you need to detect a signal, use block
-       *  prior to calling getNext.
-       */
-      Msg* getNext();
-
-
-      /** Returns the next message available. Will wait up to
-       *  ms milliseconds if no information is available. If
-       *  the specified time passes or a signal interrupts the
-       *  wait, this method returns 0. This interface provides
-       *  no mechanism to distinguish between timeout and
-       *  interrupt.
-       */
-      Msg* getNext(int ms);
-
-      /// delete all elements in the queue
-      virtual void clear();
-
-   private:
-      Fifo(const Fifo& rhs);
-      Fifo& operator=(const Fifo& rhs);
+      virtual ~Postable(){}
+      virtual void post(T)=0;
 };
 
-
-template <class Msg>
-Fifo<Msg>::Fifo() : 
-   AbstractFifo(0)
-{
 }
-
-template <class Msg>
-Fifo<Msg>::~Fifo()
-{
-   clear();
-}
-
-template <class Msg>
-void
-Fifo<Msg>::clear()
-{
-   Lock lock(mMutex); (void)lock;
-   while ( ! mFifo.empty() )
-   {
-      Msg* msg = static_cast<Msg*>(mFifo.front());
-      mFifo.pop_front();
-      delete msg;
-   }
-   assert(mFifo.empty());
-   mSize = 0UL -1;
-}
-
-template <class Msg>
-void
-Fifo<Msg>::post(Msg* msg)
-{
-   Lock lock(mMutex); (void)lock;
-   mFifo.push_back(msg);
-   mSize++;
-   mCondition.signal();
-}
-
-template <class Msg>
-void
-Fifo<Msg>::add(Msg* msg)
-{
-   post(msg);
-}
-
-template <class Msg>
-Msg*
-Fifo<Msg> ::getNext()
-{
-   return static_cast<Msg*>(AbstractFifo::getNext());
-}
-
-template <class Msg>
-Msg*
-Fifo<Msg> ::getNext(int ms)
-{
-   return static_cast<Msg*>(AbstractFifo::getNext(ms));
-}
-
-} // namespace resip
 
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
