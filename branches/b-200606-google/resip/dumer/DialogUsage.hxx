@@ -6,14 +6,16 @@
 namespace resip
 {
 
-class DialogUsage : public Feature
+class DialogUsage : public Prd
 {
    public:
       DialogUsage();
       virtual ~DialogUsage() {}
       void send(SipMessage &);
 
-   private:
+   protected:
+      virtual void protectedDispatch(SipMessage &);
+      virtual void protectedDispatch(DumTimeout &);
 };
 
 }
@@ -41,7 +43,7 @@ class DialogUsage : public Feature
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
  *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
+ *    permission, please contact vocal.org.
  *
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
@@ -52,7 +54,7 @@ class DialogUsage : public Feature
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
  * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
  * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * IN EXCESS OF ,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
