@@ -488,8 +488,6 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
                                       AppDialogSet* appDs)
 {
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
-   DumHelper::setOutgoingEncryptionLevel(*inv, level);
-
    return inv;
 }
 
@@ -725,7 +723,6 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       msg->remove(h_Warnings);
    }
    
-   assert(userProfile);
    if (msg->isRequest() 
        && userProfile->hasProxyRequires() 
        && msg->header(h_RequestLine).method() != ACK 
@@ -771,6 +768,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
       if (outboundDecorator.get())
       {
+         // !slg! this is a little dangerous - since the profile may go away and release the outboundDecorator while the stack owned SipMessage still exists in the stack
          msg->addOutboundDecorator(outboundDecorator.get());
       }
    }
