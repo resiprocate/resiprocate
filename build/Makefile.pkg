@@ -27,8 +27,8 @@ endif
 ifeq ($(USE_SSL),yes)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-#OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
-#OPENSSL_LIBDIRS := /usr/local/ssl/lib
+OPENSSL_INCLUDEDIRS := 
+OPENSSL_LIBDIRS :=
 OPENSSL_DEFINES += USE_SSL
 endif
 
@@ -74,8 +74,8 @@ endif
 
 ifeq ($(OSTYPE),Darwin)
 # Darwin ports uses these directors, fink does not 
-DB4CXX_INCLUDEDIRS := /opt/local/lib/db42
-DB4CXX_LIBDIRS := /opt/local/lib/db4
+DB4CXX_LIBDIRS += /opt/local/lib/db42
+DB4CXX_INCLUDEDIRS += /opt/local/include
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
 endif
