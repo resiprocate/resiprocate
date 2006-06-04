@@ -9,11 +9,10 @@ namespace resip
 class Prd
 {
    public:
-      Prd(PrdManager &, SharedPtr<UserProfile>);
-          
-
+      Prd(PrdManager &, SharedPtr<UserProfile>);          
       virtual ~Prd() {}
-      void send(SipMessage &);
+
+      virtual void send(SipMessage &);
       void processFeatures();
 
       void dispatch(SipMessage &m) { protectedDispatch(m); }
