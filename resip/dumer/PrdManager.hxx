@@ -1,33 +1,38 @@
 #if !defined(DumPrdManager_hxx)
 #define DumPrdManager_hxx
 
-#include <vector>
-#include <set>
-#include <map>
+//#include <vector>
+//#include <set>
+//#include <map>
 
-#include "resip/stack/Headers.hxx"
-#include "resip/dum/EventDispatcher.hxx"
-#include "resip/dum/DialogSet.hxx"
-#include "resip/dum/DumTimeout.hxx"
-#include "resip/dum/HandleManager.hxx"
-#include "resip/dum/Handles.hxx"
-#include "resip/dum/MergedRequestKey.hxx"
-#include "resip/dum/RegistrationPersistenceManager.hxx"
-#include "resip/dum/EncryptionManager.hxx"
-#include "resip/dum/ServerSubscription.hxx"
+// #include "resip/stack/Headers.hxx"
+// #include "resip/dum/EventDispatcher.hxx"
+// #include "resip/dum/DialogSet.hxx"
+// #include "resip/dum/DumTimeout.hxx"
+// #include "resip/dum/HandleManager.hxx"
+// #include "resip/dum/Handles.hxx"
+// #include "resip/dum/MergedRequestKey.hxx"
+// #include "resip/dum/RegistrationPersistenceManager.hxx"
+// #include "resip/dum/EncryptionManager.hxx"
+// #include "resip/dum/ServerSubscription.hxx"
+// #include "resip/stack/SipStack.hxx"
+// #include "resip/dum/DumFeature.hxx"
+// #include "resip/dum/DumFeatureChain.hxx"
+// #include "resip/dum/DumFeatureMessage.hxx"
+// #include "resip/dum/TargetCommand.hxx"
+// #include "resip/dum/ClientSubscriptionFunctor.hxx"
+// #include "resip/dum/ServerSubscriptionFunctor.hxx"
+
+#include <memory>
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
-#include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
-#include "resip/dum/DumFeature.hxx"
-#include "resip/dum/DumFeatureChain.hxx"
-#include "resip/dum/DumFeatureMessage.hxx"
-#include "resip/dum/TargetCommand.hxx"
-#include "resip/dum/ClientSubscriptionFunctor.hxx"
-#include "resip/dum/ServerSubscriptionFunctor.hxx"
 
 namespace resip 
 {
+
+class Data;
+class SipStack;
 
 class PrdManager : public TransactionUser
 {
@@ -48,30 +53,26 @@ class PrdManager : public TransactionUser
       PrdManager(SipStack& stack, bool createDefaultFeatures=false);
       virtual ~PrdManager();
 
+      void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       virtual void onDumCanBeDeleted()=0;
+
+      // ?jf? Is this really changeable or should it be passed into the constructor
+      void setMasterProfile(const SharedPtr<MasterProfile>& masterProfile);
+      SharedPtr<MasterProfile> getMasterProfile();
+      SharedPtr<UserProfile> getMasterUserProfile();
+
+      SipStack& getSipStack();
 
       /** Give a prd implementation to the manager. The returned value
           is the input wrapped in a shared pointer. */
       SharedPtr<T> manage(std::auto_ptr<T> prd);
 
+      /// Note:  Implementations of Postable must delete the message passed via post
+      // !jf! this should always be done in the constructor/destructor of PrdManager
+      //void registerForConnectionTermination(Postable*);
+      //void unRegisterForConnectionTermination(Postable*);
 
       // !jf! removed the MessageInterceptor
-
-      // !jf! rethink these things
-      void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
-      void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
-      void forceShutdown(DumShutdownHandler*);
-
-      SipStack& getSipStack();
-
-      void setMasterProfile(const SharedPtr<MasterProfile>& masterProfile);
-      SharedPtr<MasterProfile>& getMasterProfile();
-      SharedPtr<UserProfile>& getMasterUserProfile();
-
-      /// Note:  Implementations of Postable must delete the message passed via post
-      void registerForConnectionTermination(Postable*);
-      void unRegisterForConnectionTermination(Postable*);
-
       // ?jf? keepalive manager 
       // ?jf? redirect manager as feature
       // ?jf? client auth manager as feature
@@ -132,6 +133,40 @@ class PrdManager : public TransactionUser
       void sendResponse(const SipMessage& response);
 
       // !jf! sending to outbound proxy becomes a feature
+
+   private:
+      SipStack& mStack;
+      typedef enum 
+      {
+         Running,
+         ShutdownRequested, // while ending usages
+         RemovingTransactionUser, // while removing TU from stack
+         Shutdown,  // after TU has been removed from stack
+         Destroying // while calling destructor
+      } ShutdownState;
+      ShutdownState mShutdownState;
+
+      SharedPtr<MasterProfile> mMasterProfile;
+      //bool mIsDefaultServerReferHandler;
+
+      typedef std::set<MergedRequestKey> MergedRequests;
+      MergedRequests mMergedRequests;
+            
+      typedef std::map<Data, DialogSet*> CancelMap;
+      CancelMap mCancelMap;
+
+      typedef std::map<PrdId, Prd*> PrdMap;
+      PrdMap mPrdMap;
+      
+      //std::auto_ptr<RedirectManager>   mRedirectManager;
+      //std::auto_ptr<ClientAuthManager> mClientAuthManager;
+      //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
+
+      ServerPublicationManager mServerPublicationManager;
+      ServerRegistrationManager mServerRegistrationManager;
+      ServerSubscriptionManager mServerSubscriptionManager;
+
+      EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };
 
 }
@@ -148,87 +183,15 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool validateAccept(const SipMessage& request);
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
-
       void processPublish(const SipMessage& publish);
-
       void removeDialogSet(const DialogSetId& );      
-
       bool checkEventPackage(const SipMessage& request);
-
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
-
       void incomingProcess(std::auto_ptr<Message> msg);
       void outgoingProcess(std::auto_ptr<Message> msg);
-
-
       void requestMergedRequestRemoval(const MergedRequestKey&);
       void removeMergedRequest(const MergedRequestKey&);
-
-      typedef std::set<MergedRequestKey> MergedRequests;
-      MergedRequests mMergedRequests;
-            
-      typedef std::map<Data, DialogSet*> CancelMap;
-      CancelMap mCancelMap;
-      
-      typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
-      DialogSetMap mDialogSetMap;
-
-      SharedPtr<MasterProfile> mMasterProfile;
-      SharedPtr<UserProfile> mMasterUserProfile;
-      std::auto_ptr<RedirectManager>   mRedirectManager;
-      std::auto_ptr<ClientAuthManager> mClientAuthManager;
-      //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
-    
-      InviteSessionHandler* mInviteSessionHandler;
-      ClientRegistrationHandler* mClientRegistrationHandler;
-      ServerRegistrationHandler* mServerRegistrationHandler;      
-      RedirectHandler* mRedirectHandler;
-      DialogSetHandler* mDialogSetHandler;      
-
-      RegistrationPersistenceManager *mRegistrationPersistenceManager;
-
-	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
-
-      std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
-      std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
-      std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
-      std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
-      std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
-      std::auto_ptr<KeepAliveManager> mKeepAliveManager;
-      bool mIsDefaultServerReferHandler;
-
-      ClientPagerMessageHandler* mClientPagerMessageHandler;
-      ServerPagerMessageHandler* mServerPagerMessageHandler;
-
-      std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
-
-      SipStack& mStack;
-      DumShutdownHandler* mDumShutdownHandler;
-      typedef enum 
-      {
-         Running,
-         ShutdownRequested, // while ending usages
-         RemovingTransactionUser, // while removing TU from stack
-         Shutdown,  // after TU has been removed from stack
-         Destroying // while calling destructor
-      } ShutdownState;
-      ShutdownState mShutdownState;
-
-      // from ETag -> ServerPublication
-      typedef std::map<Data, ServerPublication*> ServerPublications;
-      ServerPublications mServerPublications;
-      typedef std::map<Data, SipMessage*> RequiresCerts;
-      RequiresCerts mRequiresCerts;      
-      // from Event-Type+document-aor -> ServerSubscription
-      // Managed by ServerSubscription
-      typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
-      ServerSubscriptions mServerSubscriptions;
-
-      IncomingTarget* mIncomingTarget;
-      OutgoingTarget* mOutgoingTarget;
-
-      EventDispatcher<ConnectionTerminated> mConnectionTerminatedEventDispatcher;
 };
 
 }
