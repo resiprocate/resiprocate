@@ -52,15 +52,12 @@ PrdManager::requestShutdown()
    mStack.unregisterTransactionUser(*this);
 }
 
-
 const Data& 
 PrdManager::name() const
 {
    static Data n("PrdManager");
    return n;
 }
-
-
 
 SipStack& 
 PrdManager::getSipStack()
@@ -88,16 +85,10 @@ PrdManager::getMasterProfile()
 }
 
 void 
-PrdManager::post(std::auto_ptr<PrdCommand>, Postable& postable, unsigned long timeMs)
+PrdManager::post(std::auto_ptr<PrdCommand> cmd, Postable& postable, unsigned long timeMs)
 {
-}
-
-
-
-SharedPtr<T> 
-PrdManager::manage(std::auto_ptr<T> prd)
-{
-   mFifo.post(new ManagePrdManagerCommand(*this, SharedPtr<Prd>(prd.release())));
+   RussianDollPrdManagerCommand* rd = new RussianDollPrdManagerCommand(cmd, postable);
+   mStack.postMS(*(cmd->release()), timeMs, *this);
 }
 
 bool 
