@@ -11,16 +11,45 @@ class ClientPublication : public NonDialogPrd
    public:
       ClientPublication();
       virtual ~ClientPublication() {}
-      void send(SipMessage &);
+      virtual void send(SipMessage &);
+      virtual void end();
+
+      SipMessage& initialize(const NameAddr& target,
+                             const Contents& body,
+                             const Data& eventType,
+                             unsigned expiresSeconds);
+
+      const Data& getEventType() { return mEventType; }
+
+      //0 means the last value of Expires will be used.
+      void refresh(unsigned int expiration=0);
+      void update(const Contents* body);
+      const Contents* getContents() const { return mDocument; }
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+
 
    protected:
       virtual void protectedDispatch(SipMessage &);
       virtual void protectedDispatch(DumTimeout &);
+
+      virtual void onSuccess(SipMessage &msg);
+      virtual void onRemove(SipMessage &msg);
+      virtual void onFailure(SipMessage &msg);
+
+   private:
+      const Contents* mDocument;
+
+      bool mWaitingForResponse;
+      bool mPendingPublish;
+      Data mEventType;
+      int mTimerSeq; // expected timer seq (all < are stale)
 };
 
 }
 
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

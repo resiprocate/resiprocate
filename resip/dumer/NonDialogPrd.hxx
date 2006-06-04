@@ -11,7 +11,7 @@ class NonDialogPrd : public Prd
    public:
       NonDialogPrd();
       virtual ~NonDialogPrd() {}
-      void send(SipMessage &);
+      virtual void send(SipMessage &);
 
    protected:
       virtual void protectedDispatch(SipMessage &);
