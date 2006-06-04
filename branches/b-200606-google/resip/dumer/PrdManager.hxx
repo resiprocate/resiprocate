@@ -99,6 +99,8 @@ class PrdManager : public TransactionUser
                                int responseCode, 
                                const Data& reason = Data::Empty) const;
 
+      // returns a usage or sends an error response
+      static std::auto_ptr<DialogUsage> createDialogUsage(const SipMessage& message);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
