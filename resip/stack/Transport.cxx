@@ -217,8 +217,11 @@ Transport::makeFailedResponse(const SipMessage& msg,
                               int responseCode,
                               const char * warning)
 {
-  if (msg.isResponse()) return;
-
+  if (msg.isResponse()) 
+  {
+     return;
+  }
+  
   const Tuple& dest = msg.getSource();
 
   std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg, 
