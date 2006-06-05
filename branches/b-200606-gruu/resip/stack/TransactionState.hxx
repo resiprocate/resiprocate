@@ -2,123 +2,38 @@
 #define RESIP_TRANSACTIONSTATE_HXX
 
 #include <iosfwd>
-#include "rutil/dns/DnsHandler.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 
 namespace resip
 {
 
-class DnsResult;
 class TransactionMessage;
-class SipMessage;
 class TransactionMap;
 class TransactionController;
 class TransactionUser;
 
-class TransactionState : public DnsHandler
+class TransactionState
 {
    public:
       RESIP_HeapCount(TransactionState);
       static void process(TransactionController& controller); 
       ~TransactionState();
      
-   private:
-      typedef enum 
-      {
-         ClientNonInvite,
-         ClientInvite,
-         ServerNonInvite,
-         ServerInvite,
-         ClientStale,
-         ServerStale,
-         Stateless  // may not be needed
-      } Machine;
-      
-      typedef enum 
-      {
-         Calling,
-         Trying,
-         Proceeding,
-         Completed,
-         Confirmed,
-         Terminated,
-         Bogus
-      } State;
-
+   protected:
       TransactionState(TransactionController& controller, 
-                       Machine m, 
-                       State s, 
                        const Data& tid, 
                        TransactionUser* tu=0);
-      
-      void rewriteRequest(const Uri& rewrite);
-      void handle(DnsResult*);
-
-      void processStateless(TransactionMessage* msg);
-      void processClientNonInvite(TransactionMessage* msg);
-      void processClientInvite(TransactionMessage* msg);
-      void processServerNonInvite(TransactionMessage* msg);
-      void processServerInvite(TransactionMessage* msg);
-      void processClientStale(TransactionMessage* msg);
-      void processServerStale(TransactionMessage* msg);
-      void processTransportFailure(TransactionMessage* failure);
-      void processNoDnsResults();
-      void processReliability(TransportType type);
-      
-      void add(const Data& tid);
-      void erase(const Data& tid);
-      
-   private:
-      bool isRequest(TransactionMessage* msg) const;
-      bool isInvite(TransactionMessage* msg) const;
-      bool isTimer(TransactionMessage* msg) const;
-      bool isResponse(TransactionMessage* msg, int lower=0, int upper=699) const;
-      bool isFromTU(TransactionMessage* msg) const;
-      bool isFromWire(TransactionMessage* msg) const;
-      bool isTransportError(TransactionMessage* msg) const;
-      bool isSentReliable(TransactionMessage* msg) const;
-      bool isSentUnreliable(TransactionMessage* msg) const;
-      bool isReliabilityIndication(TransactionMessage* msg) const;
-      bool isSentIndication(TransactionMessage* msg) const;
-      void sendToTU(TransactionMessage* msg) const;
+                  
+      virtual bool isTimer(TransactionMessage* msg) const;
+      virtual bool isTransportError(TransactionMessage* msg) const;
       static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
-      void sendToWire(TransactionMessage* msg, bool retransmit=false);
-      SipMessage* make100(SipMessage* request) const;
-      void terminateClientTransaction(const Data& tid); 
-      void terminateServerTransaction(const Data& tid); 
-      const Data& tid(SipMessage* sip) const;
-      
-      static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       
       TransactionController& mController;
-      
-      Machine mMachine;
-      State mState;
-      bool mIsCancel;
-      
-      // Indicates that the message has been sent with a reliable protocol. Set
-      // by the TransportSelector
-      bool mIsReliable;
-
-      // !rk! The contract for this variable needs to be defined.
-      SipMessage* mMsgToRetransmit;
-
-      // Handle to the dns results queried by the TransportSelector
-      DnsResult* mDnsResult;
-
-      // current selection from the DnsResult. e.g. it is important to send the
-      // CANCEL to exactly the same tuple as the original INVITE went to. 
-      Tuple mTarget; 
-      Tuple mResponseTarget; // used to reply to requests
-
+            
       Data mId;
-      Data mToTag; // for failure responses on ServerInviteTransaction 
       TransactionUser* mTransactionUser;
-      TransportFailure::FailureReason mFailureReason;      
 
-      static unsigned long StatelessIdCounter;
-      
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;
 };

@@ -34,7 +34,7 @@ class StatisticsManager : public StatisticsMessage::Payload
       void setInterval(unsigned long intvSecs);
 
    private:
-      friend class TransactionState;
+      friend class SipTransactionState;
       bool sent(SipMessage* msg, bool retrans);
       bool received(SipMessage* msg);
 

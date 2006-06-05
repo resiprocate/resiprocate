@@ -185,7 +185,7 @@ class SipStack
           @param dest Destination to sent from and can also specify interface to
           send from 
       */
-      void sendSendTest(const Tuple& dest, TransactionUser* tu=0);
+      void sendStunTest(const Tuple& dest, TransactionUser* tu=0);
       
       /** this is only if you want to send to a destination not in the route. You
           probably don't want to use it. */
@@ -505,6 +505,8 @@ class SipStack
       friend class TestDnsResolver;
       friend class TestFSM;
       friend class TransactionState;
+      friend class SipTransactionState;
+      friend class StunTransactionState;
       friend class TransactionController;
       friend class TuSelector;
 };
