@@ -72,8 +72,7 @@ StunMessage::cleanUp()
 const Data& 
 StunMessage::getTransactionId() const
 {
-   // TODO return Stun Tid
-   return Data::Empty;
+   return mTransactionId;
 }
 
 bool StunMessage::parse()
@@ -109,7 +108,11 @@ bool StunMessage::parse()
          }
       }
    }
-   if(success) mParsed=true;
+   if(success)
+   {
+      mTransactionId = Data((const char*)&mStunMessageStruct.msgHdr.id, sizeof(mStunMessageStruct.msgHdr.id));
+      mParsed=true;
+   }
 
    return success;
 }
