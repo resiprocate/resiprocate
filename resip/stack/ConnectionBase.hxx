@@ -78,6 +78,8 @@ class ConnectionBase
       UInt64 mLastUsed;
       State mState;
       MsgHeaderScanner mMsgHeaderScanner;
+
+      int mBytesNeededForMessage;
 };
 
 std::ostream& 
