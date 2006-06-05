@@ -11,11 +11,19 @@ class PrdServerTransaction : public NonDialogPrd
    public:
       PrdServerTransaction();
       virtual ~PrdServerTransaction() {}
-      void send(SipMessage &);
+      virtual void send();
+      virtual void end();
+
+      SipMessage& accept(int statusCode = 200);
+      SipMessage& reject(int statusCode);
+
 
    protected:
       virtual void protectedDispatch(SipMessage &);
       virtual void protectedDispatch(DumTimeout &);
+
+   private:
+      virtual void onReceivedRequest(SipMessage& msg)=0;
 };
 
 }
