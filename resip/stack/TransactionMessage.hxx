@@ -14,6 +14,8 @@ class TransactionMessage : public Message
    public:
       RESIP_HeapCount(TransactionMessage);
 
+      TransactionMessage& operator=(const TransactionMessage& rhs);
+
       virtual const Data& getTransactionId() const=0; 
 
       // indicates this message is associated with a Client Transaction for the
@@ -55,6 +57,11 @@ class TransactionMessage : public Message
       TransactionMessage(const Transport* fromWire); 
       TransactionMessage(); 
       
+      // !jf!
+      const Transport* mTransport;
+
+      UInt64 mCreatedTime;
+
       // For messages received from the wire, this indicates where it came
       // from. Can be used to get to the Transport and/or reliable Connection
       Tuple mSource;

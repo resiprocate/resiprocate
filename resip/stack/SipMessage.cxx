@@ -27,12 +27,10 @@ using namespace std;
 
 SipMessage::SipMessage(const Transport* fromWire)
    : TransactionMessage(fromWire), // mIsExternal(fromWire != 0),
-     mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
      mRFC2543TransactionId(),
-     mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
      mTlsDomain(Data::Empty)
 {
@@ -46,7 +44,6 @@ SipMessage::SipMessage(const SipMessage& from)
    : mStartLine(0),
      mContentsHfv(0),
      mContents(0),
-     mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -69,17 +66,12 @@ SipMessage::operator=(const SipMessage& rhs)
    if (this != &rhs)
    {
       this->cleanUp();
+      TransactionMessage::operator=(rhs);
 
-      mIsExternal = rhs.mIsExternal;
-      mTransport = rhs.mTransport;
-      mSource = rhs.mSource;
-      mDestination = rhs.mDestination;
       mStartLine = 0;
       mContentsHfv = 0;
       mContents = 0;
       mRFC2543TransactionId = rhs.mRFC2543TransactionId;
-      mRequest = rhs.mRequest;
-      mResponse = rhs.mResponse;
       mForceTarget = 0;
       mTlsDomain = rhs.mTlsDomain;
       
