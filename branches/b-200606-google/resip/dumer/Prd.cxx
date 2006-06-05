@@ -97,7 +97,15 @@ Prd::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodType
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "Prd::makeInitialRequest: " << mLastRequest);
+   DebugLog(<< "Prd::makeInitialRequest: " << mLastRequest);
+}
+
+SharedPtr<Prd>
+Prd::manage(PrdManager* prdManager) 
+{
+   mSelf = SharedPtr<Prd>(this);
+   setPrdManager(prdManager);
+   return mSelf;
 }
 
 void
@@ -108,6 +116,27 @@ Prd::makeResponse(SipMessage &response,
 {
    assert(request.isRequest());
    Helper::makeResponse(response, request, responseCode, reason);
+}
+
+void
+Prd::setPrdManager(PrdManager* prdManager)
+{
+   assert(mPrdManager == 0);
+   mPrdManager = prdManager;
+}
+
+void
+Prd::unmanage() 
+{
+   mPrdManager.unmanage(*this);
+   // may delete this
+   mSelf.reset();
+}
+
+Postable& 
+Prd::getPostable() const
+{
+   return mPostable;
 }
 
 /* ====================================================================

@@ -9,10 +9,9 @@ namespace resip
 class Prd
 {
    public:
-      Prd(SharedPtr<UserProfile>);          
+      Prd(Postable& postable, SharedPtr<UserProfile>);
       virtual ~Prd()=0;
 
-      virtual void send(SipMessage &);
       virtual void end()=0;
       void processFeatures();
 
@@ -42,17 +41,30 @@ class Prd
       void onTransactionTerminated(std::auto_ptr<TransactionTerminated>) {;}
       void onConnectionTerminated(std::auto_ptr<ConnectionTerminated>) {;}
 
+      Postable& getPostable() const;
+      
    protected:
       virtual void protectedDispatch(std::auto_ptr<SipMessage>) = 0;
       virtual void protectedDispatch(std::auto_ptr<DumTimeout>) = 0;
 
       void unmanage() { mPrdManager->unmanage(*this); }
 
+      virtual void sendInternal(SipMessage &);
+
+      SipMessage mLastRequest;
+
       SharedPtr<UserProfile> mUserProfile;
       PrdManager* mPrdManager;
 
    private:
+      friend class PrdManager;
+      Postable& mPostable;
+      // called by PrdManager
+      SharedPtr<Prd> manage(PrdManager* prdManager);
 
+      void setPrdManager(PrdManager* prdManager);
+      void SharedPtr<Prd> mSelf;
+      
       /**
         List of pending feature chains, keyed by TransactionId
         @todo Feature design is not yet complete.
