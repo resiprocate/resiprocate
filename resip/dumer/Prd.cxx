@@ -1,9 +1,12 @@
 #include "Prd.hxx"
 
+// !dlb! need to set the Prd id when created from SipMessage
+
 using namespace resip;
 
 Prd::Prd(PrdManager &prdManager, SharedPtr<UserProfile> userProfile)
-  : mPrdManager(prdManager),
+   : mId(Data::Empty, Data::Empt),
+     mPrdManager(prdManager),
     mUserProfile(userProfile),
     mIsDead(false)
 {
@@ -131,6 +134,15 @@ Prd::unmanage()
    mPrdManager.unmanage(*this);
    // may delete this
    mSelf.reset();
+}
+
+PrdId
+Prd::getPrdId() const 
+{
+   assert(!mId.getCallId().empty());
+   asert(!mId.getLocalTag().empty());
+
+   return mId;
 }
 
 Postable& 
