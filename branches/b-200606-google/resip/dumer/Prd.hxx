@@ -9,7 +9,7 @@ namespace resip
 class Prd
 {
    public:
-      Prd(PrdManager &, SharedPtr<UserProfile>);          
+      Prd(SharedPtr<UserProfile>);          
       virtual ~Prd()=0;
 
       virtual void send(SipMessage &);
@@ -34,20 +34,20 @@ class Prd
 
 
       /* Callbacks Invoked by PrdCommands ******************************/
-      void dispatch(SipMessage &m) { protectedDispatch(m); }
-      void dispatch(DumTimeout &t) { protectedDispatch(t); }
+      void dispatch(std::auto_ptr<SipMessage> m) { protectedDispatch(m); }
+      void dispatch(std::auto_ptr<DumTimeout> t) { protectedDispatch(t); }
       void onTransactionTerminated(std::auto_ptr<TransactionTerminated>) {;}
       void onConnectionTerminated(std::auto_ptr<ConnectionTerminated>) {;}
 
    protected:
-      virtual void protectedDispatch(SipMessage&) = 0;
-      virtual void protectedDispatch(DumTimeout&) = 0;
+      virtual void protectedDispatch(std::auto_ptr<SipMessage>) = 0;
+      virtual void protectedDispatch(std::auto_ptr<DumTimeout>) = 0;
 
-      void unmanage();
+      void unmanage() { mPrdManager->unmanage(*this); }
 
       SipMessage mLastRequest;
       SharedPtr<UserProfile> mUserProfile;
-      PrdManager& mPrdManager;
+      PrdManager* mPrdManager;
 
    private:
 
