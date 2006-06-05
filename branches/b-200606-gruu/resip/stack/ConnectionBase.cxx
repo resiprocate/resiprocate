@@ -135,12 +135,43 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
 
+         mState = ReadingStun;
+
+         assert (bytesRead >= 4 ); // Need the first 4 bytes to figure out the length
+  
+         char h = *(mBuffer + mBufferPos+2);
+         char l = *(mBuffer + mBufferPos+3);
+         int msgLen = h<<8 + l;
+
+         mBytesNeededForMessage = msgLen+20;
+         
          // Fall through to the next case.
       }
       case ReadingStun:
       {
-         assert(0); // TODO 
+         // TODO - there may be bug in memory mangement here 
+
+         if ( bytesRead >= mBytesNeededForMessage )
+         {
+            mMessage->addBuffer(mBuffer, mBytesNeededForMessage);
+
+            mBufferPos += mBytesNeededForMessage;
+            bytesRead -= mBytesNeededForMessage;
+            mBytesNeededForMessage = 0;
+         }
          
+         if (bytesRead)
+         {
+            mState = NewMessage;
+            goto start;
+         }
+         else
+         {
+            delete [] mBuffer;
+            mBuffer = 0;
+         }
+
+         mState = NewMessage;
          break;
       }
       
