@@ -10,11 +10,11 @@ using namespace std;
 PrdManager::PrdManager(SipStack& stack, 
                        SharedPtr<MasterProfile> profile, 
                        bool createDefaultFeatures) : 
+   TransactionUser(RegisterForTransactionTermination) // !jf! conn term
    mStack(stack),
    mMasterProfile(profile)
 {
    mStack.registerTransactionUser(*this);
-   
 }
 
 
@@ -148,6 +148,446 @@ PrdManager::internalProcess(std::auto_ptr<Message> msg)
       }
       return;
    }
+
+   TransactionTerminated* tterm = dynamic_cast<TransactionTerminated*>(msg.get());
+   if (tterm)
+   {
+      if (!tterm->isClientTransaction())
+      {
+         mCancelMap.erase(tterm->getTransactionId());
+         mMergedRequestsByTransaction.erase(tterm->getTransactionId());
+      }
+   }
+   
+   // !jf! run the incoming features here
    
    incomingProcess(msg);
+}
+
+void 
+PrdManager::incomingProcess(std::auto_ptr<Message> msg)
+{
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+   if (sipMsg)
+   {
+      if (sipMsg->isRequest())
+      {
+         // Validate Request URI
+         if( !validateRequestURI(*sipMsg) )
+         {
+            DebugLog (<< "Failed RequestURI validation " << *sipMsg);
+            return;
+         }
+
+         // Continue validation on all requests, except ACK and CANCEL
+         if(sipMsg->header(h_RequestLine).method() != ACK &&
+            sipMsg->header(h_RequestLine).method() != CANCEL)
+         {
+            if( !validateRequiredOptions(*sipMsg) )
+            {
+               DebugLog (<< "Failed required options validation " << *sipMsg);
+               return;
+            }
+            if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
+            {
+               DebugLog (<< "Failed content validation " << *sipMsg);
+               return;
+            }
+            if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
+            {
+               DebugLog (<< "Failed accept validation " << *sipMsg);
+               return;
+            }
+         }
+
+         if (!request.header(h_To).exists(p_tag) && mergeRequest(*sipMsg) )
+         {
+            InfoLog (<< "Merged request: " << *sipMsg);
+            return;
+         }
+         processRequest(*sipMsg);
+      }
+      else
+      {
+         processResponse(*sipMsg);
+      }
+   }
+   catch(BaseException& e)
+   {
+      //unparseable, bad 403 w/ 2543 trans it from FWD, etc
+      ErrLog(<<"Illegal message rejected: " << e.getMessage());
+   }
+}
+
+
+void
+PrdManager::processRequest(const SipMessage& request)
+{
+   DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
+
+   if (mShutdownState != Running && mShutdownState != ShutdownRequested)
+   {
+      WarningLog (<< "Ignoring a request since we are shutting down " << request.brief());
+
+      SipMessage failure;
+      makeResponse(failure, request, 480, "UAS is shutting down");
+      sendResponse(failure);
+      return;
+   }
+
+   switch (request.header(h_RequestLine).method())
+   {
+      case PUBLISH:
+         processPublish(request);
+         return;
+         
+      case REGISTER:
+         
+         return;
+         
+   }
+   
+   if (request.header(h_RequestLine).method() == PUBLISH)
+   {
+      processPublish(request);
+      return;
+   }
+
+   bool toTag = request.header(h_To).exists(p_tag);
+   if(request.header(h_RequestLine).getMethod() == REGISTER && toTag && getMasterProfile()->allowBadRegistrationEnabled())
+   {
+       toTag = false;
+   }
+
+   assert(mAppDialogSetFactory.get());
+   // !jf! note, the logic was reversed during ye great merge of March of Ought 5
+   if (toTag ||
+       findDialogSet(DialogSetId(request)))
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         case REGISTER:
+         {
+            SipMessage failure;
+            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
+            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+            sendResponse(failure);
+            break;
+         }
+
+         default:
+         {
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
+            {
+               if (request.header(h_RequestLine).method() != ACK)
+               {
+                  SipMessage failure;
+                  makeResponse(failure, request, 481);
+                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
+                  sendResponse(failure);
+               }
+               else
+               {
+                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());
+               }
+            }
+            else
+            {
+               InfoLog (<< "Handling in-dialog request: " << request.brief());
+               ds->dispatch(request);
+            }
+         }
+      }
+   }
+   else
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         case ACK:
+            DebugLog (<< "Discarding request: " << request.brief());
+            break;
+
+         case PRACK:
+         case BYE:
+         case UPDATE:
+         case INFO: // !rm! in an ideal world
+         {
+            SipMessage failure;
+            makeResponse(failure, request, 481);
+            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+            sendResponse(failure);
+            break;
+         }
+         case CANCEL:
+         {
+            // find the appropropriate ServerInvSession
+            CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+            if (i != mCancelMap.end())
+            {
+               i->second->dispatch(request);
+            }
+            else
+            {
+               InfoLog (<< "Received a CANCEL on a non-existent transaction ");
+               SipMessage failure;
+               makeResponse(failure, request, 481);
+               sendResponse(failure);
+            }
+            break;
+         }
+         case PUBLISH:
+            assert(false);
+         case SUBSCRIBE:
+            if (!checkEventPackage(request))
+            {
+               InfoLog (<< "Rejecting request (unsupported package) " 
+                        << request.brief());
+               return;
+            }
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
+         case INVITE:   // new INVITE
+         case REFER:    // out-of-dialog REFER
+            //case INFO :    // handle non-dialog (illegal) INFOs
+         case OPTIONS : // handle non-dialog OPTIONS
+         case MESSAGE :
+         case REGISTER:
+         {
+            {
+               DialogSetId id(request);
+               //cryptographically dangerous
+               assert(mDialogSetMap.find(id) == mDialogSetMap.end());
+            }
+            if (mDumShutdownHandler)
+            {
+               SipMessage forbidden;
+               makeResponse(forbidden, request, 480);
+               forbidden.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+               sendResponse(forbidden);
+               return;
+            }
+            try
+            {
+               DialogSet* dset =  new DialogSet(request, *this);
+
+               DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
+               AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+               appDs->mDialogSet = dset;
+               dset->setUserProfile(appDs->selectUASUserProfile(request));
+               dset->mAppDialogSet = appDs;
+
+               DebugLog ( << "************* Adding DialogSet ***************" );
+               DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+               mDialogSetMap[dset->getId()] = dset;
+               DebugLog ( << "After: Req" << Inserter(mDialogSetMap) );
+
+               dset->dispatch(request);
+            }
+            catch (BaseException& e)
+            {
+               SipMessage failure;
+               makeResponse(failure, request, 400, e.getMessage());
+               failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+               sendResponse(failure);
+            }
+
+            break;
+         }
+         case RESPONSE:
+         case SERVICE:
+            assert(false);
+            break;
+         case UNKNOWN:
+         case MAX_METHODS:
+            assert(false);
+            break;
+      }
+   }
+}
+
+void
+DialogUsageManager::processResponse(const SipMessage& response)
+{
+   if (response.header(h_CSeq).method() != CANCEL)
+   {
+      DialogSet* ds = findDialogSet(DialogSetId(response));
+
+      if (ds)
+      {
+         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         ds->dispatch(response);
+      }
+      else
+      {
+         InfoLog (<< "Throwing away stray response: " << response.brief());
+      }
+   }
+}
+
+
+bool
+DialogUsageManager::validateRequestURI(const SipMessage& request)
+{
+   // RFC3261 - 8.2.1
+   if (!getMasterProfile()->isMethodSupported(request.header(h_RequestLine).getMethod()))
+   {
+      InfoLog (<< "Received an unsupported method: " << request.brief());
+
+      SipMessage failure;
+      makeResponse(failure, request, 405);
+      failure.header(h_Allows) = getMasterProfile()->getAllowedMethods();
+      sendResponse(failure);
+
+      return false;
+   }
+
+   // RFC3261 - 8.2.2
+   if (!getMasterProfile()->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
+   {
+      InfoLog (<< "Received an unsupported scheme: " << request.brief());
+      SipMessage failure;
+      makeResponse(failure, request, 416);
+      sendResponse(failure);
+
+	  return false;
+   }
+
+   return true;
+}
+
+
+bool
+DialogUsageManager::validateRequiredOptions(const SipMessage& request)
+{
+   // RFC 2162 - 8.2.2
+   if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
+      (request.header(h_RequestLine).getMethod() != ACK ||
+       request.header(h_RequestLine).getMethod() != CANCEL))
+   {
+      Tokens unsupported = getMasterProfile()->getUnsupportedOptionsTags(request.header(h_Requires));
+	  if (!unsupported.empty())
+	  {
+	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 420);
+         failure.header(h_Unsupporteds) = unsupported;
+         sendResponse(failure);
+
+         return false;
+	  }
+   }
+
+   return true;
+}
+
+bool
+DialogUsageManager::validateContent(const SipMessage& request)
+{
+   // RFC3261 - 8.2.3
+   // Don't need to validate content headers if they are specified as optional in the content-disposition
+   if (!(request.exists(h_ContentDisposition) &&
+	     request.header(h_ContentDisposition).exists(p_handling) &&
+	     isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
+   {
+	  if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), request.header(h_ContentType)))
+      {
+         InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentType) << " for " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
+         sendResponse(failure);
+
+         return false;
+      }
+
+	  if (request.exists(h_ContentEncoding) && !getMasterProfile()->isContentEncodingSupported(request.header(h_ContentEncoding)))
+      {
+         InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentEncoding) << " for " << request.brief());
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_AcceptEncodings) = getMasterProfile()->getSupportedEncodings();
+         sendResponse(failure);
+
+         return false;
+      }
+
+      if (getMasterProfile()->validateContentLanguageEnabled() &&
+          request.exists(h_ContentLanguages) && !getMasterProfile()->isLanguageSupported(request.header(h_ContentLanguages)))
+      {
+         InfoLog (<< "Received an unsupported language: " << request.header(h_ContentLanguages).front() << " for " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+         sendResponse(failure);
+
+         return false;
+      }
+   }
+
+   return true;
+}
+
+bool
+DialogUsageManager::validateAccept(const SipMessage& request)
+{
+   MethodTypes method = request.header(h_RequestLine).method();
+   // checks for Accept to comply with SFTF test case 216
+   if(request.exists(h_Accepts))
+   {
+      for (Mimes::const_iterator i = request.header(h_Accepts).begin();
+           i != request.header(h_Accepts).end(); i++)
+      {
+         if (getMasterProfile()->isMimeTypeSupported(method, *i))
+         {
+            return true;  // Accept header passes validation if we support as least one of the mime types
+         }
+      }
+   }
+   // If no Accept header then application/sdp should be assumed for certain methods
+   else if(method == INVITE ||
+           method == OPTIONS ||
+           method == PRACK ||
+           method == UPDATE)
+   {
+      if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
+      {
+         return true;
+      }
+   }
+   else
+   {
+      // Other method without an Accept Header
+      return true;
+   }
+
+   InfoLog (<< "Received unsupported mime types in accept header: " << request.brief());
+   SipMessage failure;
+   makeResponse(failure, request, 406);
+   failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
+   sendResponse(failure);
+   return false;
+}
+
+
+bool
+PrdManager::mergeRequest(const SipMessage& request)
+{
+   assert(request.isRequest());
+   assert(request.isExternal());
+   assert(!request.header(h_To).exists(p_tag));
+
+   if (mMergedRequests.count(MergedRequestKey(request)))
+   {
+      SipMessage failure;
+      makeResponse(failure, request, 482, "Merged Request");
+      failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+      sendResponse(failure);
+      return true;
+   }
+
+   return false;
 }

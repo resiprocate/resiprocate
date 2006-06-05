@@ -9,6 +9,11 @@ Prd::Prd(PrdManager &prdManager, SharedPtr<UserProfile> userProfile)
 {
 }
 
+Prd::~Prd()
+{
+   mPrdManager.unmanage(*this);
+}
+
 void 
 Prd::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
