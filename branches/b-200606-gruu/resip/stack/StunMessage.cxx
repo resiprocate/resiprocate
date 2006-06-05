@@ -33,7 +33,7 @@ StunMessage::operator=(const StunMessage& rhs)
       TransactionMessage::operator=(rhs);
 
       mStunMessageStruct = rhs.mStunMessageStruct;
-      if(mStunMessageStruct.hasTurnData)
+      if(mStunMessageStruct.hasTurnData)  // .slg. should probably encapsulate this in StunMessageStruct as operator=
       {
          // Copy turn data
          mStunMessageStruct.turnData = new Data(*rhs.mStunMessageStruct.turnData);
@@ -45,10 +45,6 @@ StunMessage::operator=(const StunMessage& rhs)
 
 StunMessage::~StunMessage()
 {
-   if(mStunMessageStruct.hasTurnData)
-   {
-      delete mStunMessageStruct.turnData;
-   }
    cleanUp();
 }
 
@@ -111,6 +107,14 @@ bool StunMessage::parse()
    if(success)
    {
       mTransactionId = Data((const char*)&mStunMessageStruct.msgHdr.id, sizeof(mStunMessageStruct.msgHdr.id));
+      if(mStunMessageStruct.msgHdr.msgType & 0x0100)
+      {
+         mResponse = true;
+      }
+      else
+      {
+         mRequest = true;
+      }
       mParsed=true;
    }
 
