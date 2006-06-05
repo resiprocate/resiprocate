@@ -2,6 +2,7 @@
 #define RESIP_PAGE_MODE_PRD_HXX
 
 #include "NonDialogPrd.hxx"
+#include "resip/dumer/EncryptionLevel.hxx"
 
 namespace resip
 {
@@ -11,11 +12,44 @@ class PageModePrd : public NonDialogPrd
    public:
       PageModePrd();
       virtual ~PageModePrd() {}
-      void send(SipMessage &);
+
+      virtual void page(std::auto_ptr<Contents> contents, EncryptionLevel level=None);
+      virtual void send(SipMessage &msg);
+      virtual void end();
+
+      void initialize(const NameAddr& target);
 
    protected:
-      virtual void protectedDispatch(SipMessage &);
-      virtual void protectedDispatch(DumTimeout &);
+      virtual void protectedDispatch(std::auto_ptr<SipMessage>);
+      virtual void protectedDispatch(std::auto_ptr<DumTimeout>);
+
+   private:
+      /** UAS **/
+      SharedPtr<SipMessage> accept(int statusCode = 200);
+      SharedPtr<SipMessage> reject(int statusCode);
+      /** Callbacks **/
+      virtual void onMessageReceived();
+
+      /** UAC **/
+      void pageFirstMsgQueued ();
+      void clearMsgQueued ();
+      /** Callbacks **/
+      virtual void onSuccess();
+
+      struct Item
+      {
+         EncryptionLevel encryptionLevel;
+         Contents* contents;
+      };
+
+      typedef std::deque<Item> MsgQueue;
+      MsgQueue mOutboundMsgQueue;
+
+      SipMessage mResponse;
+
+      // disabled
+      PageModePrd(const PageModePrd&);
+      PageModePrd& operator=(const PageModePrd&);
 };
 
 }
