@@ -11,6 +11,9 @@ TARGET_LIBRARY = libresip
 TESTPROGRAMS =
 
 SRC = \
+    SipTransactionState.cxx \
+    StunTransactionState.cxx \
+    StunTimerMessage.cxx \
 	StunMessage.cxx \
 	TransactionMessage.cxx \
 	Auth.cxx \

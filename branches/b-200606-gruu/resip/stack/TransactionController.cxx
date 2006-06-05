@@ -76,7 +76,7 @@ TransactionController::process(FdSet& fdset)
       mTimers.process();
 
       while (mStateMacFifo.messageAvailable())
-      {
+      {         
          TransactionState::process(*this);
       }
    }

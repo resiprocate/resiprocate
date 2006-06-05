@@ -90,6 +90,8 @@ class TransactionController
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
+      friend class SipTransactionState;
+      friend class StunTransactionState;
       friend class TransportSelector;
 
       friend class TestDnsResolver;
