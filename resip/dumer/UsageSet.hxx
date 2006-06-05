@@ -1,11 +1,11 @@
-#ifndef RESIP_DialogUsage_hxx
-#define RESIP_DialogUsage_hxx
+#ifndef RESIP_UsageSet_hxx
+#define RESIP_UsageSet_hxx
 
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
 #include "rutil/WeakPtr.hxx"
 #include "resip/dum/UserProfile.hxx"
-#include "resip/dum/BaseUsage.hxx"
+#include "resip/dum/Prd.hxx"
 #include "resip/dum/Handles.hxx"
 #include <vector>
 
@@ -19,40 +19,36 @@ class DumTimeout;
 class SipMessage;
 class NameAddr;
 
-class DialogUsage : public UsageSet
+class UsageSet : public Prd
 {
    public:
-      virtual bool isForMe(const SipMessage& message) const = 0;
-
-      class Exception : public BaseException
-      {
-         public:
-            Exception(const Data& msg, const Data& file, int line);
-            virtual const char* name() const;
-      };
-
-      const DialogId& getDialogId() const;
-      const Data& getCallId() const;
-      SharedPtr<UserProfile> getUserProfile() const;
-
-      virtual void dispatch(const SipMessage& message);
+      // client
+      UsageSet(SharedPtr<UserProfile>);
+      // server
+      UsageSet(const SipMessage& message, SharedPtr<UserProfile>);
       
+      virtual void dispatch(const SipMessage& message);
+
    protected:
       friend class PrdManager;
 
-      virtual void send(SharedPtr<SipMessage> msg);      
+      UsageSet(SharedPtr<UserProfile> userProf);
+      virtual ~UsageSet();
 
-      DialogUsage();
-      virtual ~DialogUsage();
+      void addDialog(SharedPtr<Dialog> dialog) {
+         mDialogs.add(dialog);
+      }
 
-      virtual void dialogDestroyed(const SipMessage& msg) = 0;
-
-      void setDialog(SharedPtr<Dialog> dialog);
-
-      virtual void dispatchProgenitor(const SipMessage& message);
-
+      void addChild(SharedPtr<DialogUsage> child) {
+         mChildUsages.push_back(child);
+      }
+      
+      // return true is handled
+      bool UsageSet::dispatchFilter(const SipMessage& message);
    private:
-      SharedPtr<Dialogs> mDialog;
+
+      std::vector< WeakPtr<Dialogs> > mDialogs;
+      std::vector< SharedPtr<UsageSet> > mChildUsages;
 };
  
 }
