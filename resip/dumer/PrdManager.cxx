@@ -213,6 +213,8 @@ PrdManager::internalProcess(std::auto_ptr<Message> msg)
       return;
    }
 
+   std::auto_ptr<SipMessage>(static_cast<SipMessage>(msg.release()));
+   
    TransactionTerminated* tterm = dynamic_cast<TransactionTerminated*>(msg.get());
    if (tterm)
    {
@@ -231,8 +233,8 @@ PrdManager::internalProcess(std::auto_ptr<Message> msg)
 void 
 PrdManager::incomingProcess(std::auto_ptr<Message> msg)
 {
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-   if (sipMsg)
+   std::auto_ptr<SipMessage> sipMsg(dynamic_cast<SipMessage>(msg.release()));
+   if (sipMsg.get())
    {
       if (sipMsg->isRequest())
       {
@@ -269,11 +271,11 @@ PrdManager::incomingProcess(std::auto_ptr<Message> msg)
             InfoLog (<< "Merged request: " << *sipMsg);
             return;
          }
-         processRequest(*sipMsg);
+         processRequest(sipMsg);
       }
       else
       {
-         processResponse(*sipMsg);
+         processResponse(sipMsg);
       }
    }
    catch(BaseException& e)
@@ -285,45 +287,118 @@ PrdManager::incomingProcess(std::auto_ptr<Message> msg)
 
 
 void
-PrdManager::processRequest(const SipMessage& request)
+PrdManager::processRequest(std::auto_ptr<SipMessage> request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
 
    if (mShutdownState != Running && mShutdownState != ShutdownRequested)
    {
-      WarningLog (<< "Ignoring a request since we are shutting down " << request.brief());
+      WarningLog (<< "Ignoring a request since we are shutting down " << request->brief());
 
       SipMessage failure;
-      makeResponse(failure, request, 480, "UAS is shutting down");
+      makeResponse(failure, *request, 480, "UAS is shutting down");
       sendResponse(failure);
       return;
    }
+   
+   // CANCEL processing as well as handle requests that having matching Prd in
+   // the mPrdMap
+   {
+      PrdId id(*request);
+      if (request->header(h_RequestLine).getMethod() == CANCEL)
+      {
+         CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+         if (i != mCancelMap.end())
+         {
+            id = mPrdMap.find(i->second);
+         }
+         else
+         {
+            SipMessage failure;
+            makeResponse(failure, *request, 481, "No matching transaction for CANCEL");
+            sendResponse(failure);
+            return;
+         }
+      }
 
-   switch (request.header(h_RequestLine).method())
+      PrdMap::iterator target = mPrdMap.find(id);
+      if (target != mPrdMap.end())
+      {
+         SharedPtr<Prd> prd(target->second);
+         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+         target->first->post(cmd);
+         return;
+      }
+   }
+   
+   switch (request->header(h_RequestLine).method())
    {
       case PUBLISH:
-         processPublish(request);
+         processPublish(*request);
          return;
-         
-      case REGISTER:
 
+      case MESSAGE:
+      {
+         std::pair<Data,Data> id = std::make_pair(Data::from(request.header(h_RequestLine).uri()),
+                                                  request.header(h_From).uri().getAor());
+         
+         PageModePrdMap::iterator target = mPageModePrdMap.find(id);
+         if (target != mPageModePrdMap.end())
+         {
+            SharedPtr<Prd> prd(target->second);
+            SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+            target->first->post(cmd);
+         }
+         else
+         {
+            SharedPtr<Prd> prd = mPageModePrdFactory->create(request)->manage();
+            assert(prd->get());
+            SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+            prd->getPostable().post(cmd);
+         }
          return;
+      }
+      
+      case REGISTER:
+         SharedPtr<Prd> prd = mRegistrationFactory->create(request)->manage();
+         assert(prd->get());
+         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+         prd->getPostable().post(cmd);
+         return;
+
+      case INVITE:
+      case SUBSCRIBE:
+         // !jf! do something here
+         break;
+
+      case CANCEL:
+         assert(0);
+         break;
+         
+      case ACK:
+         // drop it on the floor since no matching Prd
+         break;
+         
+         
+      default:
+      {
+         SharedPtr<Prd> prd = mPrdServerTransactionFactory->create(request)->manage();
+         assert(prd->get());
+         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+         prd->getPostable().post(cmd);
+         return;
+      }
+
          
    }
    
-
-   bool toTag = request.header(h_To).exists(p_tag);
-   if(request.header(h_RequestLine).getMethod() == REGISTER && toTag && getMasterProfile()->allowBadRegistrationEnabled())
-   {
-       toTag = false;
-   }
 
    assert(mAppDialogSetFactory.get());
    // !jf! note, the logic was reversed during ye great merge of March of Ought 5
    if (toTag ||
        findDialogSet(DialogSetId(request)))
    {
-      switch (request.header(h_RequestLine).getMethod())
+      switch (request->header(h_RequestLine).getMethod())
       {
          case REGISTER:
          {
@@ -339,22 +414,22 @@ PrdManager::processRequest(const SipMessage& request)
             DialogSet* ds = findDialogSet(DialogSetId(request));
             if (ds == 0)
             {
-               if (request.header(h_RequestLine).method() != ACK)
+               if (request->header(h_RequestLine).method() != ACK)
                {
                   SipMessage failure;
                   makeResponse(failure, request, 481);
                   failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
+                  InfoLog (<< "Rejected request (which was in a dialog) " << request->brief());
                   sendResponse(failure);
                }
                else
                {
-                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());
+                  InfoLog (<< "ACK doesn't match any dialog" << request->brief());
                }
             }
             else
             {
-               InfoLog (<< "Handling in-dialog request: " << request.brief());
+               InfoLog (<< "Handling in-dialog request: " << request->brief());
                ds->dispatch(request);
             }
          }
@@ -362,10 +437,10 @@ PrdManager::processRequest(const SipMessage& request)
    }
    else
    {
-      switch (request.header(h_RequestLine).getMethod())
+      switch (request->header(h_RequestLine).getMethod())
       {
          case ACK:
-            DebugLog (<< "Discarding request: " << request.brief());
+            DebugLog (<< "Discarding request: " << request->brief());
             break;
 
          case PRACK:
@@ -382,7 +457,7 @@ PrdManager::processRequest(const SipMessage& request)
          case CANCEL:
          {
             // find the appropropriate ServerInvSession
-            CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+            CancelMap::iterator i = mCancelMap.find(request->getTransactionId());
             if (i != mCancelMap.end())
             {
                i->second->dispatch(request);
@@ -402,7 +477,7 @@ PrdManager::processRequest(const SipMessage& request)
             if (!checkEventPackage(request))
             {
                InfoLog (<< "Rejecting request (unsupported package) " 
-                        << request.brief());
+                        << request->brief());
                return;
             }
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
@@ -466,20 +541,20 @@ PrdManager::processRequest(const SipMessage& request)
 }
 
 void
-DialogUsageManager::processResponse(const SipMessage& response)
+DialogUsageManager::processResponse(std::auto_ptr<SipMessage> response)
 {
-   if (response.header(h_CSeq).method() != CANCEL)
+   if (response->header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
 
       if (ds)
       {
-         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         DebugLog ( << "DialogUsageManager::processResponse: " << response->brief());
          ds->dispatch(response);
       }
       else
       {
-         InfoLog (<< "Throwing away stray response: " << response.brief());
+         InfoLog (<< "Throwing away stray response: " << response->brief());
       }
    }
 }

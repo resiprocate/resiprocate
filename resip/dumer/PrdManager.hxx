@@ -163,6 +163,7 @@ class PrdManagerCore : public TransactionUser, public PrdManager
 
    private:
       // makes a proto response to a request
+      // change this to an auto_ptr
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
@@ -223,6 +224,7 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       typedef std::map<std::pair<Data,Data>, PrdTarget> PageModePrdMap;      
       PageModePrdMap mPageModePrdMap;
       
+      // Factories
       std::auto_ptr<InviteSessionFactory> mInviteSessionFactory;
 
       typedef std::map<Data,std::auto_ptr<ServerSubscriptionFactory> ServerSubscriptionFactoryMap;
