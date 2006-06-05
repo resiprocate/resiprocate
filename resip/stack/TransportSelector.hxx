@@ -25,6 +25,7 @@ class DnsHandler;
 class Message;
 class TransactionMessage;
 class SipMessage;
+class StunMessage;
 class TransactionController;
 class Security;
 
@@ -78,7 +79,9 @@ class TransportSelector
       
       /// Resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
-      
+
+      void transmit( StunMessage* msg, Tuple& target );
+
       unsigned int sumTransportFifoSizes() const;
 
       unsigned int getTimeTillNextProcessMS();

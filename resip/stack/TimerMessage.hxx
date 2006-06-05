@@ -25,7 +25,7 @@ class TimerMessage : public TransactionMessage
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& str) const;
       
-   private:
+   protected:
       Data mTransactionId;
       Timer::Type mType;
       unsigned long mDuration;

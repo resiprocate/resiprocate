@@ -32,6 +32,8 @@ class Message
    protected:
       friend class TuSelector;      
       friend class TransactionState;
+      friend class SipTransactionState;
+      friend class StunTransactionState;
       friend class SipStack;
       bool hasTransactionUser() const { return tu != 0; }
       void setTransactionUser(TransactionUser* t) { tu = t; }
