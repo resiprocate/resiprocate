@@ -40,8 +40,12 @@ class ConnectionBase
       enum State
       {
          NewMessage = 0,
-         ReadingHeaders,
-         PartialBody,
+         NewSipMessage,
+         ReadingSipHeaders,
+         PartialSipBody,
+         NewStunMessage,
+         ReadingStun,
+         NewCRLFMessage,
          MAX
       };
 	
@@ -65,7 +69,7 @@ class ConnectionBase
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
    private:
-      SipMessage* mMessage;
+      TransactionMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
       size_t mBufferSize;
