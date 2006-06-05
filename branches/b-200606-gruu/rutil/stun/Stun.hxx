@@ -167,81 +167,88 @@ enum StunHmacStatus
 };
 
 
-typedef struct
+struct StunMessageStruct
 {
-      StunMsgHdr msgHdr;
-	
-      bool hasMappedAddress;
-      StunAtrAddress4  mappedAddress;
-	
-      bool hasResponseAddress;
-      StunAtrAddress4  responseAddress;
-	
-      bool hasChangeRequest;
-      StunAtrChangeRequest changeRequest;
-	
-      bool hasSourceAddress;
-      StunAtrAddress4 sourceAddress;
-	
-      bool hasChangedAddress;
-      StunAtrAddress4 changedAddress;
-	
-      bool hasUsername;
-      StunAtrString username;
-	
-      bool hasPassword;
-      StunAtrString password;
-	
-      bool hasMessageIntegrity;
-      StunAtrIntegrity messageIntegrity;
-	
-      bool hasErrorCode;
-      StunAtrError errorCode;
-	
-      bool hasUnknownAttributes;
-      StunAtrUnknown unknownAttributes;
-	
-      bool hasReflectedFrom;
-      StunAtrAddress4 reflectedFrom;
+   StunMessageStruct() : hasTurnData(false) {}
 
-      bool hasXorMappedAddress;
-      StunAtrAddress4  xorMappedAddress;
-	
-      bool xorOnly;
+   ~StunMessageStruct()
+   {
+      if(hasTurnData) delete turnData;
+   }
 
-      bool hasServerName;
-      StunAtrString serverName;
-      
-      bool hasSecondaryAddress;
-      StunAtrAddress4 secondaryAddress;
+   StunMsgHdr msgHdr;
 
-      bool hasTurnLifetime;
-      UInt32 turnLifetime;
-      
-      bool hasTurnAlternateServer;
-      StunAtrAddress4 turnAlternateServer;
-      
-      bool hasTurnMagicCookie;
-      UInt32 turnMagicCookie;
-      
-      bool hasTurnBandwidth;
-      UInt32 turnBandwidth;
-      
-      bool hasTurnDestinationAddress;
-      StunAtrAddress4 turnDestinationAddress;
-      
-      bool hasTurnRemoteAddress;
-      StunAtrAddress4 turnRemoteAddress;
-      
-      bool hasTurnData;
-      resip::Data* turnData;
-      
-      //bool hasTurnNonce;
-      // turnNonce;
-      
-      //bool hasTurnRealm;
-      // turnRealm;
-} StunMessageStruct; 
+   bool hasMappedAddress;
+   StunAtrAddress4  mappedAddress;
+
+   bool hasResponseAddress;
+   StunAtrAddress4  responseAddress;
+
+   bool hasChangeRequest;
+   StunAtrChangeRequest changeRequest;
+
+   bool hasSourceAddress;
+   StunAtrAddress4 sourceAddress;
+
+   bool hasChangedAddress;
+   StunAtrAddress4 changedAddress;
+
+   bool hasUsername;
+   StunAtrString username;
+
+   bool hasPassword;
+   StunAtrString password;
+
+   bool hasMessageIntegrity;
+   StunAtrIntegrity messageIntegrity;
+
+   bool hasErrorCode;
+   StunAtrError errorCode;
+
+   bool hasUnknownAttributes;
+   StunAtrUnknown unknownAttributes;
+
+   bool hasReflectedFrom;
+   StunAtrAddress4 reflectedFrom;
+
+   bool hasXorMappedAddress;
+   StunAtrAddress4  xorMappedAddress;
+
+   bool xorOnly;
+
+   bool hasServerName;
+   StunAtrString serverName;
+
+   bool hasSecondaryAddress;
+   StunAtrAddress4 secondaryAddress;
+
+   bool hasTurnLifetime;
+   UInt32 turnLifetime;
+
+   bool hasTurnAlternateServer;
+   StunAtrAddress4 turnAlternateServer;
+
+   bool hasTurnMagicCookie;
+   UInt32 turnMagicCookie;
+
+   bool hasTurnBandwidth;
+   UInt32 turnBandwidth;
+
+   bool hasTurnDestinationAddress;
+   StunAtrAddress4 turnDestinationAddress;
+
+   bool hasTurnRemoteAddress;
+   StunAtrAddress4 turnRemoteAddress;
+
+   bool hasTurnData;
+   resip::Data* turnData;
+
+   //bool hasTurnNonce;
+   // turnNonce;
+
+   //bool hasTurnRealm;
+   // turnRealm;
+}; 
 
 
 // Define enum with different types of NAT 
