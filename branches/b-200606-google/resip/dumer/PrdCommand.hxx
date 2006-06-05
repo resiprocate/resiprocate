@@ -9,9 +9,9 @@ namespace resip
 
 class ConnectionTerminated;
 class DumTimeout;
+class PrdManager;
 class SipMessage;
 class TransactionTerminated;
-class SipStack;
 
 class PrdCommand
 {
@@ -30,7 +30,8 @@ class ConnectionTerminatedPrdCommand : public PrdCommand
       ConnectionTerminatedPrdCommand(
               SharedPtr<Prd> prd, 
               std::auto_ptr<ConnectionTerminated> msg)
-         : mPrd(prd), mConnectionTerminated(msg) { }
+         : PrdCommand(prd), 
+           mConnectionTerminated(msg) { }
 
       virtual void operator()() 
       { 
@@ -49,10 +50,12 @@ class ConnectionTerminatedPrdCommand : public PrdCommand
 class DumTimeoutPrdCommand : public PrdCommand
 {
    public:
-      DumTimeoutPrdCommand(
-              SharedPtr<Prd> prd, 
-              std::auto_ptr<DumTimeout> msg)
-         : mPrd(prd), mDumTimeout(msg) { }
+      DumTimeoutPrdCommand(SharedPtr<Prd> prd, 
+                           std::auto_ptr<DumTimeout> msg)
+         : Prd(prd), 
+           mDumTimeout(msg) 
+      { 
+      }
 
       virtual void operator()() 
       { 
@@ -71,12 +74,13 @@ class DumTimeoutPrdCommand : public PrdCommand
 class SipMessagePrdCommand : public PrdCommand
 {
    public:
-      SipMessagePrdCommand(
-              SharedPtr<Prd> prd, 
-              std::auto_ptr<SipMessage> msg,
-              SipStack &stack)
-         : mPrd(prd), mSipMessage(msg), mStack(mStack) { }
-
+      SipMessagePrdCommand(SharedPtr<Prd> prd, 
+                           std::auto_ptr<SipMessage> msg,
+                           PrdManager &manager)
+         : Prd(prd), 
+           mSipMessage(msg), 
+           mPrdManager(manager) {}
+      
       virtual void operator()() 
       { 
          SharedPtr<Ptr> prd(mPrd);
@@ -88,17 +92,19 @@ class SipMessagePrdCommand : public PrdCommand
 
    private:
       std::auto_ptr<SipMessage> mSipMessage;
-      SipStack &mStack;
+      PrdManager &mPrdManager;
 };
 
 
 class TransactionTerminatedPrdCommand : public PrdCommand
 {
    public:
-      TransactionTerminatedPrdCommand(
-              SharedPtr<Prd> prd, 
-              std::auto_ptr<TransactionTerminated> msg)
-         : mPrd(prd), mTransactionTerminated(msg) { }
+      TransactionTerminatedPrdCommand(SharedPtr<Prd> prd, 
+                                      std::auto_ptr<TransactionTerminated> msg)
+         : Prd(prd), 
+           mTransactionTerminated(msg)
+      { 
+      }
 
       virtual void operator()() 
       { 
