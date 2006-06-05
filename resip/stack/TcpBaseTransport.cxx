@@ -110,6 +110,8 @@ TcpBaseTransport::processListen(FdSet& fdset)
       createConnection(tuple, sock, true);
    }
 }
+
+
 /// @todo  only inspects the first element in ConnectionManager::getNextWrite(lame) 
 void
 TcpBaseTransport::processSomeWrites(FdSet& fdset)
@@ -129,6 +131,7 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
         delete curr;
    }
 }
+
 
 void
 TcpBaseTransport::processSomeReads(FdSet& fdset)
