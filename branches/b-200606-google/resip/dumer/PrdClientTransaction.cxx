@@ -1,60 +1,73 @@
-#if !defined(RESIP_PAGE_MODE_PRD_HXX)
-#define RESIP_PAGE_MODE_PRD_HXX
 
-#include "NonDialogPrd.hxx"
-#include "resip/dumer/EncryptionLevel.hxx"
+#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/dumer/PrdClientTransaction.hxx"
 
-namespace resip
+using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+PrdClientTransaction::PrdClientTransaction()
 {
-
-class PageModePrd : public NonDialogPrd
-{
-   public:
-      PageModePrd();
-      virtual ~PageModePrd() {}
-
-      virtual void page(std::auto_ptr<Contents> contents, EncryptionLevel level=None);
-      virtual void send(SipMessage &msg);
-      virtual void end();
-
-      void initialize(const NameAddr& target);
-
-   protected:
-      virtual void protectedDispatch(std::auto_ptr<SipMessage>);
-      virtual void protectedDispatch(std::auto_ptr<DumTimeout>);
-
-   private:
-      /** UAS **/
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
-      /** Callbacks **/
-      virtual void onMessageReceived()=0;
-
-      /** UAC **/
-      void pageFirstMsgQueued ();
-      void clearMsgQueued ();
-      /** Callbacks **/
-      virtual void onSuccess()=0;
-
-      struct Item
-      {
-         EncryptionLevel encryptionLevel;
-         Contents* contents;
-      };
-
-      typedef std::deque<Item> MsgQueue;
-      MsgQueue mOutboundMsgQueue;
-
-      SipMessage mResponse;
-
-      // disabled
-      PageModePrd(const PageModePrd&);
-      PageModePrd& operator=(const PageModePrd&);
-};
-
 }
 
-#endif
+ClientOutOfDialogReq::~ClientOutOfDialogReq()
+{
+}
+
+SipMessage &
+PrdClientTransaction::initialize(const NameAddr& target, const MethodTypes method)
+{
+   makeInitialRequest(target, method);
+
+   return mLastRequest;
+}
+
+void
+PrdClientTransaction::end()
+{
+   unmanage();
+}
+
+void 
+PrdClientTransaction::protectedDispatch(std::auto_ptr<SipMessage> msg)
+{
+	assert(msg->isResponse());
+    
+    if (msg->header(h_StatusLine).statusCode() >= 200)
+    {
+       if(msg->header(h_StatusLine).statusCode() >= 200 && msg->header(h_StatusLine).statusCode() < 300)
+       {
+          // Pass Response to Handler
+          DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+                     << getMethodName(msg->header(h_CSeq).method()) 
+                     << " method success response.");   
+          onSuccess(*msg);  
+       }
+       else
+       {
+          // Pass Response to Handler
+          DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+                   << getMethodName(msg->header(h_CSeq).method()) 
+                     << " method failure response.");   
+          onFailure(*msg);  
+       }
+         
+       unmanage();
+    }
+    else
+    {
+       // Wait for final response
+       DebugLog ( << "ClientOutOfDialogReq::dispatch - encountered provisional response" << msg->brief() );
+    }    
+}
+
+void 
+ClientOutOfDialogReq::protectedDispatch(std::auto_ptr<DumTimeout>)
+{
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -71,13 +84,14 @@ class PageModePrd : public NonDialogPrd
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
+
  *    distribution.
  * 
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
  *    software without prior written permission. For written
- *    permission, please contact vocal.org.
+ *    permission, please contact vocal@vovida.org.
  *
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
@@ -88,7 +102,7 @@ class PageModePrd : public NonDialogPrd
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
  * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
  * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF ,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
