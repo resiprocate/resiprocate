@@ -98,6 +98,14 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       virtual SharedPtr<MasterProfile> getMasterProfile();
       virtual void post(std::auto_ptr<PrdCommand>, Postable& postable, unsigned long timeMs=0); 
 
+      // factory methods my SIP method
+      void setInviteSessionFactory(std::auto_ptr<InviteSessionFactory> );
+      void setSubscriptionFactory(const Data& eventType, std::auto_ptr<ServerSubscriptionFactory> );
+      void setRegistrationFactory(std::auto_ptr<ServerRegistrationFactory> );
+      void setPublicationFactory(std::auto_ptr<ServerPublicationFactory> );
+      void setPrdServerTransactionFactory(MethodTypes method, std::auto_ptr<PrdServerTransactionFactory> );
+      void setPageModePrdFactory(std::auto_ptr<PageModePrdFactory>);
+
       /// Note:  Implementations of Postable must delete the message passed via post
       // !jf! this should always be done in the constructor/destructor of PrdManager
       //void registerForConnectionTermination(Postable*);
@@ -123,17 +131,7 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       //exposed so DumThread variants can be written
       Message* getNext(int ms) { return mFifo.getNext(ms); }
       bool messageAvailable(void) { return mFifo.messageAvailable(); }
-
-      // makes a proto response to a request
-      static void makeResponse(SipMessage& response, 
-                               const SipMessage& request, 
-                               int responseCode, 
-                               const Data& reason = Data::Empty) const;
-
-      // factory methods my SIP method
-      void setInviteProto(const InviteSession& protoType);
-      void setSusbscribeProto(const Data& event, const SubscribeSession& protoType);
-      
+    
       // returns a usage or sends an error response
       static std::auto_ptr<DialogUsage> createDialogUsage(const SipMessage& message);
 
@@ -165,9 +163,29 @@ class PrdManagerCore : public TransactionUser, public PrdManager
 
 
    private:
-      
-      // ?jf? do I need this? May call a callback to let the app adorn
+      // makes a proto response to a request
+      static void makeResponse(SipMessage& response, 
+                               const SipMessage& request, 
+                               int responseCode, 
+                               const Data& reason = Data::Empty) const;
       void sendResponse(const SipMessage& response);
+      void processRequest(const SipMessage& request);
+      void processResponse(const SipMessage& response);
+      bool validateRequestURI(const SipMessage& request);
+      bool validateRequiredOptions(const SipMessage& request);
+      bool validateContent(const SipMessage& request);
+      bool validateAccept(const SipMessage& request);
+      bool validateTo(const SipMessage& request);
+      bool mergeRequest(const SipMessage& request);
+      void processPublish(const SipMessage& publish);
+      void removeDialogSet(const DialogSetId& );      
+      bool checkEventPackage(const SipMessage& request);
+      bool queueForIdentityCheck(SipMessage* msg);
+      void processIdentityCheckResponse(const HttpGetMessage& msg);
+      void incomingProcess(std::auto_ptr<Message> msg);
+      void outgoingProcess(std::auto_ptr<Message> msg);
+      void requestMergedRequestRemoval(const MergedRequestKey&);
+      void removeMergedRequest(const MergedRequestKey&);
 
       // !jf! sending to outbound proxy becomes a feature
 
@@ -186,15 +204,33 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       SharedPtr<MasterProfile> mMasterProfile;
       //bool mIsDefaultServerReferHandler;
 
-      typedef std::set<MergedRequestKey> MergedRequests;
-      MergedRequests mMergedRequests;
+      // transaction id -> MergedRequestKey
+      std::map<Data,MergedRequestKey> mMergedRequestsByTransaction;
+      std::set<MergedRequestKey> mMergedRequests;
             
-      typedef std::map<Data, DialogSet*> CancelMap;
+      // transaction id -> PrdId
+      typedef std::map<Data, PrdId> CancelMap;
       CancelMap mCancelMap;
 
-      typedef std::map<PrdId, Prd*> PrdMap;
+      typedef std::pair<Postable*,WeakPtr<Prd> > PrdTarget;
+      
+      typedef std::map<PrdId, PrdTarget> PrdMap;
       PrdMap mPrdMap;
       
+      typedef std::map<Data,PrdTarget> PrdServerPublicationMap;
+      PrdServerPublicationMap mPrdServerPublicationMap;
+
+      // (localaor,remoteaor) -> PrdTarget
+      typedef std::map<std::pair<Data,Data>, PrdTarget> PageModePrdMap;      
+      PageModePrdMap mPageModePrdMap;
+      
+      std::auto_ptr<InviteSessionFactory> mInviteSessionFactory;
+      std::auto_ptr<ServerSubscriptionFactory> mSubscriptionFactory;
+      std::auto_ptr<RegistrationFactory> mRegistrationFactory;
+      std::auto_ptr<PublicationFactory> mPublicationFactory;
+      std::auto_ptr<PrdServerTransactionFactory> mPrdServerTransactionFactory;
+      std::auto_ptr<PageModePrdFactory> mPageModePrdFactory;
+
       //std::auto_ptr<RedirectManager>   mRedirectManager;
       //std::auto_ptr<ClientAuthManager> mClientAuthManager;
       //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
@@ -212,23 +248,6 @@ class PrdManagerCore : public TransactionUser, public PrdManager
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
    private:     
-      void processRequest(const SipMessage& request);
-      void processResponse(const SipMessage& response);
-      bool validateRequestURI(const SipMessage& request);
-      bool validateRequiredOptions(const SipMessage& request);
-      bool validateContent(const SipMessage& request);
-      bool validateAccept(const SipMessage& request);
-      bool validateTo(const SipMessage& request);
-      bool mergeRequest(const SipMessage& request);
-      void processPublish(const SipMessage& publish);
-      void removeDialogSet(const DialogSetId& );      
-      bool checkEventPackage(const SipMessage& request);
-      bool queueForIdentityCheck(SipMessage* msg);
-      void processIdentityCheckResponse(const HttpGetMessage& msg);
-      void incomingProcess(std::auto_ptr<Message> msg);
-      void outgoingProcess(std::auto_ptr<Message> msg);
-      void requestMergedRequestRemoval(const MergedRequestKey&);
-      void removeMergedRequest(const MergedRequestKey&);
 };
 #endif
 

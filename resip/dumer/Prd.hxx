@@ -10,7 +10,7 @@ class Prd
 {
    public:
       Prd(PrdManager &, SharedPtr<UserProfile>);          
-      virtual ~Prd() {}
+      virtual ~Prd()=0;
 
       virtual void send(SipMessage &);
       virtual void end()=0;
@@ -46,8 +46,8 @@ class Prd
       void unmanage();
 
       SipMessage mLastRequest;
-	   SharedPtr<UserProfile> mUserProfile;
-	   PrdManager& mPrdManager;
+      SharedPtr<UserProfile> mUserProfile;
+      PrdManager& mPrdManager;
 
    private:
 
