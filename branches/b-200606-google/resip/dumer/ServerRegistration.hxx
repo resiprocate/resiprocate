@@ -11,11 +11,38 @@ class ServerRegistration : public NonDialogPrd
    public:
       ServerRegistration();
       virtual ~ServerRegistration() {}
-      void send(SipMessage &);
+
+      /// Accept a SIP registration
+      void accept(std::vector<ContactRecord>& contacts, int statusCode = 200);
+
+      /// Accept a SIP registration
+      void accept(std::vector<ContactRecord>& contacts, 
+                  std::auto_ptr<SipMessage> ok);
+
+      /// Reject a SIP registration
+      void reject(int statusCode);
+
+      /// Called when "Contact: *" arrives with expires = 0
+      onRemoveAll(Data callId, int cseq) = 0;
+
+      /// Called when contacts are added and/or removed
+      onUpdate(Data callId, int cseq,
+               std::vector<ContactRecord>& writes,
+               std::vector<ContactRecord>& removes) = 0;
+
+      /// Called when no contact header fields are present
+      onQuery() = 0;
+
+      virtual void end();
 
    protected:
-      virtual void protectedDispatch(SipMessage &);
-      virtual void protectedDispatch(DumTimeout &);
+      virtual void protectedDispatch(std::auto_ptr<SipMessage>);
+      virtual void protectedDispatch(std::<DumTimeout>);
+
+      Uri mAor;
+      std::auto_ptr<SipMessage> mRequest;
+
+   private:
 };
 
 }
