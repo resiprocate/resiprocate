@@ -130,6 +130,10 @@ class PrdManagerCore : public TransactionUser, public PrdManager
                                int responseCode, 
                                const Data& reason = Data::Empty) const;
 
+      // factory methods my SIP method
+      void setInviteProto(const InviteSession& protoType);
+      void setSusbscribeProto(const Data& event, const SubscribeSession& protoType);
+      
       // returns a usage or sends an error response
       static std::auto_ptr<DialogUsage> createDialogUsage(const SipMessage& message);
 
