@@ -272,11 +272,7 @@ class SipMessage : public TransactionMessage
 
       // raw text corresponding to each unknown header
       mutable UnknownHeaders mUnknownHeaders;
-  
-      // !jf!
-      const Transport* mTransport;
-
-      
+        
       // Raw buffers coming from the Transport. message manages the memory
       std::vector<char*> mBufferList;
 
@@ -294,7 +290,6 @@ class SipMessage : public TransactionMessage
       mutable Data mRFC2543TransactionId;
 
       Data mEncoded; // to be retransmitted
-      UInt64 mCreatedTime;
 
       // used when next element is a strict router OR 
       // client forces next hop OOB

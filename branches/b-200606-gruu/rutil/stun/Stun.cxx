@@ -192,7 +192,7 @@ stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& resul
 
 
 bool
-stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose)
+stunParseMessage( char* buf, unsigned int bufLen, StunMessageStruct& msg, bool verbose)
 {
    if (verbose) clog << "Received stun message: " << bufLen << " bytes" << endl;
    memset(&msg, 0, sizeof(msg));
@@ -640,7 +640,7 @@ encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 
 
 unsigned int
-stunEncodeMessage( const StunMessage& msg, 
+stunEncodeMessage( const StunMessageStruct& msg, 
                    char* buf, 
                    unsigned int bufLen, 
                    const StunAtrString& password, 
@@ -1183,7 +1183,7 @@ stunParseServerName( char* name, StunAddress4& addr)
 }
 
 static void
-stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* msg)
+stunCreateErrorResponse(StunMessageStruct& response, int cl, int number, const char* msg)
 {
    response.msgHdr.msgType = BindErrorResponseMsg;
    response.hasErrorCode = true;
@@ -1195,7 +1195,7 @@ stunCreateErrorResponse(StunMessage& response, int cl, int number, const char* m
 
 #if 0
 static void
-stunCreateSharedSecretErrorResponse(StunMessage& response, int cl, int number, const char* msg)
+stunCreateSharedSecretErrorResponse(StunMessageStruct& response, int cl, int number, const char* msg)
 {
    response.msgHdr.msgType = SharedSecretErrorResponseMsg;
    response.hasErrorCode = true;
@@ -1206,7 +1206,7 @@ stunCreateSharedSecretErrorResponse(StunMessage& response, int cl, int number, c
 #endif
 
 static void
-stunCreateSharedSecretResponse(const StunMessage& request, const StunAddress4& source, StunMessage& response)
+stunCreateSharedSecretResponse(const StunMessageStruct& request, const StunAddress4& source, StunMessageStruct& response)
 {
    response.msgHdr.msgType = SharedSecretResponseMsg;
    response.msgHdr.id = request.msgHdr.id;
@@ -1219,8 +1219,8 @@ stunCreateSharedSecretResponse(const StunMessage& request, const StunAddress4& s
 }
 
 
-// This funtion takes a single message sent to a stun server, parses
-// and constructs an apropriate repsonse - returns true if message is
+// This function takes a single message sent to a stun server, parses
+// and constructs an apropriate response - returns true if message is
 // valid
 bool
 stunServerProcessMsg( char* buf,
@@ -1229,7 +1229,7 @@ stunServerProcessMsg( char* buf,
                       StunAddress4& secondary,
                       StunAddress4& myAddr,
                       StunAddress4& altAddr, 
-                      StunMessage* resp,
+                      StunMessageStruct* resp,
                       StunAddress4* destination,
                       StunAtrString* hmacPassword,
                       bool* changePort,
@@ -1244,7 +1244,7 @@ stunServerProcessMsg( char* buf,
    *changeIp = false;
    *changePort = false;
 	
-   StunMessage req;
+   StunMessageStruct req;
    bool ok = stunParseMessage( buf,bufLen, req, verbose);
 	
    if (!ok)      // Complete garbage, drop it on the floor
@@ -1745,7 +1745,7 @@ stunServerProcess(StunServerInfo& info, bool verbose)
       bool changePort = false;
       bool changeIp = false;
 		
-      StunMessage resp;
+      StunMessageStruct resp;
       StunAddress4 dest;
       StunAtrString hmacPassword;  
       hmacPassword.sizeValue = 0;
@@ -1899,7 +1899,7 @@ stunFindLocalInterfaces(UInt32* addresses,int maxRet)
 }
 
 void
-stunBuildReqSimple( StunMessage* msg,
+stunBuildReqSimple( StunMessageStruct* msg,
                     const StunAtrString& username,
                     bool changePort, bool changeIp, unsigned int id )
 {
@@ -1971,8 +1971,8 @@ stunSendTest( resip::Socket myFd, StunAddress4& dest,
          assert(0);
    }
 	
-   StunMessage req;
-   memset(&req, 0, sizeof(StunMessage));
+   StunMessageStruct req;
+   memset(&req, 0, sizeof(StunMessageStruct));
 	
    stunBuildReqSimple( &req, username, 
                        changePort , changeIP , 
@@ -2065,8 +2065,8 @@ stunTest( StunAddress4& dest, int testNum, bool verbose, StunAddress4* sAddr, un
 	   return false;
    }
 	
-   StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
+   StunMessageStruct resp;
+   memset(&resp, 0, sizeof(StunMessageStruct));
 	
    if ( verbose ) clog << "Got a response" << endl;
 
@@ -2253,8 +2253,8 @@ stunNatType( StunAddress4& dest,
                               &from.addr,
                               &from.port,verbose );
 						
-                  StunMessage resp;
-                  memset(&resp, 0, sizeof(StunMessage));
+                  StunMessageStruct resp;
+                  memset(&resp, 0, sizeof(StunMessageStruct));
 						
                   stunParseMessage( msg,msgLen, resp,verbose );
 						
@@ -2510,8 +2510,8 @@ stunOpenSocket( StunAddress4& dest, StunAddress4* mapAddr,
 	
    getMessage( myFd, msg, &msgLen, &from.addr, &from.port,verbose );
 	
-   StunMessage resp;
-   memset(&resp, 0, sizeof(StunMessage));
+   StunMessageStruct resp;
+   memset(&resp, 0, sizeof(StunMessageStruct));
 	
    bool ok = stunParseMessage( msg, msgLen, resp,verbose );
    if (!ok)
@@ -2605,8 +2605,8 @@ stunOpenSocketPair( StunAddress4& dest, StunAddress4* mapAddr,
                   &from.addr,
                   &from.port ,verbose);
 		
-      StunMessage resp;
-      memset(&resp, 0, sizeof(StunMessage));
+      StunMessageStruct resp;
+      memset(&resp, 0, sizeof(StunMessageStruct));
 		
       bool ok = stunParseMessage( msg, msgLen, resp, verbose );
       if (!ok) 
