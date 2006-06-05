@@ -76,12 +76,14 @@ const UInt16 TurnRealm = 0x0015;
 
 
 // define types for a stun message 
+const UInt16 StunMinValMsg                = 0x0001;
 const UInt16 BindRequestMsg               = 0x0001;
 const UInt16 BindResponseMsg              = 0x0101;
 const UInt16 BindErrorResponseMsg         = 0x0111;
 const UInt16 SharedSecretRequestMsg       = 0x0002;
 const UInt16 SharedSecretResponseMsg      = 0x0102;
 const UInt16 SharedSecretErrorResponseMsg = 0x0112;
+const UInt16 StunMaxValMsg                = 0x0112;
 
 // define types for a turn message - per turn-08
 const UInt16 TurnAllocateRequest = 0x0003;
