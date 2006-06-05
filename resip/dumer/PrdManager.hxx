@@ -225,12 +225,24 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       PageModePrdMap mPageModePrdMap;
       
       std::auto_ptr<InviteSessionFactory> mInviteSessionFactory;
-      std::auto_ptr<ServerSubscriptionFactory> mSubscriptionFactory;
+
+      typedef std::map<Data,std::auto_ptr<ServerSubscriptionFactory> ServerSubscriptionFactoryMap;
+      ServerSubscriptionFactoryMap mSubscriptionFactory;
+
       std::auto_ptr<RegistrationFactory> mRegistrationFactory;
+      
+      typedef std::map<Data,std::auto_ptr<ServerPublicationFactory> ServerPublicationFactoryMap;
+      ServerPublicationFactoryMap mPublicationFactory;
+
       std::auto_ptr<PublicationFactory> mPublicationFactory;
-      std::auto_ptr<PrdServerTransactionFactory> mPrdServerTransactionFactory;
       std::auto_ptr<PageModePrdFactory> mPageModePrdFactory;
 
+      typedef std::map<MethodTypes, std::auto_ptr<PrdServerTransactionFactory> 
+      PrdServerTransactionFactoryMap;
+      PrdServerTransactionFactoryMap mPrdServerTransactionFactory;
+
+      std::set<MethodTypes> mAllowedMethods;
+      
       //std::auto_ptr<RedirectManager>   mRedirectManager;
       //std::auto_ptr<ClientAuthManager> mClientAuthManager;
       //std::auto_ptr<ServerAuthManager> mServerAuthManager;  
@@ -243,13 +255,6 @@ class PrdManagerCore : public TransactionUser, public PrdManager
 };
 
 }
-   
-#if 0
-class DialogUsageManager : public HandleManager, public TransactionUser
-{
-   private:     
-};
-#endif
 
 #endif
 
