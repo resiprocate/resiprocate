@@ -20,7 +20,7 @@ class TransactionMessage : public Message
 
       // indicates this message is associated with a Client Transaction for the
       // purpose of determining which TransactionMap to use
-      virtual bool isClientTransaction() const {assert(false); return true;}; 
+      virtual bool isClientTransaction() const;
 
       virtual Message* clone() const {assert(false); return NULL;}
 

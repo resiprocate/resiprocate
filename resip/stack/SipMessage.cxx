@@ -512,13 +512,6 @@ SipMessage::encodeBrief(std::ostream& str) const
    return str;
 }
 
-bool
-SipMessage::isClientTransaction() const
-{
-   assert(mRequest || mResponse);
-   return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
-}
-
 std::ostream& 
 SipMessage::encode(std::ostream& str) const
 {

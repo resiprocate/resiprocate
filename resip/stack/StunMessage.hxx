@@ -50,13 +50,14 @@ class StunMessage : public TransactionMessage
             const char* name() const { return "StunMessage::Exception"; }
       };
 
-      virtual bool isClientTransaction() const;
       virtual void addBuffer(char* buf, int len);
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
       Data& getEncoded();      
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
-      
+
+      StunMessageStruct mStunMessageStruct;
+
       virtual std::ostream& encode(std::ostream& str) const;            
       virtual std::ostream& encodeBrief(std::ostream& str) const;
                   
@@ -70,8 +71,6 @@ class StunMessage : public TransactionMessage
       bool mParsed;
       int mTotalBufferSize;
       Data mTransactionId;
-
-      StunMessageStruct  mStunMessageStruct;
 
 //      Data mEncoded; // to be retransmitted      
       friend class TransportSelector;

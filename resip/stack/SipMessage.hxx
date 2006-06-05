@@ -63,9 +63,6 @@ class SipMessage : public TransactionMessage
 
             const char* name() const { return "SipMessage::Exception"; }
       };
-
-
-      virtual bool isClientTransaction() const;
       
       virtual std::ostream& encode(std::ostream& str) const;      
       //sipfrags will not output Content Length if there is no body--introduce
