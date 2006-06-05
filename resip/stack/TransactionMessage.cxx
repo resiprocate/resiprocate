@@ -42,6 +42,13 @@ TransactionMessage::isResponse() const
    return mResponse;
 }
 
+bool
+TransactionMessage::isClientTransaction() const
+{
+   assert(mRequest || mResponse);
+   return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
