@@ -2,7 +2,10 @@
 #include "resip/dumer/PageModePrd.hxx"
 #include "resip/dumer/EncryptionLevel.hxx"
 
+using namespace resip;
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
 
 PageModePrd::PageModePrd()
 {
