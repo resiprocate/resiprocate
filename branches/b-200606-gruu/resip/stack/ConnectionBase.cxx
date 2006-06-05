@@ -5,6 +5,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StunMessage.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/stack/TlsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -85,40 +86,88 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
    {
       case NewMessage:
       {
+         mState = NewSipMessage; // this is the default
+         
          if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
+            mState = NewCRLFMessage;
+         }
+         else
+         {
+            if (bytesRead >= 4 ) // Need the first 4 bytes to figure out the length
+            {
+               char h = *(mBuffer + mBufferPos);
+               char l = *(mBuffer + mBufferPos+1);
+               int msgType = h<<8 + l;
+               if ( (msgType >= 0x0001) && (msgType <= 0x0112 ) ) // TODO should
+                  // get from stun 
+               {
+                  mState = NewStunMessage;
+               }
+            }
+         }
+         goto start;
+         break;
+      }
+      case NewCRLFMessage:
+      {
             StackLog(<<"Throwing away incoming firewall keep-alive");
             mBufferPos += 4;
             bytesRead -= 4;
             if (bytesRead)
             {
+               mState = NewMessage;
                goto start;
             }
             else
             {
                delete [] mBuffer;
                mBuffer = 0;
-               return;
             }
-         }
+            mState = NewMessage;
+            break;
+      }
+      case NewStunMessage:
+      {
          assert(mWho.transport);
-         mMessage = new SipMessage(mWho.transport);
+         mMessage = new StunMessage(mWho.transport);
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
-         mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+         // Fall through to the next case.
+      }
+      case ReadingStun:
+      {
+         assert(0); // TODO 
+         
+         break;
+      }
+      
+      case NewSipMessage:
+      {
+         assert(mWho.transport);
+         SipMessage* msg = new SipMessage(mWho.transport);
+         mMessage = msg;
+         
+         DebugLog(<< "ConnectionBase::process setting source " << mWho);
+         msg->setSource(mWho);
+         msg->setTlsDomain(mWho.transport->tlsDomain());
 
          // Set TlsPeerName if message is from TlsConnection
          TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
          if(tlsConnection)
          {
-            mMessage->setTlsPeerNames(tlsConnection->getPeerNames());
+            msg->setTlsPeerNames(tlsConnection->getPeerNames());
          }
-         mMsgHeaderScanner.prepareForMessage(mMessage);
+         mMsgHeaderScanner.prepareForMessage(msg);
          // Fall through to the next case.
       }
-      case ReadingHeaders:
+      case ReadingSipHeaders:
       {
+         SipMessage* msg = dynamic_cast<SipMessage*>(mMessage);
+         assert(msg);
+         
          unsigned int chunkLength = mBufferPos + bytesRead;
          char *unprocessedCharPtr;
          MsgHeaderScanner::ScanChunkResult scanChunkResult =
@@ -166,12 +215,12 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                mBufferPos = numUnprocessedChars;
                mBufferSize = size;
             }
-            mState = ReadingHeaders;
+            mState = ReadingSipHeaders;
          }
          else
          {         
             // The message header is complete.
-            size_t contentLength = mMessage->header(h_ContentLength).value();
+            size_t contentLength = msg->header(h_ContentLength).value();
             
             if (numUnprocessedChars < contentLength)
             {
@@ -183,22 +232,22 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                mBufferSize = contentLength;
                mBuffer = newBuffer;
             
-               mState = PartialBody;
+               mState = PartialSipBody;
             }
             else
             {
                // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, contentLength);
-               if (!transport()->basicCheck(*mMessage))
+               msg->setBody(unprocessedCharPtr, contentLength);
+               if (!transport()->basicCheck(*msg))
                {
                   delete mMessage;
                   mMessage = 0;
                }
                else
                {
-                  Transport::stampReceived(mMessage);
-                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                  fifo.add(mMessage);
+                  Transport::stampReceived(msg);
+                  DebugLog(<< "##Connection: " << *this << " received: " << *msg);
+                  fifo.add(msg);
                   mMessage = 0;                  
                }
 
@@ -232,25 +281,28 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          }
          break;
       }
-      case PartialBody:
+      case PartialSipBody:
       {
-         size_t contentLength = mMessage->header(h_ContentLength).value();
+         SipMessage* msg = dynamic_cast<SipMessage*>(mMessage);
+         assert(msg);
+         
+         size_t contentLength = msg->header(h_ContentLength).value();
          mBufferPos += bytesRead;
          if (mBufferPos == contentLength)
          {
-            mMessage->addBuffer(mBuffer);
-            mMessage->setBody(mBuffer, contentLength);
-            if (!transport()->basicCheck(*mMessage))
+            msg->addBuffer(mBuffer);
+            msg->setBody(mBuffer, contentLength);
+            if (!transport()->basicCheck(*msg))
             {
                delete mMessage;
                mMessage = 0;
             }
             else
             {
-               DebugLog(<< "##ConnectionBase: " << *this << " received: " << *mMessage);
+               DebugLog(<< "##ConnectionBase: " << *this << " received: " << *msg);
 
-               Transport::stampReceived(mMessage);
-               fifo.add(mMessage);
+               Transport::stampReceived(msg);
+               fifo.add(msg);
                mMessage = 0;
             }
             mState = NewMessage;
@@ -259,7 +311,10 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          break;
       }
       default:
+      {
          assert(0);
+         break;
+      }
    }
 }
             
