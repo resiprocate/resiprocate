@@ -11,11 +11,15 @@ class PrdClientTransaction : public NonDialogPrd
    public:
       PrdClientTransaction();
       virtual ~PrdClientTransaction() {}
-      void send(SipMessage &);
-
+      virtual void end();
+      
    protected:
       virtual void protectedDispatch(SipMessage &);
       virtual void protectedDispatch(DumTimeout &);
+
+   private:
+      virtual void onSuccess(SipMessage& msg)=0;
+      virtual void onFailure(SipMessage& msg)=0;
 };
 
 }
