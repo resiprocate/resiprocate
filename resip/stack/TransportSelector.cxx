@@ -721,6 +721,18 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    }
 }
 
+void
+TransportSelector::transmit(StunMessage* msg, Tuple& target)
+{
+   assert(target.transport);
+
+   /*
+   if(!msg->getEncoded().empty())
+   {
+      target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+   }*/
+}
+
 unsigned int
 TransportSelector::sumTransportFifoSizes() const
 {

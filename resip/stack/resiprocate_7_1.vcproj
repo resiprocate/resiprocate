@@ -450,6 +450,9 @@
 				RelativePath=".\SipStack.cxx">
 			</File>
 			<File
+				RelativePath=".\SipTransactionState.cxx">
+			</File>
+			<File
 				RelativePath=".\StackThread.cxx">
 			</File>
 			<File
@@ -463,6 +466,15 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\StunMessage.cxx">
+			</File>
+			<File
+				RelativePath=".\StunTimerMessage.cxx">
+			</File>
+			<File
+				RelativePath=".\StunTransactionState.cxx">
 			</File>
 			<File
 				RelativePath=".\Symbols.cxx">
@@ -499,6 +511,9 @@
 			</File>
 			<File
 				RelativePath=".\TransactionMap.cxx">
+			</File>
+			<File
+				RelativePath=".\TransactionMessage.cxx">
 			</File>
 			<File
 				RelativePath=".\TransactionState.cxx">
@@ -832,6 +847,9 @@
 				RelativePath=".\SipStack.hxx">
 			</File>
 			<File
+				RelativePath=".\SipTransactionState.hxx">
+			</File>
+			<File
 				RelativePath=".\StackThread.hxx">
 			</File>
 			<File
@@ -845,6 +863,15 @@
 			</File>
 			<File
 				RelativePath=".\StringCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\StunMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\StunTimerMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\StunTransactionState.hxx">
 			</File>
 			<File
 				RelativePath=".\Symbols.hxx">
