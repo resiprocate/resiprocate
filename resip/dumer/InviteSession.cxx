@@ -2429,15 +2429,59 @@ InviteSession::rejectReferNoSub(int responseCode)
 }
 
 // v2
+SharedPtr<InviteSession>
+InviteSession::createChild(const SipMessage& message)
+{
+   // !dlb! could throw
+   SharedPtr<Dialog> newDialog(new Dialog(msg));
+   std::auto_ptr<DialogUsage> child(mPrdManager.createDialogUsage(msg));
+   if (child.get()) 
+   {
+      child->setDialog(newDialog);
+      addChild(SharedPtr<DialogUsage>(child.release()));
+   }
+}
+
 bool
 InviteSession::dispatchProgenitor(const SipMessage& message)
 {
-// was ClientInviteSession::dispatchStart    
+// !dlb! was ClientInviteSession::dispatchStart    
    assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() > 100);
    assert(msg.header(h_CSeq).method() == INVITE);
 
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   // !dlb! handle non-dialog-creating 1xx
+
+   switch (mGroupState) 
+   {
+      case GROUP_Init :
+         if (message.isResponse() 
+             && message.header(h_StatusLine).code()/100 == 1) 
+         {
+            mGroupState = GROUP_Provisional;
+         }
+         break;
+      case GROUP_Provisional :
+         break;
+      case GROUP_WaitingToCancel :
+      case GROUP_Terminated :
+         if (message.isRequest()) 
+         {
+            // 481
+         }
+         else 
+         {
+            if (message.header(h_CSeq).method() == INVITE
+                && message.header(h_StatusLine).code()/100 == 2)
+            {
+               // ack
+               // bye
+            }
+         }
+         break;
+      case GROUP_Established :
+         break;
+   }
+   
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    InviteSession::Event event = toEvent(msg, sdp.get());
@@ -2445,36 +2489,39 @@ InviteSession::dispatchProgenitor(const SipMessage& message)
    switch (event)
    {
       case On1xx:
-         transition(UAC_Early);
-         handler->onNewSession(getHandle(), None, msg);
-         if(!isTerminated())  
+         SharedPtr<InviteSession> child(createChild(msg));
+         child->transition(UAC_Early);
+         onNewSessionBase(child, None, msg);
+         if (!child->isTerminated())  
          {
-            handleProvisional(msg);
+            child->handleProvisional(msg);
          }
          break;
 
       case On1xxEarly:
          // !jf! Assumed that if UAS supports 100rel, the first 1xx must contain an
          // offer or an answer.
-         transition(UAC_Early);
+         SharedPtr<InviteSession> child(createChild(msg));
+         child->transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), None, msg);
-         if(!isTerminated())  
+         onNewSessionBase(child, None, msg);
+         if (!isTerminated())  
          {
-            handleProvisional(msg);
-            if(!isTerminated())  
+            child->handleProvisional(msg);
+            if (!isTerminated())  
             {
-               handler->onEarlyMedia(getHandle(), msg, *sdp);
+               child->onEarlyMedia(msg, *sdp);
             }
          }
          break;
 
       case On1xxOffer:
+         SharedPtr<InviteSession> child(createChild(msg));         
          transition(UAC_EarlyWithOffer);
-         handler->onNewSession(getHandle(), Offer, msg);
+         onNewSessionBase(child, Offer, msg);
          if(!isTerminated())  
          {
-            handleOffer(msg, *sdp);
+            child->handleOffer(msg, *sdp);
          }
          break;
 

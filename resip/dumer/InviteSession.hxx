@@ -17,7 +17,7 @@ class SdpContents;
     Implements common attributes and behavior (i.e.t post connected) of the two
     classes.
 */
-class InviteSession : public DialogUsage
+class InviteSession : public UsageSet
 {
    public:
       /** Called to set the offer that will be used in the next message that
@@ -182,6 +182,15 @@ class InviteSession : public DialogUsage
          UAS_WaitingToTerminate,
          UAS_WaitingToHangup
       } State;
+
+      typedef enum 
+      {
+         GROUP_Init, 
+         GROUP_Provisional,
+         GROUP_WaitingToCancel,
+         GROUP_Terminated,
+         GROUP_Established
+      } GroupState;
 
       typedef enum
       {

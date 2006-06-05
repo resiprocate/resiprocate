@@ -83,7 +83,8 @@ DialogUsage::send(SipMessage& msg)
 */
 
 // v2
-void DialogUsage::possiblyDie()
+void
+DialogUsage::possiblyDie()
 {
    if (!isDestroying()
        && mDialogs.empty()
@@ -95,58 +96,36 @@ void DialogUsage::possiblyDie()
 }
 
 void
+DialogUsage::setDialog(SharedPtr<Dialog> dialog) 
+{
+   mDialog = dialog;
+}
+
+void
 DialogUsage::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
 
-   // child usage want the message?
-   for (std::list< SharedPtr<DialogUsage> >::const_iterator i = mChildUsages.begin();
-        i != mChildUsages.end(); ++i) {
-      if (i->isForMe(msg)) {
-         DebugLog(<< "found child to handle message " << *i << endl << msg);
-         i->dispatchChild(msg);
-         return;
-      }
-   }
-
-   // dialog wants the request?
-   for (std::list< WeakdPtr<Dialog> >::const_iterator i = mDialogs.begin();
-        i != mDialogss.end(); ++i) {
-      SharedPtr<Dialog> dialog(*i);
-      if (dialog.get()
-          && dialog->!isDestroying()
-          && dialog->isForMe(msg)) {
-         if (msg->isRequest()) {
-            DebugLog(<< "dialog message " << *dialog << endl << msg);
-            std::auto_ptr<DialogUsage> child(mPrdManager.createDialogUsage(msg));
-            if (child.get()) 
-            {
-               child->setDialog(dialog);
-               addChild(SharedPtr<DialogUsage>(child.release()));
-               child->dispatchChild(msg);
-            }
-            else 
-            {
-               DebugLog(<< "did not create usage");
-            }
+   if (!UsageSet::dispatchFilter(msg)) 
+   {
+      // no dialog
+      StackLog(<< "No matching dialog for " << endl << msg);
+      if (!(isProgenitor() 
+            && dispatchProgenitor(msg)))
+      {
+         if (msg.isRequest()) 
+         {
+            StackLog(<< "No matching dialog, sending 481 " << endl << msg);
+            SharedPtr<SipMessage> response(new SipMessage);
+            mPrdManager.makeResponse(*response, msg, 481);
+            mPrdManager.send(response);
+            return;
+         }
          else 
          {
-            DebugLog(<< "discard stray response " << *dialog << endl << msg);
-         }
-         return;
+            DebugLog(<< "Dropping stray response in usage: " << *this << endl << msg);
          }
       }
-   }
-
-   // no dialog
-   StackLog(<< "No matching dialog for " << endl << msg);
-   if (!dispatchProgenitor(msg)) 
-   {
-      StackLog (<< "No matching dialog, sending 481 " << endl << msg);
-      SharedPtr<SipMessage> response(new SipMessage);
-      mPrdManager.makeResponse(*response, msg, 481);
-      mPrdManager.send(response);
-      return;
    }
 }
 

@@ -40,7 +40,13 @@ class PrdManager
 
       /** Give a prd implementation to the manager. The returned value
           is the input wrapped in a shared pointer. */
-      virtual SharedPtr<T> manage(std::auto_ptr<T> prd)=0;
+      virtual SharedPtr<T> manage(std::auto_ptr<T> prd)
+      {
+         SharedPtr<T> spt(prd.release());
+         spt->manage(spt);
+         mFifo.post(new ManagePrdManagerCommand(*this, spt));
+         return spt;
+      }
 
       /** Remove from the PrdManager datastructure. Application can keep this
           around until PrdManager is deleted */
@@ -85,13 +91,6 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       
       SharedPtr<MasterProfile> getMasterProfile();
       SipStack& getSipStack();
-
-      virtual SharedPtr<T> manage(std::auto_ptr<T> prd)
-      {
-         SharedPtr<T> spt(prd.release());
-         mFifo.post(new ManagePrdManagerCommand(*this, spt));
-         return spt;
-      }
 
       virtual void unmanage(Prd& prd);
       virtual void send(SharePtr<SipMessage> msg);
