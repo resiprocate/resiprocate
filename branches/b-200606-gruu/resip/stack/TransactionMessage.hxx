@@ -25,6 +25,7 @@ class TransactionMessage : public Message
       virtual Message* clone() const {assert(false); return NULL;}
 
       virtual void addBuffer(char* buf) { assert(false); } ;
+      virtual void addBuffer(char* buf, int size) { assert(false); } ;
 
       void setFromTU() 
       {
