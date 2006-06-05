@@ -91,6 +91,70 @@ PrdManager::post(std::auto_ptr<PrdCommand> cmd, Postable& postable, unsigned lon
    mStack.postMS(*(cmd->release()), timeMs, *this);
 }
 
+void 
+PrdManager::setInviteSessionFactory(std::auto_ptr<InviteSessionFactory> f)
+{
+   assert(!mInviteSessionFactory.get());
+   mInviteSessionFactory = f;
+   mAllowedMethods.insert(INVITE);
+   mAllowedMethods.insert(INFO);
+   mAllowedMethods.insert(ACK);
+   mAllowedMethods.insert(CANCEL);
+}
+
+void 
+PrdManager::setSubscriptionFactory(const Data& eventType, 
+                                   std::auto_ptr<ServerSubscriptionFactory> f)
+{
+   assert(mSubscriptionFactory[eventType].get() == 0);
+   mSubscriptionFactory[eventType] = f;
+   mAllowedMethods.insert(SUBSCRIBE);
+   mAllowedMethods.insert(NOTIFY);
+}
+
+void 
+PrdManager::setRegistrationFactory(std::auto_ptr<ServerRegistrationFactory> f)
+{
+   assert(mRegistrationFactory.get() == 0);
+   mRegistrationFactory = f;
+   mAllowedMethods.insert(REGISTER);
+}
+
+void 
+PrdManager::setPublicationFactory(const Data& eventType, 
+                                  std::auto_ptr<ServerPublicationFactory> f)
+{
+   assert(mPublicationFactory[eventType].get() == 0);
+   mPublicationFactory[eventType] = f;
+   mAllowedMethods.insert(PUBLISH);
+}
+
+void 
+PrdManager::setPrdServerTransactionFactory(MethodTypes method, 
+                                           std::auto_ptr<PrdServerTransactionFactory> f)
+{
+   assert (method != REGISTER);
+   assert (method != SUBSCRIBE);
+   assert (method != INVITE);
+   assert (method != ACK);
+   assert (method != CANCEL);
+   assert (method != PUBLISH);
+   assert (method != NOTIFY);
+   assert (method != MESSAGE);
+   
+   assert(mPrdServerTransactionFactory[method].get() == 0);
+   mPrdServerTransactionFactory[method] = f;
+   mAllowedMethods.insert(method);
+}
+
+void 
+PrdManager::setPageModePrdFactory(std::auto_ptr<PageModePrdFactory> f)
+{
+   assert(mPageModePrdFactory.get() == 0);
+   mPageModePrdFactory = f;
+   mAllowedMethods.insert(MESSAGE);
+}
+
 bool 
 PrdManager::process()
 {
@@ -242,16 +306,11 @@ PrdManager::processRequest(const SipMessage& request)
          return;
          
       case REGISTER:
-         
+
          return;
          
    }
    
-   if (request.header(h_RequestLine).method() == PUBLISH)
-   {
-      processPublish(request);
-      return;
-   }
 
    bool toTag = request.header(h_To).exists(p_tag);
    if(request.header(h_RequestLine).getMethod() == REGISTER && toTag && getMasterProfile()->allowBadRegistrationEnabled())
@@ -424,13 +483,12 @@ DialogUsageManager::processResponse(const SipMessage& response)
       }
    }
 }
-
-
+   
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
    // RFC3261 - 8.2.1
-   if (!getMasterProfile()->isMethodSupported(request.header(h_RequestLine).getMethod()))
+   if (mAllowedMethods.count(request.header(h_RequestLine).getMethod()) == 0)
    {
       InfoLog (<< "Received an unsupported method: " << request.brief());
 
@@ -455,7 +513,6 @@ DialogUsageManager::validateRequestURI(const SipMessage& request)
 
    return true;
 }
-
 
 bool
 DialogUsageManager::validateRequiredOptions(const SipMessage& request)
