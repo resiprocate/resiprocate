@@ -291,252 +291,122 @@ PrdManager::processRequest(std::auto_ptr<SipMessage> request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
 
-   if (mShutdownState != Running && mShutdownState != ShutdownRequested)
+   try
    {
-      WarningLog (<< "Ignoring a request since we are shutting down " << request->brief());
-
-      SipMessage failure;
-      makeResponse(failure, *request, 480, "UAS is shutting down");
-      sendResponse(failure);
-      return;
-   }
-   
-   // CANCEL processing as well as handle requests that having matching Prd in
-   // the mPrdMap
-   {
-      PrdId id(*request);
-      if (request->header(h_RequestLine).getMethod() == CANCEL)
+      if (mShutdownState != Running && mShutdownState != ShutdownRequested)
       {
-         CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
-         if (i != mCancelMap.end())
-         {
-            id = mPrdMap.find(i->second);
-         }
-         else
-         {
-            SipMessage failure;
-            makeResponse(failure, *request, 481, "No matching transaction for CANCEL");
-            sendResponse(failure);
-            return;
-         }
-      }
+         WarningLog (<< "Ignoring a request since we are shutting down " << request->brief());
 
-      PrdMap::iterator target = mPrdMap.find(id);
-      if (target != mPrdMap.end())
-      {
-         SharedPtr<Prd> prd(target->second);
-         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
-         target->first->post(cmd);
+         SipMessage failure;
+         makeResponse(failure, *request, 480, "UAS is shutting down");
+         sendResponse(failure);
          return;
       }
-   }
    
-   switch (request->header(h_RequestLine).method())
-   {
-      case PUBLISH:
-         processPublish(*request);
-         return;
-
-      case MESSAGE:
+      // CANCEL processing as well as handle requests that having matching Prd in
+      // the mPrdMap
       {
-         std::pair<Data,Data> id = std::make_pair(Data::from(request.header(h_RequestLine).uri()),
-                                                  request.header(h_From).uri().getAor());
-         
-         PageModePrdMap::iterator target = mPageModePrdMap.find(id);
-         if (target != mPageModePrdMap.end())
+         PrdId id(*request);
+         if (request->header(h_RequestLine).getMethod() == CANCEL)
+         {
+            CancelMap::iterator i = mCancelMap.find(request.getTransactionId());
+            if (i != mCancelMap.end())
+            {
+               id = mPrdMap.find(i->second);
+            }
+            else
+            {
+               SipMessage failure;
+               makeResponse(failure, *request, 481, "No matching transaction for CANCEL");
+               sendResponse(failure);
+               return;
+            }
+         }
+
+         PrdMap::iterator target = mPrdMap.find(id);
+         if (target != mPrdMap.end())
          {
             SharedPtr<Prd> prd(target->second);
             SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
             target->first->post(cmd);
+            return;
          }
-         else
+      }
+   
+      switch (request->header(h_RequestLine).method())
+      {
+         case PUBLISH:
+            processPublish(*request);
+            return;
+
+         case MESSAGE:
          {
-            SharedPtr<Prd> prd = mPageModePrdFactory->create(request)->manage();
+            std::pair<Data,Data> id = std::make_pair(Data::from(request.header(h_RequestLine).uri()),
+                                                     request.header(h_From).uri().getAor());
+         
+            PageModePrdMap::iterator target = mPageModePrdMap.find(id);
+            if (target != mPageModePrdMap.end())
+            {
+               SharedPtr<Prd> prd(target->second);
+               SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+               target->first->post(cmd);
+            }
+            else
+            {
+               SharedPtr<Prd> prd = mPageModePrdFactory->create(request)->manage();
+               assert(prd->get());
+               SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+               prd->getPostable().post(cmd);
+            }
+            return;
+         }
+      
+         case REGISTER:
+            SharedPtr<Prd> prd = mRegistrationFactory->create(request)->manage();
             assert(prd->get());
             SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
             prd->getPostable().post(cmd);
-         }
-         return;
-      }
-      
-      case REGISTER:
-         SharedPtr<Prd> prd = mRegistrationFactory->create(request)->manage();
-         assert(prd->get());
-         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
-         prd->getPostable().post(cmd);
-         return;
+            return;
 
-      case INVITE:
-      case SUBSCRIBE:
-         // !jf! do something here
-         break;
-
-      case CANCEL:
-         assert(0);
-         break;
-         
-      case ACK:
-         // drop it on the floor since no matching Prd
-         break;
-         
-         
-      default:
-      {
-         SharedPtr<Prd> prd = mPrdServerTransactionFactory->create(request)->manage();
-         assert(prd->get());
-         SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
-         prd->getPostable().post(cmd);
-         return;
-      }
-
-         
-   }
-   
-
-   assert(mAppDialogSetFactory.get());
-   // !jf! note, the logic was reversed during ye great merge of March of Ought 5
-   if (toTag ||
-       findDialogSet(DialogSetId(request)))
-   {
-      switch (request->header(h_RequestLine).getMethod())
-      {
-         case REGISTER:
-         {
-            SipMessage failure;
-            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
-            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-            sendResponse(failure);
+         case INVITE:
+         case SUBSCRIBE:
+            UsageSet* uset = new UsageSet(request, createDialogUsage(request));
+            SharedPtr<Prd> prd = uset->manage();
+            SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+            prd->getPostable().post(cmd);
             break;
-         }
+
+         case ACK:
+            // drop it on the floor since no matching Prd
+            break;
+         
+         case CANCEL:
+            // handled up above
+            assert(0);
+            break;
 
          default:
          {
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
+            if (!request.header(h_To).exists(p_tag))
             {
-               if (request->header(h_RequestLine).method() != ACK)
-               {
-                  SipMessage failure;
-                  makeResponse(failure, request, 481);
-                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-                  InfoLog (<< "Rejected request (which was in a dialog) " << request->brief());
-                  sendResponse(failure);
-               }
-               else
-               {
-                  InfoLog (<< "ACK doesn't match any dialog" << request->brief());
-               }
-            }
-            else
-            {
-               InfoLog (<< "Handling in-dialog request: " << request->brief());
-               ds->dispatch(request);
+               SharedPtr<Prd> prd = mPrdServerTransactionFactory->create(request)->manage();
+               assert(prd->get());
+               SipMessagePrdCommand* cmd = new SipMessagePrdCommand(prd, request, *this);
+               prd->getPostable().post(cmd);
+               return;
             }
          }
       }
+
+      SipMessage failure;
+      makeResponse(failure, *request, 481);
+      sendResponse(failure);
    }
-   else
+   catch (BaseException& e)
    {
-      switch (request->header(h_RequestLine).getMethod())
-      {
-         case ACK:
-            DebugLog (<< "Discarding request: " << request->brief());
-            break;
-
-         case PRACK:
-         case BYE:
-         case UPDATE:
-         case INFO: // !rm! in an ideal world
-         {
-            SipMessage failure;
-            makeResponse(failure, request, 481);
-            failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-            sendResponse(failure);
-            break;
-         }
-         case CANCEL:
-         {
-            // find the appropropriate ServerInvSession
-            CancelMap::iterator i = mCancelMap.find(request->getTransactionId());
-            if (i != mCancelMap.end())
-            {
-               i->second->dispatch(request);
-            }
-            else
-            {
-               InfoLog (<< "Received a CANCEL on a non-existent transaction ");
-               SipMessage failure;
-               makeResponse(failure, request, 481);
-               sendResponse(failure);
-            }
-            break;
-         }
-         case PUBLISH:
-            assert(false);
-         case SUBSCRIBE:
-            if (!checkEventPackage(request))
-            {
-               InfoLog (<< "Rejecting request (unsupported package) " 
-                        << request->brief());
-               return;
-            }
-         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
-         case INVITE:   // new INVITE
-         case REFER:    // out-of-dialog REFER
-            //case INFO :    // handle non-dialog (illegal) INFOs
-         case OPTIONS : // handle non-dialog OPTIONS
-         case MESSAGE :
-         case REGISTER:
-         {
-            {
-               DialogSetId id(request);
-               //cryptographically dangerous
-               assert(mDialogSetMap.find(id) == mDialogSetMap.end());
-            }
-            if (mDumShutdownHandler)
-            {
-               SipMessage forbidden;
-               makeResponse(forbidden, request, 480);
-               forbidden.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-               sendResponse(forbidden);
-               return;
-            }
-            try
-            {
-               DialogSet* dset =  new DialogSet(request, *this);
-
-               DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
-               AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
-               appDs->mDialogSet = dset;
-               dset->setUserProfile(appDs->selectUASUserProfile(request));
-               dset->mAppDialogSet = appDs;
-
-               DebugLog ( << "************* Adding DialogSet ***************" );
-               DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
-               mDialogSetMap[dset->getId()] = dset;
-               DebugLog ( << "After: Req" << Inserter(mDialogSetMap) );
-
-               dset->dispatch(request);
-            }
-            catch (BaseException& e)
-            {
-               SipMessage failure;
-               makeResponse(failure, request, 400, e.getMessage());
-               failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-               sendResponse(failure);
-            }
-
-            break;
-         }
-         case RESPONSE:
-         case SERVICE:
-            assert(false);
-            break;
-         case UNKNOWN:
-         case MAX_METHODS:
-            assert(false);
-            break;
-      }
+      SipMessage failure;
+      makeResponse(failure, request, 400, e.getMessage());
+      sendResponse(failure);
    }
 }
 
