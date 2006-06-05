@@ -132,7 +132,7 @@ class PrdManagerCore : public TransactionUser, public PrdManager
       bool messageAvailable(void) { return mFifo.messageAvailable(); }
     
       // returns a usage or sends an error response
-      static std::auto_ptr<DialogUsage> createDialogUsage(const SipMessage& message);
+      DialogUsage* createDialogUsage(const SipMessage& message);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
