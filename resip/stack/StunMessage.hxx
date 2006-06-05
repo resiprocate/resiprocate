@@ -69,6 +69,7 @@ class StunMessage : public TransactionMessage
       std::vector<std::pair<char*,int> > mBufferList;
       bool mParsed;
       int mTotalBufferSize;
+      Data mTransactionId;
 
       StunMessageStruct  mStunMessageStruct;
 
