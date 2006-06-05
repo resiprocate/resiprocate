@@ -358,6 +358,7 @@ Helper::makeResponse(SipMessage& response,
    {
       getResponseCodeReason(responseCode, response.header(h_StatusLine).reason());
    }
+   response.setTransactionUser(request.getTransactionUser());
 }
 
 SipMessage*
