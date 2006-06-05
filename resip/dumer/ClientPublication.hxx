@@ -30,20 +30,25 @@ class ClientPublication : public NonDialogPrd
 
 
    protected:
-      virtual void protectedDispatch(SipMessage &);
-      virtual void protectedDispatch(DumTimeout &);
+      virtual void protectedDispatch(std::auto_ptr<SipMessage>);
+      virtual void protectedDispatch(std::auto_ptr<DumTimeout>);
 
+   private:
+      /** Callbacks **/
       virtual void onSuccess(SipMessage &msg);
       virtual void onRemove(SipMessage &msg);
       virtual void onFailure(SipMessage &msg);
 
-   private:
       const Contents* mDocument;
 
       bool mWaitingForResponse;
       bool mPendingPublish;
       Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
+
+      // disabled
+      ClientPublication(const ClientPublication&);
+      ClientPublication& operator=(const ClientPublication&);
 };
 
 }

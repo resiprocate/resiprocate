@@ -28,12 +28,8 @@ ClientPublication::ClientPublication()
 ClientPublication::~ClientPublication()
 {
    DebugLog( << "ClientPublication::~ClientPublication: " << mId);   
-   mDialogSet.mClientPublication = 0;
 
-   if (mDocument)
-   {
-      delete mDocument;
-   }
+   delete mDocument;
 }
 
 SipMessage&
@@ -61,13 +57,13 @@ ClientPublication::end()
 void 
 ClientPublication::protectedDispatch(SipMessage& msg)
 {
-   if (msg.isRequest())
+   if (msg->isRequest())
    {
       DebugLog( << "Dropping stray request to ClientPublication usage: " << msg);
    }
    else
    {
-      const int code = msg.header(h_StatusLine).statusCode();
+      const int code = msg->header(h_StatusLine).statusCode();
       if (code < 200)
       {
          return;
@@ -80,28 +76,28 @@ ClientPublication::protectedDispatch(SipMessage& msg)
       {
          if (mLastRequest.header(h_Expires).value() == 0)
          {
-            onRemove(msg);
+            onRemove(*msg);
 
             unmanage();
 
             return;
          }
-         else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
+         else if (msg->exists(h_SIPETag) && msg->exists(h_Expires))
          {
-            mLastRequest.header(h_SIPIfMatch) = msg.header(h_SIPETag);
+            mLastRequest.header(h_SIPIfMatch) = msg->header(h_SIPETag);
             mLastRequest.releaseContents();
             addTimer(DumTimeout::Publication, 
-                     Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
+                     Helper::aBitSmallerThan(msg->header(h_Expires).value()), 
                      getBaseHandle(),
                      ++mTimerSeq);
-            onSuccess(msg);
+            onSuccess(*msg);
          }
          else
          {
             // Any PUBLISH/200 must have an ETag. This should not happen. Not
             // sure what the app can do in this case. 
             WarningLog (<< "PUBLISH/200 received with no ETag " << mLastRequest.header(h_From).uri());
-            onFailure(msg);
+            onFailure(*msg);
             
             unmanage();
 
@@ -119,14 +115,14 @@ ClientPublication::protectedDispatch(SipMessage& msg)
          }         
          else if (code == 423) // interval too short
          {
-            if (msg.exists(h_MinExpires))
+            if (msg->exists(h_MinExpires))
             {
-               mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
+               mLastRequest.header(h_Expires).value() = msg->header(h_MinExpires).value();
                update(mDocument); // !dys! since contents not released until on success, no need to call update any more.
             }
             else
             {
-               onFailure(msg);
+               onFailure(*msg);
                
                unmanage();
 
@@ -142,12 +138,12 @@ ClientPublication::protectedDispatch(SipMessage& msg)
                     code == 503 ||
                     code == 600 ||
                     code == 603) &&
-                   msg.exists(h_RetryAfter)))
+                   msg->exists(h_RetryAfter)))
          {
             int retryMinimum = 0;
-            if (msg.exists(h_RetryAfter))
+            if (msg->exists(h_RetryAfter))
             {
-               retryMinimum = msg.header(h_RetryAfter).value();
+               retryMinimum = msg->header(h_RetryAfter).value();
             }
 
             // RFC 3261:20.33 Retry-After
@@ -155,7 +151,7 @@ ClientPublication::protectedDispatch(SipMessage& msg)
             if (retry < 0)
             {
                DebugLog(<< "Application requested failure on Retry-After");
-               onFailure(msg);
+               onFailure(*msg);
                
                unmanage();
 
@@ -199,9 +195,9 @@ ClientPublication::protectedDispatch(SipMessage& msg)
 }
 
 void 
-ClientPublication::protectedDispatch(DumTimeout& timer)
+ClientPublication::protectedDispatch(std::auto_ptr<DumTimeout> timer)
 {
-    if (timer.seq() == mTimerSeq)
+    if (timer->seq() == mTimerSeq)
     {
        refresh();
     }
