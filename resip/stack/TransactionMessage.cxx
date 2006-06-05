@@ -1,17 +1,35 @@
 
 #include "resip/stack/TransactionMessage.hxx"
+#include "rutil/Timer.hxx"
 
 using namespace resip;
 
 
 TransactionMessage::TransactionMessage(const Transport* fromWire):
-   mIsExternal(fromWire != 0) ,
+     mTransport(fromWire),
+     mCreatedTime(Timer::getTimeMicroSec()),
+     mIsExternal(fromWire != 0),
      mRequest(false),
      mResponse(false)
-
 {
 }
-      
+    
+TransactionMessage& 
+TransactionMessage::operator=(const TransactionMessage& rhs)
+{
+   if (this != &rhs)
+   {
+      mTransport = rhs.mTransport;
+      mIsExternal = rhs.mIsExternal;
+      mRequest = rhs.mRequest;
+      mResponse = rhs.mResponse;
+      mSource = rhs.mSource;
+      mDestination = rhs.mDestination;
+   }
+
+   return *this;
+}
+
 bool
 TransactionMessage::isRequest() const
 {

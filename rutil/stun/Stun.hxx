@@ -241,7 +241,7 @@ typedef struct
       
       //bool hasTurnRealm;
       // turnRealm;
-} StunMessage; 
+} StunMessageStruct; 
 
 
 // Define enum with different types of NAT 
@@ -293,16 +293,16 @@ typedef struct
 bool
 stunParseMessage( char* buf, 
                   unsigned int bufLen, 
-                  StunMessage& message, 
+                  StunMessageStruct& message, 
                   bool verbose );
 
 void
-stunBuildReqSimple( StunMessage* msg,
+stunBuildReqSimple( StunMessageStruct* msg,
                     const StunAtrString& username,
                     bool changePort, bool changeIp, unsigned int id=0 );
 
 unsigned int
-stunEncodeMessage( const StunMessage& message, 
+stunEncodeMessage( const StunMessageStruct& message, 
                    char* buf, 
                    unsigned int bufLen, 
                    const StunAtrString& password,
@@ -383,7 +383,7 @@ stunServerProcessMsg( char* buf,
                       StunAddress4& secondary,
                       StunAddress4& myAddr,
                       StunAddress4& altAddr, 
-                      StunMessage* resp,
+                      StunMessageStruct* resp,
                       StunAddress4* destination,
                       StunAtrString* hmacPassword,
                       bool* changePort,

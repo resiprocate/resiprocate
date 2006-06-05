@@ -38,7 +38,7 @@ class StunMessage : public TransactionMessage
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
 
-       virtual ~StunMessage();
+      virtual ~StunMessage();
 
       static StunMessage* make(const Data& buffer, bool isExternal = false);
 
@@ -51,42 +51,12 @@ class StunMessage : public TransactionMessage
             const char* name() const { return "StunMessage::Exception"; }
       };
 
-/*
-  
-  void setFromTU() 
-  {
-  mIsExternal = false;
-  }
-  
-  void setFromExternal()
-  {
-  mIsExternal = true;
-  }
-  
-  bool isExternal() const
-  {
-  return mIsExternal;
-  }
-  
-*/
       virtual bool isClientTransaction() const;
       
       virtual std::ostream& encode(std::ostream& str) const;      
       
       virtual std::ostream& encodeBrief(std::ostream& str) const;
-      
-      /*
-        bool isRequest() const;
-        bool isResponse() const;
-        
-        void setSource(const Tuple& tuple) { mSource = tuple; }
-        const Tuple& getSource() const { return mSource; }
-        
-        // Used by the stateless interface to specify where to send a request/response
-        void setDestination(const Tuple& tuple) { mDestination = tuple; }
-        Tuple& getDestination() { return mDestination; }
-      */
-      
+            
       virtual void addBuffer(char* buf);
       
       // returns the encoded buffer which was encoded by resolve()
@@ -96,30 +66,16 @@ class StunMessage : public TransactionMessage
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
       
    protected:
-      // void cleanUp();
+      void cleanUp();
       
    private:
-/*
-  // indicates this message came from the wire, set by the Transport
-  bool mIsExternal;
-  
-  // For messages received from the wire, this indicates where it came
-  // from. Can be used to get to the Transport and/or reliable Connection
-  Tuple mSource;
-  
-  // Used by the TU to specify where a message is to go
-  Tuple mDestination;
-  
-  // Raw buffers coming from the Transport. message manages the memory
-  std::vector<char*> mBufferList;
-  
-  // is a request or response
-  mutable bool mRequest;
-  mutable bool mResponse;
-*/
       
+      // Raw buffers coming from the Transport. message manages the memory
+      std::vector<char*> mBufferList;
+
+      StunMessageStruct  mStunMessageStruct;
+
 //      Data mEncoded; // to be retransmitted
-       UInt64 mCreatedTime;
       
       friend class TransportSelector;
 };
