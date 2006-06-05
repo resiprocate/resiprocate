@@ -79,7 +79,7 @@ class Transport
       // request. Response will go straight into the TxFifo
 
       bool basicCheck(const SipMessage& msg);
-      bool basicCheck(const StunMessage& msg);
+      bool basicCheck(StunMessage& msg);   // causes a parse
 
       void makeFailedResponse(const SipMessage& msg,
                               int responseCode = 400,

@@ -17,6 +17,7 @@
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/StunMessage.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Helper.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -298,6 +299,35 @@ Transport::basicCheck(const SipMessage& msg)
       catch (BaseException& e)
       {
          InfoLog (<< "Cannot make failure response to badly constructed message: " << e);
+         return false;
+      }
+   }
+   return true;
+}
+
+bool
+Transport::basicCheck(StunMessage& msg)
+{
+   if (msg.isExternal())
+   {
+      bool parseSuccess=false;
+      try
+      {
+          parseSuccess = msg.parse();
+          if(!parseSuccess)
+          {
+             // ?slg? send error reponse - need to decide if sending a response is OK, even if we couldn't parse a tid
+          }
+          return parseSuccess;
+      }
+      catch (BaseException& e)  // not currently thrown
+      {
+         InfoLog (<< "Cannot make failure response to badly constructed message: " << e);
+         return false;
+      }
+      catch(...)
+      {
+         InfoLog (<< "Cannot make failure response to badly constructed message: (unknown exception)");
          return false;
       }
    }
