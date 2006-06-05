@@ -42,6 +42,7 @@ class Prd
       void onConnectionTerminated(std::auto_ptr<ConnectionTerminated>) {;}
 
       Postable& getPostable() const;
+      const PrdId& getId() const;
       
    protected:
       virtual void protectedDispatch(std::auto_ptr<SipMessage>) = 0;
@@ -58,6 +59,8 @@ class Prd
 
    private:
       friend class PrdManager;
+      PrdId mId;
+      
       Postable& mPostable;
       // called by PrdManager
       SharedPtr<Prd> manage(PrdManager* prdManager);
