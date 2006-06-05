@@ -110,7 +110,6 @@ Prd::makeResponse(SipMessage &response,
    Helper::makeResponse(response, request, responseCode, reason);
 }
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

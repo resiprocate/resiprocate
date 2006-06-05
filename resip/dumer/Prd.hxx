@@ -48,7 +48,6 @@ class Prd
 
       void unmanage() { mPrdManager->unmanage(*this); }
 
-      SipMessage mLastRequest;
       SharedPtr<UserProfile> mUserProfile;
       PrdManager* mPrdManager;
 
