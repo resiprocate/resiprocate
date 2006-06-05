@@ -222,11 +222,15 @@ UdpTransport::process(FdSet& fdset)
       if ( ( buffer[0] == 0 || buffer[0] == 1 )  
            && ( buffer[1] >= 1 && buffer[1] <= 0x12 ) )
       {
-         message = new StunMessage;
+         message = new StunMessage(this);
+         // Tell the StunMessage about this datagram buffer.
+         message->addBuffer(buffer, len);
       }
       else
       {
          message = new SipMessage(this);
+         // Tell the SipMessage about this datagram buffer.
+         message->addBuffer(buffer);
       }
  
       // It is presumed that UDP Datagrams are arriving atomically and that
@@ -237,8 +241,6 @@ UdpTransport::process(FdSet& fdset)
       message->setSource(tuple);   
       //DebugLog (<< "Received from: " << tuple);
    
-      // Tell the SipMessage about this datagram buffer.
-      message->addBuffer(buffer);
 
       if ( dynamic_cast<StunMessage*>( message ) )
       {

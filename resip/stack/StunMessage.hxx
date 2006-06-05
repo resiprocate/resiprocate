@@ -29,18 +29,17 @@ class StunMessage : public TransactionMessage
        explicit StunMessage(const Transport* fromWire = 0);
       // .dlb. public, allows pass by value to compile.
       StunMessage(const StunMessage& message);
+      virtual ~StunMessage();
+      StunMessage& operator=(const StunMessage& rhs);
 
       // .dlb. sure would be nice to have overloaded return value here..
       virtual Message* clone() const;
-
-      StunMessage& operator=(const StunMessage& rhs);
       
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
 
-      virtual ~StunMessage();
-
       static StunMessage* make(const Data& buffer, bool isExternal = false);
+      virtual bool parse();
 
       class Exception : public BaseException
       {
@@ -52,31 +51,28 @@ class StunMessage : public TransactionMessage
       };
 
       virtual bool isClientTransaction() const;
-      
-      virtual std::ostream& encode(std::ostream& str) const;      
-      
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
-            
-      virtual void addBuffer(char* buf);
-      
+      virtual void addBuffer(char* buf, int len);
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
-      Data& getEncoded();
-      
+      Data& getEncoded();      
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
       
+      virtual std::ostream& encode(std::ostream& str) const;            
+      virtual std::ostream& encodeBrief(std::ostream& str) const;
+                  
    protected:
       void cleanUp();
       
    private:
       
       // Raw buffers coming from the Transport. message manages the memory
-      std::vector<char*> mBufferList;
+      std::vector<std::pair<char*,int> > mBufferList;
+      bool mParsed;
+      int mTotalBufferSize;
 
       StunMessageStruct  mStunMessageStruct;
 
-//      Data mEncoded; // to be retransmitted
-      
+//      Data mEncoded; // to be retransmitted      
       friend class TransportSelector;
 };
 
