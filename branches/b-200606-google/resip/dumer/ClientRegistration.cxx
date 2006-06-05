@@ -294,17 +294,17 @@ ClientRegistration::dump(std::ostream& strm) const
 }
 
 void
-ClientRegistration::protectedDispatch(const SipMessage& msg)
+ClientRegistration::protectedDispatch(std::auto_ptr<SipMessage> sipMessage)
 {
    try
    {
       // !jf! there may be repairable errors that we can handle here
-      assert(msg.isResponse());
+      assert(msg && msg->isResponse());
 
       /*   !slg! Needs to be fixed
-      if(msg.isExternal())
+      if(msg->isExternal())
       {
-         const Data& receivedTransport = msg.header(h_Vias).front().transport();
+         const Data& receivedTransport = msg->header(h_Vias).front().transport();
          int keepAliveTime = 0;
          if(receivedTransport == Symbols::TCP ||
             receivedTransport == Symbols::TLS ||
@@ -323,7 +323,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
          }
       }*/
 
-      const int& code = msg.header(h_StatusLine).statusCode();
+      const int& code = msg->header(h_StatusLine).statusCode();
       if (code < 200)
       {
          // throw it away
@@ -333,10 +333,10 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
       {
          try
          {
-            if (msg.exists(h_ServiceRoutes))
+            if (msg->exists(h_ServiceRoutes))
             {
-               InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-               mUserProfile->setServiceRoute(msg.header(h_ServiceRoutes));
+               InfoLog(<< "Updating service route: " << Inserter(msg->header(h_ServiceRoutes)));
+               mUserProfile->setServiceRoute(msg->header(h_ServiceRoutes));
             }
             else
             {
@@ -359,9 +359,9 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
             mMyContacts = mInitialRequest->header(h_Contacts);
          }
 
-         if (msg.exists(h_Contacts))
+         if (msg->exists(h_Contacts))
          {
-            mAllContacts = msg.header(h_Contacts);
+            mAllContacts = msg->header(h_Contacts);
 
             // make timers to re-register
             int expiry = INT_MAX;
@@ -372,7 +372,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
                int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
-                  for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
+                  for (NameAddrs::const_iterator it = msg->header(h_Contacts).begin(); it != msg->header(h_Contacts).end(); it++)
                   {
                      try
                      {
@@ -405,8 +405,8 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
             }
             else
             {
-               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-                    it != msg.header(h_Contacts).end(); it++)
+               for (NameAddrs::const_iterator it = msg->header(h_Contacts).begin();
+                    it != msg->header(h_Contacts).end(); it++)
                {
                   //add to boolean exp. but needs testing
                   //std::find(myContacts().begin(), myContacts().end(), *it) != myContacts().end()
@@ -426,9 +426,9 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
             
             if (expiry == INT_MAX)
             {
-               if (msg.exists(h_Expires))
+               if (msg->exists(h_Expires))
                {
-                  expiry = msg.header(h_Expires).value();
+                  expiry = msg->header(h_Expires).value();
                }
             }
             if (expiry != INT_MAX)
@@ -446,7 +446,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
          {
             case AddingOrQuerying:
                mState = Registered;
-               onSuccess(msg);
+               onSuccess(*msg);
                break;
 
             case Removing:
@@ -470,7 +470,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
                if(mUserRefresh)
                {
                    mUserRefresh = false;
-                   onSuccess(msg);
+                   onSuccess(*msg);
                }
                break;
 
@@ -494,10 +494,10 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
             if (code == 423) // interval too short
             {
                int maxRegistrationTime = mUserProfile->getDefaultMaxRegistrationTime();
-               if (msg.exists(h_MinExpires) && 
-                   (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
+               if (msg->exists(h_MinExpires) && 
+                   (maxRegistrationTime == 0 || msg->header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
-                  mLastRequest->header(h_Expires).value() = msg.header(h_MinExpires).value();
+                  mLastRequest->header(h_Expires).value() = msg->header(h_MinExpires).value();
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
                   return;
@@ -544,7 +544,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
             }
          }
          
-         onFailure(msg);
+         onFailure(*msg);
 
          // Retry if Profile setting is set
          if (mUserProfile->getDefaultRegistrationRetryTime() > 0 &&
@@ -552,10 +552,10 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
              !mEndWhenDone)
          {
             unsigned int retryInterval = mUserProfile)->getDefaultRegistrationRetryTime();
-            if (msg.exists(h_RetryAfter))
+            if (msg->exists(h_RetryAfter))
             {
                // Use retry interval from error response
-               retryInterval = msg.header(h_RetryAfter).value();
+               retryInterval = msg->header(h_RetryAfter).value();
             }
             mExpires = 0;
             switch(mState)
@@ -575,7 +575,7 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
                           retryInterval,
                           getBaseHandle(),
                           ++mTimerSeq);
-            InfoLog( << "Registration error " << code << " for " << msg.header(h_To) << ", retrying in " << retryInterval << " seconds.");
+            InfoLog( << "Registration error " << code << " for " << msg->header(h_To) << ", retrying in " << retryInterval << " seconds.");
             return;
          }
 
@@ -596,14 +596,16 @@ ClientRegistration::protectedDispatch(const SipMessage& msg)
 }
 
 void
-ClientRegistration::protectedDispatch(const DumTimeout& timer)
+ClientRegistration::protectedDispatch(std::auto_ptr<DumTimeout> timer)
 {
-   switch(timer.type())
+   assert(timer);
+
+   switch(timer->type())
    {
       case DumTimeout::Registration:
          // If you happen to be Adding/Updating when the timer goes off, you should just ignore
          // it since a new timer will get added when the 2xx is received.
-         if (timer.seq() == mTimerSeq && mState == Registered)
+         if (timer->seq() == mTimerSeq && mState == Registered)
          {
             if (!mMyContacts.empty())
             {
@@ -613,7 +615,7 @@ ClientRegistration::protectedDispatch(const DumTimeout& timer)
          break;
 
       case DumTimeout::RegistrationRetry:
-         if (timer.seq() == mTimerSeq)
+         if (timer->seq() == mTimerSeq)
          {
             switch(mState)
             {

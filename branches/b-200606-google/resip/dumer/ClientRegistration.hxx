@@ -14,11 +14,6 @@ class ClientRegistration : public NonDialogPrd
       SipMessage& initialize(const NameAddr& target);
       SipMessage& initialize(const NameAddr& target, int registrationTime);
 
-      /** Callbacks **/
-      virtual void onSuccess(SipMessage& msg) = 0;
-      virtual void onRemoved(SipMessage& msg) = 0;
-      virtual int  onRequestRetry(int retrySeconds, SipMessage& msg) = 0;
-
       /** Adds a registration binding, using the registration from the UserProfile */
       void addBinding(const NameAddr& contact);
 
@@ -57,8 +52,8 @@ class ClientRegistration : public NonDialogPrd
       virtual void end();
 
    protected:
-      virtual void protectedDispatch(SipMessage &);
-      virtual void protectedDispatch(DumTimeout &);
+      virtual void protectedDispatch(std::auto_ptr<SipMessage>);
+      virtual void protectedDispatch(std::auto_ptr<DumTimeout>);
 
    private:
       typedef enum
@@ -71,6 +66,11 @@ class ClientRegistration : public NonDialogPrd
          RetryRefreshing, // Waiting to retry a refresh
          None // for queued only
       } State;
+
+      /** Callbacks **/
+      virtual void onSuccess(SipMessage& msg) = 0;
+      virtual void onRemoved(SipMessage& msg) = 0;
+      virtual int  onRequestRetry(int retrySeconds, SipMessage& msg) = 0;
 
       SipMessage& tryModification(ClientRegistration::State state);
       void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
@@ -87,6 +87,10 @@ class ClientRegistration : public NonDialogPrd
       SipMessage mQueuedRequest;
 
       NetworkAssociation mNetworkAssociation;
+
+      // disabled
+      ClientRegistration(const ClientRegistration&);
+      ClientRegistration& operator=(const ClientRegistration&);
 };
 
 }

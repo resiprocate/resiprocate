@@ -19,6 +19,9 @@ class Prd
       void makeInitialRequest(const NameAddr& target, MethodTypes method);
       void makeInitialRequest(const NameAddr& target, const NameAddr& from,
                               MethodTypes method);
+      void makeResponse(const SipMessage& request,
+                        int responseCode,
+                        const Data& reason) const;
 
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,

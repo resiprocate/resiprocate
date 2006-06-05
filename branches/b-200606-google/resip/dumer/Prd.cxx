@@ -100,6 +100,16 @@ Prd::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodType
    DebugLog ( << "Prd::makeInitialRequest: " << mLastRequest);
 }
 
+void
+Prd::makeResponse(SipMessage &response,
+                  const SipMessage& request,
+                  int responseCode,
+                  const Data& reason) const
+{
+   assert(request.isRequest());
+   Helper::makeResponse(response, request, responseCode, reason);
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
