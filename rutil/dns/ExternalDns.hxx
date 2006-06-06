@@ -27,7 +27,9 @@ class ExternalDns
       };      
       
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr) = 0; 
+                       AfterSocketCreationFuncPtr,
+                       int dnsTimeout = 0,
+                       int dnsTries = 0) = 0; 
                           
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;

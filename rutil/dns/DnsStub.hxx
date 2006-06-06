@@ -91,7 +91,9 @@ class DnsStub : public ExternalDnsHandler
       };
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,
-              AfterSocketCreationFuncPtr socketFunc = 0);      
+              AfterSocketCreationFuncPtr socketFunc = 0,
+              int dnsTimeout = 0,
+              int dnsTries = 0);
       ~DnsStub();
 
       void setResultTransform(ResultTransform*);

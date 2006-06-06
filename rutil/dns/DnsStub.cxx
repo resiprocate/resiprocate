@@ -42,11 +42,13 @@ DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 DnsStub::NameserverList DnsStub::EmptyNameserverList;
 
 DnsStub::DnsStub(const NameserverList& additional,
-                 AfterSocketCreationFuncPtr socketFunc) :
+                 AfterSocketCreationFuncPtr socketFunc,
+                 int timeout,
+                 int tries) :
    mTransform(0),
-   mDnsProvider(ExternalDnsFactory::createExternalDns())
+   mDnsProvider(ExternalDnsFactory::get())
 {
-   int retCode = mDnsProvider->init(additional, socketFunc);
+   int retCode = mDnsProvider->init(additional, socketFunc, timeout, tries);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
@@ -69,8 +71,6 @@ DnsStub::~DnsStub()
    {
       delete *it;
    }
-
-   delete mDnsProvider;
 }
 
 bool 
@@ -498,7 +498,15 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
 
    char* name = 0;
    int len = 0;
-   ares_expand_name(aptr, abuf, alen, &name, &len);
+
+   if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
+   {
+      ErrLog(<< "Failed DNS preparse"  << endl);
+      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
+      bGotAnswers = false;
+      return;
+   }
+
    targetToQuery = name;
    aptr += len;
 
