@@ -137,7 +137,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     mOriginalContacts = database->getContacts(mAor);
 
-    // If no conacts are present in the request, this is simply a query.
+    // If no contaacts are present in the request, this is simply a query.
     if (!msg.exists(h_Contacts))
     {
       handler->onQuery(getHandle(), msg);
@@ -179,8 +179,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
-      static ExtensionParameter p_cid("cid");
-      i->uri().param(p_cid) = Data(msg.getSource().connectionId);
+// !rwm! I believe the getSource().connectionId has been replaced by the Tuple stored in the ContactRecord
+//      static ExtensionParameter p_cid("cid");
+//      i->uri().param(p_cid) = Data(msg.getSource().connectionId);
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -189,25 +190,74 @@ ServerRegistration::dispatch(const SipMessage& msg)
         {
           operation = REMOVE;
         }
-        database->removeContact(mAor, i->uri());
+		  // see if there is an instance ID on the contact
+		  if (i->exists(p_Instance))
+		  {
+		     int regid = 0;
+			  if (i->exists(p_regId))
+			  {
+			     regid = i->param(p_regId);
+			  }
+		     database->removeInstance(mAor, i->param(p_Instance), regid);
+		  }
+		  else
+		  {
+		     database->removeContact(mAor, i->uri());
+		  }
       }
       // Otherwise, it's an addition or refresh.
       else
       {
         RegistrationPersistenceManager::update_status_t status;
-        InfoLog (<< "Adding " << mAor << " -> " << i->uri());
-        if(i->exists(p_q))
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires,i->param(p_q));
-        }
-        else
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires);
+        InfoLog (<< "Adding/Updating" << mAor << " -> " << i->uri());
+
+		   RegistrationPersistenceManager::ContactRecord rec;
+			rec.lastModified = Timer::getTimeMs();
+			rec.expires = now + expires;
+			rec.uri = i->uri();
+			rec.lastCallId = msg.header(h_CallId).value();
+			rec.lastCSeq = msg.header(h_CSeq).sequence();
+			rec.connectionId = msg.getSource();
+			
+			if (i->exists(p_Instance))
+			{
+				rec.instanceId = i->param(p_Instance);
+				if (i->exists(p_regId) && (i->param(p_regId) > 0))
+				{
+					rec.regId = i->param(p_regId);
+				}
+				else
+				{
+					rec.regId = 0;
+				}
+			}
+			else
+			{
+				rec.instanceId = Data::Empty;
+				rec.regId = 0;
+			}
+			
+			if (i->exists(p_q))
+			{
+				rec.useQ = true;
+				rec.q = i->param(p_q);
+			}
+			else
+			{
+				rec.useQ = false;
+			}
+
+			if (msg.exists(h_Paths))
+			{
+				rec.sipPath = msg.header(h_Paths);
+			}
+		 	
+			status = database->updateContact(mAor, rec);
+
+         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
+         {
+				operation = ADD;
          }
-        if (status == RegistrationPersistenceManager::CONTACT_CREATED)
-        {
-          operation = ADD;
-        }
       }
     }
 

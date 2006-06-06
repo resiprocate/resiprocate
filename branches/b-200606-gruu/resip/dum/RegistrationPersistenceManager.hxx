@@ -3,6 +3,10 @@
 
 #include <list>
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/NameAddr.hxx"
+#include "resip/stack/Tuple.hxx"
+#include "rutil/Data.hxx"
+#include <time.h>
 
 namespace resip
 {
@@ -12,10 +16,20 @@ class RegistrationPersistenceManager
   public:
    struct ContactRecord
    {
-      resip::Uri uri;
+      Uri uri;					// URI from Contact header
       time_t expires;
       float q;
       bool useQ;
+	   Data instanceId;		// the "+sip.instance" header parameter
+		int regId;				// the "reg-id" header parameter
+		NameAddrs sipPath;	// the list of Path header field values
+		Tuple connectionId;	// the "connection" over which registration was received
+		// ParameterList mCalleeCaps;  
+		
+		UInt64 lastModified;			// should have same units as expires???
+		
+		Data lastCallId;
+		int lastCSeq;
    };
    
     typedef std::list<ContactRecord> ContactRecordList;
@@ -47,9 +61,11 @@ class RegistrationPersistenceManager
          contact should not be prioritized according to q-value (default).
          
      */
-    virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires, float q=-1) = 0;
+    //virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires, float q=-1) = 0;
+	 virtual update_status_t updateContact(const Uri& aor, const ContactRecord& contactRec) = 0;
 
     virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
+	 virtual void removeInstance(const Uri& aor, const Data& instance, const int regId = 0) = 0;
 
     virtual ContactRecordList getContacts(const Uri& aor) = 0;
   private:
