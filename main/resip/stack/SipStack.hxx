@@ -39,7 +39,7 @@ class SipStack
                             the stack will not support these advanced security 
                             features.  The compile flag USE_SSL is also required.
                             The security object will be owned by the SipStack and
-                            deleted in the SipStack destructor.  Default is 0.
+                            deleted in the SipStack destructor.  Default is 0. 
 
           @param handler    AsyncProcessHandler that will be invoked when Messages 
                             are posted to the stack.  For example:  SelectInterruptor.
@@ -49,7 +49,9 @@ class SipStack
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
-               AfterSocketCreationFuncPtr socketFunc = 0);      
+               AfterSocketCreationFuncPtr socketFunc = 0,
+               int dnsTimeout = 0,
+               int dnsTries = 0);      
 
       virtual ~SipStack();
 
