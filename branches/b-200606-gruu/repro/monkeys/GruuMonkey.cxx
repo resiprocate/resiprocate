@@ -30,12 +30,8 @@ GruuMonkey::process(RequestContext& context)
             << "; reqcontext = " << context);
 
    resip::SipMessage& request = context.getOriginalRequest();
+   
 
-   //    sip:alice;uuid:urn:00000-000-8....@example.com;user=gruu
-   //
-   // Looking for a Request URI which contains ";user=gruu"
-   
-   
    // This monkey looks for a Request URIs such as:
    //    sip:alice@example.com;opaque=uuid:urn:0000-000-89akkskhnasd
    //
