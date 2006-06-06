@@ -1270,10 +1270,10 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    buddy.group = group;
    buddy.presDialog = new DeprecatedDialog( NameAddr(mContact) );
    assert( buddy.presDialog );
-   
-   mBuddies.push_back( buddy );
 
    subscribeBuddy( buddy );
+
+   mBuddies.push_back( buddy );
 }
 
 

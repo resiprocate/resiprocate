@@ -116,6 +116,17 @@ public:
             UInt64 mNextTimeToSubscribe;
             bool online;
             Data status;
+            
+            Buddy() {};
+            Buddy(const Buddy& rhs)
+            {
+                uri = rhs.uri;
+                group = rhs.group;
+                presDialog = rhs.presDialog;
+                mNextTimeToSubscribe = rhs.mNextTimeToSubscribe;
+                online = rhs.online;
+                status = rhs.status;
+            };
       };
 
       // people I subscribe to
