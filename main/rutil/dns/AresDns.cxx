@@ -8,6 +8,7 @@
 
 #include "ares.h"
 #include "ares_dns.h"
+#include "ares_private.h"
 
 #if !defined(USE_ARES)
 #error Must have ARES
@@ -23,7 +24,9 @@ using namespace resip;
 
 int 
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
-              AfterSocketCreationFuncPtr socketfunc)   
+              AfterSocketCreationFuncPtr socketfunc,
+              int timeout,
+              int tries)   
 {
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
@@ -81,6 +84,16 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    }
    else
    {
+      if (timeout > 0)
+      {
+         mChannel->timeout = timeout;
+      }
+
+      if (tries > 0)
+      {
+         mChannel->tries = tries;
+      }
+
       return Success;      
    }
 }
