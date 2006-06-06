@@ -31,8 +31,11 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires,float q=-1);
+//      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires,float q=-1);
+		virtual update_status_t updateContact(const Uri& aor, const ContactRecord& contactRec);
       virtual void removeContact(const Uri& aor, const Uri& contact);
+		virtual void removeInstance(const Uri& aor, const Data& instance, const int regId);
+
       
       virtual ContactRecordList getContacts(const Uri& aor);
    

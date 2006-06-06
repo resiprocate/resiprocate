@@ -119,6 +119,59 @@ InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
 }
 
 RegistrationPersistenceManager::update_status_t 
+InMemoryRegistrationDatabase::updateContact(const Uri& aor, const ContactRecord& contactRec)
+{
+  ContactRecordList *contactList = 0;
+
+  {
+    Lock g(mDatabaseMutex);
+
+    database_map_t::iterator i;
+    i = mDatabase.find(aor);
+    if (i == mDatabase.end() || i->second == 0)
+    {
+      contactList = new ContactRecordList();
+      mDatabase[aor] = contactList;
+    }
+    else
+    {
+      contactList = i->second;
+    }
+  }
+
+  assert(contactList);
+
+  ContactRecordList::iterator j;
+
+   // See if the contact is already present. Either we match the instance ID or if one 
+	// is not present, we use URI matching rules on the Contact header URI.
+   for (j = contactList->begin(); j != contactList->end(); j++)
+   {
+		if (!contactRec.instanceId.empty())
+		{
+			if (((*j).instanceId == contactRec.instanceId) && ((*j).regId == contactRec.regId))
+			{
+				*j = contactRec;
+				return CONTACT_UPDATED;
+			}
+		}	 
+		else
+	   { 
+			if ((*j).uri == contactRec.uri)
+			{
+				*j = contactRec;
+				return CONTACT_UPDATED;
+			 }
+		}
+	}
+   
+   // This is a new contact, so we add it to the list.
+   contactList->push_back(contactRec);
+   return CONTACT_CREATED;
+}
+
+/*
+RegistrationPersistenceManager::update_status_t 
 InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, time_t expires,float q)
 {
   ContactRecordList *contactList = 0;
@@ -181,6 +234,7 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, 
   contactList->push_back(newRec);
   return CONTACT_CREATED;
 }
+*/
 
 void 
 InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
@@ -204,7 +258,7 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
   // See if the contact is present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
   {
-    if ((*j).uri == contact)
+    if (((*j).uri == contact) && !((*j).uri.exists(p_Instance)))
     {
       contactList->erase(j);
       if (contactList->empty())
@@ -212,6 +266,42 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
         removeAor(aor);
       }
       return;
+    }
+  }
+}
+
+void 
+InMemoryRegistrationDatabase::removeInstance(const Uri& aor, const Data& instance, const int regId = 0)
+{
+  ContactRecordList *contactList = 0;
+
+  {
+    Lock g(mDatabaseMutex);
+
+    database_map_t::iterator i;
+    i = mDatabase.find(aor);
+    if (i == mDatabase.end() || i->second == 0)
+    {
+      return;
+    }
+    contactList = i->second;
+  }
+
+  ContactRecordList::iterator j;
+
+  // See if the instance ID is present.
+  for (j = contactList->begin(); j != contactList->end(); j++)
+  {
+    if ((*j).instanceId == instance)
+    {
+      if (((*j).regId == regId) || (regId == 0))
+		{
+		   contactList->erase(j);
+         if (contactList->empty())
+         {
+           removeAor(aor);
+         }
+		}
     }
   }
 }
