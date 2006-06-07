@@ -144,12 +144,12 @@ PageModePrd::reject(int statusCode)
 }
 
 void 
-ServerPagerMessage::send(SharedPtr<SipMessage> response)
+PageModePrd::send(SharedPtr<SipMessage> response)
 {
    // Use Page to send a request
    assert(response->isResponse());
 
-   send(response);
+   NonDialogPrd::send(response);
 }
 
 void
