@@ -40,15 +40,15 @@ using namespace std;
 DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 
 DnsStub::NameserverList DnsStub::EmptyNameserverList;
+int DnsStub::mDnsTimeout = 0;
+int DnsStub::mDnsTries = 0;
 
 DnsStub::DnsStub(const NameserverList& additional,
-                 AfterSocketCreationFuncPtr socketFunc,
-                 int timeout,
-                 int tries) :
+                 AfterSocketCreationFuncPtr socketFunc) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::get())
 {
-   int retCode = mDnsProvider->init(additional, socketFunc, timeout, tries);
+   int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
