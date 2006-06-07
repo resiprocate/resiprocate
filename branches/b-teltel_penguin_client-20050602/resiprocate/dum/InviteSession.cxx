@@ -679,6 +679,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnAck:
          mCurrentRetransmit200     = 0; // stop the 200 retransmit timer
          mCurrentRetransmit200CSeq = 0; // reset so DumTimeout::WaitForAck handles only active retransmit timeout.
+         handler->onAckReceived(getSessionHandle(), msg);
          break;
 
       default:
