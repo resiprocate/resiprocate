@@ -1525,7 +1525,7 @@ Data::convertInt() const
 {
    int val = 0;
    int s = 1;
-   if (mBuf && size)
+   if (mBuf && mSize)
    {
       char* p = mBuf;
       int l = mSize;
@@ -1566,7 +1566,7 @@ Data::convertInt64() const
 {
    Int64 val = 0;
    int s = 1;
-   if (mBuf && size)
+   if (mBuf && mSize)
    {
       char* p = mBuf;
       int l = mSize;
