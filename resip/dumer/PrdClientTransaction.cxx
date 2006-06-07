@@ -12,7 +12,7 @@ PrdClientTransaction::PrdClientTransaction()
 {
 }
 
-ClientOutOfDialogReq::~ClientOutOfDialogReq()
+PrdClientTransaction::~PrdClientTransaction()
 {
 }
 
