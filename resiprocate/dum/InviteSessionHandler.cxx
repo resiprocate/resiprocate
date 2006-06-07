@@ -11,6 +11,11 @@ InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
    handle->send(msg);
 }
 
+void
+InviteSessionHandler::onAckReceived(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
 void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
