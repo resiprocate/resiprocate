@@ -104,7 +104,7 @@ class InviteSessionHandler
       virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg)=0;
 
       /// called when ACK is received
-      virtual void onAckReceived(InviteSessionHandle, const SipMessage& msg)=0;
+      virtual void onAckReceived(InviteSessionHandle, const SipMessage& msg);
 
       /// default behaviour is to send a BYE to end the dialog
       virtual void onAckNotReceived(InviteSessionHandle);
