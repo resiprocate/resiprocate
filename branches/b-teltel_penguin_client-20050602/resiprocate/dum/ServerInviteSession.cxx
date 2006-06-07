@@ -391,7 +391,7 @@ ServerInviteSession::accept(int code)
       case UAS_EarlyProvidedAnswer:
          transition(UAS_Accepted);
          sendAccept(code, mCurrentLocalSdp.get());
-         handler->onConnected(getSessionHandle(), mInvite200);
+         //handler->onConnected(getSessionHandle(), mInvite200);
          break;
          
       case UAS_NoOffer:
@@ -621,7 +621,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         // handler->onConnected(getSessionHandle(), msg);  // !slg! not needed since onConnected is called when 200 is sent
+         handler->onConnected(getSessionHandle(), msg);  // !slg! not needed since onConnected is called when 200 is sent
          break;
       }
 
