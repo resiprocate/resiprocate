@@ -55,7 +55,7 @@ ClientPublication::end()
 }
 
 void 
-ClientPublication::protectedDispatch(SipMessage& msg)
+ClientPublication::protectedDispatch(std::auto_ptr<SipMessage> msg)
 {
    if (msg->isRequest())
    {
