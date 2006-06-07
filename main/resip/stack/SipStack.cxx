@@ -46,16 +46,14 @@ SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler, 
                    bool stateless,
-                   AfterSocketCreationFuncPtr socketFunc,
-                   int dnsTimeout,
-                   int dnsTries
+                   AfterSocketCreationFuncPtr socketFunc
    ) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional, socketFunc, dnsTimeout, dnsTries)),
+   mDnsStub(new DnsStub(additional, socketFunc)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
