@@ -49,9 +49,7 @@ class SipStack
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
-               AfterSocketCreationFuncPtr socketFunc = 0,
-               int dnsTimeout = 0,
-               int dnsTries = 0);      
+               AfterSocketCreationFuncPtr socketFunc = 0);      
 
       virtual ~SipStack();
 
