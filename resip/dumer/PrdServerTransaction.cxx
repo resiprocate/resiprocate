@@ -39,7 +39,7 @@ void
 PrdServerTransaction::send(SipMessage& response)
 {
    assert(response->isResponse());
-   send(response);
+   NonDialogPrd::send(response);
    unmanage();
 }
 
