@@ -14,7 +14,6 @@ class PageModePrd : public NonDialogPrd
       virtual ~PageModePrd() {}
 
       virtual void page(std::auto_ptr<Contents> contents, EncryptionLevel level=None);
-      virtual void send(SipMessage &msg);
       virtual void end();
 
       void initialize(const NameAddr& target);
