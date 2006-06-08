@@ -108,8 +108,7 @@ PageModePrd::pageFirstMsgQueued ()
    DumHelper::setOutgoingEncryptionLevel(*mLastRequest, mOutboundMsgQueue.front().encryptionLevel);
    DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << *mLastRequest);
    
-   // Call base class send, our version asserts reponses only
-   NonDialogPrd::send(mLastRequest);
+   send(mLastRequest);
 }
 
 void
@@ -143,15 +142,6 @@ PageModePrd::reject(int statusCode)
    //!dcm! -- should any responses include a contact?
    makeResponse(mResponse, mRequest, statusCode);
    return mResponse;
-}
-
-void 
-PageModePrd::send(SipMessage& response)
-{
-   // Use page() to send a request
-   assert(response->isResponse());
-
-   NonDialogPrd::send(response);
 }
 
 void
