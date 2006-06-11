@@ -383,7 +383,7 @@ class SdpContents : public Contents
                   // from session if empty
                   const std::list<Connection> getConnections() const;
                   // does not include session connections
-                  std::list<Connection>& getMediumConnections() {return mConnections;}
+                  const std::list<Connection>& getMediumConnections() const {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
@@ -452,7 +452,7 @@ class SdpContents : public Contents
             const std::list<Phone>& getPhones() const {return mPhones;}
             const Connection& connection() const {return mConnection;}
             Connection& connection() {return mConnection;} // !dlb! optional?
-            bool isConnection() { return mConnection.mAddress != Data::Empty; }
+            bool isConnection() const { return mConnection.mAddress != Data::Empty; }
             const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
             std::list<Bandwidth>& bandwidths() {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
