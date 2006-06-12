@@ -17,6 +17,7 @@ libresiprocate_la_SOURCES = \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
 	os/FileSystem.cxx \
+	os/HeapInstanceCounter.cxx \
 	os/Id.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
@@ -107,6 +108,7 @@ libresiprocate_la_SOURCES = \
 	TcpBaseTransport.cxx \
 	TcpConnection.cxx \
 	TcpTransport.cxx \
+	TimeAccumulate.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TlsConnection.cxx \
@@ -234,6 +236,7 @@ resiprocate_include_HEADERS = \
 	TcpTransport.hxx \
 	TcpBaseTransport.hxx \
 	TcpConnection.hxx \
+	TimeAccumulate.hxx \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
 	TlsConnection.hxx \
@@ -276,6 +279,7 @@ resiprocate_os_include_HEADERS = \
 	os/Fifo.hxx \
 	os/FileSystem.hxx \
 	os/HashMap.hxx \
+	os/HeapInstanceCounter.hxx \
 	os/Id.hxx \
 	os/Inserter.hxx \
 	os/Lock.hxx \
