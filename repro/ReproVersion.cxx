@@ -15,8 +15,9 @@
 #endif
 
 #include "repro/ReproVersion.hxx"
+#ifndef WIN32  // !slg! need solution for generating reproInfo.hxx for windows
 #include "repro/reproInfo.hxx"
-
+#endif
 #if !defined(REPRO_BUILD_REV)
 # define REPRO_BUILD_REV "000000"
 #endif
@@ -26,7 +27,7 @@
 #endif
 
 #if !defined(REPRO_RELEASE_VERSION)
-# define REPRO_RELEASE_VERSION 0.0
+# define REPRO_RELEASE_VERSION "0.0"
 #endif
 
 #if !defined(REPRO_NAME)
