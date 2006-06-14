@@ -1405,7 +1405,12 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       assert(!sip->header(h_Vias).empty());
 
       Tuple target(mResponseTarget);
-      if (sip->hasForceTarget())
+      if (sip->getDestination().transport)
+      {
+         target = sip->getDestination();
+         StackLog(<<"response with destination sending to : " << target);
+      }
+      else if (sip->hasForceTarget())
       {
          target = simpleTupleForUri(sip->getForceTarget());
          target.transport = mResponseTarget.transport;
