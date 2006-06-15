@@ -12,6 +12,7 @@
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/SendData.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -20,7 +21,7 @@ class TransactionMessage;
 class SipMessage;
 class Connection;
 
-class InternalTransport : public Transport, public ThreadIf
+class RESIP_API InternalTransport : public Transport, public ThreadIf
 {
    public:
       // sendHost what to put in the Via:sent-by

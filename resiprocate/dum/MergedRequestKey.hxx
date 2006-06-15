@@ -2,12 +2,13 @@
 #define RESIP_MERGEDREQUESTKEY_HXX
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class MergedRequestKey
+class DUM_API MergedRequestKey
 {
    public:
       MergedRequestKey();

@@ -1,10 +1,11 @@
 #if !defined(RESIP_SUBSCRIPTIONPERSISTENCEMANAGER_HXX)
 #define RESIP_SUBSCRIPTIONPERSISTENCEMANAGER_HXX
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class SubscriptionPersistenceManager
+class DUM_API SubscriptionPersistenceManager
 {
 };
 

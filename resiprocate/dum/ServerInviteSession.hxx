@@ -3,13 +3,14 @@
 
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 #include <deque>
 
 namespace resip
 {
 
-class ServerInviteSession: public InviteSession
+class DUM_API ServerInviteSession: public InviteSession
 {
    public:
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;

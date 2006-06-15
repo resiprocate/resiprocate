@@ -2,13 +2,14 @@
 #define RESIP_TCPTRANSPORT_HXX
 
 #include "resiprocate/TcpBaseTransport.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class TransactionMessage;
 
-class TcpTransport : public TcpBaseTransport
+class RESIP_API TcpTransport : public TcpBaseTransport
 {
    public:
       TcpTransport(Fifo<TransactionMessage>& fifo, 

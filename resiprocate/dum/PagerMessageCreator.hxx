@@ -2,6 +2,7 @@
 #define RESIP_PAGERMESSAGECREATOR_HXX
 
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -9,7 +10,7 @@ namespace resip
 class Uri;
 class SipMessage;
 
-class PagerMessageCreator: public BaseCreator
+class DUM_API PagerMessageCreator: public BaseCreator
 {
    public:
       PagerMessageCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile& userProfile);

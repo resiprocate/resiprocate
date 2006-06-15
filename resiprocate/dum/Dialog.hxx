@@ -13,6 +13,7 @@
 #include "resiprocate/CallId.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/NetworkAssociation.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -24,7 +25,7 @@ class AppDialog;
 
 //!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
-class Dialog 
+class DUM_API Dialog 
 {
    public:
       class Exception : BaseException

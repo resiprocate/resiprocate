@@ -2,6 +2,7 @@
 #define RESIP_OUTOFDIALOGREQCREATOR_HXX
 
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -9,7 +10,7 @@ namespace resip
 class Uri;
 class SipMessage;
 
-class OutOfDialogReqCreator: public BaseCreator
+class DUM_API OutOfDialogReqCreator: public BaseCreator
 {
    public:
       OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, UserProfile& userProfile);

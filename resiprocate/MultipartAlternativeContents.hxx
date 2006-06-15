@@ -2,11 +2,12 @@
 #define RESIP_MultipartAlternativeContents_hxx
 
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class MultipartAlternativeContents : public MultipartMixedContents
+class RESIP_API MultipartAlternativeContents : public MultipartMixedContents
 {
    public:
       MultipartAlternativeContents();

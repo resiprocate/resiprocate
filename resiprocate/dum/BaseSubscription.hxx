@@ -4,6 +4,7 @@
 #include "resiprocate/dum/DialogUsage.hxx"
 #include "resiprocate/dum/SubscriptionState.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ class DialogUsageManager;
 
 //!dcm! -- update contact in dialog if required
 
-class BaseSubscription: public DialogUsage
+class DUM_API BaseSubscription: public DialogUsage
 {
    public:      
       bool matches(const SipMessage& subOrNotify);

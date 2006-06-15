@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ using namespace std;
 struct headers { char *name; Headers::Type type; };
 /* maximum key range = 540, duplicates = 4 */
 
-class HeaderHash
+class RESIP_API HeaderHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);

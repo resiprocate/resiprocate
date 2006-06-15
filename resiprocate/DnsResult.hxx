@@ -11,6 +11,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #ifdef _WIN32
 #include <Ws2tcpip.h>
@@ -23,7 +24,7 @@ namespace resip
 class DnsInterface;
 class DnsHandler;
 
-class DnsResult
+class RESIP_API DnsResult
 {
    public:
       RESIP_HeapCount(DnsResult);

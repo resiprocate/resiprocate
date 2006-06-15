@@ -1,12 +1,14 @@
 #if !defined(ParseUtil_hxx)
 #define ParseUtil_hxx
 
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip 
 {
 
 class Data;
 
-class ParseUtil
+class RESIP_API ParseUtil
 {
    public:
       // full parse

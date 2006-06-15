@@ -11,6 +11,7 @@
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -19,7 +20,7 @@ class Contents;
 class HeaderFieldValue;
 class ParseBuffer;
 
-class ContentsFactoryBase
+class RESIP_API ContentsFactoryBase
 {
    public:
       virtual Contents* create(HeaderFieldValue* hfv, 
@@ -28,18 +29,18 @@ class ContentsFactoryBase
 };
 
 // MIME header types
-class MIME_Header
+class RESIP_API MIME_Header
 {
 };
 
-class H_ContentID : public MIME_Header
+class RESIP_API H_ContentID : public MIME_Header
 {
    public:
       typedef Token Type;
 };
 extern H_ContentID h_ContentID;
 
-class H_ContentDescription : public MIME_Header
+class RESIP_API H_ContentDescription : public MIME_Header
 {
    public:
       typedef StringCategory Type;
@@ -47,7 +48,7 @@ class H_ContentDescription : public MIME_Header
 extern H_ContentDescription h_ContentDescription;
       
 // Common type for all body contents
-class Contents : public LazyParser
+class RESIP_API Contents : public LazyParser
 {
    public:
       // pass Mime instance for parameters

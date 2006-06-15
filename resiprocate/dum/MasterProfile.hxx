@@ -8,13 +8,14 @@
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/Token.hxx"
 #include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class Data;
 
-class MasterProfile : public UserProfile
+class DUM_API MasterProfile : public UserProfile
 {
    public:  
       

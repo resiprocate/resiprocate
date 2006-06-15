@@ -3,7 +3,7 @@
 
 
 #include "resiprocate/MultipartMixedContents.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -11,7 +11,7 @@ namespace resip
 class Mime;
 class ParseBuffer;
 
-class MultipartSignedContents : public MultipartMixedContents
+class RESIP_API MultipartSignedContents : public MultipartMixedContents
 {
    public:
       MultipartSignedContents();

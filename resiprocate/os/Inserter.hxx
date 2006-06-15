@@ -12,6 +12,7 @@
 
 #include "HashMap.hxx"
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be

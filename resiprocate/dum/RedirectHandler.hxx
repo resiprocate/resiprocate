@@ -1,6 +1,6 @@
 #if !defined(RESIP_REDIRECTHANDLER_HXX)
 #define RESIP_REDIRECTHANDLER_HXX
-
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -8,7 +8,7 @@ namespace resip
 class SipMessage;
 class NameAddr;
 
-class RedirectHandler
+class DUM_API RedirectHandler
 {
    public:
 //3xx that isn't 380 or 305 has been received

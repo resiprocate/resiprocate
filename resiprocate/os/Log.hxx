@@ -2,6 +2,7 @@
 #define RESIP_Log_hx
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #ifndef WIN32
 #include <syslog.h>
@@ -21,7 +22,7 @@ namespace resip
 
 class ExternalLogger;
 
-class Log
+class RESIP_API Log
 {
    public:
       typedef enum 
@@ -63,7 +64,7 @@ class Log
 	 Implementation for logging macros.
 	 Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
       */
-      class Guard
+      class RESIP_API Guard
       {
 	 public:
 	    /** Remember the logging values and be a a stream to receive
@@ -91,7 +92,7 @@ class Log
 	    Guard& operator=(const Guard&);
       };
 
-      class ThreadSetting
+      class RESIP_API ThreadSetting
       {
          public:
             ThreadSetting()
@@ -194,7 +195,7 @@ class Log
 };
 
 /** Interface functor for external logging. */
-class ExternalLogger
+class RESIP_API ExternalLogger
 {
    public:
       /** return true to also do default logging, false to supress default logging. */

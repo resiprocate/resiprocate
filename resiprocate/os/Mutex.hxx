@@ -3,13 +3,13 @@
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Lockable.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class Condition;
 
-class Mutex : public Lockable
+class RESIP_API Mutex : public Lockable
 {
       friend class Condition;
 

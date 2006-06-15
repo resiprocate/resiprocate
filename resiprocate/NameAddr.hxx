@@ -6,6 +6,7 @@
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ namespace resip
 //====================
 // NameAddr:
 //====================
-class NameAddr : public ParserCategory
+class RESIP_API NameAddr : public ParserCategory
 {
    public:
       enum {commaHandling = CommasAllowedOutputMulti};

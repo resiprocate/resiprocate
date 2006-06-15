@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 #include <map>
 #include <functional>
@@ -13,7 +14,7 @@ namespace resip
 class Auth;
 class SipMessage;
 
-class ClientAuthManager
+class DUM_API ClientAuthManager
 {
    public:
       ClientAuthManager();

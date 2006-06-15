@@ -7,6 +7,7 @@
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
 
-class TransactionController
+class RESIP_API TransactionController
 {
    public:
       // set after starting at your peril

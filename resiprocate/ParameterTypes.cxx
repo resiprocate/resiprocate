@@ -14,7 +14,7 @@ _enum##_Param::_enum##_Param()                                                  
    ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;    \
    ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;               \
 }                                                                               \
-_enum##_Param resip::p_##_enum
+RESIP_API _enum##_Param resip::p_##_enum
 
 int strncasecmp(char*,char*,int);
 
@@ -116,7 +116,7 @@ Qop_Options_Param::Qop_Options_Param()
 {
    ParameterTypes::ParameterNames[ParameterTypes::qopOptions] = "qop";
 }
-Qop_Options_Param resip::p_qopOptions;
+RESIP_API Qop_Options_Param resip::p_qopOptions;
 
 ParameterTypes::Type
 qop_Param::getTypeNum() const {return ParameterTypes::qop;}
@@ -124,14 +124,14 @@ qop_Param:: qop_Param()
 {
    ParameterTypes::ParameterNames[ParameterTypes::qop] = "qop";
 }
-qop_Param resip::p_qop;
+RESIP_API qop_Param resip::p_qop;
 
 Qop_Factory_Param::Qop_Factory_Param()
 {
    ParameterTypes::ParameterFactories[ParameterTypes::qopFactory] = Type::decode;
    ParameterTypes::ParameterNames[ParameterTypes::qopFactory] = "qop";
 }
-Qop_Factory_Param resip::p_qopFactory;
+RESIP_API Qop_Factory_Param resip::p_qopFactory;
 
 #include "resiprocate/ParameterHash.hxx"
 

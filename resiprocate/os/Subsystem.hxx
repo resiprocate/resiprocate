@@ -3,11 +3,12 @@
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Subsystem 
+class RESIP_API Subsystem 
 {
    public:
       // Add new systems below

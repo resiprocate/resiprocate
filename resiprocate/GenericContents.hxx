@@ -3,12 +3,13 @@
 
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 // Note: not added to ContentsFactory
-class GenericContents : public PlainContents
+class RESIP_API GenericContents : public PlainContents
 {
    public:
       GenericContents();

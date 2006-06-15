@@ -2,6 +2,7 @@
 #define RESIP_NETWORKASSOCIATION_HXX
 
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip 
 {
@@ -9,7 +10,7 @@ namespace resip
 class SipMessage;
 class DialogUsageManager;
 
-class NetworkAssociation
+class DUM_API NetworkAssociation
 {
    public:
       NetworkAssociation() : mDum(0) {}

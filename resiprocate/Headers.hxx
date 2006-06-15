@@ -6,6 +6,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -14,7 +15,7 @@ class SipMessage;
 //#define PARTIAL_TEMPLATE_SPECIALIZATION
 #ifdef PARTIAL_TEMPLATE_SPECIALIZATION
 template<bool>
-class TypeIf
+class RESIP_API TypeIf
 {
    public:
       template <class T>
@@ -25,11 +26,11 @@ class TypeIf
       };
 };
 
-class UnusedHeader
+class RESIP_API UnusedHeader
 {
 };
 
-class TypeIf<false>
+class RESIP_API TypeIf<false>
 {
    public:
       template <class T>
@@ -57,7 +58,7 @@ class TypeIf<false>
 
 #endif
 
-class HeaderBase
+class RESIP_API HeaderBase
 {
    public:
       virtual Headers::Type getTypeNum() const = 0;
@@ -65,7 +66,7 @@ class HeaderBase
 };
 
 #define defineHeader(_enum, _name, _type, _rfc)                 \
-class H_##_enum : public HeaderBase                             \
+class RESIP_API H_##_enum : public HeaderBase                             \
 {                                                               \
    public:                                                      \
       RESIP_HeapCount(H_##_enum);                               \
@@ -77,10 +78,10 @@ class H_##_enum : public HeaderBase                             \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum();                                              \
 };                                                              \
-extern H_##_enum h_##_enum
+extern RESIP_API H_##_enum h_##_enum
 
 #define defineMultiHeader(_enum, _name, _type, _rfc)            \
-class H_##_enum##s : public HeaderBase                          \
+class RESIP_API H_##_enum##s : public HeaderBase                          \
 {                                                               \
    public:                                                      \
       RESIP_HeapCount(H_##_enum##s);                            \
@@ -92,7 +93,7 @@ class H_##_enum##s : public HeaderBase                          \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum##s();                                           \
 };                                                              \
-extern H_##_enum##s h_##_enum##s
+extern RESIP_API H_##_enum##s h_##_enum##s
 
 //====================
 // Token:
@@ -114,7 +115,7 @@ defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 
 defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
 // explicitly declare to avoid h_AllowEventss, ugh
-extern H_AllowEventss h_AllowEvents;
+extern RESIP_API H_AllowEventss h_AllowEvents;
 
 defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
 defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
@@ -128,13 +129,13 @@ defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329");
 defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329");
 defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
 // explicitly declare to avoid h_SecurityVerifys, ugh
-extern H_SecurityVerifys h_SecurityVerifies;
+extern RESIP_API H_SecurityVerifys h_SecurityVerifies;
 
 defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
 defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
 defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 // explicitly declare to avoid h_Privacys
-extern H_Privacys h_Privacies;
+extern RESIP_API H_Privacys h_Privacies;
 
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
@@ -176,11 +177,11 @@ defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
 // explicitly declare to avoid h_PAssertedIdentitys
-extern H_PPreferredIdentitys h_PPreferredIdentities;
+extern RESIP_API H_PPreferredIdentitys h_PPreferredIdentities;
 
 defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
 // explicitly declare to avoid h_PAssertedIdentitys
-extern H_PAssertedIdentitys h_PAssertedIdentities;
+extern RESIP_API H_PAssertedIdentitys h_PAssertedIdentities;
 
 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
@@ -223,7 +224,7 @@ defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
 defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
 
 typedef H_CallID H_CallId; // code convention compatible
-extern H_CallId h_CallId; // code convention compatible
+extern RESIP_API H_CallId h_CallId; // code convention compatible
 
 defineHeader(Join, "Join", CallId, "RFC 3911");
 defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
@@ -268,11 +269,11 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 //====================
 // special first line accessors
 //====================
-class RequestLineType {};
-extern RequestLineType h_RequestLine;
+class RESIP_API RequestLineType {};
+extern RESIP_API RequestLineType h_RequestLine;
 
-class StatusLineType {};
-extern StatusLineType h_StatusLine;
+class RESIP_API StatusLineType {};
+extern RESIP_API StatusLineType h_StatusLine;
  
 }
 

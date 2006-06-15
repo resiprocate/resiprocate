@@ -5,13 +5,14 @@
 #include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class Message;
 class TransactionUser;
 
-class TuSelector
+class RESIP_API TuSelector
 {
    public:
       TuSelector(TimeLimitFifo<Message>& fallBackFifo);

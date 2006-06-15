@@ -3,13 +3,14 @@
 
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 
 
-class HandleManager
+class DUM_API HandleManager
 {
    public:
       HandleManager();

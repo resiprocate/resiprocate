@@ -2,12 +2,13 @@
 #define RESIP_SYSLOGSTREAM_HXX 
 
 #include "resiprocate/os/SysLogBuf.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 //class SysLogBuf;
 
-class SysLogStream : private SysLogBuf, public std::ostream
+class RESIP_API SysLogStream : private SysLogBuf, public std::ostream
 {
    public:
       SysLogStream();

@@ -2,11 +2,12 @@
 #define RESIP__DEFAULTSERVERREFERHANDLER_HXX
 
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class DefaultServerReferHandler : public ServerSubscriptionHandler
+class DUM_API DefaultServerReferHandler : public ServerSubscriptionHandler
 {
   public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub);

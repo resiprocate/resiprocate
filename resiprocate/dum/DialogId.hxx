@@ -3,11 +3,12 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class DialogId
+class DUM_API DialogId
 {
    public:
       DialogId(const SipMessage& msg );

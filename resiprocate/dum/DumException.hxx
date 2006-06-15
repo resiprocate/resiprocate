@@ -2,11 +2,12 @@
 #define RESIP__DUMEXCEPTION_HXX
 
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class DumException : public BaseException
+class DUM_API DumException : public BaseException
 {
    public:
       DumException(const Data& msg, const Data& file, const int line)

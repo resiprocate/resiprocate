@@ -4,11 +4,12 @@
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class ServerPublication : public BaseUsage 
+class DUM_API ServerPublication : public BaseUsage 
 {
    public:
       typedef Handle<ServerPublication> ServerPublicationHandle;

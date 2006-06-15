@@ -4,6 +4,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/DialogUsage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 #include <map>
 
@@ -16,7 +17,7 @@ class SdpContents;
     Implements common attributes and behavior (i.e.t post connected) of the two
     classes.
 */
-class InviteSession : public DialogUsage
+class DUM_API InviteSession : public DialogUsage
 {
    public:
       static std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);

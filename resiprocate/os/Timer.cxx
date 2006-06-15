@@ -251,7 +251,7 @@ resip::operator>(const Timer& t1, const Timer& t2)
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& str, const Timer& t)
+RESIP_API resip::operator<<(std::ostream& str, const Timer& t)
 {
    UInt64 now = Timer::getTimeMs();
 

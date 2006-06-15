@@ -6,6 +6,7 @@
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ namespace resip
 class SipMessage;
 class DialogUsageManager;
 
-class AppDialogSet : public Handled
+class DUM_API AppDialogSet : public Handled
 {
    public:
 

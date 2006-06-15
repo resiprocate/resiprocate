@@ -3,13 +3,14 @@
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 20, duplicates = 0 */
 
-class MethodHash
+class RESIP_API MethodHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);

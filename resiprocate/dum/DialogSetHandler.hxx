@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class SdpContents;
 class SipMessage;
 
 
-class DialogSetHandler
+class DUM_API DialogSetHandler
 {
    public:
       //called when a 100 is received 

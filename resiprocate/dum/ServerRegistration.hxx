@@ -4,11 +4,12 @@
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class ServerRegistration: public NonDialogUsage 
+class DUM_API ServerRegistration: public NonDialogUsage 
 {
    public:
       ServerRegistrationHandle getHandle();

@@ -2,13 +2,14 @@
 #define TcpConnection_hxx
 
 #include "resiprocate/Connection.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class Tuple;
 
-class TcpConnection : public Connection
+class RESIP_API TcpConnection : public Connection
 {
    public:
       TcpConnection( const Tuple& who, Socket fd );

@@ -1663,7 +1663,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
 {
    strm << "tid=" << state.mId << " [ ";
    switch (state.mMachine)

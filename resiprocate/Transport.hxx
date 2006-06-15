@@ -5,6 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,10 +14,10 @@ class TransactionMessage;
 class SipMessage;
 class Connection;
 
-class Transport
+class RESIP_API Transport
 {
    public:
-      class Exception : public BaseException
+      class RESIP_API Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line);
@@ -116,12 +117,12 @@ class Transport
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:
       static const Data transportNames[MAX_TRANSPORT];
-      friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
 
       Data mTlsDomain;      
 };
 
-std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+extern RESIP_API std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
       
 }
 

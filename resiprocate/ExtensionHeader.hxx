@@ -3,10 +3,12 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip
 {
 
-class ExtensionHeader
+class RESIP_API ExtensionHeader
 {
    public:
       explicit ExtensionHeader(const char* unknownHeaderName);

@@ -5,6 +5,7 @@
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #ifdef WIN32
 
@@ -58,7 +59,7 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
 bool
-genericLogCheckLevel(resip::Log::Level level);
+RESIP_API genericLogCheckLevel(resip::Log::Level level);
 
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)   \
@@ -82,7 +83,7 @@ do                                                                              
 namespace resip
 {
 
-class GenericLogImpl :  public Log 
+class RESIP_API GenericLogImpl :  public Log 
 {
    public:
       static std::ostream& Instance();

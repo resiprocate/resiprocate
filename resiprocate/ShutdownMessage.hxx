@@ -2,11 +2,12 @@
 #define RESIP_ShutdownMessage_hxx 
 
 #include "resiprocate/ApplicationMessage.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class ShutdownMessage : public ApplicationMessage
+class RESIP_API ShutdownMessage : public ApplicationMessage
 {
    public:
       ShutdownMessage() {};
