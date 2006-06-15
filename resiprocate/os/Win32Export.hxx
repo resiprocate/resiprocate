@@ -2,19 +2,18 @@
 #define WIN32EXPORT_HXX 
 
 #if defined(WIN32) || defined(_WIN32) 
-
-#ifdef RESIP_EXPORTS
-#define RESIP_API __declspec(dllexport)
+#   ifdef RESIP_EXPORTS
+#      define RESIP_API __declspec(dllexport)
+#   elif defined(USE_RESIP_DLL)
+#      define RESIP_API __declspec(dllimport)
+#   else
+#      define RESIP_API 
+#   endif
 #else
-#define RESIP_API __declspec(dllimport)
-#endif
+#   define RESIP_API 
+#endif // #if defined(WIN32) || defined(_WIN32) 
 
-#else
-#define RESIP_API 
-
-#endif
-
-#endif
+#endif // #if !defined(WIN32EXPORT_HXX)
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
