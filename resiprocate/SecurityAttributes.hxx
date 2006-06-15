@@ -2,6 +2,7 @@
 #define RESIP_SecurityAttributes_hxx
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -15,7 +16,7 @@ enum SignatureStatus
    SignatureNotTrusted // signature is new and is not signed by a CA we
 };
 
-class SecurityAttributes
+class RESIP_API SecurityAttributes
 {
    public:
       SecurityAttributes();

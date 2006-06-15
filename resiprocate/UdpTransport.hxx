@@ -4,11 +4,12 @@
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class UdpTransport : public InternalTransport
+class RESIP_API UdpTransport : public InternalTransport
 {
    public:
       RESIP_HeapCount(UdpTransport);

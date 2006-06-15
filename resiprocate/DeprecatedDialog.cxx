@@ -685,7 +685,7 @@ DeprecatedDialog::incrementCSeq(SipMessage& request)
 }
 
 std::ostream&
-resip::operator<<(std::ostream& strm, const DeprecatedDialog& d)
+RESIP_API resip::operator<<(std::ostream& strm, const DeprecatedDialog& d)
 {
    strm << "DeprecatedDialog: [" << d.dialogId() 
         << " created=" << d.mCreated 

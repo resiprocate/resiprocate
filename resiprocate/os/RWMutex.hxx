@@ -7,11 +7,12 @@ static const char* const resipRWMutex_hxx_Version =
 #include "Lockable.hxx"
 #include "Mutex.hxx"
 #include "Condition.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class RWMutex : public Lockable
+class RESIP_API RWMutex : public Lockable
 {
     public:
       RWMutex();

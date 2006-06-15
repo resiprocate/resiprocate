@@ -2,10 +2,11 @@
 #define RESIP_KEEPALIVEMESSAGE_HXX 
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
-class KeepAliveMessage : public SipMessage
+class RESIP_API KeepAliveMessage : public SipMessage
 {
    public:
       RESIP_HeapCount(KeepAliveMessage);

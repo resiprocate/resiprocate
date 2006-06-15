@@ -3,11 +3,12 @@
 
 #include <list>
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class RegistrationPersistenceManager
+class DUM_API RegistrationPersistenceManager
 {
   public:
     typedef std::pair<Uri,time_t> ContactPair;

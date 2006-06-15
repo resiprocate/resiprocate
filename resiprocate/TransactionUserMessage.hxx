@@ -2,11 +2,12 @@
 #define RESIP_TransactionUserMessage_hxx 
 
 #include "resiprocate/TransactionMessage.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class TransactionUserMessage : public TransactionMessage
+class RESIP_API TransactionUserMessage : public TransactionMessage
 {
    public:
       typedef enum 

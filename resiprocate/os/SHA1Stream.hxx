@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #if defined (USE_SSL)
 # include "openssl/sha.h"
@@ -18,7 +19,7 @@ typedef int SHA_CTX;
 namespace resip
 {
 
-class SHA1Buffer : public std::streambuf
+class RESIP_API SHA1Buffer : public std::streambuf
 {
    public:
       SHA1Buffer();
@@ -38,7 +39,7 @@ class SHA1Buffer : public std::streambuf
       std::vector<char> mBuf;
 };
 
-class SHA1Stream : private SHA1Buffer, public std::ostream
+class RESIP_API SHA1Stream : private SHA1Buffer, public std::ostream
 {
    public:
       SHA1Stream();

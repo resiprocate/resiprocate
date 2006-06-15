@@ -3,13 +3,14 @@
 
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 class SipMessage;
 class SdpContents;
 
-class ClientInviteSession : public InviteSession
+class DUM_API ClientInviteSession : public InviteSession
 {
    public:
       ClientInviteSession(DialogUsageManager& dum,

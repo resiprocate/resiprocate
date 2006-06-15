@@ -12,6 +12,7 @@
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/TuSelector.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip 
 {
@@ -27,7 +28,7 @@ class Uri;
 class TransactionUser;
 class AsyncProcessHandler;
 
-class SipStack
+class RESIP_API SipStack
 {
    public:
       // Set stateless=true, if you want to use the stack for a stateless proxy

@@ -5,6 +5,7 @@
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/NetworkAssociation.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ class SipMessage;
 class BaseCreator;
 
 //!dcm! -- shutdown/deletion API -- end?
-class ClientRegistration: public NonDialogUsage
+class DUM_API ClientRegistration: public NonDialogUsage
 {
    public:
       ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SipMessage& req);

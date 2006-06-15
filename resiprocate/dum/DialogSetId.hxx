@@ -3,13 +3,14 @@
 
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class SipMessage;
 
-class DialogSetId
+class DUM_API DialogSetId
 {
    public:
       static const DialogSetId Empty;
@@ -22,7 +23,7 @@ class DialogSetId
       bool operator<(const DialogSetId& rhs) const;
       bool operator>(const DialogSetId& rhs) const;
       size_t hash() const;
-      friend std::ostream& operator<<(std::ostream&, const DialogSetId& id);
+      friend DUM_API std::ostream& operator<<(std::ostream&, const DialogSetId& id);
       
       const Data& getCallId() const { return mCallId; }
       const Data& getLocalTag() const { return mTag; }
@@ -40,7 +41,7 @@ class DialogSetId
 #endif
 };
 
-    std::ostream& operator<<(std::ostream&, const DialogSetId&);
+extern DUM_API std::ostream& operator<<(std::ostream&, const DialogSetId&);
 
 }
 

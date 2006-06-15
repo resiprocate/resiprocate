@@ -2,6 +2,7 @@
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
 #include "resiprocate/dum/BaseSubscription.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ class DialogUsageManager;
 
 //!dcm! -- update contact in dialog if required
 
-class ClientSubscription: public BaseSubscription
+class DUM_API ClientSubscription: public BaseSubscription
 {
    public:      
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);

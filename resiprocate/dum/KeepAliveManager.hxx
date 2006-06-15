@@ -3,6 +3,7 @@
 
 #include <map>
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip 
 {
@@ -10,7 +11,7 @@ namespace resip
 class KeepAliveTimeout;
 class DialogUsageManager;
 
-class KeepAliveManager
+class DUM_API KeepAliveManager
 {
    public:
       struct NetworkAssociationInfo

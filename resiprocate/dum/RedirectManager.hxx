@@ -12,6 +12,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 //8.1.3.4
 //19.1.5
@@ -21,7 +22,7 @@ namespace resip
 
 class DialogSet;
 
-class RedirectManager
+class DUM_API RedirectManager
 {
    public:   
       class Ordering : public std::binary_function<const NameAddr&, const NameAddr&, bool>

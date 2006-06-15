@@ -17,6 +17,7 @@
 #include <WS2TCPIP.H>
 #endif
 
+#include "resiprocate/os/Win32Export.hxx"
 
 #ifdef _WIN32
 
@@ -73,7 +74,7 @@ namespace resip
 {
 
 /// set up network - does nothing in unix but needed for windows
-void
+RESIP_API void
 initNetwork();
 
 #ifndef WIN32
@@ -85,11 +86,11 @@ inline int getErrno() { return errno; }
 typedef SOCKET Socket;
 #endif
 
-bool makeSocketNonBlocking(Socket fd);
-bool makeSocketBlocking(Socket fd);
-int closeSocket( Socket fd );
+RESIP_API bool makeSocketNonBlocking(Socket fd);
+RESIP_API bool makeSocketBlocking(Socket fd);
+RESIP_API int closeSocket( Socket fd );
 
-class FdSet
+class RESIP_API FdSet
 {
    public:
       FdSet() : size(0), numReady(0)

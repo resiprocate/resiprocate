@@ -8,6 +8,7 @@
 #include "resiprocate/CallId.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class SipMessage;
 class NameAddr;
 class CallID;
 
-class DeprecatedDialog
+class RESIP_API DeprecatedDialog
 {
    public:
       class Exception : public BaseException 

@@ -2,13 +2,14 @@
 #define RESIP_PUBLICATIONCREATOR_HXX
 
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class Contents;
 
-class PublicationCreator: public BaseCreator
+class DUM_API PublicationCreator: public BaseCreator
 {
    public:
       PublicationCreator(DialogUsageManager& dum, 

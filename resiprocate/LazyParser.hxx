@@ -2,6 +2,7 @@
 #define RESIP_LAZYPARSER_HXX 
 
 #include <iosfwd>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ class HeaderFieldValue;
 class ParseBuffer;
 class Data;
 
-class LazyParser
+class RESIP_API LazyParser
 {
    public:
       LazyParser(HeaderFieldValue* headerFieldValue);
@@ -47,7 +48,7 @@ class LazyParser
       bool mIsParsed;
 };
 
-std::ostream&
+RESIP_API std::ostream&
 operator<<(std::ostream&, const LazyParser& lp);
 
 }

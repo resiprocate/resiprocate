@@ -279,7 +279,7 @@ ConnectionBase::transport()
 
 std::ostream& 
 
-resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
 
 {
 

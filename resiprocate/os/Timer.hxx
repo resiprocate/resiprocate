@@ -4,6 +4,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 #include <iostream>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ class Message;
 
 // Note: Timers are not thread safe; if the application needs to create timers
 // do something else
-class Timer
+class RESIP_API Timer
 {
    public:
       RESIP_HeapCount(Timer);

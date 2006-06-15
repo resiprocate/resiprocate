@@ -7,6 +7,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class NameAddr;
 class SecurityAttributes;
 class Security;
 
-class UnsupportedAuthenticationScheme : public BaseException
+class RESIP_API UnsupportedAuthenticationScheme : public BaseException
 {
    public:
       UnsupportedAuthenticationScheme(const Data& msg, const Data& file, const int line)
@@ -25,7 +26,7 @@ class UnsupportedAuthenticationScheme : public BaseException
       const char* name() const { return "UnsupportedAuthenticationScheme"; }
 };
 
-class Helper
+class RESIP_API Helper
 {
    public:
 
@@ -195,7 +196,7 @@ class Helper
       static std::pair<Data,Data> fromGruuUserPart(const Data& gruuUserPart,
                                                    const Data& key);
 
-      struct ContentsSecAttrs
+      struct RESIP_API ContentsSecAttrs
       {
             ContentsSecAttrs();
             ContentsSecAttrs(std::auto_ptr<Contents> contents,

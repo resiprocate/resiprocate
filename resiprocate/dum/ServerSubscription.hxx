@@ -2,6 +2,7 @@
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
 #include "resiprocate/dum/BaseSubscription.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -9,7 +10,7 @@ namespace resip
 class DialogUsageManager;
 
 //!dcm! -- no Subscription State expires parameter generation yet. 
-class ServerSubscription : public BaseSubscription 
+class DUM_API ServerSubscription : public BaseSubscription 
 {
    public:
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;

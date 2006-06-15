@@ -4,7 +4,7 @@
 #include <list>
 #include "BaseException.hxx"
 #include "Data.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 struct in_addr;
 
@@ -13,7 +13,7 @@ namespace resip
 
 class Tuple;
 
-class DnsUtil
+class RESIP_API DnsUtil
 {
    public:
       class Exception : public BaseException

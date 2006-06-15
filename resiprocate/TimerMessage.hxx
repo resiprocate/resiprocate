@@ -6,11 +6,12 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class TimerMessage : public TransactionMessage
+class RESIP_API TimerMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(TimerMessage);

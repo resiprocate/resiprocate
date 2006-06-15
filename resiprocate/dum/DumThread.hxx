@@ -2,13 +2,14 @@
 #define RESIP_DumThread__hxx
 
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class DialogUsageManager;
 
-class DumThread : public ThreadIf
+class DUM_API DumThread : public ThreadIf
 {
    public:
       DumThread(DialogUsageManager& dum);

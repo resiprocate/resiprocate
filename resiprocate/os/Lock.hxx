@@ -2,6 +2,7 @@
 #define RESIP_LOCK_HXX  
 
 #include "resiprocate/os/Lockable.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ enum LockType
    VOCAL_WRITELOCK
 };
 
-class Lock
+class RESIP_API Lock
 {
    public:
       Lock(Lockable &, LockType = VOCAL_LOCK);
@@ -23,13 +24,13 @@ class Lock
       Lockable&   myLockable;
 };
 
-class ReadLock : public Lock
+class RESIP_API ReadLock : public Lock
 {
    public:
       ReadLock(Lockable &);
 };
 
-class WriteLock : public Lock
+class RESIP_API WriteLock : public Lock
 {
    public:
       WriteLock(Lockable &);

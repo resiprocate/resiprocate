@@ -10,13 +10,14 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class SdpContents;
 
-class AttributeHelper
+class RESIP_API AttributeHelper
 {
    public:
       RESIP_HeapCount(AttributeHelper);
@@ -34,7 +35,7 @@ class AttributeHelper
       HashMap< Data, std::list<Data> > mAttributes;
 };
 
-class SdpContents : public Contents
+class RESIP_API SdpContents : public Contents
 {
    public:
       RESIP_HeapCount(SdpContents);
@@ -43,12 +44,12 @@ class SdpContents : public Contents
 
       class Session;
 
-      class Session
+      class RESIP_API Session
       {
          public:
             class Medium;
 
-            class Codec
+            class RESIP_API Codec
             {
                public:
                   Codec() : mName(), mRate(0), mPayloadType(-1) {}
@@ -77,6 +78,7 @@ class SdpContents : public Contents
                   static const Codec G728_8000;
                   static const Codec G729_8000;
                   static const Codec GSM_8000;
+                  static const Codec MJPEG_8000;
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
                   static const Codec CN;
@@ -89,7 +91,7 @@ class SdpContents : public Contents
                   // Maps payload type (number) to Codec definition.
                   static CodecMap& getStaticCodecs();
 
-                  friend bool operator==(const Codec&, const Codec&);
+                  friend RESIP_API bool operator==(const Codec&, const Codec&);
 
                private:
                   Data mName;
@@ -99,10 +101,10 @@ class SdpContents : public Contents
 
                   static CodecMap* sStaticCodecs;
                   static bool sStaticCodecsCreated;
-                  friend std::ostream& operator<<(std::ostream&, const Codec&);
+                  friend RESIP_API std::ostream& operator<<(std::ostream&, const Codec&);
             };
 
-            class Origin
+            class RESIP_API Origin
             {
                public:
                   Origin(const Data& user,
@@ -139,7 +141,7 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
-            class Email
+            class RESIP_API Email
             {
                public:
                   Email(const Data& address,
@@ -163,7 +165,7 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
-            class Phone
+            class RESIP_API Phone
             {
                public:
                   Phone(const Data& number,
@@ -186,7 +188,7 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
-            class Connection
+            class RESIP_API Connection
             {
                public:
                   Connection(AddrType addType,
@@ -215,7 +217,7 @@ class SdpContents : public Contents
                   friend class Medium;
             };
 
-            class Bandwidth
+            class RESIP_API Bandwidth
             {
                public:
                   Bandwidth(const Data& modifier,
@@ -240,7 +242,7 @@ class SdpContents : public Contents
                   friend class Medium;
             };
 
-            class Time
+            class RESIP_API Time
             {
                public:
                   Time(unsigned long start,
@@ -288,7 +290,7 @@ class SdpContents : public Contents
                   friend class Session;
             };
 
-            class Timezones
+            class RESIP_API Timezones
             {
                public:
                   class Adjustment
@@ -316,7 +318,7 @@ class SdpContents : public Contents
                   std::list<Adjustment> mAdjustments;
             };
 
-            class Encryption
+            class RESIP_API Encryption
             {
                public:
                   typedef enum {NoEncryption = 0, Prompt, Clear, Base64, UriKey} KeyType;
@@ -342,7 +344,7 @@ class SdpContents : public Contents
                   Data mKey;
             };
 
-            class Medium
+            class RESIP_API Medium
             {
                public:
                   Medium();

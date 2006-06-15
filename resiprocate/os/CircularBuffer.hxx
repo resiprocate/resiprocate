@@ -2,11 +2,12 @@
 #define RESIP_CIRCULARBUFFER_HXX  
 
 #include <vector>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class CircularBuffer : private vector<unsigned char> 
+class RESIP_API CircularBuffer : private vector<unsigned char> 
 {
    public:
       CircularBuffer(unsigned int capacity)

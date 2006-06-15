@@ -2,11 +2,12 @@
 #define RESIP_CLIENTPUBLICATION_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class ClientPublication : public NonDialogUsage
+class DUM_API ClientPublication : public NonDialogUsage
 {
    public:
       ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SipMessage& pub);

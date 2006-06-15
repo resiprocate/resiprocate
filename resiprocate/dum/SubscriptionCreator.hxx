@@ -2,11 +2,12 @@
 #define RESIP_SUBSCRIPTIONCREATOR_HXX
 
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class SubscriptionCreator : public BaseCreator 
+class DUM_API SubscriptionCreator : public BaseCreator 
 {
    public:
    

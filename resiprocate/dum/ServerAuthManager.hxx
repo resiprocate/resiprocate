@@ -5,6 +5,7 @@
 
 #include "resiprocate/dum/UserProfile.hxx"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ class UserAuthInfo;
 class DialogUsageManager;
 
 
-class ServerAuthManager
+class DUM_API ServerAuthManager
 {
    public:
       typedef enum Result

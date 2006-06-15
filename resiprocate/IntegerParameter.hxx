@@ -3,6 +3,8 @@
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
+
 #include <iosfwd>
 
 namespace resip
@@ -10,7 +12,7 @@ namespace resip
 
 class ParseBuffer;
 
-class IntegerParameter : public Parameter
+class RESIP_API IntegerParameter : public Parameter
 {
    public:
       typedef int Type;

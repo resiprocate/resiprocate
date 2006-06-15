@@ -4,6 +4,8 @@
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
+
 #include <deque>
 #include <map>
 #include <memory>
@@ -12,7 +14,7 @@ namespace resip
 {
 class SipMessage;
 
-class ClientPagerMessage : public NonDialogUsage
+class DUM_API ClientPagerMessage : public NonDialogUsage
 {
   public:
       ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);

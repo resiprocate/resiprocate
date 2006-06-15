@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ namespace resip
 //====================
 // StatusLine:
 //====================
-class StatusLine : public ParserCategory
+class RESIP_API StatusLine : public ParserCategory
 {
    public:
       StatusLine();

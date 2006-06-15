@@ -5,12 +5,13 @@
 
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class Uri : public ParserCategory
+class RESIP_API Uri : public ParserCategory
 {
    public:
       RESIP_HeapCount(Uri)

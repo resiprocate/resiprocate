@@ -3,12 +3,13 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
   class TransactionState;
 
-  class TransactionMap 
+  class RESIP_API TransactionMap 
   {
      public:
         ~TransactionMap();

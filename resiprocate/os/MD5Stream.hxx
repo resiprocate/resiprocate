@@ -4,11 +4,12 @@
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/vmd5.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class MD5Buffer : public std::streambuf
+class RESIP_API MD5Buffer : public std::streambuf
 {
    public:
       MD5Buffer();
@@ -22,7 +23,7 @@ class MD5Buffer : public std::streambuf
       MD5Context mContext;
 };
 
-class MD5Stream : private MD5Buffer, public std::ostream
+class RESIP_API MD5Stream : private MD5Buffer, public std::ostream
 {
    public:
       MD5Stream();

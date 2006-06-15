@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -15,7 +16,7 @@ namespace resip
 //====================
 // Auth:
 //====================
-class Auth : public ParserCategory
+class RESIP_API Auth : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};

@@ -2,11 +2,12 @@
 #define RESIP_USAGEUSEEXCEPTION_HXX 
 
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class UsageUseException : public BaseException
+class DUM_API UsageUseException : public BaseException
 {
    public:
       UsageUseException(const Data& msg, const Data& file, const int line)

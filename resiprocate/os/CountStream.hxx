@@ -3,12 +3,13 @@
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 // !dlb! Much more efficient to implement ostream::operator<<
 namespace resip
 {
 
-class CountBuffer : public std::streambuf
+class RESIP_API CountBuffer : public std::streambuf
 {
    public:
       CountBuffer(size_t& count);
@@ -24,7 +25,7 @@ class CountBuffer : public std::streambuf
       size_t& mCount;
 };
 
-class CountStream : private CountBuffer, public std::ostream
+class RESIP_API CountStream : private CountBuffer, public std::ostream
 {
    public:
       CountStream(size_t& count);

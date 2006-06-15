@@ -1,11 +1,12 @@
 #if !defined(RESIP_HANDLED_HXX)
 #define RESIP_HANDLED_HXX
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 class HandleManager;
 
-class Handled
+class DUM_API Handled
 {
    public:
       typedef unsigned long Id; // make this a UInt64, fix the hash

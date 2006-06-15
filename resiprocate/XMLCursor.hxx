@@ -6,6 +6,7 @@
 
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -93,7 +94,7 @@ namespace resip
 
 */
 
-class XMLCursor
+class RESIP_API XMLCursor
 {
    public: // statics
       static Data encodeXMLCompatible(const Data& strData);

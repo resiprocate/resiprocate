@@ -5,6 +5,7 @@
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class TransactionMap;
 class TransactionController;
 class TransactionUser;
 
-class TransactionState : public DnsHandler
+class RESIP_API TransactionState : public DnsHandler
 {
    public:
       RESIP_HeapCount(TransactionState);

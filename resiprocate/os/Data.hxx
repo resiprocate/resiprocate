@@ -10,6 +10,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 
+#include "resiprocate/os/Win32Export.hxx"
 #include "HashMap.hxx"
 #if defined(HAVE_CONFIG_HXX)
 #include "resiprocate/config.hxx"
@@ -29,7 +30,7 @@ class TestData;
 namespace resip
 {
 
-class Data 
+class RESIP_API Data 
 {
    public:
       RESIP_HeapCount(Data);
@@ -217,7 +218,7 @@ class Data
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
-      friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
       friend class oDataBuffer;
@@ -303,7 +304,7 @@ bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
 bool operator<(const char* s, const Data& d);
 
-std::ostream& operator<<(std::ostream& strm, const Data& d);
+extern RESIP_API std::ostream& operator<<(std::ostream& strm, const Data& d);
 
 inline Data
 operator+(const char* c, const Data& d)

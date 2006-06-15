@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class SdpContents;
 class SipMessage;
 
 
-class InviteSessionHandler
+class DUM_API InviteSessionHandler
 {
    public:
       /// called when an initial INVITE or the intial response to an outoing invite  

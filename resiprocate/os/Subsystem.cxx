@@ -22,7 +22,7 @@ const Data& Subsystem::getSubsystem() const
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const Subsystem& ss)
+RESIP_API resip::operator<<(std::ostream& strm, const Subsystem& ss)
 {
    strm << ss.mSubsystem;
    return strm;

@@ -4,7 +4,7 @@
 // a reasonable namespace (resip::) in the stack and
 // whatever your client namespace is if you want
 // a list in your application.
-
+#include "resiprocate/os/Win32Export.hxx"
 
 #if !defined(RESIP_API_CHECK_HXX)
 #define RESIP_API_CHECK_HXX
@@ -15,7 +15,7 @@
 #endif
 namespace resip
 {
-class ApiCheck
+class RESIP_API ApiCheck
 {
     public:
         typedef struct { const char * name; size_t sz; const char * culprits;} ApiEntry;

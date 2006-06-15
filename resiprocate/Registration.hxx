@@ -5,6 +5,7 @@
 #include <memory>
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ namespace resip
 class SipMessage;
 class CallID;
 
-class Registration 
+class RESIP_API Registration 
 {
    public: 
       // Register a binding from aor to default contact

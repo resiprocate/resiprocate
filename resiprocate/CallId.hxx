@@ -5,6 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ namespace resip
 //====================
 // CallID:
 //====================
-class CallID : public ParserCategory
+class RESIP_API CallID : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};

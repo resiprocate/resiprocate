@@ -3,13 +3,13 @@
 
 #include <iosfwd>
 #include "resiprocate/Parameter.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 namespace resip
 {
 
 class ParseBuffer;
 
-class UnknownParameter : public Parameter
+class RESIP_API UnknownParameter : public Parameter
 {
    public:
       UnknownParameter(const char* startName, 

@@ -2,6 +2,7 @@
 #define RESIP_APPLICATIONSIP_HXX 
 
 #include "resiprocate/SipFrag.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ namespace resip
 
 // map content-type application/sip to the same parser as message/sip
 // some Cisco gateways send NOTIFY with content-type application/sip
-class ApplicationSip : public SipFrag
+class RESIP_API ApplicationSip : public SipFrag
 {
    public:
       ApplicationSip(const Mime& contentsType = getStaticType());

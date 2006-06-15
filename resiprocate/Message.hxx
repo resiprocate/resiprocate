@@ -2,12 +2,13 @@
 #define RESIP_Message_hxx 
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 #include <iosfwd>
 
 namespace resip
 {
 class TransactionUser;
-class Message 
+class RESIP_API Message 
 {
    public:
       Message();
@@ -39,10 +40,10 @@ class Message
       TransactionUser* tu;      
 };
 
-std::ostream& 
+RESIP_API std::ostream& 
 operator<<(std::ostream& strm, const Message& msg);
 
-std::ostream& 
+RESIP_API std::ostream& 
 operator<<(std::ostream& strm, const Message::Brief& brief);
 
 }

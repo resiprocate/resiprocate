@@ -6,6 +6,7 @@
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -16,7 +17,7 @@ class ParseBuffer;
 // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
 // Notably, the tid MAY contain dashes by the clientdata MUST NOT.
 //
-class BranchParameter : public Parameter
+class RESIP_API BranchParameter : public Parameter
 {
    public:
       typedef BranchParameter Type;

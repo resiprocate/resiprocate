@@ -4,11 +4,12 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class UserAuthInfo : public resip::ApplicationMessage
+class DUM_API UserAuthInfo : public resip::ApplicationMessage
 {
    public:
       UserAuthInfo( const resip::Data& user,

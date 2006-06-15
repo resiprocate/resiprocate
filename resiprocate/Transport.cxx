@@ -255,7 +255,7 @@ Transport::operator==(const Transport& rhs) const
 }
     
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Transport& rhs)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::Transport& rhs)
 {
    strm << "Transport: " << rhs.mTuple;
    if (!rhs.mInterface.empty()) strm << " on " << rhs.mInterface;
