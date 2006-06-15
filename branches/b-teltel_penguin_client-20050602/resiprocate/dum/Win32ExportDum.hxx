@@ -2,18 +2,19 @@
 #define WIN32EXPORTDUM_HXX 
 
 #if defined(WIN32) || defined(_WIN32) 
-
-#ifdef DUM_EXPORTS
-#define DUM_API __declspec(dllexport)
+#   ifdef DUM_EXPORTS
+#      define DUM_API __declspec(dllexport)
+#   elif defined(USE_DUM_DLL)
+#      define DUM_API __declspec(dllimport)
+#   else
+#      define DUM_API 
+#   endif
 #else
-#define DUM_API __declspec(dllimport)
-#endif
-#else
-#define DUM_API 
+#   define RESIP_API 
+#endif // #if defined(WIN32) || defined(_WIN32) 
 
-#endif
 
-#endif
+#endif // #if !defined(WIN32EXPORTDUM_HXX)
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
