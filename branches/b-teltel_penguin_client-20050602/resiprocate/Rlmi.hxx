@@ -5,11 +5,12 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Rlmi : public Contents
+class RESIP_API Rlmi : public Contents
 {
    public:
       Rlmi();

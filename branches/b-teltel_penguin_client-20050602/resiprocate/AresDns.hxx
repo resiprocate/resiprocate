@@ -3,6 +3,7 @@
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 extern "C"
 {
@@ -13,7 +14,7 @@ struct ares_channeldata;
 
 namespace resip
 {
-class AresDns : public ExternalDns
+class RESIP_API AresDns : public ExternalDns
 {
    public:
       AresDns() {}

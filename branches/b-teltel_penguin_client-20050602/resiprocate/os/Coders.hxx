@@ -2,11 +2,12 @@
 #define RESIP_CODERS_HXX
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Base64Coder
+class RESIP_API Base64Coder
 {
    public:
       // encoded data is 4/3 rds length of input

@@ -1,6 +1,7 @@
 #ifndef RESIP_IntrusiveListElement
 #define RESIP_IntrusiveListElement
 
+#include "resiprocate/os/Win32Export.hxx"
 /*
   Heritable intrusive doubly linked list element template.
 
@@ -53,7 +54,7 @@ namespace resip
 {
 
 template <class P>
-class IntrusiveListElement
+class RESIP_API IntrusiveListElement
 {
    public:
       IntrusiveListElement() 
@@ -190,7 +191,7 @@ class IntrusiveListElement
 };
 
 template <class P>
-class IntrusiveListElement1
+class RESIP_API IntrusiveListElement1
 {
    public:
       IntrusiveListElement1() 
@@ -327,7 +328,7 @@ class IntrusiveListElement1
 };
 
 template <class P>
-class IntrusiveListElement2
+class RESIP_API IntrusiveListElement2
 {
    public:
       IntrusiveListElement2() 

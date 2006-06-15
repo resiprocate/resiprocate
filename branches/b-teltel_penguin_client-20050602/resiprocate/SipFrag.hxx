@@ -6,6 +6,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -14,7 +15,7 @@ class SipMessage;
 
 // Mostly works -- 
 // Preparse insists on a start line while SIP frag may not have one.
-class SipFrag : public Contents
+class RESIP_API SipFrag : public Contents
 {
    public:
       SipFrag(const Mime& contentsType = getStaticType());

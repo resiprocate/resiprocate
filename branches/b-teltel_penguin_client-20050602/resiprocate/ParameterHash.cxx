@@ -3,12 +3,14 @@
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/ParameterTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip {
 using namespace std;
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 380, duplicates = 1 */
 
-class ParameterHash
+class RESIP_API ParameterHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);

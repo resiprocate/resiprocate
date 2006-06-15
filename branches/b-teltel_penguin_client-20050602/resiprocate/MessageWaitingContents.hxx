@@ -5,6 +5,7 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ const char* skipSipLWS(ParseBuffer& pb);
 
 typedef enum {mw_voice=0, mw_fax, mw_pager, mw_multimedia, mw_text, mw_none, MW_MAX} HeaderType;
 
-class MessageWaitingContents : public Contents
+class RESIP_API MessageWaitingContents : public Contents
 {
    public:
       MessageWaitingContents();

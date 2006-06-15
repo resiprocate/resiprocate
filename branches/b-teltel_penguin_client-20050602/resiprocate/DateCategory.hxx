@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -40,7 +41,7 @@ enum Month {
    Dec
 };
 
-class DateCategory : public ParserCategory
+class RESIP_API DateCategory : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};

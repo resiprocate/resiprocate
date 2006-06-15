@@ -94,7 +94,7 @@ TransactionUser::setMessageFilterRuleList(MessageFilterRuleList &rules)
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
 {
    tu.encode(strm);
    return strm;

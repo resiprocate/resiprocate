@@ -2,6 +2,7 @@
 #define RESIP_FiniteFifo_hxx 
 
 #include "resiprocate/os/AbstractFifo.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 // efficiency note: use a circular buffer do avoid list node allocation
 
@@ -11,7 +12,7 @@ namespace resip
 {
 
 template < class Msg >
-class FiniteFifo : public AbstractFifo
+class RESIP_API FiniteFifo : public AbstractFifo
 {
    public:
       FiniteFifo(unsigned int maxSize);

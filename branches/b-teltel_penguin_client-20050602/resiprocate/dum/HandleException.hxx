@@ -2,11 +2,12 @@
 #define RESIP_HANDLEEXCEPTION_HXX
 
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class HandleException : public BaseException
+class DUM_API HandleException : public BaseException
 {
    public:
       HandleException(const Data& msg, const Data& file, int line);

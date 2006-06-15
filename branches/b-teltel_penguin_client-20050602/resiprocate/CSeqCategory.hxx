@@ -5,6 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ namespace resip
 //====================
 // CSeqCategory:
 //====================
-class CSeqCategory : public ParserCategory
+class RESIP_API CSeqCategory : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};

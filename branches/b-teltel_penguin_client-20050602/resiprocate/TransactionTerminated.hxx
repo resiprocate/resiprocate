@@ -3,12 +3,13 @@
 
 #include "TransactionMessage.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class TransactionUser;
 
-class TransactionTerminated : public TransactionMessage
+class RESIP_API TransactionTerminated : public TransactionMessage
 {
    public:
       RESIP_HeapCount(TransactionTerminated);

@@ -27,6 +27,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -35,7 +36,7 @@ class Contents;
 class ExtensionHeader;
 class SecurityAttributes;
 
-class SipMessage : public TransactionMessage
+class RESIP_API SipMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(SipMessage);

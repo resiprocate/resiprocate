@@ -8,13 +8,14 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class Pidf;
 
-class TuIM
+class RESIP_API TuIM
 {
    private:
       class Buddy;

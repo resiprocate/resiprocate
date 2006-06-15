@@ -6,6 +6,7 @@
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -13,7 +14,7 @@ namespace resip
 //====================
 // RequestLine:
 //====================
-class RequestLine : public ParserCategory
+class RESIP_API RequestLine : public ParserCategory
 {
    public:
       RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion);

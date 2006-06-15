@@ -3,13 +3,14 @@
 
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/Mime.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 class SipMessage;
 class SecurityAttributes;
 
-class ClientSubscriptionHandler
+class DUM_API ClientSubscriptionHandler
 {
   public:
       virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
@@ -28,7 +29,7 @@ class ClientSubscriptionHandler
       virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 };
 
-class ServerSubscriptionHandler
+class DUM_API ServerSubscriptionHandler
 {
   public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;

@@ -7,13 +7,13 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/MessageFilterRule.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class TransactionUser
+class RESIP_API TransactionUser
 {
    public:
       void post(Message *);

@@ -5,6 +5,7 @@
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/HandleException.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {

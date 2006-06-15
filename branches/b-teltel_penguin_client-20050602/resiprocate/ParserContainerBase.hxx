@@ -4,13 +4,14 @@
 #include "resiprocate/ParserCategory.hxx"
 #include <iosfwd>
 #include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class HeaderFieldValueList;
 
-class ParserContainerBase
+class RESIP_API ParserContainerBase
 {
    public:
       ParserContainerBase(Headers::Type type = Headers::UNKNOWN)

@@ -1,10 +1,11 @@
 #if !defined(RESIP_DUMSHUTDOWNHANDLER_HXX)
 #define RESIP_DUMSHUTDOWNHANDLER_HXX
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class DumShutdownHandler
+class DUM_API DumShutdownHandler
 {
    public:
       virtual void onDumCanBeDeleted()=0;

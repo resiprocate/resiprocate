@@ -1,5 +1,6 @@
 #if !defined (RESIP_DNS_HANDLER_HXX)
 #define RESIP_DNS_HANDLER_HXX
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -7,7 +8,7 @@ namespace resip
 class DnsResult;
 class TransactionState;
 
-class DnsHandler
+class RESIP_API DnsHandler
 {
    public:
       virtual ~DnsHandler()=0;

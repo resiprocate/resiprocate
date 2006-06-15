@@ -24,13 +24,14 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/SendData.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class TransactionMessage;
 
-class ConnectionBase
+class RESIP_API ConnectionBase
 {
       friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:

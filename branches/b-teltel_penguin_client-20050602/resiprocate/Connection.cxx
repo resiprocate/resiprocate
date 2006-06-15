@@ -99,7 +99,7 @@ Connection::getConnectionManager() const
 }
             
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Connection& c)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;

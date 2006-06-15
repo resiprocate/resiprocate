@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/Mime.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ class ServerPublication;
 class SipMessage;
 class SecurityAttributes;
 
-class ClientPublicationHandler
+class DUM_API ClientPublicationHandler
 {
    public:
       /// Called when the publication succeeds or each time it is sucessfully
@@ -35,7 +36,7 @@ class ClientPublicationHandler
       {}
 };
 
-class ServerPublicationHandler
+class DUM_API ServerPublicationHandler
 {
    public:
       virtual void onInitial(ServerPublicationHandle,

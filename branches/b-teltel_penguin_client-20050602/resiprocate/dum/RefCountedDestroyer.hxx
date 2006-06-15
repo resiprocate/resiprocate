@@ -1,12 +1,13 @@
 #if !defined(RESIP_REFCOUNTEDDESTROYER_HXX)
 #define RESIP_REFCOUNTEDDESTROYER_HXX
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 //designed to be used by composition, does not destroy itself.
 template<class T>
-class RefCountedDestroyer
+class DUM_API RefCountedDestroyer
 {
    public:            
       class Guard

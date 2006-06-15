@@ -5,13 +5,14 @@
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class ParseBuffer;
 
-class RportParameter : public Parameter
+class RESIP_API RportParameter : public Parameter
 {
    public:
       typedef RportParameter Type;

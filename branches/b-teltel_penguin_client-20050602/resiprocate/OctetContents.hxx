@@ -3,11 +3,12 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class OctetContents : public Contents
+class RESIP_API OctetContents : public Contents
 {
    public:
       static const OctetContents Empty;

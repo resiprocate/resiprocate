@@ -3,10 +3,11 @@
 
 #include <vector>
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
-class MessageFilterRule
+class RESIP_API MessageFilterRule
 {
    public:
       typedef std::vector<Data> SchemeList;

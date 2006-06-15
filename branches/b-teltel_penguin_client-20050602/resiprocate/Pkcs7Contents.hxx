@@ -3,11 +3,12 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Pkcs7Contents : public Contents
+class RESIP_API Pkcs7Contents : public Contents
 {
    public:
       static const Pkcs7Contents Empty;
@@ -39,7 +40,7 @@ class Pkcs7Contents : public Contents
 
 static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
 
-class Pkcs7SignedContents : public Pkcs7Contents
+class RESIP_API Pkcs7SignedContents : public Pkcs7Contents
 {
    public:  
       static const Pkcs7SignedContents Empty;

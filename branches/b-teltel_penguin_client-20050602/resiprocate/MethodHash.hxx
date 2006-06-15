@@ -1,12 +1,14 @@
 #if !defined(RESIP_METHODSHASH_HXX)
 #define RESIP_METHODSHASH_HXX
+
+#include "resiprocate/os/Win32Export.hxx"
 namespace resip 
 {
 
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 494, duplicates = 0 */
 
-class MethodHash
+class RESIP_API MethodHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);

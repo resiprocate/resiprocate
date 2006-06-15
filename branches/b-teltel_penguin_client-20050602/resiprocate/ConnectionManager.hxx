@@ -4,11 +4,12 @@
 #include <map>
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/Connection.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class ConnectionManager
+class RESIP_API ConnectionManager
 {
       friend class Connection;
    public:

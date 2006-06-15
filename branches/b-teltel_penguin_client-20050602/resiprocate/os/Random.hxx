@@ -3,11 +3,12 @@
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Random
+class RESIP_API Random
 {
    public:
       static void initialize();

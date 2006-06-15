@@ -5,11 +5,12 @@
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class KeepAliveTimeout : public ApplicationMessage
+class DUM_API KeepAliveTimeout : public ApplicationMessage
 {
    public:
       

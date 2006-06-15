@@ -4,6 +4,8 @@
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/DataParameter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
+
 #include <iosfwd>
 
 namespace resip
@@ -11,7 +13,7 @@ namespace resip
 
 class ParseBuffer;
 
-class QuotedDataParameter : public DataParameter
+class RESIP_API QuotedDataParameter : public DataParameter
 {
    public:
       QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);

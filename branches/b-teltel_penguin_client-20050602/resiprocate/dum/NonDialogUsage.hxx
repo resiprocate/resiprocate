@@ -4,6 +4,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -14,7 +15,7 @@ class DumTimeout;
 class SipMessage;
 class NameAddr;
 
-class NonDialogUsage : public BaseUsage
+class DUM_API NonDialogUsage : public BaseUsage
 {
    public:
       class Exception : public BaseException

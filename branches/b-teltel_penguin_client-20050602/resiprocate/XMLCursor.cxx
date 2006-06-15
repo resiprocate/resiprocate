@@ -6,6 +6,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 //#ifndef   `_WIN32 // !cj! TODO FIX 
 #if 1 
@@ -438,7 +439,7 @@ XMLCursor::encodeXMLCompatible(const Data& strData)
    return encodedStr;
 }
 
-class FindStruct
+class RESIP_API FindStruct
 {
 public:
    FindStruct(const char* findStr, const char* replaceStr)
@@ -694,7 +695,7 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
 }
 
 std::ostream&
-resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
+RESIP_API resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
 {
    Data::size_type size = node.mPb.end() - node.mPb.start();
 
@@ -709,7 +710,7 @@ resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
 }
 
 std::ostream&
-resip::operator<<(std::ostream& str, const XMLCursor& cursor)
+RESIP_API resip::operator<<(std::ostream& str, const XMLCursor& cursor)
 {
    str << "XMLCursor " << *cursor.mCursor;
    return str;

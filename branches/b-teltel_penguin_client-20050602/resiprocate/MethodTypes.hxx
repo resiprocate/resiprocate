@@ -1,5 +1,6 @@
 #if !defined(RESIP_METHODTYPES_HXX)
 #define RESIP_METHODTYPES_HXX 
+#include "resiprocate/os/Win32Export.hxx"
 
 #define defineMethod(_enum, _name, _rfc) _enum
 namespace resip
@@ -36,15 +37,15 @@ typedef enum
 
 // extern Data MethodNames[]; // !ah! Do not touch. want a name, call getMethodName()
 
-MethodTypes
+RESIP_API MethodTypes
 getMethodType(const Data& name);
 
-MethodTypes
+RESIP_API MethodTypes
 getMethodType(const char* name, int len);
 
 // TODO -- !dcm! -- fix to return unknown method as a string
-const Data&
-getMethodName(MethodTypes t);
+RESIP_API const Data&
+ getMethodName(MethodTypes t);
 
 }
 

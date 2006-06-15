@@ -2,6 +2,7 @@
 #define RESIP_REGISTRATIONCREATOR_HXX
 
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -14,7 +15,7 @@ class NameAddr;
   It has nothing to do with server handling of registration requests.
  */
 
-class RegistrationCreator : public BaseCreator 
+class DUM_API RegistrationCreator : public BaseCreator 
 {
    public:
       RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile& userProfile, int RegistrationTime);

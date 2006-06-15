@@ -9,6 +9,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/ssl.h>
@@ -31,7 +32,7 @@ class Security;
 class MultipartSignedContents;
 class SipMessage;
 
-class BaseSecurity
+class RESIP_API BaseSecurity
 {
    public:
       class Exception : public BaseException
@@ -181,7 +182,7 @@ class BaseSecurity
       
 };
 
-class Security : public BaseSecurity
+class RESIP_API Security : public BaseSecurity
 {
    public:
 #ifdef _WIN32

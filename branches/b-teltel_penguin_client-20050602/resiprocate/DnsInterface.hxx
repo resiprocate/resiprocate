@@ -9,6 +9,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -19,7 +20,7 @@ class Uri;
 class Via;
 class ExternalDns;
 // 
-class DnsInterface : public ExternalDnsHandler
+class RESIP_API DnsInterface : public ExternalDnsHandler
 {
    public:
       class Exception : public BaseException

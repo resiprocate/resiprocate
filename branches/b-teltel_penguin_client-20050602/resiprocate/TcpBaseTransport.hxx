@@ -3,13 +3,14 @@
 
 #include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/ConnectionManager.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class TransactionMessage;
 
-class TcpBaseTransport : public InternalTransport
+class RESIP_API TcpBaseTransport : public InternalTransport
 {
    public:
       enum  {MaxFileDescriptors = 100000};

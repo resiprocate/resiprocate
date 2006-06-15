@@ -8,6 +8,7 @@
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
@@ -20,7 +21,7 @@ class Message;
 class TransactionMessage;
 class TuSelector;
 
-class BaseTimerQueue
+class RESIP_API BaseTimerQueue
 {
    public:
       virtual ~BaseTimerQueue()=0;
@@ -37,7 +38,7 @@ class BaseTimerQueue
       std::multiset<Timer> mTimers;
 };
 
-class BaseTimeLimitTimerQueue : public BaseTimerQueue
+class RESIP_API BaseTimeLimitTimerQueue : public BaseTimerQueue
 {
    public:
       void add(const Timer& timer);
@@ -47,7 +48,7 @@ class BaseTimeLimitTimerQueue : public BaseTimerQueue
 };
 
 
-class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
+class RESIP_API TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
 {
    public:
       TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
@@ -58,7 +59,7 @@ class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
 };
 
 
-class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
+class RESIP_API TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
 {
    public:
       TuSelectorTimerQueue(TuSelector& sel);
@@ -69,7 +70,7 @@ class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
 };
 
 
-class TimerQueue : public BaseTimerQueue
+class RESIP_API TimerQueue : public BaseTimerQueue
 {
    public:
       TimerQueue(Fifo<TransactionMessage>& fifo);
@@ -83,7 +84,7 @@ class TimerQueue : public BaseTimerQueue
 
 #include <openssl/ssl.h>
 
-class DtlsTimerQueue : public BaseTimerQueue
+class RESIP_API DtlsTimerQueue : public BaseTimerQueue
 {
    public:
       DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;

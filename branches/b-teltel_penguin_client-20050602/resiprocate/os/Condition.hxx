@@ -1,6 +1,8 @@
 #if !defined(RESIP_CONDITION_HXX)
 #define RESIP_CONDITION_HXX
 
+#include "resiprocate/os/Win32Export.hxx"
+
 #if defined(WIN32)
 #  include <windows.h>
 #  include <winbase.h>
@@ -17,7 +19,7 @@ namespace resip
 
 class Mutex;
 
-class Condition
+class RESIP_API Condition
 {
    public:
       Condition();

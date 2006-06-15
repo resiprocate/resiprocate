@@ -16,6 +16,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 using namespace resip;
 
@@ -273,7 +274,7 @@ Uri::operator=(const Uri& rhs)
    return *this;
 }
 
-class OrderUnknownParameters
+class RESIP_API OrderUnknownParameters
 {
    public:
       OrderUnknownParameters() { notUsed=false; };

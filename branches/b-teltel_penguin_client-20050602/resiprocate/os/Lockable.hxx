@@ -3,10 +3,12 @@
 
 /** Infrastructure common to VOCAL.<br><br>
  */
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip
 {
 
-class Lockable
+class RESIP_API Lockable
 {
    protected:
       Lockable() {};

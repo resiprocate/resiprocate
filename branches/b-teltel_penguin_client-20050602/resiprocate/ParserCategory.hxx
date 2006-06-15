@@ -9,6 +9,7 @@
 #include "resiprocate/ParameterTypes.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
@@ -21,7 +22,7 @@ class ExtensionParameter;
 class Parameter;
 class ParseBuffer;
 
-class ParserCategory : public LazyParser
+class RESIP_API ParserCategory : public LazyParser
 {
     public:
       enum {UnknownParserCategory = -1};
@@ -181,11 +182,11 @@ class ParserCategory : public LazyParser
    private:
       void clear();
       void copyParametersFrom(const ParserCategory& other);
-      friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;
 };
 
-std::ostream&
+extern RESIP_API std::ostream&
 operator<<(std::ostream&, const ParserCategory& category);
 
 }

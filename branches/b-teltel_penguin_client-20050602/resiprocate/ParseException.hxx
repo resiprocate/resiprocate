@@ -2,11 +2,12 @@
 #define RESIP_PARSEEXCEPTION_HXX 
 
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class ParseException : public BaseException
+class RESIP_API ParseException : public BaseException
 {
    public:
       ParseException(const Data& msg, const Data& file, const int line)

@@ -65,7 +65,7 @@ H_##_enum::knownReturn(ParserContainerBase* container)                          
    return dynamic_cast<ParserContainer<_type>*>(container)->front();                                                    \
 }                                                                                                                       \
                                                                                                                         \
-H_##_enum resip::h_##_enum
+RESIP_API H_##_enum resip::h_##_enum
 
 #define defineMultiHeader(_enum, _name, _type, _reference)                                                                              \
    Headers::Type                                                                                                                        \
@@ -92,7 +92,7 @@ H_##_enum##s::knownReturn(ParserContainerBase* container)                       
    return *dynamic_cast<ParserContainer<_type>*>(container);                                                                            \
 }                                                                                                                                       \
                                                                                                                                         \
-H_##_enum##s resip::h_##_enum##s
+ RESIP_API H_##_enum##s  resip::h_##_enum##s
 
 //====================
 // Token

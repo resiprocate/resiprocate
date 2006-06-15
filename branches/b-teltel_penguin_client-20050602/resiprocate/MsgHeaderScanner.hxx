@@ -1,5 +1,8 @@
 #if !defined(RESIP_MSG_HEADER_SCANNER_HXX)
 #define RESIP_MSG_HEADER_SCANNER_HXX
+
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip 
 {
 
@@ -48,7 +51,7 @@ class SipMessage;
 //    '('/')' pair comments cannot be combined with any multi-values.
 //     A multi-value cannot be empty, except as needed to specify 0 multi-values.
 
-class MsgHeaderScanner
+class RESIP_API MsgHeaderScanner
 {
       
    public:

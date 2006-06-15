@@ -31,6 +31,7 @@
 #ifdef RESIP_POLL_EXTERN
 # include <map>
 #endif // RESI
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip {
 
@@ -47,7 +48,7 @@ namespace resip {
   "beforeExternWait", "setEntryFDStateForExternWait", and "afterExternWait".
   (The latter are selected by #define-ing RESIP_POLL_EXTERN.)
 */
-class Poll {
+class RESIP_API Poll {
 
    public:
 

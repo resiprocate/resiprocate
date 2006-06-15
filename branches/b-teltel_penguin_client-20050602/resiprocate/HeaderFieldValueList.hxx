@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ namespace resip
 class ParserContainerBase;
 class HeaderFieldValue;
 
-class HeaderFieldValueList
+class RESIP_API HeaderFieldValueList
 {
    public:
       HeaderFieldValueList()

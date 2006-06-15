@@ -1781,6 +1781,7 @@ const Codec Codec::G723_8000("G723", 4, 8000);
 const Codec Codec::G728_8000("G728", 15, 8000);
 const Codec Codec::G729_8000("G729", 18, 8000);
 const Codec Codec::GSM_8000("G729", 3, 8000);
+const Codec Codec::MJPEG_8000("MJPEG", 26, 8000);
 // !kk! payloadType (2nd arg) should not be clock rate for these two:
 const Codec Codec::TelephoneEvent("telephone-event", 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event", 8000);

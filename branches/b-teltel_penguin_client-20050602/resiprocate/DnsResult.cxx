@@ -1527,7 +1527,7 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 {
    strm << result.mTarget << " --> " << Inserter(result.mResults);
    return strm;
@@ -1535,7 +1535,7 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
 {
    strm << "key=" << naptr.key
         << " order=" << naptr.order
@@ -1548,7 +1548,7 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
 }
 
 std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
+RESIP_API resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
 {
    strm << "key=" << srv.key
         << " t=" << Tuple::toData(srv.transport) 
