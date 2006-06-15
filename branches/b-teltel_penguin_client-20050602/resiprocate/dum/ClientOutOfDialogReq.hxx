@@ -4,12 +4,13 @@
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class ClientOutOfDialogReq : public NonDialogUsage
+class DUM_API ClientOutOfDialogReq : public NonDialogUsage
 {
   public:
       ClientOutOfDialogReq(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& req);

@@ -3,13 +3,14 @@
 
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class SipStack;
 
-class StackThread : public ThreadIf
+class RESIP_API StackThread : public ThreadIf
 {
    public:
       StackThread(SipStack& stack);

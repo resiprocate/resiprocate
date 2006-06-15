@@ -2,11 +2,12 @@
 #define RESIP_SERVEROUTOFDIALOGREQ_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class ServerOutOfDialogReq : public NonDialogUsage
+class DUM_API ServerOutOfDialogReq : public NonDialogUsage
 {
    public:
       typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;

@@ -3,11 +3,12 @@
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class WinCompat
+class RESIP_API WinCompat
 {
    public:
       //typedef enum Version

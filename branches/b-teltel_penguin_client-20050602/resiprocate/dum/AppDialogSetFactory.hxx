@@ -1,6 +1,6 @@
 #if !defined(RESIP_APPDIALOGSETFACTORY_HXX)
 #define RESIP_APPDIALOGSETFACTORY_HXX
-
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -9,7 +9,7 @@ class AppDialogSet;
 class DialogUsageManager;
 class SipMessage;
 
-class AppDialogSetFactory
+class DUM_API AppDialogSetFactory
 {
    public:
       virtual AppDialogSet* createAppDialogSet(DialogUsageManager&, const SipMessage&);      

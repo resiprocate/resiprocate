@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class DialogUsageManager;
 class Uri;
 class SdpContents;
 
-class InviteSessionCreator : public BaseCreator
+class DUM_API InviteSessionCreator : public BaseCreator
 {
    public:
       InviteSessionCreator(DialogUsageManager& dum, 

@@ -4,7 +4,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/DialogId.hxx"
-
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 #include <vector>
 
@@ -16,7 +16,7 @@ class Dialog;
 class Data;
 class NameAddr;
 
-class AppDialog : public Handled
+class DUM_API AppDialog : public Handled
 {
    public:
       AppDialog(HandleManager& ham);

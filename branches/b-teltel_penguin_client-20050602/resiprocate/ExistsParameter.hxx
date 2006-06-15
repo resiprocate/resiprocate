@@ -2,6 +2,8 @@
 #define RESIP_EXISTSPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
+
 #include <iosfwd>
 
 namespace resip
@@ -9,7 +11,7 @@ namespace resip
 
 class ParseBuffer;
 
-class ExistsParameter : public Parameter
+class RESIP_API ExistsParameter : public Parameter
 {
    public:
       typedef bool Type;

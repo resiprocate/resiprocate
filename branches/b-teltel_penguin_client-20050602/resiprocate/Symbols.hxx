@@ -1,11 +1,12 @@
 #if !defined(RESIP_SYMBOLS_HXX)
 #define RESIP_SYMBOLS_HXX 
 
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Symbols
+class RESIP_API Symbols
 {
    public:
       static const char* DefaultSipVersion;

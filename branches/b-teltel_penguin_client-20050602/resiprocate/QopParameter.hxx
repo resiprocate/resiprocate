@@ -4,13 +4,14 @@
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
 #include <iosfwd>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class ParseBuffer;
 
-class QopParameter : public Parameter
+class RESIP_API QopParameter : public Parameter
 {
    public:
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);

@@ -1,6 +1,8 @@
 #if !defined(RESIP_DATASTREAM_HXX)
 #define RESIP_DATASTREAM_HXX 
 
+#include "resiprocate/os/Win32Export.hxx"
+
 #include <iostream>
 
 namespace resip
@@ -8,7 +10,7 @@ namespace resip
 
 class Data;
 
-class DataBuffer : public std::streambuf
+class RESIP_API DataBuffer : public std::streambuf
 {
    public:
       DataBuffer(Data& str);
@@ -34,7 +36,7 @@ class DataBuffer : public std::streambuf
 // result contains the encoded message
 // -- may be larger than initially allocated
 
-class DataStream : private DataBuffer, public std::iostream
+class RESIP_API DataStream : private DataBuffer, public std::iostream
 {
    public:
       DataStream(Data& str);
@@ -45,7 +47,7 @@ class DataStream : private DataBuffer, public std::iostream
       DataStream& operator=(const DataStream&);
 };
 
-class iDataStream : private DataBuffer, public std::istream
+class RESIP_API iDataStream : private DataBuffer, public std::istream
 {
    public:
       iDataStream(Data& str);
@@ -57,7 +59,7 @@ class iDataStream : private DataBuffer, public std::istream
 
 };
 
-class oDataStream : private DataBuffer, public std::ostream {
+class RESIP_API oDataStream : private DataBuffer, public std::ostream {
    public:
       oDataStream(Data& str);
       ~oDataStream();

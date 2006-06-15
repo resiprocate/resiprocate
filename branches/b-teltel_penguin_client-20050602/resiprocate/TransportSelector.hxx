@@ -14,7 +14,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/GenericIPAddress.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 #include "resiprocate/SecurityTypes.hxx"
 class TestTransportSelector;
@@ -29,7 +29,7 @@ class SipMessage;
 class TransactionController;
 class Security;
 
-class TransportSelector 
+class RESIP_API TransportSelector 
 {
    public:
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security);

@@ -4,13 +4,13 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Timer.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class SipMessage;
 
-class Subscription
+class RESIP_API Subscription
 {
    public: 
       void processRequest(SipMessage* msg);   

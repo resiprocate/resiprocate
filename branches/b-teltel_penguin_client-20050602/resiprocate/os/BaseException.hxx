@@ -5,12 +5,13 @@
 #include <iostream>
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 // treat as abstract
-class BaseException : public std::exception
+class RESIP_API BaseException : public std::exception
 {
    public:
       virtual const char* name() const = 0;
@@ -28,7 +29,7 @@ class BaseException : public std::exception
       resip::Data fileName;
       int lineNumber;
 
-      friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const BaseException& e);
 };
  
 }

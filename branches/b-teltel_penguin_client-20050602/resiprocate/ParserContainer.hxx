@@ -7,6 +7,7 @@
 #include "resiprocate/Embedded.hxx"
 #include <cassert>
 #include <vector>
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {

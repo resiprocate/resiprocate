@@ -4,11 +4,12 @@
 #include <cassert>
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class TransactionMessage : public Message
+class RESIP_API TransactionMessage : public Message
 {
    public:
       RESIP_HeapCount(TransactionMessage);

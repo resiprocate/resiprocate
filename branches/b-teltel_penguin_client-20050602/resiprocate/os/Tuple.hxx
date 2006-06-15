@@ -14,6 +14,7 @@
 #else
 #include <netinet/in.h>
 #endif
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -29,7 +30,7 @@ struct GenericIPAddress;
 
 typedef unsigned long ConnectionId;
 
-class Tuple
+class RESIP_API Tuple
 {
    public:
       RESIP_HeapCount(Tuple);
@@ -136,7 +137,7 @@ class Tuple
       TransportType mTransportType;
       Data mTargetDomain; 
 
-      friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
       friend class DnsResult;
 };
 

@@ -15,6 +15,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip 
 {
@@ -51,7 +52,7 @@ class DumShutdownHandler;
 class KeepAliveManager;
 class HttpGetMessage;
 
-class DialogUsageManager : public HandleManager, public TransactionUser
+class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
       class Exception : public BaseException

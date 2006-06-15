@@ -3,11 +3,12 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class ParseBuffer
+class RESIP_API ParseBuffer
 {
    public:
       // does NOT OWN the buffer memory

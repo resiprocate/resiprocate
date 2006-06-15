@@ -2,11 +2,12 @@
 #define RESIP_PLAINCONTENTS_HXX 
 
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class PlainContents : public Contents
+class RESIP_API PlainContents : public Contents
 {
    public:
       static const PlainContents Empty;

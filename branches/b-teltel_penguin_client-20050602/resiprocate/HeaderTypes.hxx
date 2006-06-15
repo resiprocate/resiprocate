@@ -2,7 +2,7 @@
 #define RESIP_HEADERTYPES_HXX 
 
 #include "resiprocate/os/Data.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 //****************************************************************************
 //
 // !dlb! until automated, must ensure that this set is consistent with
@@ -27,7 +27,7 @@
 namespace resip
 {
 
-class Headers
+class RESIP_API Headers
 {
    public:
       // put headers that you want to appear early in the message early in

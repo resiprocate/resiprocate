@@ -4,6 +4,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ class ClientMessage;
 class ServerMessage;
 class SipMessage;
 
-class ClientPagerMessageHandler
+class DUM_API ClientPagerMessageHandler
 {
    public:
       virtual void onSuccess(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<std::map<resip::Data, resip::Data> > extraHeadersMap)=0;
@@ -23,7 +24,7 @@ class ClientPagerMessageHandler
       virtual void onFailure(ClientPagerMessageHandle, const SipMessage& status, std::auto_ptr<Contents> contents, std::auto_ptr<std::map<resip::Data, resip::Data> > extraHeadersMap)=0;
 };
 
-class ServerPagerMessageHandler
+class DUM_API ServerPagerMessageHandler
 {
    public:
       virtual void onMessageArrived(ServerPagerMessageHandle, const SipMessage& message)=0;

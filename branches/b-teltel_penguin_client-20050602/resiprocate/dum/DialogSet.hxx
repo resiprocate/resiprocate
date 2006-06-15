@@ -9,6 +9,7 @@
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -20,7 +21,7 @@ class AppDialogSet;
 class ClientOutOfDialogReq;
 class UserProfile;
 
-class DialogSet
+class DUM_API DialogSet
 {
    public:
       DialogSet(BaseCreator* creator, DialogUsageManager& dum);

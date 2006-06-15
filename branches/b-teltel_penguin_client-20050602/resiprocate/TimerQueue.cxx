@@ -197,7 +197,7 @@ DtlsTimerQueue::process()
 #endif
 
 std::ostream& 
-resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
+RESIP_API resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
 {
    str << "TimerQueue[" ;
 

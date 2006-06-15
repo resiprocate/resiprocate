@@ -12,6 +12,7 @@
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -38,7 +39,7 @@ namespace resip
    thread.join();
    </PRE>
 */
-class ThreadIf
+class RESIP_API ThreadIf
 {
    public:
       ThreadIf();

@@ -4,16 +4,16 @@
 #include "resiprocate/os/Data.hxx"
 #include <iosfwd>
 #include "resiprocate/ParameterTypeEnums.hxx"
-
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Parameter
+class RESIP_API Parameter
 {
    public:
       Parameter(ParameterTypes::Type type);
-      virtual ~Parameter() {}
+      //virtual ~Parameter() {}
       
       ParameterTypes::Type getType() const;
 
@@ -28,7 +28,7 @@ class Parameter
 
    protected:
       Parameter(const Parameter& other) : mType(other.mType) {};
-      Parameter& operator=(const Parameter& other); // don't define
+      //Parameter& operator=(const Parameter& other); // don't define
 
    private:
       ParameterTypes::Type mType;

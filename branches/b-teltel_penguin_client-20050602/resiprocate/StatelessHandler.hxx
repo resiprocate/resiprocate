@@ -3,6 +3,7 @@
 
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/DnsHandler.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ namespace resip
 class TransactionController;
 class TransportSelector;
 
-class StatelessHandler 
+class RESIP_API StatelessHandler 
 {
    public:
       StatelessHandler(TransactionController& c);
@@ -20,7 +21,7 @@ class StatelessHandler
       TransactionController& mController;
 };
 
-class StatelessMessage : public DnsHandler
+class RESIP_API StatelessMessage : public DnsHandler
 {
    public:
       StatelessMessage(TransportSelector& selector, SipMessage* msg);

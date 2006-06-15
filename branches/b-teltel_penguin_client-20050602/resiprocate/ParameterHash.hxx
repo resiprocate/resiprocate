@@ -1,11 +1,13 @@
 #if !defined(PARAMETERHASH_HXX)
 #define PARAMETERHASH_HXX
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip 
 {
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 494, duplicates = 0 */
 
-class ParameterHash
+class RESIP_API ParameterHash
 {
 private:
   static inline unsigned int hash (const char *str, unsigned int len);

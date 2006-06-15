@@ -4,6 +4,7 @@
 #include "resiprocate/TcpBaseTransport.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -12,7 +13,7 @@ class Connection;
 class Message;
 class Security;
 
-class TlsTransport : public TcpBaseTransport
+class RESIP_API TlsTransport : public TcpBaseTransport
 {
    public:
       RESIP_HeapCount(TlsTransport);

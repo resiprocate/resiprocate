@@ -3,6 +3,7 @@
 
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/ParameterTypes.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 #include <iosfwd>
 
@@ -13,7 +14,7 @@ class ParserCategory;
 class UnknownParameter;
 class ParseBuffer;
 
-class HeaderFieldValue
+class RESIP_API HeaderFieldValue
 {
    public:
       HeaderFieldValue()

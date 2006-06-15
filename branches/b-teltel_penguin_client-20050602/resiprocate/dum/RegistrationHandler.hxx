@@ -2,6 +2,7 @@
 #define RESIP_REGISTRATIONHANDLER_HXX
 
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -9,7 +10,7 @@ namespace resip
 class SipMessage;
 class NameAddr;
 
-class ClientRegistrationHandler
+class DUM_API ClientRegistrationHandler
 {
    public:
       /// Called when registraion succeeds or each time it is sucessfully
@@ -28,7 +29,7 @@ class ClientRegistrationHandler
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
 };
 
-class ServerRegistrationHandler
+class DUM_API ServerRegistrationHandler
 {
    public:
       /// Called when registration is refreshed

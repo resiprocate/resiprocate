@@ -6,6 +6,7 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/ParserContainer.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -15,7 +16,7 @@ class HeaderFieldValue;
 //====================
 // Mime:
 //====================
-class Mime : public ParserCategory
+class RESIP_API Mime : public ParserCategory
 {
    public:
       enum {commaHandling = CommasAllowedOutputCommas};

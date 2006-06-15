@@ -12,8 +12,10 @@
 #include "resiprocate/RportParameter.hxx"
 #include "resiprocate/Symbols.hxx"
 
+#include "resiprocate/os/Win32Export.hxx"
+
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-   class _enum##_Param : public ParamBase                   \
+   class RESIP_API _enum##_Param : public ParamBase                   \
    {                                                        \
      public:                                                \
       typedef _type Type;                                   \
@@ -22,12 +24,12 @@
       virtual const char* name() const { return _name; } \
       _enum##_Param();                                      \
    };                                                       \
-   extern _enum##_Param p_##_enum
+   extern RESIP_API _enum##_Param p_##_enum
 
 namespace resip
 {
 
-class ParamBase
+class RESIP_API ParamBase
 {
    public:
       virtual ParameterTypes::Type getTypeNum() const = 0;
@@ -127,7 +129,7 @@ class Qop_Options_Param : public ParamBase
       virtual ParameterTypes::Type getTypeNum() const;
       Qop_Options_Param();
 };
-extern Qop_Options_Param p_qopOptions;
+extern RESIP_API Qop_Options_Param p_qopOptions;
 
 class qop_Param : public ParamBase
 {
@@ -137,7 +139,7 @@ class qop_Param : public ParamBase
       virtual ParameterTypes::Type getTypeNum() const;
       qop_Param();
 };
-extern qop_Param p_qop;
+extern RESIP_API qop_Param p_qop;
 
 class Qop_Factory_Param
 {
@@ -145,7 +147,7 @@ class Qop_Factory_Param
       typedef QopParameter Type;
       Qop_Factory_Param();
 };
-extern Qop_Factory_Param p_qopFactory;
+extern RESIP_API Qop_Factory_Param p_qopFactory;
 }
 
 #undef defineParam

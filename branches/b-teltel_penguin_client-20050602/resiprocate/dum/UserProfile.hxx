@@ -6,13 +6,14 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class Data;
 
-class UserProfile : public Profile
+class DUM_API UserProfile : public Profile
 {
    public:  
       UserProfile(Profile *baseProfile = 0);

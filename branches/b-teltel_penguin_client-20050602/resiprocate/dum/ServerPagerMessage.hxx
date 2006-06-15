@@ -3,11 +3,12 @@
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
-class ServerPagerMessage : public NonDialogUsage
+class DUM_API ServerPagerMessage : public NonDialogUsage
 {
    public:
       typedef Handle<ServerPagerMessage> ServerPagerMessageHandle;

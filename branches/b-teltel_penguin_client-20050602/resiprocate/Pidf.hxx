@@ -8,11 +8,12 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class Pidf : public Contents
+class RESIP_API Pidf : public Contents
 {
    public:
       RESIP_HeapCount(Pidf);

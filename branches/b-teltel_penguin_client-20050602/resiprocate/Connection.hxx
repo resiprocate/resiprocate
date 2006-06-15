@@ -10,6 +10,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/os/IntrusiveListElement.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
@@ -25,7 +26,7 @@ typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 
-class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
+class RESIP_API Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
@@ -63,8 +64,8 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       void remove(); // called by ConnectionManager
 
       // no value semantics
-      Connection(const Connection&);
-      Connection& operator=(const Connection&);
+      Connection(const Connection&){};
+      //Connection& operator=(const Connection&);
 
 };
 

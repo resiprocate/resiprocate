@@ -2,11 +2,12 @@
 #define RESIP_ExtensionParameter_hxx
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
-class ExtensionParameter
+class RESIP_API ExtensionParameter
 {
    public:
       explicit ExtensionParameter(const Data& unknownParameterName);

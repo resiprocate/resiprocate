@@ -3,13 +3,14 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class DialogUsageManager;
 
-class BaseCreator
+class DUM_API BaseCreator
 {
    public:
       BaseCreator(DialogUsageManager& dum, UserProfile& userProfile);

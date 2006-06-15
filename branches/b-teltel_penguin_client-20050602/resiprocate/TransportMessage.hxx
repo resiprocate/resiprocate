@@ -5,13 +5,14 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 // This message is used to indicate that the TransportSelector has sent a sip
 // message using either reliable or unreliable transport
-class TransportMessage : public TransactionMessage
+class RESIP_API TransportMessage : public TransactionMessage
 {
    public:
       RESIP_HeapCount(TransportMessage);

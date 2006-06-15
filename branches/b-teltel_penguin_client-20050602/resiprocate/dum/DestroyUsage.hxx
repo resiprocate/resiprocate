@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +12,7 @@ namespace resip
 class Dialog;
 class DialogSet;
 
-class DestroyUsage : public ApplicationMessage
+class DUM_API DestroyUsage : public ApplicationMessage
 {
    public:
       DestroyUsage(BaseUsageHandle target);

@@ -7,11 +7,13 @@
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Lock.hxx"
 
+#include "resiprocate/os/Win32Export.hxx"
+
 namespace resip
 {
 
 /// for statistics gathering
-class FifoStatsInterface
+class RESIP_API FifoStatsInterface
 {
    public:
       virtual ~FifoStatsInterface() {}
@@ -21,7 +23,7 @@ class FifoStatsInterface
 
 /** First in first out queue template hoist.
  */
-class AbstractFifo : public FifoStatsInterface
+class RESIP_API AbstractFifo : public FifoStatsInterface
 {
    public:
       AbstractFifo(unsigned int maxSize);

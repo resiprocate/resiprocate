@@ -3,12 +3,13 @@
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Lockable.hxx"
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 class Condition;
 	
-class RecursiveMutex : public Lockable
+class RESIP_API RecursiveMutex : public Lockable
 {
    public:
       RecursiveMutex();

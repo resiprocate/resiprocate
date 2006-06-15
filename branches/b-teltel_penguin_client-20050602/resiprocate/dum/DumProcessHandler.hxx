@@ -3,7 +3,7 @@
 
 #include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/external/ExternalTimer.hxx"
-
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -11,7 +11,7 @@ namespace resip
 class DialogUsageManager;
 
 
-class DumProcessHandler : public AsyncProcessHandler, public ExternalTimerHandler
+class DUM_API DumProcessHandler : public AsyncProcessHandler, public ExternalTimerHandler
 {
    public:
       DumProcessHandler(ExternalTimer*);      

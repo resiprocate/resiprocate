@@ -1,12 +1,13 @@
 #if !defined(RESIP_EMBEDDED_HXX)
 #define RESIP_EMBEDDED_HXX 
+#include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
 {
 
 class Data;
 
-class Embedded
+class RESIP_API Embedded
 {
    public:
       static char* decode(const Data& input, unsigned int& decodedLength);

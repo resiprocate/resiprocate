@@ -5,13 +5,14 @@
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
 
 class Data;
 
-class Profile
+class DUM_API Profile
 {
    public:        
       Profile(Profile *baseProfile = 0);  // Default to no base profile

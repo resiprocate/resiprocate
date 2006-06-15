@@ -8,6 +8,7 @@
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Lock.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
@@ -18,7 +19,7 @@ namespace resip
   or replication of any kind. It's good for testing, but probably
   inappropriate for any commercially deployable products.
 */
-class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
+class DUM_API InMemoryRegistrationDatabase : public RegistrationPersistenceManager
 {
    public:
       InMemoryRegistrationDatabase();
