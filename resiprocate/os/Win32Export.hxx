@@ -2,6 +2,11 @@
 #define WIN32EXPORT_HXX 
 
 #if defined(WIN32) || defined(_WIN32) 
+
+#   if defined(_MSC_VER)
+#      pragma warning(disable: 4251)  // warning C4251:  class 'std::vector<_Ty>' needs to have dll-interface to be used by clients of class 
+#   endif // #if defined(_MSC_VER)
+
 #   ifdef RESIP_EXPORTS
 #      define RESIP_API __declspec(dllexport)
 #   elif defined(USE_RESIP_DLL)
