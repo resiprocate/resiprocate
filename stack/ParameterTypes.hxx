@@ -6,7 +6,7 @@
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/IntegerParameter.hxx"
-#include "resip/stack/FloatParameter.hxx"
+#include "resip/stack/QValueParameter.hxx"
 #include "resip/stack/ExistsParameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/RportParameter.hxx"
@@ -84,7 +84,7 @@ defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
 defineParam(permission, "permission", DataParameter, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
 defineParam(purpose, "purpose", DataParameter, "RFC ????");
-defineParam(q, "q", FloatParameter, "RFC 3261");
+defineParam(q, "q", QValueParameter, "RFC 3261");
 defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
 defineParam(reason, "reason", DataParameter, "RFC ????");
 defineParam(received, "received", DataParameter, "RFC ????");
