@@ -295,7 +295,7 @@ ServerInviteSession::end()
 
       case UAS_Accepted:
       case UAS_WaitingToOffer:
-         if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
+         if(mCurrentRetransmit200Map.size())  // If retransmit200 timer is active then ACK is not received yet - wait for it
          {
             transition(UAS_WaitingToHangup);
          }
@@ -619,7 +619,8 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    {
       case OnAck:
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         mCurrentRetransmit200Map.clear();
          transition(Connected);
          handler->onConnected(getSessionHandle(), msg);  // !slg! not needed since onConnected is called when 200 is sent
          break;
@@ -627,7 +628,8 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 
       case OnAckAnswer:
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         mCurrentRetransmit200Map.clear();
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -676,14 +678,16 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    {
       case OnAck:
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; 
+         mCurrentRetransmit200Map.clear();      // stop the 200 retransmit timer
          InviteSession::provideOffer(*mProposedLocalSdp);
          break;
       }
 
       case OnAckAnswer:
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; 
+         mCurrentRetransmit200Map.clear();      // stop the 200 retransmit timer
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
@@ -729,7 +733,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnAckAnswer:
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; // 
+         mCurrentRetransmit200Map.clear();      //stop the 200 retransmit timer
          transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -742,7 +747,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          
       case OnAck: 
          { 
-             mCurrentRetransmit200 = 0; // stop the 200 retransmit timer 
+             //mCurrentRetransmit200 = 0; 
+            mCurrentRetransmit200Map.clear(); // stop the 200 retransmit timer 
              sendBye(); 
              transition(Terminated); 
              handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
@@ -841,7 +847,8 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
       case OnAck:
       case OnAckAnswer:
       {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200 = 0; 
+         mCurrentRetransmit200Map.clear();      // stop the 200 retransmit timer
 
          sendBye();
          transition(Terminated);

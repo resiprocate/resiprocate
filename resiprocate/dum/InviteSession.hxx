@@ -7,6 +7,7 @@
 #include "resiprocate/dum/Win32ExportDum.hxx"
 
 #include <map>
+#include <list>
 
 namespace resip
 {
@@ -242,8 +243,11 @@ class DUM_API InviteSession : public DialogUsage
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
       SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
       
-      unsigned long mCurrentRetransmit200;
-      unsigned long mCurrentRetransmit200CSeq; // to match corresponding DumTimeout::WaitForAck.
+      //unsigned long mCurrentRetransmit200;
+      //unsigned long mCurrentRetransmit200CSeq; // to match corresponding DumTimeout::WaitForAck.
+
+      std::map<unsigned long, unsigned long> mCurrentRetransmit200Map; // CSeq:Timeout
+      //std::list<unsigned long> mCurrentRetransmit200CSeqList;
 
       // Session Timer settings
       int  mSessionInterval;
