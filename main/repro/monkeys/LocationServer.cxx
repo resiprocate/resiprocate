@@ -35,8 +35,7 @@ LocationServer::process(RequestContext& context)
 
      mStore.unlockRecord(inputUri);
 
-      std::list<Target*> qbatch;
-      std::list<Target*> noqbatch;
+      std::list<Target*> batch;
      for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
@@ -46,11 +45,11 @@ LocationServer::process(RequestContext& context)
            InfoLog (<< *this << " adding target " << contact.uri);
            if(contact.useQ)
            {
-               qbatch.push_back(new QValueTarget(contact.uri,contact.q));
+               batch.push_back(new QValueTarget(contact.uri,contact.q));
            }
            else
            {
-               noqbatch.push_back(new QValueTarget(contact.uri,1.0));   
+               batch.push_back(new QValueTarget(contact.uri,1.0));   
            }
         }
         else
@@ -61,21 +60,14 @@ LocationServer::process(RequestContext& context)
      }
 
       
-     if(!qbatch.empty())
+     if(!batch.empty())
      {
-         qbatch.sort(Target::targetPtrCompare);
-        context.getResponseContext().addTargetBatch(qbatch);
+         batch.sort(Target::targetPtrCompare);
+        context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
-        assert(qbatch.empty());
+        assert(batch.empty());
      }
-     
-     if(!noqbatch.empty())
-     {
-        context.getResponseContext().addTargetBatch(noqbatch);
-        //ResponseContext should be consuming the vector
-        assert(noqbatch.empty());
-     }
-     
+          
    }
    else
    {
