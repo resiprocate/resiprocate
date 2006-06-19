@@ -35,8 +35,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : DialogUsage(dum, dialog),
      mState(Undefined),
      mNitState(NitComplete),
-     mCurrentRetransmit200(0),
-     mCurrentRetransmit200CSeq(0),
+     //mCurrentRetransmit200(0),
+     //mCurrentRetransmit200CSeq(0),
      mSessionInterval(0),
      mSessionRefresherUAS(false),
      mSessionTimerSeq(0),
@@ -545,24 +545,32 @@ InviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit200)
    {
-      if (mCurrentRetransmit200)
+      if (mCurrentRetransmit200Map.size())
       {
-         assert(mCurrentRetransmit200CSeq == timeout.seq() && "need to investigate why seq number is out of order");
-         //if (mCurrentRetransmit200CSeq == timeout.seq())
+         std::map<unsigned long, unsigned long>::iterator found  = mCurrentRetransmit200Map.find(timeout.seq());
+         assert(found != mCurrentRetransmit200Map.end() && "need to investigate why seq number is not exist");
+
+         if (found != mCurrentRetransmit200Map.end())
          {
             InfoLog (<< "Retransmitting: " << endl << mInvite200);
             mDialog.send(mInvite200);
-            mCurrentRetransmit200 *= 2;
-            mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(), timeout.seq());
+            (found->second) *= 2;
+            //mCurrentRetransmit200 *= 2;
+            mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, found->second), getBaseHandle(), timeout.seq());
          }
       }
    }
    else if (timeout.type() == DumTimeout::WaitForAck)
    {
-      if(mCurrentRetransmit200 && mCurrentRetransmit200CSeq == timeout.seq())  // If retransmit200 timer is active then ACK is not received yet
-      {                                                                        //  mCurrentRetransmit200CSeq must match most recent DumTimeout::Retransmit200.
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         mCurrentRetransmit200CSeq = 0;
+      if (mCurrentRetransmit200Map.size())
+      {
+         std::map<unsigned long, unsigned long>::iterator found  = mCurrentRetransmit200Map.find(timeout.seq()); // If retransmit200 timer is active then ACK is not received yet
+                                                                                                                 //  mCurrentRetransmit200CSeq must match most recent DumTimeout::Retransmit200.      
+         if (found != mCurrentRetransmit200Map.end())
+         {
+            //mCurrentRetransmit200Map.erase(found);
+            mCurrentRetransmit200Map.clear();
+         }
          // this is so the app can decided to ignore this. default implementation
          // will call end next
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
@@ -575,6 +583,24 @@ InviteSession::dispatch(const DumTimeout& timeout)
              mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          }
       }
+
+
+      //if(mCurrentRetransmit200 && mCurrentRetransmit200CSeq == timeout.seq())  // If retransmit200 timer is active then ACK is not received yet
+      //{                                                                        
+      //   mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      //   mCurrentRetransmit200CSeq = 0;
+         // this is so the app can decided to ignore this. default implementation
+         // will call end next
+         //mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
+
+         //// If we are waiting for an Ack and it times out, then end with a BYE
+         //if(mState == UAS_WaitingToHangup)
+         //{
+         //    sendBye();
+         //    transition(Terminated);
+         //    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         //}
+      //}
    }
    else if (timeout.type() == DumTimeout::Glare)
    {
@@ -677,8 +703,9 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
 
       case OnAck:
-         mCurrentRetransmit200     = 0; // stop the 200 retransmit timer
-         mCurrentRetransmit200CSeq = 0; // reset so DumTimeout::WaitForAck handles only active retransmit timeout.
+         mCurrentRetransmit200Map.clear();
+         //mCurrentRetransmit200     = 0; // stop the 200 retransmit timer
+         //mCurrentRetransmit200CSeq = 0; // reset so DumTimeout::WaitForAck handles only active retransmit timeout.
          handler->onAckReceived(getSessionHandle(), msg);
          break;
 
@@ -923,8 +950,9 @@ InviteSession::dispatchAnswered(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-      mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-      mCurrentRetransmit200CSeq = 0;
+      //mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      //mCurrentRetransmit200CSeq = 0;
+      mCurrentRetransmit200Map.clear();
       transition(Connected);
    }
    else
@@ -938,8 +966,9 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-      mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-      mCurrentRetransmit200CSeq = 0;
+      //mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+      //mCurrentRetransmit200CSeq = 0;
+      mCurrentRetransmit200Map.clear();
       provideOffer(*mProposedLocalSdp);
    }
    else
@@ -1176,10 +1205,9 @@ InviteSession::setReInviteHeader(const ExtensionHeader&        extensionHeader,
 void
 InviteSession::startRetransmit200Timer()
 {
-   mCurrentRetransmit200 = Timer::T1;
    int seq = mLastSessionModification.header(h_CSeq).sequence();
-   mCurrentRetransmit200CSeq = seq; // Jun. 1st, 2006: to match corresponding DumTimeout::WaitForAck.
-   mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
+   mCurrentRetransmit200Map[seq] = Timer::T1; // Jun. 1st, 2006: to match corresponding DumTimeout::WaitForAck.
+   mDum.addTimerMs(DumTimeout::Retransmit200, Timer::T1, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
 
