@@ -1,10 +1,12 @@
-#include <string.h>
+#include "dtls_shim.h"
+#include "bio_local.h"
+
 #include <openssl/ssl.h>
+#include <openssl/crypto.h>
+
+#include <string.h>
 #include <time.h>
 #include <assert.h>
-
-#include "dtls_shim.h"
-
 
 #define DTLS_SHIM_DEFAULT_NUM_FINGERPRINTS 5
 #define DTLS_SHIM_DEFAULT_NUM_CONNECTIONS  5
@@ -104,8 +106,6 @@ dtls_shim_table_find(dtls_shim_table_s *table, dtls_shim_con_info_s *con)
 SSL *
 dtls_shim_table_add(dtls_shim_table_s *table, dtls_shim_con_info_s con, SSL *ssl)
 {
-    int i;
-
     if (table->count == table->max)
     {
         table->connections = (dtls_shim_con_info_s *)realloc(table->connections,
@@ -143,7 +143,7 @@ dtls_shim_table_get_entries(dtls_shim_table_s *table, unsigned int *count)
 static BIO *g_dummy_bio = NULL;
 
 dtls_shim_h
-dtls_shim_init(const X509 *cert, void *app_data)
+dtls_shim_init(const X509 *cert, EVP_PKEY *pkey, void *app_data)
 {
     dtls_shim_h handle = NULL;
 
@@ -154,6 +154,19 @@ dtls_shim_init(const X509 *cert, void *app_data)
     memset(handle, 0x00, sizeof(dtls_shim_s));
 
     handle->ctx = SSL_CTX_new(DTLSv1_method());
+
+    /* Client does not need to have a cert. */
+    if ( cert != NULL && pkey != NULL)
+    {
+        if ( ! SSL_CTX_use_certificate(handle->ctx, (X509 *)cert) ||
+            ! SSL_CTX_use_PrivateKey(handle->ctx, pkey))
+        {
+            SSL_CTX_free(handle->ctx);
+            free(handle);
+            return NULL;
+        }
+    }
+
     handle->table = dtls_shim_table_new();
     handle->app_data = app_data;
 
@@ -164,6 +177,7 @@ dtls_shim_init(const X509 *cert, void *app_data)
     handle->max_fingerprints = DTLS_SHIM_DEFAULT_NUM_FINGERPRINTS;
 
     g_dummy_bio = BIO_new(BIO_s_mem());
+    BIO_set_mem_eof_return(g_dummy_bio, -1);
 
     if ( handle->ctx == NULL || handle->table == NULL || 
         handle->fingerprints == NULL || g_dummy_bio == NULL)
@@ -177,6 +191,12 @@ dtls_shim_init(const X509 *cert, void *app_data)
     }
 
     return handle;    
+}
+
+void
+dtls_shim_enable_srtp_profiles(dtls_shim_h handle, const char *srtp_profiles)
+{
+    SSL_CTX_set_tlsext_use_srtp(handle->ctx, srtp_profiles);
 }
 
 
@@ -215,17 +235,15 @@ dtls_shim_get_client_data(dtls_shim_h handle)
 
 int
 dtls_shim_get_srtp_key(dtls_shim_h handle, 
-                       dtls_shim_con_info_s *con,
+                       dtls_shim_con_info_s con,
                        dtls_shim_srtp_key_s *srtp_key)
 {
     SSL *ssl = NULL;
 
-    if ( handle == NULL || con == NULL)
-    {
+    if ( handle == NULL )
        return 0;
-    }
 
-    ssl = dtls_shim_table_find(handle->table, con);
+    ssl = dtls_shim_table_find(handle->table, &con);
     if ( ssl && SSL_is_init_finished(ssl) && SSL_get_selected_srtp_profile(ssl))
     {
        SSL_get_srtp_key_info(ssl, 
@@ -280,7 +298,7 @@ dtls_shim_read(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf
 	dtls_shim_iostatus_e *status)
 {
     int len, err;
-    BIO *rbio = NULL;
+    BIO *rbio = NULL, *wbio = NULL;
     SSL *ssl = NULL;
 
     if ( handle == NULL)
@@ -296,8 +314,17 @@ dtls_shim_read(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf
         /* This connection is the server side of DTLS. */
         SSL_set_accept_state(ssl);
 
-        /* I/O to be set-up later. */
-        SSL_set_bio(ssl, NULL, g_dummy_bio);
+        /* Set-up BIO. */
+        wbio = BIO_new(BIO_s_mem());
+        if ( wbio == NULL)
+        {
+            SSL_free(ssl);
+            return -1;
+        }        
+
+        /* This reference will get decremented when SSL_free is called. */
+        CRYPTO_add(&g_dummy_bio->references, 1, CRYPTO_LOCK_BIO);
+        SSL_set_bio(ssl, g_dummy_bio, wbio);
 
         dtls_shim_table_add(handle->table, con, ssl);
     }
@@ -323,9 +350,16 @@ dtls_shim_read(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf
         switch(err)
         {
             case SSL_ERROR_WANT_READ:
-                *status = DTLS_SHIM_WANT_READ;
             case SSL_ERROR_WANT_WRITE:
-                *status = DTLS_SHIM_WANT_WRITE;
+                if ( ssl->wbio->next_bio != NULL)
+                    wbio = ssl->wbio->next_bio;
+                else
+                    wbio= ssl->wbio;
+                if ( BIO_get_mem_data(wbio, NULL) > 0 )
+                    *status = DTLS_SHIM_WANT_WRITE;
+                else
+                    *status = DTLS_SHIM_OK;
+                break;
             default:
                 *status = DTLS_SHIM_READ_ERROR;
         }
@@ -336,14 +370,15 @@ dtls_shim_read(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf
 
 int 
 dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obuf, 
-    unsigned int olen, const unsigned char *ibuf, unsigned int ilen, 
+    unsigned int *olen, const unsigned char *ibuf, unsigned int ilen, 
 	dtls_shim_iostatus_e *status)
 {
-   int len, err, wlen;
+    int len, err, wlen;
     BIO *wbio = NULL;
     SSL *ssl = NULL;
     char *p;
     
+    *status = DTLS_SHIM_WRITE_ERROR;
 
     if ( handle == NULL)
         return -1;
@@ -355,19 +390,42 @@ dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obu
         if (ssl == NULL)
             return -1;
 
+        wbio = BIO_new(BIO_s_mem());
+        if ( wbio == NULL)
+        {
+            SSL_free(ssl);
+            return -1;
+        }
+
         SSL_set_connect_state(ssl);
 
-        SSL_set_bio(ssl, g_dummy_bio, g_dummy_bio);
+        /* This reference will get decremented when SSL_free is called. */
+        CRYPTO_add(&g_dummy_bio->references, 1, CRYPTO_LOCK_BIO);
+        SSL_set_bio(ssl, g_dummy_bio, wbio);
+
         dtls_shim_table_add(handle->table, con, ssl);
     }
 
-    wbio = BIO_new(BIO_s_mem());
-    if ( wbio == NULL)
-        return -1;
+    /* shim_read might have already generated some bytes to send. */
+    if ( ssl->wbio->next_bio != NULL)
+        wbio = ssl->wbio->next_bio;
+    else
+        wbio = ssl->wbio;
 
-    /* BIO_set_mem_eof_return(wbio, -1); */
-    
-    ssl->wbio = wbio;
+    wlen = BIO_get_mem_data(wbio, &p);
+    if (wlen > 0 && wlen <= *olen)
+    {
+        memcpy(obuf, p, wlen);
+        BIO_reset(wbio);
+        *olen = wlen;
+        *status = DTLS_SHIM_OK;
+        return 0;
+    }
+    else if ( wlen > *olen)
+    {
+        *status = DTLS_SHIM_WRITE_ERROR;
+        return -1;
+    }
 
     len = SSL_write(ssl, ibuf, ilen);
 
@@ -390,17 +448,15 @@ dtls_shim_write(dtls_shim_h handle, dtls_shim_con_info_s con, unsigned char *obu
         }
     }
 
-    wlen = BIO_get_mem_data(ssl->wbio, &p);
-    if (wlen > olen)
+    wlen = BIO_get_mem_data(wbio, &p);
+    if (wlen > *olen)
     {
        *status = DTLS_SHIM_WRITE_ERROR;
        return -1;
     }
-    memcpy(obuf, p, wlen);
-    len = wlen;
 
-    BIO_free(ssl->wbio);
-    ssl->wbio = g_dummy_bio;
+    memcpy(obuf, p, wlen);
+    *olen = wlen;
 
     return len;
 }
@@ -416,7 +472,7 @@ dtls_shim_add_fingerprint(dtls_shim_h handle,
                           dtls_shim_fingerprint_s *fingerprint)
 {
     if ( handle == NULL || fingerprint == NULL)
-        return;
+        return NULL;
 
     assert( handle->num_fingerprints <= handle->max_fingerprints);
 

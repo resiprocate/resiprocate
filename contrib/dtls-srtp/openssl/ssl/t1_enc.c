@@ -548,7 +548,7 @@ printf("pre-master\n");
             s->srtp_key_block_length=srtp_bytes;
             
             
-            OPENSSL_cleanse(p1+num,srtp_bytes);
+            OPENSSL_cleanse(p1+non_srtp_num,srtp_bytes);
 
             num=non_srtp_num;
             }
