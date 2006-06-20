@@ -163,6 +163,7 @@ class Data
       */
       explicit Data(UInt64 value);
 
+#ifndef RESIP_FIXED_POINT
       enum DoubleDigitPrecision 
       {
          ZeroDigitPrecision = 0, OneDigitPrecision, 
@@ -183,6 +184,7 @@ class Data
       */
       explicit Data(double value, 
 		    Data::DoubleDigitPrecision precision = FourDigitPrecision);
+#endif
 
       /**
         Creates a buffer containing "true" or "false", depending
@@ -554,6 +556,7 @@ class Data
       */ 
       size_t convertSize() const;
 
+#ifndef RESIP_FIXED_POINT
       /**
         Takes the contents of the Data and converts them to a 
         double precision floating point value. Will strip leading
@@ -562,6 +565,7 @@ class Data
         and leading negative signs).
       */ 
       double convertDouble() const;
+#endif
 
       /**
         Takes the contents of the Data and converts them to an
