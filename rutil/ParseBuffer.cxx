@@ -799,7 +799,7 @@ ParseBuffer::unsignedLongLong()
    return num;
 }
 
-
+#ifndef RESIP_FIXED_POINT
 float
 ParseBuffer::floatVal()
 {
@@ -830,7 +830,7 @@ ParseBuffer::floatVal()
      return 0.0;
    }
 }
-
+#endif
 
 int
 ParseBuffer::qVal()

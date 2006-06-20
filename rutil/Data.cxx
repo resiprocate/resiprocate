@@ -452,6 +452,7 @@ Data::Data(unsigned long value)
    }
 }
 
+#ifndef RESIP_FIXED_POINT
 static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
            Data::DoubleDigitPrecision precision)
@@ -538,6 +539,7 @@ Data::Data(double value,
 
    assert(mBuf[mSize] == 0);
 }
+#endif
 
 Data::Data(unsigned int value)
    : mSize(0),
@@ -1621,6 +1623,7 @@ Data::convertSize() const
    return val;
 }
 
+#ifndef RESIP_FIXED_POINT
 double 
 Data::convertDouble() const
 {
@@ -1680,6 +1683,7 @@ Data::convertDouble() const
    }
    return s*(val + d/div);
 }
+#endif
 
 bool
 Data::prefix(const Data& pre) const

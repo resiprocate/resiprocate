@@ -110,7 +110,9 @@ class ParseBuffer
 
       UInt64 unsignedLongLong();
       unsigned long unsignedInteger();
+#ifndef RESIP_FIXED_POINT		
       float floatVal();
+#endif
       int qVal();
       static const char* Whitespace;
       static const char* ParamTerm;
