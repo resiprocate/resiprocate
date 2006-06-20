@@ -28,6 +28,20 @@ class QValueParameter : public Parameter
 			bool operator==(const QVal& rhs) const { return value == rhs.value; }
 			bool operator!=(const QVal& rhs) const { return value != rhs.value; }			
 			
+			bool operator<(const int rhs) const { return value < rhs; }
+			bool operator>(const int rhs) const { return value > rhs; }
+			bool operator<=(const int rhs) const { return value <= rhs; }
+			bool operator>=(const int rhs) const { return value >= rhs; }
+			bool operator==(const int rhs) const { return value == rhs; }
+			bool operator!=(const int rhs) const { return value != rhs; }			
+			
+			bool operator<(const long rhs) const { return value < rhs; }
+			bool operator>(const long rhs) const { return value > rhs; }
+			bool operator<=(const long rhs) const { return value <= rhs; }
+			bool operator>=(const long rhs) const { return value >= rhs; }
+			bool operator==(const long rhs) const { return value == rhs; }
+			bool operator!=(const long rhs) const { return value != rhs; }			
+			
 			QVal& operator=(const QVal& rhs) { value = rhs.value;  return (*this); }
 			QVal& operator=(const int rhs) { setValue(rhs); return (*this); }			
 			QVal& operator=(const long rhs) { setValue((int)(rhs * 1000.0)); return (*this); }			
