@@ -285,7 +285,19 @@ main(int arc, char** argv)
       TR _tr("Test NameAddr q value");
 
       NameAddr w("<sip:wombat@192.168.2.221:5062;transport=Udp>;expires=63;q=1");
+#ifndef RESIP_FIXED_POINT
       assert(w.param(p_q) == 1.0);
+#endif
+		assert(w.param(p_q) == 1000);
+		w.param(p_q) = 843;
+		assert(w.param(p_q) <= 843);
+#ifndef RESIP_FIXED_POINT
+		assert(w.param(p_q) == 0.843);
+		w.param(p_q) = 0.65;
+		assert(w.param(p_q) == 650);
+#endif
+		w.param(p_q) = 0;
+		assert(w.param(p_q) == 0);
    }
    
    {
