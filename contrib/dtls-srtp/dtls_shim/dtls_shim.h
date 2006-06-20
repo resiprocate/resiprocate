@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <openssl/x509.h>
+#include <openssl/evp.h>
 
 /* read and write timeouts. */
 #define DTLS_SHIM_DEFAULT_RECV_TIMEOUT  250000  /* 250 ms */
@@ -51,7 +52,9 @@ typedef struct dtls_shim *dtls_shim_h;
  * Initialize the library; set-up data structures.
  * RETURNS: NULL handle if an error occurs. 
  */
-dtls_shim_h dtls_shim_init(const X509 *cert, void *);
+dtls_shim_h dtls_shim_init(const X509 *cert, EVP_PKEY *pkey, void *);
+
+void dtls_shim_enable_srtp_profiles(dtls_shim_h, const char *srtp_profiles);
 
 /* 
  * Clean-up and release allocated memory.  This function is *not*
@@ -70,7 +73,7 @@ void *dtls_shim_get_client_data(dtls_shim_h);
  * Get SRTP keys for a given connection.
  * RETURNS: 0 on error, 1 on success
  */
-int dtls_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s, dtls_shim_srtp_key_s *);
+int dtls_shim_get_srtp_key(dtls_shim_h, dtls_shim_con_info_s, dtls_shim_srtp_key_s *);
 
 /* 
  * To be invoked after each read or write call.  If, and when, a timer
@@ -97,7 +100,7 @@ int dtls_shim_read(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf,
  * then call dtls_shim_get_status() for further information.
  */
 int dtls_shim_write(dtls_shim_h, dtls_shim_con_info_s, unsigned char *obuf, 
-    unsigned int olen, const unsigned char *ibuf, unsigned int ilen, 
+    unsigned int *olen, const unsigned char *ibuf, unsigned int ilen, 
 	dtls_shim_iostatus_e *status);
 
 /*
