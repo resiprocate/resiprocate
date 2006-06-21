@@ -68,7 +68,7 @@ main(int argc, char* argv[])
    resip::Data aor(aorp);
    sec.generateUserCert(aor);
    X509* cert = sec.getUserCert(aor);
-   EVP_PKEY* pkey = sec.getUserKey(aor);
+   EVP_PKEY* pkey = sec.getUserPrivateKey(aor);
    InfoLog (<< "Generated user cert for " << aor);
    
    dtls_shim_h shim = dtls_shim_init(cert, pkey, 0);
@@ -111,6 +111,9 @@ main(int argc, char* argv[])
           InfoLog ( << "wrote " << olen << " bytes");
       }
 
+      //assert(bytes > 0);
+      InfoLog (<< "finished shim_write, need to write " << bytes);
+      
       switch (status)
       {
          case DTLS_SHIM_WANT_WRITE:
@@ -151,6 +154,8 @@ main(int argc, char* argv[])
          {
             if (getMessage(socket, buffer, sizeof(buffer), len, source.remote))
             {
+               InfoLog (<< "Got " << len << " bytes from remote");
+               
                int bytes = dtls_shim_read(shim, source, obuf, sizeof(obuf), buffer, len, &status);
                
                if ( bytes > 0)
