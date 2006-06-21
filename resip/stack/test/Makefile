@@ -5,6 +5,11 @@ CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
+ifeq ($(USE_DTLS), yes)
+PACKAGES += DTLS_SHIM 
+TESTPROGRAMS += testshim.cxx
+endif
+
 PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT
 
 ifeq ($(USE_SSL), yes)
@@ -12,6 +17,7 @@ TESTPROGRAMS += makeSelfCert.cxx \
 		testSecurity.cxx \
 		testTls.cxx 
 endif
+
 
 TESTPROGRAMS += \
 SipTortureTests.cxx \
