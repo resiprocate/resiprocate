@@ -40,6 +40,15 @@ endif
 #OPENSSL_LDLIBS_LAST := /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a
 #OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
 
+ifeq ($(USE_DTLS),yes)
+DTLS_SHIM_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/dtls_shim
+DTLS_SHIM_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/dtls_shim
+DTLS_SHIM_LIBNAME := dtls_shim
+OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
+OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
+OPENSSL_LIBNAME += dl
+endif
+
 ifeq ($(USE_MYSQL),yes)
 MYSQL_LIBNAME :=  mysqlclient z m
 MYSQL_DEFINES += USE_MYSQL
