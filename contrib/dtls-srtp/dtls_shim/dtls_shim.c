@@ -1,5 +1,4 @@
 #include "dtls_shim.h"
-#include "bio_local.h"
 
 #include <openssl/ssl.h>
 #include <openssl/crypto.h>
