@@ -46,7 +46,7 @@ DTLS_SHIM_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/dtls_shim
 DTLS_SHIM_LIBNAME := dtls_shim
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
-OPENSSL_LIBNAME += dl
+OPENSSL_LIBNAME = ssl crypto dl
 endif
 
 ifeq ($(USE_MYSQL),yes)
