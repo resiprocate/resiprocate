@@ -2482,6 +2482,12 @@ BaseSecurity::getDomainKey(  const Data& domain )
    return mDomainPrivateKeys.count(domain) ? mDomainPrivateKeys[domain] : 0;
 }
 
+EVP_PKEY*
+BaseSecurity::getUserPrivateKey( const Data& aor )
+{
+   return mUserPrivateKeys.count(aor) ? mUserPrivateKeys[aor] : 0;
+}
+
 #endif
 
 
