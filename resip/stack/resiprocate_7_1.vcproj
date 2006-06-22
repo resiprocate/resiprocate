@@ -417,6 +417,9 @@
 				RelativePath=".\QuotedDataParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\QValueParameter.cxx">
+			</File>
+			<File
 				RelativePath=".\RAckCategory.cxx">
 			</File>
 			<File
@@ -788,6 +791,9 @@
 			</File>
 			<File
 				RelativePath=".\QuotedDataParameter.hxx">
+			</File>
+			<File
+				RelativePath=".\QValueParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\RAckCategory.hxx">
