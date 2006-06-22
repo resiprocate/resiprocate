@@ -1,6 +1,6 @@
 
 // server: ./testshim 10000 jason@localhost
-// client: ./testshim 20000 nagendra@localhost localhost 10000
+// client: ./testshim 20000 nagendra@localhost 127.0.0.1 10000
 
 #include <iostream>
 #include <openssl/err.h>
