@@ -267,7 +267,7 @@ SipTransactionState::process(TransactionController& controller, TransactionMessa
                state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->mState = Proceeding;
+               //state->mState = Proceeding;
                state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->add(tid);
                
@@ -935,7 +935,7 @@ SipTransactionState::processServerInvite(TransactionMessage* msg)
       switch (sip->header(h_RequestLine).getMethod())
       {
          case INVITE:
-            if (mState == Proceeding || mState == Completed)
+            if (mState == Trying || mState == Proceeding || mState == Completed)
             {
                /*
                  The server transaction has already been constructed so this
@@ -950,6 +950,10 @@ SipTransactionState::processServerInvite(TransactionMessage* msg)
                }
                delete msg;
                sendToWire(mMsgToRetransmit);
+               if(mState == Trying)
+               {
+                  mState = Proceeding;
+               }
             }
             else
             {
