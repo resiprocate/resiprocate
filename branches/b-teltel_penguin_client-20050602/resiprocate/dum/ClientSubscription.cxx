@@ -177,7 +177,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
          remoteTarget.remove(p_tag);
 
-         SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType(), getAppDialogSet()->reuse());
+         SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
          mDum.send(sub);
          handler->onTerminated(getHandle(), msg);
 
