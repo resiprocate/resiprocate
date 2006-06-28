@@ -10,6 +10,9 @@
 #include "ares_dns.h"
 #include "ares_private.h"
 
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+
 #if !defined(USE_ARES)
 #error Must have ARES
 #endif
@@ -21,6 +24,8 @@
 #endif
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 int 
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
@@ -92,6 +97,12 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
       if (tries > 0)
       {
          mChannel->tries = tries;
+      }
+
+      DebugLog(<< "number of name servers found " << mChannel->nservers);
+      for (int i = 0; i < mChannel->nservers; ++i)
+      {
+         DebugLog(<< "name server " << DnsUtil::inet_ntop(mChannel->servers[i].addr));
       }
 
       return Success;      
