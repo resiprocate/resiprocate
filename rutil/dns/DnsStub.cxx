@@ -46,7 +46,7 @@ int DnsStub::mDnsTries = 0;
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc) :
    mTransform(0),
-   mDnsProvider(ExternalDnsFactory::get())
+   mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries);
    if (retCode != ExternalDns::Success)
@@ -71,6 +71,8 @@ DnsStub::~DnsStub()
    {
       delete *it;
    }
+
+   delete mDnsProvider;
 }
 
 bool 

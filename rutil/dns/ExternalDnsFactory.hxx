@@ -6,14 +6,12 @@ namespace resip
 {
 class ExternalDns;
 
+//linker pattern, replace the cxx to use a different Dns provider. The deafult
+//is to use ares.
 class ExternalDnsFactory
 {
    public:
-      static void set(std::auto_ptr<ExternalDns>);
-      static ExternalDns* get();
-
-   private:
-      static std::auto_ptr<ExternalDns> mDns;
+      static ExternalDns* createExternalDns();
 };
 
 }
