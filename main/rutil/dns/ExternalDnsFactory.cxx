@@ -2,31 +2,28 @@
 #include <sys/types.h>
 #endif
 
+//#define USE_LOCAL_DNS 
+#ifdef USE_LOCAL_DNS
+#include <map>
+#include "rutil/dns/LocalDns.hxx"
+#else
 #include "rutil/dns/AresDns.hxx"
+#endif
+
 #include "rutil/dns/ExternalDnsFactory.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 
 using namespace resip;
 
-std::auto_ptr<ExternalDns> ExternalDnsFactory::mDns;
-
-void
-ExternalDnsFactory::set(std::auto_ptr<ExternalDns> dns)
-{
-   assert(!mDns.get());
-   if (mDns.get()) return;
-   mDns = dns;
-}
-
 ExternalDns* 
-ExternalDnsFactory::get()
+ExternalDnsFactory::createExternalDns()
 {
-   if (!mDns.get())
-   {
-      mDns = std::auto_ptr<ExternalDns>(new AresDns());
-   }
-   return mDns.get();
+#ifdef USE_LOCAL_DNS
+   return new LocalDns();
+#else
+   return new AresDns();
+#endif
 }
 
 /* ====================================================================
