@@ -226,14 +226,14 @@ class RESIP_API DnsResult
       std::map<Data,In6AddrList> mAAAARecords;
 
       friend class DnsInterface;
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult&);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 };
 
-std::ostream& operator<<(std::ostream& strm, const DnsResult&);
-std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
-std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult&);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 
 }
 

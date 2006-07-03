@@ -529,10 +529,10 @@ static bool invokeSdpContentsInit = SdpContents::init();
 
 typedef SdpContents::Session::Codec Codec;
 
-bool operator==(const SdpContents::Session::Codec& lhs,
+RESIP_API bool operator==(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
 
-std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
+RESIP_API std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
 
 }
 

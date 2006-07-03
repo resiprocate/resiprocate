@@ -50,7 +50,7 @@ HeaderFieldValue::encode(ostream& str) const
    return str;
 }
 
-ostream& RESIP_API resip::operator<<(ostream& stream, HeaderFieldValue& hfv)
+RESIP_API ostream& resip::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
    hfv.encode(stream);
    return stream;
