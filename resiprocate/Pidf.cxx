@@ -328,8 +328,8 @@ Pidf::merge(const Pidf& other)
    }
 }
 
-std::ostream& 
-RESIP_API resip::operator<<(std::ostream& strm, const Pidf::Tuple& tuple)
+RESIP_API std::ostream& 
+resip::operator<<(std::ostream& strm, const Pidf::Tuple& tuple)
 {
    strm << "Tuple [" 
         << " status=" << tuple.status

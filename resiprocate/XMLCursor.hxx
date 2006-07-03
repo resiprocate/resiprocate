@@ -174,12 +174,12 @@ public:
             Node(const Node&);
             Node& operator=(const Node&);
 
-            friend std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
+            friend RESIP_API std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
             // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
       };
    private:
-      friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
-      friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const XMLCursor&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
 
       // no value semantics
       XMLCursor(const XMLCursor&);
@@ -187,11 +187,9 @@ public:
       friend class Node;
 };
 
-std::ostream&
-operator<<(std::ostream& str, const XMLCursor& cursor);
+RESIP_API std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
 
-std::ostream&
-operator<<(std::ostream& str, const XMLCursor::Node& cursor);
+RESIP_API std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor);
 
 }
 

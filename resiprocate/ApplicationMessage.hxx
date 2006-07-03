@@ -7,7 +7,7 @@
 namespace resip
 {
 
-class ApplicationMessage : public Message
+class RESIP_API ApplicationMessage : public Message
 {
    public:
       ApplicationMessage() {};

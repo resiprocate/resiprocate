@@ -584,8 +584,8 @@ SipStack::dump(std::ostream& strm)  const
    return strm;
 }
 
-std::ostream& 
-RESIP_API resip::operator<<(std::ostream& strm, 
+RESIP_API std::ostream& 
+resip::operator<<(std::ostream& strm, 
 const SipStack& stack) 
 {
    return stack.dump(strm);

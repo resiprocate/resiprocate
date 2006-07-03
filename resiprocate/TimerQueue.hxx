@@ -34,7 +34,7 @@ class RESIP_API BaseTimerQueue
       unsigned int msTillNextTimer() const;
       
    protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
       std::multiset<Timer> mTimers;
 };
 
@@ -97,7 +97,7 @@ class RESIP_API DtlsTimerQueue : public BaseTimerQueue
 
 #endif
 
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+RESIP_API std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
 
 }
 

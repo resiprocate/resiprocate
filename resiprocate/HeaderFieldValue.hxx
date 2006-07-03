@@ -37,11 +37,10 @@ class RESIP_API HeaderFieldValue
       
       const bool mMine;
 
-      friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 };
 
-std::ostream& operator<<(std::ostream& stream, 
-			 HeaderFieldValue& hList);
+//RESIP_API std::ostream& operator<<(std::ostream& stream, HeaderFieldValue& hList);
 
 
 }
