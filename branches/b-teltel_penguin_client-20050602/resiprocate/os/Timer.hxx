@@ -95,7 +95,7 @@ class RESIP_API Timer
 
       friend bool operator<(const Timer& t1, const Timer& t2);
       friend bool operator>(const Timer& t1, const Timer& t2);
-      friend std::ostream& operator<<(std::ostream&, const Timer&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const Timer&);
       friend class BaseTimeLimitTimerQueue;
       friend class BaseTimerQueue;
       friend class DtlsTimerQueue;
@@ -104,7 +104,7 @@ class RESIP_API Timer
       friend class TuSelectorTimerQueue;
 };
  
-std::ostream& operator<<(std::ostream&, const Timer&);
+RESIP_API std::ostream& operator<<(std::ostream&, const Timer&);
 
 }
 

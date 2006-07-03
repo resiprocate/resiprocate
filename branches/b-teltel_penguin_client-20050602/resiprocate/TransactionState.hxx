@@ -116,7 +116,7 @@ class RESIP_API TransactionState : public DnsHandler
       Data mToTag; // for failure responses on ServerInviteTransaction 
       TransactionUser* mTransactionUser;      
       
-      friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;
 };
 

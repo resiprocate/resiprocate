@@ -250,8 +250,8 @@ resip::operator>(const Timer& t1, const Timer& t2)
     return t1.mWhen > t2.mWhen;
 }
 
-std::ostream& 
-RESIP_API resip::operator<<(std::ostream& str, const Timer& t)
+RESIP_API std::ostream& 
+resip::operator<<(std::ostream& str, const Timer& t)
 {
    UInt64 now = Timer::getTimeMs();
 

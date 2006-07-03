@@ -33,7 +33,7 @@ class TransactionMessage;
 
 class RESIP_API ConnectionBase
 {
-      friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
+      friend RESIP_API  std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
       ConnectionBase(const Tuple& who);
       ConnectionId getId() const;
@@ -83,8 +83,7 @@ class RESIP_API ConnectionBase
       MsgHeaderScanner mMsgHeaderScanner;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const resip::ConnectionBase& c);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
 
 }
 

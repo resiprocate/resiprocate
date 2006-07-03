@@ -13,10 +13,9 @@ namespace resip
 {
 
 /// for statistics gathering
-class RESIP_API FifoStatsInterface
+class FifoStatsInterface
 {
    public:
-      virtual ~FifoStatsInterface() {}
       virtual size_t getCountDepth() const = 0;
       virtual time_t getTimeDepth() const = 0;
 };

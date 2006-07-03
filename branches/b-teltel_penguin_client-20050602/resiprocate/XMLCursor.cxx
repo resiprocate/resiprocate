@@ -694,8 +694,8 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
    return pb.position();
 }
 
-std::ostream&
-RESIP_API resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
+RESIP_API std::ostream&
+resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
 {
    Data::size_type size = node.mPb.end() - node.mPb.start();
 
@@ -709,8 +709,8 @@ RESIP_API resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
    return str;
 }
 
-std::ostream&
-RESIP_API resip::operator<<(std::ostream& str, const XMLCursor& cursor)
+RESIP_API std::ostream&
+resip::operator<<(std::ostream& str, const XMLCursor& cursor)
 {
    str << "XMLCursor " << *cursor.mCursor;
    return str;

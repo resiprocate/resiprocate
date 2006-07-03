@@ -46,8 +46,7 @@ class RESIP_API TransactionUser
       MessageFilterRuleList mRuleList;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const TransactionUser& tu);
+RESIP_API std::ostream& operator<<(std::ostream& strm, const TransactionUser& tu);
 
 }
 

@@ -277,16 +277,11 @@ ConnectionBase::transport()
    return mWho.transport;
 }
 
-std::ostream& 
-
-RESIP_API resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
-
+RESIP_API std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
 {
-
    strm << "CONN_BASE: " << &c << " " << c.mWho;
-
    return strm;
-
 }
 
 
