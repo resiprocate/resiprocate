@@ -29,7 +29,7 @@ typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 class RESIP_API Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
-      friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
+      friend RESIP_API std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
    public:
       Connection(const Tuple& who, Socket socket);
@@ -69,8 +69,7 @@ class RESIP_API Connection : public ConnectionBase, public ConnectionLruList, pu
 
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const resip::Connection& c);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
 }
 

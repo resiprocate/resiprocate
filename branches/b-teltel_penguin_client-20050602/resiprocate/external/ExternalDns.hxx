@@ -12,7 +12,7 @@ class ExternalDnsRawResult;
 class ExternalDnsHostResult;
 
 //used by the asynchronous executive
-class ExternalDns
+class RESIP_API ExternalDns
 {
    public:
       //returns 0 for success, otherwise message can be pulled from errorMessage

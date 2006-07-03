@@ -64,7 +64,7 @@ class RESIP_API Pidf : public Contents
       std::vector<Tuple> mTuples;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
+RESIP_API std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
 static bool invokePidfInit = Pidf::init();
 
 }

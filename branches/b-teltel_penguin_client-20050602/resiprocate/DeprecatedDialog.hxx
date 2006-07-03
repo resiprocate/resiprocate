@@ -135,11 +135,10 @@ class RESIP_API DeprecatedDialog
 
       UInt64 expireyTimeAbsoluteMs;
       
-      friend std::ostream& operator<<(std::ostream&, const DeprecatedDialog&);
+      friend RESIP_API std::ostream& operator<<(std::ostream&, const DeprecatedDialog&);
 };
 
-std::ostream&
-operator<<(std::ostream& strm, const DeprecatedDialog& d);
+//RESIP_API std::ostream& operator<<(std::ostream& strm, const DeprecatedDialog& d);
  
 } // namespace Cathay
 

@@ -247,7 +247,7 @@ class RESIP_API SipStack
       friend class TuSelector;
 };
 
-std::ostream& operator<<(std::ostream& strm, const SipStack& stack);
+RESIP_API std::ostream& operator<<(std::ostream& strm, const SipStack& stack);
  
 }
 
