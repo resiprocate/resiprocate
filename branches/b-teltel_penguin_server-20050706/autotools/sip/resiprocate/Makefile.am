@@ -38,6 +38,8 @@ libresiprocate_la_SOURCES = \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
 	os/WinCompat.cxx \
+	external/HttpGetMessage.cxx \
+	external/HttpProvider.cxx \
 	AresDns.cxx \
 	ApiCheck.cxx \
 	BranchParameter.cxx \
@@ -59,6 +61,7 @@ libresiprocate_la_SOURCES = \
 	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
+	KeepAliveMessage.cxx \
 	LazyParser.cxx \
 	Message.cxx \
 	MessageFilterRule.cxx \
@@ -152,7 +155,7 @@ libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
-    ApplicationSip.hxx \
+	ApplicationSip.hxx \
 	AresDns.hxx \
 	Auth.hxx \
 	BranchParameter.hxx \
@@ -184,6 +187,7 @@ resiprocate_include_HEADERS = \
 	Helper.hxx \
 	IntegerCategory.hxx \
 	IntegerParameter.hxx \
+	KeepAliveMessage.hxx \
 	LazyParser.hxx \
 	Message.hxx \
 	MessageFilterRule.hxx \
@@ -306,6 +310,13 @@ resiprocate_os_include_HEADERS = \
 	os/vthread.hxx \
 	os/WinCompat.hxx 
 
+resiprocate_external_includedir=$(includedir)/resiprocate/external
+resiprocate_external_include_HEADERS = \
+	external/AsyncID.hxx \
+	external/ExternalDns.hxx \
+	external/ExternalTimer.hxx \
+	external/HttpGetMessage.hxx \
+	external/HttpProvider.hxx
 
 
 #SUFFIXES = .gperf .cxx
