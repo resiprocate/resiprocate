@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #define DTLS_SHIM_DEFAULT_NUM_FINGERPRINTS 5
 #define DTLS_SHIM_DEFAULT_NUM_CONNECTIONS  5
@@ -90,11 +92,14 @@ SSL *
 dtls_shim_table_find(dtls_shim_table_s *table, dtls_shim_con_info_s *con)
 {
     int i;
+    struct sockaddr_in *sin = (struct sockaddr_in *) &(con->remote);
+    struct sockaddr_in *tmp;
 
     for ( i = 0; i < table->count; i++)
     {
-        if ( memcmp(&(table->connections[i]), con, 
-            sizeof(dtls_shim_con_info_s)) == 0)
+      tmp = (struct sockaddr_in *) &(table->connections[i].remote);
+        if ( memcmp(&(sin->sin_addr), &(tmp->sin_addr), sizeof(sin->sin_addr)) == 0 && 
+             sin->sin_port == tmp->sin_port)
             return table->ssl[i];
     }
 
