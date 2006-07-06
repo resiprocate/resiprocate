@@ -33,7 +33,6 @@ main()
 
    // throw a few events in the queue
    timer.add(Timer::TimerA, "first", 1000);
-   cerr << "timer fifo size: " << timer.size() << endl;
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
    assert(isNear(timer.msTillNextTimer(), 1000));
    timer.add(Timer::TimerA, "second", 2000);
@@ -108,17 +107,6 @@ main()
    assert(r.size() == 5);
    timer.process();   
    assert(r.size() == 5);
-
-   srandom(time(0));
-   for (int i = 0; i < 200000; i++)
-   {
-      int duration = random() % 3600000;
-      timer.add(Timer::TimerA, "random", duration);
-   }
-   cerr << "timer fifo size: " << timer.size() << endl;
-   timer.process();   
-   cerr << "timer fifo size: " << timer.size() << endl;
-  
    return 0;
 }
 
