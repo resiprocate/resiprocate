@@ -83,6 +83,7 @@ static const int SOCKET_ERROR = -1;
 inline int getErrno() { return errno; }
 #endif
 
+bool setSocketKeepalive(Socket fd);
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 int closeSocket( Socket fd );
