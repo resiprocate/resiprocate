@@ -387,15 +387,13 @@ BaseSecurity::addCertPEM (PEMType type,
       ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
       throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
-   try
+   BIO_set_close(in, BIO_NOCLOSE);
+   cert = PEM_read_bio_X509(in,0,0,0);
+   if (cert == NULL)
    {
-      BIO_set_close(in, BIO_NOCLOSE);
-      cert = PEM_read_bio_X509(in,0,0,0);
-   }
-   catch(...)
-   {
-      BIO_free(in); 
-      throw;
+	   ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+	   BIO_free(in); 
+	   throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
    }
    
    addCertX509(type,name,cert,write);
@@ -1312,7 +1310,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    static char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
-   assert(ret);  
+   assert(ret);
    X509_EXTENSION_free(ext);
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
