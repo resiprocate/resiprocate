@@ -216,7 +216,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = msg.msgHdr.msgLength;
 	
-   clog << "bytes after header = " << size << endl;
+   if (verbose) clog << "bytes after header = " << size << endl;
 	
    while ( size > 0 )
    {
