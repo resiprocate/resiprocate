@@ -7,7 +7,13 @@
 #include <time.h>
 #include <assert.h>
 #include <sys/types.h>
+
+#ifdef WIN32
+#include <stdlib.h>
+#include <io.h>
+#else
 #include <netinet/in.h>
+#endif
 
 #define DTLS_SHIM_DEFAULT_NUM_FINGERPRINTS 5
 #define DTLS_SHIM_DEFAULT_NUM_CONNECTIONS  5
