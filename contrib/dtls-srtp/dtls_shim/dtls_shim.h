@@ -1,11 +1,18 @@
 #ifndef INCLUDED_DTLS_SHIM
 #define INCLUDED_DTLS_SHIM
 
+#ifdef WIN32
+#include <winsock2.h>
+//#include <WS2TCPIPH>
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#endif
+
 #include <openssl/x509.h>
 #include <openssl/evp.h>
+
 
 /* read and write timeouts. */
 #define DTLS_SHIM_DEFAULT_RECV_TIMEOUT  250000  /* 250 ms */
