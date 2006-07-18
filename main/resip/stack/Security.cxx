@@ -1278,11 +1278,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
-   ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
+   ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
                                      (unsigned char *) domain.data(), domain.size(), 
                                      -1, 0);
    assert(ret);
-   ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
+   ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
                                      (unsigned char *) aor.data(), aor.size(), 
                                      -1, 0);
    assert(ret);
