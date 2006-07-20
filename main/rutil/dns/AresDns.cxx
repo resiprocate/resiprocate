@@ -4,7 +4,6 @@
 
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
-#include "rutil/WinLeakCheck.hxx"
 
 #include "ares.h"
 #include "ares_dns.h"
@@ -12,6 +11,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #if !defined(USE_ARES)
 #error Must have ARES
