@@ -38,7 +38,8 @@ class Log
          Syslog, 
          File, 
          Cerr,
-         VSDebugWindow   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
+         VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
+         OnlyExternal // log messages are only written to external logger
       };
       
       enum Level

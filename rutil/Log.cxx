@@ -459,7 +459,11 @@ Log::Guard::~Guard()
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else
+   else if(resip::Log::_type == resip::Log::OnlyExternal) 
+   {
+      return;
+   }
+   else 
    {
       // endl is magic in syslog -- so put it here
       resip::GenericLogImpl::Instance() << mData << std::endl;
