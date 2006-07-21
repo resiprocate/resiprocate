@@ -533,10 +533,10 @@ Helper::computeUniqueBranch()
 Data
 Helper::computeCallId()
 {
-   static Data hostname = DnsUtil::getLocalHostName().md5().base64encode(true);
-   return Random::getRandomHex(8) + hostname;
+   static Data hostname = DnsUtil::getLocalHostName();
+   Data hostAndSalt(hostname + Random::getRandomHex(8));
+   return hostAndSalt.md5().base64encode(true);
 }
-
 
 Data
 Helper::computeTag(int numBytes)
