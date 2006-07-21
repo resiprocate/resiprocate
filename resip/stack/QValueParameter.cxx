@@ -8,7 +8,6 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
-//#include <iostream>
 
 using namespace resip;
 using namespace std;
