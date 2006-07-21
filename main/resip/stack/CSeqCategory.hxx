@@ -27,8 +27,8 @@ class CSeqCategory : public ParserCategory
       MethodTypes method() const;
       Data& unknownMethodName();
       const Data& unknownMethodName() const;
-      int& sequence();
-      int sequence() const;
+      unsigned int& sequence();
+      unsigned int sequence() const;
 
       bool operator==(const CSeqCategory& rhs) const;
       bool operator<(const CSeqCategory& rhs) const;
@@ -40,7 +40,7 @@ class CSeqCategory : public ParserCategory
    private:
       mutable MethodTypes mMethod;
       mutable Data mUnknownMethodName;
-      mutable int mSequence;
+      mutable unsigned int mSequence;
 };
  
 }
