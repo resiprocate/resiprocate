@@ -461,7 +461,7 @@ Tuple::hash() const
       const sockaddr_in6& in6 =
          reinterpret_cast<const sockaddr_in6&>(mSockaddr);
 
-      return size_t(in6.sin6_addr.s6_addr +
+      return size_t(Data(Data::Share, (const char *)&in6.sin6_addr.s6_addr, sizeof(in6.sin6_addr.s6_addr)).hash() +
                     5*in6.sin6_port +
                     25*mTransportType);
    }
