@@ -288,16 +288,16 @@ main(int arc, char** argv)
 #ifndef RESIP_FIXED_POINT
       assert(w.param(p_q) == 1.0);
 #endif
-		assert(w.param(p_q) == 1000);
-		w.param(p_q) = 843;
-		assert(w.param(p_q) <= 843);
+      assert(w.param(p_q) == 1000);
+      w.param(p_q) = 843;
+      assert(w.param(p_q) <= 843);
 #ifndef RESIP_FIXED_POINT
-		assert(w.param(p_q) == 0.843);
-		w.param(p_q) = 0.65;
-		assert(w.param(p_q) == 650);
+      assert(w.param(p_q) == 0.843);
+      w.param(p_q) = 0.65;
+      assert(w.param(p_q) == 650);
 #endif
-		w.param(p_q) = 0;
-		assert(w.param(p_q) == 0);
+      w.param(p_q) = 0;
+      assert(w.param(p_q) == 0);
    }
    
    {
