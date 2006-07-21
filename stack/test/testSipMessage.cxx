@@ -1972,15 +1972,28 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message->header(h_SecurityClients).front().value() == "ipsec-ike");
       assert(message->header(h_SecurityClients).front().param(p_dAlg) == "md5");
-      assert(message->header(h_SecurityClients).front().param(p_q) == 0.1f);
+      assert(message->header(h_SecurityClients).front().param(p_q) == 100);
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityClients).front().param(p_q) == double(0.1));
+      assert(message->header(h_SecurityClients).front().param(p_q) == 0.1);
+      assert(message->header(h_SecurityClients).front().param(p_q) == float(0.1));
+#endif
 
       assert(message->header(h_SecurityServers).front().value() == "tls");
       assert(message->header(h_SecurityServers).front().param(p_dQop) == "verify");
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityServers).front().param(p_q) == double(0.2));
       assert(message->header(h_SecurityServers).front().param(p_q) == 0.2f);
+#endif
+      assert(message->header(h_SecurityServers).front().param(p_q) == 200);
 
       assert(message->header(h_SecurityVerifies).front().value() == "tls");
       assert(message->header(h_SecurityVerifies).front().param(p_dVer) == "0000000000000000000000000000abcd");
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityVerifies).front().param(p_q) == double(0.2));
       assert(message->header(h_SecurityVerifies).front().param(p_q) == 0.2f);
+#endif
+      assert(message->header(h_SecurityVerifies).front().param(p_q) == 200);
 
       assert(message->exists(h_AllowEvents) == false);
    }
