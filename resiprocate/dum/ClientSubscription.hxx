@@ -42,7 +42,10 @@ class DUM_API ClientSubscription: public BaseSubscription
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      
+
+      void processRequest(const SipMessage& msg);
+      void processResponse(const SipMessage& msg);
+
       // disabled
       ClientSubscription(const ClientSubscription&);
       ClientSubscription& operator=(const ClientSubscription&);

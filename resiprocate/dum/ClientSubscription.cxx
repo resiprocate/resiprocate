@@ -39,219 +39,251 @@ ClientSubscription::getHandle()
 void
 ClientSubscription::dispatch(const SipMessage& msg)
 {
-   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);
-
    // asserts are checks the correctness of Dialog::dispatch
-   if (msg.isRequest() )
+   if (msg.isRequest())
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
 
-      // !dlb! 481 NOTIFY iff state is dead?
-
-      //!dcm! -- heavy, should just store enough information to make response
-      mLastNotify = msg;
-      mLastNotify.setContents( NULL );
-
-      if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
-      {
-         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
-         mDialog.mRemoteTarget = msg.header(h_Contacts).front();
-         handler->onNewSubscription(getHandle(), msg);
-         mOnNewSubscriptionCalled = true;
-      }         
-      int expires = 0;      
-      //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
-      if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
-      {
-         expires = msg.header(h_SubscriptionState).param(p_expires);
-      }
-      else
-      {
-         expires = 3600;
-      }
-
-      if (!mLastRequest.exists(h_Expires))
-      {
-         mLastRequest.header(h_Expires).value() = expires;
-      }
-
-      //if no subscription state header, treat as an extension. Only allow for
-      //refer to handle non-compliant implementations
-      if (!msg.exists(h_SubscriptionState))
-      {
-         if (msg.exists(h_Event) && msg.header(h_Event).value() == "refer")
-         {
-            SipFrag* frag  = dynamic_cast<SipFrag*>(msg.getContents());
-            if (frag)
-            {
-               if (frag->message().isResponse())
-               {
-                  int code = frag->message().header(h_StatusLine).statusCode();
-                  if (code < 200)
-                  {
-                     handler->onUpdateExtension(getHandle(), msg);
-                  }
-                  else
-                  {
-                     acceptUpdate();                     
-                     handler->onTerminated(getHandle(), msg);
-                     delete this;
-                  }
-               }
-            }
-            else
-            {
-               acceptUpdate();
-               handler->onTerminated(getHandle(), msg);
-               delete this;
-            }
-         }
-         else
-         {            
-            SipMessage lastResponse;
-            mDialog.makeResponse(lastResponse, msg, 400);
-            lastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
-            send(lastResponse);
-            handler->onTerminated(getHandle(), msg);
-            delete this;
-         }
-         return;
-      }
-
-      unsigned long refreshInterval = 0;
-      UInt64 now = Timer::getTimeMs() / 1000;
-      
-      if (mExpires == 0 || now + expires < mExpires)
-      {
-         refreshInterval = Helper::smallerThan((unsigned long)expires);
-         mExpires = now + refreshInterval;
-      }
-
-      if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
-      {
-         if (refreshInterval)
-         {
-            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
-         }
-         
-         handler->onUpdateActive(getHandle(), msg);
-      }
-      else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
-      {
-         if (refreshInterval)
-         {
-            mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
-            InfoLog (<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
-         }
-
-         handler->onUpdatePending(getHandle(), msg);
-      }
-      else if (msg.header(h_SubscriptionState).value() == "terminated")
-      {
-         acceptUpdate();
-         handler->onTerminated(getHandle(), msg);
-         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");
-         delete this;
-         return;
-      }
-      else if (!mEnded)
-      {
-         handler->onUpdateExtension(getHandle(), msg);
-      }
+      processRequest(msg);
    }
    else
    {
-      // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
-      // to ignore this case
+      processResponse(msg);
+   }
+}
 
-      if (msg.header(h_StatusLine).statusCode() == 481)
+void
+ClientSubscription::processRequest(const SipMessage& msg)
+{
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);
+
+   // !dlb! 481 NOTIFY iff state is dead?
+
+   //!dcm! -- heavy, should just store enough information to make response
+   mLastNotify = msg;
+   mLastNotify.setContents( NULL );
+
+   if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
+   {
+      InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
+      mDialog.mRemoteTarget = msg.header(h_Contacts).front();
+      handler->onNewSubscription(getHandle(), msg);
+      mOnNewSubscriptionCalled = true;
+   }         
+
+   int expires = 0;      
+   //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
+   if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
+   {
+      expires = msg.header(h_SubscriptionState).param(p_expires);
+   }
+   else
+   {
+      expires = 3600;
+   }
+
+   if (!mLastRequest.exists(h_Expires))
+   {
+      mLastRequest.header(h_Expires).value() = expires;
+   }
+
+   //if no subscription state header, treat as an extension. Only allow for
+   //refer to handle non-compliant implementations
+   if (!msg.exists(h_SubscriptionState))
+   {
+      if (msg.exists(h_Event) && msg.header(h_Event).value() == "refer")
       {
-         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
-                  << mDialog.mRemoteTarget);
-         NameAddr remoteTarget(mDialog.mRemoteTarget);
-         if (mDialog.mRemoteTarget.uri().host().empty())
+         SipFrag* frag  = dynamic_cast<SipFrag*>(msg.getContents());
+         if (frag)
          {
-            remoteTarget = mLastRequest.header(h_To);
-         }
-         remoteTarget.remove(p_tag);
-
-         SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
-         mDum.send(sub);
-         handler->onTerminated(getHandle(), msg);
-
-         delete this;
-         return;
-      }
-      else if (msg.header(h_StatusLine).statusCode() == 408 ||
-               ((msg.header(h_StatusLine).statusCode() == 413 ||
-                 msg.header(h_StatusLine).statusCode() == 480 ||
-                 msg.header(h_StatusLine).statusCode() == 486 ||
-                 msg.header(h_StatusLine).statusCode() == 500 ||
-                 msg.header(h_StatusLine).statusCode() == 503 ||
-                 msg.header(h_StatusLine).statusCode() == 600 ||
-                 msg.header(h_StatusLine).statusCode() == 603) &&
-                msg.exists(h_RetryAfter)))
-      {
-         int retry;
-
-         if (msg.header(h_StatusLine).statusCode() == 408)
-         {
-            InfoLog (<< "Received 408 to SUBSCRIBE "
-                     << mLastRequest.header(h_To));
-            retry = handler->onRequestRetry(getHandle(), 0, msg);
+            if (frag->message().isResponse())
+            {
+               int code = frag->message().header(h_StatusLine).statusCode();
+               if (code < 200)
+               {
+                  handler->onUpdateExtension(getHandle(), msg);
+               }
+               else
+               {
+                  acceptUpdate();                     
+                  handler->onTerminated(getHandle(), msg);
+                  delete this;
+               }
+            }
          }
          else
          {
-            InfoLog (<< "Received non-408 retriable to SUBSCRIBE "
-                     << mLastRequest.header(h_To));
-            retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
-         }
-
-         if (retry < 0)
-         {
-            DebugLog(<< "Application requested failure on Retry-After");
+            acceptUpdate();
             handler->onTerminated(getHandle(), msg);
             delete this;
-            return;
          }
-         else if (retry == 0)
-         {
-            DebugLog(<< "Application requested immediate retry on Retry-After");
-                   
-            if (mDialog.mRemoteTarget.uri().host().empty())
-            {
-               SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-               mDum.send(sub);
-            }
-            else
-            {
-               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDum.send(sub);
-            }
-            
-            return;
-         }
-         else 
-         {
-            // leave the usage around until the timeout
-            // !dlb! would be nice to set the state to something dead, but not used
-            mDum.addTimer(DumTimeout::SubscriptionRetry, 
-                          retry, 
-                          getBaseHandle(),
-                          ++mTimerSeq);
-            // leave the usage around until the timeout
-            return;
-         }
-            
+      }
+      else
+      {            
+         SipMessage lastResponse;
+         mDialog.makeResponse(lastResponse, msg, 400);
+         lastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
+         send(lastResponse);
+         handler->onTerminated(getHandle(), msg);
+         delete this;
+      }
+      return;
+   }
+
+   unsigned long refreshInterval = 0;
+   UInt64 now = Timer::getTimeMs() / 1000;
+
+   if (mExpires == 0 || now + expires < mExpires)
+   {
+      refreshInterval = Helper::smallerThan((unsigned long)expires);
+      mExpires = now + refreshInterval;
+   }
+
+   if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
+   {
+      if (refreshInterval)
+      {
+         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+         InfoLog(<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+      }
+
+      handler->onUpdateActive(getHandle(), msg);
+   }
+   else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
+   {
+      if (refreshInterval)
+      {
+         mDum.addTimer(DumTimeout::Subscription, refreshInterval, getBaseHandle(), ++mTimerSeq);
+         InfoLog(<< "[ClientSubscription] reSUBSCRIBE in " << refreshInterval);
+      }
+
+      handler->onUpdatePending(getHandle(), msg);
+   }
+   else if (msg.header(h_SubscriptionState).value() == "terminated")
+   {
+      acceptUpdate();
+      InfoLog(<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");
+      handler->onTerminated(getHandle(), msg);
+      delete this;
+      return;
+   }
+   else if (!mEnded)
+   {
+      handler->onUpdateExtension(getHandle(), msg);
+   }
+}
+
+void
+ClientSubscription::processResponse(const SipMessage& msg)
+{
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);
+
+   // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
+   // to ignore this case
+
+   if (msg.header(h_StatusLine).statusCode() == 481 &&
+      msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
+   {
+      InfoLog(<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
+         << mDialog.mRemoteTarget);
+      NameAddr remoteTarget(mDialog.mRemoteTarget);
+      if (mDialog.mRemoteTarget.uri().host().empty())
+      {
+         remoteTarget = mLastRequest.header(h_To);
+      }
+      remoteTarget.remove(p_tag);
+
+      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
+      mDum.send(sub);
+
+      handler->onTerminated(getHandle(), msg);
+      delete this;
+      return;
+   }
+   else if (msg.header(h_StatusLine).statusCode() == 408 ||
+      ((msg.header(h_StatusLine).statusCode() == 413 ||
+      msg.header(h_StatusLine).statusCode() == 480 ||
+      msg.header(h_StatusLine).statusCode() == 486 ||
+      msg.header(h_StatusLine).statusCode() == 500 ||
+      msg.header(h_StatusLine).statusCode() == 503 ||
+      msg.header(h_StatusLine).statusCode() == 600 ||
+      msg.header(h_StatusLine).statusCode() == 603) &&
+      msg.exists(h_RetryAfter)))
+   {
+      int retry;
+
+      if (msg.header(h_StatusLine).statusCode() == 408)
+      {
+         InfoLog(<< "Received 408 to SUBSCRIBE "
+            << mLastRequest.header(h_To));
+         retry = handler->onRequestRetry(getHandle(), 0, msg);
+      }
+      else
+      {
+         InfoLog(<< "Received non-408 retriable to SUBSCRIBE "
+            << mLastRequest.header(h_To));
+         retry = handler->onRequestRetry(getHandle(), msg.header(h_RetryAfter).value(), msg);
+      }
+
+      if (retry < 0)
+      {
+         DebugLog(<< "Application requested failure on Retry-After");
+         handler->onTerminated(getHandle(), msg);
          delete this;
          return;
       }
-      else if (msg.header(h_StatusLine).statusCode() >= 300)
+      else if (retry == 0)
       {
+         DebugLog(<< "Application requested immediate retry on Retry-After");
+
+         if (mDialog.mRemoteTarget.uri().host().empty())
+         {
+            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            mDum.send(sub);
+         }
+         else
+         {
+            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+            mDum.send(sub);
+         }
+
          handler->onTerminated(getHandle(), msg);
          delete this;
+         return;
+      }
+      else 
+      {
+         // leave the usage around until the timeout
+         // !dlb! would be nice to set the state to something dead, but not used
+         mDum.addTimer(DumTimeout::SubscriptionRetry, 
+            retry, 
+            getBaseHandle(),
+            ++mTimerSeq);
+         // leave the usage around until the timeout
+         return;
+      }
+   }
+   else if (msg.header(h_StatusLine).statusCode() >= 300)
+   {
+      if (msg.header(h_StatusLine).statusCode() == 423 &&
+         msg.exists(h_MinExpires))
+      {
+         requestRefresh(msg.header(h_MinExpires).value());
+      }
+      else
+      {
+         InfoLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to SUBSCRIBE "
+            << mLastRequest.header(h_To) << " : resubscribe in 20 seconds");
+
+         mDum.addTimer(DumTimeout::SubscriptionRetry, 
+            20, 
+            getBaseHandle(),
+            ++mTimerSeq);
+
+         //handler->onTerminated(getHandle(), msg);
+         //delete this;
          return;
       }
    }
