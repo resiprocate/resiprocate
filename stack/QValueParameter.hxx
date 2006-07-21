@@ -5,6 +5,12 @@
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include <iosfwd>
 
+#ifndef RESIP_FIXED_POINT
+#include <math.h>
+// Required due to float point inaccuracies and platform dependent issues (ie. rounding)
+static int doubleToInt(const double d) { double f = floor(d); double c = ceil(d); return (((c-d) >= (d-f)) ? (int)f :(int)c); }
+#endif
+
 namespace resip
 {
 
@@ -52,22 +58,22 @@ namespace resip
          operator float() const { return floatVal(); }
          operator double() const { return (double) floatVal(); }		
 
-         bool operator<(const float rhs) const { return value < (int)(rhs * 1000); }
-         bool operator>(const float rhs) const { return value > (int)(rhs * 1000); }
-         bool operator<=(const float rhs) const { return value <= (int)(rhs * 1000); }
-         bool operator>=(const float rhs) const { return value >= (int)(rhs * 1000); }
-         bool operator==(const float rhs) const { return value == (int)(rhs * 1000); }
-         bool operator!=(const float rhs) const { return value != (int)(rhs * 1000); }
+         bool operator<(const float rhs) const { return value < doubleToInt(rhs*1000.0); }
+         bool operator>(const float rhs) const { return value > doubleToInt(rhs*1000.0); }
+         bool operator<=(const float rhs) const { return value <= doubleToInt(rhs*1000.0); }
+         bool operator>=(const float rhs) const { return value >= doubleToInt(rhs*1000.0); }
+         bool operator==(const float rhs) const { return value == doubleToInt(rhs*1000.0); }
+         bool operator!=(const float rhs) const { return value != doubleToInt(rhs*1000.0); }
 
-         bool operator<(const double rhs) const { return value < (int)(rhs * 1000); }
-         bool operator>(const double rhs) const { return value > (int)(rhs * 1000); }
-         bool operator<=(const double rhs) const { return value <= (int)(rhs * 1000); }
-         bool operator>=(const double rhs) const { return value >= (int)(rhs * 1000); }
-         bool operator==(const double rhs) const { return value == (int)(rhs * 1000); }
-         bool operator!=(const double rhs) const { return value != (int)(rhs * 1000); }			
+         bool operator<(const double rhs) const { return value < doubleToInt(rhs*1000.0); }
+         bool operator>(const double rhs) const { return value > doubleToInt(rhs*1000.0); }
+         bool operator<=(const double rhs) const { return value <= doubleToInt(rhs*1000.0); }
+         bool operator>=(const double rhs) const { return value >= doubleToInt(rhs*1000.0); }
+         bool operator==(const double rhs) const { return value == doubleToInt(rhs*1000.0); }
+         bool operator!=(const double rhs) const { return value != doubleToInt(rhs*1000.0); }
 
-         QVal& operator=(const float rhs) { value = (int)(rhs * 1000); return (*this); }			
-         QVal& operator=(const double rhs) { value = (int)(rhs * 1000); return (*this); }			
+         QVal& operator=(const float rhs) { setValue(doubleToInt(rhs*1000.0)); return (*this); }			
+         QVal& operator=(const double rhs) { setValue(doubleToInt(rhs*1000.0)); return (*this); }			
 #endif		
          void setValue(int val) { value = (val<0) || (val>1000) ? 1000 : val; }
          int getValue() const { return value; }

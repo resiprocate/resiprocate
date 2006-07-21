@@ -293,6 +293,9 @@ main(int arc, char** argv)
       assert(w.param(p_q) <= 843);
 #ifndef RESIP_FIXED_POINT
       assert(w.param(p_q) == 0.843);
+      w.param(p_q) = 0.843;
+      assert(w.param(p_q) == 843);
+      assert(w.param(p_q) == 0.843);
       w.param(p_q) = 0.65;
       assert(w.param(p_q) == 650);
 #endif
@@ -1789,6 +1792,52 @@ main(int arc, char** argv)
       Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dVer) == "0000000000000000000000000000abcd");
+   }
+
+   {
+      TR _tr( "Test CSeqCategory 1");
+      Data cseqString("1 INVITE");
+      HeaderFieldValue hfv(cseqString.data(), cseqString.size());
+      
+      CSeqCategory str(&hfv, Headers::UNKNOWN);
+      assert(str.sequence() == 1);
+      assert(str.method() == INVITE);
+      assert(Data::from(str) == cseqString);
+   }
+
+   {
+      TR _tr( "Test CSeqCategory 2");
+      Data cseqString("4294967295 INVITE");
+      HeaderFieldValue hfv(cseqString.data(), cseqString.size());
+      
+      CSeqCategory str(&hfv, Headers::UNKNOWN);
+      assert(str.sequence() == 4294967295);
+      assert(str.method() == INVITE);
+      assert(Data::from(str) == cseqString);
+   }
+
+   {
+      TR _tr( "Test RAckCategory 1");
+      Data rackString("1 2 INVITE");
+      HeaderFieldValue hfv(rackString.data(), rackString.size());
+      
+      RAckCategory str(&hfv, Headers::UNKNOWN);
+      assert(str.rSequence() == 1);
+      assert(str.cSequence() == 2);
+      assert(str.method() == INVITE);
+      assert(Data::from(str) == rackString);
+   }
+
+   {
+      TR _tr( "Test RAckCategory 2");
+      Data rackString("4294967294 4294967295 INVITE");
+      HeaderFieldValue hfv(rackString.data(), rackString.size());
+      
+      RAckCategory str(&hfv, Headers::UNKNOWN);
+      assert(str.rSequence() == 4294967294);
+      assert(str.cSequence() == 4294967295);
+      assert(str.method() == INVITE);
+      assert(Data::from(str) == rackString);
    }
 
    cerr << "\nTEST OK" << endl;
