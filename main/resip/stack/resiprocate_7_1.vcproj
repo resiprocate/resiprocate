@@ -288,9 +288,6 @@
 				RelativePath=".\ExternalBodyContents.cxx">
 			</File>
 			<File
-				RelativePath=".\FloatParameter.cxx">
-			</File>
-			<File
 				RelativePath=".\FlowId.cxx">
 			</File>
 			<File
@@ -653,9 +650,6 @@
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.hxx">
-			</File>
-			<File
-				RelativePath=".\FloatParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\FlowId.hxx">
