@@ -84,7 +84,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case REFER:
          case NOTIFY:
             DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());
-            mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
+            mId = DialogId(ds.getId(), 
+                           request.header(h_From).exists(p_tag) ? request.header(h_From).param(p_tag) : Data::Empty);            
+
             mRemoteNameAddr = request.header(h_From);
             mLocalNameAddr = request.header(h_To);
             mLocalNameAddr.param(p_tag) = mId.getLocalTag();
