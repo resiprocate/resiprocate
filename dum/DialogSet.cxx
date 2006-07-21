@@ -779,7 +779,7 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog*
 DialogSet::findDialog(const DialogId id)
 {
-   DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   StackLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
 
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
