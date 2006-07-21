@@ -387,7 +387,6 @@ BaseSecurity::addCertPEM (PEMType type,
       ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
       throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
-   BIO_set_close(in, BIO_NOCLOSE);
    cert = PEM_read_bio_X509(in,0,0,0);
    if (cert == NULL)
    {
@@ -657,7 +656,6 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    
    try
    {
-      BIO_set_close(in, BIO_NOCLOSE);
 
       EVP_PKEY* privateKey;
       if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
@@ -705,7 +703,6 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
             passPhrase = const_cast<char*>(iter->second.c_str());
          }
       }
-      BIO_set_close(in, BIO_NOCLOSE);
       
       EVP_PKEY* privateKey=0;
       if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, 0, passPhrase)) == NULL)
