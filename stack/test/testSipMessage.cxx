@@ -2028,20 +2028,20 @@ main(int argc, char** argv)
          Token sec;
          sec.value() = "ipsec-ike";
          sec.param(p_dAlg) = "md5";
-         sec.param(p_q) = 0.1f;
+         sec.param(p_q) = 100;
          message->header(h_SecurityClients).push_back(sec);
       }
       {
          Token sec;
          sec.value() = "tls";
-         sec.param(p_q) = 0.2f;
+         sec.param(p_q) = 200;
          sec.param(p_dQop) = "verify";
          message->header(h_SecurityServers).push_back(sec);
       }
       {
          Token sec;
          sec.value() = "tls";
-         sec.param(p_q) = 0.2f;
+         sec.param(p_q) = 200;
          sec.param(p_dVer) = "0000000000000000000000000000abcd";
          message->header(h_SecurityVerifies).push_back(sec);
       }
