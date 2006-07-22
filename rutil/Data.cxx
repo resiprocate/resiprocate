@@ -1051,7 +1051,7 @@ Data::md5() const
 Data 
 Data::escaped() const
 { 
-   Data ret((int)floor(1.1*size()), Data::Preallocate);
+   Data ret((int)((size()*11)/10), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1095,7 +1095,7 @@ Data::escaped() const
 Data 
 Data::charEncoded() const
 { 
-   Data ret((int)floor(1.1*size()), Data::Preallocate);
+   Data ret((int)((size()*11)/10), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1636,12 +1636,12 @@ Data::convertDouble() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
-   
+sign_char:
+
    if (*p == '-')
    {
       s = -1;
@@ -1656,18 +1656,18 @@ Data::convertDouble() const
    {
       if (*p == '.')
       {
-	 goto decimals;
+         goto decimals;
       }
       if (!isdigit(*p))
       {
-	 return s*val;
+         return s*val;
       }
       val *= 10;
       val += (*p) - '0';
    }
    return s*val;
 
-  decimals:
+decimals:
    ++p;
    long d = 0;
    double div = 1.0;
@@ -1675,7 +1675,7 @@ Data::convertDouble() const
    {
       if (!isdigit(*p)) 
       {
-	 break;
+         break;
       }
       d *= 10;
       d += *p - '0';
