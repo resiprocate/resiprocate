@@ -375,14 +375,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
                     BaseUsageHandle target, 
-                    int seq, 
-                    int altseq=-1);
+                    unsigned int seq, 
+                    unsigned int altseq=0);
 
       void addTimerMs(DumTimeout::Type type,
                       unsigned long duration,
                       BaseUsageHandle target, 
-                      int seq, 
-                      int altseq=-1);
+                      unsigned int seq, 
+                      unsigned int altseq=0);
 
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog* findDialog(const DialogId& id);
