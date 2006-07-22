@@ -132,8 +132,8 @@ class Dialog
       
       //variants
       NameAddr mLocalContact;
-      unsigned long mLocalCSeq;
-      unsigned long mRemoteCSeq;
+      unsigned int mLocalCSeq;
+      unsigned int mRemoteCSeq;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
