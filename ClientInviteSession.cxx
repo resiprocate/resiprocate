@@ -475,7 +475,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       else
       {
          // store state about the provisional if reliable, so we can detect retransmissions
-         int rseq = msg.header(h_RSeq).value();
+         unsigned int rseq = (unsigned int)msg.header(h_RSeq).value();
          if ( (mLastReceivedRSeq == 0) || (rseq == mLastReceivedRSeq+1))
          {
             startStaleCallTimer();
@@ -539,7 +539,7 @@ void
 ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 {
    if ( isReliable(msg) &&
-        (mLastReceivedRSeq == 0 || msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
+        (mLastReceivedRSeq == 0 || (unsigned int)msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
    {
       SharedPtr<SipMessage> prack(new SipMessage);
       mDialog.makeRequest(*prack, PRACK);
