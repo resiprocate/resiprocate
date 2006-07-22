@@ -337,12 +337,12 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
+         // make timers to re-register
+         int expiry = INT_MAX;
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
 
-            // make timers to re-register
-            int expiry = INT_MAX;
             //!dcm! -- should do set intersection with my bindings and walk that
             //small size, n^2, don't care
             if (mDialogSet.getUserProfile()->getRinstanceEnabled())
