@@ -174,7 +174,7 @@ public:
       DeprecatedDialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
       Data   mRegistrationPassword;
-      int    mLastAuthCSeq; // This is the CSeq of the last registration message
+      unsigned int mLastAuthCSeq; // This is the CSeq of the last registration message
                             // sent that included digest authorization information 
 
       const int    mRegistrationTimeSeconds; // this is the default time to request in
