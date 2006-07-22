@@ -854,7 +854,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
-   int cSeq = msg->header(h_CSeq).sequence();
+   unsigned int cSeq = msg->header(h_CSeq).sequence();
 
    if ( number<200 )
    {
