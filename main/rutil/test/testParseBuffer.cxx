@@ -405,12 +405,14 @@ main(int argc, char** argv)
       assert(pb.unsignedInteger() == 2890844526UL);
    }
 
+#ifndef RESIP_FIXED_POINT
    {
       char buf[] = "17.71";
       ParseBuffer pb(buf, strlen(buf));   
       float val = pb.floatVal();
       assert(val > 17.70 && val < 17.72);
    }
+#endif
 
    {
       char buf[] = "token another token";
