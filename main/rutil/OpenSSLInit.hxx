@@ -22,6 +22,8 @@ class OpenSSLInit
    public:
       static bool init();
    private:
+	   OpenSSLInit();
+	   ~OpenSSLInit();
       static void lockingFunction(int mode, int n, const char* file, int line);
       static unsigned long threadIdFunction();
       static CRYPTO_dynlock_value* dynCreateFunction(char* file, int line);
