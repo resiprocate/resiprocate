@@ -3,13 +3,8 @@
 
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/QValue.hxx"
 #include <iosfwd>
-
-#ifndef RESIP_FIXED_POINT
-#include <math.h>
-// Required due to float point inaccuracies and platform dependent issues (ie. rounding)
-static int doubleToInt(const double d) { double f = floor(d); double c = ceil(d); return (((c-d) >= (d-f)) ? (int)f :(int)c); }
-#endif
 
 namespace resip
 {
@@ -19,71 +14,7 @@ namespace resip
    class QValueParameter : public Parameter
    {
    public:
-      class QVal 
-      {
-      public:
-         explicit QVal(int val) : value(val) { }
-
-         operator int() const { return value; }
-
-         bool operator<(const QVal& rhs) const { return value < rhs.value; }
-         bool operator>(const QVal& rhs) const { return value > rhs.value; }
-         bool operator<=(const QVal& rhs) const { return value <= rhs.value; }
-         bool operator>=(const QVal& rhs) const { return value >= rhs.value; }
-         bool operator==(const QVal& rhs) const { return value == rhs.value; }
-         bool operator!=(const QVal& rhs) const { return value != rhs.value; }			
-
-         bool operator<(const int rhs) const { return value < rhs; }
-         bool operator>(const int rhs) const { return value > rhs; }
-         bool operator<=(const int rhs) const { return value <= rhs; }
-         bool operator>=(const int rhs) const { return value >= rhs; }
-         bool operator==(const int rhs) const { return value == rhs; }
-         bool operator!=(const int rhs) const { return value != rhs; }			
-
-         bool operator<(const long rhs) const { return value < rhs; }
-         bool operator>(const long rhs) const { return value > rhs; }
-         bool operator<=(const long rhs) const { return value <= rhs; }
-         bool operator>=(const long rhs) const { return value >= rhs; }
-         bool operator==(const long rhs) const { return value == rhs; }
-         bool operator!=(const long rhs) const { return value != rhs; }			
-
-         QVal& operator=(const QVal& rhs) { value = rhs.value;  return (*this); }
-         QVal& operator=(const int rhs) { setValue(rhs); return (*this); }			
-         QVal& operator=(const long rhs) { setValue(rhs); return (*this); }			
-
-#ifndef RESIP_FIXED_POINT
-
-         float floatVal() const { return value/float(1000.0); }
-
-         operator float() const { return floatVal(); }
-         operator double() const { return (double) floatVal(); }		
-
-         bool operator<(const float rhs) const { return value < doubleToInt(rhs*1000.0); }
-         bool operator>(const float rhs) const { return value > doubleToInt(rhs*1000.0); }
-         bool operator<=(const float rhs) const { return value <= doubleToInt(rhs*1000.0); }
-         bool operator>=(const float rhs) const { return value >= doubleToInt(rhs*1000.0); }
-         bool operator==(const float rhs) const { return value == doubleToInt(rhs*1000.0); }
-         bool operator!=(const float rhs) const { return value != doubleToInt(rhs*1000.0); }
-
-         bool operator<(const double rhs) const { return value < doubleToInt(rhs*1000.0); }
-         bool operator>(const double rhs) const { return value > doubleToInt(rhs*1000.0); }
-         bool operator<=(const double rhs) const { return value <= doubleToInt(rhs*1000.0); }
-         bool operator>=(const double rhs) const { return value >= doubleToInt(rhs*1000.0); }
-         bool operator==(const double rhs) const { return value == doubleToInt(rhs*1000.0); }
-         bool operator!=(const double rhs) const { return value != doubleToInt(rhs*1000.0); }
-
-         QVal& operator=(const float rhs) { setValue(doubleToInt(rhs*1000.0)); return (*this); }			
-         QVal& operator=(const double rhs) { setValue(doubleToInt(rhs*1000.0)); return (*this); }			
-#endif		
-         void setValue(int val) { value = (val<0) || (val>1000) ? 1000 : val; }
-         int getValue() const { return value; }
-         std::ostream& encode(std::ostream& stream) const;
-
-      private:
-         int value;
-      };
-
-      typedef QVal Type;
+      typedef QValue Type;
 
       QValueParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       explicit QValueParameter(ParameterTypes::Type type);
@@ -104,7 +35,7 @@ namespace resip
       Type mValue;
    };
 
-   std::ostream& operator<<(std::ostream& stream, const QValueParameter::QVal& qvalue);
+   std::ostream& operator<<(std::ostream& stream, const QValue& qvalue);
 
 }
 

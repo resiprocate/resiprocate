@@ -49,6 +49,7 @@ SRC = \
 	ExtensionHeader.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
+	QValue.cxx \
 	QValueParameter.cxx \
 	FlowId.cxx \
 	GenericContents.cxx \
