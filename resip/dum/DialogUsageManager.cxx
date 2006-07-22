@@ -346,7 +346,7 @@ DialogUsageManager::setRemoteCertStore(auto_ptr<RemoteCertStore> store)
 
 void
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
-                             BaseUsageHandle target, int cseq, int rseq)
+                             BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.post(t, duration, this);
@@ -354,7 +354,7 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 
 void
 DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
-                               BaseUsageHandle target, int cseq, int rseq)
+                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.postMS(t, duration, this);
