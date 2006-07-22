@@ -44,40 +44,13 @@ QValueParameter::clone() const
 }
 
 ostream&
-QValueParameter::QVal::encode(ostream& stream) const
-{
-	int i = value;
-	
-   if (i == 1000)
-   {
-      return stream << "1.0";
-   }	 
-   
-   stream << "0." << (i / 100);
-   i %= 100;
-	
-   if (i)
-   {
-      stream << (i / 10);
-		i %= 10;
-		
-		if (i)
-		{
-			stream << i;
-		}
-   }
-   
-   return stream;
-}
-
-ostream&
 QValueParameter::encode(ostream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }
 
 ostream&
-resip::operator<<(ostream& stream, const QValueParameter::QVal& qvalue)
+resip::operator<<(ostream& stream, const QValue& qvalue)
 {
 	return qvalue.encode(stream);
 }

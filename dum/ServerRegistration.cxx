@@ -62,7 +62,7 @@ ServerRegistration::accept(SipMessage& ok)
     ok.header(h_Contacts).push_back(contact);
     if(i->useQ)
     {
-      ok.header(h_Contacts).back().param(p_q)=i->q;
+      ok.header(h_Contacts).back().param(p_q)=(int)i->q;
     }
   }
 
