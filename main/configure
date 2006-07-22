@@ -35,6 +35,7 @@ USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
+RESIP_FIXED_POINT := no
 INSTALL_PREFIX := /usr/local" > build/Makefile.conf
     exit
   fi
@@ -186,6 +187,13 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'ipv6',
+  },
+  {
+    name	=> "RESIP_FIXED_POINT",
+    description => "Compile with no floating point functions?",
+    default	=> "no",
+    validate	=> [@yesno],
+    flag	=> 'resip-fixed-point',
   },
   {
     name        => "INSTALL_PREFIX",
