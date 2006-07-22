@@ -1688,7 +1688,7 @@ void
 InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;
-   int seq = mLastRemoteSessionModification->header(h_CSeq).sequence();
+   unsigned int seq = mLastRemoteSessionModification->header(h_CSeq).sequence();
    mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
@@ -1703,7 +1703,7 @@ InviteSession::startRetransmit200Timer()
 void
 InviteSession::start491Timer()
 {
-   int seq = mLastLocalSessionModification->header(h_CSeq).sequence();
+   unsigned int seq = mLastLocalSessionModification->header(h_CSeq).sequence();
 
    if (dynamic_cast<ClientInviteSession*>(this))
    {
