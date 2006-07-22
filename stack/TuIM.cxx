@@ -70,7 +70,7 @@ TuIM::TuIM(SipStack* stack,
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
-     mLastAuthCSeq(-1),
+     mLastAuthCSeq(0),
      mRegistrationTimeSeconds(registrationTimeSeconds),
      mSubscriptionTimeSeconds(subscriptionTimeSeconds),
      mDefaultProtocol( UNKNOWN_TRANSPORT )
