@@ -400,24 +400,24 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      }
                   }
                }
-            }
-            
-            if (expiry == INT_MAX)
+            }            
+         }
+
+         if (expiry == INT_MAX)
+         {
+            if (msg.exists(h_Expires))
             {
-               if (msg.exists(h_Expires))
-               {
-                  expiry = msg.header(h_Expires).value();
-               }
+               expiry = msg.header(h_Expires).value();
             }
-            if (expiry != INT_MAX)
-            {
-               int exp = Helper::aBitSmallerThan(expiry);
-               mExpires = exp + Timer::getTimeMs() / 1000;
-               mDum.addTimer(DumTimeout::Registration,
-                             exp,
-                             getBaseHandle(),
-                             ++mTimerSeq);
-            }
+         }
+         if (expiry != INT_MAX)
+         {
+            int exp = Helper::aBitSmallerThan(expiry);
+            mExpires = exp + Timer::getTimeMs() / 1000;
+            mDum.addTimer(DumTimeout::Registration,
+                          exp,
+                          getBaseHandle(),
+                          ++mTimerSeq);
          }
 
          switch (mState)

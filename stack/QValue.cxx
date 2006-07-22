@@ -1,75 +1,49 @@
-#if !defined(RESIP_PIDF_HXX)
-#define RESIP_PIDF_HXX 
+#if defined(HAVE_CONFIG_H)
+#include "resip/stack/config.hxx"
+#endif
 
-#include <vector>
-
-#include "resip/stack/Contents.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/HashMap.hxx"
-#include "resip/stack/Uri.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/QValue.hxx"
+//#include <iostream>
 
-namespace resip
+using namespace resip;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+const Data&
+QValue::getData() const
 {
-
-class Pidf : public Contents
-{
-   public:
-      RESIP_HeapCount(Pidf);
-      Pidf();
-      Pidf(const Mime& contentType);
-      Pidf(HeaderFieldValue* hfv, const Mime& contentType);
-      Pidf(const Pidf& rhs);
-      explicit Pidf(const Uri& entity);
-      virtual ~Pidf();
-
-      Pidf& operator=(const Pidf& rhs);
-      virtual Contents* clone() const;
-      static const Mime& getStaticType() ;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      void setSimpleId(const Data& id);
-      void setEntity(const Uri& entity);
-      const Uri& getEntity() const;
-      void setSimpleStatus(bool online, const Data& note = Data::Empty, 
-                           const Data& contact = Data::Empty);
-      bool getSimpleStatus(Data* note=NULL) const;
-      
-      class Tuple
-      {
-         public:
-            bool status;
-            Data id;
-            Data contact;
-            QValue contactPriority;
-            Data note;
-            Data timeStamp;
-            HashMap<Data, Data> attributes;
-      };
-
-      std::vector<Tuple>& getTuples();
-      const std::vector<Tuple>& getTuples() const;
-      int getNumTuples() const;
-
-      // combine tuples
-      void merge(const Pidf& other);
-
-      static bool init();   
-   
-   private:
-      Uri mEntity;
-      Data mNote;
-      std::vector<Tuple> mTuples;
-};
-
-std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
-static bool invokePidfInit = Pidf::init();
-
+   DataStream strm(mDataValue);
+   encode(strm);
+   return mDataValue;
 }
 
-#endif
+ostream&
+QValue::encode(ostream& stream) const
+{
+	int i = mValue;
+	
+   if (i == 1000)
+   {
+      return stream << "1.0";
+   }	 
+   
+   stream << "0." << (i / 100);
+   i %= 100;
+	
+   if (i)
+   {
+      stream << (i / 10);
+		i %= 10;
+		
+		if (i)
+		{
+			stream << i;
+		}
+   }
+   
+   return stream;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

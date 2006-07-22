@@ -213,7 +213,7 @@ Pidf::parse(ParseBuffer& pb)
                         XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("priority");
                         if (i != xml.getAttributes().end())
                         {
-                           t.contactPriority = float( i->second.convertDouble() );
+                           t.contactPriority.setValue(i->second);
                         }
                         if (xml.firstChild())
                         {
@@ -277,7 +277,7 @@ Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
 
    mTuples[0].status = online;
    mTuples[0].contact = contact;
-   mTuples[0].contactPriority = 1.0;
+   mTuples[0].contactPriority = 1000;  // 1.0
    mTuples[0].note = note;
    mTuples[0].timeStamp = Data::Empty;
 }
