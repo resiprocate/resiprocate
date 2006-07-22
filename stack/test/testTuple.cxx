@@ -10,12 +10,17 @@ int
 main()
 {
    typedef HashMap<Tuple, Connection*> AddrMap;
+   //typedef std::map<Tuple, Connection*> AddrMap;
 
 #ifdef USE_IPV6
    {
       AddrMap mMap;
       Tuple t("2000:1::203:baff:fe30:1176", 5100, V6, TCP);
+      Tuple s = t;
+      assert(s == t);
+      assert(s.hash() == t.hash());
       mMap[t] = 0;
+      std::cerr << mMap.count(t) << endl;
       std::cerr << Inserter(mMap) << std::endl;
       
       assert(mMap.count(t) == 1);
