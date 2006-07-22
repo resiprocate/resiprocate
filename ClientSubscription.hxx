@@ -67,7 +67,7 @@ class ClientSubscription: public BaseSubscription
       bool mHaveQueuedRefresh;
       int mQueuedRefreshInterval;
 
-      int mLargestNotifyCSeq;
+      unsigned int mLargestNotifyCSeq;
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);

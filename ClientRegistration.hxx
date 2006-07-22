@@ -88,7 +88,7 @@ class ClientRegistration: public NonDialogUsage
       SharedPtr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
-      int mTimerSeq; // expected timer seq (all < are stale)
+      unsigned int mTimerSeq; // expected timer seq (all < are stale)
 
       State mState;
       bool mEndWhenDone;

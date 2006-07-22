@@ -38,7 +38,7 @@ class ClientPublication : public NonDialogUsage
       
       SharedPtr<SipMessage> mPublish;
       Data mEventType;
-      int mTimerSeq; // expected timer seq (all < are stale)
+      unsigned int mTimerSeq; // expected timer seq (all < are stale)
       const Contents* mDocument;
       
       // disabled
