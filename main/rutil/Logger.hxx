@@ -67,7 +67,7 @@ do                                                                              
 // Suppress debug logging at compile time
 #undef DebugLog
 #define DebugLog(args_)
-#undef StackLog(args_)
+#undef StackLog 
 #define StackLog(args_)
 #endif
 

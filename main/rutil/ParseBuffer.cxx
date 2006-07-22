@@ -811,23 +811,23 @@ ParseBuffer::floatVal()
 
       if (*mPosition == '.')
       {
-	  skipChar();
-	  const char* pos = mPosition;
-	  mant = float(integer());
-	  int s = mPosition - pos;
-	  while (s--)
-	  {
-	     mant /= 10.0;
-	  }
+         skipChar();
+         const char* pos = mPosition;
+         mant = float(integer());
+         int s = mPosition - pos;
+         while (s--)
+         {
+            mant /= 10.0;
+         }
       }
       return num + mant;
    }
    catch (Exception&)
    {
-     Data msg("Expected a floating point value, got: ");
-     msg += Data(s, mPosition - s);
-     fail(__FILE__, __LINE__,msg);
-     return 0.0;
+      Data msg("Expected a floating point value, got: ");
+      msg += Data(s, mPosition - s);
+      fail(__FILE__, __LINE__,msg);
+      return 0.0;
    }
 }
 #endif
