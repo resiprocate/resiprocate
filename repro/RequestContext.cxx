@@ -113,7 +113,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          ret = mRequestProcessorChain.process(*this);
       }
       
-      if(ret!=Processor::WaitingForEvent)
+      if(ret!=Processor::WaitingForEvent && !mHaveSentFinalResponse)
       {
          // if target list is empty return a 480
          if (!mResponseContext.hasTargets())
@@ -124,7 +124,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      << mOriginalRequest->header(h_RequestLine).uri() 
                      << " send 480");
             Helper::makeResponse(response, *mOriginalRequest, 480); 
-            mResponseContext.mForwardedFinalResponse=true;
             sendResponse(response);
          }
          else
@@ -149,7 +148,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                            << "Sending a 500 response for this request:" 
                            << mOriginalRequest->header(h_RequestLine).uri() );
                   Helper::makeResponse(response, *mOriginalRequest, 500); 
-                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -203,7 +201,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                        << "Sending a 500 response for this request:" 
                        << mOriginalRequest->header(h_RequestLine).uri() );
                Helper::makeResponse(response, *mOriginalRequest, 500); 
-               mResponseContext.mForwardedFinalResponse=true;
                sendResponse(response);
             }
             else
@@ -269,7 +266,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
          case Processor::REQUEST_CHAIN:
             ret = mRequestProcessorChain.process(*this);
             
-            if(ret != Processor::WaitingForEvent)
+            if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
             {
                if (!mResponseContext.hasTargets())
                {
@@ -279,7 +276,6 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                            << mOriginalRequest->header(h_RequestLine).uri() 
                            << " send 480");
                   Helper::makeResponse(response, *mOriginalRequest, 480); 
-                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -305,7 +301,6 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                                 << "Sending a 500 response for this request:" 
                                 << mOriginalRequest->header(h_RequestLine).uri() );
                         Helper::makeResponse(response, *mOriginalRequest, 500); 
-                        mResponseContext.mForwardedFinalResponse=true;
                         sendResponse(response);
                      }
                      else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
@@ -418,6 +413,7 @@ void
 RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
+   
 
    // We can't respond to an ACK request - so just drop it and generate an Ack200DoneMessage so the request contexts
    // gets cleaned up properly
@@ -431,8 +427,12 @@ RequestContext::sendResponse(const SipMessage& msg)
    {
       mProxy.send(msg);
    }
-   if (msg.header(h_StatusLine).statusCode()>199)
+   
+   //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
+   //response in this context.
+   if (msg.header(h_StatusLine).statusCode()>199 && msg.header(h_CSeq).method()!=CANCEL)
    {
+      DebugLog(<<"Sending final response.");
       mHaveSentFinalResponse=true;
    }
 }
