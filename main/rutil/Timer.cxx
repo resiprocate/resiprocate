@@ -165,10 +165,8 @@ Timer::getSystemTime()
     assert( sizeof(UInt64) == 64/8 );
     UInt64 time=0;
 #if defined(WIN32)  
-    SYSTEMTIME t;
-    GetSystemTime( &t );
     FILETIME ft;
-    SystemTimeToFileTime( &t, &ft);
+    GetSystemTimeAsFileTime( &ft);
     ULARGE_INTEGER li;
     li.LowPart = ft.dwLowDateTime;
     li.HighPart = ft.dwHighDateTime;
