@@ -55,7 +55,7 @@ class RequestContext
       
       //Will return the tid of the new target, since this creates the instance 
       //of class Target for the user. (see ResponseContext::addTarget())
-      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=true);
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
       
       void sendResponse(const resip::SipMessage& response);
             
@@ -67,6 +67,7 @@ class RequestContext
       void setFromTrustedNode();
       bool fromTrustedNode() const;
       
+      bool mHaveSentFinalResponse;
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
@@ -77,7 +78,6 @@ class RequestContext
       resip::Data mDigestIdentity;
       int mTransactionCount;
       Proxy& mProxy;
-      bool mHaveSentFinalResponse;
       resip::NameAddr mTopRoute;
       resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
