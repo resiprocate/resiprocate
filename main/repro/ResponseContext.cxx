@@ -24,7 +24,6 @@ using namespace std;
 
 ResponseContext::ResponseContext(RequestContext& context) : 
    mRequestContext(context),
-   mForwardedFinalResponse(false),
    mBestPriority(50),
    mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
@@ -57,7 +56,7 @@ ResponseContext::~ResponseContext()
 bool
 ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 {
-   if(mForwardedFinalResponse)
+   if(mRequestContext.mHaveSentFinalResponse)
    {
       return false;
    }
@@ -106,14 +105,21 @@ bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
                                  bool highPriority)
 {
-   if(mForwardedFinalResponse || targets.empty())
-   {
-      return false;
-   }
-     
    std::list<resip::Data> queue;
    Target* target=0;
    std::list<Target*>::iterator it;
+
+   if(mRequestContext.mHaveSentFinalResponse || targets.empty())
+   {
+      for(it=targets.begin();it!=targets.end();it++)
+      {
+         delete *it;
+      }
+      
+      targets.clear();
+      return false;
+   }
+     
    
    for(it=targets.begin();it!=targets.end();it++)
    {
@@ -163,7 +169,7 @@ ResponseContext::beginClientTransactions()
    
    for (TransactionMap::iterator i=mCandidateTransactionMap.begin(); i != mCandidateTransactionMap.end(); )
    {
-      if(!isDuplicate(i->second) && !mForwardedFinalResponse)
+      if(!isDuplicate(i->second) && !mRequestContext.mHaveSentFinalResponse)
       {
          mTargetList.push_back(i->second->uri());
          beginClientTransaction(i->second);
@@ -198,7 +204,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
    
-   if(isDuplicate(i->second) || mForwardedFinalResponse)
+   if(isDuplicate(i->second) || mRequestContext.mHaveSentFinalResponse)
    {
       mTerminatedTransactionMap[i->second->tid()] = i->second;
       mCandidateTransactionMap.erase(i);
@@ -219,7 +225,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
 bool 
 ResponseContext::cancelActiveClientTransactions()
 {
-   if(mForwardedFinalResponse)
+   if(mRequestContext.mHaveSentFinalResponse)
    {
       return false;
    }
@@ -363,7 +369,7 @@ ResponseContext::getCandidateTransactionMap() const
 bool 
 ResponseContext::hasCandidateTransactions() const
 {
-   return !mForwardedFinalResponse && !mCandidateTransactionMap.empty();
+   return !mRequestContext.mHaveSentFinalResponse && !mCandidateTransactionMap.empty();
 }
 
 
@@ -617,7 +623,7 @@ ResponseContext::processCancel(const SipMessage& request)
    std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
    mRequestContext.sendResponse(*ok);
 
-   if (!mForwardedFinalResponse)
+   if (!mRequestContext.mHaveSentFinalResponse)
    {
       cancelAllClientTransactions();
    }
@@ -626,7 +632,7 @@ ResponseContext::processCancel(const SipMessage& request)
 void
 ResponseContext::processTimerC()
 {
-   if (!mForwardedFinalResponse)
+   if (!mRequestContext.mHaveSentFinalResponse)
    {
       InfoLog(<<"Canceling client transactions due to timer C.");
       cancelAllClientTransactions();
@@ -708,7 +714,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          mRequestContext.updateTimerC();
 
-         if  (!mForwardedFinalResponse)
+         if  (!mRequestContext.mHaveSentFinalResponse)
          {
             if (target->status() == Target::WaitingToCancel)
             {
@@ -736,13 +742,13 @@ ResponseContext::processResponse(SipMessage& response)
          if (response.header(h_CSeq).method() == INVITE)
          {
             cancelAllClientTransactions();
-            mForwardedFinalResponse = true;
+            mRequestContext.mHaveSentFinalResponse = true;
             mRequestContext.sendResponse(response);
          }
-         else if (!mForwardedFinalResponse)
+         else if (!mRequestContext.mHaveSentFinalResponse)
          {
             clearCandidateTransactions();
-            mForwardedFinalResponse = true;
+            mRequestContext.mHaveSentFinalResponse = true;
             mRequestContext.sendResponse(response);            
          }
          break;
@@ -750,10 +756,10 @@ ResponseContext::processResponse(SipMessage& response)
       case 3:
       case 4:
       case 5:
-         DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
+         DebugLog (<< "forwardedFinal=" << mRequestContext.mHaveSentFinalResponse 
                    << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
          terminateClientTransaction(transactionId);
-         if (!mForwardedFinalResponse)
+         if (!mRequestContext.mHaveSentFinalResponse)
          {
             int priority = getPriority(response);
             if (priority == mBestPriority)
@@ -807,7 +813,7 @@ ResponseContext::processResponse(SipMessage& response)
          
       case 6:
          terminateClientTransaction(transactionId);
-         if (!mForwardedFinalResponse)
+         if (!mRequestContext.mHaveSentFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
             {
@@ -822,7 +828,6 @@ ResponseContext::processResponse(SipMessage& response)
             
             if (areAllTransactionsTerminated())
             {
-               mForwardedFinalResponse = true;
                mRequestContext.sendResponse(mBestResponse);
             }
          }
@@ -1062,7 +1067,6 @@ ResponseContext::forwardBestResponse()
       cancelActiveClientTransactions();
    }
    
-   mForwardedFinalResponse = true;
    
    if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
@@ -1093,7 +1097,7 @@ repro::operator<<(std::ostream& strm, const ResponseContext& rc)
    strm << "ResponseContext: "
         << " identity=" << rc.mRequestContext.getDigestIdentity()
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
-        << " forwarded=" << rc.mForwardedFinalResponse
+        << " forwarded=" << rc.mRequestContext.mHaveSentFinalResponse
         << " pending=" << Inserter(rc.mCandidateTransactionMap)
         << " active=" << Inserter(rc.mActiveTransactionMap)
         << " terminated=" << Inserter(rc.mTerminatedTransactionMap);
