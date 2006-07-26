@@ -26,7 +26,7 @@ ConnectionBase::ConnectionBase()
      mBufferPos(0),
      mBufferSize(0),
      mLastUsed(0),
-     mState(NewMessage)
+     mConnState(NewMessage)
 {
    DebugLog (<< "ConnectionBase::ConnectionBase, no params: " << this);
 }
@@ -40,7 +40,7 @@ ConnectionBase::ConnectionBase(const Tuple& who)
      mBufferPos(0),
      mBufferSize(0),
      mLastUsed(Timer::getTimeMs()),
-     mState(NewMessage)
+     mConnState(NewMessage)
 {
    DebugLog (<< "ConnectionBase::ConnectionBase, who: " << mWho << " " << this);
 }
@@ -76,12 +76,12 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
    assert(mWho.transport);
 
-   DebugLog(<< "In State: " << connectionStates[mState]);
+   DebugLog(<< "In State: " << connectionStates[mConnState]);
    //getConnectionManager().touch(this); -- !dcm!
    
   start:   // If there is an overhang come back here, effectively recursing
    
-   switch(mState)
+   switch(mConnState)
    {
       case NewMessage:
       {
@@ -166,7 +166,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                mBufferPos = numUnprocessedChars;
                mBufferSize = size;
             }
-            mState = ReadingHeaders;
+            mConnState = ReadingHeaders;
          }
          else
          {         
@@ -183,7 +183,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                mBufferSize = contentLength;
                mBuffer = newBuffer;
             
-               mState = PartialBody;
+               mConnState = PartialBody;
             }
             else
             {
@@ -204,7 +204,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 
                int overHang = numUnprocessedChars - contentLength;
 
-               mState = NewMessage;
+               mConnState = NewMessage;
                mBuffer = 0;               
                if (overHang > 0) 
                {
@@ -253,7 +253,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                fifo.add(mMessage);
                mMessage = 0;
             }
-            mState = NewMessage;
+            mConnState = NewMessage;
             mBuffer = 0;            
          }
          break;
@@ -266,7 +266,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 std::pair<char*, size_t> 
 ConnectionBase::getWriteBuffer()
 {
-   if (mState == NewMessage)
+   if (mConnState == NewMessage)
    {
       if (mBuffer)
       {
