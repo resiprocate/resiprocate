@@ -174,8 +174,16 @@ ClientPublication::dispatch(const SipMessage& msg)
          }
          else
          {
-            handler->onFailure(getHandle(), msg);
-            delete this;
+            InfoLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to PUBLISH "
+               << mPublish.header(h_To) << " : publish in 20 seconds");
+
+            mDum.addTimer(DumTimeout::Publication, 
+               20,
+               getBaseHandle(),
+               ++mTimerSeq);
+ 
+            //handler->onFailure(getHandle(), msg);
+            //delete this;
             return;
          }
 
