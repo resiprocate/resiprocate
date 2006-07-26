@@ -36,20 +36,20 @@ class TlsConnection : public Connection
       
       const std::list<Data>& getPeerNames() const;
       
-      typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
-      static const char * fromState(State);
+      typedef enum TlsState { Broken, Accepting, Connecting, Handshaking, Up } TlsState;
+      static const char * fromState(TlsState);
    
    private:
       void computePeerName();
       Data getPeerNamesData() const;
-      State checkState();
+      TlsState checkState();
 
       bool mServer;
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
       Data mDomain;
       
-      State mState;
+      TlsState mTlsState;
 
       SSL* mSsl;
       BIO* mBio;
