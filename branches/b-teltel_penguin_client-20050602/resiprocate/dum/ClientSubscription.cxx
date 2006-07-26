@@ -183,21 +183,22 @@ ClientSubscription::processResponse(const SipMessage& msg)
    // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
    // to ignore this case
 
-   if (msg.header(h_StatusLine).statusCode() == 481 &&
-      msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
+   if (msg.header(h_StatusLine).statusCode() == 481)
    {
       InfoLog(<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
          << mDialog.mRemoteTarget);
-      NameAddr remoteTarget(mDialog.mRemoteTarget);
-      if (mDialog.mRemoteTarget.uri().host().empty())
+      if ( !(msg.exists(h_Expires) && msg.header(h_Expires).value() == 0))
       {
-         remoteTarget = mLastRequest.header(h_To);
+         NameAddr remoteTarget(mDialog.mRemoteTarget);
+         if (mDialog.mRemoteTarget.uri().host().empty())
+         {
+            remoteTarget = mLastRequest.header(h_To);
+         }
+         remoteTarget.remove(p_tag);
+   
+         SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
+         mDum.send(sub);
       }
-      remoteTarget.remove(p_tag);
-
-      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
-      mDum.send(sub);
-
       handler->onTerminated(getHandle(), msg);
       delete this;
       return;
