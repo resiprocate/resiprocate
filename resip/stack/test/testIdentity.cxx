@@ -46,58 +46,9 @@ main(int argc, char* argv[])
 
    assert( security );
 
-#if 0
-   Data in1("sip:alice@atlanta.example.com"
-            "|sip:bob@biloxi.example.org"
-            "|a84b4c76e66710"
-            "|314159 INVITE"
-            //":314159 INVITE"
-            "|Thu, 21 Feb 2002 13:02:03 GMT"
-            "|sip:alice@pc33.atlanta.example.com"
-            "|v=0\r\n"
-            "o=UserA 2890844526 2890844526 IN IP4 pc33.atlanta.example.com\r\n"
-            "s=Session SDP\r\n"
-            "c=IN IP4 pc33.atlanta.example.com\r\n"
-            "t=0 0\r\n"
-            "m=audio 49172 RTP/AVP 0\r\n"
-            "a=rtpmap:0 PCMU/8000\r\n");
-
-   Data in2("sip:bob@biloxi.example.org"
-            "|sip:alice@atlanta.example.com"
-            "|a84b4c76e66710"
-            "|231 BYE"
-            "|Thu, 21 Feb 2002 14:19:51 GMT"
-            "|"
-            "|" 
-            //"|\r\n" 
-      );
-
-   Data& in=in1;
-   
-   ofstream strm("identity-in", std::ios_base::trunc);
-   strm.write( in.data(), in.size() );
-   strm.flush();
-   
-   Data res = security->computeIdentity( Data("atlanta.example.com"), in );
-
-   ErrLog( << "input is encoded " << in.charEncoded()  );
-   ErrLog( << "input is hex " << in.hex() );
-   ErrLog( << "input is  " << in );
-   ErrLog( << "identity is " << res  );
-
-   if (true)
    {
-      bool c  = security->checkIdentity( Data("atlanta.example.com"), in , res );
-      
-      if ( !c )
-      {
-         ErrLog( << "Identity check failed" << res  );
-         return -1;
-      }
-   }
-#endif
-   
-   {
+        ErrLog( << "\n\nStarting test one" );
+
       Data txt1 = 
          "INVITE sip:bob@biloxi.exmple.org SIP/2.0\r\n"
          "Via: SIP/2.0/TLS pc33.atlanta.example.com;branch=z9hG4bKnashds8\r\n"
@@ -137,6 +88,8 @@ main(int argc, char* argv[])
    }
 
    {
+        ErrLog( << "\n\nStarting test two" );
+
       Data txt2 = 
          "BYE sip:alice@pc33.atlanta.example.com SIP/2.0\r\n"
          "Via: SIP/2.0/TLS 192.0.2.4;branch=z9hG4bKnashds10\r\n"
@@ -147,15 +100,24 @@ main(int argc, char* argv[])
          "Call-ID: a84b4c76e66710\r\n"
          "CSeq: 231 BYE\r\n"
          "Content-Length: 0\r\n"
-         "\r\n";
+         "\r\n"
+         ;
       
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
       
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
-         msg->header(h_Identity).value() = security->computeIdentity( domain,
-                                                                       msg->getCanonicalIdentityString());
+
+         Data identString = msg->getCanonicalIdentityString();
+         
+#if 0  // this should not be here but used for testing with other
+         identString += "\r\n"; 
+#endif
+   
+         ErrLog( << "canonical string in <> is <" << identString << ">" );
+         
+         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
       }
       catch (Security::Exception& e)
       {
