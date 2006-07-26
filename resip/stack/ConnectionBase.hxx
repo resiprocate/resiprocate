@@ -37,7 +37,7 @@ class ConnectionBase
       enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
 
    protected:
-      enum State
+      enum ConnState
       {
          NewMessage = 0,
          ReadingHeaders,
@@ -45,7 +45,7 @@ class ConnectionBase
          MAX
       };
 	
-      State getCurrentState() const { return mState; }
+      ConnState getCurrentState() const { return mConnState; }
       void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
@@ -72,7 +72,7 @@ class ConnectionBase
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;
-      State mState;
+      ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
 };
 
