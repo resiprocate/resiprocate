@@ -68,7 +68,6 @@ tfm/contrib/cppunit/Makefile: tfm/contrib/cppunit/Makefile.in
 
 cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)
-configure_ares: contrib/ares/Makefile
 
 # If we are building ares under Resiprocate, ares needs to know the
 # Resiprocate install directory.  It is passed in via the ARES_PREFIX

@@ -855,7 +855,7 @@ ParseBuffer::qVal()
          skipChar();
          
          int i = 100;
-         while(isdigit(*mPosition) && i)
+         while(!eof() && isdigit(*mPosition) && i)
          {
             num += (*mPosition-'0') * i;
             i /= 10;
