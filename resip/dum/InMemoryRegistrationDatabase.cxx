@@ -129,7 +129,7 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor,
                                              const Uri& contact, 
                                              time_t expires,
                                              unsigned int cid,
-                                             unsigned short q)
+                                             short q)
 {
   ContactRecordList *contactList = 0;
 
@@ -162,16 +162,17 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor,
       (*j).uri = contact;
       (*j).expires = expires;
 
-      if(q>0)
+      if(q>=0)
       {
          (*j).useQ=true;
+         (*j).q=(unsigned short)q;
       }
       else
       {
          (*j).useQ=false;
+         (*j).q=0;
       }
 
-      (*j).q=q;
       (*j).cid=cid;
       return CONTACT_UPDATED;
     }
@@ -181,16 +182,17 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor,
    newRec.uri=contact;
    newRec.expires=expires;
 
-   if(q>0)
+   if(q>=0)
    {
       newRec.useQ=true;
+      newRec.q=(unsigned short)q;
    }
    else
    {
       newRec.useQ=false;
+      newRec.q=0;
    }
 
-   newRec.q=q;
    newRec.cid=cid;
    
   // This is a new contact, so we add it to the list.
