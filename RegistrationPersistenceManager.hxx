@@ -53,7 +53,7 @@ class RegistrationPersistenceManager
                                           const Uri& contact, 
                                           time_t expires,
                                           unsigned int cid=0,
-                                          unsigned short q=0) = 0;
+                                          short q=-1) = 0;
 
     virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
 
