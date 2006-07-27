@@ -278,6 +278,29 @@ Tuple::isAnyInterface() const
 #endif
 }
 
+bool
+Tuple::isLoopback() const
+{
+   
+   if(ipVersion()==V4)
+   {
+      static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
+      return isEqualWithMask(loopbackv4,8,true,true);
+   }
+   else if (ipVersion()==V6)
+   {
+#ifdef USE_IPV6
+      return m_anonv6.sin6_addr == in6addr_loopback;
+#endif
+   }
+   else
+   {
+      assert(0);
+   }
+   
+   return false;
+}
+
 bool 
 Tuple::isV4() const
 {
@@ -530,9 +553,9 @@ Tuple::inet_ntop(const Tuple& tuple)
 
 
 bool
-Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort)
+Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool ignoreTransport) const
 {
-   if(getType() == compare.getType())  // check if transport type matches
+   if(ignoreTransport || getType() == compare.getType())  // check if transport type matches
    {
       if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET) // v4
       {

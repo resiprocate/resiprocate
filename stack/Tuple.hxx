@@ -79,6 +79,7 @@ class Tuple
       IpVersion ipVersion() const;     
       bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
+      bool isLoopback() const;
       
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
@@ -97,7 +98,7 @@ class Tuple
 
       /// compares this tuple with the one passed in for family, port and address equality
       /// using the passed in address mask (mask is specified by number of bits)
-      bool isEqualWithMask(const Tuple& tuple, short mask, bool ignorePort=false);
+      bool isEqualWithMask(const Tuple& tuple, short mask, bool ignorePort=false, bool ignoreTransport=false) const;
 
       // special comparitors
       class AnyInterfaceCompare
