@@ -124,11 +124,18 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     database->lockRecord(mAor);
 
-    int globalExpires = 0;
+    unsigned int globalExpires = 0;
 
     if (msg.exists(h_Expires))
     {
-      globalExpires = msg.header(h_Expires).value();
+      if((unsigned int)(msg.header(h_Expires).value()) > 4294967295u)
+      {
+         globalExpires = 4294967295u;
+      }
+      else
+      {
+         globalExpires = (unsigned int)(msg.header(h_Expires).value());
+      }
     }
     else
     {
@@ -146,7 +153,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    int expires;
+    unsigned int expires;
     time_t now;
     time(&now);
 
@@ -154,7 +161,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
     {
       if (i->exists(p_expires))
       {
-        expires = i->param(p_expires);
+         if((unsigned int)(i->param(p_expires)) > 4294967295u)
+         {
+            expires = 4294967295u;
+         }
+         else
+         {
+            expires = (unsigned int)(i->param(p_expires));
+         }
       }
       else
       {
@@ -179,8 +193,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
-      static ExtensionParameter p_cid("cid");
-      i->uri().param(p_cid) = Data(msg.getSource().connectionId);
+      unsigned int cid = msg.getSource().connectionId;
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -195,14 +208,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
       else
       {
         RegistrationPersistenceManager::update_status_t status;
-        InfoLog (<< "Adding " << mAor << " -> " << i->uri());
+        InfoLog (<< "Adding " << mAor << " -> " << *i  );
         if(i->exists(p_q))
         {
-            status = database->updateContact(mAor, i->uri(), now + expires,i->param(p_q));
+            status = database->updateContact(mAor, i->uri(), now + expires,cid,i->param(p_q).getValue());
         }
         else
         {
-            status = database->updateContact(mAor, i->uri(), now + expires);
+            status = database->updateContact(mAor, i->uri(), now + expires,cid);
          }
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
