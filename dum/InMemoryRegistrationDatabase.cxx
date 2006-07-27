@@ -53,14 +53,20 @@ InMemoryRegistrationDatabase::UriList
 InMemoryRegistrationDatabase::getAors()
 {
    UriList retList;   
-   for( database_map_t::const_iterator it = mDatabase.begin();
-        it != mDatabase.end(); it++)
-   {
-      retList.push_back(it->first);
-   }
+   getAors(retList);
    return retList;
 }
 
+void
+InMemoryRegistrationDatabase::getAors(InMemoryRegistrationDatabase::UriList& container)
+{
+   container.clear();
+   for( database_map_t::const_iterator it = mDatabase.begin();
+        it != mDatabase.end(); it++)
+   {
+      container.push_back(it->first);
+   }
+}
 
 bool 
 InMemoryRegistrationDatabase::aorIsRegistered(const Uri& aor)
@@ -119,7 +125,11 @@ InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
 }
 
 RegistrationPersistenceManager::update_status_t 
-InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, time_t expires,float q)
+InMemoryRegistrationDatabase::updateContact(const Uri& aor, 
+                                             const Uri& contact, 
+                                             time_t expires,
+                                             unsigned int cid,
+                                             unsigned short q)
 {
   ContactRecordList *contactList = 0;
 
@@ -151,15 +161,18 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, 
     {
       (*j).uri = contact;
       (*j).expires = expires;
-      if(q>=0)
+
+      if(q>0)
       {
-         (*j).q=q;
          (*j).useQ=true;
       }
       else
       {
          (*j).useQ=false;
       }
+
+      (*j).q=q;
+      (*j).cid=cid;
       return CONTACT_UPDATED;
     }
   }
@@ -167,15 +180,18 @@ InMemoryRegistrationDatabase::updateContact(const Uri& aor, const Uri& contact, 
    ContactRecord newRec;
    newRec.uri=contact;
    newRec.expires=expires;
-   if(q>=0)
+
+   if(q>0)
    {
-      newRec.q=q;
       newRec.useQ=true;
    }
    else
    {
       newRec.useQ=false;
    }
+
+   newRec.q=q;
+   newRec.cid=cid;
    
   // This is a new contact, so we add it to the list.
   contactList->push_back(newRec);
@@ -219,16 +235,26 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
 RegistrationPersistenceManager::ContactRecordList
 InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 {
+   ContactRecordList result;
   Lock g(mDatabaseMutex);
+  getContacts(aor,result);
+  return result;
+   
+}
 
+void
+InMemoryRegistrationDatabase::getContacts(const Uri& aor,RegistrationPersistenceManager::ContactRecordList& container)
+{
   database_map_t::iterator i;
   i = mDatabase.find(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
-    return ContactRecordList();
+      return;
   }
-  return *(i->second);
+  container= *(i->second);
+
 }
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
