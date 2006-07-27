@@ -35,7 +35,7 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
                                              const Uri& contact, 
                                              time_t expires,
                                              unsigned int cid=0,
-                                             unsigned short q=0);
+                                             short q=-1);
       virtual void removeContact(const Uri& aor, const Uri& contact);
       
       virtual ContactRecordList getContacts(const Uri& aor);
