@@ -14,6 +14,8 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 const UInt64 ConnectionManager::MinimumGcAge = 1;
+ConnectionId ConnectionManager::theConnectionIdGenerator=1;
+resip::Mutex ConnectionManager::theCidMutex;
 
 ConnectionManager::ConnectionManager() : 
    mHead(),
@@ -21,9 +23,9 @@ ConnectionManager::ConnectionManager() :
    mWriteIter(mWriteHead->begin()),
    mReadHead(ConnectionReadList::makeList(&mHead)),
    mReadIter(mReadHead->begin()),
-   mLRUHead(ConnectionLruList::makeList(&mHead)),
-   mConnectionIdGenerator(1) 
+   mLRUHead(ConnectionLruList::makeList(&mHead))
 {
+   DebugLog(<<"ConnectionManager::ConnectionManager() called ");
 }
 
 ConnectionManager::~ConnectionManager()
@@ -40,46 +42,63 @@ ConnectionManager::~ConnectionManager()
 Connection*
 ConnectionManager::findConnection(const Tuple& addr)
 {
-   if (addr.connectionId == 0)
+   if (addr.connectionId != 0)
    {
-      AddrMap::const_iterator i = mAddrMap.find(addr);
-      if (i != mAddrMap.end())
-      {
-         return i->second;
-      }
-   }
-   else
-   {
-      IdMap::const_iterator i = mIdMap.find(addr.connectionId);
+      IdMap::iterator i = mIdMap.find(addr.connectionId);
       if (i != mIdMap.end())
       {
-         return i->second;
+         if(i->second->who()==addr)
+         {
+            DebugLog(<<"Found connection id " << addr.connectionId);
+            return i->second;
+         }
+         else
+         {
+            DebugLog(<<"connection id " << addr.connectionId 
+                     << " exists, but does not match the destination. Cid -> "
+                     << i->second->who() << ", tuple -> " << addr);
+         }
+      }
+      else
+      {
+         DebugLog(<<"connection id " << addr.connectionId << " does not exist.");
       }
    }
    
+   AddrMap::iterator i = mAddrMap.find(addr);
+   if (i != mAddrMap.end())
+   {
+      DebugLog(<<"Found connection for tuple "<< addr );
+      return i->second;
+   }
+
+   
+   DebugLog(<<"Could not find connection " << addr.connectionId);
    return 0;
 }
 
 const Connection* 
 ConnectionManager::findConnection(const Tuple& addr) const
 {
-   if (addr.connectionId == 0)
-   {
-      AddrMap::const_iterator i = mAddrMap.find(addr);
-      if (i != mAddrMap.end())
-      {
-         return i->second;
-      }
-   }
-   else
+   if (addr.connectionId != 0)
    {
       IdMap::const_iterator i = mIdMap.find(addr.connectionId);
-      if (i != mIdMap.end())
+      if (i != mIdMap.end() && i->second->who()==addr)
       {
+         DebugLog(<<"Found connection id " << addr.connectionId);
          return i->second;
       }
    }
    
+   AddrMap::const_iterator i = mAddrMap.find(addr);
+   if (i != mAddrMap.end())
+   {
+      DebugLog(<<"Found connection for tuple "<< addr );
+      return i->second;
+   }
+
+   
+   DebugLog(<<"Could not find connection " << addr.connectionId);
    return 0;
 }
 
@@ -178,8 +197,14 @@ ConnectionManager::removeFromWritable()
 void
 ConnectionManager::addConnection(Connection* connection)
 {
-   connection->who().connectionId = ++mConnectionIdGenerator;
+   assert(mAddrMap.find(connection->who())==mAddrMap.end());
+
+   {
+      resip::Lock g(theCidMutex);
+      connection->who().connectionId = ++theConnectionIdGenerator;
+   }
    //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId  << ":" << connection->mSocket);
+   
    
    mAddrMap[connection->who()] = connection;
    mIdMap[connection->who().connectionId] = connection;
@@ -198,6 +223,7 @@ ConnectionManager::removeConnection(Connection* connection)
    //DebugLog (<< "ConnectionManager::removeConnection()");
 
    assert(!mReadHead->empty());
+
 
    mIdMap.erase(connection->mWho.connectionId);
    mAddrMap.erase(connection->mWho);
