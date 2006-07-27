@@ -14,7 +14,8 @@ class RegistrationPersistenceManager
    {
       resip::Uri uri;
       time_t expires;
-      float q;
+      unsigned short q;
+      unsigned int cid; //This may become regid from outbound soon
       bool useQ;
    };
    
@@ -38,6 +39,7 @@ class RegistrationPersistenceManager
     virtual void unlockRecord(const Uri& aor) = 0;
 
      virtual UriList getAors() = 0;
+     virtual void getAors(UriList& container) = 0;
 
     /**
       @param expires Absolute time of expiration, measured in seconds
@@ -47,11 +49,16 @@ class RegistrationPersistenceManager
          contact should not be prioritized according to q-value (default).
          
      */
-    virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires, float q=-1) = 0;
+    virtual update_status_t updateContact(const Uri& aor, 
+                                          const Uri& contact, 
+                                          time_t expires,
+                                          unsigned int cid=0,
+                                          unsigned short q=0) = 0;
 
     virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
 
     virtual ContactRecordList getContacts(const Uri& aor) = 0;
+    virtual void getContacts(const Uri& aor,ContactRecordList& container) = 0;
   private:
 };
 
