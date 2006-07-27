@@ -31,13 +31,19 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires,float q=-1);
+      virtual update_status_t updateContact(const Uri& aor, 
+                                             const Uri& contact, 
+                                             time_t expires,
+                                             unsigned int cid=0,
+                                             unsigned short q=0);
       virtual void removeContact(const Uri& aor, const Uri& contact);
       
       virtual ContactRecordList getContacts(const Uri& aor);
+      virtual void getContacts(const Uri& aor,ContactRecordList& container);
    
       /// return all the AOR is the DB 
       virtual UriList getAors();
+      virtual void getAors(UriList& container);
       
    private:
       typedef std::map<Uri,ContactRecordList *> database_map_t;
