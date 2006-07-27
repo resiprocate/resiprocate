@@ -91,9 +91,11 @@ class TransportSelector
       static Tuple getFirstInterface(bool is_v4, TransportType type);
 
    private:
-      Transport* findTransport(const Tuple& src);
-      Transport* findTlsTransport(const Data& domain);
-      Transport* findDtlsTransport(const Data& domain);
+      Connection* findConnection(const Tuple& dest);
+      Transport* findTransportBySource(Tuple& src);
+      Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTlsTransport(const Data& domain,const IpVersion ipv);
+      Transport* findDtlsTransport(const Data& domain, const IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       DnsInterface mDns;
@@ -118,8 +120,10 @@ class TransportSelector
 
       // domain name -> Transport
       typedef std::map<Data, Transport*> TlsTransportMap ;
-      TlsTransportMap mTlsTransports;     
-      TlsTransportMap mDtlsTransports;
+      TlsTransportMap mV4TlsTransports;     
+      TlsTransportMap mV4DtlsTransports;
+      TlsTransportMap mV6TlsTransports;     
+      TlsTransportMap mV6DtlsTransports;
 
       typedef std::vector<Transport*> TransportList;
       TransportList mSharedProcessTransports;

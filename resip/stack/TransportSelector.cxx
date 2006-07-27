@@ -19,6 +19,7 @@
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/InternalTransport.hxx"
+#include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
@@ -69,8 +70,12 @@ TransportSelector::~TransportSelector()
 {
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
-   deleteMap(mTlsTransports);
-   deleteMap(mDtlsTransports);
+   deleteMap(mV4TlsTransports);
+   deleteMap(mV4DtlsTransports);
+#ifdef USE_IPV6
+   deleteMap(mV6TlsTransports);
+   deleteMap(mV6DtlsTransports);
+#endif
 }
 
 void
@@ -138,13 +143,39 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       break;
       case TLS:
       {
-         mTlsTransports[transport->tlsDomain()] = transport;
+         if(transport->ipVersion()==V4)
+         {
+            mV4TlsTransports[transport->tlsDomain()] = transport;
+         }
+         else if(transport->ipVersion()==V6)
+         {
+#ifdef USE_IPV6
+            mV6TlsTransports[transport->tlsDomain()] = transport;
+#endif
+         }
+         else
+         {
+            assert(0);
+         }
       }
       break;
 #ifdef USE_DTLS
       case DTLS:
       {
-         mDtlsTransports[transport->tlsDomain()] = transport;
+         if(transport->ipVersion()==V4)
+         {
+            mV4DtlsTransports[transport->tlsDomain()] = transport;
+         }
+         else if(transport->ipVersion()==V6)
+         {
+#ifdef USE_IPV6
+            mV6DtlsTransports[transport->tlsDomain()] = transport;
+#endif
+         }
+         else
+         {
+            assert(0);
+         }
       }
       break;
 #endif
@@ -474,8 +505,15 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // assign it. In this case, the stack will pick an arbitrary (but appropriate)
       // transport. If it is non-zero, it will only match transports that are bound to
       // the specified port (and fail if none are available)
-      source.setPort(via.sentPort());
-      
+
+      if(msg->isRequest())
+      {
+         source.setPort(via.sentPort());
+      }
+      else
+      {
+         source.setPort(0);
+      }
  
       DebugLog (<< "Looked up source for destination: " << target
                 << " -> " << source
@@ -485,7 +523,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       return source;
    }
 }
-
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.
@@ -501,34 +538,67 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       // (imagine a synthetic message...)
 
       Tuple source;
+      // !bwc! We need 3 things here:
+      // 1) A Transport* to call send() on.
+      // 2) A complete Tuple to pass in this call (target).
+      // 3) A host, port, and protocol for filling out the topmost via (source)
+      /*
+         Our Transport* might be found in target. If so, we can skip this block
+         of stuff.
+         Alternatively, we might not have the transport to start with. However,
+         given a connection id, we will be able to find the Connection we
+         should use, we can get the Transport we want. If we have no connection
+         id, but we know we are using TLS or DTLS and have a tls hostname, we
+         can use the hostname to find the appropriate transport. If all else
+         fails, we must resort to the connected UDP trick to fill out source,
+         which in turn is used to look up a matching transport.
+
+         Given the transport, it is always possible to get the port/protocol, 
+         and usually possible to get the host (if it is bound to INADDR_ANY, we
+         can't tell). However, if we had to fill out source in order to find 
+         the transport in the first place, this is not an issue.
+      */
+
       if (msg->isRequest())
       {
-         // there must be a via, use the port in the via as a hint of what
-         // port to send on
-         source = determineSourceInterface(msg, target);
+         Transport* transport=0;
 
-         // would already be specified for ACK or CANCEL
-         if (target.transport == 0)
+         transport = findTransportByDest(msg,target);
+         
+         // !bwc! Here we use transport to find source.
+         if(transport)
          {
-            if (target.getType() == TLS)
+            source = transport->getTuple();
+
+            //!bwc! If the transport has an ambiguous interface, we need to
+            //look a little closer.
+            if(source.isAnyInterface())
             {
-               target.transport = findTlsTransport(msg->getTlsDomain());
-               //target.transport = findTlsTransport(msg->header(h_From).uri().host());
-            }
-#if defined( USE_DTLS )
-            else if (target.getType() == DTLS)
-            {
-               target.transport = findDtlsTransport(msg->getTlsDomain());
-               //target.transport = findDtlsTransport(msg->header(h_From).uri().host());
-            }
-#endif
-            else
-            {
-               target.transport = findTransport(source);
+               Tuple temp = determineSourceInterface(msg,target);
+               /* determineSourceInterface can return 0 in the port as default
+                  to let the stack pick an "arbitrary (but appropriate) transport"
+                  so we'll assert that the port is 0 _or_ the same as source. (mjf)
+                */
+               assert((source.getPort()==temp.getPort() ||
+                       temp.getPort()==0) && 
+                        source.ipVersion()==temp.ipVersion() &&
+                        source.getType()==temp.getType());
+               source=temp;
             }
          }
-
-         if (target.transport) // findTransport may have failed
+         // !bwc! Here we use source to find transport.
+         else
+         {
+            source = determineSourceInterface(msg, target);
+            transport = findTransportBySource(source);
+         }
+                  
+         target.transport=transport;
+         
+         // !bwc! Topmost Via is only filled out in the request case. Also, if
+         // we don't have a transport at this point, we're going to fail,
+         // so don't bother doing the work.
+         if(target.transport)
          {
             Via& topVia(msg->header(h_Vias).front());
             topVia.remove(p_maddr); // !jf! why do this?
@@ -536,7 +606,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             // insert the via
             if (topVia.transport().empty())
             {
-               topVia.transport() = Tuple::toData(target.transport->transport());
+               topVia.transport() = Tuple::toData(source.getType());
             }
             if (!topVia.sentHost().size())
             {
@@ -544,9 +614,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = target.transport->port();
+               msg->header(h_Vias).front().sentPort() = source.getPort();
             }
          }
+         
       }
       else if (msg->isResponse())
       {
@@ -554,13 +625,22 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
          assert(target.transport);
-         if (target.transport->getTuple().isAnyInterface())
+         
+         source = target.transport->getTuple();
+
+         //!bwc! If the transport has an ambiguous interface, we need to
+         //look a little closer.
+         if(source.isAnyInterface())
          {
-            source = determineSourceInterface(msg, target);
-         }
-         else
-         {
-            source = target.transport->getTuple();
+            Tuple temp = source;
+            source = determineSourceInterface(msg,target);
+            /* determineSourceInterface will return an arbitrary port here,
+               so use the port specified in target.transport->getTuple().
+            */
+            assert(source.ipVersion()==temp.ipVersion() &&
+                     source.getType()==temp.getType());
+
+            source.setPort(target.transport->getTuple().getPort());
          }
       }
       else
@@ -571,7 +651,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       if (target.transport)
       {
          // There is a contact header and it contains exactly one entry
-         if (msg->exists(h_Contacts) && !msg->header(h_Contacts).empty())
+         if (msg->exists(h_Contacts) && msg->header(h_Contacts).size()==1)
          {
             for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); i != msg->header(h_Contacts).end(); i++)
             {
@@ -610,7 +690,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
-               if (target.transport->transport() != UDP)
+               if (target.transport->transport() != UDP && !rr.uri().exists(p_transport))
                {
                   rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                }
@@ -639,18 +719,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                }                  
             }
 #endif
-         }
-
-         // poor man's outbound instead of using flow ids
-         // assumes the registrar (for a proxy has stored the connection id
-         // (cid) 
-         static ExtensionParameter p_cid("cid");
-         if (msg->isRequest() && msg->header(h_RequestLine).uri().exists(p_cid))
-         {
-            unsigned long cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
-            target.connectionId = cid;
-            msg->header(h_RequestLine).uri().remove(p_cid);
-            InfoLog (<< "Using existing connection id " << cid);
          }
 
          // Call back anyone who wants to perform outbound decoration
@@ -736,22 +804,180 @@ TransportSelector::sumTransportFifoSizes() const
       sum += i->second->getFifoSize();
    }
 
-   for (TlsTransportMap::const_iterator i = mTlsTransports.begin();
-        i != mTlsTransports.end(); ++i)
+   for (TlsTransportMap::const_iterator i = mV4TlsTransports.begin();
+        i != mV4TlsTransports.end(); ++i)
    {
       sum += i->second->getFifoSize();
    }
 
+#ifdef USE_IPV6
+   for (TlsTransportMap::const_iterator i = mV6TlsTransports.begin();
+        i != mV6TlsTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+#endif
+
+#ifdef USE_DTLS
+   for (TlsTransportMap::const_iterator i = mV4DtlsTransports.begin();
+        i != mV4DtlsTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+
+#ifdef USE_IPV6
+   for (TlsTransportMap::const_iterator i = mV6DtlsTransports.begin();
+        i != mV6DtlsTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+#endif
+
+#endif
+   
    return sum;
 }
 
-Transport*
-TransportSelector::findTransport(const Tuple& search)
+Connection*
+TransportSelector::findConnection(const Tuple& target)
 {
-   DebugLog(<< "findTransport(" << search << ")");
+   //!bwc! If we can find a match in the ConnectionManager, we can get
+   //determine what Tranport this needs to be sent on. This may also let
+   // us know immediately what our source needs to be.
+   if(target.getType()==TCP || target.getType()==TLS)
+   {
+      TcpBaseTransport* tcpb=0;
+      Connection* conn=0;
+      TransportList::const_iterator i;
+
+      for(i=mSharedProcessTransports.begin();i!=mSharedProcessTransports.end();i++)
+      {
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
+         {
+            conn = tcpb->getConnectionManager().findConnection(target);
+            if(conn)
+            {
+               return conn;
+            }
+         }
+      }
+      
+      for(i=mHasOwnProcessTransports.begin();i!=mHasOwnProcessTransports.end();i++)
+      {
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
+         {
+            conn = tcpb->getConnectionManager().findConnection(target);
+            if(conn)
+            {
+               return conn;
+            }
+         }
+      }
+
+   }
+   
+   return 0;
+}
+
+
+Transport*
+TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
+{
+   if(!target.transport)
+   {
+      if(target.getType()!=UDP) // !bwc! Maybe we can find a connection?
+      {
+         if( !target.connectionId) // !bwc! Don't have a cid yet...
+         {
+            static ExtensionParameter p_cid("cid");
+            unsigned long cid=0;
+            if(msg->exists(h_Routes) && 
+               !msg->header(h_Routes).empty() && 
+               msg->header(h_Routes).front().uri().exists(p_cid))
+            {
+               cid = msg->header(h_Routes).front().uri().param(p_cid).convertUnsignedLong();
+               msg->header(h_Routes).front().uri().remove(p_cid);
+            }
+            else if (msg->header(h_RequestLine).uri().exists(p_cid))
+            {
+               cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
+               msg->header(h_RequestLine).uri().remove(p_cid);
+            }
+            
+            target.connectionId=cid;
+         }
+         
+         // !bwc! We might find a match by the cid, or maybe using the
+         // tuple itself.
+         Connection* conn = findConnection(target);
+         
+         if(conn) // !bwc! Woohoo! Home free!
+         {
+            return conn->transport();
+         }
+         else if(target.getType()==TLS)
+         {
+            return findTlsTransport(msg->getTlsDomain(), target.ipVersion());
+         }
+         else if(target.getType()==DTLS)
+         {
+            return findTlsTransport(msg->getTlsDomain(), target.ipVersion());
+         }
+
+      }
+            
+   }
+   else // !bwc! Easy as pie.
+   {
+      return target.transport;
+   }
+
+   // !bwc! No luck here. Maybe findTransportBySource will end up working.
+   return 0; 
+}
+
+Transport*
+TransportSelector::findTransportBySource(Tuple& search)
+{
+   DebugLog(<< "findTransportBySource(" << search << ")");
 
    if (search.getPort() != 0)
    {
+      //0. When we are sending to a loopback address, the kernel makes an
+      //(effectively) arbitrary choice of which loopback address to send
+      //from. (Since any loopback address can be used to send to any other
+      //loopback address) This choice may not agree with our idea of what
+      //address we should be sending from, so we need to just choose the
+      //loopback address we like, and ignore what the kernel told us to do.
+      if( search.isLoopback() )
+      {
+         ExactTupleMap::const_iterator i;
+         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
+         {
+            DebugLog(<<"search: " << search << " elem: " << i->first);
+            if(i->first.ipVersion()==V4)
+            {
+               //Compare only the first byte (the 127)
+               if(i->first.isEqualWithMask(search,8,false))
+               {
+                  search=i->first;
+                  DebugLog(<<"Match!");
+                  return i->second;
+               }
+            }
+#ifdef USE_IPV6
+            else if(i->first.ipVersion()==V6)
+            {
+               //What to do?
+            }
+#endif
+            else
+            {
+               assert(0);
+            }
+         }
+      }
+
       // 1. search for matching port on a specific interface
       {
          ExactTupleMap::const_iterator i = mExactTransports.find(search);
@@ -774,6 +1000,41 @@ TransportSelector::findTransport(const Tuple& search)
    }
    else
    {
+      //0. When we are sending to a loopback address, the kernel makes an
+      //(effectively) arbitrary choice of which loopback address to send
+      //from. (Since any loopback address can be used to send to any other
+      //loopback address) This choice may not agree with our idea of what
+      //address we should be sending from, so we need to just choose the
+      //loopback address we like, and ignore what the kernel told us to do.
+      if( search.isLoopback() )
+      {
+         ExactTupleMap::const_iterator i;
+         for (i=mExactTransports.begin();i != mExactTransports.end();i++)
+         {
+            DebugLog(<<"search: " << search << " elem: " << i->first);
+            if(i->first.ipVersion()==V4)
+            {
+               //Compare only the first byte (the 127)
+               if(i->first.isEqualWithMask(search,8,true))
+               {
+                  search=i->first;
+                  DebugLog(<<"Match!");
+                  return i->second;
+               }
+            }
+#ifdef USE_IPV6
+            else if(i->first.ipVersion()==V6)
+            {
+               //What to do?
+            }
+#endif
+            else
+            {
+               assert(0);
+            }
+         }
+      }
+
       // 1. search for ANY port on specific interface
       {
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
@@ -807,46 +1068,102 @@ TransportSelector::findTransport(const Tuple& search)
 
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname)
+TransportSelector::findTlsTransport(const Data& domainname,resip::IpVersion version)
 {
-   DebugLog (<< "Searching for TLS transport for domain='" 
-             << domainname << "'" << " have " << mTlsTransports.size());
-   // If no domainname specified and there is only 1 TLS transport, use it.
-   if (domainname == Data::Empty && mTlsTransports.size() == 1)
-   {
-      DebugLog (<< "Found default TLS transport for domain=" << mTlsTransports.begin()->first);
-      return mTlsTransports.begin()->second;
-   }
 
-   if (mTlsTransports.count(domainname))
+   if(version==V4)
    {
-      DebugLog (<< "Found TLS transport for domain=" << mTlsTransports.begin()->first);
-      return mTlsTransports[domainname];
-   }
+      DebugLog (<< "Searching for TLS transport for domain='" 
+                   << domainname << "'" << " have " << mV4TlsTransports.size());
+      // If no domainname specified and there is only 1 TLS transport, use it.
+      if (domainname == Data::Empty && mV4TlsTransports.size() == 1)
+      {
+         DebugLog (<< "Found default TLS transport for domain=" << mV4TlsTransports.begin()->first);
+         return mV4TlsTransports.begin()->second;
+      }
 
-   // don't know which one to use
-   DebugLog (<< "No TLS transport found");
-   return 0;
+      if (mV4TlsTransports.count(domainname))
+      {
+         DebugLog (<< "Found TLS transport for domain=" << mV4TlsTransports.begin()->first);
+         return mV4TlsTransports[domainname];
+      }
+
+      // don't know which one to use
+      DebugLog (<< "No TLS transport found");
+      return 0;
+   }
+   else if(version==V6)
+   {
+#ifdef USE_IPV6
+      DebugLog (<< "Searching for TLS transport for domain='" 
+                << domainname << "'" << " have " << mV6TlsTransports.size());
+      // If no domainname specified and there is only 1 TLS transport, use it.
+      if (domainname == Data::Empty && mV6TlsTransports.size() == 1)
+      {
+         DebugLog (<< "Found default TLS transport for domain=" << mV6TlsTransports.begin()->first);
+         return mV6TlsTransports.begin()->second;
+      }
+
+      if (mV6TlsTransports.count(domainname))
+      {
+         DebugLog (<< "Found TLS transport for domain=" << mV6TlsTransports.begin()->first);
+         return mV6TlsTransports[domainname];
+      }
+#endif
+      // don't know which one to use
+      DebugLog (<< "No TLS transport found");
+      return 0;   
+   }
+   else
+   {
+      assert(0);
+      return 0;
+   }
 }
 
 
 Transport*
-TransportSelector::findDtlsTransport(const Data& domainname)
+TransportSelector::findDtlsTransport(const Data& domainname,resip::IpVersion version)
 
 {
 #ifdef USE_DTLS
-   DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
-   // If no domainname specified and there is only 1 TLS transport, use it.
-   if (domainname == Data::Empty && mDtlsTransports.size() == 1)
+   if(version==V4)
    {
-      DebugLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
-      return (Transport*)mDtlsTransports.begin()->second;
+      DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
+      // If no domainname specified and there is only 1 TLS transport, use it.
+         if (domainname == Data::Empty && mV4DtlsTransports.size() == 1)
+      {
+         DebugLog (<< "Found default DTLS transport for domain=" << mV4DtlsTransports.begin()->first);
+         return (Transport*)mV4DtlsTransports.begin()->second;
+      }
+      
+         if (mV4DtlsTransports.count(domainname))
+      {
+         DebugLog (<< "Found DTLS transport for domain=" << mV4DtlsTransports.begin()->first);
+         return (Transport*)mV4DtlsTransports[domainname];
+      }
    }
-   
-   if (mDtlsTransports.count(domainname))
+   else if(version==V6)
    {
-      DebugLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
-      return (Transport*)mDtlsTransports[domainname];
+#ifdef USE_IPV6
+      DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
+      // If no domainname specified and there is only 1 TLS transport, use it.
+      if (domainname == Data::Empty && mV6DtlsTransports.size() == 1)
+      {
+         DebugLog (<< "Found default DTLS transport for domain=" << mV6DtlsTransports.begin()->first);
+         return (Transport*)mV6DtlsTransports.begin()->second;
+      }
+      
+      if (mV6DtlsTransports.count(domainname))
+      {
+         DebugLog (<< "Found DTLS transport for domain=" << mV6DtlsTransports.begin()->first);
+         return (Transport*)mV6DtlsTransports[domainname];
+      }
+#endif
+   }
+   else
+   {
+      assert(0);
    }
 #endif
    
@@ -854,6 +1171,7 @@ TransportSelector::findDtlsTransport(const Data& domainname)
    DebugLog (<< "No DTLS transport found");
    return 0;
 }
+
 
 
 unsigned int 
