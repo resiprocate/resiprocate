@@ -4,6 +4,8 @@
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
 
+stack: repro dum tests
+
 all: repro dum tests tfm
 
 tfm: tfmcontrib
@@ -24,6 +26,7 @@ repro: dum
 tests: resiprocate 
 	cd resip/stack/test; $(MAKE)
 	cd rutil/test; $(MAKE)	
+
 check: tests
 	cd resip/stack/test && ./runtests.sh
 	cd rutil/test && ./runtests.sh	
