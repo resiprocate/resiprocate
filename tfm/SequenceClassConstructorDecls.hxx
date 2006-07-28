@@ -4,14 +4,14 @@ SequenceClass(int lineNumber,
               bool execute,
               ActionBase* action,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
               ActionBase* action,
               TestEndPoint::ExpectBase* e1,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -19,7 +19,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e1,
               TestEndPoint::ExpectBase* e2,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -28,7 +28,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e2,
               TestEndPoint::ExpectBase* e3,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -38,7 +38,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e3,
               TestEndPoint::ExpectBase* e4,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -49,7 +49,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e4,
               TestEndPoint::ExpectBase* e5,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -61,7 +61,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e5,
               TestEndPoint::ExpectBase* e6,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -74,7 +74,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e6,
               TestEndPoint::ExpectBase* e7,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -88,7 +88,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e7,
               TestEndPoint::ExpectBase* e8,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -103,7 +103,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e8,
               TestEndPoint::ExpectBase* e9,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -119,7 +119,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e9,
               TestEndPoint::ExpectBase* e10,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -136,7 +136,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e10,
               TestEndPoint::ExpectBase* e11,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -154,7 +154,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e11,
               TestEndPoint::ExpectBase* e12,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -173,7 +173,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e12,
               TestEndPoint::ExpectBase* e13,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -193,7 +193,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e13,
               TestEndPoint::ExpectBase* e14,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -214,7 +214,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e14,
               TestEndPoint::ExpectBase* e15,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -236,7 +236,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e15,
               TestEndPoint::ExpectBase* e16,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -259,7 +259,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e16,
               TestEndPoint::ExpectBase* e17,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -283,7 +283,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e17,
               TestEndPoint::ExpectBase* e18,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -308,7 +308,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e18,
               TestEndPoint::ExpectBase* e19,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -334,7 +334,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e19,
               TestEndPoint::ExpectBase* e20,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -361,7 +361,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e20,
               TestEndPoint::ExpectBase* e21,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -389,7 +389,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e21,
               TestEndPoint::ExpectBase* e22,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -418,7 +418,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e22,
               TestEndPoint::ExpectBase* e23,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -448,7 +448,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e23,
               TestEndPoint::ExpectBase* e24,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -479,7 +479,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e24,
               TestEndPoint::ExpectBase* e25,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -511,7 +511,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e25,
               TestEndPoint::ExpectBase* e26,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -544,7 +544,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e26,
               TestEndPoint::ExpectBase* e27,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -578,7 +578,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e27,
               TestEndPoint::ExpectBase* e28,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -613,7 +613,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e28,
               TestEndPoint::ExpectBase* e29,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -649,7 +649,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e29,
               TestEndPoint::ExpectBase* e30,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -686,7 +686,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e30,
               TestEndPoint::ExpectBase* e31,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -724,7 +724,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e31,
               TestEndPoint::ExpectBase* e32,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -763,7 +763,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e32,
               TestEndPoint::ExpectBase* e33,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -803,7 +803,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e33,
               TestEndPoint::ExpectBase* e34,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -844,7 +844,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e34,
               TestEndPoint::ExpectBase* e35,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -886,7 +886,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e35,
               TestEndPoint::ExpectBase* e36,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -929,7 +929,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e36,
               TestEndPoint::ExpectBase* e37,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -973,7 +973,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e37,
               TestEndPoint::ExpectBase* e38,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1018,7 +1018,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e38,
               TestEndPoint::ExpectBase* e39,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1064,7 +1064,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e39,
               TestEndPoint::ExpectBase* e40,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1111,7 +1111,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e40,
               TestEndPoint::ExpectBase* e41,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1159,7 +1159,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e41,
               TestEndPoint::ExpectBase* e42,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1208,7 +1208,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e42,
               TestEndPoint::ExpectBase* e43,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1258,7 +1258,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e43,
               TestEndPoint::ExpectBase* e44,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1309,7 +1309,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e44,
               TestEndPoint::ExpectBase* e45,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1361,7 +1361,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e45,
               TestEndPoint::ExpectBase* e46,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1414,7 +1414,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e46,
               TestEndPoint::ExpectBase* e47,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1468,7 +1468,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e47,
               TestEndPoint::ExpectBase* e48,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1523,7 +1523,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e48,
               TestEndPoint::ExpectBase* e49,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1579,7 +1579,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e49,
               TestEndPoint::ExpectBase* e50,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1636,7 +1636,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e50,
               TestEndPoint::ExpectBase* e51,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1694,7 +1694,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e51,
               TestEndPoint::ExpectBase* e52,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1753,7 +1753,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e52,
               TestEndPoint::ExpectBase* e53,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1813,7 +1813,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e53,
               TestEndPoint::ExpectBase* e54,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1874,7 +1874,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e54,
               TestEndPoint::ExpectBase* e55,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1936,7 +1936,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e55,
               TestEndPoint::ExpectBase* e56,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -1999,7 +1999,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e56,
               TestEndPoint::ExpectBase* e57,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2063,7 +2063,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e57,
               TestEndPoint::ExpectBase* e58,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2128,7 +2128,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e58,
               TestEndPoint::ExpectBase* e59,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2194,7 +2194,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e59,
               TestEndPoint::ExpectBase* e60,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2261,7 +2261,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e60,
               TestEndPoint::ExpectBase* e61,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2329,7 +2329,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e61,
               TestEndPoint::ExpectBase* e62,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2398,7 +2398,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e62,
               TestEndPoint::ExpectBase* e63,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2468,7 +2468,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e63,
               TestEndPoint::ExpectBase* e64,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2539,7 +2539,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e64,
               TestEndPoint::ExpectBase* e65,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2611,7 +2611,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e65,
               TestEndPoint::ExpectBase* e66,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2684,7 +2684,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e66,
               TestEndPoint::ExpectBase* e67,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2758,7 +2758,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e67,
               TestEndPoint::ExpectBase* e68,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2833,7 +2833,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e68,
               TestEndPoint::ExpectBase* e69,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2909,7 +2909,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e69,
               TestEndPoint::ExpectBase* e70,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -2986,7 +2986,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e70,
               TestEndPoint::ExpectBase* e71,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3064,7 +3064,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e71,
               TestEndPoint::ExpectBase* e72,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3143,7 +3143,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e72,
               TestEndPoint::ExpectBase* e73,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3223,7 +3223,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e73,
               TestEndPoint::ExpectBase* e74,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3304,7 +3304,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e74,
               TestEndPoint::ExpectBase* e75,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3386,7 +3386,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e75,
               TestEndPoint::ExpectBase* e76,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3469,7 +3469,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e76,
               TestEndPoint::ExpectBase* e77,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3553,7 +3553,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e77,
               TestEndPoint::ExpectBase* e78,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3638,7 +3638,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e78,
               TestEndPoint::ExpectBase* e79,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3724,7 +3724,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e79,
               TestEndPoint::ExpectBase* e80,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3811,7 +3811,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e80,
               TestEndPoint::ExpectBase* e81,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3899,7 +3899,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e81,
               TestEndPoint::ExpectBase* e82,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -3988,7 +3988,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e82,
               TestEndPoint::ExpectBase* e83,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4078,7 +4078,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e83,
               TestEndPoint::ExpectBase* e84,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4169,7 +4169,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e84,
               TestEndPoint::ExpectBase* e85,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4261,7 +4261,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e85,
               TestEndPoint::ExpectBase* e86,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4354,7 +4354,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e86,
               TestEndPoint::ExpectBase* e87,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4448,7 +4448,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e87,
               TestEndPoint::ExpectBase* e88,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4543,7 +4543,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e88,
               TestEndPoint::ExpectBase* e89,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4639,7 +4639,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e89,
               TestEndPoint::ExpectBase* e90,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4736,7 +4736,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e90,
               TestEndPoint::ExpectBase* e91,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4834,7 +4834,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e91,
               TestEndPoint::ExpectBase* e92,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -4933,7 +4933,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e92,
               TestEndPoint::ExpectBase* e93,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5033,7 +5033,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e93,
               TestEndPoint::ExpectBase* e94,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5134,7 +5134,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e94,
               TestEndPoint::ExpectBase* e95,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5236,7 +5236,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e95,
               TestEndPoint::ExpectBase* e96,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5339,7 +5339,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e96,
               TestEndPoint::ExpectBase* e97,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5443,7 +5443,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e97,
               TestEndPoint::ExpectBase* e98,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5548,7 +5548,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e98,
               TestEndPoint::ExpectBase* e99,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 SequenceClass(int lineNumber,
               bool execute,
@@ -5654,7 +5654,7 @@ SequenceClass(int lineNumber,
               TestEndPoint::ExpectBase* e99,
               TestEndPoint::ExpectBase* e100,
               unsigned int hangAroundTimeMs,
-              SequenceSet* sset);
+              boost::shared_ptr<SequenceSet> sset);
 
 
 // Copyright 2005 Purplecomm, Inc

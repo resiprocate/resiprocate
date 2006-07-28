@@ -2624,45 +2624,50 @@ TestSipEndPoint::process(FdSet& fdset)
    {
       DebugLog(<< "Caught: " << e);
       {
-         if (getSequenceSet())
+         boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+         if (sset)
          {
             Data msg;
             {
                DataStream str(msg);
                str << e;
             }
-            getSequenceSet()->globalFailure(msg);
+            sset->globalFailure(msg);
          }
       }
    }
    catch (resip::BaseException& e)
    {
       DebugLog (<< "Uncaught VOCAL exception: " << e << "...ignoring");
-      if (getSequenceSet())
+      
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
       {
          Data msg;
          {
             DataStream str(msg);
             str << e;
          }
-         getSequenceSet()->globalFailure(msg);
+         sset->globalFailure(msg);
       }
    }
    catch (std::exception& e)
    {
       DebugLog (<< "Uncaught std::exception exception: " << e.what() << "...ignoring");
-      if (getSequenceSet())
-      {
-         getSequenceSet()->globalFailure(e.what());
-      }
 
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
+      {
+         sset->globalFailure(e.what());
+      }
    }
    catch (...)
    {
       DebugLog (<< "Uncaught unknown exception ");
-      if (getSequenceSet())
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
       {
-         getSequenceSet()->globalFailure("Uncaught unknown exception ");
+         sset->globalFailure("Uncaught unknown exception ");
       }
    }
 }
@@ -2797,9 +2802,10 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       DebugLog(<<"Unknown message type: " << *msg);
       throw GlobalFailure("Unknown msg type", __FILE__, __LINE__);
    }
-   if (getSequenceSet())
+   boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+   if (sset)
    {
-      getSequenceSet()->enqueue(event);
+      sset->enqueue(event);
    }
    else
    {
