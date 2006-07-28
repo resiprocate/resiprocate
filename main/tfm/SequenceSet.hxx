@@ -67,8 +67,6 @@ class SequenceSet
 
    public:
 
-//#include "SequenceSetDecls.hxx"
-
    private:
       boost::shared_ptr<SequenceSet> mHandle;      
       // no value semanitcs

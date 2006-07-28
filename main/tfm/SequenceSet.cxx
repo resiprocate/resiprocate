@@ -351,7 +351,6 @@ SequenceSet::handleEvent(shared_ptr<Event> event)
 // scripting interface
 //------------------------------------------------------------------------------
 
-//#include "SequenceSetDefns.hxx"
 
 std::ostream&
 operator<<(std::ostream& str, const SequenceSet& sset)
