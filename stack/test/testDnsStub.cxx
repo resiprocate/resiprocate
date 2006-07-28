@@ -147,7 +147,7 @@ void MyDnsSink::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 class TestDns : public ThreadIf, public DnsStub
 {
    public:
-      TestDns()
+      TestDns(const DnsStub::NameserverList& additional) : DnsStub(additional)
       {
       }
 
@@ -182,9 +182,16 @@ main(int argc, const char** argv)
       return 0;
    }
 
+   DnsStub::NameserverList nameServerList = DnsStub::EmptyNameserverList;
+   if(argc == 4)
+   {
+      Tuple tuple(Data(argv[3]), 0, V4);
+      nameServerList.push_back(tuple.toGenericIPAddress());
+   }
+
    char* logType = "cout";
    //char* logLevel = "STACK";
-   char* logLevel = "INFO";
+   char* logLevel = "DEBUG";
 
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
@@ -200,7 +207,7 @@ main(int argc, const char** argv)
 
    Log::initialize(logType, logLevel, argv[0]);
    initNetwork();
-   TestDns dns;
+   TestDns dns(nameServerList);
    dns.run();   
    cerr << "Starting" << endl;   
 #if defined(HAVE_POPT_H)
