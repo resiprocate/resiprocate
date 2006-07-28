@@ -290,8 +290,8 @@ Tuple::isLoopback() const
    else if (ipVersion()==V6)
    {
 #ifdef USE_IPV6
-#if defined(__linux__) || defined(__APPLE__)
-      return IN6_IS_ADDR_LOOPBACK(&(m_anonv6.sin6_addr));
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+      return IN6_IS_ADDR_LOOPBACK(&(m_anonv6.sin6_addr)) != 0;
 #else
       return ((*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[0])) == 0) && 
              (*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[4])) == 0) && 
