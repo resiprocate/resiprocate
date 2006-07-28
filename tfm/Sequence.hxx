@@ -6,6 +6,7 @@
 #include <set>
 #include <memory>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 #include "rutil/Data.hxx"
 #include "resip/stack/ValueFifo.hxx"
@@ -54,7 +55,7 @@ class SequenceClass : public AsciiGraphic
    public:
       friend class SequenceSet;
       // global SequenceSet for CPU tests (old interface)
-      static SequenceSet* CPUSequenceSet;
+      static boost::shared_ptr<SequenceSet> CPUSequenceSet;
       static bool CPUSequenceSetCleanup;
 
       static void CPUSequenceSetup();
@@ -100,14 +101,14 @@ class SequenceClass : public AsciiGraphic
 
       friend class SequenceHandler;
    private:
-      void setSequenceSet(SequenceSet* set);
-      SequenceSet* getSequenceSet() const {return mSet;}
+      void setSequenceSet(boost::shared_ptr<SequenceSet> set);
+      boost::shared_ptr<SequenceSet> getSequenceSet() const {return mSet;}
 
       ActionBase* mAction;
       std::list<TestEndPoint::ExpectBase*> mExpects;
       std::list<TestEndPoint::ExpectBase*> mUsedExpects;
       unsigned int mHangAroundTimeMs;
-      SequenceSet* mSet;
+      boost::shared_ptr<SequenceSet> mSet;
 
       // remember the linenumber of the Sequence
       int mLineNumber;
@@ -185,7 +186,7 @@ do                                                                              
 {                                                                                               \
    /* get rid of this sequence set before next run -- see Seq functions */                      \
    SequenceClass::CPUSequenceSetCleanup = true;                                                 \
-   SequenceSet* sset(SequenceClass::CPUSequenceSet);                                            \
+   boost::shared_ptr<SequenceSet> sset(SequenceClass::CPUSequenceSet);                          \
    sset->outputToInfo();                                                                        \
                                                                                                 \
    /* local forces order of evalulation */                                                      \
