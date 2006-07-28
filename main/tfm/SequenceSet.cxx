@@ -21,7 +21,8 @@ SequenceSet::SequenceSet()
      mFileName(),
      mLineNumber(0),
      mExplanation(),
-     mReset(false)
+     mReset(false),
+     mHandle(this)
 {}
 
 SequenceSet::~SequenceSet()
@@ -139,7 +140,7 @@ SequenceSet::preLoop()
       try
       {
          // recursively set the sequence set on all end points
-         (*i)->setSequenceSet(this);
+         (*i)->setSequenceSet(getHandle());
          // let it throw out to CPP
          (*i)->start();
       }
@@ -176,13 +177,14 @@ void
 SequenceSet::postLoop()
 {
    //usleep(1000); //!dcm! -- this causes better performance, but it shouldn't be necessary
- 
-   for (list<SequenceClass*>::const_iterator i = mSequences.begin();
-        i != mSequences.end(); i++)
-   {
-      // recursively unset the sequence set on all end points
-      (*i)->setSequenceSet(0);
-   }
+
+// .dcm. weak_ptr in endpoints now 
+//    for (list<SequenceClass*>::const_iterator i = mSequences.begin();
+//         i != mSequences.end(); i++)
+//    {
+//       // recursively unset the sequence set on all end points
+//       (*i)->setSequenceSet(0);
+//    }
 
    DebugLog(<< "after exec loop: " << !mFailed);
 }
@@ -349,7 +351,7 @@ SequenceSet::handleEvent(shared_ptr<Event> event)
 // scripting interface
 //------------------------------------------------------------------------------
 
-#include "SequenceSetDefns.hxx"
+//#include "SequenceSetDefns.hxx"
 
 std::ostream&
 operator<<(std::ostream& str, const SequenceSet& sset)

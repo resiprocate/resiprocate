@@ -32,7 +32,7 @@ TestEndPoint::GlobalFailure::getName() const
 }
 
 TestEndPoint::TestEndPoint() 
-   : mSequenceSet(0)
+//   : mSequenceSet(0)
 {
 }
 
@@ -46,18 +46,18 @@ TestEndPoint::DebugTimeMult()
    return (Log::level() >= Log::Debug) ? 4 : 1;
 }
 
-SequenceSet* 
+boost::weak_ptr<SequenceSet> 
 TestEndPoint::getSequenceSet() const 
 {
    return mSequenceSet;
 }
 
 void
-TestEndPoint::setSequenceSet(SequenceSet* set)
+TestEndPoint::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 {
    //DebugLog(<< this << "->TestEndPoint::setSequenceSet(" << set << ")" << "(was " << mSequenceSet << ")");
-   assert(set == 0 || mSequenceSet == 0 || mSequenceSet == set);
-   mSequenceSet = set;
+//   assert(set == 0 || mSequenceSet == 0 || mSequenceSet == set);
+   mSequenceSet = boost::weak_ptr<SequenceSet>(set);
 }
 
 bool 
@@ -151,7 +151,7 @@ void
 TestEndPoint::clear()
 {
    DebugLog(<< "clearing " << getName());
-   mSequenceSet = 0;
+//   mSequenceSet = 0;
 }
 
 
@@ -204,7 +204,7 @@ TestEndPoint::And::queue(SequenceClass* parent)
 }
 
 void
-TestEndPoint::And::setSequenceSet(SequenceSet* set)
+TestEndPoint::And::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 {
    for(list<SequenceClass*>::iterator seqit =  mSequences.begin();
        seqit != mSequences.end(); seqit++)
@@ -291,15 +291,17 @@ TestEndPoint::Pause::Pause(int msec, TestEndPoint* endPoint)
 void TestEndPoint::Pause::exec(shared_ptr<Event> event)
 {
    assert(mNext);
-   assert(mEndPoint->getSequenceSet());
-   mEndPoint->getSequenceSet()->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
+   boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
+   assert(sset.get());
+   sset->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, event)), mMsec);
 }
 
 void TestEndPoint::Pause::exec()
 {
    assert(mNext);
-   assert(mEndPoint->getSequenceSet());
-   mEndPoint->getSequenceSet()->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
+   boost::shared_ptr<SequenceSet> sset(mEndPoint->getSequenceSet());
+   assert(sset.get());
+   sset->enqueue(shared_ptr<Event>(new ExpectActionEvent(mNext, mEndPoint)), mMsec);
 }
 
 resip::Data
@@ -344,7 +346,7 @@ TestEndPoint::ExpectBase::queue(SequenceClass* parent)
 }
 
 void 
-TestEndPoint::ExpectBase::setSequenceSet(SequenceSet* set)
+TestEndPoint::ExpectBase::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 {
    getEndPoint()->setSequenceSet(set);
 }

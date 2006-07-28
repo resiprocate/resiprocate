@@ -39,6 +39,9 @@ class SequenceSet
 
       void clear();
 
+      boost::shared_ptr<SequenceSet> getHandle() { return mHandle; }
+      void release() { mHandle.reset(); }
+
    protected:
       void handle(boost::shared_ptr<Event> event);
       std::list<SequenceClass*> mSequences;
@@ -64,9 +67,10 @@ class SequenceSet
 
    public:
 
-#include "SequenceSetDecls.hxx"
+//#include "SequenceSetDecls.hxx"
 
    private:
+      boost::shared_ptr<SequenceSet> mHandle;      
       // no value semanitcs
       SequenceSet(const SequenceSet&);
       SequenceSet& operator=(const SequenceSet&);
