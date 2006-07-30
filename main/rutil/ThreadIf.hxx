@@ -51,11 +51,11 @@ class ThreadIf
       void join();
 
       // request the thread running thread() to return, by setting  mShutdown
-      void shutdown();
+      virtual void shutdown();
 
       //waits for waitMs, or stops waiting and returns true if shutdown was
       //called
-      bool waitForShutdown(int ms) const;
+      virtual bool waitForShutdown(int ms) const;
 
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
