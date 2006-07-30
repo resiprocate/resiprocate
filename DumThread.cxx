@@ -18,7 +18,7 @@ DumThread::thread()
    {
       try
       {
-         std::auto_ptr<Message> msg(mDum.mFifo.getNext(100));
+         std::auto_ptr<Message> msg(mDum.mFifo.getNext(1000));  // Only need to wake up to see if we are shutdown
          if (msg.get())
          {
             mDum.internalProcess(msg);
