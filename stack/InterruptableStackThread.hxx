@@ -32,6 +32,7 @@ class InterruptableStackThread : public ThreadIf
       virtual ~InterruptableStackThread();
       
       virtual void thread();
+      virtual void shutdown();
 
    protected:
       virtual void buildFdSet(FdSet& fdset);

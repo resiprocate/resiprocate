@@ -49,6 +49,13 @@ InterruptableStackThread::thread()
 }
 
 void
+InterruptableStackThread::shutdown()
+{
+   ThreadIf::shutdown();
+   mSelectInterruptor.interrupt();
+}
+
+void
 InterruptableStackThread::buildFdSet(FdSet& fdset)
 {}
 
