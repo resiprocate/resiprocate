@@ -653,6 +653,21 @@ main(int argc, char* argv[])
        assert(Data::from(addr.uri().embedded().header(h_CallInfos).front()) == "<sip:192.168.0.1>;answer-after=0");
    }
 
+   // URI containing special character #
+   // technically, # is meant to be encoded, but some systems (Asterisk,
+   // some Cisco gear) seem to send this un-encoded
+   // Some carriers insert # between a phone number and a billing prefix
+   {
+      Uri uri = Uri("sip:1234#00442031111111@lvdx.com");
+      //cout << "Encoded correctly: " << uri << endl;
+      assert(Data::from(uri) == "sip:1234%2300442031111111@lvdx.com");
+
+      Uri::setUriUserEncoding('#', false);
+      uri = Uri("sip:1234#00442031111111@lvdx.com");
+      //cout << "Non Encoded # for compatibility: " << uri << endl;
+      assert(Data::from(uri) == "sip:1234#00442031111111@lvdx.com");
+   }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
