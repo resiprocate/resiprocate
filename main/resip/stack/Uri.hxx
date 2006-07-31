@@ -1,10 +1,13 @@
 #if !defined(RESIP_URI_HXX)
 #define RESIP_URI_HXX 
 
+#include <bitset>
 #include <cassert>
 
 #include "resip/stack/ParserCategory.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+
+#define URI_ENCODING_TABLE_SIZE 128
 
 namespace resip
 {
@@ -52,6 +55,10 @@ class Uri : public ParserCategory
 
       /** Return a vector of domains to do a NAPTR lookup for enum */
       std::vector<Data> getEnumLookups(const std::vector<Data>& suffixes) const;
+
+      /** Modifies the default URI encoding character sets */
+      static void setUriUserEncoding(char c, bool encode);
+      static void setUriPasswordEncoding(char c, bool encode);
       
       bool hasEmbedded() const;
       SipMessage& embedded();
@@ -95,6 +102,19 @@ class Uri : public ParserCategory
 
       // cache for IPV6 host comparison
       mutable Data mCanonicalHost;
+
+      static bool mEncodingReady;
+      // characters listed in these strings should not be URI encoded
+      static Data mUriNonEncodingUserChars;
+      static Data mUriNonEncodingPasswordChars;
+      typedef std::bitset<URI_ENCODING_TABLE_SIZE> EncodingTable;
+      // if a bit is set/true, the corresponding character should be encoded
+      static EncodingTable mUriEncodingUserTable;
+      static EncodingTable mUriEncodingPasswordTable;
+
+      static void initialiseEncodingTables();
+      static inline bool shouldEscapeUserChar(char c);
+      static inline bool shouldEscapePasswordChar(char c);
 
    private:
       Data mEmbeddedHeadersText;
