@@ -831,7 +831,7 @@ Uri::clone() const
 }
 
 inline bool //.dcm. replace with lookup array
-shoudEscapeUserChar(char c)
+shouldEscapeUserChar(char c)
 {
    if ( (c >= 'a' && c <= 'z') ||
         (c >= 'A' && c <= 'Z') ||
@@ -906,7 +906,7 @@ Uri::encodeParsed(std::ostream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, shoudEscapeUserChar); 
+      mUser.escapeToStream(str, shouldEscapeUserChar); 
 #else
       str << mUser;
 #endif
