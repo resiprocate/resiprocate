@@ -4,6 +4,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/CpimContents.hxx" // vk
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -1239,20 +1240,41 @@ TestSipEndPoint::message(const TestUser& endPoint, const Data& text)
    return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, body);
 }
 
+// vk
 TestSipEndPoint::Request*
-TestSipEndPoint::message(const resip::Uri& target, const Data& text)
+TestSipEndPoint::message(const NameAddr& target, const Data& text, const messageType contentType)
 {
-   PlainContents* plain = new PlainContents;
-   plain->text() = text;
-   boost::shared_ptr<resip::Contents> body(plain);
-   return new Request(this, target, resip::MESSAGE, body);
+   if (contentType == messageCpim)
+   {
+     CpimContents* cpim = new CpimContents;
+     cpim->text() = text;
+     boost::shared_ptr<resip::Contents> body(cpim);
+     return new Request(this, target.uri(), resip::MESSAGE, body);
+   }
+   else // if (contentType == textPlain)
+   {
+     PlainContents* plain = new PlainContents;
+     plain->text() = text;
+     boost::shared_ptr<resip::Contents> body(plain);
+     return new Request(this, target.uri(), resip::MESSAGE, body);
+   }
 }
+// end - vk
+
 
 TestSipEndPoint::Request*
 TestSipEndPoint::message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents)
 {
    return new Request(this, target, resip::MESSAGE, contents);
 }
+
+// vk
+TestSipEndPoint::Request*
+TestSipEndPoint::options(const Uri& url)
+{
+   return new Request(this, url, resip::OPTIONS);
+}
+// end - vk
 
 TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint* endPoint, 
                                         boost::shared_ptr<resip::SipMessage>& msg)
@@ -1400,6 +1422,157 @@ TestSipEndPoint::send300(std::set<resip::NameAddr> alternates)
    return new Send300(*this,alternates);
 }
 
+// vk
+
+// 301
+
+TestSipEndPoint::Send301::Send301(TestSipEndPoint & endPoint, std::set<resip::NameAddr> alternates)
+   : MessageExpectAction(endPoint),
+     mAlternates(alternates),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send301::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 301);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send301(std::set<resip::NameAddr> alternates)
+{
+   return new Send301(*this, alternates);
+}
+
+// 400
+
+TestSipEndPoint::Send400::Send400(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send400::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 400);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send400()
+{
+   return new Send400(*this);
+}
+
+// 407
+
+TestSipEndPoint::Send407::Send407(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send407::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 407);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send407()
+{
+   return new Send407(*this);
+}
+
+// 408
+
+TestSipEndPoint::Send408::Send408(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send408::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 408);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send408()
+{
+   return new Send408(*this);
+}
+
+// 410
+
+TestSipEndPoint::Send410::Send410(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send410::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 410);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send410()
+{
+   return new Send410(*this);
+}
+
+// 482
+
+TestSipEndPoint::Send482::Send482(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send482::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 482);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send482()
+{
+   return new Send482(*this);
+}
+
+// 483
+
+TestSipEndPoint::Send483::Send483(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send483::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 483);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send483()
+{
+   return new Send483(*this);
+}
+
+// end - vk
 
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
@@ -1879,6 +2052,14 @@ TestSipEndPoint::send202()
 {
    return new Send202(*this);
 }
+
+// vk
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send200()
+{
+   return new Send200(*this);
+}
+// end - vk
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send100()
